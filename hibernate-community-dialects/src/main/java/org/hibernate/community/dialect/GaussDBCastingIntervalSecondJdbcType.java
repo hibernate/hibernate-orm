@@ -64,9 +64,16 @@ public class GaussDBCastingIntervalSecondJdbcType implements AdjustableJdbcType 
 					SqlAppender sqlAppender,
 					SqlAstTranslator<?> walker,
 					SessionFactoryImplementor sessionFactory) {
-				sqlAppender.append( "extract(epoch from " );
-				expression.accept( walker );
-				sqlAppender.append( ')' );
+				final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
+				if ( dialect instanceof GaussDBDialect g && g.isMMode() ) {
+					// M mode: column is numeric (seconds), read directly — no extract(epoch)
+					expression.accept( walker );
+				}
+				else {
+					sqlAppender.append( "extract(epoch from " );
+					expression.accept( walker );
+					sqlAppender.append( ')' );
+				}
 			}
 
 			@Override
@@ -82,9 +89,15 @@ public class GaussDBCastingIntervalSecondJdbcType implements AdjustableJdbcType 
 			@Nullable Size size,
 			SqlAppender appender,
 			Dialect dialect) {
-		appender.append( '(' );
-		appender.append( writeExpression );
-		appender.append( "*interval'1 second')" );
+		if ( dialect instanceof GaussDBDialect g && g.isMMode() ) {
+			// M mode: column is numeric (seconds), bind BigDecimal directly — no interval cast
+			appender.append( writeExpression );
+		}
+		else {
+			appender.append( '(' );
+			appender.append( writeExpression );
+			appender.append( "*interval'1 second')" );
+		}
 	}
 
 	@Override

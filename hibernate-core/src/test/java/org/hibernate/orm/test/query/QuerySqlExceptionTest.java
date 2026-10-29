@@ -50,6 +50,7 @@ public class QuerySqlExceptionTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class, comment = "The test triggers an execution-time SQLException via select (:param / 2), relying on the string parameter divided by 2 raising a type error; GaussDB M mode is MySQL-compatible and evaluates it to 0.0 without error, so the trigger never fires. A mode (openGauss PG kernel) is type-strict and raises the error.")
 	public void sqlExceptionOnExecutionWillCloseStatement(EntityManagerFactoryScope scope) {
 		// We need at least one row in the "contacts" table,
 		// otherwise the SELECT below might not even get executed completely

@@ -73,9 +73,13 @@ public class InsertConflictTests {
 							"values (1, 'John') " +
 							"on conflict do nothing"
 					).executeUpdate();
-					if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof MySQLDialect ) {
+					final var dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+					if ( dialect instanceof MySQLDialect
+							|| dialect instanceof GaussDBDialect ) {
 						// Since JDBC set the MySQL CLIENT_FOUND_ROWS flag, the updated count is 1 even if values didn't change
 						// Also see https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
+						// GaussDB emulates `on conflict do nothing` via `on duplicate key update col=col`
+						// (in A mode on a non-key column), which also returns 1 on a conflicting row.
 						assertEquals( 1, updated );
 					}
 					else {
@@ -228,6 +232,11 @@ public class InsertConflictTests {
 			reason = "Cloud Spanner does not support ON CONFLICT clauses for INSERT ... SELECT statements")
 	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class,
 			reason = "ON CONFLICT clause with empty conflict target in INSERT statement is not supported")
+	// GaussDB A mode cannot emulate the DO NOTHING part for the secondary table contact_supp,
+	// which has only the PK column: A mode does not support ON CONFLICT and its ON DUPLICATE
+	// KEY UPDATE rejects updating key columns (probe-verified), so the DO NOTHING part of the
+	// secondary table insert cannot be rendered. M mode allows updating key columns.
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBAMode.class)
 	public void testOnConflictDoNothingMultiTable(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -236,9 +245,13 @@ public class InsertConflictTests {
 									"values (1, ('John', 'Doe')) " +
 									"on conflict do nothing"
 					).executeUpdate();
-					if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof MySQLDialect ) {
+					final var dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+					if ( dialect instanceof MySQLDialect
+							|| dialect instanceof GaussDBDialect ) {
 						// Since JDBC set the MySQL CLIENT_FOUND_ROWS flag, the updated count is 1 even if values didn't change
 						// Also see https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
+						// GaussDB emulates `on conflict do nothing` via `on duplicate key update col=col`
+						// (in A mode on a non-key column), which also returns 1 on a conflicting row.
 						assertEquals( 1, updated );
 					}
 					else {
@@ -257,6 +270,9 @@ public class InsertConflictTests {
 	@SkipForDialect( dialectClass = SpannerDialect.class,
 			reason = "Cloud Spanner does not support ON CONFLICT clauses for INSERT ... SELECT statements")
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "MERGE into a table that has a self-referential FK does not work")
+	// GaussDB A mode cannot emulate the DO NOTHING part for the secondary table contact_supp,
+	// which has only the PK column (see testOnConflictDoNothingMultiTable).
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBAMode.class)
 	public void testOnConflictDoUpdateMultiTable(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -290,6 +306,9 @@ public class InsertConflictTests {
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "MATCHED does not support AND condition")
 	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class,
 			reason = "Spanner does not support predicates (WHERE clause) in conflict clauses")
+	// GaussDB A mode cannot emulate the DO NOTHING part for the secondary table contact_supp,
+	// which has only the PK column (see testOnConflictDoNothingMultiTable).
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBAMode.class)
 	public void testOnConflictDoUpdateWithWhereMultiTable(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

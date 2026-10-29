@@ -92,9 +92,6 @@ public class JaxbCfgProcessor {
 		return staxFactory;
 	}
 
-	private static final String EXTERNAL_PE = "http://xml.org/sax/features/external-parameter-entities";
-
-
 	private static XMLInputFactory buildStaxFactory(boolean allowDtdAndExternalEntities) {
 		final var staxFactory = XMLInputFactory.newInstance();
 		XmlFactoryUtil.configureXmlFactory( staxFactory, allowDtdAndExternalEntities );
@@ -180,9 +177,9 @@ public class JaxbCfgProcessor {
 			final var schemaStream = url.openStream();
 			try {
 				return XmlFactoryUtil.newSchemaFactory()
-						.newSchema( new StreamSource( url.openStream() ) );
+						.newSchema( new StreamSource( schemaStream ) );
 			}
-			catch ( SAXException | IOException e ) {
+			catch ( SAXException e ) {
 				throw new XsdException( "Unable to load schema [" + schemaName + "]", e, schemaName );
 			}
 			finally {

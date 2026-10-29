@@ -45,7 +45,7 @@ public class LocalSchemaLocator {
 			final var schemaStream = schemaUrl.openStream();
 			try {
 				return XmlFactoryUtil.newSchemaFactory()
-						.newSchema( new StreamSource( schemaUrl.openStream() ) );
+						.newSchema( new StreamSource( schemaStream ) );
 			}
 			catch ( Exception e ) {
 				throw new XmlInfrastructureException( "Unable to load schema [" + schemaUrl.toExternalForm() + "]", e );

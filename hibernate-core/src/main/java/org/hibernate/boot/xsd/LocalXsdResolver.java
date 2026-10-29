@@ -76,9 +76,9 @@ public class LocalXsdResolver {
 			final var schemaStream = url.openStream();
 			try {
 				return XmlFactoryUtil.newSchemaFactory()
-						.newSchema( new StreamSource( url.openStream() ) );
+						.newSchema( new StreamSource( schemaStream ) );
 			}
-			catch ( SAXException | IOException e ) {
+			catch ( SAXException e ) {
 				throw new XsdException( "Unable to load schema [" + schemaResourceName + "]", e, schemaResourceName );
 			}
 			finally {

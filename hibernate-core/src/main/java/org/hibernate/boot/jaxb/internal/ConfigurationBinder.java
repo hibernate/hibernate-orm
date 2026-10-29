@@ -32,6 +32,14 @@ public class ConfigurationBinder extends AbstractBinder<JaxbPersistenceImpl> {
 		return false;
 	}
 
+	// persistence.xml is parsed before Hibernate settings are resolved, so there is no
+	// settings source to read from here; always apply the secure defaults.
+
+	@Override
+	public boolean isDtdAndExternalEntitiesAllowed() {
+		return false;
+	}
+
 	@Override
 	protected <X extends JaxbPersistenceImpl> Binding<X> doBind(
 			XMLEventReader staxEventReader,

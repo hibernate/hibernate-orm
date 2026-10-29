@@ -21,6 +21,7 @@ import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.xsd.MappingXsdSupport;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.util.config.ConfigurationException;
 import org.hibernate.service.ServiceRegistry;
@@ -46,6 +47,13 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 	private final XMLEventFactory xmlEventFactory = XMLEventFactory.newInstance();
 
 	private final Supplier<Options> optionsAccess;
+
+	/**
+	 * Null when this binder was not given access to Hibernate settings (e.g. built
+	 * directly with an {@link Options} instance), in which case the XML-security-related
+	 * setting {@link #isDtdAndExternalEntitiesAllowed()} falls back to its secure default.
+	 */
+	private final @Nullable Function<String, Object> settingsAccess;
 
 	private JAXBContext hbmJaxbContext;
 	private JAXBContext entityMappingsJaxbContext;
@@ -77,6 +85,7 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 			Supplier<UnsupportedFeatureHandling> unsupportedHandlingAccess) {
 		super( resourceStreamLocator );
 		this.optionsAccess = optionsAccess;
+		this.settingsAccess = null;
 	}
 
 	/**
@@ -96,6 +105,7 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 				? MappingBinder.class.getClassLoader()::getResourceAsStream
 				: resourceStreamLocator );
 
+		this.settingsAccess = settingsAccess;
 		if ( settingsAccess == null ) {
 			this.optionsAccess = () -> VALIDATING;
 		}
@@ -146,6 +156,19 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 	@Override
 	public boolean isValidationEnabled() {
 		return optionsAccess.get().validateMappings();
+	}
+
+	@Override
+	public boolean isDtdAndExternalEntitiesAllowed() {
+		return readBooleanSetting( MappingSettings.XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES );
+	}
+
+	private boolean readBooleanSetting(String settingName) {
+		if ( settingsAccess == null ) {
+			return false;
+		}
+		final Object setting = settingsAccess.apply( settingName );
+		return setting != null && BOOLEAN.convert( setting );
 	}
 
 	@Override

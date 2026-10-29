@@ -49,12 +49,13 @@ public abstract class AbstractXMLPrettyPrinterStrategy implements XMLPrettyPrint
 					"com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl",
 					null);
 			result.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+			result.setFeature("http://xml.org/sax/features/external-general-entities", false);
+			result.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
 		}
 		catch (ParserConfigurationException e) {
 			LOGGER.severe(
-					"A ParserConfigurationException happened while setting the " +
-					"'http://apache.org/xml/features/nonvalidating/load-external-dtd' feature" +
-					"to false." );
+					"A ParserConfigurationException happened while disabling the loading " +
+					"of external DTDs and entities." );
 			throw new RuntimeException(e);
 		}
 		return result;

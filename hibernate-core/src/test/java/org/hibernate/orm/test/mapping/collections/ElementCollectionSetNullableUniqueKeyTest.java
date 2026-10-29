@@ -61,7 +61,7 @@ public class ElementCollectionSetNullableUniqueKeyTest {
 
 	@Test
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix treats two nulls as equal, which is why we don't create a unique constraint")
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTableCheck.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCheckConstraints.class)
 	void createsUniqueKeyForSetAndPrimaryKeyForOrderedList() {
 		final var metadata = buildMetadata( ssr );
 		final var commands = generateCreationCommands( ssr, metadata );

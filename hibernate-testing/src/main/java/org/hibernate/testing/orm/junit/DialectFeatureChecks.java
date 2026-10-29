@@ -70,6 +70,7 @@ import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.dialect.aggregate.spi.AggregateComponentReadRequest;
 import org.hibernate.dialect.array.spi.ArraySupport;
+import org.hibernate.dialect.constraint.spi.CheckConstraintPlacement;
 import org.hibernate.dialect.sql.ast.spi.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.sql.ast.spi.NullOrderingSupport;
 import org.hibernate.dialect.sql.ast.spi.SetOperationSupport;
@@ -316,6 +317,14 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsTableCheck implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.getCheckConstraintSupport().supports( org.hibernate.dialect.constraint.spi.CheckConstraintPlacement.TABLE );
+		}
+	}
+
+	public static class SupportsCheckConstraints implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.getCheckConstraintSupport().supports( CheckConstraintPlacement.ANONYMOUS_COLUMN )
+					|| dialect.getCheckConstraintSupport().supports( CheckConstraintPlacement.NAMED_COLUMN )
+					|| dialect.getCheckConstraintSupport().supports( CheckConstraintPlacement.TABLE );
 		}
 	}
 

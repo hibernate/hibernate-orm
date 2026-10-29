@@ -3,6 +3,7 @@ package org.hibernate.boot.cfgxml.internal;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.cfg.spi.JaxbCfgHibernateConfiguration;
+import org.hibernate.boot.jaxb.internal.stax.LocalXmlResourceResolver;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.internal.util.config.ConfigurationException;
@@ -47,6 +48,7 @@ public class JaxbCfgProcessor {
 	public static final String HIBERNATE_CONFIGURATION_URI = "http://www.hibernate.org/xsd/orm/cfg";
 
 	private final ClassLoaderService classLoaderService;
+	private final LocalXmlResourceResolver xmlResourceResolver;
 
 	/**
 	 * Settings gathered (from system properties and {@code /hibernate.properties}) before
@@ -61,6 +63,7 @@ public class JaxbCfgProcessor {
 
 	public JaxbCfgProcessor(ClassLoaderService classLoaderService, @Nullable Map<String, Object> settings) {
 		this.classLoaderService = classLoaderService;
+		this.xmlResourceResolver = new LocalXmlResourceResolver( classLoaderService );
 		this.settings = settings;
 	}
 
@@ -92,10 +95,10 @@ public class JaxbCfgProcessor {
 		return staxFactory;
 	}
 
-	private static XMLInputFactory buildStaxFactory(boolean allowDtdAndExternalEntities) {
+	private XMLInputFactory buildStaxFactory(boolean allowDtdAndExternalEntities) {
 		final var staxFactory = XMLInputFactory.newInstance();
 		XmlFactoryUtil.configureXmlFactory( staxFactory, allowDtdAndExternalEntities );
-
+		staxFactory.setXMLResolver( xmlResourceResolver );
 		return staxFactory;
 	}
 

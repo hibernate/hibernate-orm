@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!--
+  <list-index base="1"/> indicates that the first element of the list is stored with
+  index value 1 (rather than the JPA/Hibernate default of 0). This has no equivalent
+  attribute on <order-column/> in mapping.xml - it must be transferred as the sibling
+  <list-index-base/> element (@org.hibernate.annotations.ListIndexBase) instead.
+
+  The <key property-ref="..."/> additionally targets an alternate key of the owning
+  entity rather than its primary key, exercising both transformations together as in
+  the original (HHH) issue report.
+-->
+<hibernate-mapping package="org.hibernate.orm.test.boot.jaxb.mapping.listindexbase">
+    <class name="Note" table="list_index_base_note">
+        <id name="id" type="long">
+            <generator class="increment"/>
+        </id>
+        <property name="altKey" column="alt_key" unique="true" not-null="true"/>
+        <list name="items" table="list_index_base_item">
+            <key column="note_id" property-ref="altKey"/>
+            <list-index column="position" base="1"/>
+            <element column="text" type="string"/>
+        </list>
+    </class>
+</hibernate-mapping>

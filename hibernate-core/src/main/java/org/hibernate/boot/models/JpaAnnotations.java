@@ -93,6 +93,7 @@ import org.hibernate.boot.models.annotations.internal.PostPersistJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PostRemoveJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PostUpdateJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PostUpsertJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.PreDeleteJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PreInsertJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PreMergeJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PrePersistJpaAnnotation;
@@ -193,6 +194,7 @@ import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostRemove;
 import jakarta.persistence.PostUpdate;
 import jakarta.persistence.PostUpsert;
+import jakarta.persistence.PreDelete;
 import jakarta.persistence.PreInsert;
 import jakarta.persistence.PreMerge;
 import jakarta.persistence.PrePersist;
@@ -843,6 +845,13 @@ public interface JpaAnnotations {
 	CompleteAnnotationDescriptor<PostUpsert,PostUpsertJpaAnnotation> POST_UPSERT = new CompleteAnnotationDescriptor<>(
 			PostUpsert.class,
 			PostUpsertJpaAnnotation.class,
+			EnumSet.of( Kind.METHOD ),
+			false
+	);
+
+	CompleteAnnotationDescriptor<PreDelete,PreDeleteJpaAnnotation> PRE_DELETE = new CompleteAnnotationDescriptor<>(
+			PreDelete.class,
+			PreDeleteJpaAnnotation.class,
 			EnumSet.of( Kind.METHOD ),
 			false
 	);

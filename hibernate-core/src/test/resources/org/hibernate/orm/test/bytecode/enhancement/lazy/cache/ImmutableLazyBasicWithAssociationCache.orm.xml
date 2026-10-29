@@ -1,0 +1,45 @@
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="8.0">
+    <persistence-unit-metadata>
+        <xml-mapping-metadata-complete/>
+    </persistence-unit-metadata>
+
+    <entity class="org.hibernate.orm.test.bytecode.enhancement.lazy.cache.AbstractImmutableLazyBasicWithAssociationCacheTest$DataHolder" name="DataHolder" access="FIELD" cacheable="true">
+        <caching access="READ_ONLY"/>
+        <mutable>false</mutable>
+        <attributes>
+            <id name="id">
+                <generated-value/>
+            </id>
+            <basic name="payload" fetch="LAZY">
+                <column name="payload" length="4000"/>
+            </basic>
+            <many-to-one name="category" fetch="LAZY"/>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.bytecode.enhancement.lazy.cache.AbstractImmutableLazyBasicWithAssociationCacheTest$DataHolderNoLazyCache" name="DataHolderNoLazyCache" access="FIELD" cacheable="true">
+        <caching access="READ_ONLY" includeLazy="false"/>
+        <mutable>false</mutable>
+        <attributes>
+            <id name="id">
+                <generated-value/>
+            </id>
+            <basic name="payload" fetch="LAZY">
+                <column name="payload" length="4000"/>
+            </basic>
+            <many-to-one name="category" fetch="LAZY"/>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.bytecode.enhancement.lazy.cache.AbstractImmutableLazyBasicWithAssociationCacheTest$Category" name="Category" access="FIELD" cacheable="true">
+        <caching access="READ_WRITE"/>
+        <attributes>
+            <id name="id">
+                <generated-value/>
+            </id>
+            <basic name="name"/>
+        </attributes>
+    </entity>
+</entity-mappings>

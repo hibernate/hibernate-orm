@@ -430,6 +430,7 @@ public class ManagedTypeProcessor {
 					cacheUsage.usage( strategy );
 				}
 			}
+			cacheUsage.includeLazy( jaxbCaching.isIncludeLazy() );
 		}
 	}
 

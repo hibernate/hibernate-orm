@@ -40,6 +40,7 @@ import static org.hibernate.boot.models.JpaAnnotations.POST_UPDATE;
 import static org.hibernate.boot.models.JpaAnnotations.PRE_PERSIST;
 import static org.hibernate.boot.models.JpaAnnotations.PRE_REMOVE;
 import static org.hibernate.boot.models.JpaAnnotations.PRE_UPDATE;
+import static org.hibernate.boot.models.JpaAnnotations.PRE_MERGE;
 
 /// Models a JPA-style lifecycle event handler, whether [callback][JpaEventListenerStyle#CALLBACK] or
 /// [listener][JpaEventListenerStyle#LISTENER] style.
@@ -55,6 +56,7 @@ import static org.hibernate.boot.models.JpaAnnotations.PRE_UPDATE;
 /// @see jakarta.persistence.PrePersist
 /// @see jakarta.persistence.PreRemove
 /// @see jakarta.persistence.PreUpdate
+/// @see jakarta.persistence.PreMerge
 ///
 /// @author Steve Ebersole
 @Remove
@@ -232,6 +234,18 @@ public class LifecycleEventHandler {
 					modelsContext,
 					callbackMethods
 			);
+			applyXmlCallback(
+					jaxbMapping.getPreMerge(),
+					methodDetails,
+					mutableMethodDetails,
+					consumerType,
+					listenerClassDetails,
+					PreMerge.class,
+					PRE_MERGE,
+					CallbackType.PRE_MERGE,
+					modelsContext,
+					callbackMethods
+			);
 		} );
 
 		final var descriptor =
@@ -277,7 +291,8 @@ public class LifecycleEventHandler {
 			&& jaxbMapping.getPostLoad() == null
 			&& jaxbMapping.getPostPersist() == null
 			&& jaxbMapping.getPostUpdate() == null
-			&& jaxbMapping.getPostRemove() == null;
+			&& jaxbMapping.getPostRemove() == null
+			&& jaxbMapping.getPreMerge() == null;
 	}
 
 	private static void errorIfEmpty(LifecycleEventHandler descriptor) {

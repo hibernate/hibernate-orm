@@ -996,6 +996,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final LockStrategy lockStrategy = determineLockingStrategy( lockingTarget, lockOptions.getFollowOnStrategy() );
 		if ( lockStrategy == LockStrategy.FOLLOW_ON ) {
 			LockingHelper.validateFollowOnLocking( lockOptions );
+			LockingHelper.validateFollowOnLockingResults( selectStatement, lockingTarget, lockingClauseStrategy );
 		}
 
 		return getSessionFactory().getJdbcSelectWithActionsBuilder()
@@ -2313,7 +2314,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					break;
 				}
 				case FOLLOW_ON: {
-					if ( querySpec.isRoot() ) {
+					if ( querySpec.isRoot()
+							|| getSqlAst() instanceof SelectStatement select
+									&& select.getQueryPart().isRoot()
+									&& select.getQueryPart().getFirstQuerySpec() == querySpec ) {
 						lockOptions = null;
 					}
 					else {

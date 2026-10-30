@@ -15,6 +15,8 @@ import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.from.FromClause;
 import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 import org.hibernate.sql.ast.spi.query.predicate.PredicateContainer;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.internal.LockingResultCoverage;
 
 /**
  * @author Steve Ebersole
@@ -30,6 +32,7 @@ public class QuerySpec extends QueryPart implements SqlAstNode, PredicateContain
 	private Predicate havingClauseRestrictions;
 
 	private Set<NavigablePath> rootPathsForLocking;
+	private LockingResultCoverage lockingResultCoverage;
 
 	public QuerySpec(boolean isRoot) {
 		super( isRoot );
@@ -50,6 +53,8 @@ public class QuerySpec extends QueryPart implements SqlAstNode, PredicateContain
 		this.whereClauseRestrictions = original.whereClauseRestrictions;
 		this.groupByClauseExpressions = original.groupByClauseExpressions;
 		this.havingClauseRestrictions = original.havingClauseRestrictions;
+		this.rootPathsForLocking = original.rootPathsForLocking;
+		this.lockingResultCoverage = original.lockingResultCoverage;
 	}
 
 	public QuerySpec asSubQuery() {
@@ -92,6 +97,19 @@ public class QuerySpec extends QueryPart implements SqlAstNode, PredicateContain
 	/// for locking purposes.
 	public Set<NavigablePath> getRootPathsForLocking() {
 		return rootPathsForLocking;
+	}
+
+	/// Structural coverage of this branch's primary result, or {@code null} if SQM
+	/// supplied no summary. Loader-created ASTs instead use their executable result graph.
+	public LockingResultCoverage getLockingResultCoverage() {
+		return lockingResultCoverage;
+	}
+
+	/// Replaces the immutable coverage snapshot without retaining another branch's complete result graph.
+	public void applyDomainResultForLocking(DomainResult<?> result) {
+		lockingResultCoverage = lockingResultCoverage == null
+				? LockingResultCoverage.from( result )
+				: lockingResultCoverage.withDomainResult( result );
 	}
 
 	/// Applies a [NavigablePath] to be considered a root for the

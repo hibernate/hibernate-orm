@@ -1,7 +1,9 @@
 package org.hibernate.sql.exec.internal.lock;
 
 import java.util.AbstractMap;
+import java.util.AbstractCollection;
 import java.util.AbstractSet;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -21,7 +23,9 @@ import org.hibernate.persister.entity.EntityPersister;
 /// @author Steve Ebersole
 final class EntityDetailsMap extends AbstractMap<Object, EntityDetails> {
 
-	private final Map<EntityKey, EntityDetails> entries = new LinkedHashMap<>();
+	private final Map<EntityKey, IndexedDetails> entries = new LinkedHashMap<>();
+	private int nextPosition;
+	private boolean directKeys = true;
 	private final SharedSessionContractImplementor session;
 	private final EntityPersister persister;
 
@@ -34,14 +38,66 @@ final class EntityDetailsMap extends AbstractMap<Object, EntityDetails> {
 		return identifier == null ? null : session.generateEntityKey( identifier, persister );
 	}
 
+	EntityDetails putEntityKey(EntityKey key, EntityDetails details) {
+		final var existing = entries.get( key );
+		if ( existing != null ) {
+			final var previous = existing.details;
+			existing.details = details;
+			return previous;
+		}
+		entries.put( key, new IndexedDetails( nextPosition++, details ) );
+		return null;
+	}
+
+	IndexedDetails getEntityKey(EntityKey key) {
+		return entries.get( key );
+	}
+
+	boolean hasDirectKeys() {
+		return directKeys;
+	}
+
+	int positionCount() {
+		return nextPosition;
+	}
+
+	/// A stable coverage position independent of identifier-facing map views.
+	static final class IndexedDetails {
+		final int position;
+		EntityDetails details;
+
+		IndexedDetails(int position, EntityDetails details) {
+			this.position = position;
+			this.details = details;
+		}
+	}
+
+	@Override @Nonnull
+	public Collection<EntityDetails> values() {
+		return new AbstractCollection<>() {
+			@Override public int size() { return entries.size(); }
+			@Override public void clear() { entries.clear(); }
+			@Override public Iterator<EntityDetails> iterator() {
+				final var iterator = entries.values().iterator();
+				return new Iterator<>() {
+					@Override public boolean hasNext() { return iterator.hasNext(); }
+					@Override public EntityDetails next() { return iterator.next().details; }
+					@Override public void remove() { iterator.remove(); }
+				};
+			}
+		};
+	}
+
 	@Override
 	public EntityDetails put(Object identifier, EntityDetails details) {
-		return entries.put( entityKey( identifier ), details );
+		directKeys = false;
+		return putEntityKey( entityKey( identifier ), details );
 	}
 
 	@Override
 	public EntityDetails get(Object identifier) {
-		return entries.get( entityKey( identifier ) );
+		final var entry = entries.get( entityKey( identifier ) );
+		return entry == null ? null : entry.details;
 	}
 
 	@Override
@@ -51,7 +107,8 @@ final class EntityDetailsMap extends AbstractMap<Object, EntityDetails> {
 
 	@Override
 	public EntityDetails remove(Object identifier) {
-		return entries.remove( entityKey( identifier ) );
+		final var removed = entries.remove( entityKey( identifier ) );
+		return removed == null ? null : removed.details;
 	}
 
 	@Override
@@ -117,14 +174,20 @@ final class EntityDetailsMap extends AbstractMap<Object, EntityDetails> {
 
 			@Override
 			public boolean contains(Object object) {
-				return object instanceof Entry<?, ?> entry
-						&& entries.entrySet().contains( new SimpleImmutableEntry<>( entityKey( entry.getKey() ), entry.getValue() ) );
+				if ( !(object instanceof Entry<?, ?> entry) ) {
+					return false;
+				}
+				final var indexed = entries.get( entityKey( entry.getKey() ) );
+				return indexed != null && Objects.equals( indexed.details, entry.getValue() );
 			}
 
 			@Override
 			public boolean remove(Object object) {
-				return object instanceof Entry<?, ?> entry
-						&& entries.entrySet().remove( new SimpleImmutableEntry<>( entityKey( entry.getKey() ), entry.getValue() ) );
+				if ( !contains( object ) ) {
+					return false;
+				}
+				entries.remove( entityKey( ((Entry<?, ?>) object).getKey() ) );
+				return true;
 			}
 
 			@Override @Nonnull
@@ -139,8 +202,8 @@ final class EntityDetailsMap extends AbstractMap<Object, EntityDetails> {
 						final var entry = iterator.next();
 						return new Entry<>() {
 							@Override public Object getKey() { return identifier( entry.getKey() ); }
-							@Override public EntityDetails getValue() { return entry.getValue(); }
-							@Override public EntityDetails setValue(EntityDetails value) { return entry.setValue( value ); }
+							@Override public EntityDetails getValue() { return entry.getValue().details; }
+							@Override public EntityDetails setValue(EntityDetails value) { directKeys = false; final var previous = entry.getValue().details; entry.getValue().details = value; return previous; }
 							@Override public int hashCode() { return Objects.hashCode( getKey() ) ^ Objects.hashCode( getValue() ); }
 							@Override public String toString() { return getKey() + "=" + getValue(); }
 							@Override public boolean equals(Object object) {

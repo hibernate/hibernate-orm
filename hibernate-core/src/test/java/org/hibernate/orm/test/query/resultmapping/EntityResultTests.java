@@ -46,7 +46,7 @@ import static org.hamcrest.Matchers.notNullValue;
 				EntityOfBasics.class,
 				EntityWithEmbedded.class
 		},
-		xmlMappings = "org/hibernate/orm/test/query/resultmapping/result-set-mapping.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/query/resultmapping/result-set-mapping.orm.xml"
 )
 @ServiceRegistry(
 		settings = {

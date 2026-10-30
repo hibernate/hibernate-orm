@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.idgen.enhanced.sequence;
 
+import org.hibernate.generator.Generator;
+import org.hibernate.id.GenericGeneratorGeneration;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -18,8 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel( xmlMappings = {
-		"org/hibernate/orm/test/idgen/enhanced/sequence/Basic.hbm.xml",
-		"org/hibernate/orm/test/idgen/enhanced/sequence/Dedicated.hbm.xml"
+		"org/hibernate/orm/test/idgen/enhanced/sequence/Basic.orm.xml",
+		"org/hibernate/orm/test/idgen/enhanced/sequence/Dedicated.orm.xml"
 })
 @SessionFactory
 public class BasicSequenceTest {
@@ -29,9 +31,13 @@ public class BasicSequenceTest {
 		final EntityPersister persister = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor(Entity.class.getName());
-		assertThat( persister.getGenerator() ).isInstanceOf( SequenceStyleGenerator.class );
+		assertThat( persister.getGenerator() ).isInstanceOf( GenericGeneratorGeneration.class );
 
-		final SequenceStyleGenerator generator = (SequenceStyleGenerator) persister.getGenerator();
+		final GenericGeneratorGeneration genericGenerator = (GenericGeneratorGeneration) persister.getGenerator();
+		Generator delegate = genericGenerator.getDelegate();
+		assertThat( delegate ).isInstanceOf( SequenceStyleGenerator.class );
+
+		final SequenceStyleGenerator generator = (SequenceStyleGenerator) delegate;
 
 		final int count = 5;
 
@@ -52,22 +58,26 @@ public class BasicSequenceTest {
 	@Test
 	@JiraKey(value = "HHH-6790")
 	public void testSequencePerEntity(SessionFactoryScope scope) {
-		final String overriddenEntityName = "SpecialEntity";
 
 		final EntityPersister persister = scope.getSessionFactory()
 				.getMappingMetamodel()
-				.getEntityDescriptor(overriddenEntityName);
-		assertThat( persister.getGenerator() ).isInstanceOf( SequenceStyleGenerator.class );
+				.getEntityDescriptor( SpecialEntity.class.getName());
+		assertThat( persister.getGenerator() ).isInstanceOf( GenericGeneratorGeneration.class );
 
-		final SequenceStyleGenerator generator = (SequenceStyleGenerator) persister.getGenerator();
+		final GenericGeneratorGeneration genericGenerator = (GenericGeneratorGeneration) persister.getGenerator();
+		Generator delegate = genericGenerator.getDelegate();
+		assertThat( delegate ).isInstanceOf( SequenceStyleGenerator.class );
+
+		final SequenceStyleGenerator generator = (SequenceStyleGenerator) delegate;
+
 		assertEquals( "ID_SEQ_BSC_ENTITY" + SequenceStyleGenerator.DEF_SEQUENCE_SUFFIX,
 				generator.getDatabaseStructure().getPhysicalName().render() );
 
 		scope.inTransaction( (s) -> {
-			Entity entity1 = new Entity( "1" );
-			s.persist( overriddenEntityName, entity1 );
-			Entity entity2 = new Entity( "2" );
-			s.persist( overriddenEntityName, entity2 );
+			SpecialEntity entity1 = new SpecialEntity( "1" );
+			s.persist(  entity1 );
+			SpecialEntity entity2 = new SpecialEntity( "2" );
+			s.persist(  entity2 );
 
 			assertEquals( 1, entity1.getId().intValue() );
 			assertEquals( 2, entity2.getId().intValue() );

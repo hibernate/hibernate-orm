@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
  * @author Steve Ebersole
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/reattachment/Mappings.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/reattachment/Mappings.orm.xml"
 )
 @SessionFactory
 public class ProxyReattachmentTest {

@@ -1,16 +1,17 @@
 package org.hibernate.orm.test.manytomany.batchload;
+
 import java.util.HashSet;
 import java.util.Set;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 public class Group {
 	private Long id;
+
 	private String name;
-	private Set<User> users = new HashSet<User>();
+
+	private Set<User> users = new HashSet<>();
 
 	public Group() {
 	}

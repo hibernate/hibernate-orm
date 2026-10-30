@@ -9,8 +9,8 @@ public class User {
 	private Integer id;
 	private Timestamp timestamp;
 	private String username;
-	private Set groups;
-	private Set permissions;
+	private Set<Group> groups;
+	private Set<Permission> permissions;
 
 	public User() {
 	}
@@ -44,19 +44,19 @@ public class User {
 		this.username = username;
 	}
 
-	public Set getGroups() {
+	public Set<Group> getGroups() {
 		return groups;
 	}
 
-	public void setGroups(Set groups) {
+	public void setGroups(Set<Group> groups) {
 		this.groups = groups;
 	}
 
-	public Set getPermissions() {
+	public Set<Permission> getPermissions() {
 		return permissions;
 	}
 
-	public void setPermissions(Set permissions) {
+	public void setPermissions(Set<Permission> permissions) {
 		this.permissions = permissions;
 	}
 }

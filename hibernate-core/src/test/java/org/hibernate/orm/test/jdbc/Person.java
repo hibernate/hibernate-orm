@@ -2,8 +2,6 @@ package org.hibernate.orm.test.jdbc;
 
 
 /**
- * Person implementation
- *
  * @author Steve Ebersole
  */
 public class Person {

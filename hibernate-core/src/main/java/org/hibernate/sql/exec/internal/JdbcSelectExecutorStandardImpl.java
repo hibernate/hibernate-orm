@@ -147,10 +147,11 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		final var statementAccess = new StatementAccessImpl( connection, logicalConnection, factory );
 		final var actionExecution = jdbcSelect.createActionExecution();
 		LoadedValuesCollector loadedValuesCollector = null;
+		DeferredResultSetAccess deferredResultSetAccess = null;
 		try {
 			actionExecution.performPreActions( statementAccess, connection, executionContext );
 
-			final var deferredResultSetAccess = finalizedResult == null ? new DeferredResultSetAccess(
+			deferredResultSetAccess = finalizedResult == null ? new DeferredResultSetAccess(
 					jdbcSelect,
 					jdbcParameterBindings,
 					executionContext,
@@ -247,7 +248,27 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			return result;
 		}
 		catch (RuntimeException | Error e) {
-			actionExecution.cleanupAfterFailure( e, statementAccess, connection, executionContext, loadedValuesCollector );
+			try {
+				actionExecution.cleanupAfterFailure( e, statementAccess, connection, executionContext, loadedValuesCollector );
+			}
+			catch (RuntimeException | Error cleanupFailure) {
+				if ( cleanupFailure != e ) {
+					e.addSuppressed( cleanupFailure );
+				}
+			}
+			// A consumer may have created a cursor that we never handed to the caller.
+			// Release only this invocation's JDBC resources, without repeating consumer
+			// completion or query-cache finalization. Already released access is a no-op.
+			if ( deferredResultSetAccess != null ) {
+				try {
+					deferredResultSetAccess.release();
+				}
+				catch (RuntimeException | Error releaseFailure) {
+					if ( releaseFailure != e ) {
+						e.addSuppressed( releaseFailure );
+					}
+				}
+			}
 			throw e;
 		}
 	}

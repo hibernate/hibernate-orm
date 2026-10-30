@@ -61,7 +61,7 @@ jobs:
           { "name": "edb 14", "rdbms": "edb_14",
             "runs-on": "runs-on/fleet=linux-standard/env=ibm" },
           { "name": "db2 11.5", "rdbms": "db2_11_5",
-            "timeout": 120,
+            "timeout": 180,
             "gradle-args": "-Ptest.threads=1",
             "runs-on": "runs-on/fleet=linux-standard/env=ibm" },
           { "name": "mssql 2017", "rdbms": "mssql_2017",

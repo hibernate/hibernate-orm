@@ -204,6 +204,34 @@ when calling the superclass implementation.
 
 This section describes changes in behavior that applications should be aware of.
 
+[[pessimistic-refresh-visibility]]
+=== Refreshing pessimistically locked entities
+
+An equal or weaker refresh request now retains a non-incrementing pessimistic
+reload unless `LockingSupport.canUsePlainReadForRefresh(currentMode, requestedMode)`
+permits an ordinary read. This also applies to `refresh()` without an explicit
+mode. A held database lock does not guarantee that an ordinary read uses the
+locking read's view: on MySQL and MariaDB, it can consult an older snapshot and
+restore stale state or fail to find a row returned by the preceding locking read.
+
+The entry retains the appropriate existing lock mode. Refreshing an entity already
+locked with `PESSIMISTIC_FORCE_INCREMENT` does not repeat that increment, and
+optimistic refresh handling continues to avoid duplicate version actions.
+Wider requested scope still requires acquisition independently of the new predicate.
+
+The new default SPI method returns `false`, retaining a locking reload. A custom
+profile may return `true` for mode pairs where a plain reload preserves visibility
+and conflict semantics across its supported configurations. Additional locking SQL
+and normal dialect follow-on/timeout handling may therefore be observable.
+
+Standard `LockingSupport` profiles supply explicit policies. MySQL, MariaDB and TiDB
+retain locking reloads for all modes: even force increment may generate the same timestamp
+value, so its UPDATE need not establish own-write visibility. Informix permits a
+plain reload after a pessimistic force increment's transaction-duration write lock.
+Other standard `LockingSupport` profiles generally retain their previous plain reloads; selecting
+a standard simple/parameterized profile selects that policy as well. Independent
+custom implementations continue to inherit the interface's `false` default.
+
 [[follow-on-locking-missing-rows]]
 === Missing rows during follow-on locking
 

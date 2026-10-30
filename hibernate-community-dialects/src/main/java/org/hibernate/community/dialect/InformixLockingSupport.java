@@ -1,6 +1,7 @@
 package org.hibernate.community.dialect;
 
 import jakarta.persistence.Timeout;
+import org.hibernate.LockMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.Timeouts;
@@ -26,6 +27,13 @@ public class InformixLockingSupport
 	public static final LockingSupport LOCKING_SUPPORT = new InformixLockingSupport();
 
 	public InformixLockingSupport() {
+	}
+
+	@Override
+	public boolean canUsePlainReadForRefresh(LockMode currentLockMode, LockMode requestedLockMode) {
+		// Cursor update locks need not survive cursor closure. Only a preceding
+		// version write guarantees protection independently of retention settings.
+		return currentLockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT;
 	}
 
 	@Override

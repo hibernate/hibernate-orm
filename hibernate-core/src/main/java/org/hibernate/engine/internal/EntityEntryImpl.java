@@ -426,7 +426,9 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	public void forceLocked(Object entity, Object nextVersion) {
 		version = nextVersion;
 		final int versionProperty = persister.getVersionPropertyIndex();
-		loadedState[versionProperty] = version;
+		if ( loadedState != null ) {
+			loadedState[versionProperty] = version;
+		}
 		setLockMode( PESSIMISTIC_FORCE_INCREMENT );
 		persister.setValue( entity, versionProperty, nextVersion );
 	}

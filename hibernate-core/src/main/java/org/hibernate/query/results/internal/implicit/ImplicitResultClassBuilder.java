@@ -79,4 +79,22 @@ public class ImplicitResultClassBuilder implements ResultBuilder {
 	public ResultBuilder cacheKeyInstance() {
 		return this;
 	}
+
+	@Override
+	public boolean equals(Object object) {
+		if ( this == object ) {
+			return true;
+		}
+		else if ( !( object instanceof ImplicitResultClassBuilder that ) ) {
+			return false;
+		}
+		else {
+			return suppliedResultClass.equals( that.suppliedResultClass );
+		}
+	}
+
+	@Override
+	public int hashCode() {
+		return suppliedResultClass.hashCode();
+	}
 }

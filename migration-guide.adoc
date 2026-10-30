@@ -498,6 +498,19 @@ Such changes typically do not impact programs using a relational schema managed 
 // Dependency changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+[[soft-delete-set-keys]]
+=== Keys of soft-deleted set collections
+
+For set-valued collections using `@SoftDelete(strategy = TIMESTAMP)`, an implicit key including the deletion timestamp is generated when the dialect supports `nulls not distinct` unique constraints.
+This permits a previously deleted element to be added again while retaining its historical rows and enforcing uniqueness of live rows.
+On other dialects, no implicit key is generated for a timestamp soft-delete collection.
+
+For the boolean `ACTIVE` and `DELETED` strategies, Hibernate no longer generates an implicit primary key, unique key, or unique index for the collection table.
+A boolean marker cannot distinguish repeated historical deletions of the same element.
+Consequently, database-enforced uniqueness of live collection rows is not provided automatically for these strategies or for timestamp collections on dialects without `nulls not distinct` support.
+Applications requiring that guarantee must provide an appropriate database-specific constraint or index.
+Explicitly declared constraints are not removed; existing schemas must be migrated separately to remove incompatible implicit constraints.
+
 [[dependency-changes]]
 == Changes in Dependencies
 

@@ -431,6 +431,11 @@ public class SingleStatementBatchImpl implements SingleStatementBatch {
 	}
 
 	@Override
+	public int getBatchSize() {
+		return batchSizeToUse;
+	}
+
+	@Override
 	public String toString() {
 		return "SingleStatementBatchImpl(" + getKey().toLoggableString() + ")";
 	}

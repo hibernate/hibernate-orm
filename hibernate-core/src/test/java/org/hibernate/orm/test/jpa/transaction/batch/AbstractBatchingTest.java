@@ -169,6 +169,11 @@ public abstract class AbstractBatchingTest {
 			wrapped.release();
 			numberOfStatementsAfterRelease = wrapped.getStatementGroup().getNumberOfActiveStatements();
 		}
+
+		@Override
+		public int getBatchSize() {
+			return wrapped.getBatchSize();
+		}
 	}
 
 	public static class SingleStatementBatchWrapper implements SingleStatementBatch {
@@ -238,6 +243,11 @@ public abstract class AbstractBatchingTest {
 			wasReleaseCalled = true;
 			wrapped.release();
 			numberOfStatementsAfterRelease = 0;
+		}
+
+		@Override
+		public int getBatchSize() {
+			return wrapped.getBatchSize();
 		}
 	}
 }

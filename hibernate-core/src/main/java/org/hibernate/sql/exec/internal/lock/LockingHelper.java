@@ -154,6 +154,41 @@ public class LockingHelper {
 			return;
 		}
 
+		reportMissingRows( tableDetails, entityMappingType, missingKeys, session );
+	}
+
+	static void validateAcquiredIdentities(
+			TableDetails tableDetails,
+			EntityMappingType entityMappingType,
+			List<EntityKey> expectedKeys,
+			java.util.function.Predicate<EntityKey> acquired,
+			Timeout lockTimeout,
+			SharedSessionContractImplementor session) {
+		if ( lockTimeout.milliseconds() == SKIP_LOCKED_MILLI
+				|| !tableDetails.isIdentifierTable()
+						&& tableDetails instanceof TableMapping tableMapping && tableMapping.isOptional() ) {
+			return;
+		}
+		LinkedHashSet<EntityKey> missing = null;
+		for ( var key : expectedKeys ) {
+			if ( !acquired.test( key ) ) {
+				if ( missing == null ) {
+					missing = new LinkedHashSet<>();
+				}
+				missing.add( key );
+			}
+		}
+		if ( missing != null ) {
+			reportMissingRows( tableDetails, entityMappingType, missing, session );
+		}
+	}
+
+	private static void reportMissingRows(
+			TableDetails tableDetails,
+			EntityMappingType entityMappingType,
+			LinkedHashSet<EntityKey> missingKeys,
+			SharedSessionContractImplementor session) {
+		final var persister = entityMappingType.getEntityPersister();
 		final var firstMissing = missingKeys.iterator().next();
 		final var factory = session.getFactory();
 		final var identifiers = new StringJoiner( ", ", "[", "]" );
@@ -664,7 +699,13 @@ public class LockingHelper {
 		entityKeys.forEach( (entityKey) -> {
 			final Object instance = persistenceContext.getEntity( entityKey );
 			final var entityEntry = persistenceContext.getEntry( instance );
-			map.put( entityKey.getIdentifierValue(), new EntityDetails( entityKey, entityEntry, instance ) );
+			final var details = new EntityDetails( entityKey, entityEntry, instance );
+			if ( map instanceof EntityDetailsMap indexed ) {
+				indexed.putEntityKey( entityKey, details );
+			}
+			else {
+				map.put( entityKey.getIdentifierValue(), details );
+			}
 		} );
 		return map;
 	}

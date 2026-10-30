@@ -102,6 +102,27 @@ class CompositeIdentifierEntityDetailsMapTest {
 		assertThat( fixture.resolve() ).isEmpty();
 	}
 
+	@Test
+	void valuesViewRetainsMutationAndReplacementSemantics() {
+		final var fixture = new Fixture();
+		final var first = new Identifier( 1 );
+		final var second = new Identifier( 2 );
+		final var map = fixture.resolve( first, second );
+		final var values = map.values();
+		final var replacement = map.get( second );
+		map.entrySet().iterator().next().setValue( replacement );
+		assertThat( values ).containsExactly( replacement, replacement );
+		final var iterator = values.iterator();
+		iterator.next();
+		iterator.remove();
+		assertThat( map.containsKey( first ) ).isFalse();
+		map.put( first, null );
+		assertThat( values ).containsExactly( replacement, null );
+		assertThat( values.remove( null ) ).isTrue();
+		values.clear();
+		assertThat( map ).isEmpty();
+	}
+
 	private static class Fixture {
 		private final EntityPersister persister = mock( EntityPersister.class );
 		private final SharedSessionContractImplementor session = mock( SharedSessionContractImplementor.class );

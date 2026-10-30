@@ -152,6 +152,13 @@ Current stateless operations invoke applicable lifecycle callbacks and Hibernate
 They do not use the stateful action queue, and are not identical to stateful entity operations.
 See link:{doc-javadoc-url}org/hibernate/StatelessSession.html[`StatelessSession`] for operation-specific contracts.
 
+Explicit optimistic locking also has a different lifecycle: stateless requests obtain immediate database protection instead of scheduling stateful completion-time validation.
+Force-increment requests increment immediately.
+The protection required for stateless `OPTIMISTIC` must survive until transaction completion; a fresh version read or stable snapshot alone is insufficient.
+See <<locking-session-lifecycle,stateful and stateless locking timing>> and <<locking-concurrency-baseline,concurrency configuration>>.
+Stateless exceptions do not automatically mark the transaction rollback-only, but the database may still abort it and rollback does not restore detached object values.
+See <<locking-failures,locking failures>> before deciding whether a failed transaction can be reused.
+
 The standard multiple-operation methods submit a bounded group through one invocation:
 
 [[batch-stateless-session-example]]

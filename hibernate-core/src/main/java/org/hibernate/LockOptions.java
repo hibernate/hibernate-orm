@@ -23,13 +23,14 @@ import static java.util.Collections.emptySet;
  * <ul>
  * <li>the {@linkplain #getLockMode lock mode},
  * <li>the {@linkplain #getTimeOut pessimistic lock timeout}, and
- * <li>the {@linkplain #getLockScope lock scope}, that is, whether
- *     the lock extends to rows of owned collections.
+ * <li>the {@linkplain #getLockScope lock scope}, controlling which
+ *     entity, collection, or fetched association rows participate.
  * </ul>
  * <p>
- * Timeout and lock scope are ignored if the specified {@code LockMode}
- * represents a flavor of {@linkplain LockMode#OPTIMISTIC optimistic}
- * locking.
+ * For stateful sessions, timeout and pessimistic lock scope do not control
+ * deferred {@linkplain LockMode#OPTIMISTIC optimistic} validation or increment.
+ * A {@link StatelessSession} instead converts optimistic requests into
+ * immediate database protection.
  * <p>
  * In HQL and criteria queries, lock modes can be defined in an even
  * more granular fashion, with the option to specify a lock mode that
@@ -51,8 +52,8 @@ import static java.util.Collections.emptySet;
  * For HQL/JPQL queries, locking should be controlled via operations of
  * the {@link org.hibernate.query.SelectionQuery} interface:
  * <ul>
- * <li>A timeout may be set via
- * {@link org.hibernate.query.CommonQueryContract#setTimeout(Timeout)}
+ * <li>A lock acquisition timeout may be set via
+ * {@link org.hibernate.query.SelectionQuery#setLockTimeout(Timeout)}.
  * <li>The {@code PessimisticLockScope} may be set using
  * {@link org.hibernate.query.SelectionQuery#setLockScope(PessimisticLockScope)}
  * <li>Use of follow-on locking may be enabled via

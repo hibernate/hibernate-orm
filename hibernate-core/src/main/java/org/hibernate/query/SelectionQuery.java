@@ -720,6 +720,8 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * {@inheritDoc}
 	 *
 	 * @see #setHibernateLockMode
+	 * @see LockMode
+	 * @see Locking.FollowOn
 	 */
 	@Override
 	@Nonnull
@@ -738,6 +740,13 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * {@inheritDoc}
 	 *
 	 * @see #setLockMode(LockModeType)
+	 * @apiNote Pessimistic locking uses direct or follow-on acquisition according
+	 * to the dialect, query shape, and {@linkplain #setFollowOnStrategy policy}.
+	 * Follow-on acquisition requires entity results covering every requested
+	 * lock target and does not support skip-locked requests. Scalar projections,
+	 * aggregates, and pagination are not universally supported or rejected:
+	 * support depends on the chosen strategy and dialect. Acquiring a lock does
+	 * not generally refresh an existing managed instance.
 	 */
 	@Override
 	@Nonnull
@@ -755,6 +764,10 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	/**
 	 * {@inheritDoc}
 	 *
+	 * Normal scope covers mapped entity-table rows. Extended scope adds the
+	 * applicable owned collection and join-table rows; fetched scope follows
+	 * the operation's fetch plan. A fetch plan is not a recursive graph lock.
+	 *
 	 * @since 8.0
 	 */
 	@Override
@@ -770,15 +783,22 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	Timeout getLockTimeout();
 
 	/**
-	 * Specify a pessimistic lock timeout.
+	 * Specify a pessimistic lock acquisition timeout, subject to dialect
+	 * support and precision. This controls waiting for database protection,
+	 * not total query execution, transaction duration, or an overall deadline
+	 * for all follow-on statements.
 	 *
+	 * @see org.hibernate.Timeouts
 	 * @since 8.0
 	 */
 	@Nonnull
 	SelectionQuery<R> setLockTimeout(@Nullable Timeout lockTimeout);
 
 	/**
-	 * Specifies whether follow-on locking should be applied
+	 * Specify the {@linkplain Locking.FollowOn follow-on acquisition policy}.
+	 * Selection and acquisition are separate phases; acquisition does not
+	 * rerun the selection predicate or establish unchanged page membership.
+	 * The result mapping and requested options must support the chosen policy.
 	 */
 	@Override
 	@Nonnull

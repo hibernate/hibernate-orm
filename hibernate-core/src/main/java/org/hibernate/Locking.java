@@ -23,25 +23,44 @@ public interface Locking {
 	 * In certain circumstances, Hibernate may need to acquire locks
 	 * through the use of additional queries.  For example, some
 	 * databases may not allow locking rows for queries with a join or
-	 * with pagination.  In such cases, Hibernate will fall back
-	 * to issuing additional queries to lock the matching rows.
-	 * This option controls whether Hibernate is allowed to use
-	 * this approach.
+	 * with pagination. This option controls whether Hibernate may select
+	 * entities first and acquire their locks with additional statements.
+	 * <p>
+	 * Selection and acquisition are separate phases. Concurrent changes
+	 * may occur between them; acquisition does not rerun the original
+	 * predicate or establish unchanged page membership. Existing managed
+	 * state is not generally refreshed. A required row disappearing causes
+	 * a stale-state failure, rather than successful acquisition.
+	 * <p>
+	 * Follow-on acquisition requires entity results covering every requested
+	 * entity lock target. Scalar attributes, identifiers, scalar-only DTOs,
+	 * and scalar aggregate results do not provide this coverage. Mixed results
+	 * and DTOs containing entities may provide it. Skip-locked requests are
+	 * incompatible with follow-on acquisition. Hibernate rejects these known
+	 * incompatible combinations before executing the selection SQL.
+	 * <p>
+	 * Locking a graph root through this approach does not establish that
+	 * protected graph state was read after root acquisition. Applications
+	 * coordinating graph access must establish that ordering themselves.
+	 *
+	 * @see org.hibernate.query.SelectionQuery#setFollowOnStrategy(FollowOn)
 	 */
 	enum FollowOn implements FindOption, LockOption, RefreshOption {
 		/**
-		 * Allow follow-on locking when necessary.
+		 * Allow follow-on locking when necessary and supported for the result
+		 * mapping and requested options.
 		 */
 		ALLOW,
 
 		/**
 		 * Disallow follow-on locking, throwing an exception instead.
+		 * This does not make an unsupported direct locking clause valid.
 		 */
 		DISALLOW,
 
 		/**
-		 * Disallow follow-on locking, but ignoring the situation
-		 * rather than throw an exception.
+		 * Allow execution without the expected locks when follow-on
+		 * acquisition would be required.
 		 *
 		 * @apiNote This can lead to rows not being locked
 		 * when they are expected to be.
@@ -51,9 +70,10 @@ public interface Locking {
 		IGNORE,
 
 		/**
-		 * Force the use of follow-on locking.
+		 * Request follow-on locking, subject to the applicable execution path,
+		 * result mapping, and dialect support.
 		 *
-		 * @apiNote This may lead to exceptions from the database.
+		 * @apiNote Incompatible requests may be rejected by Hibernate or the database.
 		 */
 		FORCE;
 

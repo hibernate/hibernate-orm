@@ -1075,36 +1075,41 @@ Book book = session.get(Book.class, isbn, LockMode.PESSIMISTIC_WRITE);
 
 We can also link:{doc-javadoc-url}/org/hibernate/query/SelectionQuery.html#setLockMode(jakarta.persistence.LockModeType)[specify] a `LockMode` for a query.
 
-A lock mode can be used to request a pessimistic lock, or to customize the behavior of optimistic locking:
+A lock mode can be used to request a pessimistic lock, or to customize the behavior of optimistic locking.
+The following table describes stateful session timing; stateless differences are explained below.
 
 .Optimistic and pessimistic lock modes
 [%breakable,cols="26,~"]
 |===
 | `LockMode` type | Meaning
 
-| `READ`                        | An optimistic lock obtained implicitly whenever
-an entity is read from the database using `select`
-| `OPTIMISTIC`                  | An optimistic lock obtained when an entity is
-read from the database, and verified using a
-`select` to check the version when the
-transaction completes
-| `OPTIMISTIC_FORCE_INCREMENT`  | An optimistic lock obtained when an entity is
-read from the database, and enforced using an
-`update` to increment the version when the
-transaction completes
-| `WRITE`                       | A pessimistic lock obtained implicitly whenever
-an entity is written to the database using
-`update` or `insert`
-| `PESSIMISTIC_READ`            | A pessimistic `for share` lock
-| `PESSIMISTIC_WRITE`           | A pessimistic `for update` lock
+| `READ`                        | Records that an entity was read from the database;
+does not itself request explicit optimistic validation or a transaction-long shared lock
+| `OPTIMISTIC`                  | Request version validation before transaction completion,
+including for an unchanged managed entity
+| `OPTIMISTIC_FORCE_INCREMENT`  | Request version validation and increment before transaction
+completion, even when the entity is unchanged
+| `WRITE`                       | Internal state recorded after an entity write;
+not an application lock request
+| `PESSIMISTIC_READ`            | Shared database protection against conflicting writes;
+may use stronger protection where shared locks are unavailable
+| `PESSIMISTIC_WRITE`           | Exclusive database protection against conflicting writes
+and incompatible locking requests; ordinary snapshot reads may still proceed
 | `PESSIMISTIC_FORCE_INCREMENT` | A pessimistic lock enforced using an immediate
 `update` to increment the version
-| `NONE`                        | No lock; assigned when an entity is read from the second-level cache
+| `NONE`                        | No explicit lock requested; permits retrieval from a cache
 |===
 
-Note that an `OPTIMISTIC` lock is always verified at the end of the transaction, even when the entity has not been modified.
-This is slightly different to what most people mean when they talk about an "optimistic lock".
-It's never necessary to request an `OPTIMISTIC` lock on a modified entity, since the version number is always verified when a SQL `update` is executed.
+For a stateful session, `OPTIMISTIC` schedules version validation before transaction completion even when the entity has not been modified, while it remains managed.
+Merely reading a versioned entity does not schedule that validation.
+Automatic checks on eligible entity updates and deletes instead follow the mapping's versioned or versionless optimistic mutation strategy; bulk mutations do not automatically perform those per-entity checks.
+Stateless `EntityAgent` requests use immediate protection instead, and both force-increment modes increment immediately.
+See the link:{doc-user-guide-url}#locking-session-lifecycle[User Guide's locking lifecycle comparison].
+
+Lock acquisition does not generally refresh existing managed state.
+Use `refresh()` when it must be reloaded, taking the database's current-read and snapshot visibility into account.
+An equal or weaker mode retains stronger existing protection, but `EXTENDED` scope can still require collection-table acquisition.
+See the link:{doc-user-guide-url}#locking[locking chapter] for scope, follow-on acquisition gaps, and supported query combinations.
 
 [CAUTION]
 ====
@@ -1119,6 +1124,8 @@ A pessimistic lock request may be combined with an explicit `Timeout`.
 session.lock(book, LockMode.PESSIMISTIC_WRITE, Timeout.seconds(2))
 
 The interface link:{doc-javadoc-url}/org/hibernate/Timeouts.html[`Timeouts`] defines some special instances of `Timeout` which may be used to request use of link:{doc-javadoc-url}/org/hibernate/Timeouts.html#NO_WAIT[`for update nowait`] or link:{doc-javadoc-url}/org/hibernate/Timeouts.html#SKIP_LOCKED[`for update skip locked`] on databases which support these options.
+Skip-locked requires a supported selection operation and is incompatible with follow-on acquisition; it is not a `lock()` option for an existing managed entity.
+An acquisition timeout controls waiting for protection and is distinct from query execution and transaction timeouts.
 
 [source,java]
 session.lock(book, LockMode.PESSIMISTIC_WRITE, Timeouts.NO_WAIT)

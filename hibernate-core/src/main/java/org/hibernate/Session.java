@@ -103,6 +103,13 @@ import java.util.List;
 ///     to a more restrictive lock level by calling [#lock(Object,LockMode)] or
 ///     [#lock(Object,LockModeType)].
 ///
+/// Lock acquisition does not generally replace existing managed state. A
+/// [#find(Class,Object,FindOption...) find] or query may return an existing
+/// managed instance with its current state; use [#refresh(Object)] to reload it.
+/// Explicit optimistic validation is deferred until before transaction completion
+/// while the entity remains managed. Automatic mutation checks do not validate
+/// every entity that was only read.
+///
 /// A persistence context holds hard references to all its entities and prevents them
 /// from being garbage collected. Therefore, a `Session` is a short-lived object,
 /// and must be discarded as soon as a logical transaction ends. In extreme cases,
@@ -134,9 +141,10 @@ import java.util.List;
 ///
 /// It's crucially important to appreciate the following restrictions and why they exist:
 ///
-///   - If the `Session` throws an exception, the current transaction must be rolled
-///     back and the session must be discarded. The internal state of the `Session`
-///     cannot be expected to be consistent with the database after the exception occurs.
+///   - After a persistence failure that leaves the session unreliable, roll back
+///     the transaction and discard the session. Its internal state cannot be
+///     expected to be consistent with the database. Query result cardinality
+///     exceptions do not themselves imply such damage.
 ///   - At the end of a logical transaction, the session must be explicitly
 ///     [destroyed][#close()], so that all JDBC resources may be released.
 ///   - If a transaction is rolled back, the state of the persistence context and of its
@@ -145,6 +153,15 @@ import java.util.List;
 ///   - A `Session` is never thread-safe. It contains various different sorts of
 ///     fragile mutable state. Each thread or transaction must obtain its own dedicated
 ///     instance from the [SessionFactory].
+///
+/// Lock failures are classified using the database failure and API exception
+/// conversion. At a Jakarta Persistence boundary, a statement-level acquisition
+/// timeout is a [jakarta.persistence.LockTimeoutException], while a transaction-aborting
+/// pessimistic failure is a [jakarta.persistence.PessimisticLockException]. A
+/// `LockTimeoutException` does not itself require a rollback-only mark, but does
+/// not prove the database transaction or persistence context remains usable.
+/// Deferred optimistic failures may surface during completion, possibly wrapped
+/// in [jakarta.persistence.RollbackException].
 ///
 /// An easy way to be sure that session and transaction management is being done correctly
 /// is to [let the factory do it][SessionFactory#inTransaction(java.util.function.Consumer)]:
@@ -485,6 +502,11 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// The option [KeyType#NATURAL] specifies that the given id should be interpreted as a
 	/// [natural id][org.hibernate.annotations.NaturalId].
 	///
+	/// A requested lock is acquired as appropriate for an existing managed
+	/// instance, but does not generally replace its state. Use [#refresh(Object)]
+	/// when that state must be reloaded. See [LockMode] for mode composition and
+	/// [Locking.FollowOn] for acquisition restrictions.
+	///
 	/// @param entityType the entity type
 	/// @param id an identifier
 	/// @param options options controlling the behavior of the operation
@@ -663,8 +685,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///   - immediately increment the version of the given instance by requesting
 	///     [LockMode#PESSIMISTIC_FORCE_INCREMENT].
 	///
-	/// If the requested lock mode is already held on the given entity, this
-	/// operation has no effect.
+	/// An equal or weaker request retains the stronger existing mode. For
+	/// additional acquisition options, including wider scope, see
+	/// [#lock(Object,LockMode,LockOption...)]. This operation does not generally
+	/// reload managed state; use [#refresh(Object)] when a reload is needed.
 	///
 	/// The modes [LockMode#WRITE] and [LockMode#UPGRADE_SKIPLOCKED]
 	/// are not legal arguments to `lock()`.
@@ -690,8 +714,15 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///   - immediately increment the version of the given instance by requesting
 	///     [LockMode#PESSIMISTIC_FORCE_INCREMENT].
 	///
-	/// If the requested lock mode is already held on the given entity, this
-	/// operation has no effect.
+	/// An equal or weaker request retains the stronger existing mode. A
+	/// [jakarta.persistence.PessimisticLockScope#EXTENDED] pessimistic request
+	/// may still acquire collection or owned join-table locks, including after
+	/// collection replacement. Scope acquisition alone does not repeat an
+	/// already-performed forced version increment. See [LockMode] for mode
+	/// composition and [Locking.FollowOn] for acquisition restrictions.
+	///
+	/// This operation does not generally reload managed state; use
+	/// [#refresh(Object)] when a reload is needed.
 	///
 	/// The modes [LockMode#WRITE] and [LockMode#UPGRADE_SKIPLOCKED]
 	/// are not legal arguments to `lock()`.
@@ -718,12 +749,23 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// This operation requests [LockMode#READ]. To obtain a stronger lock,
 	/// call [#refresh(Object,RefreshOption...)], passing the appropriate
 	/// [LockMode] as an option.
+	/// Existing pessimistic protection is preserved. Depending on the dialect,
+	/// retaining that protection may require a locking read even though this
+	/// overload requests only `READ`. Reload visibility follows the database's
+	/// current-read and snapshot rules.
 	///
 	/// @param object a persistent instance associated with this session
 	@Override
 	void refresh(@Nonnull Object object);
 
 	/// {@inheritDoc}
+	///
+	/// Reloads managed state while preserving an existing stronger pessimistic
+	/// mode. An equal or weaker request may still require a locking read to
+	/// preserve its semantics. Retaining a force-increment mode alone does not
+	/// repeat the increment. Reload visibility follows the database's current-read
+	/// and snapshot rules; refreshing the root does not refresh every associated
+	/// entity unless the applicable refresh cascade includes it.
 	///
 	/// @param object a persistent instance associated with this session
 	/// @param options options controlling the behavior of the operation

@@ -194,6 +194,7 @@ import org.hibernate.sql.exec.spi.JdbcPaginationApplication;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcOperations;
 import org.hibernate.sql.exec.internal.VersionTypeSeedParameterSpecification;
+import org.hibernate.sql.exec.internal.lock.LockingHelper;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
@@ -993,6 +994,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final LockingSupport lockingSupport = getDialect().getLockingSupport();
 		final LockingSupport.Metadata lockingSupportMetadata = lockingSupport.getMetadata();
 		final LockStrategy lockStrategy = determineLockingStrategy( lockingTarget, lockOptions.getFollowOnStrategy() );
+		if ( lockStrategy == LockStrategy.FOLLOW_ON ) {
+			LockingHelper.validateFollowOnLocking( lockOptions );
+		}
 
 		return getSessionFactory().getJdbcSelectWithActionsBuilder()
 				.setPrimaryAction( jdbcSelect )

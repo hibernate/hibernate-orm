@@ -9,6 +9,7 @@ import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.TupleTransformer;
+import org.hibernate.sql.exec.internal.lock.LockingHelper;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcLockingApplication;
@@ -22,6 +23,7 @@ import org.hibernate.sql.results.internal.RowTransformerTupleTransformerAdapter;
 import org.hibernate.sql.results.jdbc.internal.AbstractJdbcValues;
 import org.hibernate.sql.results.jdbc.internal.CachedJdbcValuesMetadata;
 import org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess;
+import org.hibernate.sql.results.jdbc.internal.JdbcSelectSqlFinalizer;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesCacheHit;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
@@ -125,6 +127,20 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 		final var session = executionContext.getSession();
 		final var factory = session.getFactory();
+		// Only skip-locked requests need a late raw-SQL decision before actions
+		// or connection acquisition. Keep all other finalization at its usual point.
+		JdbcSelectSqlFinalizer.FinalizedResult finalizedResult = null;
+		final var queryOptions = executionContext.getQueryOptions();
+		final var lockOptions = queryOptions == null ? null : queryOptions.getLockOptions();
+		if ( LockingHelper.isSkipLockedRequest( lockOptions ) ) {
+			if ( jdbcSelect.getLockingApplication() == JdbcLockingApplication.FOLLOW_ON ) {
+				LockingHelper.validateFollowOnLocking( lockOptions );
+			}
+			else if ( jdbcSelect.getLockingApplication() == JdbcLockingApplication.RAW_SQL ) {
+				finalizedResult = JdbcSelectSqlFinalizer.finalizeSql(
+						jdbcSelect, jdbcParameterBindings, executionContext );
+			}
+		}
 		final var logicalConnection = session.getJdbcCoordinator().getLogicalConnection();
 
 		final var connection = logicalConnection.getPhysicalConnection();
@@ -134,12 +150,15 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		try {
 			actionExecution.performPreActions( statementAccess, connection, executionContext );
 
-			final var deferredResultSetAccess = new DeferredResultSetAccess(
+			final var deferredResultSetAccess = finalizedResult == null ? new DeferredResultSetAccess(
 					jdbcSelect,
 					jdbcParameterBindings,
 					executionContext,
 					statementCreator,
 					resultCountEstimate
+			) : new DeferredResultSetAccess(
+					jdbcSelect, jdbcParameterBindings, executionContext, statementCreator, resultCountEstimate,
+					finalizedResult
 			);
 			final var jdbcValues = resolveJdbcValuesSource(
 					executionContext.getQueryIdentifier( deferredResultSetAccess.getFinalSql() ),

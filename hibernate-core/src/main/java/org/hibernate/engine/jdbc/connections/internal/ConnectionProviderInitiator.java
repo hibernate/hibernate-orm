@@ -113,7 +113,10 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			}
 		}
 
-		return instantiateConnectionProvider( configurationValues, strategySelector, beanContainer );
+		return registry.requireService( org.hibernate.context.spi.MultiTenancy.class )
+				.getTenantDataSourceMapper() == null
+				? instantiateConnectionProvider( configurationValues, strategySelector, beanContainer )
+				: new DataSourceConnectionProvider();
 	}
 
 	private static Class<? extends ConnectionProvider> connectionProviderClass(Class<?> providerClass) {

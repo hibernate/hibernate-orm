@@ -6,6 +6,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.Internal;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
@@ -45,7 +46,8 @@ public final class SequenceInformationExtractorTiDBDatabaseImpl implements Seque
 	}
 
 	@Override
-	public Iterable<SequenceInformation> extractMetadata(ExtractionContext extractionContext) throws SQLException {
+	public @Nonnull Iterable<SequenceInformation> extractMetadata(
+			@Nonnull ExtractionContext extractionContext) throws SQLException {
 		final var identifierHelper = extractionContext.getJdbcEnvironment().getIdentifierHelper();
 
 		final List<SequenceInformation> sequenceInformationList = new ArrayList<>();

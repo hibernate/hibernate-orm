@@ -4,6 +4,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
@@ -78,33 +79,33 @@ public class DatabaseInformationImpl
 	}
 
 	@Override
-	public boolean catalogExists(Identifier catalog) {
+	public boolean catalogExists(@Nonnull Identifier catalog) {
 		return extractor.catalogExists( context.catalogWithDefault( catalog ) );
 	}
 
 	@Override
-	public boolean schemaExists(Namespace.Name namespace) {
+	public boolean schemaExists(@Nonnull Namespace.Name namespace) {
 		return extractor.schemaExists( context.catalogWithDefault( namespace.catalog() ),
 				context.schemaWithDefault( namespace.schema() ) );
 	}
 
 	@Override
-	public TableInformation getTableInformation(
-			Identifier catalogName,
-			Identifier schemaName,
-			Identifier tableName) {
+	public @Nullable TableInformation getTableInformation(
+			@Nullable Identifier catalogName,
+			@Nullable Identifier schemaName,
+			@Nonnull Identifier tableName) {
 		return getTableInformation( new QualifiedTableName( catalogName, schemaName, tableName ) );
 	}
 
 	@Override
-	public TableInformation getTableInformation(
-			Namespace.Name namespace,
-			Identifier tableName) {
+	public @Nullable TableInformation getTableInformation(
+			@Nonnull Namespace.Name namespace,
+			@Nonnull Identifier tableName) {
 		return getTableInformation( new QualifiedTableName( namespace, tableName ) );
 	}
 
 	@Override
-	public TableInformation getTableInformation(QualifiedTableName tableName) {
+	public @Nullable TableInformation getTableInformation(@Nonnull QualifiedTableName tableName) {
 		if ( tableName.getObjectName() == null ) {
 			throw new IllegalArgumentException( "Passed table name cannot be null" );
 		}
@@ -116,26 +117,28 @@ public class DatabaseInformationImpl
 	}
 
 	@Override
-	public NameSpaceTablesInformation getTablesInformation(Namespace namespace) {
+	public @Nonnull NameSpaceTablesInformation getTablesInformation(@Nonnull Namespace namespace) {
 		return extractor.getTables( context.catalogWithDefault( namespace.getPhysicalName().catalog() ),
 				context.schemaWithDefault( namespace.getPhysicalName().schema() ) );
 	}
 
 	@Override
-	public SequenceInformation getSequenceInformation(
-			Identifier catalogName,
-			Identifier schemaName,
-			Identifier sequenceName) {
+	public @Nullable SequenceInformation getSequenceInformation(
+			@Nullable Identifier catalogName,
+			@Nullable Identifier schemaName,
+			@Nonnull Identifier sequenceName) {
 		return getSequenceInformation( new QualifiedSequenceName( catalogName, schemaName, sequenceName ) );
 	}
 
 	@Override
-	public SequenceInformation getSequenceInformation(Namespace.Name schemaName, Identifier sequenceName) {
+	public @Nullable SequenceInformation getSequenceInformation(
+			@Nonnull Namespace.Name schemaName,
+			@Nonnull Identifier sequenceName) {
 		return getSequenceInformation( new QualifiedSequenceName( schemaName, sequenceName ) );
 	}
 
 	@Override
-	public SequenceInformation getSequenceInformation(QualifiedSequenceName sequenceName) {
+	public @Nullable SequenceInformation getSequenceInformation(@Nonnull QualifiedSequenceName sequenceName) {
 		return locateSequenceInformation( sequenceName );
 	}
 
@@ -145,12 +148,12 @@ public class DatabaseInformationImpl
 	}
 
 	@Override
-	public @Nullable TableInformation locateTableInformation(QualifiedTableName tableName) {
+	public @Nullable TableInformation locateTableInformation(@Nonnull QualifiedTableName tableName) {
 		return getTableInformation( tableName );
 	}
 
 	@Override
-	public SequenceInformation locateSequenceInformation(QualifiedSequenceName sequenceName) {
+	public @Nullable SequenceInformation locateSequenceInformation(@Nonnull QualifiedSequenceName sequenceName) {
 		// again, follow legacy behavior
 		if ( sequenceName.getCatalogName() != null || sequenceName.getSchemaName() != null ) {
 			sequenceName = unqualifiedSequenceName( sequenceName );
@@ -159,17 +162,18 @@ public class DatabaseInformationImpl
 	}
 
 	@Override
-	public PrimaryKeyInformation locatePrimaryKeyInformation(QualifiedTableName tableName) {
+	public @Nullable PrimaryKeyInformation locatePrimaryKeyInformation(@Nonnull QualifiedTableName tableName) {
 		return extractor.getPrimaryKey( locateNonNullTableInformation( tableName ) );
 	}
 
 	@Override
-	public Iterable<ForeignKeyInformation> locateForeignKeyInformation(QualifiedTableName tableName) {
+	public @Nonnull Iterable<ForeignKeyInformation> locateForeignKeyInformation(
+			@Nonnull QualifiedTableName tableName) {
 		return extractor.getForeignKeys( locateNonNullTableInformation( tableName ) );
 	}
 
 	@Override
-	public Iterable<IndexInformation> locateIndexesInformation(QualifiedTableName tableName) {
+	public @Nonnull Iterable<IndexInformation> locateIndexesInformation(@Nonnull QualifiedTableName tableName) {
 		return extractor.getIndexes( locateNonNullTableInformation( tableName ) );
 	}
 

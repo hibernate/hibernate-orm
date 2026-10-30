@@ -22,7 +22,7 @@ import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
  */
 public class ConfigurationServiceImpl implements ConfigurationService, ServiceRegistryAwareService {
 
-	private final Map<String, Object> settings;
+	private final @Nonnull Map<String, Object> settings;
 	private ServiceRegistryImplementor serviceRegistry;
 
 	/**
@@ -46,19 +46,25 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 	}
 
 	@Override
-	public <T> @Nullable T getSetting(String name, Converter<T> converter) {
+	public <T> @Nullable T getSetting(@Nonnull String name, @Nonnull Converter<T> converter) {
 		final Object value = settings.get( name );
 		return value == null ? null : converter.convert( value );
 	}
 
 	@Override
-	public <T> @Nonnull T getSetting(String name, Converter<T> converter, @Nonnull T defaultValue) {
+	public <T> @Nonnull T getSetting(
+			@Nonnull String name,
+			@Nonnull Converter<T> converter,
+			@Nonnull T defaultValue) {
 		final Object value = settings.get( name );
 		return value == null ? defaultValue : converter.convert( value );
 	}
 
 	@Override
-	public <T> @Nonnull T getSetting(String name, Class<T> expected, @Nonnull T defaultValue) {
+	public <T> @Nonnull T getSetting(
+			@Nonnull String name,
+			@Nonnull Class<T> expected,
+			@Nonnull T defaultValue) {
 		final Object value = settings.get( name );
 		final T target = cast( expected, value );
 		return target !=null ? target : defaultValue;

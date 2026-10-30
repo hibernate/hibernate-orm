@@ -1,11 +1,13 @@
 package org.hibernate.tool.schema.extract.spi;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.SPI;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 
+import static java.util.Collections.emptyList;
 import static org.hibernate.SPI.Role.USE;
 
 /// Create immutable sequence-information extractors from lookup SQL and row
@@ -21,24 +23,27 @@ import static org.hibernate.SPI.Role.USE;
 /// @author Steve Ebersole
 @SPI(USE)
 public final class SequenceInformationExtractors {
-	private static final SequenceInformationExtractor NONE = extractionContext -> Collections.emptyList();
+	private static final @Nonnull SequenceInformationExtractor NONE = extractionContext -> emptyList();
 
 	private SequenceInformationExtractors() {
 	}
 
 	/// Return the stable extractor which performs no JDBC operation and reports
 	/// no sequences.
+	@Nonnull
 	public static SequenceInformationExtractor none() {
 		return NONE;
 	}
 
 	/// Begin configuring an extractor which executes `lookupSql` exactly once.
+	@Nonnull
 	public static Builder builder(String lookupSql) {
 		return new Builder( requireText( lookupSql, "lookupSql" ) );
 	}
 
 	/// Create immutable sequence information preserving the supplied nullable
 	/// numeric value references exactly.
+	@Nonnull
 	public static SequenceInformation information(
 			QualifiedSequenceName name,
 			Number startValue,
@@ -51,14 +56,17 @@ public final class SequenceInformationExtractors {
 		return new StandardSequenceInformation( name, startValue, minimumValue, maximumValue, incrementValue );
 	}
 
-	private static String requireText(String value, String description) {
+	@Nonnull
+	private static String requireText(@Nullable String value, @Nonnull String description) {
 		if ( value == null || value.isBlank() ) {
 			throw new IllegalArgumentException( description + " must not be null or blank" );
 		}
 		return value;
 	}
 
-	private static <T> T requireReader(T reader, String description) {
+
+	@Nonnull
+	private static <T> T requireReader(@Nullable T reader, @Nonnull String description) {
 		if ( reader == null ) {
 			throw new IllegalArgumentException( description + " must not be null" );
 		}
@@ -75,26 +83,28 @@ public final class SequenceInformationExtractors {
 	/// @author Steve Ebersole
 	@SPI(USE)
 	public static final class Builder {
-		private final String lookupSql;
-		private SequenceMetadataValueReader<String> sequenceNameReader = row -> row.getString( "sequence_name" );
-		private SequenceMetadataValueReader<String> catalogReader = row -> row.getString( "sequence_catalog" );
-		private SequenceMetadataValueReader<String> schemaReader = row -> row.getString( "sequence_schema" );
-		private SequenceMetadataValueReader<? extends Number> startValueReader = row -> row.getLong( "start_value" );
-		private SequenceMetadataValueReader<? extends Number> minimumValueReader = row -> row.getLong( "minimum_value" );
-		private SequenceMetadataValueReader<? extends Number> maximumValueReader = row -> row.getLong( "maximum_value" );
-		private SequenceMetadataValueReader<? extends Number> incrementValueReader = row -> row.getLong( "increment" );
+		private final @Nonnull String lookupSql;
+		private @Nonnull SequenceMetadataValueReader<String> sequenceNameReader = row -> row.getString( "sequence_name" );
+		private @Nonnull SequenceMetadataValueReader<String> catalogReader = row -> row.getString( "sequence_catalog" );
+		private @Nonnull SequenceMetadataValueReader<String> schemaReader = row -> row.getString( "sequence_schema" );
+		private @Nonnull SequenceMetadataValueReader<? extends Number> startValueReader = row -> row.getLong( "start_value" );
+		private @Nonnull SequenceMetadataValueReader<? extends Number> minimumValueReader = row -> row.getLong( "minimum_value" );
+		private @Nonnull SequenceMetadataValueReader<? extends Number> maximumValueReader = row -> row.getLong( "maximum_value" );
+		private @Nonnull SequenceMetadataValueReader<? extends Number> incrementValueReader = row -> row.getLong( "increment" );
 
-		private Builder(String lookupSql) {
+		private Builder(@Nonnull String lookupSql) {
 			this.lookupSql = lookupSql;
 		}
 
 		/// Read the sequence name with `ResultSet#getString(label)`.
+		@Nonnull
 		public Builder sequenceNameColumn(String label) {
 			final String column = requireText( label, "sequence name column label" );
 			return sequenceNameReader( row -> row.getString( column ) );
 		}
 
 		/// Read the sequence name with `ResultSet#getString(position)`.
+		@Nonnull
 		public Builder sequenceNameColumn(int position) {
 			if ( position < 1 ) {
 				throw new IllegalArgumentException( "sequence name column position must be at least one" );
@@ -103,120 +113,140 @@ public final class SequenceInformationExtractors {
 		}
 
 		/// Read the sequence name with `reader`.
+		@Nonnull
 		public Builder sequenceNameReader(SequenceMetadataValueReader<String> reader) {
 			sequenceNameReader = requireReader( reader, "sequence name reader" );
 			return this;
 		}
 
 		/// Read the catalog with `ResultSet#getString(label)`.
+		@Nonnull
 		public Builder catalogColumn(String label) {
 			final String column = requireText( label, "catalog column label" );
 			return catalogReader( row -> row.getString( column ) );
 		}
 
 		/// Read the catalog with `reader`.
+		@Nonnull
 		public Builder catalogReader(SequenceMetadataValueReader<String> reader) {
 			catalogReader = requireReader( reader, "catalog reader" );
 			return this;
 		}
 
 		/// Do not read a catalog; report it as `null`.
+		@Nonnull
 		public Builder withoutCatalog() {
 			catalogReader = row -> null;
 			return this;
 		}
 
 		/// Read the schema with `ResultSet#getString(label)`.
+		@Nonnull
 		public Builder schemaColumn(String label) {
 			final String column = requireText( label, "schema column label" );
 			return schemaReader( row -> row.getString( column ) );
 		}
 
 		/// Read the schema with `reader`.
+		@Nonnull
 		public Builder schemaReader(SequenceMetadataValueReader<String> reader) {
 			schemaReader = requireReader( reader, "schema reader" );
 			return this;
 		}
 
 		/// Do not read a schema; report it as `null`.
+		@Nonnull
 		public Builder withoutSchema() {
 			schemaReader = row -> null;
 			return this;
 		}
 
 		/// Read the start value with `ResultSet#getLong(label)`.
+		@Nonnull
 		public Builder startValueColumn(String label) {
 			final String column = requireText( label, "start-value column label" );
 			return startValueReader( row -> row.getLong( column ) );
 		}
 
 		/// Read the start value with `reader`.
+		@Nonnull
 		public Builder startValueReader(SequenceMetadataValueReader<? extends Number> reader) {
 			startValueReader = requireReader( reader, "start-value reader" );
 			return this;
 		}
 
 		/// Do not read a start value; report it as `null`.
+		@Nonnull
 		public Builder withoutStartValue() {
 			startValueReader = row -> null;
 			return this;
 		}
 
 		/// Read the minimum value with `ResultSet#getLong(label)`.
+		@Nonnull
 		public Builder minimumValueColumn(String label) {
 			final String column = requireText( label, "minimum-value column label" );
 			return minimumValueReader( row -> row.getLong( column ) );
 		}
 
 		/// Read the minimum value with `reader`.
+		@Nonnull
 		public Builder minimumValueReader(SequenceMetadataValueReader<? extends Number> reader) {
 			minimumValueReader = requireReader( reader, "minimum-value reader" );
 			return this;
 		}
 
 		/// Do not read a minimum value; report it as `null`.
+		@Nonnull
 		public Builder withoutMinimumValue() {
 			minimumValueReader = row -> null;
 			return this;
 		}
 
 		/// Read the maximum value with `ResultSet#getLong(label)`.
+		@Nonnull
 		public Builder maximumValueColumn(String label) {
 			final String column = requireText( label, "maximum-value column label" );
 			return maximumValueReader( row -> row.getLong( column ) );
 		}
 
 		/// Read the maximum value with `reader`.
+		@Nonnull
 		public Builder maximumValueReader(SequenceMetadataValueReader<? extends Number> reader) {
 			maximumValueReader = requireReader( reader, "maximum-value reader" );
 			return this;
 		}
 
 		/// Do not read a maximum value; report it as `null`.
+		@Nonnull
 		public Builder withoutMaximumValue() {
 			maximumValueReader = row -> null;
 			return this;
 		}
 
 		/// Read the increment value with `ResultSet#getLong(label)`.
+		@Nonnull
 		public Builder incrementValueColumn(String label) {
 			final String column = requireText( label, "increment-value column label" );
 			return incrementValueReader( row -> row.getLong( column ) );
 		}
 
 		/// Read the increment value with `reader`.
+		@Nonnull
 		public Builder incrementValueReader(SequenceMetadataValueReader<? extends Number> reader) {
 			incrementValueReader = requireReader( reader, "increment-value reader" );
 			return this;
 		}
 
 		/// Do not read an increment value; report it as `null`.
+		@Nonnull
 		public Builder withoutIncrementValue() {
 			incrementValueReader = row -> null;
 			return this;
 		}
 
 		/// Capture the current configuration in an immutable extractor.
+		@Nonnull
 		public SequenceInformationExtractor build() {
 			final SequenceMetadataValueReader<String> sequenceName = sequenceNameReader;
 			final SequenceMetadataValueReader<String> catalog = catalogReader;
@@ -257,27 +287,27 @@ public final class SequenceInformationExtractors {
 			Number maximumValue,
 			Number incrementValue) implements SequenceInformation {
 		@Override
-		public QualifiedSequenceName getSequenceName() {
+		public @Nonnull QualifiedSequenceName getSequenceName() {
 			return sequenceName;
 		}
 
 		@Override
-		public Number getStartValue() {
+		public @Nullable Number getStartValue() {
 			return startValue;
 		}
 
 		@Override
-		public Number getMinValue() {
+		public @Nullable Number getMinValue() {
 			return minimumValue;
 		}
 
 		@Override
-		public Number getMaxValue() {
+		public @Nullable Number getMaxValue() {
 			return maximumValue;
 		}
 
 		@Override
-		public Number getIncrementValue() {
+		public @Nullable Number getIncrementValue() {
 			return incrementValue;
 		}
 	}

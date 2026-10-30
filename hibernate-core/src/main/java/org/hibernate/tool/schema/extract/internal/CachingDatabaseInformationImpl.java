@@ -1,5 +1,12 @@
 package org.hibernate.tool.schema.extract.internal;
 
+import java.sql.SQLException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
@@ -16,12 +23,6 @@ import org.hibernate.tool.schema.extract.spi.NameSpaceTablesInformation;
 import org.hibernate.tool.schema.extract.spi.PrimaryKeyInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
-
-import java.sql.SQLException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * @since 7.2
@@ -40,7 +41,7 @@ public class CachingDatabaseInformationImpl extends DatabaseInformationImpl {
 	}
 
 	@Override
-	public @Nullable TableInformation locateTableInformation(QualifiedTableName tableName) {
+	public @Nullable TableInformation locateTableInformation(@Nonnull QualifiedTableName tableName) {
 		final var namespace = new Namespace.Name( tableName.getCatalogName(), tableName.getSchemaName() );
 		final var entry = namespaceCacheEntries.computeIfAbsent( namespace, k -> new NamespaceCacheEntry() );
 		NameSpaceTablesInformation nameSpaceTablesInformation = entry.tableInformation;
@@ -52,7 +53,7 @@ public class CachingDatabaseInformationImpl extends DatabaseInformationImpl {
 	}
 
 	@Override
-	public @Nullable PrimaryKeyInformation locatePrimaryKeyInformation(QualifiedTableName tableName) {
+	public @Nullable PrimaryKeyInformation locatePrimaryKeyInformation(@Nonnull QualifiedTableName tableName) {
 		final var namespace = new Namespace.Name( tableName.getCatalogName(), tableName.getSchemaName() );
 		final var entry = namespaceCacheEntries.computeIfAbsent( namespace, k -> new NamespaceCacheEntry() );
 		NameSpacePrimaryKeysInformation nameSpaceTablesInformation = entry.primaryKeysInformation;
@@ -64,7 +65,8 @@ public class CachingDatabaseInformationImpl extends DatabaseInformationImpl {
 	}
 
 	@Override
-	public Iterable<ForeignKeyInformation> locateForeignKeyInformation(QualifiedTableName tableName) {
+	public @Nonnull Iterable<ForeignKeyInformation> locateForeignKeyInformation(
+			@Nonnull QualifiedTableName tableName) {
 		final var namespace = new Namespace.Name( tableName.getCatalogName(), tableName.getSchemaName() );
 		final var entry = namespaceCacheEntries.computeIfAbsent( namespace, k -> new NamespaceCacheEntry() );
 		NameSpaceForeignKeysInformation nameSpaceTablesInformation = entry.foreignKeysInformation;
@@ -78,7 +80,7 @@ public class CachingDatabaseInformationImpl extends DatabaseInformationImpl {
 	}
 
 	@Override
-	public Iterable<IndexInformation> locateIndexesInformation(QualifiedTableName tableName) {
+	public @Nonnull Iterable<IndexInformation> locateIndexesInformation(@Nonnull QualifiedTableName tableName) {
 		final var namespace = new Namespace.Name( tableName.getCatalogName(), tableName.getSchemaName() );
 		final var entry = namespaceCacheEntries.computeIfAbsent( namespace, k -> new NamespaceCacheEntry() );
 		NameSpaceIndexesInformation nameSpaceTablesInformation = entry.indexesInformation;

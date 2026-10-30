@@ -3,6 +3,8 @@ package org.hibernate.tool.schema.extract.internal;
 import java.util.HashMap;
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -49,7 +51,7 @@ public class TableInformationImpl implements TableInformation {
 	}
 
 	@Override
-	public QualifiedTableName getName() {
+	public @Nonnull QualifiedTableName getName() {
 		return tableName;
 	}
 
@@ -59,12 +61,12 @@ public class TableInformationImpl implements TableInformation {
 	}
 
 	@Override
-	public String getComment() {
+	public @Nullable String getComment() {
 		return comment;
 	}
 
 	@Override
-	public ColumnInformation getColumn(Identifier columnIdentifier) {
+	public @Nullable ColumnInformation getColumn(@Nonnull Identifier columnIdentifier) {
 		return columns.get( new Identifier(
 				identifierHelper.toMetaDataObjectName( columnIdentifier ),
 				false
@@ -72,7 +74,7 @@ public class TableInformationImpl implements TableInformation {
 	}
 
 	@Override
-	public PrimaryKeyInformation getPrimaryKey() {
+	public @Nullable PrimaryKeyInformation getPrimaryKey() {
 		if ( ! wasPrimaryKeyLoaded ) {
 			primaryKey = extractor.getPrimaryKey( this );
 			wasPrimaryKeyLoaded = true;
@@ -81,7 +83,7 @@ public class TableInformationImpl implements TableInformation {
 	}
 
 	@Override
-	public Iterable<ForeignKeyInformation> getForeignKeys() {
+	public @Nonnull Iterable<ForeignKeyInformation> getForeignKeys() {
 		return foreignKeys().values();
 	}
 
@@ -97,7 +99,7 @@ public class TableInformationImpl implements TableInformation {
 	}
 
 	@Override
-	public ForeignKeyInformation getForeignKey(Identifier fkIdentifier) {
+	public @Nullable ForeignKeyInformation getForeignKey(@Nonnull Identifier fkIdentifier) {
 		return foreignKeys().get( new Identifier(
 				identifierHelper.toMetaDataObjectName( fkIdentifier ),
 				false
@@ -105,7 +107,7 @@ public class TableInformationImpl implements TableInformation {
 	}
 
 	@Override
-	public Iterable<IndexInformation> getIndexes() {
+	public @Nonnull Iterable<IndexInformation> getIndexes() {
 		return indexes().values();
 	}
 
@@ -121,12 +123,12 @@ public class TableInformationImpl implements TableInformation {
 	}
 
 	@Override
-	public void addColumn(ColumnInformation columnIdentifier) {
+	public void addColumn(@Nonnull ColumnInformation columnIdentifier) {
 		columns.put( columnIdentifier.getColumnIdentifier(), columnIdentifier );
 	}
 
 	@Override
-	public IndexInformation getIndex(Identifier indexName) {
+	public @Nullable IndexInformation getIndex(@Nonnull Identifier indexName) {
 		return indexes().get( new Identifier(
 				identifierHelper.toMetaDataObjectName( indexName ),
 				false

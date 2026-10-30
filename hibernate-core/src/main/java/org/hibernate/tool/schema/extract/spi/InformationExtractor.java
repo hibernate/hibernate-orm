@@ -1,5 +1,6 @@
 package org.hibernate.tool.schema.extract.spi;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.SPI;
@@ -30,7 +31,7 @@ public interface InformationExtractor {
 	 *
 	 * @return {@code true} if the catalog does exist; {@code false} otherwise
 	 */
-	boolean catalogExists(Identifier catalog);
+	boolean catalogExists(@Nonnull Identifier catalog);
 
 	/**
 	 * Does the given schema exist yet?
@@ -40,7 +41,7 @@ public interface InformationExtractor {
 	 *
 	 * @return {@code true} if the schema does exist; {@code false} otherwise
 	 */
-	boolean schemaExists(Identifier catalog, Identifier schema);
+	boolean schemaExists(@Nullable Identifier catalog, @Nullable Identifier schema);
 
 	/**
 	 * Look for a matching table.
@@ -53,7 +54,10 @@ public interface InformationExtractor {
 	 *
 	 * @return table info for the matching table
 	 */
-	TableInformation getTable(Identifier catalog, Identifier schema, Identifier tableName);
+	@Nullable TableInformation getTable(
+			@Nullable Identifier catalog,
+			@Nullable Identifier schema,
+			@Nonnull Identifier tableName);
 
 	/**
 	 * Extract all the tables information.
@@ -65,7 +69,9 @@ public interface InformationExtractor {
 	 *
 	 * @return a {@link NameSpaceTablesInformation}
 	 */
-	NameSpaceTablesInformation getTables(Identifier catalog, Identifier schema);
+	@Nonnull NameSpaceTablesInformation getTables(
+			@Nullable Identifier catalog,
+			@Nullable Identifier schema);
 
 	/**
 	 * Extract information about the given table's primary key.
@@ -74,7 +80,7 @@ public interface InformationExtractor {
 	 *
 	 * @return The extracted primary key information
 	 */
-	@Nullable PrimaryKeyInformation getPrimaryKey(TableInformation tableInformation);
+	@Nullable PrimaryKeyInformation getPrimaryKey(@Nonnull TableInformation tableInformation);
 
 	/**
 	 * Extract all the primary keys information.
@@ -88,7 +94,9 @@ public interface InformationExtractor {
 	 * @throws SchemaExtractionException when bulk extraction isn't supported
 	 * @since 7.2
 	 */
-	NameSpacePrimaryKeysInformation getPrimaryKeys(Identifier catalog, Identifier schema);
+	@Nonnull NameSpacePrimaryKeysInformation getPrimaryKeys(
+			@Nullable Identifier catalog,
+			@Nullable Identifier schema);
 
 	/**
 	 * Extract information about indexes defined against the given table.  Typically called from the TableInformation
@@ -98,7 +106,7 @@ public interface InformationExtractor {
 	 *
 	 * @return The extracted index information
 	 */
-	Iterable<IndexInformation> getIndexes(TableInformation tableInformation);
+	@Nonnull Iterable<IndexInformation> getIndexes(@Nonnull TableInformation tableInformation);
 
 	/**
 	 * Extract all the indexes information.
@@ -112,7 +120,9 @@ public interface InformationExtractor {
 	 * @throws SchemaExtractionException when bulk extraction isn't supported
 	 * @since 7.2
 	 */
-	NameSpaceIndexesInformation getIndexes(Identifier catalog, Identifier schema);
+	@Nonnull NameSpaceIndexesInformation getIndexes(
+			@Nullable Identifier catalog,
+			@Nullable Identifier schema);
 
 	/**
 	 * Extract information about foreign keys defined on the given table (targeting or point-at other tables).
@@ -122,7 +132,7 @@ public interface InformationExtractor {
 	 *
 	 * @return The extracted foreign-key information
 	 */
-	Iterable<ForeignKeyInformation> getForeignKeys(TableInformation tableInformation);
+	@Nonnull Iterable<ForeignKeyInformation> getForeignKeys(@Nonnull TableInformation tableInformation);
 
 	/**
 	 * Extract all the foreign keys information.
@@ -136,7 +146,9 @@ public interface InformationExtractor {
 	 * @throws SchemaExtractionException when bulk extraction isn't supported
 	 * @since 7.2
 	 */
-	NameSpaceForeignKeysInformation getForeignKeys(Identifier catalog, Identifier schema);
+	@Nonnull NameSpaceForeignKeysInformation getForeignKeys(
+			@Nullable Identifier catalog,
+			@Nullable Identifier schema);
 
 	/**
 	 * Can {@link #getPrimaryKeys(Identifier, Identifier)} be used?

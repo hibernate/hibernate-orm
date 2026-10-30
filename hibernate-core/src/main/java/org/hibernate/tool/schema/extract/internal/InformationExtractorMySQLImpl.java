@@ -1,5 +1,8 @@
 package org.hibernate.tool.schema.extract.internal;
 
+import java.sql.SQLException;
+
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
@@ -7,8 +10,6 @@ import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.NameSpaceForeignKeysInformation;
 import org.hibernate.tool.schema.extract.spi.NameSpaceIndexesInformation;
 import org.hibernate.tool.schema.extract.spi.NameSpacePrimaryKeysInformation;
-
-import java.sql.SQLException;
 
 /**
  * @since 7.2
@@ -20,7 +21,9 @@ public class InformationExtractorMySQLImpl extends InformationExtractorJdbcDatab
 	}
 
 	@Override
-	public NameSpaceForeignKeysInformation getForeignKeys(Identifier catalog, Identifier schema) {
+	public @Nonnull NameSpaceForeignKeysInformation getForeignKeys(
+			@Nullable Identifier catalog,
+			@Nullable Identifier schema) {
 		final String tableSchema = determineTableSchema( catalog, schema );
 		try ( var preparedStatement = getConnection().prepareStatement( getForeignKeysSql( tableSchema ) ) ) {
 			if ( tableSchema != null ) {
@@ -62,7 +65,9 @@ public class InformationExtractorMySQLImpl extends InformationExtractorJdbcDatab
 	}
 
 	@Override
-	public NameSpaceIndexesInformation getIndexes(Identifier catalog, Identifier schema) {
+	public @Nonnull NameSpaceIndexesInformation getIndexes(
+			@Nullable Identifier catalog,
+			@Nullable Identifier schema) {
 		final String tableSchema = determineTableSchema( catalog, schema );
 		try ( var preparedStatement = getConnection().prepareStatement( getIndexesSql( tableSchema ) ) ) {
 			if ( tableSchema != null ) {
@@ -102,7 +107,9 @@ public class InformationExtractorMySQLImpl extends InformationExtractorJdbcDatab
 	}
 
 	@Override
-	public NameSpacePrimaryKeysInformation getPrimaryKeys(Identifier catalog, Identifier schema) {
+	public @Nonnull NameSpacePrimaryKeysInformation getPrimaryKeys(
+			@Nullable Identifier catalog,
+			@Nullable Identifier schema) {
 		final String tableSchema = determineTableSchema( catalog, schema );
 		try ( var preparedStatement = getConnection().prepareStatement( getPrimaryKeysSql( tableSchema ) ) ) {
 			if ( tableSchema != null ) {

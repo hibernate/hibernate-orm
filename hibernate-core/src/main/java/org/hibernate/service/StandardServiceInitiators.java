@@ -10,6 +10,7 @@ import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
 import org.hibernate.bytecode.internal.ProxyFactoryFactoryInitiator;
 import org.hibernate.cache.internal.RegionFactoryInitiator;
+import org.hibernate.context.internal.MultiTenancyInitiator;
 import org.hibernate.engine.config.internal.ConfigurationServiceInitiator;
 import org.hibernate.engine.jdbc.batch.internal.BatchBuilderInitiator;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
@@ -76,6 +77,9 @@ public final class StandardServiceInitiators {
 
 		// ConfigurationService
 		serviceInitiators.add( ConfigurationServiceInitiator.INSTANCE );
+
+		// MultiTenancy
+		serviceInitiators.add( MultiTenancyInitiator.INSTANCE );
 
 		// PropertyAccessStrategyResolver
 		serviceInitiators.add( PropertyAccessStrategyResolverInitiator.INSTANCE );

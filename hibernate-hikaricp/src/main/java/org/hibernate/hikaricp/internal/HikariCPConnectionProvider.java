@@ -86,12 +86,16 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 	// *************************************************************************
 
 	@Override
+	@Nonnull
 	public Connection getConnection() throws SQLException {
-		return hikariDataSource != null ? hikariDataSource.getConnection() : null;
+		if ( hikariDataSource == null ) {
+			throw new IllegalStateException( "HikariCPConnectionProvider is not configured" );
+		}
+		return hikariDataSource.getConnection();
 	}
 
 	@Override
-	public void closeConnection(Connection connection) throws SQLException {
+	public void closeConnection(@Nonnull Connection connection) throws SQLException {
 		connection.close();
 	}
 
@@ -101,7 +105,8 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 	}
 
 	@Override
-	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+	@Nonnull
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(@Nonnull Dialect dialect) {
 		try ( var connection = hikariDataSource.getConnection() ) {
 			final var info = new DatabaseConnectionInfoImpl(
 					HikariCPConnectionProvider.class,

@@ -221,7 +221,7 @@ public class BasicTypeRegistry implements Serializable {
 				elementType,
 				new ColumnTypeInformation() {
 					@Override
-					public Boolean getNullable() {
+					public @Nullable Boolean getNullable() {
 						return null;
 					}
 
@@ -231,7 +231,7 @@ public class BasicTypeRegistry implements Serializable {
 					}
 
 					@Override
-					public String getTypeName() {
+					public @Nullable String getTypeName() {
 						return null;
 					}
 

@@ -1,5 +1,6 @@
 package org.hibernate.tool.schema.extract.spi;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.SPI;
 import org.hibernate.tool.schema.extract.internal.InformationExtractorJdbcDatabaseMetaDataImpl;
 import org.hibernate.tool.schema.extract.internal.InformationExtractorMySQLImpl;
@@ -23,11 +24,13 @@ public final class InformationExtractors {
 	}
 
 	/// Create a standard JDBC metadata extractor using imported keys only.
+	@Nonnull
 	public static InformationExtractor jdbcMetadata(ExtractionContext extractionContext) {
 		return jdbcMetadata( extractionContext, ForeignKeyMetadataPolicy.importedKeysOnly() );
 	}
 
 	/// Create a standard JDBC metadata extractor using `foreignKeyMetadataPolicy`.
+	@Nonnull
 	public static InformationExtractor jdbcMetadata(
 			ExtractionContext extractionContext,
 			ForeignKeyMetadataPolicy foreignKeyMetadataPolicy) {
@@ -38,20 +41,24 @@ public final class InformationExtractors {
 	}
 
 	/// Create the MySQL bulk-metadata profile.
+	@Nonnull
 	public static InformationExtractor mysql(ExtractionContext extractionContext) {
 		return new InformationExtractorMySQLImpl( requireContext( extractionContext ) );
 	}
 
 	/// Create the PostgreSQL bulk-metadata profile.
+	@Nonnull
 	public static InformationExtractor postgresql(ExtractionContext extractionContext) {
 		return new InformationExtractorPostgreSQLImpl( requireContext( extractionContext ) );
 	}
 
 	/// Create the Oracle bulk-metadata profile.
+	@Nonnull
 	public static InformationExtractor oracle(ExtractionContext extractionContext) {
 		return new InformationExtractorOracleImpl( requireContext( extractionContext ) );
 	}
 
+	@Nonnull
 	private static ExtractionContext requireContext(ExtractionContext extractionContext) {
 		if ( extractionContext == null ) {
 			throw new IllegalArgumentException( "extractionContext must not be null" );
@@ -59,6 +66,7 @@ public final class InformationExtractors {
 		return extractionContext;
 	}
 
+	@Nonnull
 	private static ForeignKeyMetadataPolicy requirePolicy(ForeignKeyMetadataPolicy policy) {
 		if ( policy == null ) {
 			throw new IllegalArgumentException( "foreignKeyMetadataPolicy must not be null" );

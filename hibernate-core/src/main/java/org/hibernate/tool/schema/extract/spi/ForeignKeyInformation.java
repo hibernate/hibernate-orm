@@ -1,5 +1,6 @@
 package org.hibernate.tool.schema.extract.spi;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.model.naming.Identifier;
 
 /**
@@ -11,14 +12,14 @@ public interface ForeignKeyInformation {
 	 *
 	 * @return The FK identifier.
 	 */
-	Identifier getForeignKeyIdentifier();
+	@Nonnull Identifier getForeignKeyIdentifier();
 
 	/**
 	 * Get the column mappings that define the reference.  Returned in sequential order.
 	 *
 	 * @return The sequential column reference mappings.
 	 */
-	Iterable<ColumnReferenceMapping> getColumnReferenceMappings();
+	@Nonnull Iterable<ColumnReferenceMapping> getColumnReferenceMappings();
 
 	interface ColumnReferenceMapping {
 		/**
@@ -27,13 +28,13 @@ public interface ForeignKeyInformation {
 		 *
 		 * @return The referencing column.
 		 */
-		ColumnInformation getReferencingColumnMetadata();
+		@Nonnull ColumnInformation getReferencingColumnMetadata();
 
 		/**
 		 * Obtain the information about the referenced column (the target side).
 		 *
 		 * @return The referenced column
 		 */
-		ColumnInformation getReferencedColumnMetadata();
+		@Nonnull ColumnInformation getReferencedColumnMetadata();
 	}
 }

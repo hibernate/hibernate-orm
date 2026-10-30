@@ -4,6 +4,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
@@ -34,7 +35,8 @@ public final class SequenceInformationExtractorMariaDBDatabaseImpl implements Se
 	}
 
 	@Override
-	public Iterable<SequenceInformation> extractMetadata(ExtractionContext extractionContext) throws SQLException {
+	public @Nonnull Iterable<SequenceInformation> extractMetadata(
+			@Nonnull ExtractionContext extractionContext) throws SQLException {
 		final List<String> sequenceNames = extractionContext.getQueryResults( lookupSql, null, resultSet -> {
 			final List<String> sequences = new ArrayList<>();
 			while ( resultSet.next() ) {

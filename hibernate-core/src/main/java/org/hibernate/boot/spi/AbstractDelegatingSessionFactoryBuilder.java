@@ -195,18 +195,21 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
+	@Deprecated(since = "8.0", forRemoval = true)
 	public T applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver<?> resolver) {
 		delegate.applyCurrentTenantIdentifierResolver( resolver );
 		return getThis();
 	}
 
 	@Override
+	@Deprecated(since = "8.0", forRemoval = true)
 	public SessionFactoryBuilder applyTenantSchemaMapper(TenantSchemaMapper<?> mapper) {
 		delegate.applyTenantSchemaMapper( mapper );
 		return getThis();
 	}
 
 	@Override
+	@Deprecated(since = "8.0", forRemoval = true)
 	public SessionFactoryBuilder applyTenantCredentialsMapper(TenantCredentialsMapper<?> mapper) {
 		delegate.applyTenantCredentialsMapper( mapper );
 		return getThis();

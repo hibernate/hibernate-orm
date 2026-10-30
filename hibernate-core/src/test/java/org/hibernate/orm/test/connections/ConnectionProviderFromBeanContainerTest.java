@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.connections;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
@@ -130,12 +131,13 @@ public class ConnectionProviderFromBeanContainerTest {
 		}
 
 		@Override
+		@Nonnull
 		public Connection getConnection() throws SQLException {
-			return null;
+			throw new UnsupportedOperationException( "Testing" );
 		}
 
 		@Override
-		public void closeConnection(Connection connection) throws SQLException {
+		public void closeConnection(@Nonnull Connection connection) throws SQLException {
 
 		}
 

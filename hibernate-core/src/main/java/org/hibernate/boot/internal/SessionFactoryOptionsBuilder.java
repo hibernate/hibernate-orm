@@ -38,6 +38,7 @@ import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.context.spi.MultiTenancy;
 import org.hibernate.cfg.GraphParserSettings;
 import org.hibernate.context.spi.TenantCredentialsMapper;
+import org.hibernate.context.spi.TenantDataSourceMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -214,12 +215,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	// multi-tenancy
 	private boolean multiTenancyEnabled;
-	@Nullable
-	private CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver;
-	@Nullable
-	private TenantSchemaMapper<Object> tenantSchemaMapper;
-	@Nullable
-	private TenantCredentialsMapper<Object> tenantCredentialsMapper;
+	@Nonnull
+	private final MultiTenancy multiTenancy;
 
 	// Queries
 	@Nullable
@@ -338,6 +335,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		// we cannot use context.getConfigurationService() here because it might be missing some settings
 		// (the StandardServiceRegistry passed in here does not need to be the bootstrap service registry)
 		final var configurationService = serviceRegistry.requireService( ConfigurationService.class );
+		multiTenancy = serviceRegistry.requireService( MultiTenancy.class );
 
 		final var strategySelector = serviceRegistry.requireService( StrategySelector.class );
 		final var jdbcServices = serviceRegistry.requireService( JdbcServices.class );
@@ -458,9 +456,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		auditStrategy = determineAuditStrategy( settings );
 
 		multiTenancyEnabled = MultiTenancy.isMultiTenancyEnabled( serviceRegistry );
-		currentTenantIdentifierResolver = MultiTenancy.getTenantIdentifierResolver( settings, serviceRegistry );
-		tenantSchemaMapper = MultiTenancy.getTenantSchemaMapper( settings, serviceRegistry );
-		tenantCredentialsMapper = MultiTenancy.getTenantCredentialsMapper( settings, serviceRegistry );
 
 		defaultBatchFetchSize = getInt( DEFAULT_BATCH_FETCH_SIZE, settings, -1 );
 		subselectFetchEnabled = getBoolean( USE_SUBSELECT_FETCH, settings );
@@ -1327,25 +1322,31 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	@Override
 	public boolean isMultiTenancyEnabled() {
-		return multiTenancyEnabled;
+		return multiTenancyEnabled || multiTenancy.getTenantDataSourceMapper() != null;
 	}
 
 	@Override
 	@Nullable
 	public TenantSchemaMapper<Object> getTenantSchemaMapper() {
-		return tenantSchemaMapper;
+		return multiTenancy.getTenantSchemaMapper();
+	}
+
+	@Override
+	@Nullable
+	public TenantDataSourceMapper<Object> getTenantDataSourceMapper() {
+		return multiTenancy.getTenantDataSourceMapper();
 	}
 
 	@Override
 	@Nullable
 	public TenantCredentialsMapper<Object> getTenantCredentialsMapper() {
-		return tenantCredentialsMapper;
+		return multiTenancy.getTenantCredentialsMapper();
 	}
 
 	@Override
 	@Nullable
 	public CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver() {
-		return currentTenantIdentifierResolver;
+		return multiTenancy.getTenantIdentifierResolver();
 	}
 
 	@Override
@@ -1802,18 +1803,15 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	public void applyCurrentTenantIdentifierResolver(@Nullable CurrentTenantIdentifierResolver<?> resolver) {
-		//noinspection unchecked
-		this.currentTenantIdentifierResolver = (CurrentTenantIdentifierResolver<Object>) resolver;
+		multiTenancy.setCurrentTenantIdentifierResolver( resolver );
 	}
 
 	public void applyTenantSchemaMapper(@Nullable TenantSchemaMapper<?> mapper) {
-		//noinspection unchecked
-		this.tenantSchemaMapper = (TenantSchemaMapper<Object>) mapper;
+		multiTenancy.setTenantSchemaMapper( mapper );
 	}
 
 	public void applyTenantCredentialsMapper(@Nullable TenantCredentialsMapper<?> mapper) {
-		//noinspection unchecked
-		this.tenantCredentialsMapper = (TenantCredentialsMapper<Object>) mapper;
+		multiTenancy.setTenantCredentialsMapper( mapper );
 	}
 
 	public void enableNamedQueryCheckingOnStartup(boolean enabled) {

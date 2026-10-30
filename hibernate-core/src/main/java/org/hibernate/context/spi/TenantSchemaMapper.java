@@ -10,6 +10,8 @@ import org.hibernate.Incubating;
  *
  * @param <T> The type of the tenant id
  *
+ * @see org.hibernate.cfg.MultiTenancySettings#MULTI_TENANT_SCHEMA_MAPPER
+ *
  * @since 7.1
  *
  * @author Gavin King

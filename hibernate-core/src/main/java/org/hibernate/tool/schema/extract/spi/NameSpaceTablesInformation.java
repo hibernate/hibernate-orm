@@ -3,6 +3,7 @@ package org.hibernate.tool.schema.extract.spi;
 import java.util.HashMap;
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.mapping.Table;
@@ -11,18 +12,18 @@ import org.hibernate.mapping.Table;
  * @author Andrea Boriero
  */
 public class NameSpaceTablesInformation {
-	private final IdentifierHelper identifierHelper;
-	private final Map<String, TableInformation> tables = new HashMap<>();
+	private final @Nonnull IdentifierHelper identifierHelper;
+	private final @Nonnull Map<String, TableInformation> tables = new HashMap<>();
 
-	public NameSpaceTablesInformation(IdentifierHelper identifierHelper) {
+	public NameSpaceTablesInformation(@Nonnull IdentifierHelper identifierHelper) {
 		this.identifierHelper = identifierHelper;
 	}
 
-	public void addTableInformation(TableInformation tableInformation) {
+	public void addTableInformation(@Nonnull TableInformation tableInformation) {
 		tables.put( tableInformation.getName().getTableName().getText(), tableInformation );
 	}
 
-	public @Nullable TableInformation getTableInformation(Table table) {
+	public @Nullable TableInformation getTableInformation(@Nonnull Table table) {
 		return tables.get( identifierHelper.toMetaDataObjectName( table.getQualifiedTableName().getTableName() ) );
 	}
 

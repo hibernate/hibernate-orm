@@ -5,9 +5,11 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Objects;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.SessionEventListener;
 import org.hibernate.context.spi.TenantCredentialsMapper;
+import org.hibernate.context.spi.TenantDataSourceMapper;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -42,7 +44,27 @@ class NonContextualJdbcConnectionAccess implements JdbcConnectionAccess, Seriali
 			listener.jdbcConnectionAcquisitionStart();
 			final Object tenantIdentifier = session.getTenantIdentifierValue();
 			if ( tenantIdentifier != null ) {
+				final var tenantDataSourceMapper = getTenantDataSourceMapper();
 				final var tenantCredentialsMapper = getTenantCredentialsMapper();
+				if ( tenantDataSourceMapper != null ) {
+					final String dataSourceName = tenantDataSourceMapper.dataSourceName( tenantIdentifier );
+					if ( dataSourceName == null ) {
+						throw new HibernateException( "Tenant data source name cannot be null" );
+					}
+					if ( tenantCredentialsMapper != null ) {
+						final String user = tenantCredentialsMapper.user( tenantIdentifier );
+						final String password = tenantCredentialsMapper.password( tenantIdentifier );
+						if ( user == null || password == null ) {
+							throw new HibernateException( "Tenant credentials cannot be null" );
+						}
+						return readOnly
+								? connectionProvider.getReadOnlyConnection( dataSourceName, user, password )
+								: connectionProvider.getConnection( dataSourceName, user, password );
+					}
+					return readOnly
+							? connectionProvider.getReadOnlyConnection( dataSourceName )
+							: connectionProvider.getConnection( dataSourceName );
+				}
 				if ( tenantCredentialsMapper != null ) {
 					if ( readOnly ) {
 						throw new HibernateException( "Credentials-based multitenancy not supported with read-only replicas" );
@@ -58,11 +80,20 @@ class NonContextualJdbcConnectionAccess implements JdbcConnectionAccess, Seriali
 					: connectionProvider.getConnection();
 		}
 		finally {
-			eventMonitor.completeJdbcConnectionAcquisitionEvent( connectionAcquisitionEvent, session, null );
+			eventMonitor.completeJdbcConnectionAcquisitionEvent(
+					connectionAcquisitionEvent, session,
+					session.getTenantIdentifierValue() );
 			listener.jdbcConnectionAcquisitionEnd();
 		}
 	}
 
+	@Nullable
+	private TenantDataSourceMapper<Object> getTenantDataSourceMapper() {
+		return session.getSessionFactory().getSessionFactoryOptions()
+				.getTenantDataSourceMapper();
+	}
+
+	@Nullable
 	private TenantCredentialsMapper<Object> getTenantCredentialsMapper() {
 		return session.getSessionFactory().getSessionFactoryOptions()
 				.getTenantCredentialsMapper();
@@ -82,7 +113,10 @@ class NonContextualJdbcConnectionAccess implements JdbcConnectionAccess, Seriali
 			}
 		}
 		finally {
-			eventMonitor.completeJdbcConnectionReleaseEvent( connectionReleaseEvent, session, null );
+			eventMonitor.completeJdbcConnectionReleaseEvent(
+					connectionReleaseEvent, session,
+					session.getTenantIdentifierValue()
+			);
 			listener.jdbcConnectionReleaseEnd();
 		}
 	}

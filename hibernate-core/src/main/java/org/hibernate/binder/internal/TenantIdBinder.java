@@ -6,6 +6,7 @@ import org.hibernate.annotations.TenantId;
 import org.hibernate.binder.AttributeBinder;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.context.spi.MultiTenancy;
 import org.hibernate.dialect.rowsecurity.internal.RowLevelSecurityDdlMaterializer;
 import org.hibernate.dialect.rowsecurity.spi.RowLevelSecurity;
 import org.hibernate.dialect.rowsecurity.spi.TenantIdentifierSource;
@@ -19,7 +20,6 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_CREDENTIALS_MAPPER;
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_RLS_ENABLED;
-import static org.hibernate.context.spi.MultiTenancy.getTenantCredentialsMapper;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 
 /**
@@ -127,9 +127,10 @@ public class TenantIdBinder implements AttributeBinder<TenantId> {
 
 	private static boolean hasTenantCredentialsMapper(MetadataBuildingContext buildingContext) {
 		final var bootstrapContext = buildingContext.getBootstrapContext();
-		final var settings = bootstrapContext.getConfigurationService().getSettings();
-		return settings.get( MULTI_TENANT_CREDENTIALS_MAPPER ) != null
-			|| getTenantCredentialsMapper( settings, bootstrapContext.getServiceRegistry() ) != null;
+		return bootstrapContext.getConfigurationService().getSettings()
+					.get( MULTI_TENANT_CREDENTIALS_MAPPER ) != null
+			|| bootstrapContext.getServiceRegistry().requireService( MultiTenancy.class )
+					.getTenantCredentialsMapper() != null;
 	}
 
 	private String columnNameOrFormula(Property property) {

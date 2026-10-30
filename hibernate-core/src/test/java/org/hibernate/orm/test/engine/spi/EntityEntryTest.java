@@ -34,6 +34,36 @@ public class EntityEntryTest {
 	}
 
 	@Test
+	public void versionCanBeReplacedWithoutChangingOtherEntryState() {
+		final var entry = createEntityEntry();
+		final var snapshot = entry.getLoadedState();
+		final var deletedState = new Object[] { "deleted" };
+		entry.setDeletedState( deletedState );
+		entry.setVersion( 24L );
+		assertThat( entry.getVersion() ).isEqualTo( 24L );
+		entry.setVersion( null );
+		assertThat( entry.getVersion() ).isNull();
+		assertThat( entry.getLoadedState() ).isSameAs( snapshot ).containsExactly( "loaded", 23L );
+		assertThat( entry.getDeletedState() ).isSameAs( deletedState );
+		assertThat( entry.getId() ).isEqualTo( 42L );
+		assertThat( entry.getRowId() ).isEqualTo( 1L );
+		assertThat( entry.getLockMode() ).isEqualTo( LockMode.OPTIMISTIC );
+		assertThat( entry.getStatus() ).isEqualTo( Status.MANAGED );
+		assertThat( entry.isExistsInDatabase() ).isTrue();
+	}
+
+	@Test
+	public void versionCanBeReplacedWithoutCreatingAReadOnlySnapshot() {
+		final var entry = createEntityEntry();
+		entry.setStatus( Status.READ_ONLY );
+		entry.setVersion( 24L );
+		assertThat( entry.getVersion() ).isEqualTo( 24L );
+		assertThat( entry.getLoadedState() ).isNull();
+		assertThat( entry.getStatus() ).isEqualTo( Status.READ_ONLY );
+		assertThat( entry.getLockMode() ).isEqualTo( LockMode.OPTIMISTIC );
+	}
+
+	@Test
 	public void testLockModeCanBeSetAndDoesNotAffectOtherPackedAttributes() {
 		// Given
 		EntityEntry entityEntry = createEntityEntry();
@@ -100,7 +130,7 @@ public class EntityEntryTest {
 	private EntityEntry createEntityEntry() {
 		return new EntityEntryImpl(
 				Status.MANAGED,
-				new Object[] {},
+				new Object[] { "loaded", 23L },
 				1L,
 				42L,
 				23L,

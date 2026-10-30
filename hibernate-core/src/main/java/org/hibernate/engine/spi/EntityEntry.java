@@ -48,6 +48,11 @@ public interface EntityEntry {
 
 	Object getVersion();
 
+	/// Replaces only the version held by this entry. Does not change the entity,
+	/// loaded snapshot, status, lock mode, or dirty tracking, and performs no SQL,
+	/// cache operations, or lifecycle callbacks.
+	void setVersion(@Nullable Object version);
+
 	void postInsert(Object version);
 
 	EntityPersister getPersister();

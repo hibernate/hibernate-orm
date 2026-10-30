@@ -149,6 +149,13 @@ public class FollowOnLockingAction implements PostAction {
 				tableLocks.forEach( (s, tableLock) ->
 						tableLock.performActions( entityDetailsMap, lockingOptions, session ) );
 				entityDetailsMap.values().forEach( entityDetails -> {
+					final var entry = entityDetails.entry();
+					final var persister = entry.getPersister();
+					if ( persister.isVersioned() ) {
+						// Reread handlers updated the entity and snapshot. Complete the entry
+						// only after all table acquisitions succeed, before any forced increment.
+						entry.setVersion( persister.getVersion( entityDetails.instance() ) );
+					}
 					if ( lockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT ) {
 						OptimisticLockHelper.forceVersionIncrement(
 								entityDetails.instance(),

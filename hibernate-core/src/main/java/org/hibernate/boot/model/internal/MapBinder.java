@@ -7,6 +7,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.MapKeyCompositeType;
+import org.hibernate.annotations.MapKeyFormula;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.SecondPass;
@@ -196,6 +197,10 @@ public class MapBinder extends CollectionBinder {
 		final var collectionEntity = persistentClasses.get( mapKeyType );
 		final boolean isKeyedByEntities = collectionEntity != null;
 		if ( isKeyedByEntities ) {
+			if ( property.hasDirectAnnotationUsage( MapKeyFormula.class ) ) {
+				throw new AnnotationException( "Map '" + safeCollectionRole()
+						+ "' is annotated '@MapKeyFormula' but its key is an entity" );
+			}
 			final var element = handleCollectionKeyedByEntities( mapKeyType );
 			handleForeignKey( property, element );
 			// a map key column has no unique constraint, so pass 'unique=false' here

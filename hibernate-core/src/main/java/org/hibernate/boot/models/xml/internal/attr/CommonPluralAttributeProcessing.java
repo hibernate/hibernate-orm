@@ -13,6 +13,7 @@ import org.hibernate.boot.models.annotations.internal.ListIndexBaseAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapKeyClassJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapKeyColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapKeyEnumeratedJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.MapKeyFormulaAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapKeyJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapKeyTemporalJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OrderByJpaAnnotation;
@@ -157,6 +158,14 @@ public class CommonPluralAttributeProcessing {
 					xmlDocumentContext.getModelBuildingContext()
 			);
 			columnAnn.apply( jaxbPluralAttribute.getMapKeyColumn(), xmlDocumentContext );
+		}
+
+		if ( isNotEmpty( jaxbPluralAttribute.getMapKeyFormula() ) ) {
+			final MapKeyFormulaAnnotation formulaAnn = (MapKeyFormulaAnnotation) memberDetails.applyAnnotationUsage(
+					HibernateAnnotations.MAP_KEY_FORMULA,
+					buildingContext
+			);
+			formulaAnn.value( jaxbPluralAttribute.getMapKeyFormula() );
 		}
 
 		if ( jaxbPluralAttribute.getMapKeyType() != null ) {

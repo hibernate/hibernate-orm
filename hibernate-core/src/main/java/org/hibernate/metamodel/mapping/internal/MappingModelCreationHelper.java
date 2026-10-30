@@ -776,8 +776,6 @@ public class MappingModelCreationHelper {
 			final var keySelectableMapping = SelectableMappingImpl.from(
 					keyTableExpression,
 					bootValueMappingKey.getSelectables().get( 0 ),
-					// In the annotation model it is not possible to have
-					// a @MapKeyFormula, but hbm.xml supports this
 					getPropertyPath( attributeMapping.getNavigableRole() )
 							+ "." + CollectionPart.Nature.INDEX.getName(),
 					null,
@@ -1357,8 +1355,8 @@ public class MappingModelCreationHelper {
 			final var selectableMapping = SelectableMappingImpl.from(
 					tableExpression,
 					basicValue.getSelectables().get( 0 ),
-					// In the annotation model it is not possible to have
-					// a @MapKeyFormula, but hbm.xml supports this
+					// This may be a formula, mapped using @MapKeyFormula,
+					// <map-key-formula>, or hbm.xml
 					getCollectionPropertyPath( collectionDescriptor )
 							+ "." + CollectionPart.Nature.INDEX.getName(),
 					null,

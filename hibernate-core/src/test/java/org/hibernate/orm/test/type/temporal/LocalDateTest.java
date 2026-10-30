@@ -215,7 +215,7 @@ public class LocalDateTest extends AbstractJavaTimeTypeTests<LocalDate, LocalDat
 
 	private static class ParametersBuilder extends AbstractParametersBuilder<LocalDate, DataImpl, ParametersBuilder> {
 		protected ParametersBuilder(Dialect dialect) {
-			super( dialect );
+			super( dialect, LocalDate.class );
 		}
 
 		public ParametersBuilder add(int year, int month, int day, ZoneId defaultTimeZone) {

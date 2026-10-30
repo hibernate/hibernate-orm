@@ -189,7 +189,7 @@ public class InstantTests extends AbstractJavaTimeTypeTests<Instant, InstantTest
 
 	private static class ParametersBuilder extends AbstractParametersBuilder<Instant, InstantData, ParametersBuilder> {
 		public ParametersBuilder(Dialect dialect) {
-			super( dialect );
+			super( dialect, Instant.class );
 		}
 
 		public ParametersBuilder add(int year, int month, int day,

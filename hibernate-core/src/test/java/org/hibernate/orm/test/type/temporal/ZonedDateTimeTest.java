@@ -260,7 +260,7 @@ public class ZonedDateTimeTest
 
 	private static class ParametersBuilder extends AbstractParametersBuilder<ZonedDateTime, DataImpl, ParametersBuilder> {
 		protected ParametersBuilder(Dialect dialect) {
-			super( dialect );
+			super( dialect, ZonedDateTime.class );
 		}
 
 		public ParametersBuilder add(

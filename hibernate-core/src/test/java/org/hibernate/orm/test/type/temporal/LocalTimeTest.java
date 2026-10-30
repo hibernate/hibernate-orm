@@ -197,7 +197,7 @@ public class LocalTimeTest extends AbstractJavaTimeTypeTests<LocalTime, LocalTim
 
 	private static class ParametersBuilder extends AbstractParametersBuilder<LocalTime, LocalTimeData, ParametersBuilder> {
 		public ParametersBuilder(Dialect dialect) {
-			super( dialect );
+			super( dialect, LocalTime.class );
 		}
 
 		public ParametersBuilder add(int hour, int minute, int second, int nanosecond, ZoneId defaultTimeZone) {

@@ -273,7 +273,8 @@ public class OffsetTimeTest extends AbstractJavaTimeTypeTests<OffsetTime, Offset
 	private static class ParametersBuilder
 			extends AbstractParametersBuilder<OffsetTime, DataImpl, ParametersBuilder> {
 		protected ParametersBuilder(Dialect dialect) {
-			super( dialect );
+			// null: direct JDBC tests for OffsetTime with NORMALIZE need separate investigation
+			super( dialect, null );
 		}
 
 		public ParametersBuilder add(int hour, int minute, int second, int nanosecond, String offset, ZoneId defaultTimeZone) {

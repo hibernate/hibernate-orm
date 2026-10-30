@@ -14,15 +14,17 @@ import java.time.ZoneId;
 public record Environment(
 		ZoneId defaultJvmTimeZone,
 		ZoneId hibernateJdbcTimeZone,
-		Class<? extends AbstractRemappingH2Dialect> remappingDialectClass) {
+		Class<? extends AbstractRemappingH2Dialect> remappingDialectClass,
+		boolean directJdbc) {
 
 	@Override
 	public String toString() {
 		return String.format(
-				"[JVM TZ: %s, JDBC TZ: %s, remapping dialect: %s]",
+				"[JVM TZ: %s, JDBC TZ: %s, remapping dialect: %s, direct JDBC: %s]",
 				defaultJvmTimeZone,
 				hibernateJdbcTimeZone,
-				remappingDialectClass == null ? null : remappingDialectClass.getSimpleName()
+				remappingDialectClass == null ? null : remappingDialectClass.getSimpleName(),
+				directJdbc
 		);
 	}
 }

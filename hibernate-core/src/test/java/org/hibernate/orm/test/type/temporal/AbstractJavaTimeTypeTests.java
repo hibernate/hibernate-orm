@@ -41,7 +41,7 @@ public abstract class AbstractJavaTimeTypeTests<T, E>
 
 	@Override
 	public StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder builder) {
-		builder.applySetting( JAVA_TIME_USE_DIRECT_JDBC, false );
+		builder.applySetting( JAVA_TIME_USE_DIRECT_JDBC, env.directJdbc() );
 		if ( env.hibernateJdbcTimeZone() != null ) {
 			builder.applySetting( JDBC_TIME_ZONE, env.hibernateJdbcTimeZone().getId() );
 		}
@@ -96,6 +96,7 @@ public abstract class AbstractJavaTimeTypeTests<T, E>
 	@JiraKey(value = "HHH-13266")
 	public void writeThenNativeRead(SessionFactoryScope factoryScope) {
 		assumeNoJdbcTimeZone();
+		assumeNoDirectJdbc();
 
 		Timezones.withDefaultTimeZone( env, () -> {
 			factoryScope.inTransaction( session -> {
@@ -125,6 +126,7 @@ public abstract class AbstractJavaTimeTypeTests<T, E>
 	@JiraKey(value = "HHH-13266")
 	public void nativeWriteThenRead(SessionFactoryScope factoryScope) {
 		assumeNoJdbcTimeZone();
+		assumeNoDirectJdbc();
 
 		Timezones.withDefaultTimeZone( env, () -> {
 			factoryScope.inTransaction( session -> {
@@ -153,5 +155,11 @@ public abstract class AbstractJavaTimeTypeTests<T, E>
 				+ ", because the expectations do not take that time zone into account."
 				+ " When this property is set, we only test that a write by Hibernate followed by "
 				+ " a read by Hibernate returns the same value." );
+	}
+
+	protected void assumeNoDirectJdbc() {
+		Assumptions.assumeFalse( env.directJdbc(),
+				"Tests with native read/writes are only relevant when not using " + JAVA_TIME_USE_DIRECT_JDBC
+				+ ", because the expectations use java.sql.Timestamp which is not involved in the direct path." );
 	}
 }

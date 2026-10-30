@@ -97,11 +97,13 @@ public class LocalDateTimeTest
 				.add( 2018, 4, 1, 3, 0, 0, 0, ZONE_AUCKLAND )
 				.add( 2018, 4, 1, 4, 0, 0, 0, ZONE_AUCKLAND )
 				// => Also test DST start
-				// This does not work, but it's unrelated to HHH-13379; see HHH-13515
-				//.add( 2018, 3, 25, 2, 0, 0, 0, ZONE_PARIS )
+				// HHH-13515: DST start (where LocalDateTime is in a gap)
+				// Only works with direct JDBC; the legacy Timestamp path silently shifts gap values
+				.onlyDirectJdbc( b -> b
+						.add( 2018, 3, 25, 2, 0, 0, 0, ZONE_PARIS )
+						.add( 2018, 9, 30, 2, 0, 0, 0, ZONE_AUCKLAND )
+				)
 				.add( 2018, 3, 25, 3, 0, 0, 0, ZONE_PARIS )
-				// This does not work, but it's unrelated to HHH-13379; see HHH-13515
-				//.add( 2018, 9, 30, 2, 0, 0, 0, ZONE_AUCKLAND )
 				.add( 2018, 9, 30, 3, 0, 0, 0, ZONE_AUCKLAND )
 				.build();
 	}
@@ -177,7 +179,7 @@ public class LocalDateTimeTest
 	private static class ParametersBuilder
 			extends AbstractParametersBuilder<LocalDateTime, DataImpl, ParametersBuilder> {
 		protected ParametersBuilder(Dialect dialect) {
-			super( dialect );
+			super( dialect, LocalDateTime.class );
 		}
 
 		public ParametersBuilder add(int year, int month, int day,

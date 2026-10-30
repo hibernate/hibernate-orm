@@ -245,7 +245,8 @@ public class OffsetDateTimeTest extends AbstractJavaTimeTypeTests<OffsetDateTime
 
 	private static class ParametersBuilder extends AbstractParametersBuilder<OffsetDateTime, DataImpl, ParametersBuilder> {
 		protected ParametersBuilder(Dialect dialect) {
-			super( dialect );
+			// null: direct JDBC tests for OffsetDateTime with NORMALIZE need separate investigation
+			super( dialect, null );
 		}
 
 		public ParametersBuilder add(int year, int month, int day,

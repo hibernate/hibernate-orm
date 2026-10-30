@@ -10,6 +10,9 @@ import java.util.function.Consumer;
 
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.FetchStyle;
+import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -45,6 +48,12 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.entity.EntityFetch;
+import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchImpl;
+import org.hibernate.sql.results.graph.entity.internal.EntityFetchSelectImpl;
 import org.hibernate.type.EntityType;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -84,8 +93,10 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 			Collection collectionBootDescriptor,
 			CollectionPersister collectionDescriptor,
 			EntityMappingType associatedEntityDescriptor,
+			FetchStyle fetchStyle,
+			FetchTiming fetchTiming,
 			MappingModelCreationProcess creationProcess) {
-		this( nature, collectionBootDescriptor, collectionDescriptor, associatedEntityDescriptor, NotFoundAction.EXCEPTION,  creationProcess );
+		this( nature, collectionBootDescriptor, collectionDescriptor, associatedEntityDescriptor, fetchStyle, fetchTiming, NotFoundAction.EXCEPTION,  creationProcess );
 	}
 
 	public ManyToManyCollectionPart(
@@ -93,9 +104,11 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 			Collection collectionBootDescriptor,
 			CollectionPersister collectionDescriptor,
 			EntityMappingType associatedEntityDescriptor,
+			FetchStyle fetchStyle,
+			FetchTiming fetchTiming,
 			NotFoundAction notFoundAction,
 			MappingModelCreationProcess creationProcess) {
-		super( nature, collectionBootDescriptor, collectionDescriptor, associatedEntityDescriptor, notFoundAction, creationProcess );
+		super( nature, collectionBootDescriptor, collectionDescriptor, associatedEntityDescriptor, fetchStyle, fetchTiming, notFoundAction, creationProcess );
 	}
 
 	@Override
@@ -349,6 +362,118 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 	@Override
 	public boolean hasPartitionedSelectionMapping() {
 		return foreignKey.hasPartitionedSelectionMapping();
+	}
+
+	@Override
+	public EntityFetch generateFetch(
+			FetchParent fetchParent,
+			NavigablePath fetchablePath,
+			FetchTiming fetchTiming,
+			boolean selected,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		if ( selected && fetchTiming == FetchTiming.IMMEDIATE ) {
+			return super.generateFetch( fetchParent, fetchablePath, fetchTiming, true, resultVariable, creationState );
+		}
+		else {
+			final TableGroup tableGroup = resolveTableGroup( fetchablePath, creationState );
+			final DomainResult<?> keyDomainResult = foreignKey.createKeyDomainResult(
+					fetchablePath,
+					tableGroup,
+					fetchParent,
+					creationState
+			);
+			if ( needsImmediateFetch( fetchTiming ) ) {
+				return buildEntityFetchSelect(
+						fetchParent,
+						this,
+						fetchablePath,
+						keyDomainResult,
+						isSelectByUniqueKey(),
+						isAffectedByEnabledFilters( creationState ),
+						creationState
+				);
+			}
+			else {
+				return buildEntityDelayedFetch(
+						fetchParent,
+						this,
+						fetchablePath,
+						keyDomainResult,
+						isSelectByUniqueKey(),
+						creationState
+				);
+			}
+		}
+	}
+
+	private boolean needsImmediateFetch(FetchTiming fetchTiming) {
+		if ( fetchTiming == FetchTiming.IMMEDIATE ) {
+			return true;
+		}
+		else if ( !getAssociatedEntityMappingType().isConcreteProxy() ) {
+			// Consider all associations annotated with @NotFound as EAGER.
+			// When resolving the concrete entity type we can preserve laziness
+			// and handle not found actions based on the discriminator value
+			return hasNotFoundAction()
+				|| getAssociatedEntityMappingType().getSoftDeleteMapping() != null;
+		}
+		else {
+			return false;
+		}
+	}
+
+	private boolean isSelectByUniqueKey() {
+		return !foreignKey.getNavigableRole()
+				.equals( getAssociatedEntityMappingType().getIdentifierMapping().getNavigableRole() );
+	}
+
+	private boolean isAffectedByEnabledFilters(DomainResultCreationState creationState) {
+		final LoadQueryInfluencers loadQueryInfluencers = creationState.getSqlAstCreationState()
+				.getLoadQueryInfluencers();
+		return getAssociatedEntityMappingType().isAffectedByEnabledFilters( loadQueryInfluencers, true );
+	}
+
+	/**
+	 * For Hibernate Reactive
+	 */
+	protected EntityFetch buildEntityFetchSelect(
+			FetchParent fetchParent,
+			AbstractEntityCollectionPart abstractEntityCollectionPart,
+			NavigablePath fetchablePath,
+			DomainResult<?> keyResult,
+			boolean selectByUniqueKey,
+			boolean isAffectedByFilter,
+			DomainResultCreationState creationState) {
+		return new EntityFetchSelectImpl(
+				fetchParent,
+				abstractEntityCollectionPart,
+				fetchablePath,
+				keyResult,
+				selectByUniqueKey,
+				isAffectedByFilter,
+				creationState
+		);
+	}
+
+	/**
+	 * For Hibernate Reactive
+	 */
+	protected EntityFetch buildEntityDelayedFetch(
+			FetchParent fetchParent,
+			AbstractEntityCollectionPart abstractEntityCollectionPart,
+			NavigablePath fetchablePath,
+			DomainResult<?> keyResult,
+			boolean selectByUniqueKey,
+			DomainResultCreationState creationState) {
+		return new EntityDelayedFetchImpl(
+				fetchParent,
+				abstractEntityCollectionPart,
+				fetchablePath,
+				keyResult,
+				selectByUniqueKey,
+				creationState
+		);
 	}
 
 

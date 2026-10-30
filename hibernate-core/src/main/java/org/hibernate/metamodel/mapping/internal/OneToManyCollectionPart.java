@@ -7,6 +7,8 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.function.Consumer;
 
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.engine.FetchStyle;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Map;
@@ -55,8 +57,10 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 			Collection bootCollectionDescriptor,
 			CollectionPersister collectionDescriptor,
 			EntityMappingType elementTypeDescriptor,
+			FetchStyle fetchStyle,
+			FetchTiming fetchTiming,
 			MappingModelCreationProcess creationProcess) {
-		this( nature, bootCollectionDescriptor, collectionDescriptor, elementTypeDescriptor, NotFoundAction.EXCEPTION, creationProcess );
+		this( nature, bootCollectionDescriptor, collectionDescriptor, elementTypeDescriptor, fetchStyle, fetchTiming, NotFoundAction.EXCEPTION, creationProcess );
 	}
 
 	public OneToManyCollectionPart(
@@ -64,9 +68,11 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 			Collection bootCollectionDescriptor,
 			CollectionPersister collectionDescriptor,
 			EntityMappingType elementTypeDescriptor,
+			FetchStyle fetchStyle,
+			FetchTiming fetchTiming,
 			NotFoundAction notFoundAction,
 			MappingModelCreationProcess creationProcess) {
-		super( nature, bootCollectionDescriptor, collectionDescriptor, elementTypeDescriptor, notFoundAction, creationProcess );
+		super( nature, bootCollectionDescriptor, collectionDescriptor, elementTypeDescriptor, fetchStyle, fetchTiming, notFoundAction, creationProcess );
 		mapKeyPropertyName =
 				nature == Nature.INDEX && bootCollectionDescriptor instanceof Map map
 						? map.getMapKeyPropertyName()

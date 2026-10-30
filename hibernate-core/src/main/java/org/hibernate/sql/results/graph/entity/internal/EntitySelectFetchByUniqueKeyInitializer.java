@@ -5,12 +5,12 @@
 package org.hibernate.sql.results.graph.entity.internal;
 
 import org.hibernate.engine.spi.EntityUniqueKey;
-import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.InitializerParent;
+import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 
 import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 
@@ -19,24 +19,22 @@ import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
  */
 public class EntitySelectFetchByUniqueKeyInitializer
 		extends EntitySelectFetchInitializer<EntitySelectFetchInitializer.EntitySelectFetchInitializerData> {
-	private final ToOneAttributeMapping fetchedAttribute;
 
 	public EntitySelectFetchByUniqueKeyInitializer(
 			InitializerParent<?> parent,
-			ToOneAttributeMapping fetchedAttribute,
+			EntityValuedFetchable fetchedAttribute,
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
 			DomainResult<?> keyResult,
 			boolean affectedByFilter,
 			AssemblerCreationState creationState) {
 		super( parent, fetchedAttribute, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter, creationState );
-		this.fetchedAttribute = fetchedAttribute;
 	}
 
 	@Override
 	protected void initialize(EntitySelectFetchInitializerData data) {
 		final String entityName = concreteDescriptor.getEntityName();
-		final String uniqueKeyPropertyName = fetchedAttribute.getReferencedPropertyName();
+		final String uniqueKeyPropertyName = getInitializedPart().getReferencedPropertyName();
 
 		final var session = data.getRowProcessingState().getSession();
 		final var persistenceContext = session.getPersistenceContextInternal();

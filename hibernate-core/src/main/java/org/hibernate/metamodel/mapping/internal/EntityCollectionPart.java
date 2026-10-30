@@ -5,7 +5,6 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.Internal;
-import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Collection;
@@ -30,8 +29,6 @@ public interface EntityCollectionPart extends CollectionPart, EntityValuedFetcha
 	enum Cardinality { ONE_TO_MANY, MANY_TO_MANY }
 
 	Cardinality getCardinality();
-
-	NotFoundAction getNotFoundAction();
 
 	EntityMappingType getAssociatedEntityMappingType();
 

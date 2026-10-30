@@ -88,6 +88,11 @@ public class LocalTimeTest extends AbstractJavaTimeTypeTests<LocalTime, LocalTim
 	}
 
 	@Override
+	protected Class<LocalTime> getJavaTimeType() {
+		return LocalTime.class;
+	}
+
+	@Override
 	protected Class<EntityWithLocalTime> getEntityType() {
 		return EntityWithLocalTime.class;
 	}

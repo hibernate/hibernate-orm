@@ -3,6 +3,7 @@ package org.hibernate.orm.test.type.temporal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.SpannerDialect;
+import org.hibernate.type.internal.DirectJavaTimeJdbcTypeResolver;
 
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -35,8 +36,10 @@ public class AbstractParametersBuilder<V,D extends Data<V>,B extends AbstractPar
 	}
 
 	protected boolean supportsDirectJdbc() {
-		return javaTimeType != null
-				&& dialect.getDirectJavaTimeJdbcSupport().supports( javaTimeType );
+		return DirectJavaTimeJdbcTypeResolver.resolve(
+				javaTimeType,
+				dialect.getDirectJavaTimeJdbcSupport()::supports
+		) != null;
 	}
 
 	public B skippedForDialects(List<Class<?>> dialectsToSkip, Consumer<B> ifNotSkipped) {

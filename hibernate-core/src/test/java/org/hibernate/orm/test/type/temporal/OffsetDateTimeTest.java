@@ -19,6 +19,7 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.type.StandardBasicTypes;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedClass;
@@ -152,6 +153,22 @@ public class OffsetDateTimeTest extends AbstractJavaTimeTypeTests<OffsetDateTime
 	}
 
 	@Override
+	protected void assertPropertyValueEquals(OffsetDateTime expected, OffsetDateTime actual, String message) {
+		if ( testParam.env().directJdbc() ) {
+			// Direct JDBC may retain an offset instead of normalizing to the JVM zone.
+			Assertions.assertEquals( expected.toInstant(), actual.toInstant(), message );
+		}
+		else {
+			super.assertPropertyValueEquals( expected, actual, message );
+		}
+	}
+
+	@Override
+	protected Class<OffsetDateTime> getJavaTimeType() {
+		return OffsetDateTime.class;
+	}
+
+	@Override
 	protected Class<EntityWithOffsetDateTime> getEntityType() {
 		return EntityWithOffsetDateTime.class;
 	}
@@ -245,8 +262,7 @@ public class OffsetDateTimeTest extends AbstractJavaTimeTypeTests<OffsetDateTime
 
 	private static class ParametersBuilder extends AbstractParametersBuilder<OffsetDateTime, DataImpl, ParametersBuilder> {
 		protected ParametersBuilder(Dialect dialect) {
-			// null: direct JDBC tests for OffsetDateTime with NORMALIZE need separate investigation
-			super( dialect, null );
+			super( dialect, OffsetDateTime.class );
 		}
 
 		public ParametersBuilder add(int year, int month, int day,

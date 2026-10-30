@@ -19,6 +19,7 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.type.StandardBasicTypes;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedClass;
@@ -29,6 +30,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -162,6 +164,39 @@ public class ZonedDateTimeTest
 	public StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder builder) {
 		builder.applySetting( TIMEZONE_DEFAULT_STORAGE, NORMALIZE );
 		return super.produceServiceRegistry( builder );
+	}
+
+	@Override
+	protected void assertPropertyValueEquals(ZonedDateTime expected, ZonedDateTime actual, String message) {
+		if ( testParam.env().directJdbc() ) {
+			// Direct JDBC may retain an offset instead of normalizing to the JVM zone.
+			Assertions.assertEquals( expected.toInstant(), actual.toInstant(), message );
+		}
+		else {
+			super.assertPropertyValueEquals( expected, actual, message );
+		}
+	}
+
+	@Override
+	protected void bindDirectJdbcValue(PreparedStatement statement, int index) throws SQLException {
+		if ( DialectContext.getDialect().getDirectJavaTimeJdbcSupport().supports( ZonedDateTime.class ) ) {
+			super.bindDirectJdbcValue( statement, index );
+		}
+		else {
+			statement.setObject( index, getExpectedPropertyValueAfterHibernateRead().toOffsetDateTime() );
+		}
+	}
+
+	@Override
+	protected ZonedDateTime extractDirectJdbcValue(ResultSet resultSet, int index) throws SQLException {
+		return DialectContext.getDialect().getDirectJavaTimeJdbcSupport().supports( ZonedDateTime.class )
+				? super.extractDirectJdbcValue( resultSet, index )
+				: resultSet.getObject( index, OffsetDateTime.class ).toZonedDateTime();
+	}
+
+	@Override
+	protected Class<ZonedDateTime> getJavaTimeType() {
+		return ZonedDateTime.class;
 	}
 
 	@Override

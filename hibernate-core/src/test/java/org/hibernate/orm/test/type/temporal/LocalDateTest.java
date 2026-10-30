@@ -116,6 +116,11 @@ public class LocalDateTest extends AbstractJavaTimeTypeTests<LocalDate, LocalDat
 	}
 
 	@Override
+	protected Class<LocalDate> getJavaTimeType() {
+		return LocalDate.class;
+	}
+
+	@Override
 	protected Class<EntityWithLocalDate> getEntityType() {
 		return EntityWithLocalDate.class;
 	}

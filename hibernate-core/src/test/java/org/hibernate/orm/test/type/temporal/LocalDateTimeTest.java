@@ -116,6 +116,11 @@ public class LocalDateTimeTest
 	}
 
 	@Override
+	protected Class<LocalDateTime> getJavaTimeType() {
+		return LocalDateTime.class;
+	}
+
+	@Override
 	protected Class<EntityWithLocalDateTime> getEntityType() {
 		return EntityWithLocalDateTime.class;
 	}

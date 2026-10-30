@@ -111,6 +111,11 @@ public class InstantTests extends AbstractJavaTimeTypeTests<Instant, InstantTest
 	}
 
 	@Override
+	protected Class<Instant> getJavaTimeType() {
+		return Instant.class;
+	}
+
+	@Override
 	protected Class<EntityWithInstant> getEntityType() {
 		return EntityWithInstant.class;
 	}

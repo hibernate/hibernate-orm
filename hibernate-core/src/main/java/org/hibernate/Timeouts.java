@@ -15,10 +15,15 @@ import static org.hibernate.jpa.internal.util.ConfigurationHelper.getInteger;
 /**
  * Helpers for dealing with {@linkplain jakarta.persistence.Timeout timeout}
  * values, including some "magic values".
+ * Lock acquisition timeouts control waiting for database protection, subject
+ * to dialect support and precision. They are distinct from query execution
+ * timeouts and transaction timeouts, and do not establish a deadline for an
+ * entire selection and follow-on acquisition phase.
  *
  * @apiNote The {@link #NO_WAIT} and {@link #SKIP_LOCKED} magic values each
  * have a corresponding {@link LockMode} ({@link LockMode#UPGRADE_NOWAIT}
  * and {@link LockMode#UPGRADE_SKIPLOCKED}, respectively).
+ * These values apply to lock acquisition, not query execution timeouts.
  *
  * @author Steve Ebersole
  *
@@ -59,6 +64,8 @@ public interface Timeouts {
 	 * Indicates that there is no timeout for the lock acquisition,
 	 * that is, that the database should in principle wait forever
 	 * to obtain the lock.
+	 * Database settings, query timeouts, and transaction timeouts may still
+	 * limit the operation.
 	 *
 	 * @see #WAIT_FOREVER_MILLI
 	 */
@@ -66,6 +73,10 @@ public interface Timeouts {
 
 	/**
 	 * Indicates that rows which are already locked should be skipped.
+	 * An empty result does not prove that no matching rows exist.
+	 * Requires a supported direct-locking selection; follow-on acquisition
+	 * and {@link Session#lock(Object, LockMode, jakarta.persistence.LockOption...)}
+	 * do not support skip-locked requests.
 	 *
 	 * @see #SKIP_LOCKED_MILLI
 	 * @see LockMode#UPGRADE_SKIPLOCKED

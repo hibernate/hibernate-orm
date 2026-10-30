@@ -1,7 +1,10 @@
 package org.hibernate.annotations;
 
 /**
- * Enumerates the possible optimistic lock checking strategies.
+ * Enumerates automatic optimistic checking strategies for entity mutations.
+ * These strategies do not schedule validation of unchanged entities.
+ * Explicit {@link org.hibernate.LockMode#OPTIMISTIC} validation requires
+ * a versioned entity.
  *
  * @see OptimisticLocking
  *
@@ -9,7 +12,7 @@ package org.hibernate.annotations;
  */
 public enum OptimisticLockType {
 	/**
-	 * No optimistic locking.
+	 * Disable optimistic mutation checks, even when a version attribute exists.
 	 */
 	NONE,
 	/**
@@ -17,30 +20,32 @@ public enum OptimisticLockType {
 	 * {@linkplain jakarta.persistence.Version version column}.
 	 * This is the usual strategy.
 	 * <p>
-	 * Any SQL {@code update} or {@code delete} statement will
-	 * have a {@code where} clause restriction which specifies
-	 * the primary key and current version. If no rows are
-	 * updated, this is interpreted as a lock checking failure.
+	 * Entity mutations include the expected version in their optimistic
+	 * predicates. A missing matching row indicates a stale version or a deleted
+	 * entity. Bulk mutations do not automatically perform these per-entity checks.
 	 *
 	 * @see jakarta.persistence.Version
 	 */
 	VERSION,
 	/**
-	 * Optimistic locking based on <em>dirty</em> fields of the
-	 * entity.
+	 * Optimistic mutation checking based on eligible previously loaded values
+	 * of <em>dirty</em> attributes for updates.
 	 * <p>
-	 * A SQL {@code update} or {@code delete} statement will
-	 * have every dirty field of the entity instance listed in
-	 * the {@code where} clause restriction.
+	 * An entity {@code update} compares those values in the {@code where}
+	 * restriction, respecting versioning exclusions. Deletes have no ordinary
+	 * dirty-property set and may compare eligible loaded values instead.
+	 * Requires available original loaded state and dynamic updates, and cannot
+	 * be combined with a {@link jakarta.persistence.Version} attribute.
 	 */
 	DIRTY,
 	/**
-	 * Optimistic locking based on <em>all</em> fields of the
-	 * entity.
+	 * Optimistic mutation checking based on <em>all</em> eligible previously
+	 * loaded values of the entity.
 	 * <p>
-	 * A SQL {@code update} or {@code delete} statement will
-	 * have every field of the entity listed in the {@code where}
-	 * clause restriction.
+	 * Entity updates and deletes compare those values in their optimistic
+	 * predicates, respecting versioning exclusions. Requires available original
+	 * loaded state and dynamic updates, and cannot be combined with a
+	 * {@link jakarta.persistence.Version} attribute.
 	 */
 	ALL
 }

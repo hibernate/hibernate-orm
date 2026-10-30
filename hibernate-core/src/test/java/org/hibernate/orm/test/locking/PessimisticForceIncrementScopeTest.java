@@ -35,7 +35,6 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
 import org.hibernate.dialect.lock.internal.LockingSqlRewriterSupport;
 import org.hibernate.dialect.lock.internal.PessimisticEntityLockException;
 import org.hibernate.engine.spi.EntityEntry;
@@ -67,7 +66,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hibernate.LockMode.PESSIMISTIC_FORCE_INCREMENT;
 import static org.hibernate.LockMode.PESSIMISTIC_WRITE;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /// Verifies that managed force increment acquires the full requested scope before
 /// changing versions. Physical probes use independent READ_COMMITTED transactions.
@@ -314,8 +312,6 @@ class PessimisticForceIncrementScopeTest {
 	@ParameterizedTest
 	@CsvSource({ "false", "true" })
 	void compositeOwnerKeysDoNotRequireASnapshot(boolean readOnly, SessionFactoryScope scope) {
-		assumeTrue( scope.getSessionFactory().getJdbcServices().getDialect().getRowValueSupport()
-				.supports( RowValueSupport.Feature.IN_LIST ) );
 		scope.inTransaction( session -> {
 			session.setDefaultReadOnly( readOnly );
 			final var item = session.find( CompositeItem.class, new CompositeId( 1, 2 ), PESSIMISTIC_FORCE_INCREMENT, EXTENDED );

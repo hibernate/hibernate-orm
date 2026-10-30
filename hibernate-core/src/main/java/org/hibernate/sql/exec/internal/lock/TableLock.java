@@ -8,8 +8,10 @@ import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
@@ -37,6 +39,7 @@ import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.spi.mutation.TableMapping;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -55,6 +58,7 @@ public class TableLock {
 	private final TableDetails tableDetails;
 	private final EntityMappingType entityMappingType;
 	private final List<EntityKey> expectedEntityKeys;
+	private final CompositeIdentifierLockResult compositeIdentifierResult;
 
 	// Used by Hibernate Reactive
 	protected final QuerySpec querySpec = new QuerySpec( true );
@@ -135,12 +139,21 @@ public class TableLock {
 		);
 
 		// add the key as the first result
-		domainResults.add( tableDetails.getKeyDetails().createDomainResult(
-				rootPath.append( "{key}" ),
-				logicalTableReference,
-				null,
-				creationStates
-		) );
+		if ( entityMappingType.getIdentifierMapping() instanceof CompositeIdentifierMapping compositeIdentifier ) {
+			compositeIdentifierResult = new CompositeIdentifierLockResult(
+					tableDetails, compositeIdentifier, physicalTableReference, rootPath.append( "{key}" ),
+					creationStates, entityKeys, session );
+			domainResults.add( compositeIdentifierResult );
+		}
+		else {
+			compositeIdentifierResult = null;
+			domainResults.add( tableDetails.getKeyDetails().createDomainResult(
+					rootPath.append( "{key}" ),
+					logicalTableReference,
+					null,
+					creationStates
+			) );
+		}
 
 		final int expectedParamCount =
 				entityKeys.size() * entityMappingType.getIdentifierMapping().getJdbcTypeCount();
@@ -189,16 +202,14 @@ public class TableLock {
 	}
 
 	private void applySimpleKeyRestriction(List<EntityKey> entityKeys, SharedSessionContractImplementor session) {
-		final var identifierMapping = entityMappingType.getIdentifierMapping();
-
 		final var keyColumn = tableDetails.getKeyDetails().getKeyColumn( 0 );
 		final var columnReference = new ColumnReference( physicalTableReference, keyColumn );
 
 		final var restriction = new InListPredicate( columnReference );
 		querySpec.applyPredicate( restriction );
 
-		entityKeys.forEach( (entityKey) -> identifierMapping.breakDownJdbcValues(
-				entityKey.getIdentifierValue(),
+		entityKeys.forEach( (entityKey) -> breakDownKeyJdbcValues(
+				entityKey,
 				(valueIndex, value, jdbcValueMapping) -> {
 					final var jdbcMapping = jdbcValueMapping.getJdbcMapping();
 					final var jdbcParameter = new SqlTypedMappingJdbcParameter( jdbcValueMapping );
@@ -224,8 +235,8 @@ public class TableLock {
 
 		entityKeys.forEach( (entityKey) -> {
 			final List<JdbcParameter> valueParams = arrayList( tableDetails.getKeyDetails().getColumnCount() );
-			identifierMapping.breakDownJdbcValues(
-					entityKey.getIdentifierValue(),
+			breakDownKeyJdbcValues(
+					entityKey,
 					(valueIndex, value, jdbcValueMapping) -> {
 						final var jdbcMapping = jdbcValueMapping.getJdbcMapping();
 						final var jdbcParameter = new SqlTypedMappingJdbcParameter( jdbcValueMapping );
@@ -238,6 +249,18 @@ public class TableLock {
 			final var valueTuple = new SqlTuple( valueParams, identifierMapping );
 			restriction.addExpression( valueTuple );
 		} );
+	}
+
+	private void breakDownKeyJdbcValues(
+			EntityKey entityKey,
+			ModelPart.JdbcValueConsumer consumer,
+			SharedSessionContractImplementor session) {
+		if ( compositeIdentifierResult != null ) {
+			compositeIdentifierResult.forEachJdbcValue( entityKey, consumer );
+		}
+		else {
+			entityMappingType.getIdentifierMapping().breakDownJdbcValues( entityKey.getIdentifier(), consumer, session );
+		}
 	}
 
 	public void performActions(Map<Object, EntityDetails> entityDetailsMap, QueryOptions lockingQueryOptions, SharedSessionContractImplementor session) {
@@ -272,14 +295,27 @@ public class TableLock {
 					tableDetails, entityMappingType, expectedEntityKeys, results, timeout, session );
 		}
 
-		results.forEach( (row) -> {
-			final Object id = row[0];
-			final var entityDetails = entityDetailsMap.get( id );
+		final Map<EntityKey, EntityDetails> detailsByKey = new HashMap<>();
+		entityDetailsMap.values().forEach( details -> detailsByKey.put( details.key(), details ) );
+		final var acquiredDetails = new ArrayList<EntityDetails>( results.size() );
+		for ( var row : results ) {
+			final var key = session.generateEntityKey( row[0], entityMappingType.getEntityPersister() );
+			final var details = detailsByKey.get( key );
+			if ( details == null ) {
+				throw new AssertionFailure( "Acquired identity has no collected entity for '"
+						+ entityMappingType.getEntityName() + "' during follow-on locking of table '"
+						+ tableDetails.getTableName() + "'" );
+			}
+			acquiredDetails.add( details );
+		}
+		for ( int rowIndex = 0; rowIndex < results.size(); rowIndex++ ) {
+			final var row = results.get( rowIndex );
+			final var entityDetails = acquiredDetails.get( rowIndex );
 			for ( int i = 0; i < resultHandlers.size(); i++ ) {
 				// offset 1 because of the id at position 0
 				resultHandlers.get( i ).applyResult( row[i+1], entityDetails, session );
 			}
-		} );
+		}
 	}
 
 

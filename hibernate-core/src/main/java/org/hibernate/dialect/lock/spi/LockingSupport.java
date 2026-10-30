@@ -40,6 +40,27 @@ import static org.hibernate.SPI.Role.USE;
 @Incubating(since = "7.1", group = "dialect-locking")
 @SPI({ USE, IMPLEMENT, SUPPLY })
 public interface LockingSupport {
+	/// Whether an equal or weaker refresh request may reload using the non-locking
+	/// [LockMode#READ] after the entity has already acquired `currentLockMode`.
+	/// Retaining the row lock alone does not establish that an ordinary reload
+	/// uses the same read view as the preceding locking read.
+	///
+	/// Hibernate invokes this predicate only for a pessimistic current mode, an
+	/// equal or weaker requested mode, and normal lock scope. The request's mode
+	/// is passed unchanged: `refresh(entity)` uses [LockMode#READ], whereas an
+	/// explicit no-lock request uses [LockMode#NONE]. Both arguments are non-null.
+	/// A `true` result must preserve read visibility and conflict semantics under
+	/// the configurations supported by this profile. Hibernate separately handles
+	/// the entry's final mode, version actions, wider scope and other lock options.
+	///
+	/// The default retains a non-incrementing pessimistic reload.
+	///
+	/// @since 8.0
+	@SPI({ USE, IMPLEMENT })
+	default boolean canUsePlainReadForRefresh(LockMode currentLockMode, LockMode requestedLockMode) {
+		return false;
+	}
+
 	/// Resolves environment-specific concurrency facts without retaining or
 	/// modifying a connection. The resolved descriptor belongs to JdbcEnvironment,
 	/// not to this potentially shared dialect profile.

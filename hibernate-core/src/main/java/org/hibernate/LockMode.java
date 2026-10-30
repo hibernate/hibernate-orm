@@ -23,8 +23,10 @@ import static org.hibernate.Timeouts.SKIP_LOCKED_MILLI;
  * optimistic lock mode is considered a weaker sort of lock than
  * every pessimistic lock mode. If a session already holds a
  * stronger lock level on a given entity when a weaker lock level
- * is requested, then the request for the weaker lock level has
- * no effect.
+ * is requested, then the stronger lock level is retained.
+ * A pessimistic request with {@link jakarta.persistence.PessimisticLockScope#EXTENDED}
+ * scope may still require acquisition of locks on collection rows, even when
+ * its lock level is equal to or weaker than the level already held.
  * <p>
  * Note that, in particular, a request for the optimistic lock
  * level {@link #OPTIMISTIC_FORCE_INCREMENT} on an entity for

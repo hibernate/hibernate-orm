@@ -72,7 +72,9 @@ import static org.hibernate.processor.util.StringUtil.decapitalize;
 import static java.lang.Boolean.FALSE;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNullElse;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.hibernate.grammars.hql.HqlLexer.SELECT;
@@ -4891,7 +4893,9 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 					if ( !checkConstructorReturn( (DeclaredType) returnType, selection ) ) {
 						message( method, mirror, value,
 								"return type '" + returnType
-								+ "' of method has no constructor matching query selection list",
+								+ "' of method has no constructor matching query selection list"
+								+ " with types " + selectionTypes( selection )
+								+ "; available constructor parameter lists: " + constructorParameterLists( (DeclaredType) returnType ),
 								Diagnostic.Kind.ERROR );
 					}
 					yield true;
@@ -4971,6 +4975,39 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 			public void other(char character) {
 			}
 		} );
+	}
+
+	private static String selectionTypes(JpaSelection<?> selection) {
+		return diagnosticList( selection.getSelectionItems().stream()
+				.map( item -> item == null ? "?" : requireNonNullElse( item.getJavaTypeName(), "?" ) ), "(", ")" );
+	}
+
+	private static String constructorParameterLists(DeclaredType returnType) {
+		return diagnosticList( constructorsIn( returnType.asElement().getEnclosedElements() ).stream()
+				.map( constructor -> constructor.getParameters().stream()
+						.map( parameter -> parameter.asType().toString() )
+						.collect( joining( ", ", "(", ")" ) ) ), "[", "]" );
+	}
+
+	private static String diagnosticList(Stream<String> items, String prefix, String suffix) {
+		final int maxLength = 256;
+		final var result = new StringBuilder( prefix );
+		final var iterator = items.iterator();
+		String separator = "";
+		while ( iterator.hasNext() ) {
+			final String item = iterator.next();
+			final int remaining = maxLength - result.length() - separator.length() - suffix.length();
+			// Reserve space for ", ..." if another entry follows.
+			if ( item.length() + ( iterator.hasNext() ? 5 : 0 ) > remaining ) {
+				result.append( separator )
+						.append( item, 0, Math.min( item.length(), Math.max( 0, remaining - 3 ) ) )
+						.append( "..." );
+				break;
+			}
+			result.append( separator ).append( item );
+			separator = ", ";
+		}
+		return result.append( suffix ).toString();
 	}
 
 	private static boolean checkConstructorReturn(DeclaredType returnType, JpaSelection<?> selection) {

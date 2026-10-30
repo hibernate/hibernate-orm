@@ -9097,7 +9097,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final var processingState = (SqlAstQueryPartProcessingStateImpl) getCurrentProcessingState();
 		final var nestingFetchParent = processingState.getNestingFetchParent();
 		processingState.setNestingFetchParent( fetchParent );
+		// the table groups of a nested collection belong to its subquery, keep them out of the outer query
+		final boolean nestedCollection = fetchParent instanceof NestedCollectionFetch;
+		if ( nestedCollection ) {
+			fromClauseIndexStack.push( new FromClauseIndex( getFromClauseIndex() ) );
+		}
 		final R result = action.apply( fetchParent );
+		if ( nestedCollection ) {
+			fromClauseIndexStack.pop();
+		}
 		processingState.setNestingFetchParent( nestingFetchParent );
 		return result;
 	}

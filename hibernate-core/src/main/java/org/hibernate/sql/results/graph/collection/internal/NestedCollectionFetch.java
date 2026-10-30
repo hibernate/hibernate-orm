@@ -7,11 +7,13 @@ import java.util.List;
 import jakarta.annotation.Nullable;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.FetchOptions;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.sqm.function.FunctionRenderer;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SelfRenderingOrderedSetAggregateFunctionSqlAstExpression;
@@ -80,7 +82,8 @@ public class NestedCollectionFetch extends CollectionFetch {
 				|| !( functionRegistry.findFunctionDescriptor( "json_arrayagg" ) instanceof FunctionRenderer jsonArrayAgg ) ) {
 			return null;
 		}
-		final var rowSelectables = rowSelectables( fetchedAttribute );
+		final var rowSelectables =
+				rowSelectables( fetchedAttribute, creationState.getSqlAstCreationState().getLoadQueryInfluencers() );
 		if ( rowSelectables == null ) {
 			return null;
 		}
@@ -143,10 +146,13 @@ public class NestedCollectionFetch extends CollectionFetch {
 				sqlAstCreationState
 		);
 		final var collectionTableGroup = tableGroupJoin.getJoinedGroup();
-		fromClauseAccess.registerTableGroup( fetchedPath, collectionTableGroup );
 
 		// the element columns are resolved to positions in the row, see getNestedSelectableIndex()
-		fetches = creationState.visitNestedFetches( this );
+		// the table group is registered in the scope of the nested fetches, it is not visible to the outer query
+		fetches = creationState.withNestedFetchParent( this, parent -> {
+			sqlAstCreationState.getFromClauseAccess().registerTableGroup( fetchedPath, collectionTableGroup );
+			return creationState.visitFetches( parent );
+		} );
 
 		final List<SqlAstNode> row = new ArrayList<>( rowSelectables.size() + 1 );
 		for ( var selectable : rowSelectables ) {
@@ -202,7 +208,9 @@ public class NestedCollectionFetch extends CollectionFetch {
 	 * The columns making up a row of the nested collection, or {@code null} if the
 	 * collection cannot be fetched nested.
 	 */
-	private static @Nullable List<SelectableMapping> rowSelectables(PluralAttributeMapping attribute) {
+	private static @Nullable List<SelectableMapping> rowSelectables(
+			PluralAttributeMapping attribute,
+			LoadQueryInfluencers influencers) {
 		final var collectionDescriptor = attribute.getCollectionDescriptor();
 		switch ( attribute.getMappedType().getCollectionSemantics().getCollectionClassification() ) {
 			case BAG, SET, ORDERED_SET, SORTED_SET, LIST:
@@ -217,7 +225,8 @@ public class NestedCollectionFetch extends CollectionFetch {
 				return null;
 			}
 			final var entity = entityPart.getAssociatedEntityMappingType();
-			if ( entity.hasSubclasses() || entity.getSuperMappingType() != null ) {
+			if ( entity.hasSubclasses() || entity.getSuperMappingType() != null
+					|| hasRestrictedToOne( entity, influencers ) ) {
 				return null;
 			}
 			entityRowSelectables( entity, selectables );
@@ -238,6 +247,20 @@ public class NestedCollectionFetch extends CollectionFetch {
 			}
 		}
 		return selectables;
+	}
+
+	/**
+	 * Does the entity have a to-one whose target is restricted? The visibility of the
+	 * target is checked by joining its table, which is not part of the row.
+	 */
+	private static boolean hasRestrictedToOne(EntityMappingType entity, LoadQueryInfluencers influencers) {
+		for ( int i = 0; i < entity.getNumberOfAttributeMappings(); i++ ) {
+			if ( entity.getAttributeMapping( i ) instanceof ToOneAttributeMapping toOne
+					&& toOne.isAffectedByRestrictions( influencers ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private static void entityRowSelectables(EntityMappingType entity, List<SelectableMapping> selectables) {

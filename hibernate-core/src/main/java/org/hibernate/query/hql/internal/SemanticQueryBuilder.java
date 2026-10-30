@@ -37,6 +37,7 @@ import org.hibernate.grammars.hql.HqlLexer;
 import org.hibernate.grammars.hql.HqlParser;
 import org.hibernate.grammars.hql.HqlParserBaseVisitor;
 import org.hibernate.internal.util.CharSequenceHelper;
+import org.hibernate.query.sqm.tree.spi.expression.SqmGroupByAll;
 import org.hibernate.spi.Stack;
 import org.hibernate.spi.StandardStack;
 import org.hibernate.metamodel.CollectionClassification;
@@ -284,6 +285,7 @@ import static org.hibernate.type.spi.TypeConfiguration.isJdbcTemporalType;
  * ANTLR via {@link HqlParseTreeBuilder}.
  *
  * @author Steve Ebersole
+ * @author Loïc Lefèvre
  */
 public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implements SqmCreationState {
 
@@ -1583,8 +1585,19 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return sqmFromByAlias;
 	}
 
+	protected SqmExpression<?> visitGroupByAllClause(HqlParser.GroupByClauseContext ctx) {
+		final var nodeBuilder = nodeBuilder();
+		return new SqmGroupByAll(nodeBuilder);
+	}
+
 	@Override
 	public List<SqmExpression<?>> visitGroupByClause(HqlParser.GroupByClauseContext ctx) {
+		if(ctx.ALL() != null) {
+			// GROUP BY ALL
+			final List<SqmExpression<?>> expressions = new ArrayList<>( 1 );
+			expressions.add( visitGroupByAllClause(ctx) );
+			return expressions;
+		}
 		final var groupByExpressionContexts = ctx.groupByExpression();
 		final int size = groupByExpressionContexts.size();
 		final List<SqmExpression<?>> expressions = new ArrayList<>( size );

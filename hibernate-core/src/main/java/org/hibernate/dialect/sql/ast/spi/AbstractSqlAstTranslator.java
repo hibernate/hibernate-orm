@@ -13,6 +13,7 @@ import org.hibernate.Locking;
 import org.hibernate.SPI;
 import org.hibernate.Timeouts;
 import org.hibernate.sql.ast.spi.query.SqlAstTreeHelper;
+import org.hibernate.sql.spi.SqlComments;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.array.spi.ArraySupport;
@@ -283,8 +284,8 @@ import static org.hibernate.SPI.Role.USE;
 /// Dialect which renders SQL should extend this class, or a supported
 /// database-family subclass. A JDBC driver with a fundamentally different
 /// command language may instead implement
-/// [org.hibernate.sql.ast.spi.translation.SqlAstTranslator] directly, normally
-/// on top of [org.hibernate.sql.ast.spi.AbstractSqlAstWalker].
+/// [SqlAstTranslator] directly, normally
+/// on top of [AbstractSqlAstWalker].
 ///
 /// Prefer the focused `get...Support()` composition hooks when a difference can
 /// be expressed as selection of an immutable rendering plan. Override a
@@ -298,6 +299,7 @@ import static org.hibernate.SPI.Role.USE;
 ///
 /// @since 8.0
 /// @author Steve Ebersole
+/// @author Loïc Lefèvre
 @SPI({ USE, IMPLEMENT })
 public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implements SqlAstTranslator<T>, SqlAppender {
 
@@ -418,7 +420,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	///
 	/// Subclass constructors should only initialize immutable dialect-specific
 	/// state. Translation does not begin until
-	/// [org.hibernate.sql.ast.spi.translation.SqlAstTranslator#translate] is
+	/// [SqlAstTranslator#translate] is
 	/// invoked.
 	@SPI(IMPLEMENT)
 	protected AbstractSqlAstTranslator(SqlAstTranslationRequest<? extends Statement, T> request) {
@@ -4509,13 +4511,19 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected final void visitPartitionExpressions(
 			List<Expression> partitionExpressions,
 			SelectItemReferenceStrategy referenceStrategy) {
-		final Function<Expression, Expression> resolveAliasExpression = switch ( referenceStrategy ) {
-			case POSITION -> Function.identity();
-			case ALIAS -> this::resolveExpressionToAlias;
-			case EXPRESSION -> this::resolveAliasedExpression;
-		};
-		visitPartitionExpressions( partitionExpressions, resolveAliasExpression,
-				referenceStrategy == SelectItemReferenceStrategy.EXPRESSION );
+		if(referenceStrategy == SelectItemReferenceStrategy.ALL) {
+			appendSql("all");
+		}
+		else {
+			final Function<Expression, Expression> resolveAliasExpression = switch ( referenceStrategy ) {
+				case POSITION -> Function.identity();
+				case ALIAS -> this::resolveExpressionToAlias;
+				case EXPRESSION -> this::resolveAliasedExpression;
+				case ALL -> null;
+			};
+			visitPartitionExpressions( partitionExpressions, resolveAliasExpression,
+					referenceStrategy == SelectItemReferenceStrategy.EXPRESSION );
+		}
 	}
 
 	protected final void visitPartitionExpressions(
@@ -5121,7 +5129,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	/// Supplies the strategy which selects SQL AST pagination plans.
 	///
 	/// This hook controls pagination represented in the SQL AST. It is distinct
-	/// from [org.hibernate.dialect.pagination.spi.LimitHandler], which rewrites
+	/// from [LimitHandler], which rewrites
 	/// already-rendered SQL for execution-time query limits. The returned support
 	/// must be non-null and must not retain supplied requests.
 	@SPI({ IMPLEMENT, SUPPLY })
@@ -9415,7 +9423,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						appendSql(separator);
 						emulateTupleComparison(
 								lhsTuple.getExpressions(),
-								SqlTupleContainer.getSqlTuple(expression).getExpressions(),
+								getSqlTuple(expression).getExpressions(),
 								tupleComparisonOperator,
 								true
 						);
@@ -9502,7 +9510,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		for ( Expression expression : listExpressions ) {
 			appendSql( separator );
 			appendSql( OPEN_PARENTHESIS );
-			renderCommaSeparated( SqlTupleContainer.getSqlTuple( expression ).getExpressions() );
+			renderCommaSeparated( getSqlTuple( expression ).getExpressions() );
 			appendSql( CLOSE_PARENTHESIS );
 			separator = ',';
 		}
@@ -10324,7 +10332,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	/// `values ( )` form. Call [#renderIntoIntoAndTable] when the standard table
 	/// rendering and affected-table registration are appropriate, then append the
 	/// database-specific no-column syntax. If the database cannot express this
-	/// operation, throw a [org.hibernate.MappingException] which identifies the
+	/// operation, throw a [MappingException] which identifies the
 	/// affected table and Dialect.
 	///
 	/// @param tableInsert the supported model insert to render
@@ -10466,7 +10474,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( sessionFactory.getSessionFactoryOptions().isCommentsEnabled() ) {
 			if ( comment != null ) {
 				appendSql( "/* " );
-				appendSql( org.hibernate.sql.spi.SqlComments.escape( comment ) );
+				appendSql( SqlComments.escape( comment ) );
 				appendSql( " */" );
 			}
 		}

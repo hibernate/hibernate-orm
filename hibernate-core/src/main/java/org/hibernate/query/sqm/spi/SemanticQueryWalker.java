@@ -128,6 +128,7 @@ import org.hibernate.query.sqm.tree.spi.update.SqmUpdateStatement;
  * Support for walking a Semantic Query Model (SQM) tree
  *
  * @author Steve Ebersole
+ * @author Loïc Lefèvre
  */
 public interface SemanticQueryWalker<T> {
 	T visitUpdateStatement(SqmUpdateStatement<?> statement);
@@ -286,6 +287,8 @@ public interface SemanticQueryWalker<T> {
 	T visitSelection(SqmSelection<?> selection);
 
 	T visitValues(SqmValues values);
+
+	T visitGroupByAllClause(List<SqmExpression<?>> groupByClauseExpressions);
 
 	T visitGroupByClause(List<SqmExpression<?>> groupByClauseExpressions);
 

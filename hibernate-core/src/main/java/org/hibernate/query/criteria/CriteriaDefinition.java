@@ -110,6 +110,7 @@ import java.util.function.Function;
  * @since 6.3
  *
  * @author Gavin King
+ * @author Loïc Lefèvre
  */
 @Incubating(since = "6.3")
 public abstract class CriteriaDefinition<R>
@@ -265,8 +266,20 @@ public abstract class CriteriaDefinition<R>
 
 	@Nonnull
 	@Override
+	public JpaCriteriaQuery<R> groupByAll(@Nonnull Expression... grouping) {
+		return query.groupByAll(grouping);
+	}
+
+	@Nonnull
+	@Override
 	public JpaCriteriaQuery<R> groupBy(@Nonnull List<Expression<?>> grouping) {
 		return query.groupBy(grouping);
+	}
+
+	@Nonnull
+	@Override
+	public JpaCriteriaQuery<R> groupByAll(@Nonnull List<Expression<?>> grouping) {
+		return query.groupByAll(grouping);
 	}
 
 	@Nonnull

@@ -81,6 +81,7 @@ import static java.util.Collections.newSetFromMap;
 
 /**
  * @author Steve Ebersole
+ * @author Loïc Lefèvre
  */
 public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 		implements SqmSelectQuery<T>, JpaSubQuery<T>, SqmExpression<T> {
@@ -376,7 +377,21 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 
 	@Nonnull
 	@Override
+	public SqmSubQuery<T> groupByAll(@Nonnull Expression<?>... expressions) {
+		super.groupBy( expressions );
+		return this;
+	}
+
+	@Nonnull
+	@Override
 	public SqmSubQuery<T> groupBy(@Nonnull List<Expression<?>> grouping) {
+		super.groupBy( grouping );
+		return this;
+	}
+
+	@Nonnull
+	@Override
+	public SqmSubQuery<T> groupByAll(@Nonnull List<Expression<?>> grouping) {
 		super.groupBy( grouping );
 		return this;
 	}

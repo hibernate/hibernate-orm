@@ -13,6 +13,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesCacheHit;
+import org.hibernate.sql.results.jdbc.internal.NonNullTargetJdbcValuesMappingProducer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -62,6 +63,9 @@ public class RowProcessingStateStandardImpl extends BaseExecutionContext impleme
 			return LockMode.NONE;
 		}
 		final LockMode effectiveLockMode = resultSetProcessingState.getQueryOptions().getLockOptions().getLockMode();
+		if ( jdbcValues.getValuesMapping() instanceof NonNullTargetJdbcValuesMappingProducer.TargetedMapping mapping ) {
+			return mapping.determineTargetLockMode( alias, effectiveLockMode );
+		}
 		return effectiveLockMode == LockMode.NONE
 				? jdbcValues.getValuesMapping().determineDefaultLockMode( alias, effectiveLockMode )
 				: effectiveLockMode;

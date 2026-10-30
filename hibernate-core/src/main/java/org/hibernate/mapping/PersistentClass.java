@@ -638,18 +638,33 @@ public abstract sealed class PersistentClass
 	 * @return {@code true} if a property with that name exists; {@code false} if not
 	 */
 	public boolean hasProperty(String name) {
+		return isIdentifierProperty( name ) || hasPropertyInClosure( name, getPropertyClosure() );
+	}
+
+	/**
+	 * Check to see if this PersistentClass defines a property with the given name,
+	 * including generic properties.
+	 *
+	 * @param name The property name to check
+	 *
+	 * @return {@code true} if a property with that name exists; {@code false} if not
+	 */
+	public boolean hasPropertyIncludingGenerics(String name) {
+		return isIdentifierProperty( name ) || hasPropertyInClosure( name, getAllPropertyClosure() );
+	}
+
+	private boolean isIdentifierProperty(String name) {
 		final var identifierProperty = getIdentifierProperty();
-		if ( identifierProperty != null && identifierProperty.getName().equals( name ) ) {
-			return true;
-		}
-		else {
-			for ( var property : getPropertyClosure() ) {
-				if ( property.getName().equals( name ) ) {
-					return true;
-				}
+		return identifierProperty != null && identifierProperty.getName().equals( name );
+	}
+
+	private boolean hasPropertyInClosure(String name, List<Property> closure) {
+		for ( var property : closure ) {
+			if ( property.getName().equals( name ) ) {
+				return true;
 			}
-			return false;
 		}
+		return false;
 	}
 
 	/**
@@ -663,7 +678,6 @@ public abstract sealed class PersistentClass
 	 */
 	public boolean isPropertyDefinedInSuperHierarchy(String name) {
 		return getSuperclass() != null && getSuperclass().isPropertyDefinedInHierarchy( name );
-
 	}
 
 	/**
@@ -676,7 +690,7 @@ public abstract sealed class PersistentClass
 	 * @return {@code true} if a property with that name exists; {@code false} if not
 	 */
 	public boolean isPropertyDefinedInHierarchy(String name) {
-		return hasProperty( name )
+		return hasPropertyIncludingGenerics( name )
 			|| getSuperMappedSuperclass() != null && getSuperMappedSuperclass().isPropertyDefinedInHierarchy( name )
 			|| getSuperclass() != null && getSuperclass().isPropertyDefinedInHierarchy( name );
 	}

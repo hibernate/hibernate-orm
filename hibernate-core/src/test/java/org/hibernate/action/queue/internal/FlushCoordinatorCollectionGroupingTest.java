@@ -55,7 +55,7 @@ class FlushCoordinatorCollectionGroupingTest {
 
 		final var coordinator = new FlushCoordinator(
 				constraintModel,
-				mock( PlanningOptions.class ),
+				new PlanningOptions( false, false, false, false, PlanningOptions.UniqueCycleStrategy.FAIL ),
 				mock( SessionImplementor.class )
 		);
 		final var groups = coordinator.groupOperations( List.of( firstCarrier, secondCarrier ) );

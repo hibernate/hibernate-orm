@@ -47,13 +47,23 @@ public final class FollowOnLockingTestSupport {
 
 	/// Evaluated before fixture bootstrap so unsupported isolation settings and
 	/// documented direct-locking overrides do not initialize these factories.
-	public static class Eligibility implements ExecutionCondition {
+	public static class Eligibility extends ReadCommittedEligibility {
 		@Override
 		public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
 			final var dialectClass = DialectContext.getDialectClass();
 			if ( SQLServerDialect.class.isAssignableFrom( dialectClass ) || SybaseDialect.class.isAssignableFrom( dialectClass ) ) {
 				return ConditionEvaluationResult.disabled( "Dialect deliberately uses direct locking even with FORCE" );
 			}
+			return super.evaluateExecutionCondition( context );
+		}
+	}
+
+	/// Shared isolation prerequisites, also applicable when entity acquisition is
+	/// direct and only collection acquisition uses secondary statements.
+	public static class ReadCommittedEligibility implements ExecutionCondition {
+		@Override
+		public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
+			final var dialectClass = DialectContext.getDialectClass();
 			if ( SpannerDialect.class.isAssignableFrom( dialectClass ) || SpannerPostgreSQLDialect.class.isAssignableFrom( dialectClass ) ) {
 				return ConditionEvaluationResult.disabled( "Database profile does not support READ_COMMITTED" );
 			}
@@ -64,7 +74,7 @@ public final class FollowOnLockingTestSupport {
 			if ( dialect.getLockingSupport().getMetadata().getPessimisticLockStyle() == PessimisticLockStyle.NONE ) {
 				return ConditionEvaluationResult.disabled( "Dialect does not support pessimistic select locking" );
 			}
-			return ConditionEvaluationResult.enabled( "READ_COMMITTED follow-on locking is eligible" );
+			return ConditionEvaluationResult.enabled( "READ_COMMITTED pessimistic locking is eligible" );
 		}
 	}
 

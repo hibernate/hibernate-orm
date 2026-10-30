@@ -1,7 +1,6 @@
 package org.hibernate.sql.exec.internal.lock;
 
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
-import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
 import org.hibernate.dialect.lock.spi.LockingClauseStrategy;
 
 import jakarta.persistence.PessimisticLockScope;
@@ -421,14 +420,6 @@ public class LockingHelper {
 			JdbcParameterBindingsImpl parameterBindings,
 			Map<Object, EntityDetails> ownerDetailsMap,
 			SharedSessionContractImplementor session) {
-		if ( !session.getDialect().getRowValueSupport().supports( RowValueSupport.Feature.IN_LIST ) ) {
-			// for now...
-			throw new UnsupportedOperationException(
-					"Follow-on collection-table locking with composite keys is not supported for Dialects"
-					+ " which do not support tuples (row constructor syntax) as part of an in-list"
-			);
-		}
-
 		final int jdbcTypeCount = keyDescriptor.getJdbcTypeCount();
 		final List<ColumnReference> columnReferences = new ArrayList<>( jdbcTypeCount );
 		keyDescriptor.forEachSelectable( (selectionIndex, selectableMapping) -> {
@@ -559,14 +550,6 @@ public class LockingHelper {
 			JdbcParameterBindingsImpl parameterBindings,
 			List<CollectionKey> collectionKeys,
 			SharedSessionContractImplementor session) {
-		if ( !session.getDialect().getRowValueSupport().supports( RowValueSupport.Feature.IN_LIST ) ) {
-			// for now...
-			throw new UnsupportedOperationException(
-					"Follow-on collection-table locking with composite keys is not supported for Dialects"
-					+ " which do not support tuples (row constructor syntax) as part of an in-list"
-			);
-		}
-
 		final int jdbcTypeCount = keyDescriptor.getJdbcTypeCount();
 		final List<ColumnReference> columnReferences = new ArrayList<>( jdbcTypeCount );
 		keyDescriptor.forEachSelectable( (selectionIndex, selectableMapping) -> {
@@ -669,9 +652,15 @@ public class LockingHelper {
 		}
 	}
 
+	/// Resolves the keys for one entity mapping using Hibernate identity semantics.
+	/// The returned mutable map exposes domain identifiers as keys, including in its
+	/// backed views, without invoking identifier Java equality or hashing for lookups.
 	public static Map<Object, EntityDetails> resolveEntityKeys(List<EntityKey> entityKeys, ExecutionContext executionContext) {
-		final Map<Object, EntityDetails> map = new HashMap<>();
-		final var persistenceContext = executionContext.getSession().getPersistenceContext();
+		final var session = executionContext.getSession();
+		final Map<Object, EntityDetails> map = entityKeys.isEmpty()
+				? new HashMap<>()
+				: new EntityDetailsMap( session, entityKeys.get( 0 ).getPersister() );
+		final var persistenceContext = session.getPersistenceContext();
 		entityKeys.forEach( (entityKey) -> {
 			final Object instance = persistenceContext.getEntity( entityKey );
 			final var entityEntry = persistenceContext.getEntry( instance );

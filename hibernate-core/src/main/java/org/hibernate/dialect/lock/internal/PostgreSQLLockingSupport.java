@@ -108,7 +108,7 @@ public class PostgreSQLLockingSupport
 
 	@Override
 	public OuterJoinLockingType getOuterJoinLockingType() {
-		return OuterJoinLockingType.UNSUPPORTED;
+		return OuterJoinLockingType.NON_NULL_TARGETS;
 	}
 
 	@Override

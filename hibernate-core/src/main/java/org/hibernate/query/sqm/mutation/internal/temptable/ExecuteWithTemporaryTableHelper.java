@@ -128,9 +128,10 @@ public final class ExecuteWithTemporaryTableHelper {
 		lockOptions.setLockMode( LockMode.WRITE );
 		// Visit the table joins and reset the lock mode if we encounter OUTER joins that are not supported
 		final var sourceSelectStatement = temporaryTableInsert.getSourceSelectStatement();
+		final var outerJoinLocking = jdbcEnvironment.getDialect().getLockingSupport().getMetadata().getOuterJoinLockingType();
 		if ( sourceSelectStatement != null
-				&& jdbcEnvironment.getDialect().getLockingSupport().getMetadata().getOuterJoinLockingType()
-						== OuterJoinLockingType.UNSUPPORTED ) {
+				&& (outerJoinLocking == OuterJoinLockingType.UNSUPPORTED
+						|| outerJoinLocking == OuterJoinLockingType.NON_NULL_TARGETS) ) {
 			sourceSelectStatement.visitQuerySpecs( querySpec -> {
 				querySpec.getFromClause().visitTableJoins( tableJoin -> {
 					if ( tableJoin.isInitialized()

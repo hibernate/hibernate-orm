@@ -12,6 +12,7 @@ import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
 import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.exec.internal.lock.CollectionLockingAction;
 import org.hibernate.sql.exec.internal.lock.FollowOnLockingAction;
+import org.hibernate.sql.exec.internal.lock.LockingHelper;
 import org.hibernate.sql.exec.internal.lock.LoadedValuesCollectorFactory;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcActionExecution;
@@ -241,6 +242,9 @@ public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 
 		@Override
 		public JdbcSelect build() {
+			if ( isFollowOnLockStrategy ) {
+				LockingHelper.validateFollowOnLocking( lockOptions );
+			}
 			if ( lockTimeoutType == LockTimeoutType.CONNECTION ) {
 				addSecondaryActionPair(
 						new LockTimeoutHandler(

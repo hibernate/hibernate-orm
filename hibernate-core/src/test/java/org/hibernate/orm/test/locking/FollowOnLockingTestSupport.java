@@ -2,14 +2,19 @@ package org.hibernate.orm.test.locking;
 
 import java.sql.Connection;
 import java.util.Locale;
+import java.util.Map;
 
+import org.hibernate.LockOptions;
 import org.hibernate.SharedSessionContract;
+import org.hibernate.Timeouts;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
+import org.hibernate.dialect.lock.internal.DB2LockingSupport;
+import org.hibernate.dialect.lock.internal.LockingSqlRewriterSupport;
 import org.hibernate.dialect.lock.spi.BlockingDuration;
 import org.hibernate.dialect.lock.spi.Operation;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
@@ -29,6 +34,7 @@ import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.LockMode.PESSIMISTIC_WRITE;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /// Test-local prerequisites and plan assertions for READ_COMMITTED follow-on
@@ -71,6 +77,37 @@ public final class FollowOnLockingTestSupport {
 		final var concurrency = scope.getSessionFactory().getJdbcServices().getJdbcEnvironment().getTransactionConcurrency();
 		assumeTrue( concurrency.supports( Operation.UPDATE_LOCK_READ ),
 				"Resolved profile does not establish explicit update-lock-read support: " + concurrency.getName() );
+	}
+
+	/// Builds a skip-locked SELECT for a separate contender transaction to probe
+	/// whether another transaction's locks protect the selected rows against writes.
+	/// Callers must establish that the rows exist and that the database profile
+	/// supports this physical-row probe: skipped rows indicate conflicting locks,
+	/// but do not identify the held lock mode or establish that ordinary reads block.
+	///
+	/// Uses the dialect's PESSIMISTIC_WRITE SQL, except that DB2's explicit
+	/// `USE AND KEEP UPDATE LOCKS` clause is replaced with
+	/// `USE AND KEEP EXCLUSIVE LOCKS`. DB2 update (U) locks coexist with shared (S)
+	/// locks, so an exclusive (X) contender is needed to detect protection provided
+	/// by either S or U locks. This adjustment is confined to the test contender;
+	/// it does not change the production PESSIMISTIC_WRITE strategy.
+	///
+	/// @param session the contender session whose dialect supplies the locking SQL
+	/// @param select the SELECT to which locking is to be applied
+	/// @param aliases target table aliases mapped to their key column names
+	/// @return the locking SELECT, configured to skip rows with conflicting locks
+	static String writeProtectionProbeSql(
+			SharedSessionContractImplementor session,
+			String select,
+			Map<String, String[]> aliases) {
+		final var support = session.getJdbcServices().getDialect().getLockingSupport();
+		final var sql = LockingSqlRewriterSupport.rewrite( support, select,
+				new LockOptions( PESSIMISTIC_WRITE ).setTimeout( Timeouts.SKIP_LOCKED ), aliases ).sql();
+		// DB2 U-locks coexist with S-locks. An X-lock contender is needed to
+		// establish protection against writes after a PESSIMISTIC_READ request.
+		return support instanceof DB2LockingSupport
+				? sql.replace( "use and keep update locks", "use and keep exclusive locks" )
+				: sql;
 	}
 
 	static void requireDeletionRace(SessionFactoryScope scope) {

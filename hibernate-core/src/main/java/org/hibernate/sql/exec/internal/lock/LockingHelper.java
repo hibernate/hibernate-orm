@@ -189,6 +189,18 @@ public class LockingHelper {
 			Timeout lockTimeout,
 			PersistentCollection<?> collectionToLock,
 			ExecutionContext executionContext) {
+		lockCollectionTableByKey( attributeMapping, lockMode, lockTimeout, collectionToLock.getKey(), executionContext );
+	}
+
+	/// Locks existing collection-table rows using the database collection key,
+	/// without reading or initializing the owner's current collection field.
+	/// The key may be the owner's identifier or a referenced unique property.
+	public static void lockCollectionTableByKey(
+			PluralAttributeMapping attributeMapping,
+			LockMode lockMode,
+			Timeout lockTimeout,
+			Object collectionKey,
+			ExecutionContext executionContext) {
 		final SharedSessionContractImplementor session = executionContext.getSession();
 
 		final var keyDescriptor = attributeMapping.getKeyDescriptor();
@@ -229,7 +241,7 @@ public class LockingHelper {
 			final var jdbcParameter =
 					new SqlTypedMappingJdbcParameter( keyPart.getSelectable( 0 ) );
 			keyDescriptor.breakDownJdbcValues(
-					collectionToLock.getKey(),
+					collectionKey,
 					(valueIndex, value, jdbcValueMapping) -> {
 						parameterBindings.addBinding( jdbcParameter,
 								new JdbcParameterBindingImpl( jdbcValueMapping.getJdbcMapping(), value ) );
@@ -242,7 +254,7 @@ public class LockingHelper {
 			final List<ColumnReference> columnReferences = new ArrayList<>( jdbcTypeCount );
 			final List<JdbcParameter> jdbcParameters = new ArrayList<>( jdbcTypeCount );
 			keyDescriptor.breakDownJdbcValues(
-					collectionToLock.getKey(),
+					collectionKey,
 					(valueIndex, value, jdbcValueMapping) -> {
 						columnReferences.add( new ColumnReference( tableReference, jdbcValueMapping ) );
 						final var jdbcMapping = jdbcValueMapping.getJdbcMapping();

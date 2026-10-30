@@ -2,6 +2,7 @@ package org.hibernate.loader.ast.internal;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -44,7 +45,8 @@ public class LoaderHelper {
 	/**
 	 * Ensure the {@linkplain LockMode} associated with the entity in relation to a
 	 * persistence context is {@linkplain LockMode#greaterThan great or equal} to the
-	 * requested mode, performing a pessimistic lock upgrade on a given entity, if needed.
+	 * requested mode. An extended pessimistic scope also requires acquisition when
+	 * the existing mode is equal or stronger, without reducing that mode.
 	 *
 	 * @param object The entity for which to upgrade the lock.
 	 * @param entry The entity's {@link EntityEntry} instance.
@@ -57,8 +59,14 @@ public class LoaderHelper {
 			@Nonnull LockOptions lockOptions,
 			@Nonnull SharedSessionContractImplementor session) {
 		final var requestedLockMode = lockOptions.getLockMode();
-		if ( requestedLockMode.greaterThan( entry.getLockMode() ) ) {
-			// Request is for a more restrictive lock than the lock already held
+		final boolean modeUpgrade = requestedLockMode.greaterThan( entry.getLockMode() );
+		final boolean scopeAcquisition = requestedLockMode.isPessimistic()
+				&& lockOptions.getLockScope() == PessimisticLockScope.EXTENDED;
+		if ( modeUpgrade || scopeAcquisition ) {
+			// Repeating force increment for scope alone must not increment the version again.
+			final var acquisitionOptions = !modeUpgrade && requestedLockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT
+					? lockOptions.makeCopy().setLockMode( LockMode.PESSIMISTIC_WRITE )
+					: lockOptions;
 			final var persister = entry.getPersister();
 
 			if ( entry.getStatus().isDeletedOrGone()) {
@@ -74,7 +82,7 @@ public class LoaderHelper {
 						"Locking %s with id '%s' in mode %s",
 						persister.getEntityName(),
 						entry.getId(),
-						requestedLockMode
+						acquisitionOptions.getLockMode()
 				);
 			}
 
@@ -104,7 +112,7 @@ public class LoaderHelper {
 					}
 				}
 
-				if ( persister.isVersioned() && requestedLockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT  ) {
+				if ( modeUpgrade && persister.isVersioned() && requestedLockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT ) {
 					// todo : should we check the current isolation mode explicitly?
 					OptimisticLockHelper.forceVersionIncrement( object, entry, session );
 				}
@@ -113,12 +121,12 @@ public class LoaderHelper {
 					final var entityLockEvent = eventMonitor.beginEntityLockEvent();
 					boolean success = false;
 					try {
-						persister.lock( entry.getId(), entry.getVersion(), object, lockOptions, session );
+						persister.lock( entry.getId(), entry.getVersion(), object, acquisitionOptions, session );
 						success = true;
 					}
 					finally {
 						eventMonitor.completeEntityLockEvent( entityLockEvent, entry.getId(),
-								persister.getEntityName(), lockOptions.getLockMode(), success, session );
+								persister.getEntityName(), acquisitionOptions.getLockMode(), success, session );
 					}
 				}
 				else {
@@ -127,7 +135,9 @@ public class LoaderHelper {
 						eventSource.forceFlush( entry );
 					}
 				}
-				entry.setLockMode(requestedLockMode);
+				if ( modeUpgrade ) {
+					entry.setLockMode( requestedLockMode );
+				}
 			}
 			finally {
 				// the database now holds a lock + the object is flushed from the cache,

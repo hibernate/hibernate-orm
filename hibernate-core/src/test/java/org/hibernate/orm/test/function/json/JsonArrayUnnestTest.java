@@ -39,10 +39,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		JsonArrayUnnestTest.Label.class
 })
 @SessionFactory
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsStructuralArrays.class)
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsUnnest.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructuralArrays.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnnest.class)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonAggregate.class)
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsJsonTable.class )
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonTable.class)
 public class JsonArrayUnnestTest {
 
 	@BeforeEach
@@ -194,7 +194,7 @@ public class JsonArrayUnnestTest {
 							"from Book e " +
 							"join e.mainPublisher p " +
 							"join p.genres g " +
-							"order by e.id",
+							"order by e.id, index(g)",
 							Tuple.class
 					)
 					.getResultList();

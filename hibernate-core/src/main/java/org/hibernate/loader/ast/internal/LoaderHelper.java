@@ -107,21 +107,14 @@ public class LoaderHelper {
 				}
 
 				if ( modeUpgrade && persister.isVersioned() && requestedLockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT ) {
-					// todo : should we check the current isolation mode explicitly?
+					if ( scopeAcquisition && entry.isExistsInDatabase() ) {
+						// Complete scope acquisition before changing any version state.
+						acquireLock( object, entry, lockOptions.makeCopy().setLockMode( LockMode.PESSIMISTIC_WRITE ), session );
+					}
 					OptimisticLockHelper.forceVersionIncrement( object, entry, session );
 				}
 				else if ( entry.isExistsInDatabase() ) {
-					final var eventMonitor = session.getEventMonitor();
-					final var entityLockEvent = eventMonitor.beginEntityLockEvent();
-					boolean success = false;
-					try {
-						persister.lock( entry.getId(), entry.getVersion(), object, acquisitionOptions, session );
-						success = true;
-					}
-					finally {
-						eventMonitor.completeEntityLockEvent( entityLockEvent, entry.getId(),
-								persister.getEntityName(), acquisitionOptions.getLockMode(), success, session );
-					}
+					acquireLock( object, entry, acquisitionOptions, session );
 				}
 				else {
 					// should only be possible for a stateful session
@@ -140,6 +133,25 @@ public class LoaderHelper {
 					persister.getCacheAccessStrategy().unlockItem( session, cacheKey, lock );
 				}
 			}
+		}
+	}
+
+	private static void acquireLock(
+			Object object,
+			EntityEntry entry,
+			LockOptions lockOptions,
+			SharedSessionContractImplementor session) {
+		final var persister = entry.getPersister();
+		final var eventMonitor = session.getEventMonitor();
+		final var entityLockEvent = eventMonitor.beginEntityLockEvent();
+		boolean success = false;
+		try {
+			persister.lock( entry.getId(), entry.getVersion(), object, lockOptions, session );
+			success = true;
+		}
+		finally {
+			eventMonitor.completeEntityLockEvent( entityLockEvent, entry.getId(),
+					persister.getEntityName(), lockOptions.getLockMode(), success, session );
 		}
 	}
 

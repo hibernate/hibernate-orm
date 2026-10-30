@@ -364,6 +364,32 @@ public class LockingHelper {
 		};
 	}
 
+	/// Resolves the persisted owner key without requiring a collection-valued snapshot.
+	public static Object resolveCollectionKey(
+			PluralAttributeMapping attribute,
+			Object owner,
+			SharedSessionContractImplementor session) {
+		final var collectionPersister = attribute.getCollectionDescriptor();
+		final var collectionType = collectionPersister.getCollectionType();
+		final var persistenceContext = session.getPersistenceContextInternal();
+		final var ownerEntry = persistenceContext.getEntry( owner );
+		if ( !collectionType.useLHSPrimaryKey() && ownerEntry != null && ownerEntry.getLoadedState() == null ) {
+			// Read-only owners have no snapshot. Their current property-ref value may
+			// have changed, but the original collection entry retains the database key.
+			final var collectionEntries = persistenceContext.getCollectionEntries();
+			if ( collectionEntries != null ) {
+				for ( var collectionEntry : collectionEntries.entrySet() ) {
+					if ( collectionEntry.getKey().getOwner() == owner
+							&& collectionEntry.getValue().getLoadedPersister() == collectionPersister ) {
+						return collectionEntry.getValue().getLoadedKey();
+					}
+				}
+			}
+		}
+		return collectionType.getKeyOfOwner( owner, session );
+	}
+
+
 	private static void applySimpleCollectionKeyTableLockRestrictions(
 			PluralAttributeMapping attributeMapping,
 			ForeignKeyDescriptor keyDescriptor,
@@ -373,11 +399,9 @@ public class LockingHelper {
 			SharedSessionContractImplementor session) {
 
 		ownerDetailsMap.forEach( (o, entityDetails) -> {
-			final var collectionInstance =
-					(PersistentCollection<?>)
-							entityDetails.entry().getLoadedState()[attributeMapping.getStateArrayPosition()];
+			final var collectionKey = resolveCollectionKey( attributeMapping, entityDetails.instance(), session );
 			keyDescriptor.breakDownJdbcValues(
-					collectionInstance.getKey(),
+					collectionKey,
 					(valueIndex, value, jdbcValueMapping) -> {
 						final var jdbcMapping = jdbcValueMapping.getJdbcMapping();
 						final var jdbcParameter = new SqlTypedMappingJdbcParameter( jdbcValueMapping );
@@ -413,14 +437,11 @@ public class LockingHelper {
 		final InListPredicate inListPredicate = new InListPredicate( new SqlTuple( columnReferences, keyDescriptor ) );
 
 		ownerDetailsMap.forEach( (o, entityDetails) -> {
-			final var collectionInstance =
-					(PersistentCollection<?>)
-							entityDetails.entry().getLoadedState()[attributeMapping.getStateArrayPosition()];
-			final Object collectionKeyValue = collectionInstance.getKey();
+			final var collectionKey = resolveCollectionKey( attributeMapping, entityDetails.instance(), session );
 
 			final List<JdbcParameter> jdbcParameters = new ArrayList<>( jdbcTypeCount );
 			keyDescriptor.breakDownJdbcValues(
-					collectionKeyValue,
+					collectionKey,
 					(valueIndex, value, jdbcValueMapping) -> {
 						final var jdbcMapping = jdbcValueMapping.getJdbcMapping();
 						final var jdbcParameter = new SqlTypedMappingJdbcParameter( jdbcValueMapping );

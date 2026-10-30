@@ -13,6 +13,9 @@ import org.hibernate.persister.entity.EntityPersister;
 import static org.hibernate.cache.spi.entry.CacheEntryHelper.buildStructuredCacheEntry;
 import static org.hibernate.stat.internal.StatsHelper.getRootEntityRole;
 
+/// Performs explicit version increments and coordinates their cache lifecycle.
+///
+/// @author Steve Ebersole
 public final class OptimisticLockHelper {
 
 	private OptimisticLockHelper() {
@@ -38,27 +41,43 @@ public final class OptimisticLockHelper {
 		else {
 			cacheKey = null;
 		}
-		final Object nextVersion = persister.forceVersionIncrement( entry.getId(), previousVersion, session );
-		entry.forceLocked( object, nextVersion );
-		if ( persister.canWriteToCache() ) {
-			final Object cacheEntry = updateCacheItem(
-					object,
-					previousVersion,
-					nextVersion,
-					cacheKey,
-					entry,
-					persister,
-					session
-			);
-			session.getTransactionCompletionCallbacks()
-					.registerCallback( new CacheCleanupProcess(
-							cacheKey,
-							persister,
-							previousVersion,
-							nextVersion,
-							lock,
-							cacheEntry
-					) );
+		try {
+			final Object nextVersion = persister.forceVersionIncrement( entry.getId(), previousVersion, session );
+			entry.forceLocked( object, nextVersion );
+			if ( persister.canWriteToCache() ) {
+				final Object cacheEntry = updateCacheItem(
+						object,
+						previousVersion,
+						nextVersion,
+						cacheKey,
+						entry,
+						persister,
+						session
+				);
+				// Registration is the final step: completion owns the lock after it returns.
+				session.getTransactionCompletionCallbacks()
+						.registerCallback( new CacheCleanupProcess(
+								cacheKey,
+								persister,
+								previousVersion,
+								nextVersion,
+								lock,
+								cacheEntry
+						) );
+			}
+		}
+		catch (RuntimeException | Error failure) {
+			if ( persister.canWriteToCache() ) {
+				try {
+					persister.getCacheAccessStrategy().unlockItem( session, cacheKey, lock );
+				}
+				catch (RuntimeException | Error cleanupFailure) {
+					if ( cleanupFailure != failure ) {
+						failure.addSuppressed( cleanupFailure );
+					}
+				}
+			}
+			throw failure;
 		}
 	}
 
@@ -154,7 +173,7 @@ public final class OptimisticLockHelper {
 		@Override
 		public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
 			final var cache = persister.getCacheAccessStrategy();
-			if ( cacheUpdateRequired( success, persister, session ) ) {
+			if ( cacheEntry != null && cacheUpdateRequired( success, persister, session ) ) {
 				cacheAfterUpdate( cache, cacheKey, session );
 			}
 			else {

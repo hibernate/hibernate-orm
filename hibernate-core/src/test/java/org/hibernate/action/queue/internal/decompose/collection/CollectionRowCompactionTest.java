@@ -1,14 +1,20 @@
 package org.hibernate.action.queue.internal.decompose.collection;
 
 import org.hibernate.action.queue.internal.PreparedCollectionMutation;
+import org.hibernate.action.queue.spi.CollectionEndpoint;
+import org.hibernate.action.queue.spi.CollectionTransition;
 import org.hibernate.action.queue.spi.decompose.DecompositionContext;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPlanContributor;
 import org.hibernate.action.queue.spi.meta.CollectionTableDescriptor;
+import org.hibernate.collection.spi.CollectionMutationInterpretation;
+import org.hibernate.collection.spi.PhysicalCollectionMutation;
+import org.hibernate.collection.spi.SemanticCollectionChange;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.persister.collection.BasicCollectionPersister;
+import org.hibernate.persister.collection.CollectionPersister;
 
 import org.junit.jupiter.api.Test;
 
@@ -23,10 +29,9 @@ class CollectionRowCompactionTest {
 	@Test
 	void compactsCreateRowsOnlyForAnOwnerInsertedInTheCurrentFlush() {
 		final var fixture = new Fixture();
-		final var mutation = mock( PreparedCollectionMutation.class );
-		final var context = mock( DecompositionContext.class );
 		final var owner = new Object();
-		when( mutation.getAffectedOwner() ).thenReturn( owner );
+		final var mutation = preparedMutation( owner );
+		final var context = mock( DecompositionContext.class );
 
 		assertThat( fixture.policy.canCompactCreate( mutation, context ) ).isFalse();
 
@@ -54,6 +59,23 @@ class CollectionRowCompactionTest {
 		);
 
 		assertThat( fixture.policy.canCompactReplacement() ).isFalse();
+	}
+
+	private static PreparedCollectionMutation preparedMutation(Object owner) {
+		return new PreparedCollectionMutation(
+				PreparedCollectionMutation.Kind.CREATE,
+				null,
+				new CollectionEndpoint( mock( CollectionPersister.class ), null ),
+				false,
+				owner,
+				null,
+				new CollectionMutationInterpretation(
+						CollectionTransition.CREATE,
+						SemanticCollectionChange.none(),
+						PhysicalCollectionMutation.noWork(),
+						0
+				)
+		);
 	}
 
 	private static class Fixture {

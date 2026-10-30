@@ -84,7 +84,7 @@ public class ActionQueueCheckpointTest {
 								Set.of(),
 								Set.of()
 						),
-						mock( PlanningOptions.class ),
+						new PlanningOptions( false, false, false, false, PlanningOptions.UniqueCycleStrategy.FAIL ),
 						Map.of(),
 						false,
 						session

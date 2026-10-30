@@ -260,7 +260,7 @@ public abstract sealed class PersistentClass
 	public List<PersistentClass> getSubclassClosure() {
 		final ArrayList<List<PersistentClass>> lists = new ArrayList<>();
 		lists.add( List.of( this ) );
-		for ( var subclass : getSubclasses() ) {
+		for ( var subclass : subclasses ) {
 			lists.add( subclass.getSubclassClosure() );
 		}
 		return new JoinedList<>( lists );

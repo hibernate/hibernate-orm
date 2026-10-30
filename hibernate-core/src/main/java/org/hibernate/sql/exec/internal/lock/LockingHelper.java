@@ -6,6 +6,7 @@ import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
@@ -17,6 +18,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
+import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -56,6 +58,23 @@ import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
  * @author Steve Ebersole
  */
 public class LockingHelper {
+	/// Whether the request expresses pessimistic skip-locked intent, including
+	/// the legacy lock mode. Does not change direct-locking option precedence.
+	public static boolean isSkipLockedRequest(LockOptions lockOptions) {
+		return lockOptions != null && lockOptions.getLockMode().isPessimistic()
+				&& (lockOptions.getTimeout().milliseconds() == SKIP_LOCKED_MILLI
+						|| lockOptions.getLockMode() == LockMode.UPGRADE_SKIPLOCKED);
+	}
+
+	/// Rejects skip-locked acquisition after follow-on locking has been selected.
+	public static void validateFollowOnLocking(LockOptions lockOptions) {
+		if ( isSkipLockedRequest( lockOptions ) ) {
+			throw new IllegalQueryOperationException(
+					"SKIP_LOCKED is not supported with follow-on locking; use direct locking for a supported query shape"
+			);
+		}
+	}
+
 	/// Validates identifier coverage for one follow-on table acquisition without
 	/// executing SQL or applying reread state. Optional non-identifier tables and
 	/// skip-locked acquisition are exempt. Expected-key order determines both the

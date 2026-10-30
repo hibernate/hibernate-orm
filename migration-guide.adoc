@@ -200,7 +200,39 @@ the existing conversion to `OptimisticLockException`. This replaces both silent
 success for partial results and the assertion failure for entirely missing results.
 The exception identifies the first missing entity in acquisition input order;
 its message lists all missing identifiers from that table acquisition. Optional
-table rows remain exempt. Skip-locked acquisition policy is unchanged.
+table rows remain exempt.
+
+[[follow-on-skip-locked]]
+=== Skip-locked queries requiring follow-on locking
+
+Pessimistic queries requesting `Timeouts.SKIP_LOCKED` (or the legacy
+`LockMode.UPGRADE_SKIPLOCKED`) now fail when Hibernate selects follow-on entity
+locking. Previously, the primary query could return entities whose rows were
+skipped by the subsequent locking query. List queries retain the existing
+`IllegalStateException` wrapper around
+`IllegalQueryOperationException`; scroll and stream retain the internal exception
+directly. The diagnostic explains the unsupported combination.
+Use direct locking with a query shape supported by the dialect. Direct locking,
+including dialect table hints, remains supported even when the requested follow-on
+strategy is overridden by the dialect.
+
+Rejection occurs before the query's JDBC connection acquisition, secondary-action
+materialization, callbacks, and SQL execution, regardless of contention or result
+contents. Earlier automatic flush work is outside this guarantee, and terminal
+no-execution shortcuts such as a zero result limit need not reject the request.
+Existing `DISALLOW`, `IGNORE`, and native-plan capability decisions remain in effect.
+
+Execution integrations which bypass the standard JDBC executor must apply the same
+guard before their own connection acquisition and callbacks. `LockingHelper` provides
+`isSkipLockedRequest()` and `validateFollowOnLocking()` for the selected follow-on
+strategy. For skip-locked `RAW_SQL` plans, use
+`JdbcSelectSqlFinalizer.finalizeSql(JdbcSelect, JdbcParameterBindings, ExecutionContext)`
+to decide the final disposition before execution. Retain its result only for that
+invocation and pass it to the new `DeferredResultSetAccess` constructor overload,
+avoiding repeated pagination, policy, and SQL decoration callbacks. Other requests
+retain their existing finalization timing. SQL-shaping query options and parameters
+must remain stable during an invocation; pre-actions must not invalidate finalized
+metadata.
 
 [[filtered-to-one-associations]]
 === Filters and SQL restrictions on to-one associations

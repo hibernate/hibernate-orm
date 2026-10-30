@@ -1,7 +1,10 @@
 package org.hibernate.orm.test.type.temporal;
 
+import org.hibernate.SessionFactory;
+import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistryFunctionalTesting;
 import org.hibernate.testing.orm.junit.ServiceRegistryProducer;
@@ -42,13 +45,17 @@ public abstract class AbstractJavaTimeTypeTests<T, E>
 	@Override
 	public StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder builder) {
 		builder.applySetting( JAVA_TIME_USE_DIRECT_JDBC, env.directJdbc() );
+		configureServiceRegistry( builder );
+		return builder.build();
+	}
+
+	protected void configureServiceRegistry(StandardServiceRegistryBuilder builder) {
 		if ( env.hibernateJdbcTimeZone() != null ) {
 			builder.applySetting( JDBC_TIME_ZONE, env.hibernateJdbcTimeZone().getId() );
 		}
 		if ( env.remappingDialectClass() != null ) {
 			builder.applySetting( DIALECT, env.remappingDialectClass().getName() );
 		}
-		return builder.build();
 	}
 
 	protected abstract Class<T> getJavaTimeType();
@@ -180,6 +187,63 @@ public abstract class AbstractJavaTimeTypeTests<T, E>
 				assertPropertyValueEquals( expected, read,
 						"Values written without Hibernate ORM should be read correctly by Hibernate ORM" );
 			} );
+		} );
+	}
+
+	@Test
+	@JiraKey(value = "HHH-13515")
+	public void legacyWriteThenDirectRead(SessionFactoryScope factoryScope) {
+		Assumptions.assumeTrue( env.directJdbc(),
+				"This test verifies backward compatibility: values written with Hibernate ORM"
+				+ " using legacy JDBC should be readable with Hibernate ORM using direct JDBC." );
+
+		Timezones.withDefaultTimeZone( env, () -> {
+			ConnectionProvider connectionProvider = factoryScope.getSessionFactory()
+					.getServiceRegistry().getService( ConnectionProvider.class );
+			StandardServiceRegistryBuilder legacyBuilder = new StandardServiceRegistryBuilder();
+			legacyBuilder.applySetting( JAVA_TIME_USE_DIRECT_JDBC, false );
+			legacyBuilder.addService( ConnectionProvider.class, connectionProvider );
+			configureServiceRegistry( legacyBuilder );
+
+			StandardServiceRegistry legacyRegistry = legacyBuilder.build();
+			try {
+				SessionFactory legacySessionFactory = new MetadataSources( legacyRegistry )
+						.addAnnotatedClass( getEntityType() )
+						.buildMetadata()
+						.buildSessionFactory();
+				try {
+					// Pre-existing data must use the legacy schema too: direct JDBC can select
+					// a different SQL type for offset/zoned values.
+					factoryScope.getSessionFactory().getSchemaManager().drop( false );
+					legacySessionFactory.getSchemaManager().create( false );
+					legacySessionFactory.inTransaction( session -> {
+						session.persist( createEntityForHibernateWrite( 1 ) );
+					} );
+
+					// Compare two fresh reads of the same row. Legacy writes may already have lost
+					// information (for example a LocalDateTime in a DST gap). Original-value
+					// preservation is checked separately by writeThenRead.
+					T expected = legacySessionFactory.fromTransaction( session ->
+							getActualPropertyValue( session.find( getEntityType(), 1 ) ) );
+					factoryScope.inTransaction( session -> {
+						T read = getActualPropertyValue( session.find( getEntityType(), 1 ) );
+						assertPropertyValueEquals( expected, read,
+								"Switching from legacy to direct JDBC should preserve the value read from the same row" );
+					} );
+				}
+				finally {
+					try {
+						legacySessionFactory.getSchemaManager().drop( false );
+						factoryScope.getSessionFactory().getSchemaManager().create( false );
+					}
+					finally {
+						legacySessionFactory.close();
+					}
+				}
+			}
+			finally {
+				StandardServiceRegistryBuilder.destroy( legacyRegistry );
+			}
 		} );
 	}
 

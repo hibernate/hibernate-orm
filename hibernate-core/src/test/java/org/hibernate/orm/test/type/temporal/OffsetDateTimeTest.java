@@ -6,7 +6,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hamcrest.MatcherAssert;
-import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
@@ -147,9 +146,9 @@ public class OffsetDateTimeTest extends AbstractJavaTimeTypeTests<OffsetDateTime
 	}
 
 	@Override
-	public StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder builder) {
+	protected void configureServiceRegistry(StandardServiceRegistryBuilder builder) {
 		builder.applySetting( TIMEZONE_DEFAULT_STORAGE, NORMALIZE );
-		return super.produceServiceRegistry( builder );
+		super.configureServiceRegistry( builder );
 	}
 
 	@Override

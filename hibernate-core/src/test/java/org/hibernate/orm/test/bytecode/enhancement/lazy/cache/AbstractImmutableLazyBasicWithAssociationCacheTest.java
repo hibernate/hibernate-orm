@@ -18,7 +18,6 @@ import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.jdbc.CollectingStatementObserver;
-import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -45,13 +44,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  * @author Ståle Pedersen
  * @see <a href="https://hibernate.atlassian.net/browse/HHH-20773">HHH-20773</a>
  */
-@DomainModel(
-		annotatedClasses = {
-				ImmutableLazyBasicWithAssociationCacheTest.DataHolder.class,
-				ImmutableLazyBasicWithAssociationCacheTest.DataHolderNoLazyCache.class,
-				ImmutableLazyBasicWithAssociationCacheTest.Category.class
-		}
-)
 @ServiceRegistry(
 		settings = {
 				@Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true"),
@@ -60,7 +52,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 )
 @SessionFactory(useCollectingStatementObserver = true)
 @BytecodeEnhanced
-public class ImmutableLazyBasicWithAssociationCacheTest {
+public abstract class AbstractImmutableLazyBasicWithAssociationCacheTest {
 
 	private Long categoryId;
 

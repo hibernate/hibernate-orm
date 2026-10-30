@@ -425,6 +425,11 @@ include::{example-dir-locking}/LockingGuideTests.java[tags=locking-guide-follow-
 Disallowing follow-on acquisition does not force the database to accept an otherwise unsupported locking clause.
 Incompatible operations can throw instead of silently weakening the request.
 Some result shapes and options, including skip-locked requests, restrict follow-on acquisition; do not assume every policy is supported for every query.
+Follow-on acquisition requires the result mapping to provide entity identities for every entity selected for locking.
+A scalar attribute, identifier, or scalar-only DTO projection does not provide this coverage and is rejected before SQL execution when follow-on locking is selected.
+Mixed results and DTOs containing entities remain supported when their entity results cover every lock target.
+Selecting one entity does not cover a different target represented only by a scalar value.
+Use direct locking for a supported query shape, or include the required entities in the selection.
 See link:{doc-javadoc-url}org/hibernate/Locking.FollowOn.html[`Locking.FollowOn`] for the policy API.
 
 [[locking-graph-root]]

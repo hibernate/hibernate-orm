@@ -23,6 +23,7 @@ import org.hibernate.dialect.function.spi.ExpressionCoercionSupport;
 import org.hibernate.dialect.function.spi.WindowFunctionSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.lock.internal.TableLockHintRendererSupport;
+import org.hibernate.dialect.lock.internal.NonNullLockTargetChecker;
 import org.hibernate.dialect.sql.ast.internal.CorrelationChecker;
 import org.hibernate.dialect.sql.ast.internal.NestedOrTargetTableCorrelationVisitor;
 import org.hibernate.engine.jdbc.Size;
@@ -194,11 +195,13 @@ import org.hibernate.sql.exec.spi.JdbcPaginationApplication;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcOperations;
 import org.hibernate.sql.exec.internal.VersionTypeSeedParameterSpecification;
+import org.hibernate.sql.exec.internal.lock.LockingHelper;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
+import org.hibernate.sql.results.jdbc.internal.NonNullTargetJdbcValuesMappingProducer;
 import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.spi.mutation.MutationTarget;
 import org.hibernate.sql.spi.ParameterMarkerStrategy;
@@ -373,6 +376,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 */
 	private QuerySpec lockingTarget;
 	private LockingClauseStrategy lockingClauseStrategy;
+	private Boolean nonNullTargetsEligible;
 	private LockOptions lockOptions;
 	private boolean scrollExecution;
 
@@ -447,6 +451,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected final void setLockingTarget(QuerySpec querySpec) {
 		if ( lockingTarget != querySpec ) {
 			lockingClauseStrategy = null;
+			nonNullTargetsEligible = null;
 		}
 		lockingTarget = querySpec;
 	}
@@ -968,7 +973,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		visitSelectStatement( selectStatement );
 
 		final int rowsToSkip;
-		final JdbcSelect jdbcSelect = JdbcOperations.select( selectRequest() )
+		final var selectBuilder = JdbcOperations.select( selectRequest() )
 				.command( getSql() )
 				.parameterBinders( getParameterBinders() )
 				.affectedQuerySpaces( getAffectedTableNames() )
@@ -983,8 +988,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				.paginationApplication( getJdbcPaginationApplication( selectStatement, paginationPlan ) )
 				.offsetParameter( getOffsetParameter() )
 				.limitParameter( getLimitParameter() )
-				.scrollExecution( scrollExecution )
-				.build();
+				.scrollExecution( scrollExecution );
+		if ( Boolean.TRUE.equals( nonNullTargetsEligible ) ) {
+			selectBuilder.jdbcValuesMappingProducer( new NonNullTargetJdbcValuesMappingProducer(
+					getSessionFactory().getJdbcValuesMappingProducerProvider().buildMappingProducer( selectStatement, getSessionFactory() ),
+					lockingTarget.getFromClause().getRoots().get( 0 ).getSourceAlias() ) );
+		}
+		final JdbcSelect jdbcSelect = selectBuilder.build();
 
 		if ( lockOptions == null || !lockOptions.getLockMode().isPessimistic() ) {
 			return jdbcSelect;
@@ -993,6 +1003,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final LockingSupport lockingSupport = getDialect().getLockingSupport();
 		final LockingSupport.Metadata lockingSupportMetadata = lockingSupport.getMetadata();
 		final LockStrategy lockStrategy = determineLockingStrategy( lockingTarget, lockOptions.getFollowOnStrategy() );
+		if ( lockStrategy == LockStrategy.FOLLOW_ON ) {
+			LockingHelper.validateFollowOnLocking( lockOptions );
+			LockingHelper.validateFollowOnLockingResults( selectStatement, lockingTarget, lockingClauseStrategy );
+		}
 
 		return getSessionFactory().getJdbcSelectWithActionsBuilder()
 				.setPrimaryAction( jdbcSelect )
@@ -2309,7 +2323,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					break;
 				}
 				case FOLLOW_ON: {
-					if ( querySpec.isRoot() ) {
+					if ( querySpec.isRoot()
+							|| getSqlAst() instanceof SelectStatement select
+									&& select.getQueryPart().isRoot()
+									&& select.getQueryPart().getFirstQuerySpec() == querySpec ) {
 						lockOptions = null;
 					}
 					else {
@@ -2406,19 +2423,17 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			strategy = LockStrategy.FOLLOW_ON;
 		}
 
-		if ( dialect.getLockingSupport().getMetadata().getOuterJoinLockingType()
-				== OuterJoinLockingType.UNSUPPORTED ) {
-			if ( lockingClauseStrategy != null && lockingClauseStrategy.containsOuterJoins() ) {
-				// we have any outer joins to lock, but the dialect does not support locking outer joins
-				// 		-we need to use follow-on locking if allowed
-				if ( followOnStrategy == Locking.FollowOn.DISALLOW ) {
-					throw new IllegalQueryOperationException( "Locking with OUTER joins is not supported" );
-				}
-				else if ( followOnStrategy == Locking.FollowOn.IGNORE ) {
-					return LockStrategy.NONE;
-				}
-				strategy = LockStrategy.FOLLOW_ON;
+		final var outerJoinLocking = dialect.getLockingSupport().getMetadata().getOuterJoinLockingType();
+		if ( lockingClauseStrategy != null && lockingClauseStrategy.containsOuterJoins()
+				&& (outerJoinLocking == OuterJoinLockingType.UNSUPPORTED
+						|| outerJoinLocking == OuterJoinLockingType.NON_NULL_TARGETS && !canLockNonNullTargets( querySpec )) ) {
+			if ( followOnStrategy == Locking.FollowOn.DISALLOW ) {
+				throw new IllegalQueryOperationException( "Locking with OUTER joins is not supported" );
 			}
+			else if ( followOnStrategy == Locking.FollowOn.IGNORE ) {
+				return LockStrategy.NONE;
+			}
+			strategy = LockStrategy.FOLLOW_ON;
 		}
 
 		if ( hasAggregateFunctions( querySpec ) ) {
@@ -2432,6 +2447,26 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		return strategy;
+	}
+
+	/// Clause rendering happens with an active statement stack, while plan
+	/// finalization happens after it is popped. Retain one translation's decision
+	/// so both phases assign the same owner to lock acquisition.
+	private boolean canLockNonNullTargets(QuerySpec querySpec) {
+		if ( querySpec != lockingTarget ) {
+			return false;
+		}
+		if ( nonNullTargetsEligible == null ) {
+			final var metadata = dialect.getLockingSupport().getMetadata();
+			nonNullTargetsEligible = lockOptions != null
+					&& getTranslationRequest().statement() instanceof SelectStatement statement
+					&& NonNullLockTargetChecker.canApply(
+							querySpec, statement, lockingClauseStrategy.getPathsToLock(), lockOptions.getLockScope(),
+							lockOptions.getLockMode() == LockMode.PESSIMISTIC_READ
+									? metadata.getReadRowLockStrategy() : metadata.getWriteRowLockStrategy(),
+							hasLimit() );
+		}
+		return nonNullTargetsEligible;
 	}
 
 	private void renderConflictClause(

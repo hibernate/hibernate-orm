@@ -2365,6 +2365,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public SelectClause visitSelectClause(SqmSelectClause selectClause) {
+		final var previousRootPathsForLockingCollector = rootPathsForLockingCollector;
 		currentClauseStack.push( Clause.SELECT );
 		try {
 			final var querySpec = currentQuerySpec();
@@ -2372,6 +2373,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			if ( contributesToTopLevelSelectClause() ) {
 				// Include every arm of a top-level set query, but not nested subqueries.
 				rootPathsForLockingCollector = querySpec::applyRootPathForLocking;
+			}
+			else {
+				rootPathsForLockingCollector = null;
 			}
 			if ( selectClause.getSelections().isEmpty() ) {
 				final var implicitSelection =
@@ -2388,7 +2392,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return sqlSelectClause;
 		}
 		finally {
-			rootPathsForLockingCollector = null;
+			rootPathsForLockingCollector = previousRootPathsForLockingCollector;
 			currentClauseStack.pop();
 		}
 	}
@@ -2437,6 +2441,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		else if ( selectableNode instanceof SqmDynamicInstantiation<?> dynamicInstantiation ) {
 			collectRootPathsForLocking( dynamicInstantiation );
 		}
+		else if ( selectableNode instanceof SqmJpaCompoundSelection<?> compoundSelection ) {
+			compoundSelection.getSelectionItems().forEach( this::collectRootPathsForLocking );
+		}
 	}
 
 	private void collectRootPathsForLocking(SqmPath<?> selectedPath) {
@@ -2444,7 +2451,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		// Typically this comes from paths rooted in a CTE.
 		// Regardless, without a path we cannot evaluate.
 		if ( selectedPath != null ) {
-			if ( selectedPath.getNodeType() instanceof EntityTypeImpl ) {
+			if ( selectedPath instanceof SqmTreatedPath<?, ?> treatedPath ) {
+				// A treatment shares the underlying entity's table group and initializer path.
+				collectRootPathsForLocking( treatedPath.getWrappedPath() );
+			}
+			else if ( selectedPath.getNodeType() instanceof EntityTypeImpl ) {
 				rootPathsForLockingCollector.accept( selectedPath.getNavigablePath() );
 			}
 			else {
@@ -2477,31 +2488,28 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private void callResultProducers(List<Map.Entry<String, DomainResultProducer<?>>> resultProducers) {
 		final boolean needsDomainResults = domainResults != null && contributesToTopLevelSelectClause();
 		final boolean collectDomainResults = collectDomainResults( needsDomainResults );
-		resultProducers.forEach(
-				entry -> {
-					// this currentSqlSelectionCollector().next() is meant solely for resolving
-					// literal reference to a selection-item in the order-by or group-by clause.
-					// in the case of `DynamicInstantiation`, that ordering should ignore that
-					// level here. Visiting the dynamic-instantiation will manage this for its
-					// arguments
-					final var domainResultProducer = entry.getValue();
-					if ( !( domainResultProducer instanceof DynamicInstantiation<?> ) ) {
-						currentSqlSelectionCollector().next();
-					}
+		resultProducers.forEach( (entry) -> {
+			// this currentSqlSelectionCollector().next() is meant solely for resolving
+			// literal reference to a selection-item in the order-by or group-by clause.
+			// in the case of `DynamicInstantiation`, that ordering should ignore that
+			// level here. Visiting the dynamic-instantiation will manage this for its
+			// arguments
+			final var domainResultProducer = entry.getValue();
+			if ( !( domainResultProducer instanceof DynamicInstantiation<?> ) ) {
+				currentSqlSelectionCollector().next();
+			}
 
-					if ( collectDomainResults ) {
-						domainResults.add( domainResultProducer.createDomainResult( entry.getKey(), this ) );
-					}
-					else if ( needsDomainResults ) {
-						// We just create domain results for the purpose of creating selections
-						// This is necessary for top-level query specs within query groups to avoid cycles
-						domainResultProducer.createDomainResult( entry.getKey(), this );
-					}
-					else {
-						domainResultProducer.applySqlSelections( this );
-					}
+			if ( needsDomainResults ) {
+				final var result = domainResultProducer.createDomainResult( entry.getKey(), this );
+				currentQuerySpec().applyDomainResultForLocking( result );
+				if ( collectDomainResults ) {
+					domainResults.add( result );
 				}
-		);
+			}
+			else {
+				domainResultProducer.applySqlSelections( this );
+			}
+		} );
 	}
 
 	private boolean collectDomainResults(boolean needsDomainResults) {

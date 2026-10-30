@@ -7,8 +7,9 @@
 === Locking concepts and transaction boundaries
 
 Optimistic locking detects conflicting changes; pessimistic locking acquires database locks to prevent conflicting access while a transaction is active.
-Both interact with database isolation, but neither replaces deliberate <<transactions,transaction boundaries>> or validation of application invariants.
+Both interact with database isolation, but neither replaces deliberate <<transactions,transaction boundaries>> nor validation of application invariants.
 Hibernate uses database concurrency mechanisms and does not lock Java objects in memory.
+These guarantees assume at least `READ_COMMITTED` transaction isolation; see <<transactions-concurrency,isolation and concurrency declarations>>.
 
 Optimistic locking::
 A version or comparison with previously loaded values detects that a row changed after it was read.
@@ -44,7 +45,8 @@ See <<locking-LockMode,lock modes>> for the standard and Hibernate APIs and <<lo
 Neither approach always provides better throughput: contention, transaction duration, and the cost of retrying determine the tradeoff.
 Optimistic locking also involves database locks when writing or validating; it is not lock-free.
 
-Explicit transactional lock requests require an active transaction and appropriate persistence-context participation.
+Explicit transactional lock requests require an active transaction.
+Stateful operations also enforce their managed-entity requirements; stateless operations work with detached instances.
 A persistence context reuses managed identity and state, but this is not a database isolation guarantee.
 See <<pc,Persistence Context>> for context lifetime and <<transactions-completion,transaction completion and failure handling>> for rollback and retries.
 
@@ -57,8 +59,8 @@ Jakarta Persistence's link:{jpaJavadocUrlPrefix}LockModeType.html[`LockModeType`
 |===
 |`LockModeType` |Hibernate `LockMode` |Requested behavior
 |`NONE` |`NONE` |No explicit lock requested.
-|`READ`, `OPTIMISTIC` |`OPTIMISTIC` |Validate the version of an unchanged entity before successful transaction completion.
-|`WRITE`, `OPTIMISTIC_FORCE_INCREMENT` |`OPTIMISTIC_FORCE_INCREMENT` |Validate and increment the version even without an ordinary entity change; the increment may be deferred until completion.
+|`READ`, `OPTIMISTIC` |`OPTIMISTIC` |Request version validation even when the entity is unchanged; timing depends on the session type, as described below.
+|`WRITE`, `OPTIMISTIC_FORCE_INCREMENT` |`OPTIMISTIC_FORCE_INCREMENT` |Request version validation and increment even without an ordinary entity change; timing depends on the session type.
 |`PESSIMISTIC_READ` |`PESSIMISTIC_READ` |Acquire shared database protection against conflicting writes; a stronger lock may be used when shared locks are unavailable.
 |`PESSIMISTIC_WRITE` |`PESSIMISTIC_WRITE` |Acquire exclusive database protection against conflicting writes and locking requests.
 |`PESSIMISTIC_FORCE_INCREMENT` |`PESSIMISTIC_FORCE_INCREMENT` |Acquire exclusive protection by immediately incrementing the version.
@@ -70,6 +72,7 @@ Prefer the descriptive standard names `OPTIMISTIC` and `OPTIMISTIC_FORCE_INCREME
 [NOTE]
 ====
 Hibernate's `LockMode.READ` represents an entity read from the database in the current transaction and is accepted by native APIs.
+It does not itself promise a transaction-long shared database lock or schedule explicit optimistic validation.
 It is distinct from Jakarta Persistence's `LockModeType.READ`, which requests optimistic version validation.
 Hibernate's `LockMode.WRITE` represents internal state after a write and is not valid for application lock requests.
 
@@ -79,6 +82,28 @@ Hibernate's `LockMode.WRITE` represents internal state after a write and is not 
 The optimistic modes and `PESSIMISTIC_FORCE_INCREMENT` require a versioned entity.
 Ordinary pessimistic read/write requests can lock unversioned entities.
 Force-increment support also depends on the version generator; do not assume a database-trigger-generated version supports every force-increment operation.
+
+[[locking-session-lifecycle]]
+==== Stateful and stateless timing
+
+Explicit optimistic requests have different lifecycles in a stateful `Session` (`EntityManager`) and a `StatelessSession` (`EntityAgent`):
+
+[cols="1,2,2",options="header"]
+|===
+|Request |Stateful session |Stateless session
+|`OPTIMISTIC` |Schedule version validation before transaction completion, even for an unchanged entity. |Obtain immediate database protection retained until transaction completion.
+|`OPTIMISTIC_FORCE_INCREMENT` |Schedule version validation and increment before transaction completion. |Validate and increment the version immediately.
+|`PESSIMISTIC_FORCE_INCREMENT` |Validate and increment the version immediately. |Validate and increment the version immediately.
+|===
+
+Deferred stateful processing depends on the entity remaining managed.
+Detaching the entity or clearing the context does not preserve a promise of validation or increment at completion.
+A successful return from the request is not proof that deferred validation or transaction commit has succeeded.
+
+Stateless optimistic protection must prevent concurrent modification until completion: a fresh version read or stable snapshot alone is insufficient.
+Hibernate selects a suitable strategy from the <<locking-concurrency-baseline,resolved concurrency configuration>> and rejects the request if no strategy is established.
+The SQL need not contain the same locking clause on every database.
+See <<batch-stateless,stateless processing>> for the command-oriented lifecycle.
 
 ==== Requesting and upgrading locks
 
@@ -109,10 +134,22 @@ For a versioned entity, requesting `PESSIMISTIC_FORCE_INCREMENT` after `PESSIMIS
 Repeating `PESSIMISTIC_FORCE_INCREMENT` when that mode is already held does not cause another increment merely because the request is repeated.
 Choose the required mode before relying on its increment behavior.
 
+Mode ordering and scope acquisition are separate concerns.
+An `EXTENDED` pessimistic request can acquire collection-table and owned join-table locks even when the entity already holds an equal or stronger mode.
+Repeating the request can be necessary after collection replacement or changes to the relevant managed state.
+This acquisition retains the stronger entity mode and does not repeat a forced version increment solely to acquire scope.
+`FETCHED` scope instead follows the locking operation's fetch plan; do not infer identical managed-state reacquisition behavior for every scope and operation.
+
 [[locking-session-lock]]
 ==== Locking an already managed entity
 
 A pessimistic read request asks for shared protection; its SQL and whether stronger protection is necessary depend on the dialect.
+Lock acquisition checks and protects database rows but does not generally replace existing managed state.
+Similarly, finding or querying an already managed entity can reuse that instance with its existing state.
+Use <<pc-refresh,`refresh()`>> to reload state explicitly.
+Refresh preserves existing pessimistic protection even when an equal or weaker mode is requested; depending on the dialect, this can require a locking read.
+Reload visibility follows the database's current-read and snapshot rules, so repeatable-read isolation does not universally imply that refresh observes the earlier values.
+
 This example also requests no waiting for a conflicting lock:
 
 [[locking-session-lock-example]]
@@ -188,6 +225,7 @@ The example asserts the final values and version to make this tradeoff observabl
 ALL and DIRTY require dynamic updates, normally enabled with <<pc-managed-state-dynamic-update,`@DynamicUpdate`>>, and cannot be combined with a `@Version` attribute.
 Attributes mapped with <<domain-version-exclusions,`@ExcludedFromVersioning`>> do not participate in their comparisons.
 These strategies compare row values rather than maintaining a separate version number.
+They protect eligible mutations, not unchanged reads: `ALL` and `DIRTY` do not provide an equivalent to explicit `OPTIMISTIC` read validation on a versioned entity.
 
 [[locking-optimistic-versionless-all]]
 ==== Comparing all eligible loaded values
@@ -262,6 +300,7 @@ Pessimistic read/write locking protects rows using the database's supported lock
 Shared requests may use exclusive protection where shared locks are unavailable.
 The dialect, query shape, and requested options determine how locking is acquired.
 Unsupported combinations may fail; there is no universal guarantee of silent fallback preserving every requested behavior.
+See the <<locking-query-combinations,query support comparison>> for direct and follow-on acquisition restrictions.
 
 [[locking-jpa-query-hints]]
 ==== Lock scope
@@ -310,6 +349,21 @@ Joined-inheritance and secondary-table rows already belong to normal scope; choo
 
 Use `Timeout.milliseconds()` or `Timeout.seconds()` as typed options, or the standard `jakarta.persistence.lock.timeout` property/hint in milliseconds.
 A lock timeout concerns waiting for a lock, not total query execution or transaction duration.
+For queries, use `SelectionQuery.setLockTimeout(Timeout)` for lock acquisition and `setTimeout(Timeout)` for query execution.
+
+[cols="2,1,2",options="header"]
+|===
+|Control |Unit |Purpose
+|`setLockTimeout(Timeout)` or a typed find/lock/refresh `Timeout` option |Explicit in `Timeout` |Lock acquisition wait.
+|`jakarta.persistence.lock.timeout` |Milliseconds |Lock acquisition wait.
+|Query `setTimeout(int)` / `org.hibernate.timeout` numeric hint |Seconds |Query execution timeout.
+|Query `setTimeout(Integer)` / `jakarta.persistence.query.timeout` |Milliseconds |Query execution timeout.
+|Query `setTimeout(Timeout)` |Explicit in `Timeout` |Query execution timeout.
+|`Transaction.setTimeout(int)` |Seconds |Transaction timeout, configured before beginning the transaction.
+|===
+
+The primitive `int` and boxed `Integer` query overloads use different units; prefer a typed `Timeout` to make the unit explicit.
+An acquisition timeout is not a portable deadline for the complete selection and all follow-on statements.
 See <<query-execution,query execution>> and <<transactions-timeouts,transaction timeouts>> for those separate controls.
 
 [[locking-jpa-query-hints-timeout-example]]
@@ -360,14 +414,29 @@ Use a supported query shape when exclusive skip-locked selection is required.
 Skip-locked `PESSIMISTIC_READ` set queries use `READPAST` on each selected table and query-level repeatable-read isolation to retain shared locks.
 ====
 
+[[locking-failures]]
 ==== Locking failures
 
-At the Jakarta Persistence API boundary, `OptimisticLockException` indicates an optimistic conflict.
-Native Hibernate APIs may report a stale-state or native locking failure instead.
-A pessimistic acquisition failure that rolls back the transaction is represented by `PessimisticLockException`; a statement-level acquisition timeout is represented by `LockTimeoutException`.
-The actual database failure and exception conversion determine which case applies.
-Do not assume a timed-out transaction is always usable.
-Roll back and discard an affected stateful context before retrying the appropriate unit of work; see <<transactions-completion,transaction failure handling>>.
+Failure classification depends on the database failure and API exception conversion, not merely on the requested timeout:
+
+[cols="2,3",options="header"]
+|===
+|Failure |Classification and handling
+|Stale version or a required row missing during follow-on acquisition |A stale-state or optimistic conflict, commonly exposed as `OptimisticLockException` at a Jakarta Persistence boundary. A missing row is not successful acquisition or a lock timeout.
+|Pessimistic acquisition failure aborting the transaction |`PessimisticLockException` at a Jakarta Persistence boundary; the transaction must be rolled back.
+|Statement-level acquisition timeout |`LockTimeoutException` at a Jakarta Persistence boundary. This exception does not itself require Hibernate to mark the transaction rollback-only.
+|Query execution timeout |Distinct from a lock timeout. `QueryTimeoutException` represents statement-level failure; a transaction-aborting failure may be exposed as a broader persistence exception.
+|Unsupported locking request |A request or query-operation rejection, possibly converted at an API boundary. This is not evidence of contention or a stale version.
+|===
+
+Native causes may contain stale-state or JDBC locking exceptions; using a `Session` variable does not guarantee that only native exception types are thrown.
+A failure during transaction completion may be wrapped in `RollbackException`; inspect the cause when diagnosing a deferred validation failure.
+
+Hibernate marking a transaction rollback-only, the database aborting it, and the persistence context remaining reliable are separate questions.
+Do not infer that a timed-out transaction remains usable merely because the exception does not itself require a rollback-only mark.
+After a failure that leaves a stateful context unreliable, roll back and discard it before retrying the appropriate unit of work.
+Stateless sessions do not automatically mark the transaction rollback-only after an exception, but the database may still abort it; rollback also does not restore detached Java object values.
+See <<pc-exception-handling,exception handling>> and <<transactions-completion,transaction failure handling>>.
 
 [[locking-follow-on]]
 === Follow-on locking
@@ -393,7 +462,10 @@ The simplified SQL illustrates grouped acquisition for the two-row, single-table
 Table-hint dialects and other mappings can use a different statement shape or count.
 The original selection and later acquisition are separate steps.
 Do not assume the selected rows still satisfy the original predicate or page membership under every concurrent change.
-Acquisition can reread database state, but does not universally refresh already managed instances; use explicit refresh when that is required.
+If a required row disappears, acquisition fails instead of reporting that row as locked.
+Multiple acquisition statements do not provide one atomic acquisition point for the entire graph.
+Newly loaded entities can adopt reread acquisition state, while existing managed instances generally retain their state; acquisition is not a general refresh.
+Use explicit refresh when existing managed state must be reloaded.
 
 [[locking-follow-on-secondary-query-example]]
 Hibernate can group locking reads by entity type and table instead of issuing one additional select for every entity.
@@ -424,7 +496,27 @@ include::{example-dir-locking}/LockingGuideTests.java[tags=locking-guide-follow-
 
 Disallowing follow-on acquisition does not force the database to accept an otherwise unsupported locking clause.
 Incompatible operations can throw instead of silently weakening the request.
-Some result shapes and options, including skip-locked requests, restrict follow-on acquisition; do not assume every policy is supported for every query.
+Some result shapes and options restrict follow-on acquisition; do not assume every policy is supported for every query.
+Follow-on acquisition requires the result mapping to provide entity identities for every entity selected for locking.
+A scalar attribute, identifier, or scalar-only DTO projection does not provide this coverage and is rejected before SQL execution when follow-on locking is selected.
+Mixed results and DTOs containing entities remain supported when their entity results cover every lock target.
+Selecting one entity does not cover a different target represented only by a scalar value.
+Use direct locking for a supported query shape, or include the required entities in the selection.
+
+[[locking-query-combinations]]
+[cols="2,2,3",options="header"]
+|===
+|Result shape or option |Direct locking |Follow-on acquisition
+|Entity results |Subject to dialect and query-shape restrictions. |Requires entity identities covering every requested target.
+|Scalar attribute, identifier, or scalar-only DTO |May be supported when the dialect can lock the underlying rows directly. |Does not supply entity-result coverage; rejected when follow-on acquisition is selected.
+|Mixed results or DTOs containing entities |Subject to dialect and query-shape restrictions. |Supported when the entity results cover every requested target; a scalar for another target does not cover it.
+|Aggregates or grouped results |Subject to database restrictions; aggregate result rows need not identify lockable entity rows. |Scalar aggregate results lack coverage. Entity-containing grouped results must satisfy identity coverage and the applicable query restrictions.
+|Skip-locked |Requires a supported direct route. |Rejected before selection SQL, including the legacy `UPGRADE_SKIPLOCKED` mode.
+|Pagination |Depends on dialect and execution strategy; do not assume database locks cover exactly the returned page. |Depends on the supported execution path and identity coverage; does not stabilize predicate or page membership across the two phases.
+|===
+
+Hibernate rejects the known incompatible follow-on result shapes and skip-locked combinations before selection SQL.
+Other database restrictions may be reported when the database executes the statement.
 See link:{doc-javadoc-url}org/hibernate/Locking.FollowOn.html[`Locking.FollowOn`] for the policy API.
 
 [[locking-graph-root]]
@@ -432,12 +524,13 @@ See link:{doc-javadoc-url}org/hibernate/Locking.FollowOn.html[`Locking.FollowOn`
 
 Applications can coordinate access to a graph of objects through an agreed graph root using either optimistic or pessimistic locking.
 With optimistic locking, participating transactions capture the root's version before reading the graph state it protects and validate that version before successful transaction completion.
-Graph writers advance the root's version even when the root's own attributes are unchanged.
+Graph writers advance the root's version within the transaction containing their graph changes, even when the root's own attributes are unchanged.
 With pessimistic locking, participating transactions acquire a lock on the root before reading the graph state it protects: a shared lock for readers or an exclusive lock for writers, held until transaction completion.
 
 Choose the <<fetching-locking-interaction,loading operation and fetch plan>> so that protected state is not read before the required coordination step.
 Eager association loading and the selection phase of follow-on locking can retrieve that state before lock acquisition;
 do not assume that requesting a root lock automatically establishes the protocol's required ordering.
+State already read into the persistence context and transaction snapshots established before coordination must also be considered when choosing reads that satisfy the protocol.
 
 This coordination requires all participating transactions to follow the same root-locking protocol.
 Locking the root does not automatically lock, version, or validate every associated entity; the agreement makes the root the coordination point for graph access.

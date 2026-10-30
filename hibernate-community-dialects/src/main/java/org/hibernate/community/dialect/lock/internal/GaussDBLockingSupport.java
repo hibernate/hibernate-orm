@@ -1,6 +1,7 @@
 package org.hibernate.community.dialect.lock.internal;
 
 import jakarta.persistence.Timeout;
+import org.hibernate.LockMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Timeouts;
 import org.hibernate.dialect.lock.spi.RowLockStrategy;
@@ -40,6 +41,12 @@ public class GaussDBLockingSupport
 	public GaussDBLockingSupport(boolean supportsNoWait, boolean supportsSkipLocked) {
 		this.supportsNoWait = supportsNoWait;
 		this.supportsSkipLocked = supportsSkipLocked;
+	}
+
+	@Override
+	public boolean canUsePlainReadForRefresh(LockMode currentLockMode, LockMode requestedLockMode) {
+		// Retain the PostgreSQL-family plain reload after successful acquisition.
+		return true;
 	}
 
 	@Override

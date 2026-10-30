@@ -54,6 +54,63 @@ This section describes changes to contracts (classes, interfaces, methods, etc.)
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#spi[SPI].
 
+[[entity-entry-version]]
+=== Explicit entity-entry version synchronization
+
+`EntityEntry` now requires `setVersion(Object)`. Custom implementations must
+implement this metadata-only assignment, including support for a null version.
+It must not change the entity, loaded snapshot, status, lock mode, or dirty
+tracking, and must not perform SQL, cache operations, or lifecycle callbacks.
+External implementations must implement the new method before using this release.
+
+Follow-on locking uses this operation after successful rereading of newly loaded
+entities, before publishing the final lock mode or forcing a version increment.
+Previously managed entities retain their existing version-checking lock-upgrade
+behavior and are not refreshed by this synchronization.
+
+[[jdbc-secondary-action-execution]]
+=== Invocation-local JDBC secondary actions
+
+Execution code must obtain `JdbcSelect.createActionExecution()` once per invocation
+and use that runner for both pre-actions and post-actions. The existing callback
+methods on `JdbcSelect` remain available but are deprecated. Cached action
+definitions must not retain invocation-specific state.
+
+`SecondaryAction.createExecutionAction()` returns `this` by default for reusable,
+stateless actions. Stateful definitions must return a fresh instance supporting
+their registered pre/post roles. The same definition is paired across phases by
+identity; duplicate registration within one phase is rejected before execution.
+Application-facing locking options and dialect timeout strategies are unchanged.
+
+The runner preserves registration order. On failure, use `cleanupAfterFailure()`
+with the original exception; remaining failure-eligible post-actions are attempted
+once, with cleanup failures suppressed on the original exception. Setup after
+pre-actions is also protected. A failing timeout setter triggers a restoration
+attempt when the original setting is known, but a failing restoration is not
+retried. This does not establish a new connection-disposal policy or extend the
+timeout to the lifetime of a scroll or stream.
+
+Custom `JdbcSelect` implementations have a default adapter for their legacy
+callbacks and remain responsible for avoiding shared mutable state. Stateful
+definitions such as the internal `LockTimeoutHandler` reject direct invocation;
+its `getBaseline()` method has been removed.
+
+`JdbcSelectWithActions` remains subclassable, with `createActionExecution()` as its
+execution extension point. Subclasses overriding the deprecated phase callbacks
+must move that customization to the runner factory; the standard executor no
+longer invokes those overrides. A subclass may call `super.createActionExecution()`
+and wrap the returned runner, keeping all execution state local to that invocation.
+The wrapper must delegate failure cleanup and preserve action order, exception
+precedence, and single-attempt execution. Subclasses without execution customization
+may inherit the factory unchanged.
+
+For asynchronous integrations, including Hibernate Reactive, the protected
+`JdbcSelectWithActions` arrays remain definitions. Use
+`JdbcActionExecution.materializeActions()` to obtain immutable lists of paired,
+invocation-local instances without invoking callbacks. Retain these instances
+across asynchronous completion and preserve phase ordering, single-attempt
+cleanup, and exception precedence. Materialization requires no thread affinity.
+
 [[persistence-context]]
 === Removed `PersistenceContext.reentrantSafeEntityEntries()`
 
@@ -146,6 +203,78 @@ when calling the superclass implementation.
 == Changes in Behavior
 
 This section describes changes in behavior that applications should be aware of.
+
+[[pessimistic-refresh-visibility]]
+=== Refreshing pessimistically locked entities
+
+An equal or weaker refresh request now retains a non-incrementing pessimistic
+reload unless `LockingSupport.canUsePlainReadForRefresh(currentMode, requestedMode)`
+permits an ordinary read. This also applies to `refresh()` without an explicit
+mode. A held database lock does not guarantee that an ordinary read uses the
+locking read's view: on MySQL and MariaDB, it can consult an older snapshot and
+restore stale state or fail to find a row returned by the preceding locking read.
+
+The entry retains the appropriate existing lock mode. Refreshing an entity already
+locked with `PESSIMISTIC_FORCE_INCREMENT` does not repeat that increment, and
+optimistic refresh handling continues to avoid duplicate version actions.
+Wider requested scope still requires acquisition independently of the new predicate.
+
+The new default SPI method returns `false`, retaining a locking reload. A custom
+profile may return `true` for mode pairs where a plain reload preserves visibility
+and conflict semantics across its supported configurations. Additional locking SQL
+and normal dialect follow-on/timeout handling may therefore be observable.
+
+Standard `LockingSupport` profiles supply explicit policies. MySQL, MariaDB and TiDB
+retain locking reloads for all modes: even force increment may generate the same timestamp
+value, so its UPDATE need not establish own-write visibility. Informix permits a
+plain reload after a pessimistic force increment's transaction-duration write lock.
+Other standard `LockingSupport` profiles generally retain their previous plain reloads; selecting
+a standard simple/parameterized profile selects that policy as well. Independent
+custom implementations continue to inherit the interface's `false` default.
+
+[[follow-on-locking-missing-rows]]
+=== Missing rows during follow-on locking
+
+For non-skipping batched follow-on locking, every required table must return a
+row for each expected entity identifier. If any are missing, acquisition now
+throws `StaleObjectStateException`, including for unversioned entities, and uses
+the existing conversion to `OptimisticLockException`. This replaces both silent
+success for partial results and the assertion failure for entirely missing results.
+The exception identifies the first missing entity in acquisition input order;
+its message lists all missing identifiers from that table acquisition. Optional
+table rows remain exempt.
+
+[[follow-on-skip-locked]]
+=== Skip-locked queries requiring follow-on locking
+
+Pessimistic queries requesting `Timeouts.SKIP_LOCKED` (or the legacy
+`LockMode.UPGRADE_SKIPLOCKED`) now fail when Hibernate selects follow-on entity
+locking. Previously, the primary query could return entities whose rows were
+skipped by the subsequent locking query. List queries retain the existing
+`IllegalStateException` wrapper around
+`IllegalQueryOperationException`; scroll and stream retain the internal exception
+directly. The diagnostic explains the unsupported combination.
+Use direct locking with a query shape supported by the dialect. Direct locking,
+including dialect table hints, remains supported even when the requested follow-on
+strategy is overridden by the dialect.
+
+Rejection occurs before the query's JDBC connection acquisition, secondary-action
+materialization, callbacks, and SQL execution, regardless of contention or result
+contents. Earlier automatic flush work is outside this guarantee, and terminal
+no-execution shortcuts such as a zero result limit need not reject the request.
+Existing `DISALLOW`, `IGNORE`, and native-plan capability decisions remain in effect.
+
+Execution integrations which bypass the standard JDBC executor must apply the same
+guard before their own connection acquisition and callbacks. `LockingHelper` provides
+`isSkipLockedRequest()` and `validateFollowOnLocking()` for the selected follow-on
+strategy. For skip-locked `RAW_SQL` plans, use
+`JdbcSelectSqlFinalizer.finalizeSql(JdbcSelect, JdbcParameterBindings, ExecutionContext)`
+to decide the final disposition before execution. Retain its result only for that
+invocation and pass it to the new `DeferredResultSetAccess` constructor overload,
+avoiding repeated pagination, policy, and SQL decoration callbacks. Other requests
+retain their existing finalization timing. SQL-shaping query options and parameters
+must remain stable during an invocation; pre-actions must not invalidate finalized
+metadata.
 
 [[filtered-to-one-associations]]
 === Filters and SQL restrictions on to-one associations

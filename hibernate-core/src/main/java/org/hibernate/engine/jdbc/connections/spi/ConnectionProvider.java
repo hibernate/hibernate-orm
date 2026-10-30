@@ -29,6 +29,9 @@ import org.hibernate.service.spi.Wrapped;
  * @author Steve Ebersole
  *
  * @see org.hibernate.cfg.AvailableSettings#CONNECTION_PROVIDER
+ * @see org.hibernate.cfg.JdbcSettings#AUTOCOMMIT
+ * @see org.hibernate.cfg.JdbcSettings#CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT
+ * @see org.hibernate.cfg.JdbcSettings#ISOLATION
  */
 public interface ConnectionProvider extends Service, Wrapped {
 	/**

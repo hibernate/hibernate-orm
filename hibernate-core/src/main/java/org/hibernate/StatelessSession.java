@@ -59,8 +59,12 @@ import java.util.List;
  * <li>when an exception is thrown by a stateless session, the current
  *     transaction is not automatically marked for rollback.
  * </ul>
+ * The database may nevertheless abort the transaction. Check the actual
+ * transaction state and roll back a failed unit of work as appropriate;
+ * the absence of a Hibernate rollback-only mark does not prove that the
+ * transaction is usable. Rollback does not restore entity field values.
  * <p>
- * Explicit lock modes behave differently to a stateful session.The lock
+ * Explicit lock modes behave differently to a stateful session. The lock
  * modes {@link jakarta.persistence.LockModeType#OPTIMISTIC OPTIMISTIC}
  * and {@link jakarta.persistence.LockModeType#OPTIMISTIC_FORCE_INCREMENT
  * OPTIMISTIC_FORCE_INCREMENT} are implemented as immediate pessimistic
@@ -69,6 +73,13 @@ import java.util.List;
  * OPTIMISTIC_FORCE_INCREMENT} and
  * {@link jakarta.persistence.LockModeType#PESSIMISTIC_FORCE_INCREMENT
  * PESSIMISTIC_FORCE_INCREMENT} both increment the version immediately.
+ * An {@code OPTIMISTIC} request requires protection against concurrent
+ * modification retained through transaction completion. A fresh version
+ * read or a stable snapshot alone is insufficient. Hibernate uses the
+ * resolved concurrency configuration to select a suitable read strategy
+ * and rejects the request if no such strategy is established.
+ * These requests do not schedule the stateful session's deferred version
+ * validation or increment.
  * <p>
  * Since version 7, the configuration property
  * {@value org.hibernate.cfg.BatchSettings#STATEMENT_BATCH_SIZE} has no effect

@@ -1,6 +1,7 @@
 package org.hibernate.dialect.lock.internal;
 
 import jakarta.persistence.Timeout;
+import org.hibernate.LockMode;
 import org.hibernate.Timeouts;
 import org.hibernate.dialect.lock.spi.RowLockStrategy;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
@@ -21,6 +22,12 @@ import static org.hibernate.dialect.lock.spi.LockTimeoutType.QUERY;
  */
 public class TimesTenLockingSupport implements LockingSupport, LockingSupport.Metadata, LockingClauseRenderer {
 	public static final TimesTenLockingSupport TIMES_TEN_LOCKING_SUPPORT = new TimesTenLockingSupport();
+
+	@Override
+	public boolean canUsePlainReadForRefresh(LockMode currentLockMode, LockMode requestedLockMode) {
+		// Retain the plain reload once the row is protected by this transaction.
+		return true;
+	}
 
 	@Override
 	public org.hibernate.dialect.lock.spi.TransactionConcurrencyResolver getTransactionConcurrencyResolver() {

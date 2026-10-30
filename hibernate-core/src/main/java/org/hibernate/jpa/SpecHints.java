@@ -37,19 +37,27 @@ public interface SpecHints {
 
 	/**
 	 * The Jakarta Persistence defined hint requesting a pessimistic lock timeout (in milliseconds).
+	 * This controls waiting for a lock, subject to dialect support and precision;
+	 * it does not configure query execution or transaction timeouts.
+	 *
+	 * @see org.hibernate.query.SelectionQuery#setLockTimeout(jakarta.persistence.Timeout)
+	 * @see org.hibernate.Timeouts
 	 */
 	String HINT_SPEC_LOCK_TIMEOUT = "jakarta.persistence.lock.timeout";
 
 	/**
-	 * Hint indicating whether to extend pessimistic locking to
-	 * associated tables.  Expected to be an instance of
-	 * {@link jakarta.persistence.PessimisticLockScope}
+	 * Hint controlling which rows participate in pessimistic locking.
+	 * Expected to be an instance of {@link jakarta.persistence.PessimisticLockScope}.
+	 * Extended scope adds applicable owned collection and join-table rows;
+	 * it does not automatically lock referenced entity state. Fetched scope
+	 * instead follows the locking operation's fetch plan.
 	 */
 	String HINT_SPEC_LOCK_SCOPE = "jakarta.persistence.lock.scope";
 
 	/**
 	 * The Jakarta Persistence defined hint requesting a timeout (in milliseconds)
-	 * be applied to a {@link jakarta.persistence.Query} executions.
+	 * be applied to {@link jakarta.persistence.Query} execution.
+	 * This does not configure a lock acquisition timeout.
 	 *
 	 * @implSpec Not valid for load and/or lock operations
 	 */

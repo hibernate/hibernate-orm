@@ -1,6 +1,7 @@
 package org.hibernate.dialect.lock.internal;
 
 
+import org.hibernate.LockMode;
 import org.hibernate.dialect.lock.spi.TransactionConcurrencyResolver;
 
 import jakarta.persistence.Timeout;
@@ -40,6 +41,13 @@ public class OracleLockingSupport implements LockingSupport, LockingSupport.Meta
 	public OracleLockingSupport(DatabaseVersion version) {
 		supportsNoWait = version.isSameOrAfter( 9 );
 		supportsSkipLocked = version.isSameOrAfter( 10 );
+	}
+
+	@Override
+	public boolean canUsePlainReadForRefresh(LockMode currentLockMode, LockMode requestedLockMode) {
+		// Successful acquisition protects the visible row; serializable conflicts
+		// remain acquisition failures rather than a switch to a newer read view.
+		return true;
 	}
 
 	@Override

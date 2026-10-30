@@ -40,6 +40,7 @@ import java.util.Map;
 
 import static java.util.Collections.emptyMap;
 import static org.hibernate.loader.ast.internal.LoaderHelper.upgradeLock;
+import static org.hibernate.spi.NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
 import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
 
 /**
@@ -149,6 +150,13 @@ public class FollowOnLockingAction implements PostAction {
 				tableLocks.forEach( (s, tableLock) ->
 						tableLock.performActions( entityDetailsMap, lockingOptions, session ) );
 				entityDetailsMap.values().forEach( entityDetails -> {
+					final var entry = entityDetails.entry();
+					final var persister = entry.getPersister();
+					if ( persister.isVersioned() ) {
+						// Reread handlers updated the entity and snapshot. Complete the entry
+						// only after all table acquisitions succeed, before any forced increment.
+						entry.setVersion( persister.getVersion( entityDetails.instance() ) );
+					}
 					if ( lockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT ) {
 						OptimisticLockHelper.forceVersionIncrement(
 								entityDetails.instance(),
@@ -194,6 +202,9 @@ public class FollowOnLockingAction implements PostAction {
 			// we need to handle collections specially (which we do below, so skip them here),
 			// and inverse to-one attributes have no columns here to select at all
 			if ( !(attributeMapping instanceof PluralAttributeMapping)
+					// Identifier state is already represented by the acquisition key result.
+					&& !attributeMapping.isEntityIdentifierMapping()
+					&& !IDENTIFIER_MAPPER_PROPERTY.equals( attributeMapping.getAttributeName() )
 					&& !isInverseToOne( attributeMapping ) ) {
 				final var tableLock = resolveTableLock( attributeMapping, tableLocks, entityMappingType );
 				if ( tableLock == null ) {

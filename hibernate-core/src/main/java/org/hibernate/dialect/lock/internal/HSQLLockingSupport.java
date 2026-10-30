@@ -1,6 +1,7 @@
 package org.hibernate.dialect.lock.internal;
 
 import jakarta.persistence.Timeout;
+import org.hibernate.LockMode;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
 import org.hibernate.dialect.lock.spi.LockTimeoutType;
 import org.hibernate.dialect.lock.spi.LockingClauseRenderer;
@@ -21,6 +22,12 @@ public class HSQLLockingSupport implements LockingSupport, LockingSupport.Metada
 
 	private HSQLLockingSupport(boolean supportsLockingClause) {
 		this.supportsLockingClause = supportsLockingClause;
+	}
+
+	@Override
+	public boolean canUsePlainReadForRefresh(LockMode currentLockMode, LockMode requestedLockMode) {
+		// The old no-clause profile establishes protection only through an actual write.
+		return supportsLockingClause || currentLockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT;
 	}
 
 	@Override

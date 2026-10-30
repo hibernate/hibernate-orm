@@ -123,7 +123,7 @@ Hibernate accepts additional loading options through `Session`, including:
 * `ReadOnlyMode` - whether loaded entities should be marked <<pc-read-only,read-only>>.
 * `LockMode` (`LockModeType`) - the <<locking-LockMode,lock mode>> to apply.
 * `Timeout` - the timeout for a <<locking-pessimistic,pessimistic lock>>.
-* `Locking.Scope` (`PessimisticLockScope`) - the <<locking-jpa-query-hints,scope of pessimistic locking>>.
+* `PessimisticLockScope` - the <<locking-jpa-query-hints,scope of pessimistic locking>>.
 * `Locking.FollowOn` - whether to acquire locks through <<locking-follow-on,additional queries>> when needed.
 * `CacheMode` (`CacheStoreMode` / `CacheRetrieveMode`) - how to use the <<caching-management,second-level cache>>.
 * `BatchSize` - how many identifiers should be loaded from the database at once
@@ -611,7 +611,11 @@ include::{example-dir-pc}/PersistenceContextTest.java[tags=pc-refresh-native-exa
 ====
 
 One case where this is useful is when it is known that the database state has changed since the data was read.
-Refreshing allows the current database state to be pulled into the entity instance and the persistence context.
+Refreshing replaces entity and persistence-context state with values visible to the database read.
+Visibility follows the database's current-read and snapshot rules; refresh is not a universal escape from a transaction snapshot.
+It preserves an existing stronger pessimistic mode, using a locking read where the dialect requires one to retain the locking-read semantics.
+Acquiring a lock through `lock()`, or finding/querying an existing managed entity with a lock, does not generally perform this replacement.
+See <<locking-session-lock,locking an already managed entity>>.
 
 The second example uses the standard `EntityManager.runWithConnection()` API to execute JDBC directly.
 Refresh is also useful when database triggers initialize entity properties.
@@ -1307,6 +1311,8 @@ For application-managed contexts, ensure closure with a `finally` block or try-w
 Not every query-result exception implies a damaged context.
 For example, `NoResultException` and `NonUniqueResultException` report result cardinality and do not themselves mark the transaction for rollback.
 Follow the exception's documented transaction semantics; do not generalize these exceptions to JDBC, optimistic-lock, or flush failures.
+For lock failures, distinguish a statement-level timeout from a transaction-aborting acquisition failure.
+The absence of a Hibernate rollback-only mark does not prove that the database transaction remains usable; see <<locking-failures,locking failures>>.
 See <<transactions,transactions>> and <<locking,locking>> for transaction and lock handling.
 
 Rollback restores database transactional state, but does not restore the values of Java objects or their generated identifiers.

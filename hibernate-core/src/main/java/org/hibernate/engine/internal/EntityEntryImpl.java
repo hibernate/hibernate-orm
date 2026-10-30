@@ -234,6 +234,11 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	}
 
 	@Override
+	public void setVersion(@Nullable Object version) {
+		this.version = version;
+	}
+
+	@Override
 	public void postInsert(Object version) {
 		this.version = version;
 	}
@@ -421,7 +426,9 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	public void forceLocked(Object entity, Object nextVersion) {
 		version = nextVersion;
 		final int versionProperty = persister.getVersionPropertyIndex();
-		loadedState[versionProperty] = version;
+		if ( loadedState != null ) {
+			loadedState[versionProperty] = version;
+		}
 		setLockMode( PESSIMISTIC_FORCE_INCREMENT );
 		persister.setValue( entity, versionProperty, nextVersion );
 	}

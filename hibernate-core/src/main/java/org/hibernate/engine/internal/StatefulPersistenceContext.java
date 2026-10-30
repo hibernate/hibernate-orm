@@ -662,18 +662,17 @@ class StatefulPersistenceContext implements PersistenceContext {
 			final boolean existsInDatabase,
 			final EntityPersister persister) {
 		assert lockMode != null;
-		final var entityEntry =
-				new EntityEntryImpl(
-						status,
-						loadedState,
-						rowId,
-						id,
-						version,
-						lockMode,
-						existsInDatabase,
-						persister,
-						this
-				);
+		final var entityEntry =	new EntityEntryImpl(
+				status,
+				loadedState,
+				rowId,
+				id,
+				version,
+				lockMode,
+				existsInDatabase,
+				persister,
+				this
+		);
 		entityEntryContext.addEntityEntry( entity, entityEntry );
 		setHasNonReadOnlyEntities( status );
 		return entityEntry;

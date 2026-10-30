@@ -1,5 +1,6 @@
 package org.hibernate.dialect.lock.internal;
 
+import org.hibernate.LockMode;
 import org.hibernate.dialect.lock.spi.Operation;
 
 import org.hibernate.dialect.lock.spi.TransactionConcurrency;
@@ -43,6 +44,13 @@ public class CockroachLockingSupport
 		supportsLockingClause = !isLegacy;
 		rowLockStrategy = isLegacy ? RowLockStrategy.NONE : RowLockStrategy.TABLE;
 		supportsNoWait = !isLegacy;
+	}
+
+	@Override
+	public boolean canUsePlainReadForRefresh(LockMode currentLockMode, LockMode requestedLockMode) {
+		// Retain the historical optimization for locking profiles. The legacy
+		// no-clause profile only establishes protection through an actual write.
+		return supportsLockingClause || currentLockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT;
 	}
 
 	@Override

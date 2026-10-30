@@ -1,6 +1,7 @@
 package org.hibernate.query.sqm.internal;
 
 import jakarta.persistence.FetchType;
+import org.hibernate.FetchMethod;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.query.spi.QueryOptions;
 
@@ -21,7 +22,8 @@ public class AppliedGraphs {
 
 	private static boolean containsCollectionFetches(GraphImplementor<?> graph) {
 		for ( var node : graph.getNodes().values() ) {
-			if ( node.getFetchType() == FetchType.EAGER ) {
+			// a nested collection never adds rows to the result set, nor do the associations of its elements
+			if ( node.getFetchType() == FetchType.EAGER && !node.getOptions().contains( FetchMethod.NESTED ) ) {
 				if ( node.getAttributeDescriptor().isCollection() ) {
 					return true;
 				}

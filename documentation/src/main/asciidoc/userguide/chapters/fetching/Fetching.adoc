@@ -524,8 +524,9 @@ include::{example-dir-fetching-graphs}/EntityGraphBatchSizeTest.java[tags=fetchi
 Per-node `CacheRetrieveMode` and `CacheStoreMode` options control cache interaction for that fetch;
 see <<caching>> for cache behavior. These options do not specify a fetch method.
 
-Hibernate's incubating `FetchMethod` option selects `BY_ID`, `JOIN`, or `BY_SUBQUERY`.
-`BY_ID` uses secondary identifier loading, `JOIN` requests joined loading, and `BY_SUBQUERY` requests grouped subquery loading.
+Hibernate's incubating `FetchMethod` option selects `BY_ID`, `JOIN`, `BY_SUBQUERY`, or `NESTED`.
+`BY_ID` uses secondary identifier loading, `JOIN` requests joined loading, `BY_SUBQUERY` requests grouped subquery loading,
+and `NESTED` requests loading a collection as a single aggregated value of the row of its owner.
 The next examples demonstrate the methods using an author/book model:
 
 .Secondary-select graph method
@@ -549,6 +550,33 @@ include::{example-dir-fetching-graphs}/EntityGraphFetchMethodTest.java[tags=fetc
 include::{example-dir-fetching-graphs}/EntityGraphFetchMethodTest.java[tags=fetching-graph-method-subquery]
 ----
 ====
+
+[[fetching-graph-method-nested]]
+.Nested graph method
+====
+[source,java,indent=0]
+----
+include::{example-dir-fetching-graphs}/EntityGraphNestedFetchTest.java[tags=fetching-graph-method-nested]
+----
+====
+
+With `NESTED`, each collection is selected by a correlated subquery in the projection list of the query,
+aggregating the elements using `json_arrayagg(json_array(...))`.
+Since the collection does not add rows to the result set, any number of collections, including bags, may be fetched in one query without a cartesian product.
+An explicit `join fetch` of the collection in the query takes precedence.
+
+`NESTED` is currently supported on H2, PostgreSQL, MySQL, and MariaDB, for one-to-many associations and element collections of basic values or embeddables mapped as a `Set`, bag, or `List`.
+In the following situations, the collection is fetched using a secondary select instead:
+
+* the dialect does not support it, see `Dialect.supportsNestedCollectionFetch()`,
+* the collection is a `Map`, an id bag, or an array,
+* the collection has a join table, that is, a many-to-many association, or a one-to-many association without `@JoinColumn`,
+* the element entity belongs to an inheritance hierarchy, is mapped to more than one table, or has a formula,
+* a column of the element has a type without a reliable JSON representation, for example, a binary, LOB, UUID, JSON, array, or time zone aware type, or
+* the collection belongs to the element of another collection fetched using `NESTED`.
+
+Associations belonging to the element are never joined: when they are fetched eagerly, by their mapping or by a subgraph, they are fetched using a secondary select.
+On MySQL and MariaDB, the aggregated value is limited by `group_concat_max_len`, which might need to be increased.
 
 These options refine the plan but remain subject to the applicable loading operation and mapping constraints.
 

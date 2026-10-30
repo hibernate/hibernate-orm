@@ -31,6 +31,18 @@ public interface FetchParent extends DomainResultGraphNode {
 	 */
 	FetchableContainer getReferencedMappingType();
 
+	/**
+	 * The position of the named selectable within the nested values of
+	 * this parent, when it is the {@linkplain DomainResultCreationState#visitNestedFetches
+	 * nesting fetch parent}, or {@code -1} if the selectable is not part
+	 * of the nested values.
+	 *
+	 * @since 8.1
+	 */
+	default int getNestedSelectableIndex(String selectableName) {
+		return getReferencedMappingType().getSelectableIndex( selectableName );
+	}
+
 	default NavigablePath resolveNavigablePath(Fetchable fetchable) {
 		final String fetchableName = fetchable.getFetchableName();
 		if ( fetchable instanceof EntityIdentifierMapping ) {

@@ -47,13 +47,20 @@ tasks.register("verifySkinnyBom") {
     group = "verification"
     description = "Verify that the BOM only constrains org.hibernate.orm artifacts"
 
-    doLast {
+    // the constraints are read through a provider, the action only works with the resulting values
+    inputs.property( "constraints", providers.provider {
+        ['api', 'runtime'].collectMany { confName ->
+            configurations.getByName( confName ).dependencyConstraints.collect { constraint ->
+                [constraint.group, constraint.name]
+            }
+        }
+    } )
+
+    doLast { verifyTask ->
         var violations = []
-        ['api', 'runtime'].each { confName ->
-            configurations.getByName( confName ).dependencyConstraints.each { constraint ->
-                if ( constraint.group != 'org.hibernate.orm' ) {
-                    violations.add( "${constraint.group}:${constraint.name}" )
-                }
+        verifyTask.inputs.properties.get( "constraints" ).each { constraint ->
+            if ( constraint[0] != 'org.hibernate.orm' ) {
+                violations.add( "${constraint[0]}:${constraint[1]}" )
             }
         }
         if ( !violations.isEmpty() ) {

@@ -4,9 +4,17 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
+import org.gradle.api.artifacts.result.ResolvedArtifactResult;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 
 import org.hibernate.build.OrmBuildDetails;
+
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
 /**
  * @author Steve Ebersole
@@ -31,9 +39,6 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 				.setDescription( "Artifacts covered by API and SPI migration compatibility validation" );
 		migrationCompatibilityArtifacts.setTransitive( false );
 
-		final var indexManager = new IndexManager( artifactsToProcess, project );
-		project.getExtensions().add( "indexManager", indexManager );
-		project.getExtensions().add( "classificationMetadataManager", new ClassificationMetadataManager() );
 		final MigrationCompatibilityExtension migrationCompatibility = project.getExtensions().create(
 				"migrationCompatibility",
 				MigrationCompatibilityExtension.class
@@ -51,16 +56,58 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 			}
 		}
 
+		final var artifactCollection = artifactsToProcess.getIncoming().getArtifacts();
 		final var indexerTask = project.getTasks().register(
 				"buildAggregatedIndex",
-				IndexerTask.class
+				IndexerTask.class,
+				(task) -> {
+					task.getArtifactsToProcess().from( artifactCollection.getArtifactFiles() );
+					// Wrapped in a callable-backed provider so the configuration cache stores its value
+					// instead of the `Project` the lookup needs for project dependencies.
+					task.getArtifactCoordinates().putAll(
+							project.provider( () -> coordinatesByFileName( project, artifactCollection.getResolvedArtifacts().get() ) )
+					);
+					final var indexingDirectory = project.getLayout().getBuildDirectory().dir( "orm/reports/indexing" );
+					task.getIndexFile().convention( indexingDirectory.map( (dir) -> dir.file( "jandex.idx" ) ) );
+					task.getArtifactFile().convention( indexingDirectory.map( (dir) -> dir.file( "artifacts.txt" ) ) );
+					task.getDescriptorFile().convention( indexingDirectory.map( (dir) -> dir.file( "artifact-coordinates.txt" ) ) );
+				}
 		);
+
+		// Everything reading the index consumes it through the indexer's outputs, which also
+		// gives them their dependency on `buildAggregatedIndex`.
+		final Provider<String> hibernateVersion = project.provider(
+				() -> project.getExtensions().getByType( OrmBuildDetails.class ).getHibernateVersionName()
+		);
+		final Provider<String> hibernateVersionFamily = project.provider(
+				() -> project.getExtensions().getByType( OrmBuildDetails.class ).getHibernateVersionFamily()
+		);
+		final Provider<ClassificationMetadataManager> metadataManager = project.getGradle().getSharedServices().registerIfAbsent(
+				"classificationMetadataManager" + project.getPath(),
+				ClassificationMetadataManager.class,
+				(spec) -> {}
+		);
+		project.getTasks().withType( AbstractClassificationValidationTask.class ).configureEach( (task) -> {
+			task.getMetadataManagerReference().set( metadataManager );
+			task.usesService( metadataManager );
+		} );
+		project.getTasks().withType( ClassificationReportsTask.class ).configureEach( (task) -> {
+			task.getMetadataManagerReference().set( metadataManager );
+			task.usesService( metadataManager );
+		} );
+		project.getTasks().withType( AbstractJandexAwareTask.class ).configureEach( (task) -> {
+			task.getHibernateVersion().set( hibernateVersion );
+			task.getIndexFile().set( indexerTask.flatMap( IndexerTask::getIndexFile ) );
+			task.getArtifactFile().set( indexerTask.flatMap( IndexerTask::getArtifactFile ) );
+			task.getDescriptorFile().set( indexerTask.flatMap( IndexerTask::getDescriptorFile ) );
+		} );
 
 		final var classificationMetadataTask = project.getTasks().register(
 				"generateClassificationMetadata",
 				ClassificationMetadataTask.class,
 				(task) -> {
-					task.dependsOn( indexerTask );
+					task.getHibernateVersionName().set( hibernateVersion );
+					task.getHibernateVersionFamily().set( hibernateVersionFamily );
 					task.getMigrationCompatibilityArtifacts().from( migrationCompatibilityArtifacts );
 				}
 		);
@@ -163,7 +210,8 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 								"orm/migration-compatibility/baseline/classifications.json.gz"
 						)
 					);
-					task.onlyIf( ignored -> migrationCompatibility.getBaselineFamily().isPresent() );
+					final Provider<Boolean> hasBaselineFamily = migrationCompatibility.getBaselineFamily().map( (family) -> true ).orElse( false );
+					task.onlyIf( ignored -> hasBaselineFamily.get() );
 				}
 		);
 		final var baselineArtifactsTask = project.getTasks().register(
@@ -179,9 +227,8 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 					task.getArtifactsDirectory().set(
 						project.getLayout().getBuildDirectory().dir( "orm/migration-compatibility/baseline/artifacts" )
 					);
-					task.onlyIf(
-						ignored -> baselineMetadataTask.get().getResolvedMetadataFile().get().getAsFile().isFile()
-					);
+					final var resolvedMetadata = baselineMetadataTask.flatMap( ResolveClassificationMetadataTask::getResolvedMetadataFile );
+					task.onlyIf( ignored -> resolvedMetadata.get().getAsFile().isFile() );
 				}
 		);
 		final var resolvedBaselineMetadata = baselineMetadataTask
@@ -198,7 +245,7 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 					task.getBaselineClassificationMetadataFile().set( resolvedBaselineMetadata );
 					task.getBaselineArtifacts().from(
 						baselineArtifactsTask.flatMap( ResolveClassificationArtifactsTask::getArtifactsDirectory )
-								.map( directory -> project.fileTree( directory ).matching( pattern -> pattern.include( "*.jar" ) ) )
+								.map( directory -> directory.getAsFileTree().matching( pattern -> pattern.include( "*.jar" ) ) )
 					);
 					task.getCurrentArtifacts().from( migrationCompatibilityArtifacts );
 				}
@@ -222,7 +269,8 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 					task.getResolvedMetadataFile().set(
 						project.getLayout().getBuildDirectory().file( "orm/migration-review/baseline/classifications.json.gz" )
 					);
-					task.onlyIf( ignored -> migrationCompatibility.getReviewFamily().isPresent() );
+					final Provider<Boolean> hasReviewFamily = migrationCompatibility.getReviewFamily().map( (family) -> true ).orElse( false );
+					task.onlyIf( ignored -> hasReviewFamily.get() );
 				}
 		);
 		final var reviewArtifactsTask = project.getTasks().register(
@@ -238,7 +286,8 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 					task.getArtifactsDirectory().set(
 						project.getLayout().getBuildDirectory().dir( "orm/migration-review/baseline/artifacts" )
 					);
-					task.onlyIf( ignored -> reviewMetadataTask.get().getResolvedMetadataFile().get().getAsFile().isFile() );
+					final var resolvedMetadata = reviewMetadataTask.flatMap( ResolveClassificationMetadataTask::getResolvedMetadataFile );
+					task.onlyIf( ignored -> resolvedMetadata.get().getAsFile().isFile() );
 				}
 		);
 		project.getTasks().register(
@@ -253,7 +302,7 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 					);
 					task.getBaselineArtifacts().from(
 						reviewArtifactsTask.flatMap( ResolveClassificationArtifactsTask::getArtifactsDirectory )
-								.map( directory -> project.fileTree( directory ).matching( pattern -> pattern.include( "*.jar" ) ) )
+								.map( directory -> directory.getAsFileTree().matching( pattern -> pattern.include( "*.jar" ) ) )
 					);
 					task.getCurrentArtifacts().from( migrationCompatibilityArtifacts );
 				}
@@ -295,6 +344,41 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 		groupingTask.dependsOn( loggingTask );
 		groupingTask.dependsOn( dialectTableTask );
 		groupingTask.dependsOn( communityDialectTableTask );
+	}
+
+	private static Map<String, String> coordinatesByFileName(Project project, Set<ResolvedArtifactResult> artifacts) {
+		final Map<String, String> coordinates = new TreeMap<>();
+		for ( ResolvedArtifactResult artifact : artifacts ) {
+			final String encoded;
+			final var component = artifact.getId().getComponentIdentifier();
+			if ( component instanceof ModuleComponentIdentifier ) {
+				final ModuleComponentIdentifier module = (ModuleComponentIdentifier) component;
+				encoded = IndexerTask.encode( module.getGroup(), module.getModule(), module.getVersion(), false );
+			}
+			else if ( component instanceof ProjectComponentIdentifier ) {
+				final ProjectComponentIdentifier identifier = (ProjectComponentIdentifier) component;
+				final Project owner = project.getRootProject().findProject( identifier.getProjectPath() );
+				if ( owner == null ) {
+					throw new IllegalStateException( "Unable to locate artifact project " + identifier.getProjectPath() );
+				}
+				encoded = IndexerTask.encode(
+						owner.getGroup().toString(),
+						owner.getName(),
+						owner.getVersion().toString(),
+						true
+				);
+			}
+			else {
+				throw new IllegalStateException(
+						"Classified artifact does not have module coordinates: " + artifact.getFile()
+				);
+			}
+			final String previous = coordinates.put( artifact.getFile().getName(), encoded );
+			if ( previous != null && !previous.equals( encoded ) ) {
+				throw new IllegalStateException( "Artifact file name maps to multiple coordinates: " + artifact.getFile().getName() );
+			}
+		}
+		return coordinates;
 	}
 
 	private static TaskProvider<Task> registerReportAlias(

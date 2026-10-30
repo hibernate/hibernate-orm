@@ -2,22 +2,35 @@ package org.hibernate.orm.post;
 
 import java.nio.file.Path;
 import java.util.function.Function;
+import javax.inject.Inject;
+
+import org.gradle.api.services.BuildService;
+import org.gradle.api.services.BuildServiceParameters;
 
 /// Lazily parses and shares the immutable canonical classification metadata
 /// within one Gradle project execution.
 ///
+/// Registered as a [BuildService] (one per project) so the tasks share the parsed model
+/// without holding a reference to the Gradle model, as required by the configuration cache.
+///
 /// @author Steve Ebersole
-public final class ClassificationMetadataManager {
+public class ClassificationMetadataManager implements BuildService<BuildServiceParameters.None> {
 	private final Function<Path, ClassificationMetadata> reader;
 	private Path source;
 	private ClassificationMetadata metadata;
 
+	@Inject
 	public ClassificationMetadataManager() {
 		this( (path) -> new ClassificationMetadataJson().read( path ) );
 	}
 
 	ClassificationMetadataManager(Function<Path, ClassificationMetadata> reader) {
 		this.reader = reader;
+	}
+
+	@Override
+	public BuildServiceParameters.None getParameters() {
+		return null;
 	}
 
 	/// Returns the single parsed model for this project execution.

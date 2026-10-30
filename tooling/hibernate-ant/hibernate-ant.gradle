@@ -30,9 +30,10 @@ dependencies {
 }
 
 tasks.named('test') {
-    doFirst {
-        systemProperty 'guide.test.classpath', sourceSets.test.runtimeClasspath.asPath
-    }
+    def testRuntimeClasspath = sourceSets.test.runtimeClasspath.elements
+    jvmArgumentProviders.add( new LazyArgumentsProvider( arguments: testRuntimeClasspath.map {
+        ["-Dguide.test.classpath=${it.collect { it.asFile.absolutePath }.join( File.pathSeparator )}".toString()]
+    } ) )
 }
 
 tasks.register('legacyTest', Test) {
@@ -44,4 +45,3 @@ tasks.register('legacyTest', Test) {
 }
 
 test.dependsOn legacyTest
-

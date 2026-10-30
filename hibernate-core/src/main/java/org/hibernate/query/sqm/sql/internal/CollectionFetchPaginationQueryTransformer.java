@@ -431,7 +431,7 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 		if ( versionMapping != null ) {
 			versionMapping.forEachSelectable( projector );
 		}
-		primaryEntity.forEachSelectable( projector );
+		primaryEntity.visitSubTypeAttributeMappings( attribute -> attribute.forEachSelectable( projector ) );
 	}
 
 	private static void addAbsorbedSelections(

@@ -234,6 +234,11 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	}
 
 	@Override
+	public void setVersion(@Nullable Object version) {
+		this.version = version;
+	}
+
+	@Override
 	public void postInsert(Object version) {
 		this.version = version;
 	}

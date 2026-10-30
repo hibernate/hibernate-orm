@@ -54,6 +54,20 @@ This section describes changes to contracts (classes, interfaces, methods, etc.)
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#spi[SPI].
 
+[[entity-entry-version]]
+=== Explicit entity-entry version synchronization
+
+`EntityEntry` now requires `setVersion(Object)`. Custom implementations must
+implement this metadata-only assignment, including support for a null version.
+It must not change the entity, loaded snapshot, status, lock mode, or dirty
+tracking, and must not perform SQL, cache operations, or lifecycle callbacks.
+External implementations must implement the new method before using this release.
+
+Follow-on locking uses this operation after successful rereading of newly loaded
+entities, before publishing the final lock mode or forcing a version increment.
+Previously managed entities retain their existing version-checking lock-upgrade
+behavior and are not refreshed by this synchronization.
+
 [[jdbc-secondary-action-execution]]
 === Invocation-local JDBC secondary actions
 

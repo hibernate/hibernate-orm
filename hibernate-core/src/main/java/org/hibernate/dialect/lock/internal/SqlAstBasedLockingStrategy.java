@@ -7,7 +7,6 @@ import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.StaleObjectStateException;
-import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.lock.spi.LockingStrategy;
 import org.hibernate.dialect.lock.spi.LockingStrategyException;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -15,6 +14,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.loader.ast.internal.LoaderSqlAstCreationState;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -176,12 +176,13 @@ public class SqlAstBasedLockingStrategy implements LockingStrategy {
 
 			if ( lockOptions.getLockScope() == PessimisticLockScope.EXTENDED ) {
 				SqmMutationStrategyHelper.visitCollectionTables( entityToLock, (attribute) -> {
-					final var collectionToLock = (PersistentCollection<?>) attribute.getValue( object );
-					LockingHelper.lockCollectionTable(
+					// The managed field may have been replaced or cleared before flush.
+					final var collectionKey = resolveCollectionKey( attribute, object, session );
+					LockingHelper.lockCollectionTableByKey(
 							attribute,
 							lockMode,
 							lockOptions.getTimeout(),
-							collectionToLock,
+							collectionKey,
 							lockingExecutionContext
 					);
 				} );
@@ -208,6 +209,30 @@ public class SqlAstBasedLockingStrategy implements LockingStrategy {
 				throw noRow;
 			}
 		}
+	}
+
+	private static Object resolveCollectionKey(
+			PluralAttributeMapping attribute,
+			Object owner,
+			SharedSessionContractImplementor session) {
+		final var collectionPersister = attribute.getCollectionDescriptor();
+		final var collectionType = collectionPersister.getCollectionType();
+		final var persistenceContext = session.getPersistenceContextInternal();
+		final var ownerEntry = persistenceContext.getEntry( owner );
+		if ( !collectionType.useLHSPrimaryKey() && ownerEntry != null && ownerEntry.getLoadedState() == null ) {
+			// Read-only owners have no snapshot. Their current property-ref value may
+			// have changed, but the original collection entry retains the database key.
+			final var collectionEntries = persistenceContext.getCollectionEntries();
+			if ( collectionEntries != null ) {
+				for ( var collectionEntry : collectionEntries.entrySet() ) {
+					if ( collectionEntry.getKey().getOwner() == owner
+							&& collectionEntry.getValue().getLoadedPersister() == collectionPersister ) {
+						return collectionEntry.getValue().getLoadedKey();
+					}
+				}
+			}
+		}
+		return collectionType.getKeyOfOwner( owner, session );
 	}
 
 	private static void handleRestriction(

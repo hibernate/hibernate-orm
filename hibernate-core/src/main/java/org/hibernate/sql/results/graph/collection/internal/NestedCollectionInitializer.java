@@ -165,6 +165,13 @@ public class NestedCollectionInitializer
 		resolveInstance( instance, data, true );
 	}
 
+	@Override
+	public void resolveState(NestedCollectionInitializerData data) {
+		super.resolveState( data );
+		// the collection is not initialized from this row, but the aggregate must still be put in the query cache
+		data.getRowProcessingState().getJdbcValue( aggregateSelection );
+	}
+
 	/**
 	 * Reads {@code [[1,"a",null],[2,"b",3]]} into rows of JDBC values.
 	 */

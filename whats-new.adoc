@@ -39,3 +39,21 @@ now recognized and bound as a true one-to-one association instead of falling bac
 many-to-one. For each physical join column that is also part of the owner's primary key, Hibernate
 infers `insertable=false, updatable=false`, since the identifier mapping already owns that column's
 value. See the link:{userGuideBase}#associations-one-to-one-formulas[user guide] for details and examples.
+
+[[map-key-formula]]
+== Formula-based map keys
+
+The new `@MapKeyFormula` annotation specifies a native SQL expression used to read the key of a
+`java.util.Map`, instead of storing the key in a `@MapKeyColumn`. Since the key is derived from the
+expression, it is never written to the database:
+
+[source,java]
+----
+@OneToMany(mappedBy = "parent")
+@MapKeyFormula("upper(code)")
+Map<String, Child> children;
+----
+
+The `<map-key-formula>` element of mapping XML, which was previously ignored, now has the same effect.
+Mappings which declare it no longer fall back to the default `<attribute>_KEY` column.
+See the link:{userGuideBase}#collections-map-key-formula[user guide] for details and examples.

@@ -42,6 +42,7 @@ import java.util.Map;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
+import static org.hibernate.Timeouts.SKIP_LOCKED_MILLI;
 import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
 
 
@@ -53,6 +54,7 @@ import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
 public class TableLock {
 	private final TableDetails tableDetails;
 	private final EntityMappingType entityMappingType;
+	private final List<EntityKey> expectedEntityKeys;
 
 	// Used by Hibernate Reactive
 	protected final QuerySpec querySpec = new QuerySpec( true );
@@ -89,6 +91,7 @@ public class TableLock {
 
 		this.tableDetails = tableDetails;
 		this.entityMappingType = entityMappingType;
+		this.expectedEntityKeys = List.copyOf( entityKeys );
 
 		rootPath = new NavigablePath( tableDetails.getTableName() );
 		physicalTableReference =
@@ -256,9 +259,17 @@ public class TableLock {
 								ListResultsConsumer.instance( ListResultsConsumer.UniqueSemantic.ALLOW )
 						);
 
-		if ( isEmpty( results )
-				&& !(tableDetails instanceof TableMapping tableMapping && tableMapping.isOptional()) ) {
-			throw new AssertionFailure( "Expecting results" );
+		final var timeout = lockingQueryOptions.getLockOptions().getTimeout();
+		if ( timeout.milliseconds() == SKIP_LOCKED_MILLI ) {
+			// Preserve skip-locked behavior until its separate acquisition policy is implemented.
+			if ( isEmpty( results )
+					&& !(tableDetails instanceof TableMapping tableMapping && tableMapping.isOptional()) ) {
+				throw new AssertionFailure( "Expecting results" );
+			}
+		}
+		else {
+			LockingHelper.validateAcquiredRows(
+					tableDetails, entityMappingType, expectedEntityKeys, results, timeout, session );
 		}
 
 		results.forEach( (row) -> {

@@ -36,12 +36,14 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.event.internal.DefaultRefreshEventListener;
 import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.util.ImmutableBitSet;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -1219,6 +1221,7 @@ public class EntityInitializerImpl
 				}
 			}
 			else {
+				prepareCollectionsForRefresh( data );
 				resolveKeySubInitializers( data );
 			}
 		}
@@ -1314,6 +1317,8 @@ public class EntityInitializerImpl
 				}
 			}
 
+			prepareCollectionsForRefresh( data );
+
 			if ( data.getInstance() != null ) {
 				upgradeLockMode( data );
 				if ( data.getState() == State.INITIALIZED ) {
@@ -1327,6 +1332,26 @@ public class EntityInitializerImpl
 					initializeSubInstancesFromParent( data );
 				}
 			}
+		}
+	}
+
+	private void prepareCollectionsForRefresh(EntityInitializerData data) {
+		if ( referencedModelPart instanceof EntityCollectionPart collectionPart
+				&& collectionPart.getNature() == CollectionPart.Nature.INDEX ) {
+			return;
+		}
+		final var session = data.getRowProcessingState().getSession();
+		if ( isRefreshingCascadeAssociation( data )
+				&& data.entityInstanceForNotify != null
+				&& session.isEventSource()
+				&& session.getLoadQueryInfluencers().registerRefreshingEntity( data.entityInstanceForNotify ) ) {
+			// Evict once per refresh, before a nested collection can reuse its initialized wrapper.
+			DefaultRefreshEventListener.evictCollections(
+					data.entityInstanceForNotify,
+					data.concreteDescriptor,
+					data.entityKey.getIdentifier(),
+					session.asEventSource()
+			);
 		}
 	}
 

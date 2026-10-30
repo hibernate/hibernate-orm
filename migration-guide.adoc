@@ -190,6 +190,18 @@ when calling the superclass implementation.
 
 This section describes changes in behavior that applications should be aware of.
 
+[[follow-on-locking-missing-rows]]
+=== Missing rows during follow-on locking
+
+For non-skipping batched follow-on locking, every required table must return a
+row for each expected entity identifier. If any are missing, acquisition now
+throws `StaleObjectStateException`, including for unversioned entities, and uses
+the existing conversion to `OptimisticLockException`. This replaces both silent
+success for partial results and the assertion failure for entirely missing results.
+The exception identifies the first missing entity in acquisition input order;
+its message lists all missing identifiers from that table acquisition. Optional
+table rows remain exempt. Skip-locked acquisition policy is unchanged.
+
 [[filtered-to-one-associations]]
 === Filters and SQL restrictions on to-one associations
 

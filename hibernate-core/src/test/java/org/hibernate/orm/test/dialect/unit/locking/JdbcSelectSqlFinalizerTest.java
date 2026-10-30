@@ -333,6 +333,50 @@ class JdbcSelectSqlFinalizerTest {
 		assertEquals( JdbcLockingApplication.NONE, result.lockingApplication() );
 	}
 
+	@Test
+	void skipLockedRejectsOnlyActualFollowOnAndPreservesPolicyErrors() {
+		final var options = lockOptions().setTimeout( Timeouts.SKIP_LOCKED );
+		for ( var disposition : java.util.List.of( JdbcLockingApplication.NONE, JdbcLockingApplication.RENDERED ) ) {
+			assertEquals( disposition, JdbcSelectSqlFinalizer.finalizeLocking(
+					"select id from person", disposition, options, Limit.NONE,
+					OracleLockingSupport.ORACLE_LOCKING_SUPPORT, true ).lockingApplication() );
+		}
+		assertThrows( IllegalQueryOperationException.class, () -> JdbcSelectSqlFinalizer.finalizeLocking(
+				"select id from person", JdbcLockingApplication.FOLLOW_ON, options, Limit.NONE,
+				LockingSupportSimple.STANDARD_SUPPORT, true ) );
+		for ( var strategy : java.util.List.of( Locking.FollowOn.ALLOW, Locking.FollowOn.FORCE ) ) {
+			options.setFollowOnStrategy( strategy );
+			final var exception = assertThrows( IllegalQueryOperationException.class,
+					() -> JdbcSelectSqlFinalizer.finalizeLocking( "select distinct id from person",
+							JdbcLockingApplication.RAW_SQL, options, Limit.NONE,
+							OracleLockingSupport.ORACLE_LOCKING_SUPPORT, true ) );
+			assertTrue( exception.getMessage().startsWith( "SKIP_LOCKED is not supported" ) );
+		}
+		// A plan lacking acquisition actions retains its existing capability error.
+		assertTrue( assertThrows( IllegalQueryOperationException.class,
+				() -> JdbcSelectSqlFinalizer.finalizeLocking( "select id from person",
+						JdbcLockingApplication.RAW_SQL, options, Limit.NONE,
+						LockingSupportSimple.STANDARD_SUPPORT, false ) )
+				.getMessage().contains( "does not provide follow-on actions" ) );
+		options.setFollowOnStrategy( Locking.FollowOn.DISALLOW );
+		assertTrue( assertThrows( IllegalQueryOperationException.class,
+				() -> JdbcSelectSqlFinalizer.finalizeLocking( "select distinct id from person",
+						JdbcLockingApplication.RAW_SQL, options, Limit.NONE,
+						OracleLockingSupport.ORACLE_LOCKING_SUPPORT, true ) )
+				.getMessage().contains( "was disallowed" ) );
+		options.setFollowOnStrategy( Locking.FollowOn.IGNORE );
+		assertEquals( JdbcLockingApplication.NONE, JdbcSelectSqlFinalizer.finalizeLocking(
+				"select distinct id from person", JdbcLockingApplication.RAW_SQL, options, Limit.NONE,
+				OracleLockingSupport.ORACLE_LOCKING_SUPPORT, true ).lockingApplication() );
+		options.setFollowOnStrategy( Locking.FollowOn.ALLOW );
+		assertEquals( JdbcLockingApplication.NONE, JdbcSelectSqlFinalizer.finalizeLocking(
+				"select distinct id from person", JdbcLockingApplication.RAW_SQL, options, Limit.NONE,
+				OracleLockingSupport.ORACLE_LOCKING_SUPPORT, false ).lockingApplication() );
+		assertEquals( JdbcLockingApplication.RENDERED, JdbcSelectSqlFinalizer.finalizeLocking(
+				"select id from person", JdbcLockingApplication.RAW_SQL, options, Limit.NONE,
+				LockingSupportSimple.STANDARD_SUPPORT, false ).lockingApplication() );
+	}
+
 	private static LockOptions lockOptions() {
 		return new LockOptions( LockMode.PESSIMISTIC_WRITE );
 	}

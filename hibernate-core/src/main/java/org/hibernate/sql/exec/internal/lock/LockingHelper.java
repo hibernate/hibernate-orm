@@ -2,6 +2,7 @@ package org.hibernate.sql.exec.internal.lock;
 
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
+import org.hibernate.dialect.lock.spi.LockingClauseStrategy;
 
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
@@ -22,6 +23,7 @@ import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
 import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
@@ -41,6 +43,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.LoadedValuesCollector;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.spi.mutation.TableMapping;
+import org.hibernate.sql.results.graph.internal.LockingResultCoverage;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,6 +51,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.util.TreeSet;
 
 import static org.hibernate.Timeouts.SKIP_LOCKED_MILLI;
 import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
@@ -71,6 +75,54 @@ public class LockingHelper {
 		if ( isSkipLockedRequest( lockOptions ) ) {
 			throw new IllegalQueryOperationException(
 					"SKIP_LOCKED is not supported with follow-on locking; use direct locking for a supported query shape"
+			);
+		}
+	}
+
+	/// Checks structural identity coverage before any query or timeout action is executed.
+	/// Each set-query branch has its own summary; a loader-created AST instead uses
+	/// the executable result graph. Collection paths retain their existing acquisition route.
+	public static void validateFollowOnLockingResults(
+			SelectStatement statement,
+			QuerySpec lockingTarget,
+			LockingClauseStrategy strategy) {
+		final List<QuerySpec> branches = new ArrayList<>();
+		statement.getQueryPart().visitQuerySpecs( branches::add );
+		if ( !branches.contains( lockingTarget ) && lockingTarget.getLockingResultCoverage() != null ) {
+			// A dialect may have wrapped the original selection for pagination.
+			branches.clear();
+			branches.add( lockingTarget );
+		}
+		final var missing = new TreeSet<String>();
+		boolean identifiable = false;
+		for ( int index = 0; index < branches.size(); index++ ) {
+			final var branch = branches.get( index );
+			var coverage = branch.getLockingResultCoverage();
+			if ( coverage == null ) {
+				coverage = LockingResultCoverage.EMPTY;
+				for ( var result : statement.getDomainResultDescriptors() ) {
+					coverage = coverage.withDomainResult( result );
+				}
+			}
+			final var required = new LinkedHashSet<NavigablePath>();
+			if ( branch.getRootPathsForLocking() != null ) {
+				required.addAll( branch.getRootPathsForLocking() );
+			}
+			if ( branch == lockingTarget && strategy.getPathsToLock() != null ) {
+				required.addAll( strategy.getPathsToLock() );
+			}
+			identifiable |= !required.isEmpty();
+			for ( var path : required ) {
+				if ( !coverage.entityPaths().contains( path ) && !coverage.collectionPaths().contains( path ) ) {
+					missing.add( (branches.size() == 1 ? "" : "branch " + (index + 1) + ": ") + path.getFullPath() );
+				}
+			}
+		}
+		if ( !missing.isEmpty() || !identifiable ) {
+			throw new IllegalQueryOperationException(
+					"Follow-on locking cannot acquire all requested locks from this result shape"
+							+ (missing.isEmpty() ? "; no identifiable entity lock targets" : "; uncovered entity lock targets: " + missing)
+							+ "; select the required entities or use direct locking for a supported query shape"
 			);
 		}
 	}

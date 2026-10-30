@@ -53,13 +53,19 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SettingProvider;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.hibernate.SPI.Role.IMPLEMENT;
 import static org.hibernate.SPI.Role.SUPPLY;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /// Verifies the stock entity-locking factories and Hibernate-owned request
@@ -320,13 +326,14 @@ public class EntityLockingStrategyFactoryTest {
 		}
 	}
 
-	@Test
-	void scopeOnlyAcquisitionUsesCustomFactoryAndEffectiveMode(SessionFactoryScope scope) {
-		final var persister = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( VersionedEntity.class );
+	@ParameterizedTest
+	@ValueSource(booleans = { false, true })
+	void extendedAcquisitionUsesCustomFactoryAndEffectiveMode(boolean modeUpgrade, SessionFactoryScope scope) {
+		final var persister = spy( scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( VersionedEntity.class ) );
 		final var entry = mock( EntityEntry.class );
 		final var session = mock( SharedSessionContractImplementor.class );
 		final var entity = new VersionedEntity();
-		when( entry.getLockMode() ).thenReturn( LockMode.PESSIMISTIC_FORCE_INCREMENT );
+		when( entry.getLockMode() ).thenReturn( modeUpgrade ? LockMode.READ : LockMode.PESSIMISTIC_FORCE_INCREMENT );
 		when( entry.getPersister() ).thenReturn( persister );
 		when( entry.getStatus() ).thenReturn( Status.MANAGED );
 		when( entry.getId() ).thenReturn( 1L );
@@ -335,6 +342,11 @@ public class EntityLockingStrategyFactoryTest {
 		when( session.getEventMonitor() ).thenReturn( mock( EventMonitor.class ) );
 		final List<LockMode> requestedModes = new ArrayList<>();
 		final List<Timeout> timeouts = new ArrayList<>();
+		doAnswer( invocation -> {
+			assertThat( requestedModes ).containsExactly( LockMode.PESSIMISTIC_READ, LockMode.PESSIMISTIC_WRITE );
+			assertThat( timeouts ).hasSize( 2 );
+			return 2L;
+		} ).when( persister ).forceVersionIncrement( 1L, 1L, session );
 		try {
 			suppliedFactory = request -> {
 				requestedModes.add( request.lockMode() );
@@ -356,6 +368,7 @@ public class EntityLockingStrategyFactoryTest {
 			}
 			assertThat( requestedModes ).containsExactly( LockMode.PESSIMISTIC_READ, LockMode.PESSIMISTIC_WRITE );
 			assertThat( timeouts ).containsExactly( Timeout.milliseconds( 750 ), Timeout.milliseconds( 750 ) );
+			verify( persister, times( modeUpgrade ? 1 : 0 ) ).forceVersionIncrement( 1L, 1L, session );
 		}
 		finally {
 			suppliedFactory = RECORDING_FACTORY;

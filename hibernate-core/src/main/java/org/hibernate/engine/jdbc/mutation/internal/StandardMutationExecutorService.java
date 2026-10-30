@@ -42,9 +42,7 @@ public class StandardMutationExecutorService implements MutationExecutorService 
 			JdbcValueBindingsFactory bindingsFactory,
 			SharedSessionContractImplementor session) {
 		// decide whether to use batching - any number > one means to batch
-		final Integer sessionBatchSize = session.getJdbcCoordinator()
-				.getJdbcSessionOwner()
-				.getJdbcBatchSize();
+		final Integer sessionBatchSize = session.getJdbcBatchSize();
 		final int batchSizeToUse = sessionBatchSize == null
 				? globalBatchSize
 				: sessionBatchSize;

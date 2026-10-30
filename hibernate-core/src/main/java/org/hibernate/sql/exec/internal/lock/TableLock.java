@@ -39,7 +39,6 @@ import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.spi.mutation.TableMapping;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -290,24 +289,9 @@ public class TableLock {
 				throw new AssertionFailure( "Expecting results" );
 			}
 		}
-		else {
-			LockingHelper.validateAcquiredRows(
-					tableDetails, entityMappingType, expectedEntityKeys, results, timeout, session );
-		}
 
-		final Map<EntityKey, EntityDetails> detailsByKey = new HashMap<>();
-		entityDetailsMap.values().forEach( details -> detailsByKey.put( details.key(), details ) );
-		final var acquiredDetails = new ArrayList<EntityDetails>( results.size() );
-		for ( var row : results ) {
-			final var key = session.generateEntityKey( row[0], entityMappingType.getEntityPersister() );
-			final var details = detailsByKey.get( key );
-			if ( details == null ) {
-				throw new AssertionFailure( "Acquired identity has no collected entity for '"
-						+ entityMappingType.getEntityName() + "' during follow-on locking of table '"
-						+ tableDetails.getTableName() + "'" );
-			}
-			acquiredDetails.add( details );
-		}
+		final var acquiredDetails = resolveAcquiredDetails(
+				entityDetailsMap, expectedEntityKeys, results, tableDetails, entityMappingType, timeout, session );
 		for ( int rowIndex = 0; rowIndex < results.size(); rowIndex++ ) {
 			final var row = results.get( rowIndex );
 			final var entityDetails = acquiredDetails.get( rowIndex );
@@ -316,6 +300,62 @@ public class TableLock {
 				resultHandlers.get( i ).applyResult( row[i+1], entityDetails, session );
 			}
 		}
+	}
+
+
+	/// Matches and validates an entire acquisition before any reread handlers run.
+	static List<EntityDetails> resolveAcquiredDetails(
+			Map<Object, EntityDetails> entityDetailsMap,
+			List<EntityKey> expectedEntityKeys,
+			List<Object[]> results,
+			TableDetails tableDetails,
+			EntityMappingType entityMappingType,
+			jakarta.persistence.Timeout timeout,
+			SharedSessionContractImplementor session) {
+		final EntityDetailsMap detailsByKey;
+		if ( entityDetailsMap instanceof EntityDetailsMap indexed && indexed.hasDirectKeys() ) {
+			detailsByKey = indexed;
+		}
+		else {
+			detailsByKey = new EntityDetailsMap( session, entityMappingType.getEntityPersister() );
+			entityDetailsMap.values().forEach( details -> detailsByKey.putEntityKey( details.key(), details ) );
+		}
+		final var acquiredDetails = new ArrayList<EntityDetails>( results.size() );
+		final var acquired = new boolean[detailsByKey.positionCount()];
+		boolean unexpectedIdentity = false;
+		java.util.HashSet<EntityKey> unexpectedKeys = null;
+		for ( var row : results ) {
+			final var key = session.generateEntityKey( row[0], entityMappingType.getEntityPersister() );
+			final var indexed = detailsByKey.getEntityKey( key );
+			final var details = indexed == null ? null : indexed.details;
+			if ( details == null ) {
+				unexpectedIdentity = true;
+			}
+			if ( indexed != null ) {
+				acquired[indexed.position] = true;
+			}
+			else {
+				if ( unexpectedKeys == null ) {
+					unexpectedKeys = new java.util.HashSet<>();
+				}
+				unexpectedKeys.add( key );
+			}
+			acquiredDetails.add( details );
+		}
+		final var unexpectedAcquired = unexpectedKeys;
+		LockingHelper.validateAcquiredIdentities(
+				tableDetails, entityMappingType, expectedEntityKeys,
+				key -> {
+					final var indexed = detailsByKey.getEntityKey( key );
+					return indexed != null ? acquired[indexed.position]
+							: unexpectedAcquired != null && unexpectedAcquired.contains( key );
+				}, timeout, session );
+		if ( unexpectedIdentity ) {
+			throw new AssertionFailure( "Acquired identity has no collected entity for '"
+					+ entityMappingType.getEntityName() + "' during follow-on locking of table '"
+					+ tableDetails.getTableName() + "'" );
+		}
+		return acquiredDetails;
 	}
 
 

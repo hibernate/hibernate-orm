@@ -63,6 +63,8 @@ public interface JaxbPluralAttribute extends JaxbPersistentAttribute, JaxbLockab
 
 	JaxbMapKeyColumnImpl getMapKeyColumn();
 
+	String getMapKeyFormula();
+
 	void setMapKeyColumn(JaxbMapKeyColumnImpl value);
 
 	JaxbUserTypeImpl getMapKeyType();

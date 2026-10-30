@@ -563,6 +563,12 @@ public interface HibernateAnnotations {
 			EnumSet.allOf( Kind.class ),
 			false
 	);
+	CompleteAnnotationDescriptor<MapKeyFormula, MapKeyFormulaAnnotation> MAP_KEY_FORMULA = new CompleteAnnotationDescriptor<>(
+			MapKeyFormula.class,
+			MapKeyFormulaAnnotation.class,
+			EnumSet.of( Kind.METHOD, Kind.FIELD ),
+			false
+	);
 	CompleteAnnotationDescriptor<MapKeyJavaType, MapKeyJavaTypeAnnotation> MAP_KEY_JAVA_TYPE = new CompleteAnnotationDescriptor<>(
 			MapKeyJavaType.class,
 			MapKeyJavaTypeAnnotation.class,

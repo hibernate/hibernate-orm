@@ -37,6 +37,13 @@ import static org.hibernate.dialect.lock.spi.LockTimeoutType.QUERY;
 /// lifetime of the Dialect. Their concrete implementation is intentionally not
 /// part of the provider contract.
 ///
+/// Selecting a stock profile also selects its
+/// [LockingSupport#canUsePlainReadForRefresh] policy. The standard, simple and
+/// parameterized profiles retain plain reloads when select locking is enabled.
+/// A provider whose locking reads have a different view from ordinary reads
+/// must supply its own policy instead of assuming the interface default applies
+/// to these stock implementations.
+///
 /// @see org.hibernate.dialect.Dialect#getLockingSupport()
 ///
 /// @since 8.0

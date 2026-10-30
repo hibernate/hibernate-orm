@@ -2,6 +2,7 @@ package org.hibernate.dialect.lock.internal;
 
 
 import jakarta.persistence.Timeout;
+import org.hibernate.LockMode;
 import org.hibernate.dialect.lock.spi.RowLockStrategy;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
@@ -76,6 +77,13 @@ public class LockingSupportSimple implements LockingSupport, LockingSupport.Meta
 		this.joinLockingType = joinLockingType;
 		this.connectionStrategy = connectionStrategy;
 		this.readsWaitForUncommittedWrites = readsWaitForUncommittedWrites;
+	}
+
+	@Override
+	public boolean canUsePlainReadForRefresh(LockMode currentLockMode, LockMode requestedLockMode) {
+		// The standard profile retains the historical plain reload. Families with
+		// distinct current and snapshot reads must override this decision.
+		return lockStyle != PessimisticLockStyle.NONE;
 	}
 
 	@Override

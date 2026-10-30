@@ -1,6 +1,7 @@
 package org.hibernate.dialect.lock.internal;
 
 
+import org.hibernate.LockMode;
 import org.hibernate.dialect.lock.spi.TransactionConcurrencyResolver;
 
 import jakarta.persistence.Timeout;
@@ -39,6 +40,13 @@ public class PostgreSQLLockingSupport
 	public PostgreSQLLockingSupport(boolean supportsNoWait, boolean supportsSkipLocked) {
 		this.supportsNoWait = supportsNoWait;
 		this.supportsSkipLocked = supportsSkipLocked;
+	}
+
+	@Override
+	public boolean canUsePlainReadForRefresh(LockMode currentLockMode, LockMode requestedLockMode) {
+		// A snapshot-incompatible row is rejected during acquisition; successful
+		// acquisition and subsequent ordinary reads share the same visible version.
+		return true;
 	}
 
 	@Override

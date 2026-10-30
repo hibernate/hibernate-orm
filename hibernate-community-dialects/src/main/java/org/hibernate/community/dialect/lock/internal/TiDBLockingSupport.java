@@ -1,6 +1,7 @@
 package org.hibernate.community.dialect.lock.internal;
 
 import jakarta.persistence.Timeout;
+import org.hibernate.LockMode;
 import org.hibernate.Timeouts;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
 import org.hibernate.dialect.lock.spi.LockTimeoutType;
@@ -19,6 +20,14 @@ public class TiDBLockingSupport implements LockingSupport, LockingSupport.Metada
 	public static final ConnectionLockTimeoutStrategy MYSQL_CONN_LOCK_TIMEOUT_STRATEGY =
 			StandardConnectionLockTimeoutStrategies.mysql( 3600 );
 	public static final TiDBLockingSupport TIDB_LOCKING_SUPPORT = new TiDBLockingSupport();
+
+	@Override
+	public boolean canUsePlainReadForRefresh(LockMode currentLockMode, LockMode requestedLockMode) {
+		// Even force increment is insufficient proof: a timestamp version can
+		// repeat, and a same-value UPDATE need not create an own-write row version.
+		// An ordinary read may therefore still consult the earlier snapshot.
+		return false;
+	}
 
 	@Override
 	public org.hibernate.dialect.lock.spi.TransactionConcurrencyResolver getTransactionConcurrencyResolver() {

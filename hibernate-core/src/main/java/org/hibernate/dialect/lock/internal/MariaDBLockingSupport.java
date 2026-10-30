@@ -1,6 +1,7 @@
 package org.hibernate.dialect.lock.internal;
 
 
+import org.hibernate.LockMode;
 import org.hibernate.dialect.lock.spi.TransactionConcurrencyResolver;
 
 import jakarta.persistence.Timeout;
@@ -45,6 +46,14 @@ public class MariaDBLockingSupport implements LockingSupport, LockingSupport.Met
 
 	public MariaDBLockingSupport(DatabaseVersion databaseVersion) {
 		this( databaseVersion.isSameOrAfter( 10, 6 ), true, true );
+	}
+
+	@Override
+	public boolean canUsePlainReadForRefresh(LockMode currentLockMode, LockMode requestedLockMode) {
+		// Even force increment is insufficient proof: a timestamp version can
+		// repeat, and a same-value UPDATE need not create an own-write row version.
+		// An ordinary read may therefore still consult the earlier snapshot.
+		return false;
 	}
 
 	@Override

@@ -1,6 +1,7 @@
 package org.hibernate.dialect.lock.internal;
 
 
+import org.hibernate.LockMode;
 import org.hibernate.dialect.lock.spi.TransactionConcurrencyResolver;
 
 import jakarta.persistence.Timeout;
@@ -29,6 +30,12 @@ public class H2LockingSupport implements LockingSupport, LockingSupport.Metadata
 
 	private H2LockingSupport(boolean supportsForUpdateOptions) {
 		this.supportsForUpdateOptions = supportsForUpdateOptions;
+	}
+
+	@Override
+	public boolean canUsePlainReadForRefresh(LockMode currentLockMode, LockMode requestedLockMode) {
+		// A successful locking read preserves the row view used by ordinary reads.
+		return true;
 	}
 
 	@Override

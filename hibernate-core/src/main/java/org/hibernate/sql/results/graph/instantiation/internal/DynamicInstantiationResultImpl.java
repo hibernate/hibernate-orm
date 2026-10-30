@@ -2,6 +2,7 @@ package org.hibernate.sql.results.graph.instantiation.internal;
 
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +48,11 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 	@Override
 	public JavaType<R> getResultJavaType() {
 		return javaType;
+	}
+
+	/// The nested results, without exposing the mutable argument list.
+	public List<ArgumentDomainResult<?>> getArgumentResults() {
+		return Collections.unmodifiableList( argumentResults );
 	}
 
 	@Override

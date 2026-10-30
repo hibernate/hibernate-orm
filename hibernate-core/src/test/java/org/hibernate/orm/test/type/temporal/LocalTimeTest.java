@@ -7,7 +7,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
@@ -42,7 +41,6 @@ import java.util.List;
 @MethodSource("testData")
 @DomainModel(annotatedClasses = LocalTimeTest.EntityWithLocalTime.class)
 @SessionFactory
-@SkipForDialect(dialectClass = H2Dialect.class, reason = "H2 1.4.200 DST bug. See org.hibernate.dialect.H2Dialect.hasDstBug")
 public class LocalTimeTest extends AbstractJavaTimeTypeTests<LocalTime, LocalTimeTest.EntityWithLocalTime> {
 
 	protected static List<Parameter<LocalTime, LocalTimeData>> testData() {

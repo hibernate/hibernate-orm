@@ -220,9 +220,25 @@ public class SharedDriverManagerConnectionProvider extends DriverManagerConnecti
 			"cubrid.jdbc.driver.CUBRIDDriver" );
 
 	public void onDefaultTimeZoneChange() {
+		resetH2TimeZoneCache();
 		if ( DRIVER_REQUIRES_NEW_CONNECTION_ON_TIMEZONE_CHANGE.contains( config.driverClassName ) ) {
 			// Clear the connection pool to avoid issues with drivers that initialize the session TZ to the system TZ
 			super.stop();
+		}
+	}
+
+	private static void resetH2TimeZoneCache() {
+		try {
+			java.lang.reflect.Field local = Class.forName( "org.h2.util.DateTimeUtils" )
+					.getDeclaredField( "LOCAL" );
+			local.setAccessible( true );
+			local.set( null, null );
+		}
+		catch (ClassNotFoundException e) {
+			// H2 is not on the classpath — nothing to reset
+		}
+		catch (ReflectiveOperationException e) {
+			throw new RuntimeException( "Failed to reset H2 timezone cache", e );
 		}
 	}
 

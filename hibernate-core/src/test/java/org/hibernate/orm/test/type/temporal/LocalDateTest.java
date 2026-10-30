@@ -18,8 +18,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -64,8 +64,6 @@ import static org.hibernate.orm.test.type.temporal.Timezones.ZONE_UTC_MINUS_8;
 				+ " when the JVM default timezone is different from the server timezone:"
 				+ " https://bugs.mysql.com/bug.php?id=91112"
 )
-@SkipForDialect(dialectClass = H2Dialect.class,
-		reason = "H2 1.4.200 DST bug. See org.hibernate.dialect.H2Dialect.hasDstBug")
 @SkipForDialect(dialectClass = HSQLDialect.class,
 		reason = "HSQL has problems with DST edges")
 public class LocalDateTest extends AbstractJavaTimeTypeTests<LocalDate, LocalDateTest.EntityWithLocalDate> {
@@ -224,7 +222,15 @@ public class LocalDateTest extends AbstractJavaTimeTypeTests<LocalDate, LocalDat
 		}
 
 		public ParametersBuilder add(int year, int month, int day, ZoneId defaultTimeZone) {
-			return add( defaultTimeZone, new DataImpl( year, month, day ) );
+			var data = new DataImpl( year, month, day );
+			if ( dialect instanceof H2Dialect
+					&& ( year < 1900 || year == 1900 && month == 1 && day == 1
+							&& defaultTimeZone.equals( ZONE_PARIS ) ) ) {
+				// H2 and java.sql.Date disagree on historical offsets, shifting these legacy
+				// values to the previous day. Direct LocalDate access preserves the date.
+				return onlyDirectJdbc( builder -> builder.add( defaultTimeZone, data ) );
+			}
+			return add( defaultTimeZone, data );
 		}
 	}
 }

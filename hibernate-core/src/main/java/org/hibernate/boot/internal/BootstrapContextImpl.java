@@ -73,7 +73,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 	private final ManagedTypeRepresentationResolver representationStrategySelector;
 	private final ConfigurationService configurationService;
 
-	private final ModelsContext modelsContext;
+	private ModelsContext modelsContext;
 
 	public BootstrapContextImpl(
 			StandardServiceRegistry serviceRegistry,
@@ -133,7 +133,23 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 	@Override
 	public ModelsContext getModelsContext() {
+		if ( modelsContext == null ) {
+			throw new IllegalStateException(
+					"The ModelsContext was released after the SessionFactory was created"
+					+ " (the boot model cannot be used to build another SessionFactory)"
+			);
+		}
 		return modelsContext;
+	}
+
+	/**
+	 * Release the {@link ModelsContext}, along with all the reflection
+	 * details it holds, once the {@code SessionFactory} has been created.
+	 *
+	 * @see org.hibernate.cfg.PersistenceSettings#RELEASE_BOOT_BINDING_STATE
+	 */
+	public void releaseModelsContext() {
+		modelsContext = null;
 	}
 
 	@Override

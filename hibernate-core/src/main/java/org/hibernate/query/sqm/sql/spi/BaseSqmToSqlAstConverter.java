@@ -2212,6 +2212,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				// fallback rather than emit unsupported SQL.
 				return false;
 			}
+			else if ( hasCollectionFetchJoinDependencies( (SqmQuerySpec<?>) sqmQueryPart ) ) {
+				// A predicate cannot stay inside the paginated subquery if its
+				// fetched collection is moved outside. Use the in-memory fallback.
+				return false;
+			}
 			else if ( ordersByPluralFetchBeforeOwner( (SqmQuerySpec<?>) sqmQueryPart ) ) {
 				// When a query orders by a collection element before the owner,
 				// pushing the owner table into a paginated subquery is not safe,
@@ -2279,6 +2284,40 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		for ( var sqmTreat : from.getSqmTreats() ) {
 			collectPaths( sqmTreat, paths, nonPluralFetchOnly );
 		}
+	}
+
+	public static boolean hasCollectionFetchJoinDependencies(SqmQuerySpec<?> sqmQuerySpec) {
+		final var fetchedPaths = new HashSet<SqmPath<?>>();
+		for ( var root : sqmQuerySpec.getFromClause().getRoots() ) {
+			collectPaths( root, fetchedPaths, false );
+		}
+		fetchedPaths.removeAll( collectNonPluralPaths( sqmQuerySpec.getFromClause() ) );
+		if ( fetchedPaths.isEmpty() ) {
+			return false;
+		}
+		for ( var root : sqmQuerySpec.getFromClause().getRoots() ) {
+			final var orderedJoins = root.getOrderedJoins();
+			if ( orderedJoins != null && orderedJoins.stream().anyMatch( fetchedPaths::contains ) ) {
+				// Ordered joins form a SQL table-group chain, not the SQM parent tree.
+				// Moving a collection can also move an independent join, or leave
+				// the collection behind a non-fetched group the transformer skips.
+				return true;
+			}
+		}
+		final var whereClause = sqmQuerySpec.getWhereClause();
+		if ( whereClause == null || whereClause.getPredicate() == null ) {
+			return false;
+		}
+		final var referencedPaths = new ArrayList<SqmPath<?>>();
+		whereClause.getPredicate().accept( new SqmPathVisitor( referencedPaths::add ) );
+		for ( var referencedPath : referencedPaths ) {
+			for ( SqmPath<?> path = referencedPath; path != null; path = path.getLhs() ) {
+				if ( fetchedPaths.contains( path ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	public static boolean ordersByPluralFetchBeforeOwner(SqmQuerySpec<?> sqmQuerySpec) {

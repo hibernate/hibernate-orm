@@ -241,8 +241,9 @@ public class MatchingIdSelectionHelper {
 		// Acquire a WRITE lock for the rows that are about to be modified
 		lockOptions.setLockMode( LockMode.WRITE );
 		// Visit the table joins and reset the lock mode if we encounter OUTER joins that are not supported
-		if ( jdbcEnvironment.getDialect().getLockingSupport().getMetadata().getOuterJoinLockingType()
-				== OuterJoinLockingType.UNSUPPORTED ) {
+		final var outerJoinLocking = jdbcEnvironment.getDialect().getLockingSupport().getMetadata().getOuterJoinLockingType();
+		if ( outerJoinLocking == OuterJoinLockingType.UNSUPPORTED
+				|| outerJoinLocking == OuterJoinLockingType.NON_NULL_TARGETS ) {
 			translation.getSqlAst().getQuerySpec().getFromClause().visitTableJoins(
 					tableJoin -> {
 						if ( tableJoin.isInitialized() && tableJoin.getJoinType() != SqlAstJoinType.INNER ) {

@@ -17,6 +17,8 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.MapKey;
 import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.MapKeyJoinColumn;
+import jakarta.persistence.MapKeyJoinColumns;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.OrderColumn;
@@ -52,6 +54,7 @@ import org.hibernate.annotations.ListIndexJavaType;
 import org.hibernate.annotations.ListIndexJdbcType;
 import org.hibernate.annotations.ListIndexJdbcTypeCode;
 import org.hibernate.annotations.ManyToAny;
+import org.hibernate.annotations.MapKeyFormula;
 import org.hibernate.annotations.MapKeyJavaType;
 import org.hibernate.annotations.MapKeyJdbcType;
 import org.hibernate.annotations.MapKeyJdbcTypeCode;
@@ -80,6 +83,7 @@ import org.hibernate.annotations.Temporal;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.models.AnnotationPlacementException;
 import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.annotations.internal.FormulaAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapKeyColumnJpaAnnotation;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
@@ -625,6 +629,20 @@ public abstract class CollectionBinder {
 			MetadataBuildingContext context,
 			MemberDetails property) {
 //			Comment comment) {
+		final var mapKeyFormula = property.getDirectAnnotationUsage( MapKeyFormula.class );
+		if ( mapKeyFormula != null ) {
+			final var formulaAnnotation =
+					new FormulaAnnotation( context.getBootstrapContext().getModelsContext() );
+			formulaAnnotation.value( mapKeyFormula.value() );
+			return buildFormulaFromAnnotation(
+					formulaAnnotation,
+					Nullability.FORCED_NOT_NULL,
+					propertyHolder,
+					inferredData,
+					entityBinder.getSecondaryTables(),
+					context
+			);
+		}
 		return buildColumnFromAnnotations(
 				property.hasDirectAnnotationUsage( MapKeyColumn.class )
 						? MapKeyColumnJpaAnnotation.toColumnAnnotation(
@@ -1164,6 +1182,21 @@ public abstract class CollectionBinder {
 		if ( property.hasDirectAnnotationUsage( MapKeyColumn.class ) && hasMapKeyProperty ) {
 			throw new AnnotationException( "Collection '" + qualify( propertyHolder.getPath(), propertyName )
 					+ "' is annotated both '@MapKey' and '@MapKeyColumn'" );
+		}
+		if ( property.hasDirectAnnotationUsage( MapKeyFormula.class ) ) {
+			if ( property.hasDirectAnnotationUsage( MapKeyColumn.class ) ) {
+				throw new AnnotationException( "Collection '" + qualify( propertyHolder.getPath(), propertyName )
+						+ "' is annotated both '@MapKeyFormula' and '@MapKeyColumn'" );
+			}
+			if ( property.hasDirectAnnotationUsage( MapKeyJoinColumn.class )
+					|| property.hasDirectAnnotationUsage( MapKeyJoinColumns.class ) ) {
+				throw new AnnotationException( "Collection '" + qualify( propertyHolder.getPath(), propertyName )
+						+ "' is annotated both '@MapKeyFormula' and '@MapKeyJoinColumn'" );
+			}
+			if ( hasMapKeyProperty ) {
+				throw new AnnotationException( "Collection '" + qualify( propertyHolder.getPath(), propertyName )
+						+ "' is annotated both '@MapKey' and '@MapKeyFormula'" );
+			}
 		}
 	}
 

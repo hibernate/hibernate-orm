@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="8.0">
+    <package>org.hibernate.orm.test.collection.map</package>
+
+    <entity name="Parent" class="AbstractMapKeyFormulaTest$Parent" metadata-complete="true" access="FIELD">
+        <table name="map_formula_parent"/>
+        <attributes>
+            <id name="id"/>
+            <one-to-many name="children" mapped-by="parent">
+                <map-key-formula>upper(code)</map-key-formula>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <entity name="Child" class="AbstractMapKeyFormulaTest$Child" metadata-complete="true" access="FIELD">
+        <table name="map_formula_child"/>
+        <attributes>
+            <id name="id"/>
+            <basic name="code"/>
+            <many-to-one name="parent">
+                <join-column name="parent_fk"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+</entity-mappings>

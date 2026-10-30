@@ -184,9 +184,6 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	/**
 	 * Obtain the {@linkplain java.sql.Statement#setQueryTimeout JDBC
 	 * query timeout} that will be used when executing the query.
-	 * <p>
-	 * See {@linkplain org.hibernate.Timeouts} for discussion of the
-	 * "magic values" accepted here.
 	 *
 	 * @apiNote Since this method is inherited from JPA, the timeout
 	 *          is expressed in <em>milliseconds</em>.
@@ -206,7 +203,6 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *          value is expressed in <em>seconds</em>.
 	 *
 	 * @see #getTimeout()
-	 * @see org.hibernate.Timeouts
 	 * @see #setTimeout(Timeout)
 	 */
 	@Nonnull
@@ -220,7 +216,6 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *          is expressed in <em>milliseconds</em>.
 	 *
 	 * @see #getTimeout()
-	 * @see org.hibernate.Timeouts
 	 * @see #setTimeout(Timeout)
 	 *
 	 * @since 7.0
@@ -232,6 +227,9 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	/**
 	 * Specify a {@linkplain java.sql.Statement#setQueryTimeout JDBC
 	 * query timeout} to use when executing the query.
+	 *
+	 * This controls query execution. It does not configure a lock acquisition
+	 * timeout or transaction timeout.
 	 *
 	 * @since 7.0
 	 */

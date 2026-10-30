@@ -248,6 +248,8 @@ Retry an appropriate unit of work with a fresh context; consider external side e
 A failed unit of work does not require shutting down the application.
 See <<pc-exception-handling,Exception handling>> for exception handling in the <<pc,Persistence Context chapter>>.
 Stateless processing has different context semantics; see <<batch,Batching>>.
+In particular, a stateless exception does not automatically mark the transaction rollback-only, but the database may still abort it.
+Distinguish that behavior from stateful exception conversion and recovery; see <<locking-failures,locking failures>>.
 
 ==== Completion callbacks
 
@@ -284,6 +286,7 @@ Changing the configured timeout during an active transaction does not promise to
 
 A transaction timeout is distinct from a query timeout or a lock timeout.
 Query timeouts constrain query execution, while lock timeouts constrain waiting for a lock, subject to database/driver support.
+Neither a lock timeout nor a query timeout establishes a portable deadline for all statements in a follow-on acquisition phase.
 See <<query-execution,Query execution>> and <<locking-jpa-query-hints,Jakarta Persistence locking hints>> for those controls.
 
 [[transactions-concurrency]]

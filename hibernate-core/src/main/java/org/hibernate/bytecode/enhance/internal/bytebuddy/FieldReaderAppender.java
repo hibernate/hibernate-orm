@@ -18,6 +18,7 @@ import static net.bytebuddy.ClassFileVersion.JAVA_V6;
 import static org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.capitalize;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.INTERCEPTOR_GETTER_NAME;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX;
+import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.PERSISTENT_FIELD_RAW_WRITER_PREFIX;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX;
 
 abstract class FieldReaderAppender implements ByteCodeAppender {
@@ -51,62 +52,56 @@ abstract class FieldReaderAppender implements ByteCodeAppender {
 		final var type = persistentFieldAsDefined.getType();
 		final var erasure = type.asErasure();
 		final var dispatcherType = type.isPrimitive() ? erasure : TypeDescription.OBJECT;
-		// From `PersistentAttributeTransformer`:
-		//     Final fields will only be written to from the constructor,
-		//     so there's no point trying to replace final field writes with a method call.
-		// as a result if a field is final, then there will be no write method, and we don't want to have this block:
-		if ( !persistentField.asDefined().isFinal() ) {
-			// if ( this.$$_hibernate_getInterceptor() != null )
-			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
-			methodVisitor.visitMethodInsn(
-					Opcodes.INVOKEVIRTUAL,
-					managedCtClass.getInternalName(),
-					INTERCEPTOR_GETTER_NAME,
-					constants.methodDescriptor_getInterceptor,
-					false
-			);
-			final var skip = new Label();
-			methodVisitor.visitJumpInsn( Opcodes.IFNULL, skip );
-			// this (for field write)
-			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
-			// this.$$_hibernate_getInterceptor();
-			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
-			methodVisitor.visitMethodInsn(
-					Opcodes.INVOKEVIRTUAL,
-					managedCtClass.getInternalName(),
-					INTERCEPTOR_GETTER_NAME,
-					constants.methodDescriptor_getInterceptor,
-					false
-			);
-			// .readXXX( self, fieldName, field );
-			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
-			methodVisitor.visitLdcInsn( persistentFieldAsDefined.getName() );
-			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
+		// if ( this.$$_hibernate_getInterceptor() != null )
+		methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
+		methodVisitor.visitMethodInsn(
+				Opcodes.INVOKEVIRTUAL,
+				managedCtClass.getInternalName(),
+				INTERCEPTOR_GETTER_NAME,
+				constants.methodDescriptor_getInterceptor,
+				false
+		);
+		final var skip = new Label();
+		methodVisitor.visitJumpInsn( Opcodes.IFNULL, skip );
+		// this (for field write)
+		methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
+		// this.$$_hibernate_getInterceptor();
+		methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
+		methodVisitor.visitMethodInsn(
+				Opcodes.INVOKEVIRTUAL,
+				managedCtClass.getInternalName(),
+				INTERCEPTOR_GETTER_NAME,
+				constants.methodDescriptor_getInterceptor,
+				false
+		);
+		// .readXXX( self, fieldName, field );
+		methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
+		methodVisitor.visitLdcInsn( persistentFieldAsDefined.getName() );
+		methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
 
-			fieldRead( methodVisitor );
-			final String descriptor = dispatcherType.getDescriptor();
-			methodVisitor.visitMethodInsn(
-					Opcodes.INVOKEINTERFACE,
-					constants.internalName_PersistentAttributeInterceptor,
-					"read" + capitalize( dispatcherType.getSimpleName() ),
-					Type.getMethodDescriptor(
-							Type.getType( descriptor ),
-							Type.getType( Object.class ),
-							Type.getType( String.class ),
-							Type.getType( descriptor )
-					),
-					true
-			);
-			// field = (cast) XXX
-			if ( !dispatcherType.isPrimitive() ) {
-				methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, erasure.getInternalName() );
-			}
-			fieldWrite( methodVisitor );
-			// end if
-			methodVisitor.visitLabel( skip );
-			if ( implementationContext.getClassFileVersion().isAtLeast( JAVA_V6 ) ) {
-				methodVisitor.visitFrame( Opcodes.F_SAME, 0, null, 0, null );
-			}
+		fieldRead( methodVisitor );
+		final String descriptor = dispatcherType.getDescriptor();
+		methodVisitor.visitMethodInsn(
+				Opcodes.INVOKEINTERFACE,
+				constants.internalName_PersistentAttributeInterceptor,
+				"read" + capitalize( dispatcherType.getSimpleName() ),
+				Type.getMethodDescriptor(
+						Type.getType( descriptor ),
+						Type.getType( Object.class ),
+						Type.getType( String.class ),
+						Type.getType( descriptor )
+				),
+				true
+		);
+		// field = (cast) XXX
+		if ( !dispatcherType.isPrimitive() ) {
+			methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, erasure.getInternalName() );
+		}
+		fieldWrite( methodVisitor );
+		// end if
+		methodVisitor.visitLabel( skip );
+		if ( implementationContext.getClassFileVersion().isAtLeast( JAVA_V6 ) ) {
+			methodVisitor.visitFrame( Opcodes.F_SAME, 0, null, 0, null );
 		}
 
 		// return field
@@ -188,10 +183,15 @@ abstract class FieldReaderAppender implements ByteCodeAppender {
 
 		@Override
 		protected void fieldWrite(MethodVisitor methodVisitor) {
+			// This path is only used for lazy-loadable fields which cannot be accessed directly.
+			// For final fields, the raw writer primarily initializes the unfetched field, though it may also
+			// overwrite the field with the value returned by the interceptor on later reads.
 			methodVisitor.visitMethodInsn(
 					Opcodes.INVOKESPECIAL,
 					internalName,
-					PERSISTENT_FIELD_WRITER_PREFIX + fieldName,
+					persistentFieldAsDefined.isFinal()
+							? PERSISTENT_FIELD_RAW_WRITER_PREFIX + fieldName
+							: PERSISTENT_FIELD_WRITER_PREFIX + fieldName,
 					Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( descriptor ) ),
 					false
 			);

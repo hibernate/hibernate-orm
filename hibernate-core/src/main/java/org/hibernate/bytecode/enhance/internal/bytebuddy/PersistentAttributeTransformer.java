@@ -6,6 +6,7 @@ import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static org.hibernate.bytecode.enhance.internal.BytecodeEnhancementLogging.ENHANCEMENT_LOGGER;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX;
+import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.PERSISTENT_FIELD_RAW_WRITER_PREFIX;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX;
 
 import java.math.BigDecimal;
@@ -327,7 +328,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 							constants.modifierPUBLIC
 					)
 					.intercept( fieldReader( enhancedField ) );
-			// Final fields will only be written to from the constructor,
+			// In users code, final fields will only be written to from the constructor,
 			// so there's no point trying to replace final field writes with a method call.
 			if ( !enhancedField.getFieldDescription().isFinal() ) {
 				builder = builder
@@ -338,6 +339,19 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 						)
 						.withParameter( enhancedField.asDefined().getType().asErasure() )
 						.intercept( fieldWriter( enhancedField ) );
+			}
+			else if ( enhancementContext.isLazyLoadable( enhancedField ) ) {
+				// However, for lazy-loadable final fields we need internally used "raw" writer method for
+				// initialization of such fields, in case if they are not directly accessible from the entity.
+				// Unlike regular "writer" method, no wrappers like dirty tracking or interceptors are required
+				builder = builder
+						.defineMethod(
+								PERSISTENT_FIELD_RAW_WRITER_PREFIX + enhancedField.getName(),
+								constants.TypeVoid,
+								constants.modifierPUBLIC
+						)
+						.withParameter( enhancedField.asDefined().getType().asErasure() )
+						.intercept( finalFieldRawWriter( enhancedField ) );
 			}
 
 			if ( !compositeOwner
@@ -405,6 +419,15 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		}
 		else {
 			return new Implementation.Simple( FieldWriterAppender.of( managedCtClass, enhancedField, constants ) );
+		}
+	}
+
+	private Implementation finalFieldRawWriter(AnnotatedFieldDescription enhancedField) {
+		if ( enhancedField.getDeclaringType().asErasure().equals( managedCtClass ) ) {
+			return new Implementation.Simple( new FinalFieldRawWriter( enhancedField ) );
+		}
+		else {
+			return new Implementation.Simple( new FinalFieldMethodRawWriter( managedCtClass, enhancedField ) );
 		}
 	}
 
@@ -516,6 +539,80 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 					Opcodes.INVOKESPECIAL,
 					managedCtClass.getSuperClass().asErasure().getInternalName(),
 					PERSISTENT_FIELD_WRITER_PREFIX + persistentField.getName(),
+					Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( descriptor ) ),
+					false
+			);
+			methodVisitor.visitInsn( Opcodes.RETURN );
+			return new Size( 1 + persistentField.getType().getStackSize().getSize(),
+					instrumentedMethod.getStackSize() );
+		}
+	}
+
+	/**
+	 * Generation of a raw final-field write using the PUTFIELD bytecode instruction.
+	 * This is used only for lazy-loadable fields: primarily for their initialization after fetching, though the
+	 * generated reader may invoke it again on later intercepted reads to overwrite the field with the returned value.
+	 * ByteBuddy's {@link FieldAccessor} cannot be used instead, as it explicitly rejects setting a final field.
+	 * On the other hand, PUTFIELD works as the "final" modifier is dropped during enhancement transformation.
+	 */
+	private static class FinalFieldRawWriter implements ByteCodeAppender {
+
+		private final AnnotatedFieldDescription persistentField;
+
+		private FinalFieldRawWriter(AnnotatedFieldDescription persistentField) {
+			this.persistentField = persistentField;
+		}
+
+		@Override
+		public Size apply(
+				MethodVisitor methodVisitor,
+				Implementation.Context implementationContext,
+				MethodDescription instrumentedMethod) {
+			final String descriptor = persistentField.asDefined().getType().asErasure().getDescriptor();
+			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
+			methodVisitor.visitVarInsn( Type.getType( descriptor ).getOpcode( Opcodes.ILOAD ), 1 );
+			methodVisitor.visitFieldInsn(
+					Opcodes.PUTFIELD,
+					persistentField.getDeclaringType().asErasure().getInternalName(),
+					persistentField.getName(),
+					descriptor
+			);
+			methodVisitor.visitInsn( Opcodes.RETURN );
+			return new Size( 1 + persistentField.getType().getStackSize().getSize(),
+					instrumentedMethod.getStackSize() );
+		}
+	}
+
+	/**
+	 * Generation of a raw final-field write through a call to the raw writer in a superclass, used when the
+	 * lazy-loadable field is not directly accessible. It primarily initializes the field after fetching, but may
+	 * overwrite it again on later intercepted reads.
+	 */
+	private static class FinalFieldMethodRawWriter implements ByteCodeAppender {
+
+		private final TypeDescription managedCtClass;
+
+		private final AnnotatedFieldDescription persistentField;
+
+		private FinalFieldMethodRawWriter(
+				TypeDescription managedCtClass,
+				AnnotatedFieldDescription persistentField) {
+			this.managedCtClass = managedCtClass;
+			this.persistentField = persistentField;
+		}
+
+		@Override
+		public Size apply(
+				MethodVisitor methodVisitor,
+				Implementation.Context implementationContext,
+				MethodDescription instrumentedMethod) {
+			final String descriptor = persistentField.asDefined().getType().asErasure().getDescriptor();
+			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
+			methodVisitor.visitVarInsn( Type.getType( descriptor ).getOpcode( Opcodes.ILOAD ), 1 );
+			methodVisitor.visitMethodInsn(
+					Opcodes.INVOKESPECIAL,
+					managedCtClass.getSuperClass().asErasure().getInternalName(),
+					PERSISTENT_FIELD_RAW_WRITER_PREFIX + persistentField.getName(),
 					Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( descriptor ) ),
 					false
 			);

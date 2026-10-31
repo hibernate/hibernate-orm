@@ -264,14 +264,14 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	}
 
 	private static void handleFilterParameters(SharedSessionContractImplementor session, MutableCacheKeyImpl mutableCacheKey) {
-		// Note: The following loops rely on getEnabledFilters() and getParameters() to return sorted maps
+		// Note: The following loops rely on getEnabledFilters() to return a sorted map
 		final var loadQueryInfluencers = session.getLoadQueryInfluencers();
 		for ( var entry : loadQueryInfluencers.getEnabledFilters().entrySet() ) {
 			final var filter = (FilterImpl) entry.getValue();
 			final var filterDefinition = filter.getFilterDefinition();
-			for ( var paramEntry : filter.getParameters().entrySet() ) {
-				final String parameterName = paramEntry.getKey();
-				final Object paramValue = paramEntry.getValue();
+			for ( String parameterName : filterDefinition.getParameterNames() ) {
+				// The value can come from a resolver and not from Filter.setParameter()
+				final Object paramValue = filter.getParameterValue( parameterName );
 				final var jdbcMapping = filterDefinition.getParameterJdbcMapping( parameterName );
 				assert jdbcMapping != null :
 						// should not happen because FilterImpl protects against it

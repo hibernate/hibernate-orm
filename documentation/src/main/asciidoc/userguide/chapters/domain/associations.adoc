@@ -628,6 +628,18 @@ type can be influenced by any of:
 3. `@AnyKeyJdbcType`
 4. `@AnyKeyJdbcTypeCode`
 
+`@AnyKeyJavaClass` and `@AnyKeyJavaType` may also be applied to a package (`package-info.java`) or module
+(`module-info.java`), as a default for every any-style association declared by a class belonging to it.
+The key type is taken from the attribute, then from the package of its declaring class, and finally from the module.
+
+[source, java, indent=0]
+----
+@AnyKeyJavaClass(Long.class)
+package org.hibernate.example;
+
+import org.hibernate.annotations.AnyKeyJavaClass;
+----
+
 
 [[associations-any-explicit-discriminator]]
 ===== Explicit discriminator mappings

@@ -61,13 +61,13 @@ public interface HibernateAnnotations {
 	CompleteAnnotationDescriptor<AnyKeyJavaClass, AnyKeyJavaClassAnnotation> ANY_KEY_JAVA_CLASS = new CompleteAnnotationDescriptor<>(
 			AnyKeyJavaClass.class,
 			AnyKeyJavaClassAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
+			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION, Kind.PACKAGE, Kind.MODULE ),
 			false
 	);
 	CompleteAnnotationDescriptor<AnyKeyJavaType, AnyKeyJavaTypeAnnotation> ANY_KEY_JAVA_TYPE = new CompleteAnnotationDescriptor<>(
 			AnyKeyJavaType.class,
 			AnyKeyJavaTypeAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
+			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION, Kind.PACKAGE, Kind.MODULE ),
 			false
 	);
 	CompleteAnnotationDescriptor<AnyKeyJdbcType, AnyKeyJdbcTypeAnnotation> ANY_KEY_JDBC_TYPE = new CompleteAnnotationDescriptor<>(

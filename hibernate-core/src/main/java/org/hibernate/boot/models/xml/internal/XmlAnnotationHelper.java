@@ -1556,6 +1556,13 @@ public class XmlAnnotationHelper {
 		applyLifecycleCallback( lifecycleCallbackContainer.getPreUpdate(), callbackType, JpaAnnotations.PRE_UPDATE, classDetails, xmlDocumentContext );
 		applyLifecycleCallback( lifecycleCallbackContainer.getPostUpdate(), callbackType, JpaAnnotations.POST_UPDATE, classDetails, xmlDocumentContext );
 		applyLifecycleCallback( lifecycleCallbackContainer.getPostLoad(), callbackType, JpaAnnotations.POST_LOAD, classDetails, xmlDocumentContext );
+		applyLifecycleCallback( lifecycleCallbackContainer.getPreMerge(), callbackType, JpaAnnotations.PRE_MERGE, classDetails, xmlDocumentContext );
+		applyLifecycleCallback( lifecycleCallbackContainer.getPreInsert(), callbackType, JpaAnnotations.PRE_INSERT, classDetails, xmlDocumentContext );
+		applyLifecycleCallback( lifecycleCallbackContainer.getPostInsert(), callbackType, JpaAnnotations.POST_INSERT, classDetails, xmlDocumentContext );
+		applyLifecycleCallback( lifecycleCallbackContainer.getPreUpsert(), callbackType, JpaAnnotations.PRE_UPSERT, classDetails, xmlDocumentContext );
+		applyLifecycleCallback( lifecycleCallbackContainer.getPostUpsert(), callbackType, JpaAnnotations.POST_UPSERT, classDetails, xmlDocumentContext );
+		applyLifecycleCallback( lifecycleCallbackContainer.getPreDelete(), callbackType, JpaAnnotations.PRE_DELETE, classDetails, xmlDocumentContext );
+		applyLifecycleCallback( lifecycleCallbackContainer.getPostDelete(), callbackType, JpaAnnotations.POST_DELETE, classDetails, xmlDocumentContext );
 	}
 
 	private static <A extends Annotation> void applyLifecycleCallback(

@@ -5986,7 +5986,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			final JdbcType elementJdbcType = jdbcType instanceof ArrayJdbcType arrayJdbcType
 					? arrayJdbcType.getElementJdbcType()
 					: jdbcType;
-			final JavaType<?> elementJavaType = javaType instanceof BasicPluralJavaType<?> pluralJavaType
+			final JavaType<?> elementJavaType = jdbcType instanceof ArrayJdbcType
+												&& javaType instanceof BasicPluralJavaType<?> pluralJavaType
 					? pluralJavaType.getElementJavaType()
 					: javaType;
 			switch ( elementJdbcType.getDdlTypeCode() ) {

@@ -95,7 +95,7 @@ public class EntityDelayedFetchInitializer
 		}
 		else {
 			keyIsEager = identifierAssembler.isEager();
-			hasLazySubInitializer = identifierAssembler.hasLazySubInitializers();
+			hasLazySubInitializer = keyIsEager || identifierAssembler.hasLazySubInitializers();
 		}
 	}
 

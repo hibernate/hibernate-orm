@@ -8,8 +8,10 @@ import jakarta.annotation.Nullable;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
@@ -82,8 +84,11 @@ public class NestedCollectionFetch extends CollectionFetch {
 				|| !( functionRegistry.findFunctionDescriptor( "json_arrayagg" ) instanceof FunctionRenderer jsonArrayAgg ) ) {
 			return null;
 		}
-		final var rowSelectables =
-				rowSelectables( fetchedAttribute, creationState.getSqlAstCreationState().getLoadQueryInfluencers() );
+		final var rowSelectables = rowSelectables(
+				fetchedAttribute,
+				creationState.getSqlAstCreationState().getLoadQueryInfluencers(),
+				creationContext.getSessionFactory().getSessionFactoryOptions().getJdbcTimeZone() != null
+		);
 		if ( rowSelectables == null ) {
 			return null;
 		}
@@ -210,7 +215,8 @@ public class NestedCollectionFetch extends CollectionFetch {
 	 */
 	private static @Nullable List<SelectableMapping> rowSelectables(
 			PluralAttributeMapping attribute,
-			LoadQueryInfluencers influencers) {
+			LoadQueryInfluencers influencers,
+			boolean jdbcTimeZone) {
 		final var collectionDescriptor = attribute.getCollectionDescriptor();
 		switch ( attribute.getMappedType().getCollectionSemantics().getCollectionClassification() ) {
 			case BAG, SET, ORDERED_SET, SORTED_SET, LIST:
@@ -232,6 +238,10 @@ public class NestedCollectionFetch extends CollectionFetch {
 			entityRowSelectables( entity, selectables );
 		}
 		else {
+			if ( elementDescriptor instanceof EmbeddableValuedModelPart embeddable
+					&& hasRestrictedToOne( embeddable.getEmbeddableTypeDescriptor(), influencers ) ) {
+				return null;
+			}
 			elementDescriptor.forEachSelectable( (index, selectable) -> addRowSelectable( selectables, selectable ) );
 		}
 		final var indexDescriptor = attribute.getIndexDescriptor();
@@ -242,7 +252,8 @@ public class NestedCollectionFetch extends CollectionFetch {
 		for ( var selectable : selectables ) {
 			if ( selectable.isFormula()
 					|| !table.equals( selectable.getContainingTableExpression() )
-					|| !isSupportedType( selectable.getJdbcMapping() ) ) {
+					|| !isSupportedType( selectable.getJdbcMapping() )
+					|| jdbcTimeZone && isAffectedByJdbcTimeZone( selectable.getJdbcMapping() ) ) {
 				return null;
 			}
 		}
@@ -250,17 +261,29 @@ public class NestedCollectionFetch extends CollectionFetch {
 	}
 
 	/**
-	 * Does the entity have a to-one whose target is restricted? The visibility of the
-	 * target is checked by joining its table, which is not part of the row.
+	 * Does the entity or embeddable have a to-one, possibly inside an embeddable, whose
+	 * target is restricted? The visibility of the target is checked by joining its table,
+	 * which is not part of the row.
 	 */
-	private static boolean hasRestrictedToOne(EntityMappingType entity, LoadQueryInfluencers influencers) {
-		for ( int i = 0; i < entity.getNumberOfAttributeMappings(); i++ ) {
-			if ( entity.getAttributeMapping( i ) instanceof ToOneAttributeMapping toOne
-					&& toOne.isAffectedByRestrictions( influencers ) ) {
+	private static boolean hasRestrictedToOne(ManagedMappingType type, LoadQueryInfluencers influencers) {
+		for ( int i = 0; i < type.getNumberOfAttributeMappings(); i++ ) {
+			final var attribute = type.getAttributeMapping( i );
+			if ( attribute instanceof ToOneAttributeMapping toOne && toOne.isAffectedByRestrictions( influencers )
+					|| attribute instanceof EmbeddableValuedModelPart embeddable
+							&& hasRestrictedToOne( embeddable.getEmbeddableTypeDescriptor(), influencers ) ) {
 				return true;
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Is the value read using the {@linkplain org.hibernate.cfg.JdbcSettings#JDBC_TIME_ZONE JDBC time zone}?
+	 * The JSON representation is not adjusted to it.
+	 */
+	private static boolean isAffectedByJdbcTimeZone(JdbcMapping jdbcMapping) {
+		final int sqlTypeCode = jdbcMapping.getJdbcType().getDefaultSqlTypeCode();
+		return sqlTypeCode == SqlTypes.TIMESTAMP || sqlTypeCode == SqlTypes.TIME;
 	}
 
 	private static void entityRowSelectables(EntityMappingType entity, List<SelectableMapping> selectables) {
@@ -277,9 +300,14 @@ public class NestedCollectionFetch extends CollectionFetch {
 	}
 
 	private static void addRowSelectable(List<SelectableMapping> selectables, SelectableMapping selectable) {
-		if ( indexOf( selectables, selectable.getSelectableName() ) == -1 ) {
-			selectables.add( selectable );
+		// a column of another table with the same name is kept, the collection is then not fetched nested
+		for ( var existing : selectables ) {
+			if ( existing.getSelectableName().equals( selectable.getSelectableName() )
+					&& existing.getContainingTableExpression().equals( selectable.getContainingTableExpression() ) ) {
+				return;
+			}
 		}
+		selectables.add( selectable );
 	}
 
 	private static int indexOf(List<SelectableMapping> selectables, String selectableName) {

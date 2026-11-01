@@ -136,7 +136,8 @@ public class NestedCollectionRowProcessingState extends BaseExecutionContext imp
 
 	@Override
 	public LockMode determineEffectiveLockMode(String alias) {
-		return processingState.determineEffectiveLockMode( alias );
+		// the rows of the nested collection are not locked, even if the row of the owner is
+		return LockMode.NONE;
 	}
 
 	@Override

@@ -572,7 +572,9 @@ In the following situations, the collection is fetched using a secondary select 
 * the collection is a `Map`, an id bag, or an array,
 * the collection has a join table, that is, a many-to-many association, or a one-to-many association without `@JoinColumn`,
 * the element entity belongs to an inheritance hierarchy, is mapped to more than one table, or has a formula,
-* a column of the element has a type without a reliable JSON representation, for example, a binary, LOB, UUID, JSON, array, or time zone aware type, or
+* the element has a to-one association, possibly inside an embeddable, whose target is restricted by `@SQLRestriction` or an enabled filter,
+* a column of the element has a type without a reliable JSON representation, for example, a binary, LOB, UUID, JSON, array, or time zone aware type,
+* a column of the element is a `TIMESTAMP` or `TIME` read using the JDBC time zone set by `hibernate.jdbc.time_zone`, or
 * the collection belongs to the element of another collection fetched using `NESTED`.
 
 Associations belonging to the element are never joined: when they are fetched eagerly, by their mapping or by a subgraph, they are fetched using a secondary select.

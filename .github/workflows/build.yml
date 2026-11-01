@@ -99,7 +99,7 @@ jobs:
       - name: Reclaim Disk Space
         run: .github/ci-prerequisites.sh
       - name: Set up Gradle JDK
-        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: 'temurin'
           java-version: ${{ env.GRADLE_JAVA_VERSION }}
@@ -143,20 +143,20 @@ jobs:
       - name: Create build cache tarball
         run: tar -czf gradle-build-cache.tgz -C ~ .gradle/caches/build-cache-1
       - name: Upload build cache
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: gradle-build-cache
           retention-days: 1
           path: gradle-build-cache.tgz
 
       - name: Upload GitHub Actions artifact for the Develocity build scan
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: "${{ github.event_name == 'pull_request' && !cancelled() }}"
         with:
           name: build-scan-data-initial
           path: ~/.gradle/build-scan-data
       - name: Store build results
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: build-compilation-data
           retention-days: 1
@@ -217,7 +217,7 @@ jobs:
       # then install the default JDK (GRADLE_JAVA_VERSION) which becomes JAVA_HOME for the Gradle daemon.
       - name: Set up test JDK ${{ matrix.java-test-version }}
         if: ${{ matrix.java-test-version && matrix.java-test-version != env.GRADLE_JAVA_VERSION && matrix.java-test-from != 'jdk.java.net' }}
-        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: 'temurin'
           java-version: ${{ matrix.java-test-version }}
@@ -232,7 +232,7 @@ jobs:
         run: echo "TEST_JDK_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
       - name: Set up build JDK ${{ matrix.java-build-version }}
         if: ${{ matrix.java-build-version && matrix.java-build-version != env.GRADLE_JAVA_VERSION }}
-        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: 'temurin'
           java-version: ${{ matrix.java-build-version }}
@@ -240,7 +240,7 @@ jobs:
         if: ${{ matrix.java-build-version && matrix.java-build-version != env.GRADLE_JAVA_VERSION }}
         run: echo "BUILD_JDK_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
       - name: Set up Gradle JDK
-        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: 'temurin'
           java-version: ${{ env.GRADLE_JAVA_VERSION }}
@@ -259,7 +259,7 @@ jobs:
           restore-keys: |
             gradle-${{ runner.os }}-
       - name: Download build cache
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # 8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # 8.0.2
         with:
           name: gradle-build-cache
       - name: Extract build cache
@@ -349,13 +349,13 @@ jobs:
 
       # --- Artifacts ---
       - name: Upload GitHub Actions artifact for the Develocity build scan
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: "${{ github.event_name == 'pull_request' && !cancelled() }}"
         with:
           name: build-scan-data-${{ env.ENTRY_LABEL }}
           path: ~/.gradle/build-scan-data
       - name: Store coverage report
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ !cancelled() && matrix.coverage != false }}
         with:
           name: build-coverage-data-${{ env.ENTRY_LABEL }}
@@ -363,7 +363,7 @@ jobs:
           path: |
             ./**/target/jacoco/*.exec
       - name: Upload test reports (if Gradle failed)
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
         with:
           name: test-reports-${{ env.ENTRY_LABEL }}
@@ -392,7 +392,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Set up Gradle JDK
-        uses: graalvm/setup-graalvm@0426e2e191540e8514dff98dc52a5f5146a2a276 # v1.6.6
+        uses: graalvm/setup-graalvm@f70bc8032f90a104502824a54bcb94b6f01715bc # v1.6.8
         with:
           distribution: 'graalvm'
           java-version: ${{ env.GRADLE_JAVA_VERSION }}
@@ -427,7 +427,7 @@ jobs:
             otp-gradle-${{ runner.os }}-
             gradle-${{ runner.os }}-
       - name: Download build cache
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # 8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # 8.0.2
         with:
           name: gradle-build-cache
       - name: Extract build cache
@@ -469,20 +469,20 @@ jobs:
           user: hibernate_orm_test_1,hibernate_orm_test_2,hibernate_orm_test_3,hibernate_orm_test_4,hibernate_orm_test_5,hibernate_orm_test_6,hibernate_orm_test_7,hibernate_orm_test_8
 
       - name: Upload GitHub Actions artifact for the Develocity build scan
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: "${{ !cancelled() }}"
         with:
           name: build-scan-data-${{ matrix.rdbms }}
           path: ~/.gradle/build-scan-data
       - name: Store coverage report
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: build-coverage-data-${{ matrix.rdbms }}
           retention-days: 1
           path: |
             ./**/target/jacoco/*.exec
       - name: Upload test reports (if Gradle failed)
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
         with:
           name: test-reports-${{ matrix.rdbms }}
@@ -506,7 +506,7 @@ jobs:
       - name: Reclaim disk space and sanitize user home
         run: .github/ci-prerequisites-atlas.sh
       - name: Set up Gradle JDK
-        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: 'temurin'
           java-version: ${{ env.GRADLE_JAVA_VERSION }}
@@ -534,14 +534,14 @@ jobs:
           DEVELOCITY_ACCESS_KEY: "${{ secrets.DEVELOCITY_ACCESS_KEY }}"
 
       - name: Upload GitHub Actions artifact for the Develocity build scan
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: "${{ github.event_name == 'pull_request' && !cancelled() }}"
         with:
           name: build-scan-data-sca
           path: ~/.gradle/build-scan-data
 
       - name: Upload test reports (if Gradle failed)
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
         with:
           name: test-reports-sca
@@ -568,7 +568,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up Gradle JDK
-        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           java-version: ${{ env.GRADLE_JAVA_VERSION }}
           distribution: 'temurin'
@@ -589,7 +589,7 @@ jobs:
       # The build cache + compiled classes are needed so that Gradle can resolve
       # task dependencies for mergeCodeCoverageReport without recompiling.
       - name: Download build cache
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # 8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # 8.0.2
         with:
           name: gradle-build-cache
       - name: Extract build cache
@@ -598,14 +598,14 @@ jobs:
           rm gradle-build-cache.tgz
 
       - name: Download compilation results
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # 8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # 8.0.2
         with:
           name: build-compilation-data
           path: .
         continue-on-error: true
 
       - name: Download coverage reports
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # 8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # 8.0.2
         with:
           pattern: build-coverage-data*
           path: .
@@ -618,7 +618,7 @@ jobs:
           ./gradlew "${common_gradle_args[@]}" mergeCodeCoverageReport copyDependenciesSonar --no-parallel
 
       - name: Store build info for Sonar scanning
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: build-results-data
           retention-days: 1

@@ -138,7 +138,7 @@ compose_wait() {
 ###############################################################################
 
 mysql() {
-    mysql_9_7
+    mysql_26_10
 }
 
 mysql_8_4() {
@@ -148,6 +148,12 @@ mysql_8_4() {
 }
 
 mysql_9_7() {
+    compose_down "mysql"
+    compose_up "versioned/mysql-9.7/docker-compose.yaml"
+    mysql_post_setup
+}
+
+mysql_26_10() {
     compose_down "mysql"
     compose_up "latest/mysql/docker-compose.yaml"
     mysql_post_setup
@@ -1256,6 +1262,7 @@ if [ -z ${1} ]; then
     echo -e "\tmssql_2022"
     echo -e "\tmssql_2017"
     echo -e "\tmysql"
+    echo -e "\tmysql_26_10"
     echo -e "\tmysql_9_7"
     echo -e "\tmysql_8_4"
     echo -e "\toracle"

@@ -431,6 +431,7 @@ import static org.hibernate.boot.model.process.internal.InferredBasicValueResolv
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+import static org.hibernate.internal.util.StringHelper.unquote;
 import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
 import static org.hibernate.query.QueryLogging.QUERY_MESSAGE_LOGGER;
 import static org.hibernate.query.common.TemporalUnit.EPOCH;
@@ -3178,7 +3179,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			String explicitAlias,
 			boolean canUseInnerJoins) {
 		final var sqlAliasBase = getSqlAliasBaseGenerator().createSqlAliasBase(
-				explicitAlias == null ? cteName : explicitAlias
+				explicitAlias == null ? unquote( cteName, getDialect() ) : explicitAlias
 		);
 		final String identifierVariable = sqlAliasBase.generateNewAlias();
 		final var cteStatement = cteContainer.getCteStatement( cteName );

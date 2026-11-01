@@ -28,6 +28,7 @@ import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.community.dialect.TiDBDialect;
+import org.hibernate.engine.jdbc.proxy.ClobProxy;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.sql.exec.ExecutionException;
 
@@ -102,6 +103,7 @@ public class FunctionTests {
 					entity.setTheInt(5);
 					entity.setTheInteger(2);
 					entity.setTheDouble(1.0);
+					entity.setTheClob( ClobProxy.generateProxy( "Some CLOB text" ) );
 					entity.setId(123);
 					entity.setTheDate( new Date( 74, 2, 25 ) );
 					entity.setTheTime( new Time( 20, 10, 8 ) );
@@ -671,6 +673,23 @@ public class FunctionTests {
 		catch (IllegalArgumentException e) {
 			assertThat( e.getCause(), is(instanceOf(QueryException.class)) );
 		}
+	}
+
+	@Test
+	@JiraKey("HHH-18954")
+	public void testLowerUpperFunctionsWithClob(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			assertThat(
+					session.createQuery( "select lower(e.theClob) from EntityOfBasics e", String.class )
+							.getSingleResult(),
+					is( "some clob text" )
+			);
+			assertThat(
+					session.createQuery( "select upper(e.theClob) from EntityOfBasics e", String.class )
+							.getSingleResult(),
+					is( "SOME CLOB TEXT" )
+			);
+		} );
 	}
 
 	@Test

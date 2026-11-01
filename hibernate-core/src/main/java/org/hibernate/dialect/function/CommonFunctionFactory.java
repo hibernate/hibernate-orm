@@ -2047,14 +2047,14 @@ public class CommonFunctionFactory {
 		functionRegistry.namedDescriptorBuilder( "lower" )
 				.setInvariantType(stringType)
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(STRING)
-				.setArgumentListSignature( "(STRING string)" )
+				.setParameterTypes(STRING_OR_CLOB)
+				.setArgumentListSignature( "(STRING_OR_CLOB string)" )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "upper" )
 				.setInvariantType(stringType)
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(STRING)
-				.setArgumentListSignature( "(STRING string)" )
+				.setParameterTypes(STRING_OR_CLOB)
+				.setArgumentListSignature( "(STRING_OR_CLOB string)" )
 				.register();
 	}
 

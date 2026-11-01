@@ -242,7 +242,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 		return switch (type) {
 			case COMPARABLE -> jdbcType.isComparable();
 			case STRING -> jdbcType.isStringLikeExcludingClob();
-			case STRING_OR_CLOB -> jdbcType.isString(); // should it be isStringLike()
+			case STRING_OR_CLOB -> jdbcType.isStringLike();
 			case NUMERIC -> jdbcType.isNumber();
 			case INTEGER -> jdbcType.isInteger();
 			case BOOLEAN -> jdbcType.isBoolean()

@@ -1,6 +1,16 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.4.15.Final (November 01, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/40501
+
+
+** Bug
+    * HHH-20910 NullPointerException ordering collection updates when an uninitialized inverse collection is cleared
+    * HHH-20810 Database snapshot of a detached entity invokes the custom `EmbeddableInstantiator` with a bogus value array (regression in 7.4.x, works in 7.3.x)
+
 Changes in 7.4.14.Final (October 25, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

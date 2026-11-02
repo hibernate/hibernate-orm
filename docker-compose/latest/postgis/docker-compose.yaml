@@ -1,7 +1,7 @@
 services:
-  postgres:
-    image: ${DB_IMAGE_POSTGRESQL_17:-docker.io/postgis/postgis:17-3.6@sha256:33a3ce9efa8dc03472758460b05aa56de23dd84a8213cd06b45d6bc996528d35}
-    container_name: postgres
+  postgis:
+    image: ${POSTGIS_IMAGE:-docker.io/postgis/postgis:18-3.7@sha256:e55337da273845fb2ad38f6151953f70fd93ac8ac2a3d2edbc4056c858783a5f}
+    container_name: postgis
     platform: ${POSTGRESQL_PLATFORM:-linux/amd64}
     environment:
       POSTGRES_USER: hibernate_orm_test
@@ -10,7 +10,7 @@ services:
     ports:
       - "5432:5432"
     tmpfs:
-      - /var/lib/postgresql/data
+      - /var/lib/postgresql
     command:
       - postgres
       - -c

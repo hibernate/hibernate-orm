@@ -42,7 +42,7 @@ jobs:
           - rdbms: hsqldb
           - rdbms: mysql
           - rdbms: mariadb
-          - rdbms: postgresql
+          - rdbms: postgis
           - rdbms: spannerpgsql
           - rdbms: spanner
           - rdbms: edb

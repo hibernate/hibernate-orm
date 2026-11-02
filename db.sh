@@ -292,12 +292,6 @@ postgis() {
   postgis_18
 }
 
-postgis_14() {
-    compose_down "postgis"
-    compose_up "versioned/postgis-14/docker-compose.yaml"
-    postgis_setup 14
-}
-
 postgis_15() {
     compose_down "postgis"
     compose_up "versioned/postgis-15/docker-compose.yaml"
@@ -1281,7 +1275,6 @@ if [ -z ${1} ]; then
     echo -e "\tpostgis_17"
     echo -e "\tpostgis_16"
     echo -e "\tpostgis_15"
-    echo -e "\tpostgis_14"
     echo -e "\tsybase"
     echo -e "\ttidb"
     echo -e "\ttidb_8_5"

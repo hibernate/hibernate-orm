@@ -57,7 +57,7 @@ jobs:
           { "name": "hsqldb 2.6", "rdbms": "hsqldb_2_6" },
           { "name": "mysql 8.4", "rdbms": "mysql_8_4" },
           { "name": "mariadb 10.6", "rdbms": "mariadb_10_6" },
-          { "name": "postgis 14", "rdbms": "postgis_14" },
+          { "name": "postgis 15", "rdbms": "postgis_15" },
           { "name": "edb 14", "rdbms": "edb_14",
             "runs-on": "runs-on/fleet=linux-standard/env=ibm" },
           { "name": "db2 11.5", "rdbms": "db2_11_5",

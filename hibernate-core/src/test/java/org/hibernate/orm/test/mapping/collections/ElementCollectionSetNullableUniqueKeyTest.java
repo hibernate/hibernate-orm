@@ -15,7 +15,6 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.cfg.JdbcSettings;
-import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SpannerDialect;
@@ -93,31 +92,15 @@ public class ElementCollectionSetNullableUniqueKeyTest {
 	}
 
 	@Test
-	void createsNullsNotDistinctUniqueKeyForPostgreSQL15() {
+	void createsNullsNotDistinctUniqueKeyForPostgreSQL() {
 		final var registry = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting( JdbcSettings.DIALECT, PostgreSQL15Dialect.class )
+				.applySetting( JdbcSettings.DIALECT, PostgreSQLDialect.class )
 				.build();
 		try {
 			final var commands = generateCreationCommands( registry, buildMetadata( registry ) );
 
 			assertTrue( hasUniqueTupleDefinition( commands, "book_topics", "book_isbn", "topics" ) );
 			assertTrue( hasNullsNotDistinctUniqueTupleDefinition( commands, "book_topics", "book_isbn", "topics" ) );
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( registry );
-		}
-	}
-
-	@Test
-	void keepsStandardUniqueKeyForPostgreSQL14() {
-		final var registry = ServiceRegistryUtil.serviceRegistryBuilder()
-				.applySetting( JdbcSettings.DIALECT, PostgreSQL14Dialect.class )
-				.build();
-		try {
-			final var commands = generateCreationCommands( registry, buildMetadata( registry ) );
-
-			assertTrue( hasUniqueTupleDefinition( commands, "book_topics", "book_isbn", "topics" ) );
-			assertFalse( hasNullsNotDistinctUniqueTupleDefinition( commands, "book_topics", "book_isbn", "topics" ) );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( registry );
@@ -192,18 +175,6 @@ public class ElementCollectionSetNullableUniqueKeyTest {
 
 	private static String columnPattern(String columnName) {
 		return "[\"`\\[]?" + columnName + "[\"`\\]]?";
-	}
-
-	public static class PostgreSQL14Dialect extends PostgreSQLDialect {
-		public PostgreSQL14Dialect() {
-			super( DatabaseVersion.make( 14 ) );
-		}
-	}
-
-	public static class PostgreSQL15Dialect extends PostgreSQLDialect {
-		public PostgreSQL15Dialect() {
-			super( DatabaseVersion.make( 15 ) );
-		}
 	}
 
 	@Entity(name = "Book")

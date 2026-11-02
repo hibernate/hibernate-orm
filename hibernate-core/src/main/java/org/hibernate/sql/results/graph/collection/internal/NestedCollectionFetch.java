@@ -84,11 +84,8 @@ public class NestedCollectionFetch extends CollectionFetch {
 				|| !( functionRegistry.findFunctionDescriptor( "json_arrayagg" ) instanceof FunctionRenderer jsonArrayAgg ) ) {
 			return null;
 		}
-		final var rowSelectables = rowSelectables(
-				fetchedAttribute,
-				creationState.getSqlAstCreationState().getLoadQueryInfluencers(),
-				creationContext.getSessionFactory().getSessionFactoryOptions().getJdbcTimeZone() != null
-		);
+		final var rowSelectables =
+				rowSelectables( fetchedAttribute, creationState.getSqlAstCreationState().getLoadQueryInfluencers() );
 		if ( rowSelectables == null ) {
 			return null;
 		}
@@ -215,8 +212,7 @@ public class NestedCollectionFetch extends CollectionFetch {
 	 */
 	private static @Nullable List<SelectableMapping> rowSelectables(
 			PluralAttributeMapping attribute,
-			LoadQueryInfluencers influencers,
-			boolean jdbcTimeZone) {
+			LoadQueryInfluencers influencers) {
 		final var collectionDescriptor = attribute.getCollectionDescriptor();
 		switch ( attribute.getMappedType().getCollectionSemantics().getCollectionClassification() ) {
 			case BAG, SET, ORDERED_SET, SORTED_SET, LIST:
@@ -252,8 +248,7 @@ public class NestedCollectionFetch extends CollectionFetch {
 		for ( var selectable : selectables ) {
 			if ( selectable.isFormula()
 					|| !table.equals( selectable.getContainingTableExpression() )
-					|| !isSupportedType( selectable.getJdbcMapping() )
-					|| jdbcTimeZone && isAffectedByJdbcTimeZone( selectable.getJdbcMapping() ) ) {
+					|| !isSupportedType( selectable.getJdbcMapping() ) ) {
 				return null;
 			}
 		}
@@ -275,15 +270,6 @@ public class NestedCollectionFetch extends CollectionFetch {
 			}
 		}
 		return false;
-	}
-
-	/**
-	 * Is the value read using the {@linkplain org.hibernate.cfg.JdbcSettings#JDBC_TIME_ZONE JDBC time zone}?
-	 * The JSON representation is not adjusted to it.
-	 */
-	private static boolean isAffectedByJdbcTimeZone(JdbcMapping jdbcMapping) {
-		final int sqlTypeCode = jdbcMapping.getJdbcType().getDefaultSqlTypeCode();
-		return sqlTypeCode == SqlTypes.TIMESTAMP || sqlTypeCode == SqlTypes.TIME;
 	}
 
 	private static void entityRowSelectables(EntityMappingType entity, List<SelectableMapping> selectables) {

@@ -205,7 +205,7 @@ import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering
 import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsTimestampWithMicros;
 import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsTimestampWithMillis;
 
-/// A {@linkplain Dialect SQL dialect} for PostgreSQL 14 and above.
+/// A {@linkplain Dialect SQL dialect} for PostgreSQL 15 and above.
 ///
 /// Please refer to the
 /// <a href="https://www.postgresql.org/docs/current/index.html">PostgreSQL documentation</a>.
@@ -222,6 +222,8 @@ import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering
 /// @since 8.0
 @SPI({ USE, IMPLEMENT })
 public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+
+	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 15 );
 
 	@Override
 	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
@@ -261,13 +263,12 @@ public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport
 	public TypeSizingProfile getTypeSizingProfile() {
 		return typeSizingProfile;
 	}
-	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 14 );
 
 	private final UniqueDelegate uniqueDelegate = new org.hibernate.dialect.unique.spi.DelegatingUniqueDelegate(
 			UniqueDelegates.createTable( this ) ) {
 		@Override
 		public boolean supportsNullsNotDistinct() {
-			return getVersion().isSameOrAfter( 15 );
+			return true;
 		}
 	};
 	private final StandardTableExporter postgresqlTableExporter = new StandardTableExporter( this ) {
@@ -313,7 +314,7 @@ public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport
 				driverKind == PostgreSQLDriverKind.VERT_X
 						? NativeParameterMarkers.INSTANCE
 						: super.getNativeParameterMarkerStrategy();
-		supportsMerge = version.isSameOrAfter( DatabaseVersion.make( 15, 0 ) );
+		supportsMerge = true;
 	}
 
 	public PostgreSQLDriverKind getDriverKind() {
@@ -729,7 +730,7 @@ public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport
 		functionFactory.sha( "sha256(?1)" );
 		functionFactory.md5( "decode(md5(?1), 'hex')" );
 
-		functionFactory.regexpLike_postgresql( getVersion().isSameOrAfter( 15 ) );
+		functionFactory.regexpLike_postgresql( true );
 	}
 
 	protected void registerXmlFunctions(CommonFunctionFactory functionFactory) {

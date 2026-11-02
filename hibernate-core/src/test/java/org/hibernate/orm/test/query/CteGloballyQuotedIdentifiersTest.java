@@ -44,5 +44,6 @@ public class CteGloballyQuotedIdentifiersTest {
 	public static class Book {
 		@Id
 		Long id;
+		String name;
 	}
 }

@@ -89,7 +89,7 @@ jobs:
             "runs-on": "runs-on/fleet=linux-standard/env=commonhaus" },
           { "name": "JDK", "java-test-version": "21",
             "runs-on": "runs-on/fleet=linux-standard/env=commonhaus" },
-          { "name": "JDK", "java-test-version": "26",
+          { "name": "JDK", "java-test-version": "27",
             "java-launcher-args": "--enable-preview --illegal-final-field-mutation=deny",
             "runs-on": "runs-on/fleet=linux-standard/env=commonhaus" },
           { "name": "JDK 17 build", "java-build-version": "17",
@@ -106,7 +106,6 @@ jobs:
             "runs-on": "runs-on/fleet=linux-standard/env=ibm" }
           ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'tidb') && ', { "name": "tidb", "rdbms": "tidb" }' || '' }}
           ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'informix') && ', { "name": "informix", "rdbms": "informix", "gradle-args": "-Ptest.threads=1" }' || '' }}
-          ${{ github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'jdk') || contains(github.event.pull_request.labels.*.name, 'jdk-27')) && ', { "name": "JDK", "java-test-version": "27", "java-launcher-args": "--enable-preview --illegal-final-field-mutation=deny", "gradle-args": "-PskipJacoco=true" }' || '' }}
           ${{ github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'jdk') || contains(github.event.pull_request.labels.*.name, 'jdk-28')) && ', { "name": "JDK", "java-test-version": "28", "java-test-from": "jdk.java.net", "java-launcher-args": "--enable-preview --illegal-final-field-mutation=deny -Dnet.bytebuddy.experimental=true", "gradle-args": "-PskipJacoco=true" }' || '' }}
         ]
       otp-matrix-json: >-

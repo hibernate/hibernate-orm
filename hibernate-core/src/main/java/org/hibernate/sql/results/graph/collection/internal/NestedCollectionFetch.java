@@ -5,12 +5,16 @@ import java.util.BitSet;
 import java.util.List;
 
 import jakarta.annotation.Nullable;
+import org.hibernate.dialect.function.json.MariaDBJsonArrayAggFunction;
+import org.hibernate.dialect.function.json.MySQLJsonArrayAggFunction;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -22,13 +26,16 @@ import org.hibernate.query.sqm.function.SelfRenderingOrderedSetAggregateFunction
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstNode;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.JsonNullBehavior;
+import org.hibernate.sql.ast.spi.query.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.ast.spi.query.select.SortSpecification;
 import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -39,6 +46,7 @@ import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -62,6 +70,7 @@ public class NestedCollectionFetch extends CollectionFetch {
 	private final @Nullable DomainResult<?> collectionKeyResult;
 	private final List<SelectableMapping> rowSelectables;
 	private final SqlSelection aggregateSelection;
+	private final boolean counted;
 	private final FetchList fetches;
 
 	/**
@@ -177,10 +186,15 @@ public class NestedCollectionFetch extends CollectionFetch {
 				typeConfiguration.getBasicTypeForJavaType( String.class )
 		);
 
+		// group_concat silently truncates its result to group_concat_max_len,
+		// the number of rows is aggregated too, so that a truncation is detected
+		counted = jsonArrayAgg instanceof MySQLJsonArrayAggFunction
+				|| jsonArrayAgg instanceof MariaDBJsonArrayAggFunction;
 		final var subquery = new QuerySpec( false, 1 );
 		subquery.getFromClause().addRoot( collectionTableGroup );
 		subquery.applyPredicate( tableGroupJoin.getPredicate() );
-		subquery.getSelectClause().addSqlSelection( new SqlSelectionImpl( 0, aggregate ) );
+		subquery.getSelectClause()
+				.addSqlSelection( new SqlSelectionImpl( 0, counted ? new Counted( aggregate ) : aggregate ) );
 
 		aggregateSelection = sqlAstCreationState.getSqlExpressionResolver().resolveSqlSelection(
 				new SelectStatement( subquery ),
@@ -188,6 +202,24 @@ public class NestedCollectionFetch extends CollectionFetch {
 				fetchParent,
 				typeConfiguration
 		);
+	}
+
+	/**
+	 * Renders {@code concat('[',count(*),',',aggregate,']')}, that is, {@code [2,[[1,"a"],[2,"b"]]]},
+	 * which is null for an empty collection.
+	 */
+	private record Counted(Expression aggregate) implements SelfRenderingExpression {
+		@Override
+		public void renderToSql(SqlAppender sqlAppender, SqlAstTranslator<?> walker, SessionFactoryImplementor sf) {
+			sqlAppender.appendSql( "concat('[',count(*),','," );
+			aggregate.accept( walker );
+			sqlAppender.appendSql( ",']')" );
+		}
+
+		@Override
+		public JdbcMappingContainer getExpressionType() {
+			return aggregate.getExpressionType();
+		}
 	}
 
 	private static List<SortSpecification> orderBy(
@@ -362,6 +394,7 @@ public class NestedCollectionFetch extends CollectionFetch {
 				parent,
 				collectionKeyResult,
 				aggregateSelection,
+				counted,
 				rowSelectables,
 				fetches.get( attribute.getElementDescriptor() ),
 				indexDescriptor == null ? null : fetches.get( indexDescriptor ),

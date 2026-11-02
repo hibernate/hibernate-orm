@@ -55,6 +55,7 @@ public class NestedCollectionInitializer
 		extends AbstractNonJoinCollectionInitializer<NestedCollectionInitializer.NestedCollectionInitializerData> {
 
 	private final SqlSelection aggregateSelection;
+	private final boolean counted;
 	private final JdbcMapping[] rowJdbcMappings;
 	private final DomainResultAssembler<?> elementAssembler;
 	private final @Nullable DomainResultAssembler<?> indexAssembler;
@@ -79,6 +80,7 @@ public class NestedCollectionInitializer
 			InitializerParent<?> parent,
 			@Nullable DomainResult<?> collectionKeyResult,
 			SqlSelection aggregateSelection,
+			boolean counted,
 			List<SelectableMapping> rowSelectables,
 			Fetch elementFetch,
 			@Nullable Fetch indexFetch,
@@ -86,6 +88,7 @@ public class NestedCollectionInitializer
 			AssemblerCreationState creationState) {
 		super( fetchedPath, fetchedMapping, parent, collectionKeyResult, false, fetchOptions, creationState );
 		this.aggregateSelection = aggregateSelection;
+		this.counted = counted;
 		this.rowJdbcMappings = new JdbcMapping[rowSelectables.size()];
 		for ( int i = 0; i < rowJdbcMappings.length; i++ ) {
 			rowJdbcMappings[i] = rowSelectables.get( i ).getJdbcMapping();
@@ -182,7 +185,8 @@ public class NestedCollectionInitializer
 	}
 
 	/**
-	 * Reads {@code [[1,"a",null],[2,"b",3]]} into rows of JDBC values.
+	 * Reads {@code [[1,"a",null],[2,"b",3]]}, or {@code [2,[[1,"a",null],[2,"b",3]]]} when
+	 * the number of rows is aggregated too, into rows of JDBC values.
 	 */
 	private List<Object[]> readRows(String json, WrapperOptions options) {
 		final var reader = new StringJsonDocumentReader( json );
@@ -192,9 +196,35 @@ public class NestedCollectionInitializer
 			if ( !reader.hasNext() || reader.next() != JsonDocumentItemType.ARRAY_START ) {
 				throw new HibernateException( "Malformed nested collection, expected a JSON array: " + json );
 			}
+			final int count;
+			if ( counted ) {
+				if ( reader.next() != JsonDocumentItemType.NUMERIC_VALUE ) {
+					throw new HibernateException( "Malformed nested collection, expected the number of rows: " + json );
+				}
+				count = reader.getIntegerValue();
+				if ( reader.next() != JsonDocumentItemType.ARRAY_START ) {
+					throw new HibernateException( "Malformed nested collection, expected a JSON array: " + json );
+				}
+			}
+			else {
+				count = -1;
+			}
 			while ( reader.hasNext() ) {
 				final var item = reader.next();
 				if ( item == JsonDocumentItemType.ARRAY_END ) {
+					if ( counted ) {
+						if ( rows.size() != count ) {
+							throw new HibernateException(
+									"Nested collection was truncated, " + rows.size() + " of " + count
+											+ " rows were read, group_concat_max_len must be increased"
+							);
+						}
+						if ( reader.next() != JsonDocumentItemType.ARRAY_END ) {
+							throw new HibernateException(
+									"Malformed nested collection, expected the end of the JSON array: " + json
+							);
+						}
+					}
 					return rows;
 				}
 				else if ( item == JsonDocumentItemType.ARRAY_START ) {

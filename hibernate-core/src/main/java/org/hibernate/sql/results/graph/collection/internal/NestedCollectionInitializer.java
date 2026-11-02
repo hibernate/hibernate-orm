@@ -1,8 +1,12 @@
 package org.hibernate.sql.results.graph.collection.internal;
 
 import java.sql.SQLException;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TimeZone;
 
 import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
@@ -23,6 +27,11 @@ import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.internal.LoadingCollectionEntryImpl;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.JdbcTimeJavaType;
+import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.TimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 import org.hibernate.type.format.JsonDocumentItemType;
 import org.hibernate.type.format.JsonDocumentReader;
 import org.hibernate.type.format.JsonValueJDBCTypeAdapter;
@@ -213,7 +222,13 @@ public class NestedCollectionInitializer
 				case NULL_VALUE -> null;
 				case BOOLEAN_VALUE -> javaType.wrap( reader.getBooleanValue(), options );
 				case NUMERIC_VALUE -> adapter.fromNumericValue( javaType, jdbcType, reader, options );
-				case VALUE -> adapter.fromValue( javaType, jdbcType, reader, options );
+				case VALUE -> options.getJdbcTimeZone() != null
+						&& ( jdbcType instanceof TimestampJdbcType || jdbcType instanceof TimeJdbcType )
+						? javaType.wrap(
+								atJdbcTimeZone( jdbcType, reader.getStringValue(), options.getJdbcTimeZone() ),
+								options
+						)
+						: adapter.fromValue( javaType, jdbcType, reader, options );
 				default -> throw new HibernateException( "Malformed nested collection, unexpected JSON value in row" );
 			};
 		}
@@ -221,6 +236,22 @@ public class NestedCollectionInitializer
 			throw new HibernateException( "Malformed nested collection, unexpected number of values in row" );
 		}
 		return row;
+	}
+
+	/**
+	 * Reads the local date time or time in the {@linkplain org.hibernate.cfg.JdbcSettings#JDBC_TIME_ZONE
+	 * JDBC time zone}, as {@link java.sql.ResultSet#getTimestamp(int, java.util.Calendar)} does.
+	 */
+	private static Object atJdbcTimeZone(JdbcType jdbcType, String value, TimeZone timeZone) {
+		final var zone = timeZone.toZoneId();
+		if ( jdbcType instanceof TimestampJdbcType ) {
+			final var local = JdbcTimestampJavaType.INSTANCE.fromEncodedString( value, 0, value.length() );
+			return Timestamp.from( local.toLocalDateTime().atZone( zone ).toInstant() );
+		}
+		else {
+			final var local = JdbcTimeJavaType.INSTANCE.fromEncodedString( value, 0, value.length() );
+			return new Time( LocalDate.EPOCH.atTime( local.toLocalTime() ).atZone( zone ).toInstant().toEpochMilli() );
+		}
 	}
 
 	/**

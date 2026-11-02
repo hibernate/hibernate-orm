@@ -577,7 +577,7 @@ In the following situations, the collection is fetched using a secondary select 
 * the collection belongs to the element of another collection fetched using `NESTED`.
 
 Associations belonging to the element are never joined: when they are fetched eagerly, by their mapping or by a subgraph, they are fetched using a secondary select.
-On MySQL and MariaDB, the aggregated value is limited by `group_concat_max_len`, which might need to be increased.
+On MySQL and MariaDB, the aggregated value is limited by `group_concat_max_len`, which might need to be increased: a collection whose aggregated value is truncated is not loaded, and an exception is thrown.
 
 These options refine the plan but remain subject to the applicable loading operation and mapping constraints.
 

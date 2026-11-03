@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.auxiliaryOperations;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /**
@@ -65,7 +66,7 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 		final String entityName = entityPersister.getEntityName();
 		this.historyUpdateBatchKey = new BasicBatchKey( entityName + "#HISTORY_UPDATE" );
 		this.historyInsertBatchKey = new BasicBatchKey( entityName + "#HISTORY_INSERT" );
-		this.historyEndUpdateGroup = buildEndingUpdateGroup( historyTableMapping, temporalMapping );
+		this.historyEndUpdateGroup = auxiliaryOperations( buildEndingUpdateGroup( historyTableMapping, temporalMapping ) );
 		this.historyInsertGroup = buildHistoryInsertGroup( entityPersister.getPropertyInsertability() );
 	}
 
@@ -250,7 +251,7 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 			applyOptimisticLocking( tableUpdateBuilder );
 
 			return new HistoryExcludedUpdateDetails(
-					createMutationOperationGroup( tableUpdateBuilder ),
+					auxiliaryOperations( createMutationOperationGroup( tableUpdateBuilder ) ),
 					toIntArray( bindableAttributeIndexes ),
 					entityPersister().optimisticLockStyle().isVersion()
 							&& versionMapping != null
@@ -341,10 +342,10 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 				new TableInsertBuilderStandard( entityPersister(), historyTableMapping, factory() );
 		applyHistoryInsertDetails( insertBuilder, propertyInclusions );
 		final var tableMutation = insertBuilder.buildMutation();
-		return singleOperation(
+		return auxiliaryOperations( singleOperation(
 				new MutationGroupSingle( MutationType.INSERT, entityPersister(), tableMutation ),
 				tableMutation.createMutationOperation( null, factory() )
-		);
+		) );
 	}
 
 	private void applyHistoryInsertDetails(

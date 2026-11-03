@@ -95,7 +95,10 @@ public interface AuxiliaryMapping {
 	///
 	/// This form is used when the restriction belongs on the join predicate
 	/// rather than on a surrounding query predicate collector.
-	void applyPredicate(@Nonnull TableGroupJoin tableGroupJoin, @Nonnull LoadQueryInfluencers loadQueryInfluencers);
+	void applyPredicate(
+			@Nonnull TableGroupJoin tableGroupJoin,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			@Nonnull LoadQueryInfluencers loadQueryInfluencers);
 
 	/// Applies the auxiliary row restriction for a resolved root table
 	/// reference.

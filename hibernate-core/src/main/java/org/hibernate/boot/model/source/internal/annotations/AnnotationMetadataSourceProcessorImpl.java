@@ -210,11 +210,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 			if ( clazz.isInterface() && isEntity( clazz ) ) {
 				throw new MappingException( "Interface '" + clazz.getName() + "' may not be annotated '@Entity'" );
 			}
-			else if ( isMappedSuperclass( clazz ) ) {
-				// Skip class with explicit @MappedSuperclass annotation
-				// the class will be discovered analyzing the implementing class
-			}
-			else {
+			else if ( !isMappedSuperclass( clazz ) ) {
 				copy.add( clazz );
 				var superClass = clazz.getSuperClass();
 				while ( superClass != null
@@ -227,6 +223,9 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 				}
 			}
 		}
+		// Prefer mapped superclasses discovered through a subclass for generic type resolution.
+		// Also bind declarations on explicitly listed mapped superclasses with no subclass.
+		copy.addAll( original );
 	}
 
 	private void orderHierarchy(List<ClassDetails> copy, List<ClassDetails> newList, LinkedHashSet<ClassDetails> original, ClassDetails clazz) {

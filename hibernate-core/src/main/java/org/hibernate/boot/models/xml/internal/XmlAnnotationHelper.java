@@ -1914,6 +1914,9 @@ public class XmlAnnotationHelper {
 			final JaxbIndexImpl jaxbIndex = jaxbIndexes.get( i );
 			index.columnList( jaxbIndex.getColumnList() );
 			applyOptionalString( jaxbIndex.getName(), index::name );
+			applyOptionalString( jaxbIndex.getType(), index::type );
+			applyOptionalString( jaxbIndex.getUsing(), index::using );
+			applyOptionalString( jaxbIndex.getOptions(), index::options );
 			if ( jaxbIndex.isUnique() != null ) {
 				index.unique( jaxbIndex.isUnique() );
 			}

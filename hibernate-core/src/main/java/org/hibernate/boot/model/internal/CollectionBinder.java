@@ -1690,10 +1690,9 @@ public abstract class CollectionBinder {
 
 		bindSynchronize();
 		bindFilters( false );
-		handleWhere( false );
+		handleWhere( false, associatedClass.getWhere() );
 
-		final var targetEntity = persistentClasses.get( getElementType().getName() );
-		bindCollectionSecondPass( targetEntity, foreignJoinColumns );
+		bindCollectionSecondPass( associatedClass, foreignJoinColumns );
 
 		if ( !collection.isInverse() && !collection.getKey().isNullable() ) {
 			createOneToManyBackref( oneToMany );
@@ -1803,8 +1802,9 @@ public abstract class CollectionBinder {
 		}
 	}
 
-	private void handleWhere(boolean hasAssociationTable) {
-		final String whereClause = getWhereClause();
+	private void handleWhere(boolean hasAssociationTable, String elementRestriction) {
+		final String whereClause =
+				getNonEmptyOrConjunctionIfBothNonEmpty( elementRestriction, getWhereOnCollectionClause() );
 		if ( hasAssociationTable ) {
 			// A many-to-many association has an association (join) table
 			// Collection#setManytoManyWhere is used to set the "where" clause that applies
@@ -1838,16 +1838,6 @@ public abstract class CollectionBinder {
 	private String getWhereJoinTableClause() {
 		final var joinTableRestriction = property.getDirectAnnotationUsage( SQLJoinTableRestriction.class );
 		return joinTableRestriction != null ? joinTableRestriction.value() : null;
-	}
-
-	private String getWhereClause() {
-		// There are 2 possible sources of "where" clauses that apply to the associated entity table:
-		// 1) from the associated entity mapping; i.e., @Entity @Where(clause="...")
-		//    (ignored if useEntityWhereClauseForCollections == false)
-		// 2) from the collection mapping;
-		//    for one-to-many, e.g., @OneToMany @JoinColumn @Where(clause="...") public Set<Rating> getRatings();
-		//    for many-to-many e.g., @ManyToMany @Where(clause="...") public Set<Rating> getRatings();
-		return getNonEmptyOrConjunctionIfBothNonEmpty( getWhereOnClassClause(), getWhereOnCollectionClause() );
 	}
 
 	private String getWhereOnCollectionClause() {
@@ -2173,7 +2163,8 @@ public abstract class CollectionBinder {
 
 		bindSynchronize();
 		bindFilters( isCollectionOfEntities );
-		handleWhere( isCollectionOfEntities );
+		handleWhere( isCollectionOfEntities,
+				isCollectionOfEntities ? targetEntity.getWhere() : getWhereOnClassClause() );
 
 		bindCollectionSecondPass( targetEntity, joinColumns );
 

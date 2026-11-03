@@ -380,7 +380,7 @@ The following major enhancements were made to subselect fetching.
 
 - `FetchMethod` was introduced as a JPA 4 `FetchOption` enumerating the basic fetching methods `BY_ID`, `JOIN`, and `BY_SUBQUERY`. To request bulk select fetching for an `AttributeNode` of an `EntityGraph`, call `node.addOption(FetchMethod.BY_SUBQUERY)`.
 +
-Note that batch fetching may be requested using the standard JPA 4 fetch option `BatchSize`.
+Note that batch fetching may be requested using the standard JPA 4 fetch option `BatchFetch`.
 
 These changes finally make bulk select fetching a first-class citizen.
 

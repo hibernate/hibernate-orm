@@ -431,7 +431,10 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping, LegacyAuxiliary
 	}
 
 	@Override
-	public void applyPredicate(@Nonnull TableGroupJoin tableGroupJoin, @Nonnull LoadQueryInfluencers loadQueryInfluencers) {
+	public void applyPredicate(
+			@Nonnull TableGroupJoin tableGroupJoin,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			@Nonnull LoadQueryInfluencers loadQueryInfluencers) {
 		tableGroupJoin.applyPredicate( createNonDeletedRestriction(
 				tableGroupJoin.getJoinedGroup().resolveTableReference( getTableName() )
 		) );

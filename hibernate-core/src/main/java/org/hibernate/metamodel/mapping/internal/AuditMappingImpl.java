@@ -27,7 +27,6 @@ import org.hibernate.query.sqm.function.FunctionRenderer;
 import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpression;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.expression.AggregateFunctionExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -510,7 +509,10 @@ public class AuditMappingImpl implements AuditMapping {
 	}
 
 	@Override
-	public void applyPredicate(TableGroupJoin tableGroupJoin, LoadQueryInfluencers loadQueryInfluencers) {
+	public void applyPredicate(
+			TableGroupJoin tableGroupJoin,
+			SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			LoadQueryInfluencers loadQueryInfluencers) {
 		if ( hasTemporalPredicate( loadQueryInfluencers )
 				&& tableGroupJoin.getJoinedGroup().getModelPart() instanceof EntityValuedModelPart entityPart ) {
 			final var entityDescriptor = entityPart.getEntityMappingType();
@@ -520,7 +522,7 @@ public class AuditMappingImpl implements AuditMapping {
 					persister,
 					tableGroupJoin.getJoinedGroup().resolveTableReference( info.auditTableName ),
 					collectEntityKeySelectables( entityDescriptor ),
-					new SqlAliasBaseManager(),
+					sqlAliasBaseGenerator,
 					info,
 					resolveDefaultUpperBound( info ),
 					false

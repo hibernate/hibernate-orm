@@ -300,7 +300,10 @@ public class TemporalMappingImpl implements TemporalMapping {
 	}
 
 	@Override
-	public void applyPredicate(TableGroupJoin tableGroupJoin, LoadQueryInfluencers loadQueryInfluencers) {
+	public void applyPredicate(
+			TableGroupJoin tableGroupJoin,
+			SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			LoadQueryInfluencers loadQueryInfluencers) {
 		if ( useTemporalRestriction( loadQueryInfluencers ) ) {
 			final var temporalInstant = loadQueryInfluencers.getTemporalIdentifier();
 			final var tableReference = tableGroupJoin.getJoinedGroup().resolveTableReference( getTableName() );

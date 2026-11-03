@@ -69,7 +69,10 @@ public interface AuxiliaryMapping {
 			SqlAliasBaseGenerator sqlAliasBaseGenerator,
 			LoadQueryInfluencers influencers);
 
-	void applyPredicate(TableGroupJoin tableGroupJoin, LoadQueryInfluencers loadQueryInfluencers);
+	void applyPredicate(
+			TableGroupJoin tableGroupJoin,
+			SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			LoadQueryInfluencers loadQueryInfluencers);
 
 	void applyPredicate(
 			Supplier<Consumer<Predicate>> predicateCollector,

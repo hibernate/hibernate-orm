@@ -3839,7 +3839,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final var auxiliaryMapping = entityDescriptor.getAuxiliaryMapping();
 		if ( auxiliaryMapping != null ) {
-			auxiliaryMapping.applyPredicate( tableGroupJoin, loadQueryInfluencers );
+			auxiliaryMapping.applyPredicate( tableGroupJoin, getSqlAliasBaseGenerator(), loadQueryInfluencers );
 		}
 
 		final var joinPredicate = sqmJoin.getJoinPredicate();

@@ -16,6 +16,7 @@ import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.AuditedTest;
 import org.hibernate.testing.orm.junit.BeforeClassTemplate;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -328,6 +329,7 @@ class AuditToOneAssociationTest {
 	}
 
 	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-21066")
 	@Order(7)
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void testExplicitEntityJoinPointInTime(SessionFactoryScope scope) {
@@ -355,6 +357,19 @@ class AuditToOneAssociationTest {
 
 			assertEquals( 1, rows.size() );
 			assertEquals( "Book V2", ((Book) rows.get( 0 )[0]).getTitle() );
+			assertEquals( "Author V2", ((Author) rows.get( 0 )[1]).getName() );
+		}
+
+		// Author(1) last changed at revUpdate, while Author(2) was created at revReassign
+		try (var session = sf.withOptions().atChangeset( revReassign ).openSession()) {
+			final var rows = session.createSelectionQuery(
+					"select b, a from LazyBook b join Author a on a.id = b.author.id"
+					+ " where b.id = :id",
+					Object[].class
+			).setParameter( "id", 2L ).getResultList();
+
+			assertEquals( 1, rows.size() );
+			assertEquals( "Lazy Book V1", ((LazyBook) rows.get( 0 )[0]).getTitle() );
 			assertEquals( "Author V2", ((Author) rows.get( 0 )[1]).getName() );
 		}
 	}

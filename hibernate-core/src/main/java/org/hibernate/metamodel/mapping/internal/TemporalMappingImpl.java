@@ -321,7 +321,10 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 	}
 
 	@Override
-	public void applyPredicate(@Nonnull TableGroupJoin tableGroupJoin, @Nonnull LoadQueryInfluencers loadQueryInfluencers) {
+	public void applyPredicate(
+			@Nonnull TableGroupJoin tableGroupJoin,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			@Nonnull LoadQueryInfluencers loadQueryInfluencers) {
 		if ( useTemporalRestriction( loadQueryInfluencers ) ) {
 			final var temporalInstant = loadQueryInfluencers.getTemporalIdentifier();
 			final var tableReference = tableGroupJoin.getJoinedGroup().resolveTableReference( getTableName() );

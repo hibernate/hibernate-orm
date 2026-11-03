@@ -2636,7 +2636,7 @@ public class ToOneAttributeMapping
 
 	private void initializeIfNeeded(TableGroup lhs, @Nullable SqlAstJoinType sqlAstJoinType, TableGroup tableGroup) {
 		if ( sqlAstJoinType == SqlAstJoinType.INNER
-				&& ( isNullable || !lhs.canUseInnerJoins() ) ) {
+				&& ( isKeyTableNullable || isNullable || !lhs.canUseInnerJoins() ) ) {
 			if ( hasJoinTable ) {
 				// Set the join type of the table reference join to INNER to retain cardinality expectation
 				final var lhsTableReference =
@@ -2645,16 +2645,11 @@ public class ToOneAttributeMapping
 				final var tableReferenceJoins = lhs.getTableReferenceJoins();
 				for ( int i = 0; i < tableReferenceJoins.size(); i++ ) {
 					final var tableReferenceJoin = tableReferenceJoins.get( i );
-					if ( tableReferenceJoin.getJoinType() != SqlAstJoinType.INNER
-							&& tableReferenceJoin.getJoinedTableReference() == lhsTableReference ) {
-						tableReferenceJoins.set(
-								i,
-								new TableReferenceJoin(
-										true,
-										tableReferenceJoin.getJoinedTableReference(),
-										tableReferenceJoin.getPredicate()
-								)
-						);
+					if ( tableReferenceJoin.getJoinedTableReference() == lhsTableReference ) {
+						if ( tableReferenceJoin.getJoinType() != SqlAstJoinType.INNER ) {
+							tableReferenceJoins.set( i, new TableReferenceJoin( true,
+									tableReferenceJoin.getJoinedTableReference(), tableReferenceJoin.getPredicate() ) );
+						}
 						return;
 					}
 				}

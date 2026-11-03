@@ -14,6 +14,7 @@ import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.SQLJoinTableRestriction;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.LegacyOneToOneXmlAnnotation;
@@ -21,6 +22,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.engine.FetchStyle;
+import org.hibernate.mapping.Join;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.models.spi.ClassDetails;
@@ -270,14 +272,23 @@ public class ToOneBinder {
 		}
 		else {
 			final var join = propertyHolder.addJoin( joinTable, false );
-			for ( var joinColumn : joinColumns.getJoinColumns() ) {
-				joinColumn.setExplicitTableName( join.getTable().getName() );
-			}
-			if ( notFoundAction != null ) {
-				join.disableForeignKeyCreation();
-			}
+			configureJoinTable( join, joinColumns, inferredData.getAttributeMember(), notFoundAction );
 			// All FK columns should be in the same table
 			return new org.hibernate.mapping.ManyToOne( context, joinColumns.getTable() );
+		}
+	}
+
+	static void configureJoinTable(
+			Join join, AnnotatedJoinColumns joinColumns, MemberDetails member, NotFoundAction notFoundAction) {
+		for ( var joinColumn : joinColumns.getJoinColumns() ) {
+			joinColumn.setExplicitTableName( join.getTable().getName() );
+		}
+		if ( notFoundAction != null ) {
+			join.disableForeignKeyCreation();
+		}
+		final var restriction = member.getDirectAnnotationUsage( SQLJoinTableRestriction.class );
+		if ( restriction != null ) {
+			join.setSqlRestriction( restriction.value() );
 		}
 	}
 

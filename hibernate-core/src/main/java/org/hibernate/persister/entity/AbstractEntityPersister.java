@@ -375,6 +375,7 @@ public abstract class AbstractEntityPersister
 	private final String sqlWhereStringTableExpression;
 	@Nullable
 	private final String sqlWhereStringTemplate;
+	private final Map<String, String> joinTableRestrictionTemplates;
 
 	//information about properties of this class,
 	//including inherited properties
@@ -663,6 +664,15 @@ public abstract class AbstractEntityPersister
 			sqlWhereStringTemplate =
 					renderSqlWhereStringTemplate( persistentClass, dialect, typeConfiguration );
 		}
+
+		final Map<String, String> joinRestrictions = new HashMap<>();
+		for ( var join : persistentClass.getSubclassJoinClosure() ) {
+			if ( !isEmpty( join.getSqlRestriction() ) ) {
+				joinRestrictions.put( determineTableName( join.getTable() ),
+						Template.renderWhereStringTemplate( "(" + join.getSqlRestriction() + ")", dialect, typeConfiguration ) );
+			}
+		}
+		joinTableRestrictionTemplates = Map.copyOf( joinRestrictions );
 
 		// PROPERTIES
 		final int hydrateSpan = getPropertySpan();
@@ -1663,6 +1673,12 @@ public abstract class AbstractEntityPersister
 				}
 		);
 
+		for ( var restriction : joinTableRestrictionTemplates.entrySet() ) {
+			if ( joinedTableReference.containsAffectedTableName( restriction.getKey() ) ) {
+				conjunction.add( new SqlFragmentPredicate( replace( restriction.getValue(), Template.TEMPLATE,
+						joinedTableReference.getIdentificationVariable() ) ) );
+			}
+		}
 		return conjunction;
 	}
 

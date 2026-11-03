@@ -27,7 +27,7 @@ services:
       - -c
       - checkpoint_timeout=1d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U hibernate_orm_test"]
+      test: ["CMD-SHELL", "psql -U hibernate_orm_test -d hibernate_orm_test -c 'select 1'"]
       interval: 5s
       timeout: 5s
       retries: 10

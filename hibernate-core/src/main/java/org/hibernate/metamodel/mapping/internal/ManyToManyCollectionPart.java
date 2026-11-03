@@ -243,7 +243,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 
 	@Override
 	public boolean isFkOptimizationAllowed() {
-		return true;
+		return !getCollectionAttribute().hasWhereRestrictions();
 	}
 
 	@Nonnull

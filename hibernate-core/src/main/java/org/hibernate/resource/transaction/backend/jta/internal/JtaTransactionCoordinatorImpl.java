@@ -335,20 +335,63 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	// SynchronizationCallbackTarget ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
+	public void validateBeforeCompletion() {
+		try {
+			transactionCoordinatorOwner.validateBeforeCompletion();
+			for ( var observer : observers() ) {
+				observer.validateBeforeCompletion();
+			}
+		}
+		catch (RuntimeException failure) {
+			throw completionFailure( null, failure );
+		}
+	}
+
+	private RuntimeException completionFailure(RuntimeException primary, RuntimeException failure) {
+		if ( primary != null ) {
+			if ( primary != failure ) {
+				primary.addSuppressed( failure );
+			}
+			return primary;
+		}
+		try {
+			// Synchronization-only platforms may never create a transaction delegate.
+			// In that case the propagated beforeCompletion failure aborts completion.
+			if ( physicalTransactionDelegate != null ) {
+				physicalTransactionDelegate.markRollbackOnly();
+			}
+		}
+		catch (RuntimeException markingFailure) {
+			if ( markingFailure != failure ) {
+				failure.addSuppressed( markingFailure );
+			}
+		}
+		return failure;
+	}
+
+	@Override
 	public void beforeCompletion() {
 		JTA_LOGGER.notifyingJtaObserversBeforeCompletion();
+		RuntimeException failure = null;
 		try {
 			transactionCoordinatorOwner.beforeTransactionCompletion();
 		}
-		catch ( Exception e ) {
-			physicalTransactionDelegate.markRollbackOnly();
-			throw e;
+		catch (RuntimeException e) {
+			failure = completionFailure( null, e );
 		}
 		finally {
-			synchronizationRegistry.notifySynchronizationsBeforeTransactionCompletion();
-			for ( var transactionObserver : observers() ) {
-				transactionObserver.beforeCompletion();
+			try {
+				synchronizationRegistry.notifySynchronizationsBeforeTransactionCompletion();
+				for ( var transactionObserver : observers() ) {
+					transactionObserver.beforeCompletion();
+				}
 			}
+			catch (RuntimeException e) {
+				failure = completionFailure( failure, e );
+			}
+		}
+		if ( failure != null ) {
+			throw failure;
 		}
 	}
 

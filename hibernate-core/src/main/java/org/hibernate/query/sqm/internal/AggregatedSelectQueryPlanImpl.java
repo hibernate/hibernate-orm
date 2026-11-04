@@ -6,8 +6,11 @@ import java.util.List;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.internal.scrollable.EmptyScrollableResults;
+import org.hibernate.query.internal.DelegatingDomainQueryExecutionContext;
+import org.hibernate.query.spi.DelegatingQueryOptions;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.Limit;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.sql.results.spi.ResultsConsumer;
 
@@ -31,43 +34,85 @@ public class AggregatedSelectQueryPlanImpl<R> implements SelectQueryPlan<R> {
 	@Override
 	public List<R> performList(DomainQueryExecutionContext executionContext) {
 		final Limit effectiveLimit = executionContext.getQueryOptions().getEffectiveLimit();
-		final int maxRowsJpa = effectiveLimit.getMaxRowsJpa();
-		if ( maxRowsJpa == 0 ) {
+		int remainingRows = effectiveLimit.getMaxRowsJpa();
+		if ( remainingRows == 0 ) {
 			return emptyList();
 		}
 		int elementsToSkip = effectiveLimit.getFirstRowJpa();
 		final List<R> overallResults = new ArrayList<>();
 
 		for ( var aggregatedQueryPlan : aggregatedQueryPlans ) {
-			final List<R> list = aggregatedQueryPlan.performList( executionContext );
-			final int size = list.size();
-			if ( size <= elementsToSkip ) {
-				// More elements to skip than the collection size
-				elementsToSkip -= size;
-				continue;
-			}
-			final int availableElements = size - elementsToSkip;
-			if ( overallResults.size() + availableElements >= maxRowsJpa ) {
-				// This result list is the last one i.e. fulfills the limit
-				final int end = elementsToSkip + ( maxRowsJpa - overallResults.size() );
-				for ( int i = elementsToSkip; i < end; i++ ) {
-					overallResults.add( list.get( i ) );
-				}
+			final List<R> list = aggregatedQueryPlan.performList(
+					effectiveLimit.isEmpty()
+							? executionContext
+							: componentExecutionContext( executionContext, effectiveLimit, elementsToSkip, remainingRows )
+			);
+			final int skipped = Math.min( elementsToSkip, list.size() );
+			elementsToSkip -= skipped;
+			final int included = Math.min( remainingRows, list.size() - skipped );
+			overallResults.addAll( list.subList( skipped, skipped + included ) );
+			remainingRows -= included;
+			if ( remainingRows == 0 ) {
 				break;
-			}
-			else if ( elementsToSkip > 0 ) {
-				// We can skip a part of this result list
-				for ( int i = availableElements; i < size; i++ ) {
-					overallResults.add( list.get( i ) );
-				}
-				elementsToSkip = 0;
-			}
-			else {
-				overallResults.addAll( list );
 			}
 		}
 
 		return overallResults;
+	}
+
+	private static DomainQueryExecutionContext componentExecutionContext(
+			DomainQueryExecutionContext executionContext, Limit effectiveLimit, int elementsToSkip, int remainingRows) {
+		final var queryOptions = executionContext.getQueryOptions();
+		final long requiredRows = (long) elementsToSkip + remainingRows;
+		// A list transformer may discard results, so a SQL row limit cannot bound its output.
+		final Integer maxRows = effectiveLimit.getMaxRows() != null
+				&& requiredRows <= Integer.MAX_VALUE
+				&& queryOptions.isLimitInMemoryEnabled() != Boolean.TRUE
+				&& queryOptions.getResultListTransformer() == null
+				? (int) requiredRows : null;
+		final var limit = new Limit( null, maxRows );
+		final var componentOptions = new DelegatingQueryOptions( queryOptions ) {
+			@Override
+			public Limit getLimit() {
+				return limit;
+			}
+
+			@Override
+			public Limit peekOriginalLimit() {
+				return limit;
+			}
+
+			@Override
+			public Limit getEffectiveLimit() {
+				return limit;
+			}
+
+			@Override
+			public Integer getFirstRow() {
+				return null;
+			}
+
+			@Override
+			public Integer getMaxRows() {
+				return maxRows;
+			}
+
+			@Override
+			public boolean hasLimit() {
+				return !limit.isEmpty();
+			}
+		};
+		return new DelegatingDomainQueryExecutionContext( executionContext ) {
+			@Override
+			public QueryOptions getQueryOptions() {
+				return componentOptions;
+			}
+
+			@Override
+			public Class<?> getResultType() {
+				return executionContext.getResultType();
+			}
+		};
 	}
 
 	@Override

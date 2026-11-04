@@ -8,12 +8,17 @@
 # Two complementary mechanisms transfer state to downstream jobs:
 #
 # 1. GitHub Actions cache (dependency cache):
-#    Stores downloaded dependencies (~/.gradle/caches/, ~/.m2/repository/, wrappers).
+#    Stores downloaded dependencies (~/.gradle/caches/modules-2/, ~/.m2/repository/,
+#    wrappers). Only ~/.gradle/caches/modules-2/ is cached -- not the parent
+#    ~/.gradle/caches/ -- to avoid recreatable directories (transforms, jars,
+#    journal, file-changes) and the build cache (transferred via tarball artifact).
 #    Only the initial build *saves* this cache, and only on non-PR events (push,
 #    schedule, workflow_dispatch) to avoid accumulating per-PR cache entries.
 #    All other jobs -- including the initial build on PRs -- restore it read-only.
 #    OTP jobs use a separate 'otp-gradle-' prefix because they run on self-hosted
-#    runners with GraalVM, whose resolved artifacts may differ.
+#    runners with GraalVM, whose resolved artifacts may differ. These runners
+#    persist their filesystem across runs, so the OTP job sanitizes the user home
+#    before restoring to prevent unbounded accumulation.
 #
 # 2. Build cache tarball (artifact):
 #    The initial build uploads ~/.gradle/caches/build-cache-1 as an artifact.
@@ -111,8 +116,7 @@ jobs:
           path: |
             ~/.m2/repository/
             ~/.m2/wrapper/
-            ~/.gradle/caches/
-            !~/.gradle/caches/build-cache-*
+            ~/.gradle/caches/modules-2/
             ~/.gradle/wrapper/
           key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
           restore-keys: |
@@ -124,8 +128,7 @@ jobs:
           path: |
             ~/.m2/repository/
             ~/.m2/wrapper/
-            ~/.gradle/caches/
-            !~/.gradle/caches/build-cache-*
+            ~/.gradle/caches/modules-2/
             ~/.gradle/wrapper/
           key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
           restore-keys: |
@@ -252,8 +255,7 @@ jobs:
           path: |
             ~/.m2/repository/
             ~/.m2/wrapper/
-            ~/.gradle/caches/
-            !~/.gradle/caches/build-cache-*
+            ~/.gradle/caches/modules-2/
             ~/.gradle/wrapper/
           key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
           restore-keys: |
@@ -391,6 +393,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      # Self-hosted runners persist their filesystem across runs; wipe cached
+      # directories so the save captures only (restored cache + this build's
+      # downloads), not the runner's unbounded accumulated state.
+      - name: Sanitize user home
+        run: .github/ci-prerequisites-otp.sh
       - name: Set up Gradle JDK
         uses: graalvm/setup-graalvm@f70bc8032f90a104502824a54bcb94b6f01715bc # v1.6.8
         with:
@@ -405,13 +412,11 @@ jobs:
           path: |
             ~/.m2/repository/
             ~/.m2/wrapper/
-            ~/.gradle/caches/
-            !~/.gradle/caches/build-cache-*
+            ~/.gradle/caches/modules-2/
             ~/.gradle/wrapper/
           key: otp-gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
           restore-keys: |
             otp-gradle-${{ runner.os }}-
-            gradle-${{ runner.os }}-
       - name: Restore local Gradle repository
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         if: github.event_name == 'pull_request'
@@ -419,13 +424,11 @@ jobs:
           path: |
             ~/.m2/repository/
             ~/.m2/wrapper/
-            ~/.gradle/caches/
-            !~/.gradle/caches/build-cache-*
+            ~/.gradle/caches/modules-2/
             ~/.gradle/wrapper/
           key: otp-gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
           restore-keys: |
             otp-gradle-${{ runner.os }}-
-            gradle-${{ runner.os }}-
       - name: Download build cache
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # 8.0.2
         with:
@@ -504,7 +507,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Reclaim disk space and sanitize user home
-        run: .github/ci-prerequisites-atlas.sh
+        run: .github/ci-prerequisites-otp.sh
       - name: Set up Gradle JDK
         uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
@@ -518,8 +521,7 @@ jobs:
           path: |
             ~/.m2/repository/
             ~/.m2/wrapper/
-            ~/.gradle/caches/
-            !~/.gradle/caches/build-cache-*
+            ~/.gradle/caches/modules-2/
             ~/.gradle/wrapper/
           key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
           restore-keys: |
@@ -579,8 +581,7 @@ jobs:
           path: |
             ~/.m2/repository/
             ~/.m2/wrapper/
-            ~/.gradle/caches/
-            !~/.gradle/caches/build-cache-*
+            ~/.gradle/caches/modules-2/
             ~/.gradle/wrapper/
           key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
           restore-keys: |

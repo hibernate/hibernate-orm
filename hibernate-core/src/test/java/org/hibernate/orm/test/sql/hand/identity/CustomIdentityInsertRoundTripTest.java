@@ -12,10 +12,8 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-/// Custom HBM insert SQL must be used while retrieving a post-insert identity.
-///
 /// @author Steve Ebersole
-@DomainModel(xmlMappings = "org/hibernate/orm/test/sql/hand/identity/CustomIdentityInsert.hbm.xml")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/sql/hand/identity/CustomIdentityInsert.orm.xml")
 @SessionFactory
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 @JiraKey("HHH-3735")

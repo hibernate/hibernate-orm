@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /// Character identifiers must bootstrap and round-trip using legacy XML mappings.
 ///
 /// @author Steve Ebersole
-@DomainModel(xmlMappings = "org/hibernate/orm/test/id/CharacterId.hbm.xml")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/id/CharacterId.orm.xml")
 @SessionFactory
 @JiraKey("HHH-2297")
 public class CharacterIdTest {

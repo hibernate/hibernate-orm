@@ -7,7 +7,6 @@
     <default-lazy>true</default-lazy>
     <entity class="Being" metadata-complete="true">
         <abstract>true</abstract>
-        <table name="Being"/>
         <dynamic-insert>false</dynamic-insert>
         <dynamic-update>false</dynamic-update>
         <select-before-update>false</select-before-update>

@@ -1,8 +1,5 @@
 package org.hibernate.orm.test.xml.version;
 
-/**
- * @author Steve Ebersole
- */
 public class Order {
 	private Integer id;
 	private String referenceCode;

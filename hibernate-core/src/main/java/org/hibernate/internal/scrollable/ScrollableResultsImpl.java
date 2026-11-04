@@ -118,6 +118,7 @@ public class ScrollableResultsImpl<R> extends AbstractScrollableResults<R> {
 
 	private void prepareCurrentRow(boolean underlyingScrollSuccessful) {
 		if ( underlyingScrollSuccessful ) {
+			checkLockingCompletionActive();
 			final PersistenceContext persistenceContext = getPersistenceContext().getPersistenceContext();
 			final LoadContexts loadContexts = persistenceContext.getLoadContexts();
 			loadContexts.register( getJdbcValuesSourceProcessingState() );
@@ -132,6 +133,11 @@ public class ScrollableResultsImpl<R> extends AbstractScrollableResults<R> {
 					persistenceContext.afterLoad();
 				}
 				persistenceContext.initializeNonLazyCollections();
+			}
+			catch (RuntimeException | Error failure) {
+				currentRow = null;
+				failLockingCompletion();
+				throw failure;
 			}
 			finally {
 				loadContexts.deregister( getJdbcValuesSourceProcessingState() );

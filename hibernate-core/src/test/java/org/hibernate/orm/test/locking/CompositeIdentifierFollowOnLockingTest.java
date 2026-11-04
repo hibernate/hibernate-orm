@@ -288,6 +288,29 @@ class CompositeIdentifierFollowOnLockingTest {
 		} );
 	}
 
+	@ParameterizedTest
+	@CsvSource({ "false, false", "false, true", "true, false", "true, true" })
+	void directForceIncrementDoesNotInitializeIdentifierAssociations(boolean derived, boolean readOnly, SessionFactoryScope scope) {
+		final var type = derived ? DerivedItem.class : AssociationItem.class;
+		final var name = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( type ).getEntityName();
+		scope.inTransaction( session -> {
+			session.setDefaultReadOnly( readOnly );
+			scope.getCollectingStatementObserver().clear();
+			final var items = session.createQuery( "from " + name + " order by title", type )
+					.setHibernateLockMode( PESSIMISTIC_FORCE_INCREMENT ).setLockScope( EXTENDED )
+					.setFollowOnStrategy( Locking.FollowOn.DISALLOW ).getResultList();
+			assertThat( items ).hasSize( 2 ).allSatisfy( item -> {
+				assertVersion( session, item, 1 );
+				assertThat( Hibernate.isInitialized( parent( item ) ) ).isFalse();
+				if ( readOnly ) {
+					assertThat( entry( session, item ).getLoadedState() ).isNull();
+				}
+			} );
+			assertThat( scope.getCollectingStatementObserver().getSqlQueries() ).hasSize( 3 )
+					.noneMatch( sql -> sql.contains( "composite_parent" ) || sql.contains( " join " ) );
+		} );
+	}
+
 	static Stream<Arguments> missingRows() {
 		return Stream.of( IdClassItem.class, SecondaryItem.class, JoinedItem.class )
 				.flatMap( type -> Stream.of( false, true ).map( all -> arguments( type, all ) ) );

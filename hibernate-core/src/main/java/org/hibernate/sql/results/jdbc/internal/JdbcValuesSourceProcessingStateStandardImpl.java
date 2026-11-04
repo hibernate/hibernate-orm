@@ -14,6 +14,7 @@ import org.hibernate.loader.ast.internal.ToOneVisibilityLoader;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.LoadedValuesCollector;
+import org.hibernate.sql.exec.internal.lock.DirectLockingCompletion;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
@@ -163,6 +164,10 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 		finishLoadingCollections();
 		getSession().getPersistenceContextInternal()
 				.postLoad( this, null );
+		final var completion = DirectLockingCompletion.from( loadedValuesCollector );
+		if ( completion != null ) {
+			completion.finishLogicalResult();
+		}
 	}
 
 	@Override

@@ -24,6 +24,15 @@ public interface TransactionCoordinatorOwner {
 	boolean isActive();
 
 	/**
+	 * Validate retained state before completion, including when the owner is inactive/closed.
+	 * Must not access services destroyed by factory closure.
+	 *
+	 * @since 8.0
+	 */
+	default void validateBeforeCompletion() {
+	}
+
+	/**
 	 * Callback indicating recognition of entering into a transactional
 	 * context whether that is explicitly via the Hibernate
 	 * {@link org.hibernate.Transaction} API or via registration

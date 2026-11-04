@@ -12,6 +12,7 @@ import org.hibernate.FetchNotFoundException;
 import org.hibernate.Hibernate;
 import org.hibernate.CacheMode;
 import org.hibernate.LockMode;
+import org.hibernate.sql.exec.internal.lock.DirectLockingCompletion;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
 import org.hibernate.annotations.NotFoundAction;
@@ -1454,6 +1455,14 @@ public class EntityInitializerImpl
 						if ( versionAssembler != null ) {
 							checkVersion( data, entityEntry, rowProcessingState );
 						}
+						// Keep validation against the selected version above. Provisional
+						// write protection must not suppress the force-increment intent.
+						final var completion = directLockingCompletion( data );
+						if ( completion != null && data.lockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT ) {
+							completion.register( data.entityKey, data.entityInstanceForNotify, entityEntry );
+							entityEntry.setLockMode( LockMode.PESSIMISTIC_WRITE );
+							return;
+						}
 						if ( data.lockMode.requiresVersion() && data.entityHolder.getEntityInitializer() == null ) {
 							// An already loaded entity will not receive a post-load event,
 							// so perform the version check or increment required by the lock mode.
@@ -1793,6 +1802,10 @@ public class EntityInitializerImpl
 		registerNaturalIdResolution( data, persistenceContext, resolvedEntityState );
 
 		takeSnapshot( data, session, persistenceContext, entityEntry, previousEntityEntry, resolvedEntityState );
+		final var completion = directLockingCompletion( data );
+		if ( completion != null && data.lockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT ) {
+			completion.register( entityKey, entityInstanceForNotify, entityEntry );
+		}
 
 		data.concreteDescriptor.afterInitialize( entityInstanceForNotify, session );
 		entityEntry.postLoad( entityInstanceForNotify );
@@ -1829,12 +1842,19 @@ public class EntityInitializerImpl
 		if ( data.getRowProcessingState().isTransactionActive() ) {
 			// from the perspective of Hibernate, an entity is read locked as soon as it is read
 			// so regardless of the requested lock mode, we upgrade to at least the read level
-			return data.lockMode == LockMode.NONE ? LockMode.READ : data.lockMode;
+			return data.lockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT && directLockingCompletion( data ) != null
+					? LockMode.PESSIMISTIC_WRITE
+					: data.lockMode == LockMode.NONE ? LockMode.READ : data.lockMode;
 		}
 		else {
 			// data read outside transaction is marked as unlocked
 			return LockMode.NONE;
 		}
+	}
+
+	private static DirectLockingCompletion directLockingCompletion(EntityInitializerData data) {
+		return DirectLockingCompletion.from(
+				data.getRowProcessingState().getJdbcValuesSourceProcessingState().getLoadedValuesCollector() );
 	}
 
 	protected void updateCaches(

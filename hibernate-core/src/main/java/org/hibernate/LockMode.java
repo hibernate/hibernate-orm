@@ -173,6 +173,11 @@ public enum LockMode implements FindOption, RefreshOption {
 	 * {@link #PESSIMISTIC_READ} or {@link #PESSIMISTIC_WRITE} increments the
 	 * version immediately. Repeating this mode when it is already held by a
 	 * stateful session does not itself cause another increment.
+	 * <p>
+	 * Direct loads using {@link PessimisticLockScope#EXTENDED} complete
+	 * supplemental collection locking before incrementing. Loading callbacks may
+	 * observe the original version and provisional {@link #PESSIMISTIC_WRITE}
+	 * protection; the increment completes before the result is exposed.
 	 *
 	 * @see LockModeType#PESSIMISTIC_FORCE_INCREMENT
 	 */

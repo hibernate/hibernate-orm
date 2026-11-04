@@ -197,6 +197,17 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 		return transformer == null ? results.getResults() : transformer.transformList( results.getResults() );
 	}
 
+	@Override
+	public boolean supportsDeferredResultFinalization() {
+		return true;
+	}
+
+	@Override
+	public List<R> finishResult(List<R> result, ExecutionContext executionContext) {
+		final ResultListTransformer<R> transformer = getResultListTransformer( executionContext );
+		return transformer == null ? result : transformer.transformList( result );
+	}
+
 	@SuppressWarnings("unchecked")
 	private static <R> ResultListTransformer<R> getResultListTransformer(ExecutionContext executionContext) {
 		return (ResultListTransformer<R>) executionContext.getQueryOptions().getResultListTransformer();

@@ -8,6 +8,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.spi.RowReader;
+import org.hibernate.sql.exec.internal.lock.DirectLockingCompletion;
 
 /**
  * Base implementation of the ScrollableResults interface intended for sharing between
@@ -78,6 +79,20 @@ public abstract class AbstractScrollableResults<R> implements ScrollableResults<
 		getPersistenceContext().afterScrollOperation();
 	}
 
+	protected void checkLockingCompletionActive() {
+		final var completion = DirectLockingCompletion.from( jdbcValuesSourceProcessingState.getLoadedValuesCollector() );
+		if ( completion != null ) {
+			completion.checkActive();
+		}
+	}
+
+	protected void failLockingCompletion() {
+		final var completion = DirectLockingCompletion.from( jdbcValuesSourceProcessingState.getLoadedValuesCollector() );
+		if ( completion != null ) {
+			completion.fail();
+		}
+	}
+
 	@Override
 	public void setFetchSize(int fetchSize) {
 		getJdbcValues().setFetchSize( fetchSize );
@@ -86,6 +101,7 @@ public abstract class AbstractScrollableResults<R> implements ScrollableResults<
 	@Override
 	public final void close() {
 		if ( !closed ) {
+			failLockingCompletion();
 			rowReader.finishUp( rowProcessingState );
 			jdbcValues.finishUp( persistenceContext );
 			getPersistenceContext().getJdbcCoordinator().afterStatementExecution();

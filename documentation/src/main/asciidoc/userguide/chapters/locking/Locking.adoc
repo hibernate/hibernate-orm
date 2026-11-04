@@ -134,6 +134,17 @@ For a versioned entity, requesting `PESSIMISTIC_FORCE_INCREMENT` after `PESSIMIS
 Repeating `PESSIMISTIC_FORCE_INCREMENT` when that mode is already held does not cause another increment merely because the request is repeated.
 Choose the required mode before relying on its increment behavior.
 
+For direct entity loading with `PESSIMISTIC_FORCE_INCREMENT` and `EXTENDED` scope, Hibernate completes supplemental collection-table locking before performing the requested version increments.
+The direct read establishes root protection; while supplemental acquisition is pending, the recorded mode is `PESSIMISTIC_WRITE`.
+Lifecycle callbacks, including `@PostLoad`, and row/tuple transformation still run during loading and may observe the original version and pending protection.
+For these executions, result-list transformation runs after acquisition and increment completion, so it observes the completed versions.
+Streams and scrolls complete the current logical result before exposing it, including results that were already managed.
+A failure on a later cursor result does not undo earlier results, and closing a cursor does not increment unconsumed results.
+
+An optimistic force increment scheduled before a pessimistic force increment remains independent: the pessimistic increment occurs before result exposure, and the scheduled optimistic increment may advance the version again before commit.
+Failed pessimistic acquisition does not cancel that previously scheduled optimistic work.
+An optimistic force-increment request made after pessimistic protection is already held retains the mode-composition behavior described above.
+
 Mode ordering and scope acquisition are separate concerns.
 An `EXTENDED` pessimistic request can acquire collection-table and owned join-table locks even when the entity already holds an equal or stronger mode.
 Repeating the request can be necessary after collection replacement or changes to the relevant managed state.

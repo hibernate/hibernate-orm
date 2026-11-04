@@ -6,6 +6,8 @@ import java.util.List;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
+import org.hibernate.sql.exec.internal.lock.LoadedValuesCollectorFactory;
+import org.hibernate.query.ResultListTransformer;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcActionExecution;
 import org.hibernate.sql.exec.spi.JdbcSelect;
@@ -22,6 +24,7 @@ import org.hibernate.sql.results.spi.RowTransformer;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -157,6 +160,71 @@ class JdbcSelectFailureCleanupTest {
 		};
 		assertThatThrownBy( () -> executor.executeQuery( select, null, context, null, Object[].class,
 				null, mock( ResultsConsumer.class ) ) ).isSameAs( original );
+	}
+
+	@ParameterizedTest
+	@CsvSource({ "false, none", "true, none", "true, post-action", "true, finalizer" })
+	void deferredFinalizationRespectsConsumerOptInAndCleanup(boolean optIn, String phase) {
+		final var session = mock( SharedSessionContractImplementor.class, RETURNS_DEEP_STUBS );
+		final var context = mock( ExecutionContext.class );
+		final var options = mock( QueryOptions.class );
+		final var transformer = mock( ResultListTransformer.class );
+		when( options.getResultListTransformer() ).thenReturn( transformer );
+		when( context.getSession() ).thenReturn( session );
+		when( context.getQueryOptions() ).thenReturn( options );
+		final var select = mock( JdbcSelect.class );
+		when( select.getLoadedValuesCollectorFactory() ).thenReturn( new LoadedValuesCollectorFactory( List.of() ).withDeferredForceIncrement() );
+		final var original = new IllegalStateException( phase );
+		final List<String> events = new ArrayList<>();
+		final org.hibernate.sql.exec.spi.PostAction restore = (a, c, e, l) -> events.add( "restore" );
+		final org.hibernate.sql.exec.spi.PostAction acquire = (a, c, e, l) -> {
+			events.add( "acquire" );
+			if ( phase.equals( "post-action" ) ) { throw original; }
+		};
+		when( select.createActionExecution() ).thenReturn( JdbcActionExecution.fromActions( null,
+				new org.hibernate.sql.exec.spi.PostAction[] { restore, acquire } ) );
+		final var values = mock( JdbcValues.class );
+		final RowReader<Object[]> reader = mock( RowReader.class );
+		final Object raw = new Object();
+		final Object finalized = new Object();
+		final ResultsConsumer<Object, Object[]> consumer = new ResultsConsumer<>() {
+			@Override public boolean canResultsBeCached() { return false; }
+			@Override public boolean supportsDeferredResultFinalization() { return optIn; }
+			@Override public Object consume(JdbcValues v, SharedSessionContractImplementor s, JdbcValuesSourceProcessingOptions o,
+					JdbcValuesSourceProcessingState state, RowProcessingState row, RowReader<Object[]> r) {
+				assertThat( row.getQueryOptions().getResultListTransformer() ).isSameAs( optIn ? null : transformer );
+				events.add( "consume" );
+				v.finishUp( s );
+				return raw;
+			}
+			@Override public Object finishResult(Object result, ExecutionContext originalContext) {
+				assertThat( result ).isSameAs( raw );
+				assertThat( originalContext ).isSameAs( context );
+				assertThat( originalContext.getQueryOptions().getResultListTransformer() ).isSameAs( transformer );
+				events.add( "finish" );
+				if ( phase.equals( "finalizer" ) ) { throw original; }
+				return finalized;
+			}
+		};
+		final var executor = new JdbcSelectExecutorStandardImpl() {
+			@Override protected JdbcValues resolveJdbcValuesSource(String identifier, JdbcSelect operation, boolean cacheable,
+					ExecutionContext execution, ResultSetAccess access) { return values; }
+		};
+		try ( var accesses = mockConstruction( DeferredResultSetAccess.class ); var helpers = mockStatic( ResultsHelper.class ) ) {
+			helpers.when( () -> ResultsHelper.createRowReader( any(), any(), any(), same( values ) ) ).thenReturn( reader );
+			if ( phase.equals( "none" ) ) {
+				assertThat( executor.executeQuery( select, null, context, (RowTransformer<Object[]>) row -> row,
+						Object[].class, null, consumer ) ).isSameAs( optIn ? finalized : raw );
+			}
+			else {
+				assertThatThrownBy( () -> executor.executeQuery( select, null, context, (RowTransformer<Object[]>) row -> row,
+						Object[].class, null, consumer ) ).isSameAs( original );
+				verify( accesses.constructed().get( 0 ), times( 1 ) ).release();
+			}
+			assertThat( events ).containsExactlyElementsOf( optIn && !phase.equals( "post-action" )
+					? List.of( "consume", "restore", "acquire", "finish" ) : List.of( "consume", "restore", "acquire" ) );
+			verify( values, times( 1 ) ).finishUp( session );
+		}
 	}
 
 	private static Throwable failure(boolean error, String message) {

@@ -23,11 +23,18 @@ import java.util.Map;
 import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
 
 /**
- * PostAction intended to perform collection locking with
- * {@linkplain PessimisticLockScope#EXTENDED} for Dialects
- * which support "table hint locking" (T-SQL variants).
+ * Supplemental collection locking for direct executions using
+ * {@linkplain PessimisticLockScope#EXTENDED}.
+ * <p>
+ * Direct force increments are completed only after the collection acquisitions
+ * succeed. Cursor completion runs after all lifecycle notifications for the
+ * logical result, rather than from the first entity's after-load callback.
  *
  * @author Steve Ebersole
+ * @implSpec Integrations overriding the protected acquisition method must retain
+ * the ordering provided by {@link DirectLockingCompletion}. Asynchronous integrations
+ * retain the collector's invocation-owned state until acquisition and increment
+ * completion; no thread-local or session-wide completion state is required.
  */
 public class CollectionLockingAction implements PostAction {
 	// Used by Hibernate Reactive
@@ -49,11 +56,10 @@ public class CollectionLockingAction implements PostAction {
 			JdbcSelectWithActionsBuilder jdbcSelectBuilder) {
 		assert lockOptions.getLockScope() == PessimisticLockScope.EXTENDED;
 
-		// NOTE: we need to set this separately so that it can get incorporated into
-		// the JdbcValuesSourceProcessingState for proper callbacks
-//		jdbcSelectBuilder.setLoadedValuesCollector( () -> resolveLoadedValuesCollector( lockingTarget ) );
-
-		jdbcSelectBuilder.setLoadedValuesCollectorFactory( resolveLoadedValuesCollectorFactory( lockingTarget) );
+		final var factory = resolveLoadedValuesCollectorFactory( lockingTarget );
+		jdbcSelectBuilder.setLoadedValuesCollectorFactory(
+				lockOptions.getLockMode() == LockMode.PESSIMISTIC_FORCE_INCREMENT
+						? factory.withDeferredForceIncrement() : factory );
 
 		// additionally, add a post-action which uses the collected values.
 		jdbcSelectBuilder.appendPostAction( new CollectionLockingAction(
@@ -71,11 +77,24 @@ public class CollectionLockingAction implements PostAction {
 			ExecutionContext executionContext,
 			LoadedValuesCollector loadedValuesCollector) {
 		if ( executionContext.isScrollResult() ) {
-			executionContext.getCallback().registerAfterLoadAction( (entity, entityMappingType, session) -> {
-				performPostAction( executionContext, loadedValuesCollector );
-				loadedValuesCollector.getCollectedCollections().clear();
-				loadedValuesCollector.getCollectedEntities().clear();
-			} );
+			final Runnable acquisition = () -> {
+				try {
+					performPostAction( executionContext, loadedValuesCollector );
+				}
+				finally {
+					loadedValuesCollector.getCollectedCollections().clear();
+					loadedValuesCollector.getCollectedEntities().clear();
+				}
+			};
+			final var completion = DirectLockingCompletion.from( loadedValuesCollector );
+			if ( completion != null ) {
+				// A per-entity after-load callback is too early when the logical row
+				// contains several entities whose lifecycle notifications must run first.
+				completion.registerCursorAcquisition( acquisition );
+			}
+			else {
+				executionContext.getCallback().registerAfterLoadAction( (entity, entityMappingType, session) -> acquisition.run() );
+			}
 		}
 		else {
 			performPostAction( executionContext, loadedValuesCollector );
@@ -84,6 +103,16 @@ public class CollectionLockingAction implements PostAction {
 
 	// Used by Hibernate Reactive
 	protected void performPostAction(ExecutionContext executionContext, LoadedValuesCollector loadedValuesCollector) {
+		final var completion = DirectLockingCompletion.from( loadedValuesCollector );
+		if ( completion == null ) {
+			lockCollections( executionContext, loadedValuesCollector );
+		}
+		else {
+			completion.complete( () -> lockCollections( executionContext, loadedValuesCollector ), executionContext.getSession() );
+		}
+	}
+
+	private void lockCollections(ExecutionContext executionContext, LoadedValuesCollector loadedValuesCollector) {
 		LockingHelper.logLoadedValues( loadedValuesCollector );
 
 		final var session = executionContext.getSession();

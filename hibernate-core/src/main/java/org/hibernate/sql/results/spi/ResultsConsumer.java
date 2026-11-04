@@ -1,6 +1,7 @@
 package org.hibernate.sql.results.spi;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
@@ -28,4 +29,18 @@ public interface ResultsConsumer<T, R> {
 			RowReader<R> rowReader);
 
 	boolean canResultsBeCached();
+
+	/// Whether this consumer can finish its result after successful locking post-actions.
+	/// Participating consumers receive query options without a result-list transformer
+	/// during consumption; [#finishResult] receives the original options.
+	default boolean supportsDeferredResultFinalization() {
+		return false;
+	}
+
+	/// Finalizes an affected direct force-increment result once its supplemental locks
+	/// and increments have completed. No row-processing state may escape `consume()`.
+	/// This hook is not called for ordinary, non-deferred executions.
+	default T finishResult(T result, ExecutionContext executionContext) {
+		return result;
+	}
 }

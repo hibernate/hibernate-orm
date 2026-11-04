@@ -10,6 +10,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.sql.exec.internal.lock.LockingHelper;
+import org.hibernate.sql.exec.internal.lock.DirectLockingCompletion;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcLockingApplication;
@@ -215,10 +216,14 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			loadedValuesCollector = jdbcSelect.getLoadedValuesCollectorFactory() == null
 					? null
 					: jdbcSelect.getLoadedValuesCollectorFactory().build();
+			final boolean deferFinalization = DirectLockingCompletion.from( loadedValuesCollector ) != null
+					&& resultsConsumer.supportsDeferredResultFinalization();
+			final ExecutionContext resultContext = deferFinalization
+					? new DeferredResultFinalizationContext( executionContext ) : executionContext;
 			final var valuesProcessingState = new JdbcValuesSourceProcessingStateStandardImpl(
 					loadedValuesCollector,
 					processingOptions,
-					executionContext
+					resultContext
 			);
 
 			final var rowReader = ResultsHelper.createRowReader(
@@ -228,7 +233,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 					jdbcValues
 			);
 
-			final var rowProcessingState = new RowProcessingStateStandardImpl( valuesProcessingState, executionContext, rowReader, jdbcValues );
+			final var rowProcessingState = new RowProcessingStateStandardImpl( valuesProcessingState, resultContext, rowReader, jdbcValues );
 
 			final T result = resultsConsumer.consume(
 					jdbcValues,
@@ -240,14 +245,19 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			);
 
 			actionExecution.performPostActions( true, statementAccess, connection, executionContext, loadedValuesCollector );
+			final T finishedResult = deferFinalization ? resultsConsumer.finishResult( result, executionContext ) : result;
 
 			if ( stats ) {
-				logQueryStatistics( jdbcSelect, executionContext, startTime, result, statistics );
+				logQueryStatistics( jdbcSelect, executionContext, startTime, finishedResult, statistics );
 			}
 
-			return result;
+			return finishedResult;
 		}
 		catch (RuntimeException | Error e) {
+			final var completion = DirectLockingCompletion.from( loadedValuesCollector );
+			if ( completion != null ) {
+				completion.fail();
+			}
 			try {
 				actionExecution.cleanupAfterFailure( e, statementAccess, connection, executionContext, loadedValuesCollector );
 			}

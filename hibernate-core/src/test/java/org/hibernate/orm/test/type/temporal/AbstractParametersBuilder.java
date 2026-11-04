@@ -135,7 +135,7 @@ public class AbstractParametersBuilder<V,D extends Data<V>,B extends AbstractPar
 		}
 		if ( canDirectJdbc ) {
 			result.add( new Parameter<>(
-					new Environment( defaultJvmTimeZone, forcedJdbcTimeZone, null, true ),
+					new Environment( defaultJvmTimeZone, forcedJdbcTimeZone, null, true, !directJdbcOnly ),
 					testData
 			) );
 		}

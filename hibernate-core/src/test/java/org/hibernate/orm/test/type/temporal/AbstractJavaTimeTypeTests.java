@@ -200,6 +200,8 @@ public abstract class AbstractJavaTimeTypeTests<T, E>
 				"This test verifies backward compatibility: values written with Hibernate ORM"
 				+ " using legacy JDBC should be readable with Hibernate ORM using direct JDBC." );
 
+		// Direct-only inputs must not reach the unsupported legacy strategy through this compatibility check.
+		Assumptions.assumeTrue( env.legacyJdbcSupported(), "This input does not support legacy JDBC access" );
 		assumeLegacyWriteThenDirectReadSupported();
 
 		Timezones.withDefaultTimeZone( env, () -> {

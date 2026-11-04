@@ -157,7 +157,7 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 		return new AnnotatedFieldDescription( enhancementContext, fields.getOnly() );
 	}
 
-	private static @Nonnull FieldList<?> findFields(TypeDescription declaredOwnedType, String name, String desc) {
+	static @Nonnull FieldList<?> findFields(TypeDescription declaredOwnedType, String name, String desc) {
 		TypeDefinition ownerType = declaredOwnedType;
 		final var fieldFilter = named( name ).and( hasDescriptor( desc ) );
 		FieldList<?> fields = ownerType.getDeclaredFields().filter( fieldFilter );

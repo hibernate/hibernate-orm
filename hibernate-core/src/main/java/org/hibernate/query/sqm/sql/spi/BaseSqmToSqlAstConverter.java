@@ -4515,11 +4515,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				tableGroupToUse = null;
 			}
 			else if ( inferredEntityMapping instanceof ToOneAttributeMapping toOneAttributeMapping ) {
-				// If the inferred mapping is a to-one association,
-				// we use the FK target part, which must be located on the entity mapping
-				final ModelPart targetPart = toOneAttributeMapping.getForeignKeyDescriptor().getPart(
-						toOneAttributeMapping.getSideNature().inverse()
-				);
+				// An inverse association is rendered using the associated entity's identifier,
+				// so the compared expression must use that identifier as well.
+				// For an owning association, we can use the FK target part, which may be a unique key.
+				final ModelPart targetPart =
+						toOneAttributeMapping.getSideNature() == ForeignKeyDescriptor.Nature.TARGET
+								? toOneAttributeMapping.getAssociatedEntityMappingType().getIdentifierMapping()
+								: toOneAttributeMapping.getForeignKeyDescriptor().getTargetPart();
 				if ( entityValuedModelPart.getPartMappingType() == toOneAttributeMapping.getPartMappingType() ) {
 					resultModelPart = targetPart;
 				}

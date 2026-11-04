@@ -72,7 +72,7 @@ defaults:
 
 env:
   GRADLE_JAVA_VERSION: '25'
-  COMMON_GRADLE_ARGS: "-Igradle/init.gradle"
+  COMMON_GRADLE_ARGS: "-Igradle/init.gradle -Dscan.uploadInBackground=false"
   MIRROR_MAVEN_CENTRAL_URL: "https://maven-central.storage-download.googleapis.com/maven2/"
   MIRROR_MAVEN_CENTRAL_FALLBACK: "true"
   JPA_PREVIEW: "true"
@@ -213,7 +213,10 @@ jobs:
         run: |
           echo "ENTRY_LABEL=${_LABEL//[\":<>|*?\\\/]/-}" >> "$GITHUB_ENV"
         env:
-          _LABEL: ${{ matrix.name }}
+          _LABEL: >-
+            ${{ matrix.name
+            }}${{ matrix.java-test-version && format(' {0}', matrix.java-test-version)
+            || '' }}
 
       # --- JDK setup ---
       # Install test/build JDKs first (if needed), capture their homes,

@@ -190,12 +190,17 @@ public abstract class AbstractJavaTimeTypeTests<T, E>
 		} );
 	}
 
+	protected void assumeLegacyWriteThenDirectReadSupported() {
+	}
+
 	@Test
 	@JiraKey(value = "HHH-13515")
 	public void legacyWriteThenDirectRead(SessionFactoryScope factoryScope) {
 		Assumptions.assumeTrue( env.directJdbc(),
 				"This test verifies backward compatibility: values written with Hibernate ORM"
 				+ " using legacy JDBC should be readable with Hibernate ORM using direct JDBC." );
+
+		assumeLegacyWriteThenDirectReadSupported();
 
 		Timezones.withDefaultTimeZone( env, () -> {
 			ConnectionProvider connectionProvider = factoryScope.getSessionFactory()

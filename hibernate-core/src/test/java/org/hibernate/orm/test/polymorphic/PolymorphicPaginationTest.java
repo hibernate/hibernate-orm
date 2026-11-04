@@ -3,13 +3,16 @@ package org.hibernate.orm.test.polymorphic;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.hibernate.jpa.HibernateHints;
 
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Tuple;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -18,13 +21,19 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 
+import static jakarta.persistence.FetchType.LAZY;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DomainModel( annotatedClasses = {
 		PolymorphicPaginationTest.Left.class,
 		PolymorphicPaginationTest.Right.class,
-		PolymorphicPaginationTest.Empty.class
+		PolymorphicPaginationTest.Empty.class,
+		PolymorphicPaginationTest.Parent.class
 } )
 @SessionFactory( generateStatistics = true )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17986" )
@@ -34,14 +43,22 @@ class PolymorphicPaginationTest {
 	@BeforeEach
 	void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
+			final var parents = new Parent[3];
+			for ( int i = 0; i < parents.length; i++ ) {
+				parents[i] = new Parent();
+				parents[i].id = i + 1;
+				session.persist( parents[i] );
+			}
 			for ( int i = 1; i <= 4; i++ ) {
 				final var entity = new Left();
 				entity.id = i;
+				entity.parent = parents[i <= 3 ? 0 : 1];
 				session.persist( entity );
 			}
 			for ( int i = 5; i <= 6; i++ ) {
 				final var entity = new Right();
 				entity.id = i;
+				entity.parent = parents[2];
 				session.persist( entity );
 			}
 		} );
@@ -85,15 +102,29 @@ class PolymorphicPaginationTest {
 		} );
 	}
 
-	@Test
-	void apiOverridesHqlPagination(SessionFactoryScope scope) {
+	@ParameterizedTest
+	@CsvSource( { "false,false", "false,true", "true,false", "true,true" } )
+	void apiOverridesHqlPagination(boolean collectionFetch, boolean inMemory, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final var query = session.createSelectionQuery( QUERY + " limit 1 offset 5", Base.class );
+			final String hql = QUERY + (collectionFetch ? " left join fetch e.tags" : "");
+			final var query = session.createSelectionQuery( hql + " limit 1 offset 5", Base.class )
+					.setHint( HibernateHints.HINT_LIMIT_IN_MEMORY, inMemory );
 			assertPage( query.setFirstResult( 1 ).setMaxResults( 4 ).list(), 1, 4 );
-			assertPage( session.createSelectionQuery( QUERY + " limit 2 offset 5", Base.class )
-					.setFirstResult( 1 ).list(), 1, 2 );
-			assertPage( session.createSelectionQuery( QUERY + " limit 1 offset 2", Base.class )
-					.setMaxResults( 4 ).list(), 2, 4 );
+			assertPage( session.createSelectionQuery( hql + " limit 2 offset 5", Base.class )
+					.setHint( HibernateHints.HINT_LIMIT_IN_MEMORY, inMemory )
+					.setFirstResult( 1 ).list(), 1, 6 );
+			assertPage( session.createSelectionQuery( hql + " limit 1 offset 5", Base.class )
+					.setHint( HibernateHints.HINT_LIMIT_IN_MEMORY, inMemory )
+					.setMaxResults( 4 ).list(), 0, 4 );
+			assertPage( session.createSelectionQuery( hql + " limit 0 offset 5", Base.class )
+					.setHint( HibernateHints.HINT_LIMIT_IN_MEMORY, inMemory )
+					.setMaxResults( 4 ).list(), 0, 4 );
+			assertPage( session.createSelectionQuery( hql + " limit 2 offset 5", Base.class )
+					.setHint( HibernateHints.HINT_LIMIT_IN_MEMORY, inMemory )
+					.setFirstResult( 0 ).list(), 0, 6 );
+			assertPage( session.createSelectionQuery( hql + " limit 1 offset 5", Base.class )
+					.setHint( HibernateHints.HINT_LIMIT_IN_MEMORY, inMemory )
+					.setMaxResults( 0 ).list(), 0, 0 );
 		} );
 	}
 
@@ -127,6 +158,41 @@ class PolymorphicPaginationTest {
 			assertPage( session.createSelectionQuery( QUERY + " limit 1 offset 1", Base.class ).list(), 1, 1 );
 		} );
 		assertThat( statistics.getEntityLoadCount() ).isEqualTo( 2 );
+	}
+
+	@ParameterizedTest
+	@MethodSource( "projections" )
+	void projectionLoadsOnlyRequiredPrefix(String hql, Class<?> resultType, SessionFactoryScope scope) {
+		final var statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
+		scope.inTransaction( session -> {
+			assertThat( session.createSelectionQuery( hql, resultType )
+					.setFirstResult( 1 ).setMaxResults( 1 ).list() ).hasSize( 1 );
+		} );
+		assertThat( statistics.getQueryStatistics( hql ).getExecutionRowCount() ).isEqualTo( 2 );
+	}
+
+	static Stream<Arguments> projections() {
+		return Stream.of(
+				Arguments.of( "select e.id " + QUERY, Integer.class ),
+				Arguments.of( "select e.id, e.id " + QUERY, Object[].class ),
+				Arguments.of( "select e.id, e.id " + QUERY, Tuple.class ),
+				Arguments.of( "select new " + IdView.class.getName() + "(e.id) " + QUERY, IdView.class ),
+				Arguments.of( "select e.id, e.id " + QUERY, PairView.class ),
+				Arguments.of( "select e " + QUERY + " join e.tags t", Object[].class ),
+				Arguments.of( "select e " + QUERY + " join e.tags t", Tuple.class ),
+				Arguments.of( "select new " + EntityView.class.getName() + "(e) " + QUERY, EntityView.class )
+		);
+	}
+
+	@Test
+	void entityAssociationProjection(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var page = session.createSelectionQuery(
+					"select e.parent " + QUERY + " order by e.id", Parent.class )
+					.setFirstResult( 1 ).setMaxResults( 1 ).list();
+			assertThat( page ).extracting( parent -> parent.id ).containsExactly( 2 );
+		} );
 	}
 
 	@Test
@@ -212,6 +278,9 @@ class PolymorphicPaginationTest {
 		@Id
 		int id;
 
+		@ManyToOne( fetch = LAZY )
+		Parent parent;
+
 		@ElementCollection
 		Set<String> tags = new HashSet<>( Set.of( "a", "b", "c" ) );
 	}
@@ -226,5 +295,20 @@ class PolymorphicPaginationTest {
 
 	@Entity( name = "PaginationEmpty" )
 	public static class Empty extends Base {
+	}
+
+	@Entity( name = "PaginationParent" )
+	public static class Parent {
+		@Id
+		int id;
+	}
+
+	public record IdView(int id) {
+	}
+
+	public record EntityView(Base entity) {
+	}
+
+	public record PairView(int id, int copy) {
 	}
 }

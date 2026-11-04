@@ -4,7 +4,7 @@
 
     <entity class="org.hibernate.orm.test.legacy.Top"
             access="PROPERTY" metadata-complete="true">
-        <table name="rootclass"/>
+        <table name="root_class"/>
         <dynamic-insert>true</dynamic-insert>
         <dynamic-update>true</dynamic-update>
         <select-before-update>true</select-before-update>

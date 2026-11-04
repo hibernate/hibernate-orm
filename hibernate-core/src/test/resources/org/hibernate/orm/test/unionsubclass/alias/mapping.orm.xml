@@ -28,7 +28,6 @@
     </entity>
     <entity class="Customer" metadata-complete="true">
         <abstract>true</abstract>
-        <table name="Customer"/>
         <dynamic-insert>false</dynamic-insert>
         <dynamic-update>false</dynamic-update>
         <select-before-update>false</select-before-update>

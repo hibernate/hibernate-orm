@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /// Verifies that fetching a many-to-one by a non-primary-key property does not require another select.
 ///
 /// @author Steve Ebersole
-@DomainModel(xmlMappings = "org/hibernate/orm/test/propertyref/basic/ManyToOnePropertyRefJoinFetch.hbm.xml")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/propertyref/basic/ManyToOnePropertyRefJoinFetch.orm.xml")
 @SessionFactory(useCollectingStatementObserver = true)
 @JiraKey("HHH-2473")
 public class ManyToOnePropertyRefJoinFetchTest {

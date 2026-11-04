@@ -1630,8 +1630,9 @@ public class EntityInitializerImpl
 		if ( loadedValuesCollector != null && data.entityHolder.getEntityInitializer() == null ) {
 			loadedValuesCollector.registerEntity( getNavigablePath(), data.concreteDescriptor, data.entityKey, true );
 		}
-		if ( data.hasCallbackActions ) {
-			// This is only needed for follow-on locking, so skip registering the entity if there is no callback
+		// Cursor post-actions register acquisition callbacks after initializer data is
+		// created. Check the live context so managed-only results also run them.
+		if ( data.getRowProcessingState().hasCallbackActions() ) {
 			data.entityHolder.markAsReloaded( processingState );
 		}
 	}

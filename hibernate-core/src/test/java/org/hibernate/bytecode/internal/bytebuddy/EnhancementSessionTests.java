@@ -16,6 +16,8 @@ import org.hibernate.bytecode.enhance.spi.EnhancementSession;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 
+import org.hibernate.testing.orm.junit.JiraKey;
+
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.ClassFileLocator;
 import org.junit.jupiter.api.Test;
@@ -155,6 +157,22 @@ class EnhancementSessionTests {
 	}
 
 	@Test
+	@JiraKey("HHH-18402")
+	void unavailableUnrelatedFieldOwnerDoesNotPreventEnhancement() throws Exception {
+		final var resources = EnhancementEnvironment.forClassLoader( getClass().getClassLoader() );
+		final EnhancementEnvironment withoutDto = name -> name.equals( Dto.class.getName() )
+				? null : resources.locate( name );
+		try ( var session = new BytecodeProviderImpl().createEnhancementSession(
+				new DefaultEnhancementModel(), withoutDto ) ) {
+			final var enhancer = session.createEnhancer( EnhancementOptions.of( true, true, false ) );
+			assertThat( describe( EntityWithDtoAccess.class,
+					enhancer.enhance( EntityWithDtoAccess.class.getName(), bytes( EntityWithDtoAccess.class ) ) )
+					.getInterfaces().asErasures().stream().map( TypeDescription::getName ) )
+					.contains( SelfDirtinessTracker.class.getName() );
+		}
+	}
+
+	@Test
 	void customLocatorIsBorrowed() throws Exception {
 		final var closed = new java.util.concurrent.atomic.AtomicBoolean();
 		final var locator = ModelTypePool.buildModelTypePool( new ClassFileLocator() {
@@ -239,6 +257,25 @@ class EnhancementSessionTests {
 	@Entity
 	static class Simple {
 		@Id int id;
+		String name;
+	}
+
+	@Entity
+	static class EntityWithDtoAccess {
+		@Id int id;
+		String name;
+
+		// Keep the DTO out of method signatures, which already require type resolution during enhancement.
+		void copyTo(Object target) {
+			( (Dto) target ).name = name;
+		}
+
+		void copyFrom(Object source) {
+			name = ( (Dto) source ).name;
+		}
+	}
+
+	static class Dto {
 		String name;
 	}
 }

@@ -261,11 +261,17 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		for ( var enhancedField : enhancedFields ) {
 			if ( enhancedField.getName().equals( name )
 					&& enhancedField.getDescriptor().equals( desc ) ) {
+				if ( enhancedField.getDeclaringType().asErasure().getInternalName().equals( owner ) ) {
+					return enhancedField;
+				}
 				if ( declaringType == null ) {
 					// The bytecode may name a subclass as the owner of an inherited field.
 					// Resolve the declaration first, including any field hiding along the way.
-					final var ownerType = classPool.describe( owner.replace( '/', '.' ) ).resolve();
-					declaringType = FieldAccessEnhancer.findFields( ownerType, name, desc )
+					final var resolution = classPool.describe( owner.replace( '/', '.' ) );
+					if ( !resolution.isResolved() ) {
+						return null;
+					}
+					declaringType = FieldAccessEnhancer.findFields( resolution.resolve(), name, desc )
 							.getOnly().getDeclaringType();
 				}
 				if ( enhancedField.getDeclaringType().asErasure().equals( declaringType.asErasure() ) ) {

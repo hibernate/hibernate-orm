@@ -8,7 +8,6 @@ import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.NaturalIdResolutions;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.Resolution;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -17,7 +16,6 @@ import org.hibernate.stat.internal.StatsHelper;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +26,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableCollection;
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
 import static org.hibernate.engine.internal.NaturalIdLogging.NATURAL_ID_LOGGER;
+import static org.hibernate.pretty.MessageHelper.naturalIdToLoggableString;
 
 public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializable {
 
@@ -60,31 +59,6 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 		return getEntityResolutions( session().getFactory().getMappingMetamodel().getEntityDescriptor( entityType ) );
 	}
 
-	private static String naturalIdToLoggableString(
-			@Nullable Object naturalId, EntityMappingType entityDescriptor, SessionFactoryImplementor factory) {
-		final var naturalIdMapping = entityDescriptor.getNaturalIdMapping();
-		if ( naturalId == null || naturalIdMapping == null ) {
-			return String.valueOf( naturalId );
-		}
-		final var attributes = naturalIdMapping.getNaturalIdAttributes();
-		final var propertyTypes = entityDescriptor.getEntityPersister().getPropertyTypes();
-		if ( attributes.size() == 1 ) {
-			// A simple natural id may be wrapped, but an array may itself be its scalar value.
-			if ( naturalId instanceof Object[] values && values.length == 1
-					&& !naturalIdMapping.isNormalized( naturalId ) ) {
-				naturalId = values[0];
-			}
-			return propertyTypes[attributes.get( 0 ).getStateArrayPosition()]
-					.toLoggableString( naturalId, factory );
-		}
-		final var values = (Object[]) naturalId;
-		final var loggableValues = new String[attributes.size()];
-		for ( int i = 0; i < attributes.size(); i++ ) {
-			loggableValues[i] = propertyTypes[attributes.get( i ).getStateArrayPosition()]
-					.toLoggableString( values[i], factory );
-		}
-		return Arrays.toString( loggableValues );
-	}
 
 	@Override
 	public boolean cacheResolution(Object id, Object naturalId, EntityMappingType entityDescriptor) {

@@ -23,6 +23,15 @@ public interface TransactionObserver {
 	void beforeCompletion();
 
 	/**
+	 * Validate retained state before completion, including when the owner is inactive/closed.
+	 * Must not access services destroyed by factory closure.
+	 *
+	 * @since 8.0
+	 */
+	default void validateBeforeCompletion() {
+	}
+
+	/**
 	 * Callback for processing the last phase of transaction completion.
 	 *
 	 * @param successful Was the transaction successful?

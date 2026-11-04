@@ -80,6 +80,8 @@ import static org.hibernate.jdbc.Expectations.createExpectation;
 @Internal
 public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
+	private static final String SUBSELECT_ALIAS = " sub_";
+
 	// the class hierarchy structure
 	private final String subquery;
 	private final String tableName;
@@ -573,6 +575,10 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 							.append( tableNameResolver != null
 									? tableNameResolver.apply( qualifiedName )
 									: qualifiedName );
+					if ( table.isSubselect() ) {
+						// some databases require a derived table to have an alias
+						subquery.append( SUBSELECT_ALIAS );
+					}
 				}
 			}
 			return subquery.append( ")" ).toString();
@@ -680,6 +686,10 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 						.append( auxMapping != null
 								? auxMapping.resolveTableName( subclassTableName )
 								: subclassTableName );
+				if ( subclassTableName.charAt( 0 ) == '(' ) {
+					// some databases require a derived table to have an alias
+					unionSubquery.append( SUBSELECT_ALIAS );
+				}
 			}
 		}
 		return unionSubquery.append( ")" ).toString();

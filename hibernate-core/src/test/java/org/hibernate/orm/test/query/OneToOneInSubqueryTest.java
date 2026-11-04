@@ -102,6 +102,16 @@ public class OneToOneInSubqueryTest {
 	}
 
 	@Test
+	void testHqlRootEqualsInverseAssociation(SessionFactoryScope scope) {
+		scope.inTransaction( session -> assertThat( session.createSelectionQuery(
+				"select p from Project p, Audit a where p = a.project and a.name = :name",
+				Project.class
+		).setParameter( "name", "wanted" ).getResultList() )
+				.extracting( result -> result.id )
+				.containsExactly( 17L ) );
+	}
+
+	@Test
 	void testHqlRootInSubquerySelectingInverseAssociation(SessionFactoryScope scope) {
 		scope.inTransaction( session -> assertThat( session.createSelectionQuery(
 				"from Project p where p in (select a.project from Audit a where a.name = :name)",

@@ -682,11 +682,11 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				}
 				unionSubquery.append( persister.getDiscriminatorSQLValue() )
 						.append( " as clazz_" );
-				unionSubquery.append( " from " )
-						.append( auxMapping != null
-								? auxMapping.resolveTableName( subclassTableName )
-								: subclassTableName );
-				if ( subclassTableName.charAt( 0 ) == '(' ) {
+				final var resolvedTableName = auxMapping != null
+						? auxMapping.resolveTableName( subclassTableName )
+						: subclassTableName;
+				unionSubquery.append( " from " ).append( resolvedTableName );
+				if ( resolvedTableName.charAt( 0 ) == '(' ) {
 					// some databases require a derived table to have an alias
 					unionSubquery.append( SUBSELECT_ALIAS );
 				}

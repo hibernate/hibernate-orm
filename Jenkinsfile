@@ -26,7 +26,7 @@ stage('Configure') {
 	//   (HANA Cloud lockable resource)
 	//   CockroachDB: Dedicated Jenkins worker node
 	this.environments = [
-		new BuildEnvironment( node: 's390x' )
+		new BuildEnvironment( tagPrefix: 'Semeru ', node: 's390x' )
 	];
 
 	if ( env.CHANGE_ID ) {
@@ -170,9 +170,10 @@ class BuildEnvironment {
 	boolean dbLockResourceAsHost
 	String additionalOptions
 	boolean longRunning
+	String tagPrefix
 
 	String toString() { getTag() }
-	String getTag() { "${node ? node + "_" : ''}${testJdkVersion ? 'jdk_' + testJdkVersion + '_' : '' }${dbName}" }
+	String getTag() { "${tagPrefix}${node ? node + "_" : ''}${testJdkVersion ? 'jdk_' + testJdkVersion + '_' : '' }${dbName}" }
 	String getRdbms() { dbName.contains("_") ? dbName.substring(0, dbName.indexOf('_')) : dbName }
 }
 

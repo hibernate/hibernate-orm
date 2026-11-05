@@ -13,6 +13,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
@@ -73,6 +74,14 @@ public interface AuxiliaryMapping {
 			TableGroupJoin tableGroupJoin,
 			SqlAliasBaseGenerator sqlAliasBaseGenerator,
 			LoadQueryInfluencers loadQueryInfluencers);
+
+	/**
+	 * @deprecated Use {@link #applyPredicate(TableGroupJoin, SqlAliasBaseGenerator, LoadQueryInfluencers)} instead.
+	 */
+	@Deprecated
+	default void applyPredicate(TableGroupJoin tableGroupJoin, LoadQueryInfluencers loadQueryInfluencers) {
+		applyPredicate( tableGroupJoin, new SqlAliasBaseManager(), loadQueryInfluencers );
+	}
 
 	void applyPredicate(
 			Supplier<Consumer<Predicate>> predicateCollector,

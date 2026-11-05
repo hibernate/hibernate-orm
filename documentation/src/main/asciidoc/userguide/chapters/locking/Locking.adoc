@@ -434,6 +434,7 @@ Failure classification depends on the database failure and API exception convers
 |===
 |Failure |Classification and handling
 |Stale version or a required row missing during follow-on acquisition |A stale-state or optimistic conflict, commonly exposed as `OptimisticLockException` at a Jakarta Persistence boundary. A missing row is not successful acquisition or a lock timeout.
+|Database snapshot or serialization conflict, including during deferred optimistic validation |The database may reject the validating read before Hibernate can compare versions. Native causes may include `TransactionSerializationException`, `SnapshotIsolationException`, or `LockAcquisitionException`, depending on the dialect; the failure need not be exposed as `OptimisticLockException`. Roll back and retry the whole transaction using a fresh persistence context.
 |Pessimistic acquisition failure aborting the transaction |`PessimisticLockException` at a Jakarta Persistence boundary; the transaction must be rolled back.
 |Statement-level acquisition timeout |`LockTimeoutException` at a Jakarta Persistence boundary. This exception does not itself require Hibernate to mark the transaction rollback-only.
 |Query execution timeout |Distinct from a lock timeout. `QueryTimeoutException` represents statement-level failure; a transaction-aborting failure may be exposed as a broader persistence exception.

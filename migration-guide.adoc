@@ -111,6 +111,37 @@ invocation-local instances without invoking callbacks. Retain these instances
 across asynchronous completion and preserve phase ordering, single-attempt
 cleanup, and exception precedence. Materialization requires no thread affinity.
 
+[[direct-force-increment-result-completion]]
+=== Direct force-increment result completion
+
+Direct loads using `PESSIMISTIC_FORCE_INCREMENT` with `EXTENDED` scope now complete
+supplemental collection-table acquisition before incrementing versions. Loading
+callbacks and tuple transformers may observe the original versions and provisional
+`PESSIMISTIC_WRITE` mode. Standard result-list transformation runs after successful
+acquisition and increments, before returning the result to the caller.
+
+`ResultsConsumer` adds `supportsDeferredResultFinalization()` and `finishResult()`.
+The opt-in defaults to `false`, preserving custom consumers' existing consumption
+timing. Custom materializing consumers which need final transformation to observe
+completed versions must opt in. For affected executions, `consume()` receives query
+options with the result-list transformer withheld; `finishResult()` receives the
+original execution context and options after successful locking post-actions.
+Complete row processing in `consume()` without retaining its processing state for
+finalization, and apply deferred result-list transformation once in `finishResult()`.
+The finalization hook is not called for ordinary, non-deferred executions.
+Decorators must preserve the wrapped consumer's opt-in and finalization behavior.
+
+Cursor consumers may retain processing state in the returned cursor. Complete
+acquisition and increments for each logical result after all its post-load
+notifications and before exposing it. Closing a cursor must not increment
+unconsumed results. Asynchronous execution integrations must retain the collector's
+invocation-owned completion state until supplemental acquisition and increments
+finish, preserving this ordering and failure cleanup.
+
+Previously scheduled optimistic force increments remain independent of this
+completion state. Completing or failing a pessimistic acquisition must not cancel
+those transaction-completion callbacks.
+
 [[persistence-context]]
 === Removed `PersistenceContext.reentrantSafeEntityEntries()`
 

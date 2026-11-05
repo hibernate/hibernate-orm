@@ -9114,28 +9114,32 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected boolean areAllResultsParameters(CaseSearchedExpression caseSearchedExpression) {
 		final List<CaseSearchedExpression.WhenFragment> whenFragments = caseSearchedExpression.getWhenFragments();
-		final Expression firstResult = whenFragments.get( 0 ).getResult();
-		if ( isParameter( firstResult ) ) {
-			for ( int i = 1; i < whenFragments.size(); i++ ) {
-				if ( !isParameter( whenFragments.get( i ).getResult() ) ) {
-					return false;
+		if ( !whenFragments.isEmpty() ) {
+			final Expression firstResult = whenFragments.get( 0 ).getResult();
+			if ( isParameter( firstResult ) ) {
+				for ( int i = 1; i < whenFragments.size(); i++ ) {
+					if ( !isParameter( whenFragments.get( i ).getResult() ) ) {
+						return false;
+					}
 				}
+				return true;
 			}
-			return true;
 		}
 		return false;
 	}
 
 	protected boolean areAllResultsParameters(CaseSimpleExpression caseSimpleExpression) {
 		final List<CaseSimpleExpression.WhenFragment> whenFragments = caseSimpleExpression.getWhenFragments();
-		final Expression firstResult = whenFragments.get( 0 ).getResult();
-		if ( isParameter( firstResult ) ) {
-			for ( int i = 1; i < whenFragments.size(); i++ ) {
-				if ( !isParameter( whenFragments.get( i ).getResult() ) ) {
-					return false;
+		if ( !whenFragments.isEmpty() ) {
+			final Expression firstResult = whenFragments.get( 0 ).getResult();
+			if ( isParameter( firstResult ) ) {
+				for ( int i = 1; i < whenFragments.size(); i++ ) {
+					if ( !isParameter( whenFragments.get( i ).getResult() ) ) {
+						return false;
+					}
 				}
+				return true;
 			}
-			return true;
 		}
 		return false;
 	}

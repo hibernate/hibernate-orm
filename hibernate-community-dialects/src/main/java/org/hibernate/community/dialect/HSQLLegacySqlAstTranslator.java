@@ -155,42 +155,46 @@ public class HSQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 
 	protected boolean areAllResultsPlainParametersOrStringLiterals(CaseSearchedExpression caseSearchedExpression) {
 		final List<CaseSearchedExpression.WhenFragment> whenFragments = caseSearchedExpression.getWhenFragments();
-		final Expression firstResult = whenFragments.get( 0 ).getResult();
-		if ( isParameter( firstResult ) && getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT
+		if  ( !whenFragments.isEmpty() ) {
+			final Expression firstResult = whenFragments.get( 0 ).getResult();
+			if ( isParameter( firstResult ) && getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT
 				|| isStringLiteral( firstResult ) ) {
-			for ( int i = 1; i < whenFragments.size(); i++ ) {
-				final Expression result = whenFragments.get( i ).getResult();
-				if ( isParameter( result ) ) {
-					if ( getParameterRenderingMode() != SqlAstNodeRenderingMode.DEFAULT ) {
+				for ( int i = 1; i < whenFragments.size(); i++ ) {
+					final Expression result = whenFragments.get( i ).getResult();
+					if ( isParameter( result ) ) {
+						if ( getParameterRenderingMode() != SqlAstNodeRenderingMode.DEFAULT ) {
+							return false;
+						}
+					}
+					else if ( !isStringLiteral( result ) ) {
 						return false;
 					}
 				}
-				else if ( !isStringLiteral( result ) ) {
-					return false;
-				}
+				return true;
 			}
-			return true;
 		}
 		return false;
 	}
 
 	protected boolean areAllResultsPlainParametersOrStringLiterals(CaseSimpleExpression caseSimpleExpression) {
 		final List<CaseSimpleExpression.WhenFragment> whenFragments = caseSimpleExpression.getWhenFragments();
-		final Expression firstResult = whenFragments.get( 0 ).getResult();
-		if ( isParameter( firstResult ) && getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT
+		if ( !whenFragments.isEmpty() ) {
+			final Expression firstResult = whenFragments.get( 0 ).getResult();
+			if ( isParameter( firstResult ) && getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT
 				|| isStringLiteral( firstResult ) ) {
-			for ( int i = 1; i < whenFragments.size(); i++ ) {
-				final Expression result = whenFragments.get( i ).getResult();
-				if ( isParameter( result ) ) {
-					if ( getParameterRenderingMode() != SqlAstNodeRenderingMode.DEFAULT ) {
+				for ( int i = 1; i < whenFragments.size(); i++ ) {
+					final Expression result = whenFragments.get( i ).getResult();
+					if ( isParameter( result ) ) {
+						if ( getParameterRenderingMode() != SqlAstNodeRenderingMode.DEFAULT ) {
+							return false;
+						}
+					}
+					else if ( !isStringLiteral( result ) ) {
 						return false;
 					}
 				}
-				else if ( !isStringLiteral( result ) ) {
-					return false;
-				}
+				return true;
 			}
-			return true;
 		}
 		return false;
 	}

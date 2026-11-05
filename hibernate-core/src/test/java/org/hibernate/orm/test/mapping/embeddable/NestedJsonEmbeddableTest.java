@@ -18,6 +18,7 @@ import java.util.UUID;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -81,6 +82,23 @@ public class NestedJsonEmbeddableTest {
 		scope.inSession(
 				session -> {
 					List<JsonHolder> jsonHolders = session.createQuery( "from JsonHolder b where b.id = 1", JsonHolder.class ).getResultList();
+					assertEquals( 1, jsonHolders.size() );
+					JsonHolder jsonHolder = jsonHolders.get( 0 );
+					assertEquals( 1L, jsonHolder.getId() );
+					assertEquals( "XYZ", jsonHolder.theJson.stringField );
+					assertEquals( 10, jsonHolder.theJson.simpleEmbeddable.integerField );
+					assertEquals( "String \"<abc>A&B</abc>\"", jsonHolder.theJson.simpleEmbeddable.doubleNested.theNested.theLeaf.stringField );
+					assertStructEquals( EmbeddableAggregate.createAggregate1(), jsonHolder.getAggregate() );
+				}
+		);
+	}
+
+	@Test
+	@JiraKey( "HHH-18660" )
+	public void testNativeQueryWithEntityResult(SessionFactoryScope scope) {
+		scope.inSession(
+				session -> {
+					List<JsonHolder> jsonHolders = session.createNativeQuery( "select * from JsonHolder b where b.id = 1", JsonHolder.class ).getResultList();
 					assertEquals( 1, jsonHolders.size() );
 					JsonHolder jsonHolder = jsonHolders.get( 0 );
 					assertEquals( 1L, jsonHolder.getId() );

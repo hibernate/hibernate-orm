@@ -10,6 +10,7 @@ import org.hibernate.Incubating;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.creation.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.spi.creation.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.query.from.LazyTableGroup;
 import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
@@ -99,6 +100,12 @@ public interface AuxiliaryMapping {
 			@Nonnull TableGroupJoin tableGroupJoin,
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
 			@Nonnull LoadQueryInfluencers loadQueryInfluencers);
+
+	/// @deprecated Use [#applyPredicate(TableGroupJoin, SqlAliasBaseGenerator, LoadQueryInfluencers)] instead.
+	@Deprecated
+	default void applyPredicate(@Nonnull TableGroupJoin tableGroupJoin, @Nonnull LoadQueryInfluencers loadQueryInfluencers) {
+		applyPredicate( tableGroupJoin, new SqlAliasBaseManager(), loadQueryInfluencers );
+	}
 
 	/// Applies the auxiliary row restriction for a resolved root table
 	/// reference.

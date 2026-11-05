@@ -8,9 +8,11 @@ import org.hibernate.orm.test.envers.entities.collection.BigDecimalMapEntity;
 import org.hibernate.orm.test.envers.tools.TestTools;
 import org.hibernate.testing.envers.junit.EnversTest;
 import org.hibernate.testing.orm.junit.BeforeClassTemplate;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -41,6 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @EnversTest
 @Jpa(annotatedClasses = {BigDecimalMapEntity.class})
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsNumericPrimaryKey.class )
 public class BigDecimalMapTest {
 	private BigDecimal entity_id;
 

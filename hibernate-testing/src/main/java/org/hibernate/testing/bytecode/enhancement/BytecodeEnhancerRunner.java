@@ -112,6 +112,11 @@ public class BytecodeEnhancerRunner extends Suite {
 				}
 
 				@Override
+				public boolean doLenientConstructorTracking() {
+					return options.lenientConstructorTracking();
+				}
+
+				@Override
 				public UnsupportedEnhancementStrategy getUnsupportedEnhancementStrategy() {
 					final UnsupportedEnhancementStrategy strategy = options.unsupportedEnhancementStrategy();
 					return strategy != SKIP ? strategy : super.getUnsupportedEnhancementStrategy();

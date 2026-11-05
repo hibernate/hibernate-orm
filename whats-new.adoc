@@ -39,3 +39,17 @@ now recognized and bound as a true one-to-one association instead of falling bac
 many-to-one. For each physical join column that is also part of the owner's primary key, Hibernate
 infers `insertable=false, updatable=false`, since the identifier mapping already owns that column's
 value. See the link:{userGuideBase}#associations-one-to-one-formulas[user guide] for details and examples.
+
+[[flexible-constructor-enhancement]]
+== Bytecode enhancement with Java 25+ flexible constructors
+
+Bytecode enhancement now supports entities whose constructors use Java 25+ flexible constructor
+bodies (https://openjdk.org/jeps/513[JEP 513]), where field writes occur before `super()`.
+Field accesses on `this` before `super()` are emitted as raw `PUTFIELD`/`GETFIELD` (since
+`INVOKEVIRTUAL` is illegal on `uninitializedThis`), with dirty tracking deferred to after the
+`super()` call. Field accesses on other fully-initialized objects are enhanced normally.
+
+If the enhancer encounters an unrecognized bytecode pattern in a constructor before `super()`, it
+fails by default. Set `lenientConstructorTracking` to `true` in your build plugin configuration
+(Gradle, Maven, or Ant) to fall back to skipping enhancement for the affected constructor instead.
+See link:{versionDocBase}/javadocs/org/hibernate/bytecode/enhance/spi/EnhancementOptions.html#doLenientConstructorTracking()[`EnhancementOptions.doLenientConstructorTracking()`].

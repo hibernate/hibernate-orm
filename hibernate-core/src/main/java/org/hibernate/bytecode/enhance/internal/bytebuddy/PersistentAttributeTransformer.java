@@ -18,6 +18,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
+import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 
 import org.hibernate.annotations.Immutable;
@@ -36,7 +37,10 @@ import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.implementation.StubMethod;
 import net.bytebuddy.implementation.bytecode.ByteCodeAppender;
 import net.bytebuddy.jar.asm.AnnotationVisitor;
+import net.bytebuddy.jar.asm.ClassReader;
+import net.bytebuddy.jar.asm.ClassWriter;
 import net.bytebuddy.jar.asm.FieldVisitor;
+import net.bytebuddy.jar.asm.Label;
 import net.bytebuddy.jar.asm.MethodVisitor;
 import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
@@ -220,40 +224,253 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 			TypePool typePool,
 			int writerFlags,
 			int readerFlags) {
+		if ( instrumentedMethod.isConstructor() ) {
+			return wrapMethodWithPreSuperFieldAccess( methodVisitor );
+		}
+		return wrapMethodWithoutPreSuperFieldAccess( methodVisitor );
+	}
+
+	private MethodVisitor wrapMethodWithoutPreSuperFieldAccess(MethodVisitor methodVisitor) {
 		return new MethodVisitor( OpenedClassReader.ASM_API, methodVisitor ) {
 			@Override
 			public void visitFieldInsn(int opcode, String owner, String name, String desc) {
-				final var enhancedField = getEnhancedField( owner, name, desc );
-				if ( enhancedField != null ) {
-					switch ( opcode ) {
-						case Opcodes.GETFIELD:
-							methodVisitor.visitMethodInsn(
-									Opcodes.INVOKEVIRTUAL,
-									owner,
-									PERSISTENT_FIELD_READER_PREFIX + name,
-									"()" + desc,
-									false
-							);
-							return;
-						case Opcodes.PUTFIELD:
-							if ( enhancedField.getFieldDescription().isFinal() ) {
-								// Final fields will only be written to from the constructor,
-								// so there's no point trying to replace final field writes with a method call.
-								break;
-							}
-							methodVisitor.visitMethodInsn(
-									Opcodes.INVOKEVIRTUAL,
-									owner,
-									PERSISTENT_FIELD_WRITER_PREFIX + name,
-									"(" + desc + ")V",
-									false
-							);
-							return;
-					}
+				if ( !emitFieldAccessReplacement( methodVisitor, opcode, owner, name, desc ) ) {
+					super.visitFieldInsn( opcode, owner, name, desc );
 				}
-				super.visitFieldInsn( opcode, owner, name, desc );
 			}
 		};
+	}
+
+	private boolean emitFieldAccessReplacement(
+			MethodVisitor mv, int opcode, String owner, String name, String desc) {
+		final var enhancedField = getEnhancedField( owner, name, desc );
+		if ( enhancedField != null ) {
+			switch ( opcode ) {
+				case Opcodes.GETFIELD:
+					mv.visitMethodInsn(
+							Opcodes.INVOKEVIRTUAL,
+							owner,
+							PERSISTENT_FIELD_READER_PREFIX + name,
+							"()" + desc,
+							false
+					);
+					return true;
+				case Opcodes.PUTFIELD:
+					// Final fields will only be written to from the constructor,
+					// so there's no point trying to replace final field writes with a method call.
+					if ( !enhancedField.getFieldDescription().isFinal() ) {
+						mv.visitMethodInsn(
+								Opcodes.INVOKEVIRTUAL,
+								owner,
+								PERSISTENT_FIELD_WRITER_PREFIX + name,
+								"(" + desc + ")V",
+								false
+						);
+						return true;
+					}
+					break;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Handles constructors that may use Java 25+ flexible constructors (JEP 513),
+	 * where field writes occur before {@code super()}.
+	 * <p>
+	 * Before {@code super()}, {@code this} is {@code uninitializedThis} -- {@code INVOKEVIRTUAL}
+	 * is illegal on it, so we cannot replace {@code PUTFIELD}/{@code GETFIELD} with the
+	 * {@code $$_hibernate_write/read_<field>} calls. Field accesses on other (fully initialized)
+	 * objects are still replaced normally.
+	 * <p>
+	 * A {@link UninitializedThisTracker} determines at transformation time whether each
+	 * {@code PUTFIELD}/{@code GETFIELD} targets {@code this} or another object.
+	 * <p>
+	 * For field writes on {@code this}, we keep the original {@code PUTFIELD} and replay the
+	 * dirty-tracking side effects after {@code super()}. Boolean locals track which fields were
+	 * written with a value that differs from the JVM default ({@code null}/{@code 0}). These
+	 * booleans are checked after {@code super()} to emit deferred dirty tracking and composite
+	 * owner setup.
+	 */
+	private MethodVisitor wrapMethodWithPreSuperFieldAccess(MethodVisitor methodVisitor) {
+		final var trackerHolder = new UninitializedThisTracker[1];
+		var recorder = new RecordingMethodVisitor( OpenedClassReader.ASM_API, methodVisitor ) {
+			private final List<AnnotatedFieldDescription> enhancedFieldsWrittenBeforeSuper =
+					new ArrayList<>();
+
+			private AnnotatedFieldDescription getDirtyTrackableField(
+					String owner, String name, String desc) {
+				if ( !enhancementContext.doDirtyCheckingInline() ) {
+					return null;
+				}
+				for ( var field : enhancedFields ) {
+					if ( field.getName().equals( name )
+							&& field.getDescriptor().equals( desc )
+							&& field.getDeclaringType().asErasure()
+									.getInternalName().equals( owner )
+							&& !field.getFieldDescription().isFinal()
+							&& InlineDirtyCheckingHandler.isDirtyTrackable(
+									enhancementContext, managedCtClass, field ) ) {
+						return field;
+					}
+				}
+				return null;
+			}
+
+			@Override
+			public void visitCode() {
+				record( mv -> {
+					mv.visitCode();
+					for ( int i = 0; i < enhancedFieldsWrittenBeforeSuper.size(); i++ ) {
+						mv.visitInsn( Opcodes.ICONST_0 );
+						mv.visitVarInsn( Opcodes.ISTORE, getMaxLocals() + i );
+					}
+				} );
+			}
+
+			@Override
+			public void visitFieldInsn(
+					int opcode, String owner, String name, String desc) {
+				var tracker = trackerHolder[0];
+				if ( !tracker.isBeforeSuperCall() ) {
+					record( mv -> {
+						if ( !emitFieldAccessReplacement(
+								mv, opcode, owner, name, desc ) ) {
+							mv.visitFieldInsn( opcode, owner, name, desc );
+						}
+					} );
+					return;
+				}
+				if ( tracker.isTrackingLost()
+						&& ( opcode == Opcodes.PUTFIELD
+								|| opcode == Opcodes.GETFIELD ) ) {
+					if ( !enhancementContext.doLenientConstructorTracking() ) {
+						throw new EnhancementException(
+								"Failed to analyze constructor bytecode"
+										+ " before super() call in "
+										+ managedCtClass.getName() + "."
+										+ " Set lenientConstructorTracking = true"
+										+ " in your enhancement configuration"
+										+ " to fall back to skipping enhancement"
+										+ " for this constructor"
+										+ " (Gradle/Ant: lenientConstructorTracking = true,"
+										+ " Maven: <lenientConstructorTracking>true"
+										+ "</lenientConstructorTracking>)."
+						);
+					}
+					record( mv -> mv.visitFieldInsn(
+							opcode, owner, name, desc ) );
+					return;
+				}
+				if ( tracker.lastFieldTargetedThis() ) {
+					if ( opcode == Opcodes.PUTFIELD ) {
+						var field = getDirtyTrackableField(
+								owner, name, desc );
+						if ( field != null ) {
+							var idx = enhancedFieldsWrittenBeforeSuper
+									.indexOf( field );
+							if ( idx < 0 ) {
+								idx = enhancedFieldsWrittenBeforeSuper
+										.size();
+								enhancedFieldsWrittenBeforeSuper.add(
+										field );
+							}
+							final var boolIdx = idx;
+							record( mv -> emitDefaultValueComparison(
+									mv, desc, boolIdx ) );
+						}
+					}
+					record( mv -> mv.visitFieldInsn(
+							opcode, owner, name, desc ) );
+				}
+				else {
+					record( mv -> {
+						if ( !emitFieldAccessReplacement(
+								mv, opcode, owner, name, desc ) ) {
+							mv.visitFieldInsn(
+									opcode, owner, name, desc );
+						}
+					} );
+				}
+			}
+
+			@Override
+			public void visitMethodInsn(
+					int opcode, String owner, String name,
+					String descriptor, boolean isInterface) {
+				var tracker = trackerHolder[0];
+				if ( tracker.lastMethodWasSuperCall() ) {
+					record( mv -> {
+						mv.visitMethodInsn(
+								opcode, owner, name,
+								descriptor, isInterface );
+						emitConditionalDirtyTracking( mv );
+					} );
+					return;
+				}
+				super.visitMethodInsn(
+						opcode, owner, name, descriptor, isInterface );
+			}
+
+			private void emitDefaultValueComparison(
+					MethodVisitor mv, String desc, int boolIdx) {
+				var skipLabel = new Label();
+				if ( desc.startsWith( "L" ) || desc.startsWith( "[" ) ) {
+					mv.visitInsn( Opcodes.DUP );
+					mv.visitJumpInsn( Opcodes.IFNULL, skipLabel );
+				}
+				else if ( "J".equals( desc ) ) {
+					mv.visitInsn( Opcodes.DUP2 );
+					mv.visitInsn( Opcodes.LCONST_0 );
+					mv.visitInsn( Opcodes.LCMP );
+					mv.visitJumpInsn( Opcodes.IFEQ, skipLabel );
+				}
+				else if ( "D".equals( desc ) ) {
+					mv.visitInsn( Opcodes.DUP2 );
+					mv.visitInsn( Opcodes.DCONST_0 );
+					mv.visitInsn( Opcodes.DCMPL );
+					mv.visitJumpInsn( Opcodes.IFEQ, skipLabel );
+				}
+				else if ( "F".equals( desc ) ) {
+					mv.visitInsn( Opcodes.DUP );
+					mv.visitInsn( Opcodes.FCONST_0 );
+					mv.visitInsn( Opcodes.FCMPL );
+					mv.visitJumpInsn( Opcodes.IFEQ, skipLabel );
+				}
+				else {
+					mv.visitInsn( Opcodes.DUP );
+					mv.visitJumpInsn( Opcodes.IFEQ, skipLabel );
+				}
+				mv.visitInsn( Opcodes.ICONST_1 );
+				mv.visitVarInsn( Opcodes.ISTORE, getMaxLocals() + boolIdx );
+				mv.visitLabel( skipLabel );
+			}
+
+			private void emitConditionalDirtyTracking(MethodVisitor mv) {
+				if ( enhancedFieldsWrittenBeforeSuper.isEmpty() ) {
+					return;
+				}
+				final var owner = managedCtClass.getInternalName();
+				for ( int i = 0; i < enhancedFieldsWrittenBeforeSuper.size(); i++ ) {
+					final var field = enhancedFieldsWrittenBeforeSuper.get( i );
+					final var skipLabel = new Label();
+					mv.visitVarInsn( Opcodes.ILOAD, getMaxLocals() + i );
+					mv.visitJumpInsn( Opcodes.IFEQ, skipLabel );
+					if ( InlineDirtyCheckingHandler.isCompositeOwnerField(
+								enhancementContext, field ) ) {
+						CodeTemplates.CompositeFieldDirtyCheckingHandler
+								.emitCompositeOwnerSetup(
+										mv, owner, field.getName(),
+										field.getDescriptor() );
+					}
+					InlineDirtyCheckingHandler.emitTrackChange(
+							mv, owner, field.getName() );
+					mv.visitLabel( skipLabel );
+				}
+			}
+		};
+		trackerHolder[0] = new UninitializedThisTracker( OpenedClassReader.ASM_API, recorder );
+		return trackerHolder[0];
 	}
 
 	private AnnotatedFieldDescription getEnhancedField(String owner, String name, String desc) {
@@ -302,7 +519,10 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 				)
 		);
 
-		builder = builder.visit( new AsmVisitorWrapper.ForDeclaredMethods().invokable( NOT_HIBERNATE_GENERATED, this ) );
+		builder = builder.visit( new AsmVisitorWrapper.ForDeclaredMethods()
+				.invokable( NOT_HIBERNATE_GENERATED, this )
+				.writerFlags( ClassWriter.COMPUTE_FRAMES )
+				.readerFlags( ClassReader.EXPAND_FRAMES ) );
 		// Remove the final modifier from all enhanced fields, because:
 		// 1. We sometimes need to write to final fields when they are lazy.
 		// 2. Those fields are already written to by Hibernate ORM through reflection anyway.

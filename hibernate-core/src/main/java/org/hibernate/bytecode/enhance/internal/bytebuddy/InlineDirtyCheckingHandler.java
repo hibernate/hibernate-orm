@@ -50,6 +50,22 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 		this.applyLazyCheck = applyLazyCheck;
 	}
 
+	static boolean isDirtyTrackable(
+			ByteBuddyEnhancementContext enhancementContext,
+			TypeDescription managedCtClass,
+			AnnotatedFieldDescription field) {
+		if ( enhancementContext.isMappedSuperclassClass( managedCtClass ) ) {
+			return false;
+		}
+		if ( enhancementContext.isCompositeClass( managedCtClass ) ) {
+			return false;
+		}
+		return !field.hasAnnotation( Id.class )
+				&& !field.hasAnnotation( EmbeddedId.class )
+				&& !( field.getType().asErasure().isAssignableTo( Collection.class )
+				&& enhancementContext.isMappedCollection( field ) );
+	}
+
 	static Implementation wrap(
 			TypeDescription managedCtClass,
 			ByteBuddyEnhancementContext enhancementContext,
@@ -60,10 +76,7 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 			if ( enhancementContext.isCompositeClass( managedCtClass ) ) {
 				implementation = Advice.to( CodeTemplates.CompositeDirtyCheckingHandler.class ).wrap( implementation );
 			}
-			else if ( !persistentField.hasAnnotation( Id.class )
-					&& !persistentField.hasAnnotation( EmbeddedId.class )
-					&& !( persistentField.getType().asErasure().isAssignableTo( Collection.class )
-					&& enhancementContext.isMappedCollection( persistentField ) ) ) {
+			else if ( isDirtyTrackable( enhancementContext, managedCtClass, persistentField ) ) {
 				implementation = new InlineDirtyCheckingHandler(
 						implementation,
 						managedCtClass,
@@ -72,10 +85,7 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 				);
 			}
 
-			if ( enhancementContext.isCompositeField( persistentField )
-				&& !persistentField.hasAnnotation( EmbeddedId.class )
-				// Don't do composite owner tracking for records
-				&& !persistentField.getType().isRecord() ) {
+			if ( isCompositeOwnerField( enhancementContext, persistentField ) ) {
 
 				// HHH-13759 - Call getter on superclass if field is not visible
 				// An embedded field won't be visible if declared private in a superclass
@@ -95,6 +105,32 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 		}
 		return implementation;
 	}
+
+	static boolean isCompositeOwnerField(
+			ByteBuddyEnhancementContext enhancementContext,
+			AnnotatedFieldDescription field) {
+		return enhancementContext.isCompositeField( field )
+				&& !field.hasAnnotation( EmbeddedId.class )
+				&& !field.getType().isRecord();
+	}
+
+	// Emits: this.$$_hibernate_trackChange(fieldName)
+	static void emitTrackChange(
+			MethodVisitor methodVisitor,
+			String ownerInternalName,
+			String fieldName) {
+		methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
+		methodVisitor.visitLdcInsn( fieldName );
+		methodVisitor.visitMethodInsn(
+				Opcodes.INVOKEVIRTUAL,
+				ownerInternalName,
+				TRACKER_CHANGER_NAME,
+				Type.getMethodDescriptor( Type.VOID_TYPE, STRING_TYPE ),
+				false
+		);
+	}
+
+
 
 	@Override
 	public ByteCodeAppender appender(Target implementationTarget) {
@@ -206,15 +242,10 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 		}
 		final var skip = new Label();
 		methodVisitor.visitJumpInsn( branchCode, skip );
-		// this.$$_hibernate_trackChange(fieldName)
-		methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
-		methodVisitor.visitLdcInsn( persistentField.getName() );
-		methodVisitor.visitMethodInsn(
-				Opcodes.INVOKEVIRTUAL,
+		emitTrackChange(
+				methodVisitor,
 				managedCtClass.getInternalName(),
-				TRACKER_CHANGER_NAME,
-				Type.getMethodDescriptor( Type.VOID_TYPE, STRING_TYPE ),
-				false
+				persistentField.getName()
 		);
 		// }
 		methodVisitor.visitLabel( skip );

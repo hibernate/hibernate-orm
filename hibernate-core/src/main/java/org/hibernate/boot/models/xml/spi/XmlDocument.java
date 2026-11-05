@@ -75,6 +75,7 @@ public interface XmlDocument {
 		String getSchema();
 		boolean isAutoImport();
 		boolean isLazinessImplied();
+		String getDefaultCascade();
 	}
 
 	Defaults getDefaults();

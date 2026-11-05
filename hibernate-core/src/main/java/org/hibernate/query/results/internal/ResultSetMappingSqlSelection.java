@@ -23,15 +23,33 @@ public class ResultSetMappingSqlSelection implements SqlSelection, Expression, S
 	private final int valuesArrayPosition;
 	private final JdbcMapping valueMapping;
 	private final ValueExtractor<?> valueExtractor;
+	private final boolean virtual;
 
 	public ResultSetMappingSqlSelection(int valuesArrayPosition, BasicValuedMapping valueMapping) {
 		this ( valuesArrayPosition, valueMapping.getJdbcMapping() );
 	}
 
 	public ResultSetMappingSqlSelection(int valuesArrayPosition, JdbcMapping jdbcMapping) {
+		this( valuesArrayPosition, jdbcMapping, false );
+	}
+
+	/**
+	 * @param virtual {@code true} for a value nested in an aggregate column (e.g. JSON),
+	 * where {@code valuesArrayPosition} is the position in the values of the aggregate
+	 */
+	public ResultSetMappingSqlSelection(int valuesArrayPosition, JdbcMapping jdbcMapping, boolean virtual) {
+		this( valuesArrayPosition, jdbcMapping, jdbcMapping.getJdbcValueExtractor(), virtual );
+	}
+
+	public ResultSetMappingSqlSelection(
+			int valuesArrayPosition,
+			JdbcMapping jdbcMapping,
+			ValueExtractor<?> valueExtractor,
+			boolean virtual) {
 		this.valuesArrayPosition = valuesArrayPosition;
 		this.valueMapping = jdbcMapping;
-		this.valueExtractor = jdbcMapping.getJdbcValueExtractor();
+		this.valueExtractor = valueExtractor;
+		this.virtual = virtual;
 	}
 
 	@Override
@@ -61,7 +79,7 @@ public class ResultSetMappingSqlSelection implements SqlSelection, Expression, S
 
 	@Override
 	public boolean isVirtual() {
-		return false;
+		return virtual;
 	}
 
 	@Override

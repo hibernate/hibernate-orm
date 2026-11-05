@@ -73,8 +73,10 @@ public class ColumnDefinitions {
 			final int sqlType = columnInformation.getTypeCode();
 			if ( isStringType( sqlType ) ) {
 				final int actualLength = columnInformation.getColumnSize();
-				final Size size = column.getColumnSize( dialect, metadata );
-				final Long requiredLength = size.getLength();
+				final Long requiredLength = declaredLength(
+						column.getSqlType( metadata ),
+						column.getColumnSize( dialect, metadata ).getLength()
+				);
 				return requiredLength == null
 					|| requiredLength == actualLength;
 			}
@@ -278,6 +280,18 @@ public class ColumnDefinitions {
 				default -> lowercaseTypeName;
 			};
 		}
+	}
+
+	/// The length declared by the first argument of the DDL type, which is what the database reports
+	/// for a column created from it, even when the DDL type is an explicit `columnDefinition` such as
+	/// `varchar(256) generated always as (...) stored` that disagrees with the mapped length.
+	private static Long declaredLength(String typeExpression, Long mappedLength) {
+		final int start = typeExpression.indexOf( '(' );
+		final int end = typeExpression.indexOf( ')', start );
+		final String argument = start < 0 || end < 0 ? "" : typeExpression.substring( start + 1, end ).trim();
+		return !argument.isEmpty() && argument.chars().allMatch( Character::isDigit )
+				? Long.valueOf( argument )
+				: mappedLength;
 	}
 
 	private static String stripArgs(String typeExpression) {

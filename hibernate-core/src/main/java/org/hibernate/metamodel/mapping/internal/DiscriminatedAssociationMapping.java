@@ -29,13 +29,11 @@ import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.spi.TreatedNavigablePath;
 import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.creation.FromClauseAccess;
 import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.ast.spi.query.from.TableGroupJoin;
 import org.hibernate.sql.ast.spi.query.from.TableReference;
-import org.hibernate.sql.ast.spi.query.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.spi.query.from.StandardVirtualTableGroup;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.query.expression.QueryLiteral;
@@ -380,6 +378,9 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			FetchTiming fetchTiming,
 			DomainResultCreationState creationState) {
 		if ( creationState.isAssociationKeyVisited( getAssociationKey() ) ) {
+			final var parentTableGroup = creationState.getSqlAstCreationState().getFromClauseAccess()
+					.getTableGroup( fetchParent.getNavigablePath() );
+			createTableGroupForDelayedFetch( fetchablePath, parentTableGroup, null, creationState );
 			return new DiscriminatedEntityFetch(
 					fetchablePath,
 					baseAssociationJtd,
@@ -416,37 +417,6 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		return associationPath.treatAs( entityMappingType.getEntityName() );
 	}
 
-	/**
-	 * Get the already-registered {@link TableGroup} exposing the table which holds the discriminator
-	 * and key columns of the any-valued mapping reached through the given path, that is, the table
-	 * group of the entity declaring it.
-	 * <p>
-	 * When the association is reached through an implicit {@code treat()} - as happens when join
-	 * fetching an {@code @Any} whose target entity declares another {@code @Any} - the declaring
-	 * table is only exposed by the table group registered under the treated path, while
-	 * {@link NavigablePath#getParent()} deliberately skips over the {@code treat()}.
-	 *
-	 * @param anyPath the path of the any-valued mapping itself
-	 *
-	 * @return the table group declaring the any-valued mapping, never {@code null}
-	 *
-	 * @throws org.hibernate.sql.ast.spi.creation.SqlTreeCreationException if no table group is registered for
-	 * the declaring path
-	 */
-	static TableGroup getTableGroup(@Nullable NavigablePath anyPath, FromClauseAccess fromClauseAccess) {
-		if ( anyPath == null ) {
-			throw new org.hibernate.sql.ast.spi.creation.SqlTreeCreationException( "Missing path for any-valued mapping" );
-		}
-		final var realParent = anyPath.getRealParent();
-		if ( realParent instanceof TreatedNavigablePath ) {
-			final var treatedTableGroup = fromClauseAccess.findTableGroup( realParent );
-			if ( treatedTableGroup != null ) {
-				return treatedTableGroup;
-			}
-		}
-		return fromClauseAccess.getTableGroup( anyPath.getParent() );
-	}
-
 	TableGroup createRootTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
@@ -455,24 +425,25 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			@Nullable Consumer<Predicate> predicateConsumer,
 			org.hibernate.sql.ast.spi.creation.SqlAstCreationState creationState) {
 		final var virtualTableGroup = new StandardVirtualTableGroup( navigablePath, modelPart, lhs, fetched );
-		final var valueDetails = getMappedEntityValueDetails();
-		final SqlAstJoinType effectiveJoinType =
-				valueDetails.size() == 1 && requestedJoinType == SqlAstJoinType.INNER
-						? SqlAstJoinType.INNER
-						: SqlAstJoinType.LEFT;
+		if ( fetched || requestedJoinType != null ) {
+			final var valueDetails = getMappedEntityValueDetails();
+			final SqlAstJoinType effectiveJoinType =
+					valueDetails.size() == 1 && requestedJoinType == SqlAstJoinType.INNER
+							? SqlAstJoinType.INNER
+							: SqlAstJoinType.LEFT;
 
-		for ( DiscriminatorValueDetails valueDetail : valueDetails ) {
-			addConcreteEntityTableGroupJoin(
-					virtualTableGroup,
-					lhs,
-					navigablePath,
-					valueDetail,
-					effectiveJoinType,
-					predicateConsumer,
-					creationState
-			);
+			for ( DiscriminatorValueDetails valueDetail : valueDetails ) {
+				addConcreteEntityTableGroupJoin(
+						virtualTableGroup,
+						lhs,
+						navigablePath,
+						valueDetail,
+						effectiveJoinType,
+						predicateConsumer,
+						creationState
+				);
+			}
 		}
-
 		return virtualTableGroup;
 	}
 
@@ -603,7 +574,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 				fetchablePath,
 				navigablePath -> {
 					final TableGroup parentTableGroup = fromClauseAccess.getTableGroup( fetchParent.getNavigablePath() );
-					final TableGroupJoin tableGroupJoin = ( (TableGroupJoinProducer) modelPart ).createTableGroupJoin(
+					final TableGroupJoin tableGroupJoin = modelPart.createTableGroupJoin(
 							navigablePath,
 							parentTableGroup,
 							resultVariable,
@@ -643,6 +614,9 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 					creationState
 			);
 		}
+		final var parentTableGroup = creationState.getSqlAstCreationState().getFromClauseAccess()
+				.getTableGroup( fetchParent.getNavigablePath() );
+		createTableGroupForDelayedFetch( fetchablePath, parentTableGroup, null, creationState );
 		return new DiscriminatedEntityFetch(
 				fetchablePath,
 				baseAssociationJtd,
@@ -651,6 +625,40 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 				fetchParent,
 				creationState
 		);
+	}
+
+	private TableGroup createTableGroupForDelayedFetch(
+			NavigablePath fetchablePath,
+			TableGroup parentTableGroup,
+			@Nullable String resultVariable,
+			DomainResultCreationState creationState) {
+		// Check if we can reuse a table group join of the parent
+		final var compatibleTableGroup = parentTableGroup.findCompatibleJoinedGroup(
+				modelPart,
+				SqlAstJoinType.LEFT
+		);
+		if ( compatibleTableGroup != null ) {
+			creationState.getSqlAstCreationState().getFromClauseAccess().registerTableGroup(
+					fetchablePath,
+					compatibleTableGroup
+			);
+			return compatibleTableGroup;
+		}
+		// We have to create the table group that points to the target so that table reference resolving works
+		final var tableGroupJoin = modelPart.createTableGroupJoin(
+				fetchablePath,
+				parentTableGroup,
+				resultVariable,
+				null,
+				null,
+				false,
+				false,
+				creationState.getSqlAstCreationState()
+		);
+		parentTableGroup.addTableGroupJoin( tableGroupJoin );
+		creationState.getSqlAstCreationState().getFromClauseAccess()
+				.registerTableGroup( fetchablePath, tableGroupJoin.getJoinedGroup() );
+		return tableGroupJoin.getJoinedGroup();
 	}
 
 	public <T> DomainResult<T> createDomainResult(

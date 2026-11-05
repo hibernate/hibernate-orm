@@ -29,7 +29,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DomainModel(annotatedClasses = TemporalRoundingTest.Zoned.class)
 @SessionFactory
-@ServiceRegistry(settings = @Setting(name = AvailableSettings.TIMEZONE_DEFAULT_STORAGE, value = "NORMALIZE"))
+@ServiceRegistry(settings = {
+		@Setting(name = AvailableSettings.TIMEZONE_DEFAULT_STORAGE, value = "NORMALIZE"),
+		@Setting(name = AvailableSettings.JAVA_TIME_USE_DIRECT_JDBC, value = "false")
+})
 @SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Doesn't support second precision 6")
 @SkipForDialect(dialectClass = InformixDialect.class, reason = "Doesn't support second precision 6")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsMicroSecondPrecision.class)

@@ -121,10 +121,9 @@ public class BootstrapContextImpl implements BootstrapContext {
 	public synchronized TypeConfiguration getTypeConfiguration() {
 		if ( typeConfiguration == null ) {
 			final var dialect = serviceRegistry.requireService( JdbcServices.class ).getDialect();
-			final boolean directJavaTimeJdbcAccessEnabled =
-					MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( configurationService );
+			final var javaTimeJdbcMode = MetadataBuildingContext.resolveJavaTimeJdbcMode( configurationService );
 			typeConfiguration = new TypeConfiguration(
-					directJavaTimeJdbcAccessEnabled,
+					javaTimeJdbcMode.isPreferDirectJdbc(),
 					dialect.getDirectJavaTimeJdbcSupport()
 			);
 		}

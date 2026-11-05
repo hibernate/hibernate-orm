@@ -1,0 +1,26 @@
+plugins {
+    id "local.java-module"
+    id "local.code-quality"
+
+    alias( libs.plugins.kotlin.jvm )
+    alias( libs.plugins.kotlin.jpa )
+}
+
+description = 'Kotlin tests for Hibernate\'s core ORM functionality'
+
+dependencies {
+    testImplementation project( ':hibernate-testing' )
+    testImplementation project( path: ':hibernate-core', configuration: 'tests' )
+    testImplementation libs.test.assertjCore
+}
+
+// JDK 17 is a baseline (see .github/workflows/ci.yml),
+tasks.named( 'compileTestJava', JavaCompile ) {
+    options.release = 17
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+    }
+}

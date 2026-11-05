@@ -2602,7 +2602,7 @@ public abstract class AbstractEntityPersister
 
 		if ( attributeNames.length != 0 ) {
 			final boolean[] propertyUpdateability = getPropertyUpdateability();
-			if ( superMappingType == null ) {
+			if ( superMappingType == null && !hasMultipleTables() ) {
 				/*
 						Sort attribute names so that we can traverse mappings efficiently
 						we cannot do this when there is a supertype because given:
@@ -2619,6 +2619,10 @@ public abstract class AbstractEntityPersister
 
 						`attributeMappings` contains { aSuper, bSuper, aChild, bChild	}
 						while the sorted `attributeNames` { aChild, aSuper, bChild, bSuper }
+
+						Similarly, when there are multiple tables (e.g., @SecondaryTable),
+						`attributeMappings` contains primary table fields followed by secondary table fields,
+						each group sorted independently, not a globally sorted sequence.
 				 */
 
 				Arrays.sort( attributeNames );

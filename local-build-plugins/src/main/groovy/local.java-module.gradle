@@ -213,6 +213,14 @@ tasks.withType( Test.class ).configureEach { test ->
 
     test.maxHeapSize = '3G'
 
+    // Include the method name in parameterized test display names so that Gradle
+    // reports each (method, parameter) combination as a distinct test case.
+    // Without this, Gradle flattens the JUnit test tree and uses only the leaf
+    // display name (e.g. "[1] 0"), which collides across methods in the same class
+    // and causes Develocity to misidentify consistently-failing parameter
+    // combinations as flaky tests. See https://github.com/gradle/gradle/issues/23324
+    test.systemProperties['junit.jupiter.params.displayname.default'] = '{displayName} [{index}] {argumentsWithNames}'
+
     // Enable bytecode enhanced engine:
     test.systemProperties['hibernate.testing.bytecode.enhancement.extension.engine.enabled'] = true
     test.systemProperties['hibernate.test.validatefailureexpected'] = true

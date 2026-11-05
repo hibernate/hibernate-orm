@@ -119,13 +119,15 @@ public class BytecodeEnhancedTestEngine implements TestEngine {
 				Arrays.stream( annotation.testEnhancedClasses() ).map( Class::getName ).toArray( String[]::new )
 		);
 
-		if ( annotation.runNotEnhancedAsWell() ) {
+		final boolean prefixChildDisplayNames = annotation.runNotEnhancedAsWell();
+		if ( prefixChildDisplayNames ) {
 			addVariantDescriptor( classDescriptor, new BytecodeEnhancedVariantDescriptor(
 					classDescriptor.getUniqueId().append( "variant", "not-enhanced" ),
 					"Not enhanced",
 					testClass,
 					false,
-					classDescriptor.testEnhancedClassNames
+					classDescriptor.testEnhancedClassNames,
+					true
 			), configurationParameters );
 		}
 
@@ -140,7 +142,8 @@ public class BytecodeEnhancedTestEngine implements TestEngine {
 						"Enhanced" + ( "-".equals( enhancementContext ) ? "" : "[" + enhancementContext + "]" ),
 						entry.getValue(),
 						true,
-						classDescriptor.testEnhancedClassNames
+						classDescriptor.testEnhancedClassNames,
+						prefixChildDisplayNames
 				), configurationParameters );
 			}
 		}
@@ -256,6 +259,7 @@ public class BytecodeEnhancedTestEngine implements TestEngine {
 		private final Class<?> testClass;
 		private final boolean enhanced;
 		private final String[] testEnhancedClassNames;
+		private final String displayNamePrefix;
 		/**
 		 * Maps Jupiter unique IDs to the descriptors mirrored into this engine's tree.  The forwarding listener uses
 		 * this to translate nested Jupiter execution events back to the descriptors exposed by this engine.
@@ -267,11 +271,13 @@ public class BytecodeEnhancedTestEngine implements TestEngine {
 				String displayName,
 				Class<?> testClass,
 				boolean enhanced,
-				String[] testEnhancedClassNames) {
+				String[] testEnhancedClassNames,
+				boolean prefixChildDisplayNames) {
 			super( uniqueId, displayName, ClassSource.from( testClass ) );
 			this.testClass = testClass;
 			this.enhanced = enhanced;
 			this.testEnhancedClassNames = testEnhancedClassNames;
+			this.displayNamePrefix = prefixChildDisplayNames ? displayName + ": " : null;
 		}
 
 		@Override
@@ -283,9 +289,13 @@ public class BytecodeEnhancedTestEngine implements TestEngine {
 				TestDescriptor parentDescriptor,
 				TestIdentifier testIdentifier,
 				TestPlan testPlan) {
+			String mirroredDisplayName = testIdentifier.getDisplayName();
+			if ( displayNamePrefix != null && testIdentifier.getType().isTest() ) {
+				mirroredDisplayName = displayNamePrefix + mirroredDisplayName;
+			}
 			final MirroredJupiterDescriptor descriptor = new MirroredJupiterDescriptor(
 					parentDescriptor.getUniqueId().append( "jupiter", testIdentifier.getUniqueId() ),
-					testIdentifier.getDisplayName(),
+					mirroredDisplayName,
 					testIdentifier.getSource().orElse( null ),
 					testIdentifier.getType()
 			);
@@ -444,9 +454,13 @@ public class BytecodeEnhancedTestEngine implements TestEngine {
 				return;
 			}
 
+			String dynamicDisplayName = testIdentifier.getDisplayName();
+			if ( variantDescriptor.displayNamePrefix != null && testIdentifier.getType().isTest() ) {
+				dynamicDisplayName = variantDescriptor.displayNamePrefix + dynamicDisplayName;
+			}
 			final MirroredJupiterDescriptor descriptor = new MirroredJupiterDescriptor(
 					parent.getUniqueId().append( "dynamic-test", testIdentifier.getUniqueId() ),
-					testIdentifier.getDisplayName(),
+					dynamicDisplayName,
 					testIdentifier.getSource().orElse( null ),
 					testIdentifier.getType()
 			);

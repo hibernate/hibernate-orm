@@ -56,7 +56,7 @@ public class JoinedDiscriminatedEntityFetch extends AbstractDiscriminatedEntityR
 			final var entityMapping = valueDetails.get( i ).getIndicatedEntity();
 			final NavigablePath concretePath = DiscriminatedAssociationMapping.concreteEntityPath( navigablePath, entityMapping );
 			final TableGroup tableGroup = fromClauseAccess.getTableGroup( concretePath );
-			final var entityResult = new EntityResultImpl<>( concretePath, entityMapping, tableGroup, null );
+			final var entityResult = new EntityResultImpl<>( tableGroup.getNavigablePath(), entityMapping, tableGroup, null );
 			entityResult.afterInitialize( entityResult, creationState );
 			concreteEntityResults.add( entityResult );
 			affectedByFilters.set( i, isAffectedByEnabledFilters( entityMapping, creationState ) );

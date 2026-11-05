@@ -140,6 +140,9 @@ include 'hibernate-micrometer'
 include 'hibernate-graalvm'
 include 'hibernate-integrationtest-java-modules'
 
+include 'hibernate-core-kotlin-tests'
+project(':hibernate-core-kotlin-tests').projectDir = new File(rootProject.projectDir, "hibernate-core/src/test-kotlin")
+
 include 'hibernate-dialect-provider-tooling'
 project(':hibernate-dialect-provider-tooling').projectDir = new File(rootProject.projectDir, "tooling/hibernate-dialect-provider")
 

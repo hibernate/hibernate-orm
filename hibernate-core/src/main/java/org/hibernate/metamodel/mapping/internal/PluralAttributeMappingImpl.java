@@ -942,13 +942,19 @@ public class PluralAttributeMappingImpl
 						? new PredicateCollector()
 						: collectionPredicateCollector;
 
-		getCollectionDescriptor().applyBaseRestrictions(
+		getCollectionDescriptor().applyFilterRestrictions(
 				predicateCollector::applyPredicate,
 				tableGroup,
 				true,
 				creationState.getLoadQueryInfluencers().getEnabledFilters(),
 				false,
-				null,
+				creationState
+		);
+
+		getCollectionDescriptor().applyWhereRestrictions(
+				collectionPredicateCollector::applyPredicate,
+				tableGroup,
+				true,
 				creationState
 		);
 
@@ -1167,7 +1173,7 @@ public class PluralAttributeMappingImpl
 
 	private boolean isNestedJoin(SqlAstJoinType joinType, boolean addsPredicate, SqlAstCreationState creationState) {
 		// For inner joins we never need join nesting
-		return joinType != SqlAstJoinType.INNER
+		return joinType != SqlAstJoinType.INNER && joinType != SqlAstJoinType.RIGHT
 			// For outer joins we need nesting if there might be an on-condition that refers to the element table
 			&& ( addsPredicate
 					|| collectionDescriptor.hasWhereRestrictions()

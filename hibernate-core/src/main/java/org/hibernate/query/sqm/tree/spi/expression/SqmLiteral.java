@@ -37,7 +37,10 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 		setExpressibleType(
 				inherentType,
 				inherentType == null
-						? nodeBuilder().getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( value.getClass() )
+						? nodeBuilder().getTypeConfiguration().getJavaTypeRegistry()
+								.resolveDescriptor( value instanceof Enum<?> enumValue
+										? enumValue.getDeclaringClass()
+										: value.getClass() )
 						: null
 		);
 		this.value = value;

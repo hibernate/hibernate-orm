@@ -1,11 +1,13 @@
 package org.hibernate.processor.test.integ.repository;
 
 import jakarta.annotation.Nullable;
+import jakarta.data.page.CursoredPage;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
 import jakarta.data.repository.Delete;
 import jakarta.data.repository.Find;
 import jakarta.data.repository.Insert;
+import jakarta.data.repository.OrderBy;
 import jakarta.data.repository.Query;
 import jakarta.data.repository.Repository;
 import jakarta.data.repository.Save;
@@ -44,6 +46,10 @@ public interface BookRepository {
 
 	@Find
 	List<Book> byTitle(String title);
+
+	@Find
+	@OrderBy("isbn")
+	CursoredPage<Book> allBooks(PageRequest pageRequest);
 
 	@Query("from Book where title like :pattern")
 	List<Book> titleLike(String pattern);

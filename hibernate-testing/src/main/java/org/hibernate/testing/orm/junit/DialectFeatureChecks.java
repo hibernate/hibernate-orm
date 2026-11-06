@@ -645,7 +645,8 @@ abstract public class DialectFeatureChecks {
 				|| dialect instanceof SQLServerDialect
 				|| dialect instanceof DerbyDialect
 				|| dialect instanceof MySQLDialect && !(dialect instanceof TiDBDialect)
-				|| dialect instanceof MariaDBDialect;
+				|| dialect instanceof MariaDBDialect
+				|| dialect instanceof CUBRIDDialect;
 		}
 	}
 

@@ -161,11 +161,17 @@ public class CUBRIDSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 		if ( expression instanceof Literal ) {
 			appendSql( "'0' || '0'" );
 		}
-		else if ( expression instanceof Summarization ) {
-			// This could theoretically be emulated by rendering all grouping variations of the query and
-			// connect them via union all but that's probably pretty inefficient and would have to happen
-			// on the query spec level
-			throw new UnsupportedOperationException( "Summarization is not supported by DBMS!" );
+		else if ( expression instanceof Summarization summarization ) {
+			if ( summarization.getKind() == Summarization.Kind.ROLLUP ) {
+				renderCommaSeparated( summarization.getGroupings() );
+				appendSql( " with rollup" );
+			}
+			else {
+				// This could theoretically be emulated by rendering all grouping variations of the query and
+				// connect them via union all but that's probably pretty inefficient and would have to happen
+				// on the query spec level
+				throw new UnsupportedOperationException( "Summarization is not supported by DBMS!" );
+			}
 		}
 		else {
 			expression.accept( this );

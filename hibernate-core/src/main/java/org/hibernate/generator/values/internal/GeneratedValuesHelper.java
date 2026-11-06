@@ -240,12 +240,10 @@ public class GeneratedValuesHelper {
 						parentNavigablePath.append( basicModelPart.getSelectableName() ),
 						basicModelPart,
 						tableGroup,
-						// For composite identifiers we may expand generated identifier parts even when
-						// supportsArbitraryValues is false; in that case, rely on positional ordering
-						// instead of column name resolution.
-						supportsArbitraryValues || !basicModelPart.isEntityIdentifierMapping()
-								? i
-								: null
+						// When supportsArbitraryValues is false, the driver decides what to return, it can be one column
+						// called GENERATED_KEY (MySQL) or every PK column in table order (H2). The list index has no
+						// reliable meaning, so we need to check by column name
+						supportsArbitraryValues ? i : null
 				) );
 			}
 			else {

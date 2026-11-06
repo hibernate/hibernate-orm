@@ -997,7 +997,8 @@ abstract public class DialectFeatureChecks {
 				|| dialect instanceof OracleDialect
 				|| dialect instanceof SybaseDialect
 				|| dialect instanceof DerbyDialect
-				|| dialect instanceof HSQLDialect;
+				|| dialect instanceof HSQLDialect
+				|| dialect instanceof CUBRIDDialect;
 		}
 	}
 

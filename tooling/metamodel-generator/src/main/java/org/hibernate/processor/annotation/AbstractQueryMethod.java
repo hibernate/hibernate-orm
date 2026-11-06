@@ -460,7 +460,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			"\t\t\t\t\t\t.collect(toList());\n" +
 			"\t\treturn new CursoredPageRecord<>(_results.getResultList(), _cursors, _totalResults, pageRequest,\n" +
 			"\t\t\t\t_results.isLastPage() ? null : afterCursor(_cursors.get(_cursors.size()-1), pageRequest.page()+1, pageRequest.size(), pageRequest.requestTotal()),\n" +
-			"\t\t\t\t_results.isFirstPage() ? null : beforeCursor(_cursors.get(0), pageRequest.page()-1, pageRequest.size(), pageRequest.requestTotal()))";
+			"\t\t\t\t_results.getPreviousPage() == null ? null : beforeCursor(_cursors.get(0), pageRequest.page()-1, pageRequest.size(), pageRequest.requestTotal()))";
 
 	static final String MAKE_KEYED_PAGE
 			= "\t\tvar _unkeyedPage =\n" +

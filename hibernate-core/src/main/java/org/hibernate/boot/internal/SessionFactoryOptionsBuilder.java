@@ -235,6 +235,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private final SqmTranslatorFactory sqmTranslatorFactory;
 	private final Boolean useOfJdbcNamedParametersEnabled;
 	private boolean namedQueryStartupCheckingEnabled;
+	private final org.hibernate.type.JavaTimeJdbcMode javaTimeJdbcMode;
 	private final boolean preferJavaTimeJdbcTypes;
 	@Nonnull
 	private final DirectJavaTimeJdbcSupport directJavaTimeJdbcSupport;
@@ -497,7 +498,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		namedQueryStartupCheckingEnabled =
 				configurationService.getSetting( QUERY_STARTUP_CHECKING, BOOLEAN, true );
 
-		preferJavaTimeJdbcTypes = MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( configurationService );
+		javaTimeJdbcMode = MetadataBuildingContext.resolveJavaTimeJdbcMode( configurationService );
+		preferJavaTimeJdbcTypes = javaTimeJdbcMode.isPreferDirectJdbc();
 		preferNativeEnumTypes = MetadataBuildingContext.isPreferNativeEnumTypesEnabled( configurationService );
 		preferLocaleLanguageTagEnabled = MetadataBuildingContext.isPreferNativeEnumTypesEnabled( configurationService );
 		preferredSqlTypeCodeForBoolean = ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( serviceRegistry );

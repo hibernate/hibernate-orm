@@ -845,7 +845,9 @@ public final class StandardBasicTypes {
 
 
 	public static void prime(TypeConfiguration typeConfiguration) {
-		prime( typeConfiguration, JAVA_TIME_USE_DIRECT_JDBC_DEFAULT, DirectJavaTimeJdbcSupports.jdbc42() );
+		prime( typeConfiguration,
+				JavaTimeJdbcMode.interpret( JAVA_TIME_USE_DIRECT_JDBC_DEFAULT ).isPreferDirectJdbc(),
+				DirectJavaTimeJdbcSupports.jdbc42() );
 	}
 
 	public static void prime(TypeConfiguration typeConfiguration, boolean javaTimeUseDirectJdbc) {

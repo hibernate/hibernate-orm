@@ -167,6 +167,37 @@ when calling the superclass implementation.
 
 This section describes changes in behavior that applications should be aware of.
 
+[[direct-jdbc-java-time]]
+=== Direct JDBC Java Time default changed to `auto`
+
+The default value of `hibernate.type.java_time_use_direct_jdbc` has been changed from `true`
+to `auto`.
+
+When set to `true` (the previous default, introduced in 8.0), Hibernate uses JDBC 4.2
+`setObject`/`getObject` to pass `java.time` objects directly to the JDBC driver, bypassing
+the legacy `java.sql.Timestamp`/`Time`/`Date` path. While this is generally more efficient,
+direct JDBC access does not honor:
+
+- The configured `hibernate.jdbc.time_zone` for `LocalDateTime` and `LocalTime` attributes.
+  The legacy path passes this timezone via a `Calendar` to the JDBC driver; the direct path does not.
+- The `@TimeZoneStorage(NORMALIZE)` or `@TimeZoneStorage(NORMALIZE_UTC)` strategies for
+  `OffsetDateTime`, `ZonedDateTime`, and `OffsetTime` attributes.
+  The legacy path normalizes zoned values to the configured timezone or UTC before storing them
+  in a plain `TIMESTAMP` column; the direct path passes them through as-is.
+
+The new `auto` default uses direct JDBC access when it is safe to do so, but raises an error
+during bootstrap if a mapping is found that uses a direct Java Time JDBC type while the
+configuration or annotations require JDBC timezone or timezone-storage normalization that
+direct access cannot honor.
+
+To resolve the error, set the property explicitly:
+
+- `hibernate.type.java_time_use_direct_jdbc=false` to revert to legacy `java.sql` wrapper
+  behavior that honors the JDBC timezone and timezone-storage settings.
+- `hibernate.type.java_time_use_direct_jdbc=true` to keep direct JDBC access and accept that
+  the JDBC timezone and timezone-storage settings will not be applied for direct-mapped types.
+
+
 [[filtered-to-one-associations]]
 === Filters and SQL restrictions on to-one associations
 

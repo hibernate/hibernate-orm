@@ -25,7 +25,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Jpa(
 		annotatedClasses = LocalTimeTest.TestEntity.class,
-		properties = @Setting(name = AvailableSettings.TIMEZONE_DEFAULT_STORAGE, value = "NORMALIZE")
+		properties = {
+				@Setting(name = AvailableSettings.TIMEZONE_DEFAULT_STORAGE, value = "NORMALIZE"),
+				@Setting(name = AvailableSettings.JAVA_TIME_USE_DIRECT_JDBC, value = "false")
+		}
 )
 public class LocalTimeTest {
 

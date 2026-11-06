@@ -35,6 +35,7 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
@@ -853,21 +854,9 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		final var context = getSourceModelContext();
 
 		explicitJavaTypeAccess = typeConfiguration -> {
-			final var anyKeyJavaType = member.locateAnnotationUsage( AnyKeyJavaType.class, context );
-			if ( anyKeyJavaType != null ) {
-				final var implClass = anyKeyJavaType.value();
-				if ( implClass != null ) {
-					return useDeferredBeanContainerAccess
-							? FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( implClass )
-							: getManagedBeanRegistry().getBean( implClass ).getBeanInstance();
-				}
-			}
-
-			final var anyKeyJavaClass = member.locateAnnotationUsage( AnyKeyJavaClass.class, context );
-			if ( anyKeyJavaClass != null ) {
-				return (BasicJavaType<?>)
-						typeConfiguration.getJavaTypeRegistry()
-								.resolveDescriptor( anyKeyJavaClass.value() );
+			final var fromMember = resolveAnyKeyJavaType( member, typeConfiguration, useDeferredBeanContainerAccess );
+			if ( fromMember != null ) {
+				return fromMember;
 			}
 
 			// mainly used in XML interpretation
@@ -883,6 +872,19 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 				else {
 					return (BasicJavaType<?>) registeredType.getJavaTypeDescriptor();
 				}
+			}
+
+			// otherwise, use the default specified by the package or module
+			final var declaringType = member.getDeclaringType();
+			final var fromPackage =
+					resolveAnyKeyJavaType( declaringType.getPackage(), typeConfiguration, useDeferredBeanContainerAccess );
+			if ( fromPackage != null ) {
+				return fromPackage;
+			}
+			final var fromModule =
+					resolveAnyKeyJavaType( declaringType.getModule(), typeConfiguration, useDeferredBeanContainerAccess );
+			if ( fromModule != null ) {
+				return fromModule;
 			}
 
 			throw new MappingException("Could not determine key type for '@Any' mapping (specify '@AnyKeyJavaType' or '@AnyKeyJavaClass')");
@@ -909,6 +911,36 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 			return null;
 		};
+	}
+
+	private BasicJavaType<?> resolveAnyKeyJavaType(
+			AnnotationTarget target,
+			TypeConfiguration typeConfiguration,
+			boolean useDeferredBeanContainerAccess) {
+		if ( target == null ) {
+			return null;
+		}
+
+		final var context = getSourceModelContext();
+
+		final var anyKeyJavaType = target.locateAnnotationUsage( AnyKeyJavaType.class, context );
+		if ( anyKeyJavaType != null ) {
+			final var implClass = anyKeyJavaType.value();
+			if ( implClass != null ) {
+				return useDeferredBeanContainerAccess
+						? FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( implClass )
+						: getManagedBeanRegistry().getBean( implClass ).getBeanInstance();
+			}
+		}
+
+		final var anyKeyJavaClass = target.locateAnnotationUsage( AnyKeyJavaClass.class, context );
+		if ( anyKeyJavaClass != null ) {
+			return (BasicJavaType<?>)
+					typeConfiguration.getJavaTypeRegistry()
+							.resolveDescriptor( anyKeyJavaClass.value() );
+		}
+
+		return null;
 	}
 
 	private void normalJdbcTypeDetails(MemberDetails attribute) {

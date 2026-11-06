@@ -1155,6 +1155,11 @@ public class H2Dialect extends Dialect implements CurrentTemporalSupport, Tempor
 	}
 
 	@Override
+	public boolean supportsNestedCollectionFetch() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsFilterClause() {
 		// Introduction of FILTER clause https://github.com/h2database/h2database/commit/9e6dbf3baa57000f670826ede431dc7fb4cd9d9c
 		return true;

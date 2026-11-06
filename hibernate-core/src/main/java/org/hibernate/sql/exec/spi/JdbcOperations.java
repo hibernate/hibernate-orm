@@ -230,6 +230,7 @@ public final class JdbcOperations {
 		private Set<String> affectedQuerySpaces = Set.of();
 		private Map<JdbcParameter, JdbcParameterBinding> appliedParameterBindings = Map.of();
 		private String uniqueConstraintNameThatMayFail;
+		private boolean retryableOnUniqueConstraintViolation;
 
 		private QueryMutationBuilder(SqlAstTranslationRequest.QueryMutation request) {
 			this.request = Objects.requireNonNull( request, "request" );
@@ -269,6 +270,17 @@ public final class JdbcOperations {
 			return this;
 		}
 
+		/// Allow the executor to execute the command once more after it failed with a
+		/// unique constraint violation, see
+		/// [JdbcOperationQueryInsert#isRetryableOnUniqueConstraintViolation()]. This
+		/// option is legal only for an insert statement.
+		///
+		/// @since 8.1
+		public QueryMutationBuilder retryableOnUniqueConstraintViolation(boolean retryableOnUniqueConstraintViolation) {
+			this.retryableOnUniqueConstraintViolation = retryableOnUniqueConstraintViolation;
+			return this;
+		}
+
 		/// Build the immutable operation description consumed by Hibernate's JDBC
 		/// executor.
 		public JdbcOperationQueryMutation build() {
@@ -279,11 +291,15 @@ public final class JdbcOperations {
 						parameterBinders,
 						affectedQuerySpaces,
 						appliedParameterBindings,
-						uniqueConstraintNameThatMayFail
+						uniqueConstraintNameThatMayFail,
+						retryableOnUniqueConstraintViolation
 				);
 			}
 			if ( uniqueConstraintNameThatMayFail != null ) {
 				throw new IllegalStateException( "A unique constraint may be specified only for an insert statement" );
+			}
+			if ( retryableOnUniqueConstraintViolation ) {
+				throw new IllegalStateException( "A retry on a unique constraint violation is allowed only for an insert statement" );
 			}
 			if ( request.statement() instanceof UpdateStatement ) {
 				return new JdbcOperationQueryUpdate(

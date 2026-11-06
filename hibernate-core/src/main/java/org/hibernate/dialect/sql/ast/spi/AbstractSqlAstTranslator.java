@@ -925,6 +925,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( conflictPlan instanceof InsertConflictRenderingPlan.ConstraintViolation ) {
 			builder.uniqueConstraintNameThatMayFail( determineUniqueConstraintNameThatMayFail( sqlAst ) );
 		}
+		else if ( conflictPlan instanceof InsertConflictRenderingPlan.Merge ) {
+			// A concurrent transaction can insert a conflicting row after the merge found no matching row,
+			// so the insert part fails. Executing the merge again sees that row.
+			builder.retryableOnUniqueConstraintViolation( true );
+		}
 		return builder.build();
 	}
 
@@ -1903,7 +1908,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		appendSql( "merge into " );
 		clauseStack.push( Clause.MERGE );
-		renderNamedTableReference( statement.getTargetTable(), LockMode.NONE );
+		renderInsertConflictMergeTarget( statement.getTargetTable() );
 		clauseStack.pop();
 		appendSql(" using " );
 
@@ -1975,6 +1980,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		appendSql( ')' );
 
+	}
+
+	/// Render the target table, including its alias, of the `merge` statement which
+	/// emulates an insert conflict clause.
+	///
+	/// Override this hook to add a table hint, for example one which makes the
+	/// statement safe against a concurrent insert of the same key.
+	@SPI(IMPLEMENT)
+	protected void renderInsertConflictMergeTarget(NamedTableReference targetTable) {
+		renderNamedTableReference( targetTable, LockMode.NONE );
 	}
 
 	protected final void renderUpdateStatementAsMerge(UpdateStatement statement) {

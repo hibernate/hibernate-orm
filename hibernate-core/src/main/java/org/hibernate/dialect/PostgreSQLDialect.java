@@ -1,5 +1,12 @@
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.type.internal.PostgreSQLOffsetTimeJdbcType;
+import org.hibernate.dialect.type.internal.PostgreSQLUtcTimeJdbcType;
+import org.hibernate.boot.spi.MetadataBuildingContext;
+
+import static org.hibernate.dialect.temporaltype.spi.TemporalPreservation.Level.*;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalPreservation;
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
@@ -144,7 +151,10 @@ import org.hibernate.tool.schema.spi.StandardUserDefinedTypeExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.OffsetDateTimeJavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
+import org.hibernate.type.descriptor.java.ZonedDateTimeJavaType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -227,7 +237,7 @@ public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport
 
 	@Override
 	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
-		return DirectJavaTimeJdbcSupports.local();
+		return DirectJavaTimeJdbcSupports.jdbc42();
 	}
 
 	private IfExistsSupport ifExistsSupport;
@@ -455,6 +465,10 @@ public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport
 			case TIME:
 				// The PostgreSQL JDBC driver reports TIME for timetz, but we use it only for mapping OffsetTime to UTC
 				if ( "timetz".equals( columnTypeName ) ) {
+					final var direct = jdbcTypeRegistry.getDescriptor( org.hibernate.type.SqlTypes.OFFSET_TIME );
+					if ( direct.getClass() == PostgreSQLOffsetTimeJdbcType.class ) {
+						return jdbcTypeRegistry.getDescriptor( org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE );
+					}
 					jdbcTypeCode = TIME_UTC;
 				}
 				break;
@@ -1070,6 +1084,7 @@ public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport
 	@Override
 	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuildRequest request) {
+		super.buildIdentifierHelper( request );
 		final var builder = request.builder();
 
 		if ( !request.jdbcMetadata().isJdbcMetadataAccessible() ) {
@@ -1077,7 +1092,7 @@ public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
 
-		return super.buildIdentifierHelper( request );
+		return builder.build();
 	}
 
 	@Override
@@ -1422,6 +1437,41 @@ public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport
 	}
 
 	@Override
+	public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
+		if ( javaType.getClass() == org.hibernate.type.descriptor.java.LocalTimeJavaType.class ) {
+			if ( jdbcType.getClass() == org.hibernate.dialect.type.internal.PostgreSQLLocalTimeJdbcType.class ) {
+				return new TemporalPreservation( IRRELEVANT, SUPPORTED, IRRELEVANT, IRRELEVANT, IRRELEVANT );
+			}
+			if ( jdbcType.getClass() == org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType.class ) {
+				return new TemporalPreservation( IRRELEVANT, org.hibernate.dialect.temporaltype.spi.TemporalPreservation.Level.UNKNOWN,
+						IRRELEVANT, IRRELEVANT, IRRELEVANT );
+			}
+		}
+		final JdbcType carrier = jdbcType instanceof org.hibernate.type.descriptor.jdbc.internal.UtcTimestampJdbcType utc
+				? utc.getDelegate() : jdbcType;
+		if ( carrier.getClass() == org.hibernate.dialect.type.internal.PostgreSQLTimestampUtcAsJdbcTimestampJdbcType.class || carrier.getClass() == org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType.class
+				|| carrier.getClass() == org.hibernate.type.descriptor.jdbc.TimestampUtcAsInstantJdbcType.class ) {
+			return org.hibernate.dialect.temporaltype.spi.StandardTemporalPreservation.instantOnly( javaType );
+		}
+
+		if ( javaType.getClass() == org.hibernate.type.descriptor.java.OffsetTimeJavaType.class
+				&& jdbcType.getClass() == PostgreSQLOffsetTimeJdbcType.class ) {
+			return new TemporalPreservation( IRRELEVANT, SUPPORTED, IRRELEVANT, SUPPORTED, IRRELEVANT );
+		}
+		if ( jdbcType.getClass() == org.hibernate.dialect.type.internal.PostgreSQLOffsetDateTimeJdbcType.class ) {
+			if ( javaType.getClass() == OffsetDateTimeJavaType.class ) {
+				return new TemporalPreservation(
+						UNSUPPORTED, UNSUPPORTED, SUPPORTED, UNSUPPORTED, IRRELEVANT );
+			}
+			if ( javaType.getClass() == ZonedDateTimeJavaType.class ) {
+				return new TemporalPreservation(
+						UNSUPPORTED, UNSUPPORTED, SUPPORTED, UNSUPPORTED, UNSUPPORTED );
+			}
+		}
+		return super.getTemporalPreservation( javaType, jdbcType );
+	}
+
+	@Override
 	@SPI({ IMPLEMENT, SUPPLY })
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes(typeContributions, serviceRegistry);
@@ -1432,6 +1482,13 @@ public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport
 	protected void contributePostgreSQLTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final var jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
+		if ( MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( serviceRegistry ) ) {
+			jdbcTypeRegistry.addDescriptor( org.hibernate.dialect.type.internal.PostgreSQLLocalTimeJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( PostgreSQLOffsetTimeJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( org.hibernate.dialect.type.internal.PostgreSQLOffsetDateTimeJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( PostgreSQLUtcTimeJdbcType.INSTANCE );
+		}
+
 		// For discussion of BLOB support in Postgres, as of 8.4, see:
 		//     http://jdbc.postgresql.org/documentation/84/binary-data.html
 		// For how this affects Hibernate, see:

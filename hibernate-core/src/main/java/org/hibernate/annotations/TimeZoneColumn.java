@@ -10,8 +10,12 @@ import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 
 /**
- * Specifies the mapped column for storing the time zone information,
- * for use in conjunction with {@link TimeZoneStorageType#COLUMN} or
+ * Specifies the auxiliary column storing offset information. With direct Java Time
+ * JDBC handling enabled, a local declaration also selects
+ * {@link TimeZoneRepresentation.Type#COLUMN COLUMN} representation and may be used
+ * without {@link TimeZoneStorage}. The name is a literal column name, not a pattern.
+ * <p>
+ * For compatibility, this annotation may also be used in conjunction with {@link TimeZoneStorageType#COLUMN} or
  * {@link TimeZoneStorageType#AUTO}. The column is simply ignored if
  * {@code AUTO} is used and the database supports native time zone
  * storage.

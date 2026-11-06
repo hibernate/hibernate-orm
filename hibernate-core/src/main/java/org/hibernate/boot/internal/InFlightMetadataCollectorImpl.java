@@ -131,7 +131,7 @@ public class InFlightMetadataCollectorImpl
 	private final BootstrapContext bootstrapContext;
 	private final MetadataBuildingOptions options;
 
-	private final GlobalRegistrations globalRegistrations;
+	private GlobalRegistrations globalRegistrations;
 	private final PersistenceUnitMetadata persistenceUnitMetadata;
 
 	private final AttributeConverterManager attributeConverterManager = new AttributeConverterManager();
@@ -222,7 +222,26 @@ public class InFlightMetadataCollectorImpl
 
 	@Override
 	public GlobalRegistrations getGlobalRegistrations() {
+		if ( globalRegistrations == null ) {
+			throw new IllegalStateException(
+					"The GlobalRegistrations were released after the SessionFactory was created"
+			);
+		}
 		return globalRegistrations;
+	}
+
+	/**
+	 * Release state which is only needed while binding the boot model,
+	 * and which references the {@link org.hibernate.models.spi.ModelsContext},
+	 * once the {@code SessionFactory} has been created.
+	 *
+	 * @see org.hibernate.cfg.PersistenceSettings#RELEASE_BOOT_BINDING_STATE
+	 */
+	public void releaseBindingState() {
+		globalRegistrations = null;
+		embeddableSubtypes.clear();
+		propertiesAnnotatedWithMapsId = null;
+		propertiesAnnotatedWithIdAndToOne = null;
 	}
 
 	@Override

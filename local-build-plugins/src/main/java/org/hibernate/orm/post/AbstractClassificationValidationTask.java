@@ -9,6 +9,7 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.Internal;
@@ -24,7 +25,6 @@ import static org.hibernate.orm.post.ReportGenerationPlugin.TASK_GROUP_NAME;
 ///
 /// @author Steve Ebersole
 public abstract class AbstractClassificationValidationTask extends DefaultTask {
-	private final Provider<ClassificationMetadataManager> metadataManager;
 	private final RegularFileProperty classificationMetadataFile;
 	private final RegularFileProperty allowlistFile;
 	private final RegularFileProperty reportFile;
@@ -32,9 +32,6 @@ public abstract class AbstractClassificationValidationTask extends DefaultTask {
 	protected AbstractClassificationValidationTask(String description, String reportName) {
 		setGroup( TASK_GROUP_NAME );
 		setDescription( description );
-		metadataManager = getProject().provider(
-				() -> getProject().getExtensions().getByType( ClassificationMetadataManager.class )
-		);
 		classificationMetadataFile = getProject().getObjects().fileProperty();
 		classificationMetadataFile.convention(
 				getProject().getLayout().getBuildDirectory().file( "orm/reports/classifications.json" )
@@ -48,9 +45,13 @@ public abstract class AbstractClassificationValidationTask extends DefaultTask {
 		reportFile.convention( getProject().getLayout().getBuildDirectory().file( "orm/reports/" + reportName ) );
 	}
 
+	/// Set by [ReportGenerationPlugin] to the project's shared [ClassificationMetadataManager] service.
+	@Internal
+	public abstract Property<ClassificationMetadataManager> getMetadataManagerReference();
+
 	@Internal
 	protected ClassificationMetadataManager getMetadataManager() {
-		return metadataManager.get();
+		return getMetadataManagerReference().get();
 	}
 
 	@InputFile

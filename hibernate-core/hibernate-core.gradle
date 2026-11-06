@@ -148,9 +148,8 @@ def instrumentationTest = tasks.register('instrumentationTest', Test) {
     useJUnitPlatform {
         includeEngines 'junit-jupiter'
     }
-    doFirst {
-        jvmArgs "-javaagent:${instrumentationTestAgent.get().archiveFile.get().asFile.absolutePath}"
-    }
+    def agentJar = instrumentationTestAgent.flatMap { it.archiveFile }
+    jvmArgumentProviders.add( new LazyArgumentsProvider( arguments: agentJar.map { ["-javaagent:${it.asFile.absolutePath}".toString()] } ) )
 }
 
 tasks.named('check') {
@@ -210,53 +209,41 @@ versionInjection {
     into( 'org.hibernate.Version', 'initVersion' )
 }
 
+def bundlesTargetDir = layout.buildDirectory.dir( "bundles" )
+def bundleBuildDirName = project.relativePath( layout.buildDirectory.asFile.get() )
+
 tasks.register('copyBundleResourcesXml', Copy) {
     inputs.property( "db", db )
     inputs.property( "dbHost", dbHost )
-    ext {
-        bundlesTargetDir = layout.buildDirectory.dir("bundles").get().asFile
-        // Escape
-        bundleTokens = [
-                'db.dialect' : dbBundle[db]['db.dialect'].replace("&", "&amp;"),
-                'jdbc.driver' : dbBundle[db]['jdbc.driver'].replace("&", "&amp;"),
-                'jdbc.user' : dbBundle[db]['jdbc.user'].replace("&", "&amp;"),
-                'jdbc.pass' : dbBundle[db]['jdbc.pass'].replace("&", "&amp;"),
-                'jdbc.url' : dbBundle[db]['jdbc.url'].replace("&", "&amp;"),
-                'jdbc.datasource' : dbBundle[db]['jdbc.datasource'].replace("&", "&amp;"),
-                'connection.init_sql' : dbBundle[db]['connection.init_sql'].replace("&", "&amp;")
-        ]
-        ext.bundleTokens['buildDirName'] = project.relativePath( layout.buildDirectory.asFile.get() )
-    }
+    // Escape
+    def bundleTokens = [
+            'db.dialect' : dbBundle[db]['db.dialect'].replace("&", "&amp;"),
+            'jdbc.driver' : dbBundle[db]['jdbc.driver'].replace("&", "&amp;"),
+            'jdbc.user' : dbBundle[db]['jdbc.user'].replace("&", "&amp;"),
+            'jdbc.pass' : dbBundle[db]['jdbc.pass'].replace("&", "&amp;"),
+            'jdbc.url' : dbBundle[db]['jdbc.url'].replace("&", "&amp;"),
+            'jdbc.datasource' : dbBundle[db]['jdbc.datasource'].replace("&", "&amp;"),
+            'connection.init_sql' : dbBundle[db]['connection.init_sql'].replace("&", "&amp;"),
+            'buildDirName' : bundleBuildDirName
+    ]
 
     from('src/test/bundles/templates') {
         include '**/*.xml'
     }
-    into ext.bundlesTargetDir
-    filter( ReplaceTokens, tokens: ext.bundleTokens)
-
-    doFirst {
-        ext.bundlesTargetDir.mkdirs()
-    }
+    into bundlesTargetDir
+    filter( ReplaceTokens, tokens: bundleTokens )
 }
 
 tasks.register('copyBundleResourcesNonXml', Copy) {
     inputs.property( "db", db )
-    ext {
-        bundlesTargetDir = layout.buildDirectory.dir("bundles").get().asFile
-        // Escape
-        bundleTokens = dbBundle[db]
-        ext.bundleTokens['buildDirName'] = project.relativePath(layout.buildDirectory.asFile.get())
-    }
+    def bundleTokens = new HashMap( dbBundle[db] )
+    bundleTokens['buildDirName'] = bundleBuildDirName
 
     from('src/test/bundles/templates') {
         exclude '**/*.xml'
     }
-    into ext.bundlesTargetDir
-    filter( ReplaceTokens, tokens: ext.bundleTokens)
-
-    doFirst {
-        ext.bundlesTargetDir.mkdirs()
-    }
+    into bundlesTargetDir
+    filter( ReplaceTokens, tokens: bundleTokens )
 }
 
 tasks.register('copyBundleResources', Copy) {

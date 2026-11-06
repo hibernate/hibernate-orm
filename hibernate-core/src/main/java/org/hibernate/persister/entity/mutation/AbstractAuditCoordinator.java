@@ -16,7 +16,10 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.ast.spi.model.MutationGroup;
 import org.hibernate.sql.model.MutationOperationGroup;
+
+import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.auxiliaryOperations;
 
 /**
  * Base support for audit log insert coordinators.
@@ -43,10 +46,15 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 		final var staticAuditInsertMutationGroup = entityAuditSupport.getStaticAuditInsertMutationGroup();
 		this.staticAuditInsertGroup = staticAuditInsertMutationGroup == null
 				? null
-				: createOperationGroup( null, staticAuditInsertMutationGroup );
+				: createAuditOperationGroup( staticAuditInsertMutationGroup );
 		this.transactionEndUpdateGroup = entityAuditSupport.getTransactionEndUpdateMutationGroup() == null
 				? null
-				: createOperationGroup( null, entityAuditSupport.getTransactionEndUpdateMutationGroup() );
+				: createAuditOperationGroup( entityAuditSupport.getTransactionEndUpdateMutationGroup() );
+	}
+
+	@Nonnull
+	private MutationOperationGroup createAuditOperationGroup(@Nonnull MutationGroup mutationGroup) {
+		return auxiliaryOperations( createOperationGroup( null, mutationGroup ) );
 	}
 
 	/**
@@ -96,7 +104,7 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 				? entityAuditSupport.resolveAuditInsertMutationGroup( propertyInclusions, entity, session )
 				: null;
 		final MutationOperationGroup operationGroup = dynamicInsert
-				? mutationGroup == null ? null : createOperationGroup( null, mutationGroup )
+				? mutationGroup == null ? null : createAuditOperationGroup( mutationGroup )
 				: staticAuditInsertGroup;
 		if ( operationGroup == null ) {
 			return;

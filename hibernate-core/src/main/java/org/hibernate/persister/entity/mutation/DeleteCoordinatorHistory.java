@@ -17,6 +17,7 @@ import org.hibernate.sql.model.internal.MutationGroupSingle;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.persister.entity.mutation.AbstractTemporalUpdateCoordinator.applyTemporalEnding;
+import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.auxiliaryOperations;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /**
@@ -135,9 +136,9 @@ public class DeleteCoordinatorHistory
 		}
 
 		final var tableMutation = tableUpdateBuilder.buildMutation();
-		return singleOperation(
+		return auxiliaryOperations( singleOperation(
 				new MutationGroupSingle( MutationType.DELETE, entityPersister(), tableMutation ),
 				tableMutation.createMutationOperation( null, factory() )
-		);
+		) );
 	}
 }

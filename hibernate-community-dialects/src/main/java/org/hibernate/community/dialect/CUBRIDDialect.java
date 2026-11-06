@@ -71,6 +71,7 @@ import org.hibernate.dialect.type.spi.SizeStrategy;
 import org.hibernate.dialect.type.spi.StandardSizeStrategy;
 import org.hibernate.dialect.type.spi.TimeZoneSupport;
 import org.hibernate.dialect.aggregate.spi.AggregateSupport;
+import org.hibernate.dialect.aggregate.spi.FunctionalDependencyAnalysisSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.TruncFunction;
 import org.hibernate.dialect.identity.spi.IdentityColumnSupport;
@@ -870,6 +871,14 @@ public class CUBRIDDialect extends Dialect implements CurrentTemporalSupport, Te
 	@SPI({ IMPLEMENT, SUPPLY })
 	public AggregateSupport getAggregateSupport() {
 		return CUBRIDAggregateSupport.INSTANCE;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
+		//CUBRID does not analyze functional dependency, but by default (only_full_group_by=no)
+		//it accepts columns that are not in the group by clause
+		return FunctionalDependencyAnalysisSupport.TABLE_GROUP_AND_CONSTANTS;
 	}
 
 	@Override

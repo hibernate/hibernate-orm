@@ -155,10 +155,15 @@ public final class JakartaDataRestriction {
 		requireNonNull( query, "missing query" );
 		requireNonNull( root, "missing root" );
 		requireNonNull( builder, "missing builder" );
+		final var sortExpression = sort.expression();
+		final var criteriaExpression =
+				sortExpression == null
+						? path( root, requireNonNull( sort.property(), "missing sort property" ) )
+						: expression( sortExpression, root, builder );
 		final var expression =
 				sort.ignoreCase()
-						? builder.lower( path( root, sort.property() ).as( String.class ) )
-						: path( root, sort.property() );
+						? builder.lower( criteriaExpression.as( String.class ) )
+						: criteriaExpression;
 		appendOrder( query, sort.isDescending() ? builder.desc( expression ) : builder.asc( expression ) );
 	}
 
@@ -387,7 +392,7 @@ public final class JakartaDataRestriction {
 			@Nonnull Root<?> root,
 			@Nonnull CriteriaBuilder builder) {
 		if ( expression instanceof Attribute<?> attribute ) {
-			return root.get( attribute.name() );
+			return path( root, attribute.name() );
 		}
 		else if ( expression instanceof Path<?, ?> path ) {
 			return path( path.expression(), root ).get( path.attribute().name() );

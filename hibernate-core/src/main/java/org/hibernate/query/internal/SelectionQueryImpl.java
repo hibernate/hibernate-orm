@@ -1397,7 +1397,8 @@ public class SelectionQueryImpl<R>
 				return false;
 			}
 		}
-		if ( BaseSqmToSqlAstConverter.ordersByPluralFetchBeforeOwner( spec ) ) {
+		if ( BaseSqmToSqlAstConverter.hasCollectionFetchJoinDependencies( spec )
+				|| BaseSqmToSqlAstConverter.ordersByPluralFetchBeforeOwner( spec ) ) {
 			return false;
 		}
 		// The transformer only rewrites when at least one root contributes a

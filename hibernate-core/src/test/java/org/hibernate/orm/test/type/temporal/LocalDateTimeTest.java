@@ -14,7 +14,9 @@ import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.UniqueClassTemplateLeafNames;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedClass;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -38,6 +40,7 @@ import static org.hibernate.orm.test.type.temporal.Timezones.ZONE_UTC_MINUS_8;
  * Tests for storage of LocalDateTime properties.
  */
 @TestInstance( TestInstance.Lifecycle.PER_METHOD )
+@ExtendWith(UniqueClassTemplateLeafNames.class)
 @ParameterizedClass
 @MethodSource("testData")
 @DomainModel(annotatedClasses = LocalDateTimeTest.EntityWithLocalDateTime.class)

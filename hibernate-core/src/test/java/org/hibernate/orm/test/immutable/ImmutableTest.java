@@ -65,7 +65,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Override
 	public String[] getOrmXmlFiles() {
-		return new String[] { "org/hibernate/orm/test/immutable/ContractVariation.hbm.xml" };
+		return new String[] { "org/hibernate/orm/test/immutable/ContractVariation.orm.xml" };
 	}
 
 	@Test

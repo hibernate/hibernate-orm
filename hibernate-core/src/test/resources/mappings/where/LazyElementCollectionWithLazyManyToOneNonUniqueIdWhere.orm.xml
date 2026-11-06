@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+<entity-mappings xmlns="https://www.hibernate.org/xsd/orm/mapping"
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                  xsi:schemaLocation="http://www.hibernate.org/xsd/orm/mapping
                 https://www.hibernate.org/xsd/orm/mapping/mapping-8.0.xsd"

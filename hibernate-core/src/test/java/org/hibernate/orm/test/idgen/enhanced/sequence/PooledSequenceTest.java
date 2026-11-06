@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.idgen.enhanced.sequence;
 
+import org.hibernate.id.GenericGeneratorGeneration;
 import org.hibernate.id.enhanced.PooledOptimizer;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.persister.entity.EntityPersister;
@@ -17,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel( xmlMappings = "org/hibernate/orm/test/idgen/enhanced/sequence/Pooled.hbm.xml" )
+@DomainModel( xmlMappings = "org/hibernate/orm/test/idgen/enhanced/sequence/Pooled.orm.xml" )
 @SessionFactory
 public class PooledSequenceTest {
 	private static final long INITIAL_VALUE = 1;
@@ -27,8 +28,9 @@ public class PooledSequenceTest {
 		final EntityPersister persister = scope.getSessionFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor(Entity.class.getName());
-		assertThat( persister.getGenerator() ).isInstanceOf( SequenceStyleGenerator.class );
-		final SequenceStyleGenerator generator = ( SequenceStyleGenerator ) persister.getGenerator();
+		assertThat( persister.getGenerator() ).isInstanceOf( GenericGeneratorGeneration.class );
+		assertThat( ((GenericGeneratorGeneration) persister.getGenerator()).getDelegate() ).isInstanceOf( SequenceStyleGenerator.class );
+		final SequenceStyleGenerator generator = (SequenceStyleGenerator) ((GenericGeneratorGeneration) persister.getGenerator()).getDelegate();
 		assertThat( generator.getOptimizer() ).isInstanceOf( PooledOptimizer.class );
 		final PooledOptimizer optimizer = (PooledOptimizer) generator.getOptimizer();
 		final int increment = optimizer.getIncrementSize();

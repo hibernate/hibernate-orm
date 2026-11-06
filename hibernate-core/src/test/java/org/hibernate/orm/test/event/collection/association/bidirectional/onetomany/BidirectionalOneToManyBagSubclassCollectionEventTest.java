@@ -6,7 +6,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 /**
  * @author Gail Badner
  */
-@DomainModel(xmlMappings = "org/hibernate/orm/test/event/collection/association/bidirectional/onetomany/BidirectionalOneToManyBagSubclassMapping.hbm.xml")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/event/collection/association/bidirectional/onetomany/BidirectionalOneToManyBagSubclassMapping.orm.xml")
 public class BidirectionalOneToManyBagSubclassCollectionEventTest extends BidirectionalOneToManyBagCollectionEventTest {
 
 	@Override

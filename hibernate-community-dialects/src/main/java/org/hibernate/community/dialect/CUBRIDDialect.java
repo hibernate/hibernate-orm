@@ -694,6 +694,8 @@ public class CUBRIDDialect extends Dialect implements CurrentTemporalSupport, Te
 		functionFactory.jsonArrayInsert_mysql();
 		functionFactory.jsonTable_mysql();
 
+		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, false );
+
 		final SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
 		final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
 		//CUBRID rejects extract(millisecond from <time>), so handle the TIME case separately
@@ -712,6 +714,16 @@ public class CUBRIDDialect extends Dialect implements CurrentTemporalSupport, Te
 		functionRegistry.register( "json_array", new CUBRIDJsonArrayFunction( typeConfiguration ) );
 		functionRegistry.register( "json_arrayagg", new CUBRIDJsonArrayAggFunction( typeConfiguration ) );
 		functionRegistry.register( "json_objectagg", new CUBRIDJsonObjectAggFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * CUBRID doesn't support the {@code generate_series} function or {@code lateral} recursive CTEs,
+	 * so it has to be emulated with a top level recursive CTE which requires an upper bound on the amount
+	 * of elements that the series can return.
+	 */
+	protected int getMaximumSeriesSize() {
+		//the default of cte_max_recursions
+		return 2000;
 	}
 
 	@Override

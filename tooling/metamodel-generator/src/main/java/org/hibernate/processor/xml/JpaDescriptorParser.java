@@ -10,7 +10,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Function;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 
@@ -25,6 +24,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMappedSuperclassImpl;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.processor.Context;
 import org.hibernate.processor.util.AccessTypeInformation;
 import org.hibernate.processor.util.FileTimeStampChecker;
@@ -59,7 +59,20 @@ public final class JpaDescriptorParser {
 		xmlParserHelper = new XmlParserHelper( context );
 		resourceStreamLocator = new ResourceStreamLocatorImpl( context );
 		configurationBinder = new ConfigurationBinder( resourceStreamLocator );
-		mappingBinder = new MappingBinder( resourceStreamLocator, (Function<String, Object>) null );
+		mappingBinder = new MappingBinder( resourceStreamLocator, this::mappingSetting );
+	}
+
+	/**
+	 * Exposes to the {@link MappingBinder} the only settings relevant to the processor:
+	 * XML validation stays enabled, and DTD/external entity support follows the
+	 * {@value org.hibernate.processor.HibernateProcessor#ALLOW_DTD_AND_EXTERNAL_ENTITIES} option.
+	 */
+	private @Nullable Object mappingSetting(String settingName) {
+		return switch ( settingName ) {
+			case MappingSettings.VALIDATE_XML -> true;
+			case MappingSettings.XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES -> context.allowDtdAndExternalEntities();
+			default -> null;
+		};
 	}
 
 	public void parseMappingXml() {

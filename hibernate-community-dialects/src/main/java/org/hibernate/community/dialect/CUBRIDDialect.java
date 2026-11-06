@@ -48,7 +48,14 @@ import java.util.TimeZone;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.community.dialect.aggregate.internal.CUBRIDAggregateSupport;
 import org.hibernate.community.dialect.function.CUBRIDExtractFunction;
+import org.hibernate.community.dialect.function.json.CUBRIDJsonArrayAggFunction;
+import org.hibernate.community.dialect.function.json.CUBRIDJsonArrayFunction;
+import org.hibernate.community.dialect.function.json.CUBRIDJsonExistsFunction;
+import org.hibernate.community.dialect.function.json.CUBRIDJsonObjectAggFunction;
+import org.hibernate.community.dialect.function.json.CUBRIDJsonObjectFunction;
+import org.hibernate.community.dialect.function.json.CUBRIDJsonValueFunction;
 import org.hibernate.community.dialect.identity.internal.CUBRIDIdentityColumnSupport;
 import org.hibernate.community.dialect.sequence.CUBRIDSequenceSupport;
 import org.hibernate.dialect.DatabaseVersion;
@@ -63,6 +70,7 @@ import org.hibernate.dialect.type.spi.ObjectNullBindingStrategy;
 import org.hibernate.dialect.type.spi.SizeStrategy;
 import org.hibernate.dialect.type.spi.StandardSizeStrategy;
 import org.hibernate.dialect.type.spi.TimeZoneSupport;
+import org.hibernate.dialect.aggregate.spi.AggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.TruncFunction;
 import org.hibernate.dialect.identity.spi.IdentityColumnSupport;
@@ -675,6 +683,16 @@ public class CUBRIDDialect extends Dialect implements CurrentTemporalSupport, Te
 		functionFactory.windowFunctions();
 		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
 
+		functionFactory.jsonQuery_mysql();
+		functionFactory.jsonSet_mysql();
+		functionFactory.jsonRemove_mysql();
+		functionFactory.jsonReplace_mysql();
+		functionFactory.jsonInsert_mysql();
+		functionFactory.jsonMergepatch_mysql();
+		functionFactory.jsonArrayAppend_mysql();
+		functionFactory.jsonArrayInsert_mysql();
+		functionFactory.jsonTable_mysql();
+
 		final SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
 		final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
 		//CUBRID rejects extract(millisecond from <time>), so handle the TIME case separately
@@ -686,6 +704,13 @@ public class CUBRIDDialect extends Dialect implements CurrentTemporalSupport, Te
 				.setInvariantType( typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.LOCAL_TIME ) )
 				.setUseParenthesesWhenNoArgs( false )
 				.register();
+
+		functionRegistry.register( "json_value", new CUBRIDJsonValueFunction( typeConfiguration ) );
+		functionRegistry.register( "json_exists", new CUBRIDJsonExistsFunction( typeConfiguration ) );
+		functionRegistry.register( "json_object", new CUBRIDJsonObjectFunction( typeConfiguration ) );
+		functionRegistry.register( "json_array", new CUBRIDJsonArrayFunction( typeConfiguration ) );
+		functionRegistry.register( "json_arrayagg", new CUBRIDJsonArrayAggFunction( typeConfiguration ) );
+		functionRegistry.register( "json_objectagg", new CUBRIDJsonObjectAggFunction( typeConfiguration ) );
 	}
 
 	@Override
@@ -839,6 +864,12 @@ public class CUBRIDDialect extends Dialect implements CurrentTemporalSupport, Te
 						WindowFunctionSupport.Feature.PARTITION_BY
 				)
 				.build();
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public AggregateSupport getAggregateSupport() {
+		return CUBRIDAggregateSupport.INSTANCE;
 	}
 
 	@Override

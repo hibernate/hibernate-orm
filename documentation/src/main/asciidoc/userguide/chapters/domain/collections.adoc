@@ -769,6 +769,7 @@ Hibernate allows using the following map keys:
 `MapKeyEnumerated`:: the map key is an `Enum` of the target child entity
 `MapKeyTemporal`:: the map key is a `Date` or a `Calendar` of the target child entity
 `MapKeyJoinColumn`:: the map key is an entity mapped as an association in the child entity that's stored as a map entry key
+`MapKeyFormula`:: the map key is derived from a native SQL expression instead of being stored in a column
 
 [[collections-map-value-type]]
 ===== Value type maps
@@ -838,6 +839,30 @@ include::{example-dir-collection}/MapKeyTypeTest.java[tags=collections-map-custo
 ----
 ====
 
+[[collections-map-key-formula]]
+===== Maps with a formula key
+
+Hibernate defines the
+https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/MapKeyFormula.html[`@MapKeyFormula`] annotation
+for deriving the `Map` key from a native SQL expression.
+The expression is evaluated against the table holding the map entries, that is, the collection table,
+or the table of the target entity for a one-to-many association without a join table.
+
+The following mapping keys `Child` entities by the upper case form of their `code` column:
+
+[[collections-map-key-formula-example]]
+.`@MapKeyFormula` mapping example
+====
+[source,java]
+----
+include::{domain-collections-core-test-base}/org/hibernate/orm/test/collection/map/AbstractMapKeyFormulaTest.java[tags=collections-map-key-formula-example,indent=0]
+----
+====
+
+Since the key is derived, it is never written to the database.
+`@MapKeyFormula` cannot be combined with `@MapKeyColumn`, `@MapKeyJoinColumn` or `@MapKey`, and the key of the map cannot be an entity.
+
+The `<map-key-formula>` element has the same effect in mapping XML.
 
 [[collections-map-key-class]]
 ===== Maps having an interface type as the key

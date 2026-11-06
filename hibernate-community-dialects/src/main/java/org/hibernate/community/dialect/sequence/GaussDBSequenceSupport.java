@@ -39,4 +39,21 @@ public class GaussDBSequenceSupport implements SequenceSupport {
 		return "drop sequence if exists " + sequenceName;
 	}
 
+	/**
+	 * GaussDB's {@code ALTER SEQUENCE} only supports {@code MAXVALUE}, {@code CACHE} and {@code OWNER},
+	 * so the {@code RESTART WITH} syntax is not supported.
+	 * Use {@code setval()} function instead to reset the sequence value.
+	 * <p>
+	 * The three-argument form with {@code is_called=false} is used so that the next {@code nextval()}
+	 * returns {@code startWith} itself, matching PostgreSQL's {@code ALTER SEQUENCE ... RESTART WITH}
+	 * semantics. The two-argument form defaults to {@code is_called=true}, which makes the next
+	 * {@code nextval()} return {@code startWith + increment} (off by one), breaking tests that reset
+	 * a sequence and then expect {@code nextval} to yield the restart value (e.g. truncate/resync).
+	 */
+	@Override
+	public String getRestartSequenceString(String sequenceName, long startWith) {
+		return "select setval('" + sequenceName + "', " + startWith + ", false)";
+	}
+
+
 }

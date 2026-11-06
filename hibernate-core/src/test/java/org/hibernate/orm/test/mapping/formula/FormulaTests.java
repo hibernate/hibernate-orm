@@ -14,6 +14,7 @@ import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.Formula;
 
 import org.hibernate.community.dialect.FirebirdDialect;
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
@@ -107,6 +108,8 @@ public class FormulaTests {
 
 		@Formula(value = "(rate * 100) || '%'")
 		@DialectOverride.Formula(dialect = MySQLDialect.class,
+				override = @Formula("concat(rate * 100, '%')"))
+		@DialectOverride.Formula(dialect = GaussDBDialect.class,
 				override = @Formula("concat(rate * 100, '%')"))
 		@DialectOverride.Formula(dialect = HSQLDialect.class,
 				override = @Formula("replace(cast(rate * 100 as varchar(10)),'E0','') || '%'"))

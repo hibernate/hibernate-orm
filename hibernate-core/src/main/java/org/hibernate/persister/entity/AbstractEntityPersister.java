@@ -164,6 +164,7 @@ import org.hibernate.models.internal.util.CollectionHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
 import org.hibernate.action.queue.internal.decompose.entity.DeleteDecomposer;
+import org.hibernate.persister.entity.mutation.EntityAuditSupport;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.persister.entity.mutation.EntityTableMappingImpl;
 import org.hibernate.persister.entity.mutation.InsertCoordinator;
@@ -432,6 +433,8 @@ public abstract class AbstractEntityPersister
 	private DeleteCoordinator deleteCoordinator;
 	@SuppressWarnings("NullAway.Init") // Initialized during mapping model creation.
 	private UpdateCoordinator mergeCoordinator;
+	@Nullable
+	private EntityAuditSupport entityAuditSupport;
 
 	@Nullable
 	private SqmMultiTableMutationStrategy sqmMultiTableMutationStrategy;
@@ -1226,6 +1229,12 @@ public abstract class AbstractEntityPersister
 	@Override
 	public UpdateCoordinator getMergeCoordinator() {
 		return mergeCoordinator;
+	}
+
+	@Nullable
+	@Override
+	public EntityAuditSupport getEntityAuditSupport() {
+		return entityAuditSupport;
 	}
 
 	@Nonnull
@@ -3806,6 +3815,8 @@ public abstract class AbstractEntityPersister
 			updateGeneratedValuesProcessor =
 					createGeneratedValuesProcessor( UPDATE, updateGeneratedAttributes );
 		}
+
+		entityAuditSupport = getAuditMapping() == null ? null : new EntityAuditSupport( this, factory );
 
 		final var legacyIntegration = stateManagement.getLegacyIntegration();
 		insertCoordinator = legacyIntegration.createInsertCoordinator( this );

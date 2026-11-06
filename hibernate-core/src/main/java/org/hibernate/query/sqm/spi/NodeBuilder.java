@@ -19,6 +19,7 @@ import java.util.Set;
 import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
+import org.hibernate.Internal;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.spi.ImmutableEntityUpdateQueryHandlingMode;
@@ -1665,9 +1666,20 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 			@Nonnull Expression<? extends Y> lower,
 			@Nonnull Expression<? extends Y> upper);
 
-	SqmPredicate between(Expression<?> value, Expression<?> lower, Expression<?> upper, boolean negated);
+	@Internal
+	@Nonnull
+	SqmPredicate between(
+			@Nonnull Expression<?> value,
+			@Nonnull Expression<?> lower,
+			@Nonnull Expression<?> upper,
+			boolean negated);
 
-	SqmPredicate comparison(Expression<?> x, ComparisonOperator operator, Expression<?> y);
+	@Internal
+	@Nonnull
+	SqmPredicate comparison(
+			@Nonnull Expression<?> x,
+			@Nonnull ComparisonOperator operator,
+			@Nonnull Expression<?> y);
 
 	@Nonnull
 	@Override

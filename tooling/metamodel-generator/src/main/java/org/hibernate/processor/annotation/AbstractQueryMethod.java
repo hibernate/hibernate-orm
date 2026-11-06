@@ -639,7 +639,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			\t\t\t\t_results.isLastPage()
 			\t\t\t\t\t? null
 			\t\t\t\t\t: afterCursor(_cursors.get(_cursors.size()-1), pageRequest.page()+1, pageRequest.size(), pageRequest.requestTotal()),
-			\t\t\t\t_results.isFirstPage()
+			\t\t\t\t_results.getPreviousPage() == null
 			\t\t\t\t\t? null
 			\t\t\t\t\t: beforeCursor(_cursors.get(0), pageRequest.page()-1, pageRequest.size(), pageRequest.requestTotal()))
 			""";

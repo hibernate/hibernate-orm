@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.net.URL;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
 
-import static javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI;
+import org.hibernate.boot.cfgxml.internal.XmlFactoryUtil;
+
 import static org.hibernate.boot.jaxb.JaxbLogger.JAXB_LOGGER;
 
 /**
@@ -44,8 +44,8 @@ public class LocalSchemaLocator {
 		try {
 			final var schemaStream = schemaUrl.openStream();
 			try {
-				return SchemaFactory.newInstance( W3C_XML_SCHEMA_NS_URI )
-						.newSchema( new StreamSource( schemaUrl.openStream() ) );
+				return XmlFactoryUtil.newSchemaFactory()
+						.newSchema( new StreamSource( schemaStream ) );
 			}
 			catch ( Exception e ) {
 				throw new XmlInfrastructureException( "Unable to load schema [" + schemaUrl.toExternalForm() + "]", e );

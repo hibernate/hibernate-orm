@@ -131,7 +131,7 @@ public abstract class AbstractJdbcParameter
 					executionContext.getSession().getFactory().getMappingMetamodel()
 							.resolveParameterBindType( bindValue );
 			return parameterType == null && bindValue instanceof Enum<?> enumValue
-					? createEnumType( executionContext, enumValue.getClass() )
+					? createEnumType( executionContext, enumValue.getDeclaringClass() )
 					: parameterType instanceof JdbcMapping ? (JdbcMapping) parameterType : null;
 		}
 	}

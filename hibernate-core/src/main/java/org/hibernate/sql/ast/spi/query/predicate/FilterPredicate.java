@@ -10,6 +10,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
+import org.hibernate.sql.exec.internal.FilterJdbcParameter;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
@@ -88,6 +89,7 @@ public class FilterPredicate implements Predicate {
 		private final String parameterName;
 		private final JdbcMapping valueMapping;
 		private final Object value;
+		private final List<FilterJdbcParameter> filterJdbcParameters;
 		private JdbcParameter jdbcParameter;
 
 		FilterFragmentParameter(String filterName, String parameterName, JdbcMapping valueMapping, Object value) {
@@ -95,6 +97,7 @@ public class FilterPredicate implements Predicate {
 			this.parameterName = parameterName;
 			this.valueMapping = valueMapping;
 			this.value = value;
+			this.filterJdbcParameters = FilterJdbcParameter.create( filterName, parameterName, valueMapping, value );
 		}
 
 		public String getFilterName() {
@@ -109,19 +112,31 @@ public class FilterPredicate implements Predicate {
 			return valueMapping;
 		}
 
+		/**
+		 * The argument of the filter parameter when the SQL AST was created.
+		 * It determines the number of JDBC parameters, but it is never bound.
+		 */
 		public Object getValue() {
 			return value;
 		}
 
 		/**
-		 * An externally bound scalar parameter, or {@code null} to use the captured filter value.
+		 * The JDBC parameters which bind the argument of the executing session:
+		 * one for a single value, or one for each element of a multivalued argument.
+		 */
+		public List<FilterJdbcParameter> getFilterJdbcParameters() {
+			return filterJdbcParameters;
+		}
+
+		/**
+		 * An externally bound scalar parameter, or {@code null} to use the {@linkplain #getFilterJdbcParameters filter JDBC parameters}.
 		 */
 		public JdbcParameter getJdbcParameter() {
 			return jdbcParameter;
 		}
 
 		/**
-		 * Use an execution-time binding instead of the captured filter value.
+		 * Use an execution-time binding instead of the filter JDBC parameters.
 		 * The caller must supply a binding for this parameter on every execution.
 		 */
 		public void setJdbcParameter(JdbcParameter jdbcParameter) {

@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.results.graph.entity;
 
+import jakarta.annotation.Nullable;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -26,7 +28,19 @@ public interface EntityValuedFetchable extends Fetchable, EntityValuedModelPart 
 			String resultVariable,
 			DomainResultCreationState creationState);
 
+	@Nullable NotFoundAction getNotFoundAction();
+
+	default boolean hasNotFoundAction() {
+		return getNotFoundAction() != null;
+	}
+
+	@Nullable String getReferencedPropertyName();
+
 	boolean isOptional();
 
 	boolean isUnwrapProxy();
+
+	boolean isLazy();
+
+	boolean isInternalLoadNullable();
 }

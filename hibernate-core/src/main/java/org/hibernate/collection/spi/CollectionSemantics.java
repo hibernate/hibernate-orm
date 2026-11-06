@@ -7,6 +7,7 @@ package org.hibernate.collection.spi;
 import java.util.Iterator;
 import java.util.function.Consumer;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.CollectionClassification;
@@ -83,7 +84,9 @@ public interface CollectionSemantics<CE, E> {
 	 * instances for the given collection semantics
 	 *
 	 * @see InitializerProducerBuilder
+	 * @deprecated Use {@link #createInitializerProducer(PluralAttributeMapping, Fetch, Fetch, Fetch)} instead
 	 */
+	@Deprecated(forRemoval = true)
 	default CollectionInitializerProducer createInitializerProducer(
 			NavigablePath navigablePath,
 			PluralAttributeMapping attributeMapping,
@@ -101,7 +104,9 @@ public interface CollectionSemantics<CE, E> {
 	 * instances for the given collection semantics
 	 *
 	 * @see InitializerProducerBuilder
+	 * @deprecated Use {@link #createInitializerProducer(PluralAttributeMapping, Fetch, Fetch, Fetch)} instead
 	 */
+	@Deprecated(forRemoval = true)
 	default CollectionInitializerProducer createInitializerProducer(
 			NavigablePath navigablePath,
 			PluralAttributeMapping attributeMapping,
@@ -120,6 +125,25 @@ public interface CollectionSemantics<CE, E> {
 				indexFetch,
 				elementFetch,
 				creationState
+		);
+	}
+
+	/**
+	 * Create a producer for {@link org.hibernate.sql.results.graph.collection.CollectionInitializer}
+	 * instances for the given collection semantics
+	 *
+	 * @see InitializerProducerBuilder
+	 */
+	default CollectionInitializerProducer createInitializerProducer(
+			PluralAttributeMapping attributeMapping,
+			@Nullable Fetch identifierFetch,
+			@Nullable Fetch indexFetch,
+			Fetch elementFetch) {
+		return InitializerProducerBuilder.createInitializerProducer(
+				attributeMapping,
+				identifierFetch,
+				indexFetch,
+				elementFetch
 		);
 	}
 }

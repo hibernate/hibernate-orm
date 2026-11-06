@@ -24,6 +24,7 @@ import java.util.Locale;
 import java.util.function.Supplier;
 
 import static java.sql.Statement.RETURN_GENERATED_KEYS;
+import static org.hibernate.engine.jdbc.mutation.internal.ModelMutationHelper.identifiedResultsCheck;
 import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getActualGeneratedModelPart;
 import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getGeneratedValues;
 import static org.hibernate.internal.util.StringHelper.EMPTY_STRINGS;
@@ -94,7 +95,11 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 		try {
 			final var preparedStatement = statementDetails.resolveStatement();
 			jdbcValueBindings.beforeStatement( statementDetails );
-			session.getJdbcCoordinator().getResultSetReturn().executeUpdate( preparedStatement, sql );
+			final int rowCount = session.getJdbcCoordinator().getResultSetReturn().executeUpdate( preparedStatement, sql );
+			if ( getTiming() == EventType.UPDATE ) {
+				identifiedResultsCheck( statementDetails, rowCount, -1, persister,
+						persister.getIdentifier( entity, session ), session.getFactory() );
+			}
 			return extractGeneratedValues( session, preparedStatement, sql,
 					() -> String.format( Locale.ROOT,
 							"Unable to extract generated key for '%s'",
@@ -131,11 +136,21 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 			operation.getBindPlan().bindValues( valueBindings, operation, session );
 			valueBindings.beforeStatement( preparedStatement, session );
 
-			session.getJdbcCoordinator().getResultSetReturn().executeUpdate( preparedStatement, sql );
+			final int rowCount = session.getJdbcCoordinator().getResultSetReturn().executeUpdate( preparedStatement, sql );
+			if ( getTiming() == EventType.UPDATE ) {
+				operation.checkResult( rowCount, preparedStatement, -1, sql, session.getFactory() );
+			}
 			return extractGeneratedValues( session, preparedStatement, sql,
 					() -> String.format( Locale.ROOT,
 							"Unable to extract generated key for '%s'",
 							persister.getNavigableRole().getFullPath() ) );
+		}
+		catch (SQLException e) {
+			throw session.getJdbcServices().getSqlExceptionHelper().convert(
+					e,
+					"Unable to check update outcome",
+					sql
+			);
 		}
 		finally {
 			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( preparedStatement );

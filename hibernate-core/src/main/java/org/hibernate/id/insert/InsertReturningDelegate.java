@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
+import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.dialect.generated.spi.GeneratedValuesSupport;
 import org.hibernate.generator.EventType;
@@ -23,6 +24,7 @@ import org.hibernate.sql.ast.spi.model.builder.TableMutationBuilder;
 import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
 
 import static java.sql.Statement.NO_GENERATED_KEYS;
+import static org.hibernate.engine.jdbc.mutation.internal.ModelMutationHelper.identifiedResultsCheck;
 import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getActualGeneratedModelPart;
 import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getGeneratedValues;
 
@@ -111,6 +113,20 @@ public class InsertReturningDelegate extends AbstractReturningDelegate {
 						throw session.getJdbcServices().getSqlExceptionHelper().convert( e, "Unable to check update outcome", sql );
 					}
 				} : null );
+	}
+
+	@Override
+	protected GeneratedValues executeAndExtractReturning(
+			String sql,
+			PreparedStatement preparedStatement,
+			SharedSessionContractImplementor session,
+			PreparedStatementDetails statementDetails,
+			Object entity) {
+		return executeAndExtractReturning( sql, preparedStatement, session,
+				getTiming() == EventType.UPDATE
+						? () -> identifiedResultsCheck( statementDetails, 0, -1, persister,
+								persister.getIdentifier( entity, session ), session.getFactory() )
+						: null );
 	}
 
 	private GeneratedValues executeAndExtractReturning(

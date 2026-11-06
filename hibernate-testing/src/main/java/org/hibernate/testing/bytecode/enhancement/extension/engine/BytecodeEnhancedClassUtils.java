@@ -119,6 +119,11 @@ final class BytecodeEnhancedClassUtils {
 					final UnsupportedEnhancementStrategy strategy = options.unsupportedEnhancementStrategy();
 					return strategy != SKIP ? strategy : super.getUnsupportedEnhancementStrategy();
 				}
+
+				@Override
+				public boolean doLenientConstructorTracking() {
+					return options.lenientConstructorTracking();
+				}
 			};
 		}
 

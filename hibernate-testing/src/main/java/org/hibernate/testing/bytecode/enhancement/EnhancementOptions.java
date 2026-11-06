@@ -20,4 +20,5 @@ public @interface EnhancementOptions {
 	boolean lazyLoading() default false;
 	boolean extendedEnhancement() default false;
 	UnsupportedEnhancementStrategy unsupportedEnhancementStrategy() default UnsupportedEnhancementStrategy.SKIP;
+	boolean lenientConstructorTracking() default false;
 }

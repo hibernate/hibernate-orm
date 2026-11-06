@@ -147,8 +147,11 @@ public class EnhancementHelper {
 
 	public static Enhancer generateEnhancer(ClassLoader classLoader, EnhancementSpec enhancementDsl) {
 
-		final var options = EnhancementOptions.of(enhancementDsl.getEnableDirtyTracking().get(),
-				enhancementDsl.getEnableLazyInitialization().get(), enhancementDsl.getEnableAssociationManagement().get());
+		final var options = EnhancementOptions.of(
+				enhancementDsl.getEnableDirtyTracking().get(),
+				enhancementDsl.getEnableLazyInitialization().get(),
+				enhancementDsl.getEnableAssociationManagement().get(),
+				enhancementDsl.getLenientConstructorTracking().get() );
 
 		//TODO allow the Gradle plugin to configure the bytecode enhancer?
 		return new EnhancementPipeline( buildDefaultBytecodeProvider().createEnhancementSession(new DefaultEnhancementModel(),

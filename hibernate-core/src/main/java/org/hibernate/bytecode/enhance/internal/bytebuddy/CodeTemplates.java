@@ -28,6 +28,9 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.StackManipulation;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.implementation.bytecode.member.MethodInvocation;
+import net.bytebuddy.jar.asm.Label;
+import net.bytebuddy.jar.asm.MethodVisitor;
+import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.implementation.bytecode.member.MethodVariableAccess;
 import net.bytebuddy.jar.asm.Opcodes;
 
@@ -339,12 +342,45 @@ class CodeTemplates {
 			}
 		}
 
+		// The exit() logic below is duplicated as direct bytecode emission
+		// in emitCompositeOwnerSetup() and InlineDirtyCheckingHandler.emitTrackChange()
+		// for the flexible constructor replay path. Keep them in sync.
 		@Advice.OnMethodExit
 		static void exit(@Advice.This CompositeOwner self, @FieldName String fieldName, @FieldValue Object field) {
 			if ( field != null ) {
 				asCompositeTracker( field ).$$_hibernate_setOwner( fieldName, self );
 			}
 			self.$$_hibernate_trackChange( fieldName );
+		}
+
+		// Emits the composite-owner portion of exit() as raw bytecode.
+		// Does NOT emit trackChange -- that is handled by InlineDirtyCheckingHandler.emitTrackChange().
+		static void emitCompositeOwnerSetup(
+				MethodVisitor methodVisitor,
+				String ownerInternalName,
+				String fieldName,
+				String fieldDescriptor) {
+			final var nullLabel = new Label();
+			final var afterLabel = new Label();
+			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
+			methodVisitor.visitFieldInsn( Opcodes.GETFIELD, ownerInternalName, fieldName, fieldDescriptor );
+			methodVisitor.visitInsn( Opcodes.DUP );
+			methodVisitor.visitJumpInsn( Opcodes.IFNULL, nullLabel );
+			methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, "org/hibernate/engine/spi/CompositeTracker" );
+			methodVisitor.visitLdcInsn( fieldName );
+			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
+			methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, "org/hibernate/engine/spi/CompositeOwner" );
+			methodVisitor.visitMethodInsn(
+					Opcodes.INVOKEINTERFACE,
+					"org/hibernate/engine/spi/CompositeTracker",
+					EnhancerConstants.TRACKER_COMPOSITE_SET_OWNER,
+					"(Ljava/lang/String;Lorg/hibernate/engine/spi/CompositeOwner;)V",
+					true
+			);
+			methodVisitor.visitJumpInsn( Opcodes.GOTO, afterLabel );
+			methodVisitor.visitLabel( nullLabel );
+			methodVisitor.visitInsn( Opcodes.POP );
+			methodVisitor.visitLabel( afterLabel );
 		}
 	}
 

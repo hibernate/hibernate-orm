@@ -36,7 +36,8 @@ public class DefaultDirtyCheckEventListener implements DirtyCheckEventListener {
 		final var persistenceContext = session.getPersistenceContextInternal();
 		final var holdersByKey = persistenceContext.getEntityHoldersByKey();
 		if ( holdersByKey != null ) {
-			for ( var holder : holdersByKey.values() ) {
+			final var holders = holdersByKey.values().toArray( new EntityHolder[0] );
+			for ( var holder : holders ) {
 				if ( isEntityDirty( holder, session ) ) {
 					event.setDirty( true );
 					return;
@@ -45,7 +46,8 @@ public class DefaultDirtyCheckEventListener implements DirtyCheckEventListener {
 		}
 		final var entriesByCollection = persistenceContext.getCollectionEntries();
 		if ( entriesByCollection != null ) {
-			for ( var entry : entriesByCollection.entrySet() ) {
+			final var entries = new java.util.ArrayList<>( entriesByCollection.entrySet() );
+			for ( var entry : entries ) {
 				if ( isCollectionDirty( entry.getKey(), entry.getValue().getLoadedPersister() ) ) {
 					event.setDirty( true );
 					return;

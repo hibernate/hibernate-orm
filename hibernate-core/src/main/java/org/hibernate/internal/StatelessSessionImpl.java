@@ -361,6 +361,7 @@ public class StatelessSessionImpl
 	@Override
 	public void insertMultiple(@Nonnull List<?> entities) {
 		checkOpen();
+		checkTransactionSyncStatus();
 		final Integer batchSize = getJdbcBatchSize();
 		setJdbcBatchSize( entities.size() );
 		try {
@@ -548,6 +549,7 @@ public class StatelessSessionImpl
 	@Override
 	public void deleteMultiple(@Nonnull List<?> entities) {
 		checkOpen();
+		checkTransactionSyncStatus();
 		final Integer batchSize = getJdbcBatchSize();
 		setJdbcBatchSize( entities.size() );
 		try {
@@ -652,6 +654,7 @@ public class StatelessSessionImpl
 	@Override
 	public void updateMultiple(@Nonnull List<?> entities) {
 		checkOpen();
+		checkTransactionSyncStatus();
 		final Integer batchSize = getJdbcBatchSize();
 		setJdbcBatchSize( entities.size() );
 		try {
@@ -823,6 +826,7 @@ public class StatelessSessionImpl
 	@Override
 	public void upsertMultiple(@Nonnull List<?> entities) {
 		checkOpen();
+		checkTransactionSyncStatus();
 		final Integer batchSize = getJdbcBatchSize();
 		setJdbcBatchSize( entities.size() );
 		try {

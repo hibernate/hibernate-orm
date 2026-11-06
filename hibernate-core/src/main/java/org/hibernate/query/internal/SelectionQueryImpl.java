@@ -31,6 +31,7 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.StatelessLocking;
 import org.hibernate.internal.util.OptionsHelper;
 import org.hibernate.internal.util.collections.IdentitySet;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.IllegalMutationQueryException;
@@ -51,6 +52,7 @@ import org.hibernate.query.named.internal.SqmSelectionMemento;
 import org.hibernate.query.spi.DelegatingQueryOptions;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.HqlInterpretation;
+import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.MutationQueryImplementor;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
@@ -78,6 +80,7 @@ import org.hibernate.query.sqm.tree.spi.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
 import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.sql.results.spi.SingleResultConsumer;
+import org.hibernate.type.descriptor.java.spi.EntityJavaType;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -97,6 +100,7 @@ import static org.hibernate.query.KeyedPage.KeyInterpretation.KEY_OF_FIRST_ON_NE
 import static org.hibernate.query.internal.QueryLogging.QUERY_MESSAGE_LOGGER;
 import static org.hibernate.query.common.FetchClauseType.PERCENT_ONLY;
 import static org.hibernate.query.common.FetchClauseType.PERCENT_WITH_TIES;
+import static org.hibernate.query.common.FetchClauseType.ROWS_ONLY;
 import static org.hibernate.query.internal.KeyBasedPagination.paginate;
 import static org.hibernate.query.internal.KeyedResult.collectKeys;
 import static org.hibernate.query.internal.KeyedResult.collectResults;
@@ -990,16 +994,76 @@ public class SelectionQueryImpl<R>
 		final boolean applyLimitInMemory =
 				limitInMemory
 					|| hasLimit && containsCollectionFetches && !paginationInSql;
-		final var list =
-				resolveQueryPlan()
-						.performList( listExecutionContext(
-								hasLimit,
-								containsCollectionFetches,
-								limitInMemory
-						) );
+		final var queryPlan = resolveQueryPlan();
+		var executionContext = listExecutionContext( hasLimit, containsCollectionFetches, limitInMemory );
+		Limit aggregatedLimit = null;
+		if ( hasLimit && queryPlan instanceof AggregatedSelectQueryPlanImpl<?>
+				&& statement.getQueryPart().getFetchClauseType() == ROWS_ONLY ) {
+			aggregatedLimit = getAggregatedLimit( statement );
+			executionContext = aggregatedQueryExecutionContext( executionContext, aggregatedLimit, applyLimitInMemory );
+		}
+		final var list = queryPlan.performList( executionContext );
+		if ( applyLimitInMemory && aggregatedLimit != null ) {
+			return handleDistinct( aggregatedLimit.getFirstRowJpa(), aggregatedLimit.getMaxRowsJpa(), list );
+		}
 		return needsDistinct
 				? handleDistinct( applyLimitInMemory, statement, list )
 				: applyLimitInMemory ? this.handleDistinct( true, statement, list ) : list;
+	}
+
+	private Limit getAggregatedLimit(SqmSelectStatement<?> statement) {
+		final var limit = getQueryOptions().getLimit();
+		if ( !limit.isEmpty() ) {
+			// Any API pagination replaces both the HQL offset and fetch, as in the SQL translator.
+			return limit;
+		}
+		final int max = getMaxRows( statement, 0 );
+		return new Limit( getIntegerLiteral( statement.getOffset() ), max < 0 ? null : max );
+	}
+
+	private DomainQueryExecutionContext aggregatedQueryExecutionContext(
+			DomainQueryExecutionContext executionContext, Limit aggregatedLimit, boolean applyLimitInMemory) {
+		final var statement = getSqmStatement();
+		final var limit = applyLimitInMemory && aggregatedLimit.getMaxRowsJpa() != 0
+				? Limit.NONE
+				: aggregatedLimit;
+		final var options = new DelegatingQueryOptions( executionContext.getQueryOptions() ) {
+			@Override
+			public Limit getEffectiveLimit() {
+				return limit;
+			}
+
+			@Override
+			public Boolean isLimitInMemoryEnabled() {
+				// ListResultsConsumer's ALLOW mode removes duplicates only for entity results.
+				return applyLimitInMemory || !statement.producesUniqueResults() && producesEntityResults( statement )
+						? TRUE : super.isLimitInMemoryEnabled();
+			}
+		};
+		return new DelegatingDomainQueryExecutionContext( executionContext ) {
+			@Override
+			public QueryOptions getQueryOptions() {
+				return options;
+			}
+
+			@Override
+			public Class<?> getResultType() {
+				return executionContext.getResultType();
+			}
+		};
+	}
+
+	private boolean producesEntityResults(SqmSelectStatement<?> statement) {
+		final var selections = statement.getQuerySpec().getSelectClause().getSelections();
+		if ( selections.size() == 1
+				&& selections.get( 0 ).getSelectableNode().getNodeType() instanceof EntityDomainType<?> entityType
+				&& (actualResultType == null || actualResultType.isAssignableFrom( entityType.getJavaType() )) ) {
+			// The unmapped root is replaced with a concrete entity in each component.
+			return true;
+		}
+		return actualResultType != null
+				&& getSessionFactory().getTypeConfiguration().getJavaTypeRegistry()
+						.resolveDescriptor( actualResultType ) instanceof EntityJavaType<?>;
 	}
 
 	@Override
@@ -1232,6 +1296,13 @@ public class SelectionQueryImpl<R>
 		final SelectQueryPlan<R>[] aggregatedQueryPlans = new SelectQueryPlan[ concreteSqmStatements.length ];
 		// todo (6.0) : we want to make sure that certain thing (ResultListTransformer, etc) only get applied at the aggregator-level
 		for ( int i = 0, length = concreteSqmStatements.length; i < length; i++ ) {
+			final var queryPart = concreteSqmStatements[i].getQueryPart();
+			if ( queryPart.getFetchClauseType() == ROWS_ONLY ) {
+				// Offset and limit apply to the concatenated results, not to every component.
+				// These are copies, so the original expressions remain available at execution time.
+				queryPart.setOffsetExpression( null );
+				queryPart.setFetchExpression( null );
+			}
 			aggregatedQueryPlans[i] = buildConcreteQueryPlan( concreteSqmStatements[i] );
 		}
 		return new AggregatedSelectQueryPlanImpl<>( aggregatedQueryPlans );
@@ -1458,10 +1529,14 @@ public class SelectionQueryImpl<R>
 	}
 
 	private List<R> handleDistinct(boolean applyLimit, SqmSelectStatement<?> statement, List<R> list) {
-		int includedCount = -1;
 		// NOTE: 'firstRow' is zero-based
 		final int first = applyLimit ? first( true, statement ) : 0;
 		final int max = applyLimit ? max( true, statement, list ) : -1;
+		return handleDistinct( first, max, list );
+	}
+
+	private List<R> handleDistinct(int first, int max, List<R> list) {
+		int includedCount = -1;
 		final List<R> distinctList = new ArrayList<>( list.size() );
 		final IdentitySet<Object> distinction = new IdentitySet<>( list.size() );
 		for ( final R result : list) {
@@ -1533,7 +1608,7 @@ public class SelectionQueryImpl<R>
 			return numericLiteral.getLiteralValue().intValue();
 		}
 		else if ( expression instanceof SqmParameter<Number> parameterExpression ) {
-			final Number number = getParameterValue( parameterExpression );
+			final Number number = (Number) getParameterValue( domainParameterXref.getQueryParameter( parameterExpression ) );
 			return number == null ? 0 : number.intValue();
 		}
 		else {
@@ -1562,7 +1637,7 @@ public class SelectionQueryImpl<R>
 			return numericLiteral.getLiteralValue();
 		}
 		else if ( expression instanceof SqmParameter<Number> numericParameter ) {
-			return getParameterValue( numericParameter );
+			return (Number) getParameterValue( domainParameterXref.getQueryParameter( numericParameter ) );
 		}
 		else {
 			throw new IllegalArgumentException( "Can't get max rows value from: " + expression );

@@ -1,5 +1,8 @@
 package org.hibernate.mapping;
 
+import org.hibernate.type.internal.TemporalMappingValidator;
+import java.time.ZoneId;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
@@ -53,6 +56,8 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.type.TrueFalseConverter;
 import org.hibernate.type.Type;
 import org.hibernate.type.WrapperArrayHandling;
+import org.hibernate.type.descriptor.converter.internal.TemporalAdjustmentConverter;
+import org.hibernate.type.descriptor.converter.internal.TemporalAdjustmentMutabilityPlan;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.java.BasicJavaType;
@@ -70,6 +75,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
+import org.hibernate.type.internal.CustomMutabilityConvertedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
 import org.hibernate.usertype.AnnotationBasedUserType;
@@ -114,6 +120,10 @@ public class BasicValue extends SimpleValue
 	@SuppressWarnings("deprecation")
 	private TemporalType temporalPrecision;
 	private TimeZoneStorageType timeZoneStorageType;
+	private ZoneId timeZoneAdjustment;
+	private boolean temporalValidationEnabled = true;
+	private String temporalRole;
+	private boolean temporalJdbcOverride;
 	private boolean isSoftDelete;
 	private SoftDeleteType softDeleteStrategy;
 
@@ -151,6 +161,10 @@ public class BasicValue extends SimpleValue
 		this.enumerationStyle = original.enumerationStyle;
 		this.temporalPrecision = original.temporalPrecision;
 		this.timeZoneStorageType = original.timeZoneStorageType;
+		this.timeZoneAdjustment = original.timeZoneAdjustment;
+		this.temporalValidationEnabled = original.temporalValidationEnabled;
+		this.temporalRole = original.temporalRole;
+		this.temporalJdbcOverride = original.temporalJdbcOverride;
 		this.resolvedJavaType = original.resolvedJavaType;
 		this.ownerName = original.ownerName;
 		this.propertyName = original.propertyName;
@@ -197,6 +211,26 @@ public class BasicValue extends SimpleValue
 
 	public EnumType getEnumerationStyle() {
 		return enumerationStyle;
+	}
+
+	public void setTemporalValidationEnabled(boolean enabled) {
+		temporalValidationEnabled = enabled;
+	}
+
+	public void setTemporalJdbcOverride(boolean explicit) {
+		temporalJdbcOverride = explicit;
+	}
+
+	public void setTemporalRole(String owner, String property) {
+		temporalRole = owner + "." + property;
+	}
+
+	private String temporalRole() {
+		return temporalRole == null ? ownerName + "." + propertyName : temporalRole;
+	}
+
+	public void setTimeZoneAdjustment(ZoneId target) {
+		timeZoneAdjustment = target;
 	}
 
 	public TimeZoneStorageType getTimeZoneStorageType() {
@@ -322,6 +356,10 @@ public class BasicValue extends SimpleValue
 			enumerationStyle = basicValue.enumerationStyle;
 			temporalPrecision = basicValue.temporalPrecision;
 			timeZoneStorageType = basicValue.timeZoneStorageType;
+			timeZoneAdjustment = basicValue.timeZoneAdjustment;
+			temporalValidationEnabled = basicValue.temporalValidationEnabled;
+			temporalRole = basicValue.temporalRole;
+			temporalJdbcOverride = basicValue.temporalJdbcOverride;
 			isSoftDelete = basicValue.isSoftDelete;
 			softDeleteStrategy = basicValue.softDeleteStrategy;
 			resolvedJavaType = basicValue.resolvedJavaType;
@@ -379,6 +417,55 @@ public class BasicValue extends SimpleValue
 		return true;
 	}
 
+	private void validateTemporalPrecision(Integer precision) {
+		if ( precision == null ) return;
+		if ( resolution.getJdbcType().getClass() == org.hibernate.type.descriptor.jdbc.TimeJdbcType.class && precision > 3 ) {
+			throw new MappingException( "Temporal mapping '" + temporalRole() + "' requires precision " + precision
+					+ " but java.sql.Time fallback supports at most millisecond precision" );
+		}
+		if ( getDialect() instanceof org.hibernate.dialect.OracleDialect
+				&& resolution.getJdbcType().getClass() == org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType.class && precision > 0 ) {
+			throw new MappingException( "Temporal mapping '" + temporalRole()
+					+ "' requires fractional precision but Oracle's LocalTime handling discards fractions; select compatible JDBC handling" );
+		}
+	}
+
+	private <J> Resolution<J> adjustedResolution(Resolution<J> original) {
+		if ( original.getValueConverter() != null ) {
+			throw new MappingException( "User converter and timezone adjustment cannot be combined for "
+					+ temporalRole() );
+		}
+		final var javaType = original.getDomainJavaType();
+		final boolean standardTimestamp = javaType.getClass() == org.hibernate.type.descriptor.java.OffsetDateTimeJavaType.class
+				|| javaType.getClass() == org.hibernate.type.descriptor.java.ZonedDateTimeJavaType.class;
+		final boolean standardTime = javaType.getClass() == org.hibernate.type.descriptor.java.OffsetTimeJavaType.class;
+		final var originalJdbcType = original.getJdbcType();
+		final boolean utcTimeCarrier = standardTime && timeZoneStorageType != TimeZoneStorageType.NATIVE
+				&& (!temporalJdbcOverride || originalJdbcType.getDefaultSqlTypeCode() == org.hibernate.type.SqlTypes.TIME_UTC);
+		final org.hibernate.type.descriptor.jdbc.JdbcType jdbcType;
+		if ( utcTimeCarrier ) {
+			jdbcType = new org.hibernate.type.descriptor.jdbc.internal.UtcTimeJdbcType( temporalJdbcOverride ? originalJdbcType
+					: getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( org.hibernate.type.SqlTypes.TIME_UTC ) );
+		}
+		else if ( standardTimestamp && timeZoneStorageType != TimeZoneStorageType.NATIVE
+				&& (!temporalJdbcOverride || originalJdbcType.getDefaultSqlTypeCode() == org.hibernate.type.SqlTypes.TIMESTAMP_UTC) ) {
+			jdbcType = new org.hibernate.type.descriptor.jdbc.internal.UtcTimestampJdbcType( temporalJdbcOverride ? originalJdbcType
+					: getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( org.hibernate.type.SqlTypes.TIMESTAMP_UTC ) );
+		}
+		else {
+			jdbcType = originalJdbcType;
+		}
+		final var converter = new TemporalAdjustmentConverter<>( javaType, timeZoneAdjustment, utcTimeCarrier, temporalRole() );
+		final var plan = new TemporalAdjustmentMutabilityPlan<>( converter, original.getMutabilityPlan() );
+		final var type = new CustomMutabilityConvertedBasicTypeImpl<>(
+				"timezone-adjustment:" + temporalRole(),
+				jdbcType,
+				converter,
+				plan
+		);
+		return new NamedBasicTypeResolution<>( original.getDomainJavaType(), type, converter, plan );
+	}
+
 	@Override
 	public Resolution<?> resolve() {
 		if ( resolution != null ) {
@@ -386,10 +473,20 @@ public class BasicValue extends SimpleValue
 		}
 		else {
 			resolution = buildResolution();
+			if ( resolution != null && timeZoneAdjustment != null ) {
+				resolution = adjustedResolution( resolution );
+			}
 			if ( resolution == null ) {
 				throw new IllegalStateException( "Unable to resolve BasicValue: " + this );
 			}
 			else {
+				if ( temporalValidationEnabled && getBuildingContext().isPreferJavaTimeJdbcTypesEnabled() ) {
+					validateTemporalPrecision( getColumnPrecision() );
+					TemporalMappingValidator.validate(
+							getDialect(), resolution.getDomainJavaType(), resolution.getJdbcType(), timeZoneAdjustment,
+							temporalRole(), resolution.getValueConverter() instanceof TemporalAdjustmentConverter<?> adjustment
+									&& adjustment.usesUtcTimeCarrier() );
+				}
 				final Size size;
 				if ( getColumn() instanceof Column column ) {
 					resolveColumn( column, getDialect() );
@@ -397,6 +494,9 @@ public class BasicValue extends SimpleValue
 				}
 				else {
 					size = Size.nil();
+				}
+				if ( temporalValidationEnabled && getBuildingContext().isPreferJavaTimeJdbcTypesEnabled() ) {
+					validateTemporalPrecision( size.getPrecision() );
 				}
 				resolution.getJdbcType().addAuxiliaryDatabaseObjects(
 						resolution.getRelationalJavaType(),

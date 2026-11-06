@@ -441,7 +441,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect implements Curr
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 		// Need to bind as java.sql.Timestamp because reading OffsetDateTime from a "datetime2" column fails
-		typeContributions.contributeJdbcType( TimestampUtcAsJdbcTimestampJdbcType.INSTANCE );
+		typeContributions.contributeJdbcType( org.hibernate.boot.spi.MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( serviceRegistry )
+				? org.hibernate.type.descriptor.jdbc.TimestampUtcAsPlainJdbcTimestampJdbcType.INSTANCE
+				: TimestampUtcAsJdbcTimestampJdbcType.INSTANCE );
 		typeContributions.getTypeConfiguration().getJdbcTypeRegistry()
 				.addDescriptor( Types.TINYINT, TinyIntAsSmallIntJdbcType.INSTANCE );
 		typeContributions.contributeJdbcType( SQLServerJdbcTypes.castingXml() );

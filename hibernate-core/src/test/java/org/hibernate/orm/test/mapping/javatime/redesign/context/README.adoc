@@ -1,0 +1,85 @@
+= Temporal mapping-context verification
+
+This package supplements the seven-type preservation matrix and leaves the legacy
+org.hibernate.orm.test.type.temporal suite unchanged. It tests actual mapping roles,
+mutable READ_WRITE caches and snapshots, not a new temporal policy.
+
+== Running
+
+[source,shell]
+----
+./gradlew :hibernate-core:test \
+  --tests 'org.hibernate.orm.test.mapping.javatime.redesign.context.*' \
+  -Pdb=h2 -Ptest.threads=1
+----
+
+Use postgresql or oracle for the live aggregate/platform cases. The representative
+non-UTC configuration additionally uses temporalTestJvmTimeZone=America/Denver and
+temporalTestSessionTimeZone=Asia/Tokyo. These select the forked JVM's initial timezone
+and connection initialization SQL; they do not request domain adjustment.
+Each test parameterizes metadata access enabled/disabled internally.
+
+ContextScope provisions only fixture-owned schema objects separately, disables
+runtime schema actions and uses a lazy guarded provider through metadata-disabled
+SessionFactory construction. It asserts every attempted acquisition, including
+attempts whose exceptions boot code catches. The guard opens before real operations.
+No DialectContext supplies a previously initialized Dialect.
+
+The configured database version is an input when metadata access is disabled.
+Defaults deliberately match the pinned local environment: H2 2.5.252, PostgreSQL
+18.6 and Oracle 23.26.1. An explicitly configured
+jakarta.persistence.database-product-version takes precedence. In particular,
+H2Dialect's conservative default 2.1.214 cannot establish JSON aggregate support.
+These tests do not infer newer capabilities from a failed mapping or obtain a boot
+connection to discover them. Unsupported aggregate families are visible skips, not
+passing negative tests. SQL Server live verification remains deferred.
+
+A test TypeContributor selects the existing matched plain UTC timestamp descriptor
+on direct-enabled handling. This keeps COLUMN collection keys valid on Oracle,
+which disallows its zoned timestamp type as a set key. It does not select a generic
+TIMESTAMP handler or redefine the production default. Default INLINE native/baseline
+constraints remain enforced, including PostgreSQL offset loss rejection.
+
+== Coverage and interpretation
+
+* TemporalContextLifecycleTests: mutable scalar INLINE/COLUMN contexts, reused and
+nested member declarations, generic superclass COLUMN/copy isolation, source-value
+non-mutation, precision-transition cache origins, real changes and unchanged flushes.
+* TemporalCollectionLifecycleTests: independent entity/collection cache hits, set
+content, list ordering, bag multiplicity, no-op flush, real add/remove/replace and
+cache update/invalidation observed before explicit eviction can hide stale entries.
+* TemporalRoleExclusionTests: explicit ID/version/embedded-ID/map/array/embedding
+rejections, broader-default skipping and runtime legacy controls. Map keys and values
+are both offset-bearing; plain TIMESTAMP keys avoid Oracle's physical key restriction.
+Excluded array/map results are compared with equivalent mappings without defaults,
+rather than being given the new scalar preservation guarantee.
+* TemporalAggregateExclusionTests: real STRUCT/JSON/XML boot and live controls,
+explicit NONE/target/INLINE/COLUMN/auxiliary rejections, nested members and ordinary
+reuse beside aggregate use. Models assert absence of both adjustment converters and
+contextual composites in excluded members, with included reuse remaining contextual.
+* TemporalConverterContextTests: explicit/auto-applied active conflicts for scalar,
+set/list/bag and INLINE/COLUMN, disabled controls, valid NONE controls, and rejection
+of unsupported explicit whole-value COLUMN conversion rather than silent discard.
+An excluded map also proves that skipping defaults retains its active user converter.
+NONE does not promise arbitrary converter/COLUMN compatibility.
+* TemporalCustomCompositeContextTests: ordinary registration, explicit temporal
+composite subclass, copies and otherwise eligible immutable reference-cache control.
+
+The cache provider is the existing CachingRegionFactory test implementation with
+mutable READ_WRITE entries; query cache is disabled. SQL inspection and statistics
+measure isolated intervals. Each transaction opens a fresh session. A second-level
+entity hit is not counted as a collection hit. An entity/collection cache control
+must report actual hits and omit the corresponding row selects. Mutation checks
+exclude setup and require no mutation DML; real changes must survive a JDBC-backed
+read and fresh cache assembly. Earlier detached source collections remain unchanged.
+
+Cache precision retains its approved origin boundary: supplied fractional values
+may survive write-populated entries while load-populated entries use extracted
+precision. Each origin resolves regional offsets at its own instant. COLUMN
+ZonedDateTime reconstructs fixed-offset identity before explicit adjustment.
+No canonicalization, extra readback, ambient/global adjustment or equality redesign
+is introduced. Existing immutable cache and legacy reference-cache tests remain
+separate regression controls.
+
+Aggregate families unsupported by the configured Dialect remain explicit skips.
+The seven-type matrix supplies separate descriptor/range/timezone coverage.

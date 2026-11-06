@@ -1,5 +1,7 @@
 package org.hibernate.boot.model.internal;
 
+import org.hibernate.annotations.TimeZoneRepresentation;
+
 
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
@@ -28,7 +30,10 @@ public class TimeZoneStorageHelper {
 			MemberDetails attributeMember,
 			ClassDetails returnedClass,
 			MetadataBuildingContext context) {
-		if ( useColumnForTimeZoneStorage( attributeMember, context ) ) {
+		if ( context.isPreferJavaTimeJdbcTypesEnabled()
+				? TemporalMappingConfiguration.resolve( attributeMember, returnedClass.toJavaClass(), context ).representation()
+						== TimeZoneRepresentation.Type.COLUMN
+				: useColumnForTimeZoneStorage( attributeMember, context ) ) {
 			final String returnedClassName = returnedClass.getName();
 			if ( OFFSET_DATETIME_CLASS.equals( returnedClassName ) ) {
 				return OffsetDateTimeCompositeUserType.class;
@@ -55,7 +60,7 @@ public class TimeZoneStorageHelper {
 	}
 
 	public static boolean isOffsetTimeClass(MemberDetails element) {
-		final var type = element.getType();
+		final var type = element.isPlural() ? element.getElementType() : element.getType();
 		return type != null
 			&& isOffsetTimeClass( type.determineRawClass().getClassName() );
 
@@ -66,6 +71,15 @@ public class TimeZoneStorageHelper {
 	}
 
 	static boolean useColumnForTimeZoneStorage(AnnotationTarget element, MetadataBuildingContext context) {
+		if ( context.isPreferJavaTimeJdbcTypesEnabled() && element instanceof MemberDetails member ) {
+			final var valueType = member.isPlural() ? member.getElementType() : member.getType();
+			// Column overrides may be inspected before a generic member's concrete
+			// type is available. Applicability is validated against the resolved type.
+			if ( !valueType.isResolved() ) return false;
+			if ( !valueType.determineRawClass().isRealClass() ) return false;
+			return TemporalMappingConfiguration.resolve( member, valueType.determineRawClass().toJavaClass(), context )
+					.representation() == TimeZoneRepresentation.Type.COLUMN;
+		}
 		final var timeZoneStorage = element.getDirectAnnotationUsage( TimeZoneStorage.class );
 		if ( timeZoneStorage == null ) {
 			return element instanceof MemberDetails attributeMember

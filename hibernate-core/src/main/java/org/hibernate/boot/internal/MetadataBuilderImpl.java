@@ -1,5 +1,7 @@
 package org.hibernate.boot.internal;
 
+import org.hibernate.boot.spi.MetadataBuildingContext;
+
 import java.util.Collection;
 import org.hibernate.boot.model.process.internal.ManagedResourcesBuilder;
 import org.hibernate.boot.model.process.internal.ManagedResourcesImpl;
@@ -675,6 +677,12 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			mappingDefaults = new MappingDefaultsImpl( serviceRegistry );
 
 			defaultTimezoneStorage = resolveTimeZoneStorageStrategy( configService );
+			if ( MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( configService )
+					&& configService.getSettings().containsKey( MappingSettings.TIMEZONE_DEFAULT_STORAGE ) ) {
+				DEPRECATION_LOGGER.deprecatedSetting( MappingSettings.TIMEZONE_DEFAULT_STORAGE,
+						"@TimeZoneRepresentation / @TimeZoneAdjustment (configured value: " + defaultTimezoneStorage + ")" );
+			}
+
 			wrapperArrayHandling = resolveWrapperArrayHandling( configService );
 
 			multiTenancyEnabled =
@@ -860,7 +868,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private TimeZoneStorageStrategy toTimeZoneStorageStrategy(@Nonnull TimeZoneSupport timeZoneSupport) {
 			return switch (defaultTimezoneStorage) {
 				case NATIVE -> {
-					if ( timeZoneSupport != TimeZoneSupport.NATIVE ) {
+					if ( timeZoneSupport != TimeZoneSupport.NATIVE
+							&& !MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( serviceRegistry ) ) {
 						throw new HibernateException( "The configured time zone storage type NATIVE is not supported with the configured dialect" );
 					}
 					yield TimeZoneStorageStrategy.NATIVE;

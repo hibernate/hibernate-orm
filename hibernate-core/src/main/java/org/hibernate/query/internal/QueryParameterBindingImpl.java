@@ -1,11 +1,8 @@
 package org.hibernate.query.internal;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import jakarta.persistence.TemporalType;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -13,16 +10,19 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.QueryArgumentException;
-import org.hibernate.type.BindableType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.sqm.spi.NodeBuilder;
+import org.hibernate.type.BindableType;
 import org.hibernate.type.NullType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import jakarta.persistence.TemporalType;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
 
 import static org.hibernate.type.descriptor.java.JavaTypeHelper.isTemporal;
 import static org.hibernate.type.internal.BindingTypeHelper.resolveTemporalPrecision;
@@ -321,7 +321,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 		// We can assume the java types are compatible, since this is relevant for cases when using the same parameter
 		// in multiple contexts e.g. assignment or comparison.
 		return jdbcMapping1.getJdbcType() == jdbcMapping2.getJdbcType()
-				&& jdbcMapping1.getValueConverter() == jdbcMapping2.getValueConverter();
+			&& Objects.equals( jdbcMapping1.getValueConverter(), jdbcMapping2.getValueConverter() );
 	}
 
 	private <V> void clarifyType(Object valueOrValues, BindableType<V> clarifiedType) {

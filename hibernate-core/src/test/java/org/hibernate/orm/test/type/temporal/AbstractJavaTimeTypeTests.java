@@ -1,7 +1,10 @@
 package org.hibernate.orm.test.type.temporal;
 
+import org.hibernate.SessionFactory;
+import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistryFunctionalTesting;
 import org.hibernate.testing.orm.junit.ServiceRegistryProducer;
@@ -41,15 +44,21 @@ public abstract class AbstractJavaTimeTypeTests<T, E>
 
 	@Override
 	public StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder builder) {
-		builder.applySetting( JAVA_TIME_USE_DIRECT_JDBC, false );
+		builder.applySetting( JAVA_TIME_USE_DIRECT_JDBC, env.directJdbc() );
+		configureServiceRegistry( builder );
+		return builder.build();
+	}
+
+	protected void configureServiceRegistry(StandardServiceRegistryBuilder builder) {
 		if ( env.hibernateJdbcTimeZone() != null ) {
 			builder.applySetting( JDBC_TIME_ZONE, env.hibernateJdbcTimeZone().getId() );
 		}
 		if ( env.remappingDialectClass() != null ) {
 			builder.applySetting( DIALECT, env.remappingDialectClass().getName() );
 		}
-		return builder.build();
 	}
+
+	protected abstract Class<T> getJavaTimeType();
 
 	protected abstract Class<E> getEntityType();
 
@@ -76,6 +85,18 @@ public abstract class AbstractJavaTimeTypeTests<T, E>
 		factoryScope.dropData();
 	}
 
+	protected void assertPropertyValueEquals(T expected, T actual, String message) {
+		Assertions.assertEquals( expected, actual, message );
+	}
+
+	protected void bindDirectJdbcValue(PreparedStatement statement, int index) throws SQLException {
+		statement.setObject( index, getExpectedPropertyValueAfterHibernateRead() );
+	}
+
+	protected T extractDirectJdbcValue(ResultSet resultSet, int index) throws SQLException {
+		return resultSet.getObject( index, getJavaTimeType() );
+	}
+
 	@Test
 	@JiraKey(value = "HHH-13266")
 	public void writeThenRead(SessionFactoryScope factoryScope) {
@@ -86,16 +107,20 @@ public abstract class AbstractJavaTimeTypeTests<T, E>
 			factoryScope.inTransaction( (session) -> {
 				T read = getActualPropertyValue( session.find( getEntityType(), 1 ) );
 				T expected = getExpectedPropertyValueAfterHibernateRead();
-				Assertions.assertEquals( expected, read,
+				assertPropertyValueEquals( expected, read,
 						"Writing then reading a value should return the original value" );
 			} );
 		} );
 	}
 
+	// Check the stored value independently of Hibernate's extraction, so symmetric binding/extraction
+	// errors cannot hide drift. The JDBC representation follows the intended column contents.
 	@Test
 	@JiraKey(value = "HHH-13266")
 	public void writeThenNativeRead(SessionFactoryScope factoryScope) {
-		assumeNoJdbcTimeZone();
+		if ( !env.directJdbc() ) {
+			assumeNoJdbcTimeZone();
+		}
 
 		Timezones.withDefaultTimeZone( env, () -> {
 			factoryScope.inTransaction( session -> {
@@ -110,10 +135,18 @@ public abstract class AbstractJavaTimeTypeTests<T, E>
 						statement.execute();
 						try (ResultSet resultSet = statement.getResultSet()) {
 							resultSet.next();
-							Object nativeRead = extractJdbcValue( resultSet, 1, factoryScope );
-							Object expected = getExpectedJdbcValueAfterHibernateWrite();
-							Assertions.assertEquals( expected, nativeRead,
-									"Values written by Hibernate ORM should match the original value (same day, hour, ...)" );
+							if ( env.directJdbc() ) {
+								T nativeRead = extractDirectJdbcValue( resultSet, 1 );
+								T expected = getExpectedPropertyValueAfterHibernateRead();
+								assertPropertyValueEquals( expected, nativeRead,
+										"Values written by Hibernate ORM should match the original value (same day, hour, ...)" );
+							}
+							else {
+								Object nativeRead = extractJdbcValue( resultSet, 1, factoryScope );
+								Object expected = getExpectedJdbcValueAfterHibernateWrite();
+								Assertions.assertEquals( expected, nativeRead,
+										"Values written by Hibernate ORM should match the original value (same day, hour, ...)" );
+							}
 						}
 					}
 				} );
@@ -121,10 +154,15 @@ public abstract class AbstractJavaTimeTypeTests<T, E>
 		} );
 	}
 
+	// JDBC initializes pre-existing data with known contents; it is not a second Hibernate binder.
+	// In particular, do not copy Hibernate's typed setObject call here: an independent fixture
+	// lets this test isolate extraction even if that binding overload introduces drift.
 	@Test
 	@JiraKey(value = "HHH-13266")
 	public void nativeWriteThenRead(SessionFactoryScope factoryScope) {
-		assumeNoJdbcTimeZone();
+		if ( !env.directJdbc() ) {
+			assumeNoJdbcTimeZone();
+		}
 
 		Timezones.withDefaultTimeZone( env, () -> {
 			factoryScope.inTransaction( session -> {
@@ -133,7 +171,12 @@ public abstract class AbstractJavaTimeTypeTests<T, E>
 							"insert into entity_tbl (id_col, value_col) values (?,?)"
 					)) {
 						statement.setInt( 1, 1 );
-						bindJdbcValue( statement, 2, factoryScope );
+						if ( env.directJdbc() ) {
+							bindDirectJdbcValue( statement, 2 );
+						}
+						else {
+							bindJdbcValue( statement, 2, factoryScope );
+						}
 						statement.execute();
 					}
 				} );
@@ -141,9 +184,73 @@ public abstract class AbstractJavaTimeTypeTests<T, E>
 			factoryScope.inTransaction( session -> {
 				T read = getActualPropertyValue( session.find( getEntityType(), 1 ) );
 				T expected = getExpectedPropertyValueAfterHibernateRead();
-				Assertions.assertEquals( expected, read,
+				assertPropertyValueEquals( expected, read,
 						"Values written without Hibernate ORM should be read correctly by Hibernate ORM" );
 			} );
+		} );
+	}
+
+	protected void assumeLegacyWriteThenDirectReadSupported() {
+	}
+
+	@Test
+	@JiraKey(value = "HHH-13515")
+	public void legacyWriteThenDirectRead(SessionFactoryScope factoryScope) {
+		Assumptions.assumeTrue( env.directJdbc(),
+				"This test verifies backward compatibility: values written with Hibernate ORM"
+				+ " using legacy JDBC should be readable with Hibernate ORM using direct JDBC." );
+
+		// Direct-only inputs must not reach the unsupported legacy strategy through this compatibility check.
+		Assumptions.assumeTrue( env.legacyJdbcSupported(), "This input does not support legacy JDBC access" );
+		assumeLegacyWriteThenDirectReadSupported();
+
+		Timezones.withDefaultTimeZone( env, () -> {
+			ConnectionProvider connectionProvider = factoryScope.getSessionFactory()
+					.getServiceRegistry().getService( ConnectionProvider.class );
+			StandardServiceRegistryBuilder legacyBuilder = new StandardServiceRegistryBuilder();
+			legacyBuilder.applySetting( JAVA_TIME_USE_DIRECT_JDBC, false );
+			legacyBuilder.addService( ConnectionProvider.class, connectionProvider );
+			configureServiceRegistry( legacyBuilder );
+
+			StandardServiceRegistry legacyRegistry = legacyBuilder.build();
+			try {
+				SessionFactory legacySessionFactory = new MetadataSources( legacyRegistry )
+						.addAnnotatedClass( getEntityType() )
+						.buildMetadata()
+						.buildSessionFactory();
+				try {
+					// Pre-existing data must use the legacy schema too: direct JDBC can select
+					// a different SQL type for offset/zoned values.
+					factoryScope.getSessionFactory().getSchemaManager().drop( false );
+					legacySessionFactory.getSchemaManager().create( false );
+					legacySessionFactory.inTransaction( session -> {
+						session.persist( createEntityForHibernateWrite( 1 ) );
+					} );
+
+					// Compare two fresh reads of the same row. Legacy writes may already have lost
+					// information (for example a LocalDateTime in a DST gap). Original-value
+					// preservation is checked separately by writeThenRead.
+					T expected = legacySessionFactory.fromTransaction( session ->
+							getActualPropertyValue( session.find( getEntityType(), 1 ) ) );
+					factoryScope.inTransaction( session -> {
+						T read = getActualPropertyValue( session.find( getEntityType(), 1 ) );
+						assertPropertyValueEquals( expected, read,
+								"Switching from legacy to direct JDBC should preserve the value read from the same row" );
+					} );
+				}
+				finally {
+					try {
+						legacySessionFactory.getSchemaManager().drop( false );
+						factoryScope.getSessionFactory().getSchemaManager().create( false );
+					}
+					finally {
+						legacySessionFactory.close();
+					}
+				}
+			}
+			finally {
+				StandardServiceRegistryBuilder.destroy( legacyRegistry );
+			}
 		} );
 	}
 

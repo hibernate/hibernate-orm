@@ -56,7 +56,7 @@ public abstract class AbstractSqlServerGISType implements JdbcType {
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
 				final Geometry geometry = getJavaType().unwrap( value, Geometry.class, options );
-				final byte[] bytes = Encoders.encode( geometry );
+				final byte[] bytes = Encoders.encode( toNative( geometry ) );
 				st.setObject( index, bytes );
 			}
 
@@ -64,7 +64,7 @@ public abstract class AbstractSqlServerGISType implements JdbcType {
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
 				final Geometry geometry = getJavaType().unwrap( value, Geometry.class, options );
-				final byte[] bytes = Encoders.encode( geometry );
+				final byte[] bytes = Encoders.encode( toNative( geometry ) );
 				st.setObject( name, bytes );
 			}
 
@@ -107,7 +107,33 @@ public abstract class AbstractSqlServerGISType implements JdbcType {
 		else {
 			throw new IllegalArgumentException( "Expected byte array or BLOB" );
 		}
-		return Decoders.decode( raw );
+		return fromNative( Decoders.decode( raw ) );
+	}
+
+	/**
+	 * Returns the geometry to serialize, for a value which is bound.
+	 * <p>
+	 * This implementation returns the geometry as it is.
+	 *
+	 * @param geometry the geometry of the value
+	 *
+	 * @return the geometry, as the serialized form of SQL Server takes it
+	 */
+	protected Geometry<?> toNative(Geometry<?> geometry) {
+		return geometry;
+	}
+
+	/**
+	 * Returns the geometry of a value which is extracted, from the geometry deserialized.
+	 * <p>
+	 * This implementation returns the geometry as it is.
+	 *
+	 * @param geometry the geometry, as deserialized from the serialized form of SQL Server
+	 *
+	 * @return the geometry of the value
+	 */
+	protected Geometry<?> fromNative(Geometry<?> geometry) {
+		return geometry;
 	}
 
 	private byte[] toByteArray(Blob blob) {

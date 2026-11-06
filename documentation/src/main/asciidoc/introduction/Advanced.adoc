@@ -332,6 +332,28 @@ class Document {
 }
 ----
 
+An attribute annotated `@Audited.Excluded` is not tracked by the audit log: its columns are omitted from the audit log table, and a change to it does not create a new revision.
+An entity may change this for attributes it inherits from a mapped superclass using link:{doc-javadoc-url}org/hibernate/annotations/Audited.Override.html[`@Audited.Override`].
+Overriding an attribute inherited from an entity superclass is not supported, and fails at boot.
+
+[source,java]
+----
+@MappedSuperclass
+class Content {
+	@Audited.Excluded
+	String draft;
+	String body;
+	...
+}
+
+@Audited @Entity
+@Audited.Override(name="draft")                    // audit the inherited draft attribute
+@Audited.Override(name="body", isAudited=false)    // but not the inherited body
+class Document extends Content {
+	...
+}
+----
+
 NOTE: In the past, audit logging was provided by {envers}[Envers].
 The functionality underlying the `@Audited` annotation is completely new, but is backward compatible with the format of Envers audit logs.
 

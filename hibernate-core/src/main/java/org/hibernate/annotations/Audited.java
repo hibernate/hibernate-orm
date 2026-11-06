@@ -78,6 +78,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Use the nested {@link Table @Audited.Table} annotation to
  * customize the audit log's table name, schema, catalog, or
  * column names for the audit log.
+ * Use {@link Override @Audited.Override} to change whether an
+ * attribute is audited.
  *
  * @see Changelog
  * @see org.hibernate.audit.AuditLog
@@ -98,12 +100,65 @@ public @interface Audited {
 	 * Updates to an excluded attribute modify the current
 	 * row directly without creating a new revision of the
 	 * entity instance. The audit log table does not contain
-	 * columns mapped by excluded attributes.
+	 * columns mapped by excluded attributes, unless an
+	 * {@link Override @Audited.Override} audits them.
 	 */
 	@Documented
 	@Target({FIELD, METHOD})
 	@Retention(RUNTIME)
 	@interface Excluded {
+	}
+
+	/**
+	 * Changes whether an attribute is audited, for the annotated
+	 * entity and its subclasses. The attribute must belong to the
+	 * entity itself or to one of its mapped superclasses.
+	 * Overriding the identifier, the version, or an attribute of
+	 * an entity superclass fails at boot. The override nearest to
+	 * the entity wins.
+	 * <p>
+	 * Excluding an attribute also disables optimistic locking for
+	 * it, as {@link Excluded} does. Re-auditing an excluded
+	 * attribute does not restore it.
+	 * <p>
+	 * Write {@code @Audited.Override} instead of importing this
+	 * type, which would shadow {@link java.lang.Override}.
+	 *
+	 * @since 8.1
+	 */
+	@Documented
+	@Target(TYPE)
+	@Retention(RUNTIME)
+	@Repeatable(Overrides.class)
+	@interface Override {
+		/**
+		 * The name of the attribute.
+		 */
+		String name();
+
+		/**
+		 * Whether the attribute is audited.
+		 */
+		boolean isAudited() default true;
+
+		/**
+		 * Customizes the audit table of the collection. Each
+		 * nonblank member replaces the matching member of the
+		 * attribute's {@link CollectionTable @Audited.CollectionTable}.
+		 */
+		CollectionTable collectionTable() default @CollectionTable;
+	}
+
+	/**
+	 * Container for repeatable {@link Override} annotations.
+	 *
+	 * @since 8.1
+	 */
+	@Documented
+	@Target(TYPE)
+	@Retention(RUNTIME)
+	@interface Overrides {
+		Override[] value();
 	}
 
 	/**
@@ -233,19 +288,19 @@ public @interface Audited {
 		/**
 		 * The name of the collection audit table.
 		 */
-		String name();
+		String name() default "";
 
 		/**
 		 * The schema of the collection audit table.
 		 * Defaults to the schema of the owning entity's
-		 * audit table.
+		 * {@link Table @Audited.Table}, if any.
 		 */
 		String schema() default "";
 
 		/**
 		 * The catalog of the collection audit table.
 		 * Defaults to the catalog of the owning entity's
-		 * audit table.
+		 * {@link Table @Audited.Table}, if any.
 		 */
 		String catalog() default "";
 	}

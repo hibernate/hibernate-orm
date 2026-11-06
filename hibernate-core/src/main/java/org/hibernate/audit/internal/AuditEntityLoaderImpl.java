@@ -51,7 +51,7 @@ public class AuditEntityLoaderImpl implements AuditEntityLoader {
 		this.entityMappingType = entityMappingType;
 
 		final var auditMapping = entityMappingType.getAuditMapping();
-		final var revTableName = entityMappingType.getMappedTableDetails().getTableName();
+		final var revTableName = entityMappingType.getEntityPersister().getTableName();
 		final var revTypeTableName = entityMappingType.getIdentifierTableDetails().getTableName();
 		this.revMapping = auditMapping.getChangesetIdMapping( revTableName );
 		final var revTypeMapping = auditMapping.getModificationTypeMapping( revTypeTableName );

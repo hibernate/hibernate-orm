@@ -1,5 +1,6 @@
 package org.hibernate.boot.model.internal;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.CascadeType;
@@ -94,6 +95,7 @@ import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.ManyToOne;
@@ -113,6 +115,7 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
+import org.hibernate.persister.state.internal.AuditStateManagement;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserCollectionType;
@@ -1675,18 +1678,7 @@ public abstract class CollectionBinder {
 
 		// For @OneToMany @JoinColumn on an @Audited entity, create a middle audit table
 		// to track collection membership changes (same approach as @ManyToMany / @JoinTable)
-		if ( !collection.isInverse() ) {
-			final var audited = extract( Audited.class, property, buildingContext );
-			if ( audited != null && !property.hasDirectAnnotationUsage( Audited.Excluded.class ) ) {
-				AuditHelper.bindOneToManyAuditTable(
-						extract( Audited.Table.class, property, buildingContext ),
-						collection,
-						oneToMany.getReferencedEntityName(),
-						extract( Audited.CollectionTable.class, property, buildingContext ),
-						buildingContext
-				);
-			}
-		}
+		bindAuditTable( oneToMany.getReferencedEntityName() );
 
 		bindSynchronize();
 		bindFilters( false );
@@ -2470,7 +2462,7 @@ public abstract class CollectionBinder {
 		handleCheckConstraints( collectionTable );
 		processSoftDeletes();
 		processTemporal();
-		processAudited();
+		bindAuditTable( null );
 	}
 
 	private void handleCheckConstraints(Table collectionTable) {
@@ -2524,21 +2516,79 @@ public abstract class CollectionBinder {
 		}
 	}
 
-	private void processAudited() {
-		assert collection.getCollectionTable() != null;
+	/**
+	 * Binds the audit table of the collection, if it is audited.
+	 *
+	 * @param oneToManyEntityName the target entity of a {@code @OneToMany} join column
+	 * collection, which has no collection table of its own
+	 */
+	private void bindAuditTable(@Nullable String oneToManyEntityName) {
 		// Skip inverse collections (mappedBy): the FK is on the child entity's table,
 		// and auditing is handled by the owning side
 		if ( collection.isInverse() ) {
 			return;
 		}
-		final var audited = extract( Audited.class, property, buildingContext );
-		if ( audited != null && !property.hasDirectAnnotationUsage( Audited.Excluded.class ) ) {
-			AuditHelper.bindAuditTable(
-					extract( Audited.Table.class, property, buildingContext ),
+		// Overrides name top-level attributes, never the members of an embeddable
+		final var auditOverride = propertyHolder.isComponent()
+				? null
+				: AuditHelper.findAuditOverride( propertyName, collection.getOwner(), buildingContext );
+		if ( isCollectionAudited( auditOverride ) ) {
+			AuditHelper.bindCollectionAuditTable(
 					collection,
+					oneToManyEntityName,
+					auditOverride == null ? null : auditOverride.collectionTable(),
+					property.getDirectAnnotationUsage( Audited.CollectionTable.class ),
 					buildingContext
 			);
 		}
+	}
+
+	/**
+	 * Whether the collection is audited. On an audited hierarchy, overrides were already
+	 * applied to the owner's properties; on an unaudited one, the given override decides.
+	 */
+	private boolean isCollectionAudited(@Nullable Audited.Override auditOverride) {
+		// Runs in a second pass, after the owner hierarchy is bound and its audit overrides are applied
+		final var owner = collection.getOwner();
+		if ( owner.getRootClass().getStateManagementType() != AuditStateManagement.class ) {
+			// An override of a collection of an unaudited hierarchy takes precedence over its @Audited
+			if ( auditOverride != null ) {
+				return auditOverride.isAudited();
+			}
+			else if ( extract( Audited.class, property, buildingContext ) == null ) {
+				return false;
+			}
+		}
+		if ( propertyHolder instanceof ComponentPropertyHolder componentHolder ) {
+			return !property.hasDirectAnnotationUsage( Audited.Excluded.class )
+					&& isComponentAudited( owner, componentHolder.getComponent() );
+		}
+		return !owner.getProperty( propertyName ).isAuditedExcluded();
+	}
+
+	private static boolean isComponentAudited(PersistentClass owner, Component target) {
+		for ( var property : owner.getPropertyClosure() ) {
+			if ( property.getValue() instanceof Component component
+					&& !property.isAuditedExcluded()
+					&& containsAuditedComponent( component, target ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static boolean containsAuditedComponent(Component component, Component target) {
+		if ( component == target ) {
+			return true;
+		}
+		for ( var property : component.getProperties() ) {
+			if ( property.getValue() instanceof Component nested
+					&& !property.isAuditedExcluded()
+					&& containsAuditedComponent( nested, target ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private static <T extends Annotation> T extract(
@@ -2578,7 +2628,7 @@ public abstract class CollectionBinder {
 
 		processSoftDeletes();
 		processTemporal();
-		processAudited();
+		bindAuditTable( null );
 		checkCheckAnnotation();
 	}
 

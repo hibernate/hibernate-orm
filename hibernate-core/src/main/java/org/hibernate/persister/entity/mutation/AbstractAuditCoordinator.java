@@ -18,6 +18,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperationGroup;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 /**
  * Base support for audit log insert coordinators.
  * <p>
@@ -37,7 +39,7 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 
 	protected AbstractAuditCoordinator(@Nonnull EntityPersister entityPersister, @Nonnull SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
-		this.entityAuditSupport = new EntityAuditSupport( entityPersister, factory );
+		this.entityAuditSupport = castNonNull( entityPersister.getEntityAuditSupport() );
 		this.auditedPropertyMask = entityAuditSupport.getAuditedPropertyMask();
 		this.auditBatchKey = new BasicBatchKey( entityPersister.getEntityName() + "#AUDIT_INSERT" );
 		final var staticAuditInsertMutationGroup = entityAuditSupport.getStaticAuditInsertMutationGroup();

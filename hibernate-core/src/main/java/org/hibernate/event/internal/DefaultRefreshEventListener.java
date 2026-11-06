@@ -151,13 +151,10 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		);
 
 		persistenceContext.removeEntityHolder( entry.getEntityKey() );
-		if ( persister.hasCollections() ) {
-			new EvictVisitor( source, object ).process( object, persister );
-		}
+		evictCollections( object, persister, id, source );
 		persistenceContext.removeEntry( object );
 
 		evictEntity( object, persister, id, source );
-		evictCachedCollections( persister, id, source );
 
 		refresh( event, object, source, persister, null, entry, id, persistenceContext );
 	}
@@ -186,7 +183,12 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		final Object result =
 				source.getLoadQueryInfluencers()
 						.fromInternalFetchProfile( CascadingFetchProfile.REFRESH,
-								() -> doRefresh( event, source, object, entry, persister, initializer, id, context ) );
+								() -> {
+									if ( object != null ) {
+										source.getLoadQueryInfluencers().registerRefreshingEntity( object );
+									}
+									return doRefresh( event, source, object, entry, persister, initializer, id, context );
+								} );
 		UnresolvableObjectException.throwIfNull( result, id, persister.getEntityName() );
 	}
 
@@ -298,6 +300,20 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		}
 		else {
 			return source.isDefaultReadOnly();
+		}
+	}
+
+	/**
+	 * Prepare an entity's collections before resolving their refresh fetches.
+	 */
+	public static void evictCollections(
+			@Nonnull Object object,
+			@Nonnull EntityPersister persister,
+			@Nonnull Object id,
+			@Nonnull EventSource source) {
+		if ( persister.hasCollections() ) {
+			new EvictVisitor( source, object ).process( object, persister );
+			evictCachedCollections( persister, id, source );
 		}
 	}
 

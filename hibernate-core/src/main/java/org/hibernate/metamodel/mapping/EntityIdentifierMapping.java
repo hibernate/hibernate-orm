@@ -125,7 +125,7 @@ public interface EntityIdentifierMapping extends ValuedModelPart, Fetchable {
 						+ (entityName == null ? session.guessEntityName( entity ) : entityName)
 						+ "' (persist the transient instance before flushing)" );
 			}
-			return getIdentifier( entity );
+			return session.getEntityPersister( entityName, entity ).getIdentifier( entity, session );
 		}
 		else {
 			return id;

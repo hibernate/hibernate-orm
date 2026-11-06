@@ -1,6 +1,7 @@
 package org.hibernate.dialect.lock.internal;
 
 import jakarta.persistence.Timeout;
+import org.hibernate.LockMode;
 import org.hibernate.Timeouts;
 import org.hibernate.dialect.lock.spi.RowLockStrategy;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
@@ -99,6 +100,13 @@ public class LockingSupportParameterized implements LockingSupport, LockingSuppo
 				outerJoinLockingType,
 				readsWaitForUncommittedWrites
 		);
+	}
+
+	@Override
+	public boolean canUsePlainReadForRefresh(LockMode currentLockMode, LockMode requestedLockMode) {
+		// Preserve the standard profile's plain reload after successful acquisition.
+		// Current-read families supply a more restrictive profile.
+		return pessimisticLockStyle != PessimisticLockStyle.NONE;
 	}
 
 	@Override

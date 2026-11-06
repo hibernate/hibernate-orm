@@ -12,8 +12,10 @@ import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
 import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.exec.internal.lock.CollectionLockingAction;
 import org.hibernate.sql.exec.internal.lock.FollowOnLockingAction;
+import org.hibernate.sql.exec.internal.lock.LockingHelper;
 import org.hibernate.sql.exec.internal.lock.LoadedValuesCollectorFactory;
 import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcActionExecution;
 import org.hibernate.sql.exec.spi.JdbcLockingApplication;
 import org.hibernate.sql.exec.spi.JdbcPaginationApplication;
 import org.hibernate.sql.exec.spi.JdbcOperationQuery;
@@ -37,6 +39,11 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ * A reusable select with secondary-action definitions.
+ *
+ * @implSpec Subclasses customize execution by overriding {@link #createActionExecution()}.
+ * Overriding the deprecated phase callbacks does not customize executor behavior.
+ *
  * @author Steve Ebersole
  */
 public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
@@ -106,7 +113,17 @@ public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 		return loadedValuesCollectorFactory;
 	}
 
+	/// Creates the runner used by the executor, without invoking the legacy callbacks.
+	/// Subclasses may wrap the runner returned by `super.createActionExecution()` to
+	/// customize execution. Each invocation must retain its own runner and delegate
+	/// failure cleanup while preserving action order and single-attempt execution.
 	@Override
+	public JdbcActionExecution createActionExecution() {
+		return JdbcActionExecution.fromActions( preActions, postActions );
+	}
+
+	@Override
+	@Deprecated(since = "8.0")
 	public void performPreActions(StatementAccess jdbcStatementAccess, Connection jdbcConnection, ExecutionContext executionContext) {
 		if ( preActions == null ) {
 			return;
@@ -118,6 +135,7 @@ public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 	}
 
 	@Override
+	@Deprecated(since = "8.0")
 	public void performPostActions(boolean succeeded, StatementAccess jdbcStatementAccess, Connection jdbcConnection, ExecutionContext executionContext, LoadedValuesCollector loadedValuesCollector) {
 		if ( postActions != null ) {
 			for ( int i = 0; i < postActions.length; i++ ) {
@@ -224,6 +242,9 @@ public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 
 		@Override
 		public JdbcSelect build() {
+			if ( isFollowOnLockStrategy ) {
+				LockingHelper.validateFollowOnLocking( lockOptions );
+			}
 			if ( lockTimeoutType == LockTimeoutType.CONNECTION ) {
 				addSecondaryActionPair(
 						new LockTimeoutHandler(

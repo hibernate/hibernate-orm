@@ -11,6 +11,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.StatementAccess;
+import org.hibernate.sql.exec.spi.JdbcActionExecution;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.LoadedValuesCollector;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
@@ -134,10 +135,20 @@ public class JdbcOperationQuerySelect
 	}
 
 	@Override
+	public JdbcActionExecution createActionExecution() {
+		// A subclass may still supply callbacks through the compatibility SPI.
+		return getClass() == JdbcOperationQuerySelect.class
+				? JdbcActionExecution.NONE
+				: JdbcSelect.super.createActionExecution();
+	}
+
+	@Override
+	@Deprecated(since = "8.0")
 	public void performPreActions(StatementAccess jdbcStatementAccess, Connection jdbcConnection, ExecutionContext executionContext) {
 	}
 
 	@Override
+	@Deprecated(since = "8.0")
 	public void performPostActions(boolean succeeded, StatementAccess jdbcStatementAccess, Connection jdbcConnection, ExecutionContext executionContext, LoadedValuesCollector loadedValuesCollector) {
 	}
 

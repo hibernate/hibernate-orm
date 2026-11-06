@@ -295,6 +295,7 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 	}
 
 	private boolean prepareCurrentRow() {
+		checkLockingCompletionActive();
 		final var rowProcessingState = getRowProcessingState();
 		final var rowReader = getRowReader();
 
@@ -331,6 +332,11 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 
 			}
 			getJdbcValuesSourceProcessingState().finishUp();
+		}
+		catch (RuntimeException | Error failure) {
+			currentRow = null;
+			failLockingCompletion();
+			throw failure;
 		}
 		finally {
 			persistenceContext.afterLoad();

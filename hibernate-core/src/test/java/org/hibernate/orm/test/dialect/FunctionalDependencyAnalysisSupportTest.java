@@ -14,29 +14,31 @@ import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException
 public class FunctionalDependencyAnalysisSupportTest {
 	@Test
 	void namedProfilesPreserveTheCapabilityHierarchy() {
-		assertProfile( FunctionalDependencyAnalysisSupport.NONE, false, false, false );
-		assertProfile( FunctionalDependencyAnalysisSupport.TABLE_REFERENCE, true, false, false );
-		assertProfile( FunctionalDependencyAnalysisSupport.TABLE_GROUP, true, true, false );
-		assertProfile( FunctionalDependencyAnalysisSupport.TABLE_GROUP_AND_CONSTANTS, true, true, true );
+		assertProfile( FunctionalDependencyAnalysisSupport.NONE, false, false, false, false );
+		assertProfile( FunctionalDependencyAnalysisSupport.TABLE_REFERENCE, true, false, false, false );
+		assertProfile( FunctionalDependencyAnalysisSupport.TABLE_GROUP, true, true, false, false );
+		assertProfile( FunctionalDependencyAnalysisSupport.TABLE_GROUP_AND_CONSTANTS, true, true, true, false );
 	}
 
 	@Test
 	void invalidAdHocProfilesAreRejected() {
 		assertThatIllegalArgumentException()
-				.isThrownBy( () -> new FunctionalDependencyAnalysisSupport( false, true, false ) );
+				.isThrownBy( () -> new FunctionalDependencyAnalysisSupport( false, true, false, false ) );
 		assertThatIllegalArgumentException()
-				.isThrownBy( () -> new FunctionalDependencyAnalysisSupport( true, false, true ) );
+				.isThrownBy( () -> new FunctionalDependencyAnalysisSupport( true, false, true, false ) );
 		assertThatIllegalArgumentException()
-				.isThrownBy( () -> new FunctionalDependencyAnalysisSupport( false, false, true ) );
+				.isThrownBy( () -> new FunctionalDependencyAnalysisSupport( false, false, true, false ) );
 	}
 
 	private static void assertProfile(
 			FunctionalDependencyAnalysisSupport support,
 			boolean analysis,
 			boolean tableGroups,
-			boolean constants) {
+			boolean constants,
+			boolean groupByAll) {
 		assertThat( support.supportsAnalysis() ).isEqualTo( analysis );
 		assertThat( support.supportsTableGroups() ).isEqualTo( tableGroups );
 		assertThat( support.supportsConstants() ).isEqualTo( constants );
+		assertThat( support.supportsGroupByAll() ).isEqualTo( groupByAll );
 	}
 }

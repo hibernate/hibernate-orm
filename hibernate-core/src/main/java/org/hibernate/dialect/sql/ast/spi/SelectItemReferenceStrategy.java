@@ -11,6 +11,7 @@ import static org.hibernate.SPI.Role.USE;
 /// semantics. The translator defaults to repeating the expression.
 ///
 /// @author Christian Beikov
+/// @author Loïc Lefèvre
 /// @see AbstractSqlAstTranslator#getGroupBySelectItemReferenceStrategy()
 @SPI({ USE, SUPPLY })
 public enum SelectItemReferenceStrategy {
@@ -19,5 +20,7 @@ public enum SelectItemReferenceStrategy {
 	/// Refer to the item by its select alias.
 	ALIAS,
 	/// Refer to the item by its one-based select-list position.
-	POSITION
+	POSITION,
+	/// Let the database define automatically the item(s).
+	ALL
 }

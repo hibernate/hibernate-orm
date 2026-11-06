@@ -57,6 +57,7 @@ import org.hibernate.query.sqm.tree.spi.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.spi.domain.SqmSingularValuedJoin;
 import org.hibernate.query.sqm.tree.spi.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.spi.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.spi.expression.SqmGroupByAll;
 import org.hibernate.query.sqm.tree.spi.expression.SqmNumericExpression;
 import org.hibernate.query.sqm.tree.spi.expression.SqmNumericExpressionWrapper;
 import org.hibernate.query.sqm.tree.spi.from.SqmCrossJoin;
@@ -81,6 +82,7 @@ import static java.util.Collections.newSetFromMap;
 
 /**
  * @author Steve Ebersole
+ * @author Loïc Lefèvre
  */
 public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 		implements SqmSelectQuery<T>, JpaSubQuery<T>, SqmExpression<T> {
@@ -378,6 +380,13 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	@Override
 	public SqmSubQuery<T> groupBy(@Nonnull List<Expression<?>> grouping) {
 		super.groupBy( grouping );
+		return this;
+	}
+
+	@Nonnull
+	@Override
+	public SqmSubQuery<T> groupByAll() {
+		super.groupBy( new SqmGroupByAll( nodeBuilder() ) );
 		return this;
 	}
 

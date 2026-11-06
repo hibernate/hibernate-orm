@@ -84,7 +84,9 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	@SPI({ SPI.Role.IMPLEMENT, SPI.Role.SUPPLY })
 	protected SelectItemReferenceStrategy getGroupBySelectItemReferenceStrategy() {
 		return getDialect().getVersion().isSameOrAfter( 23 )
-				? SelectItemReferenceStrategy.ALIAS
+				? (getDialect().getVersion().isSameOrAfter( 23, 9 )
+				? SelectItemReferenceStrategy.ALL
+				: SelectItemReferenceStrategy.ALIAS)
 				: SelectItemReferenceStrategy.EXPRESSION;
 	}
 

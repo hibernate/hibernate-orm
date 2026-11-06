@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.hibernate.SPI;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.sql.ast.spi.query.expression.All;
 import org.hibernate.sql.ast.spi.query.predicate.SqlFragmentPredicate;
 import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
@@ -99,6 +100,7 @@ import org.hibernate.sql.ast.spi.model.TableUpdateStandard;
 /// @since 8.0
 /// @author Steve Ebersole
 /// @author Christian Beikov
+/// @author Loïc Lefèvre
 @SPI({ SPI.Role.USE, SPI.Role.IMPLEMENT })
 public class ExpressionReplacementWalker implements SqlAstWalker {
 
@@ -211,6 +213,11 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 	@Override
 	public void visitStar(Star star) {
 		doReplaceExpression( star );
+	}
+
+	@Override
+	public void visitAll(All all) {
+		doReplaceExpression( all );
 	}
 
 	@Override

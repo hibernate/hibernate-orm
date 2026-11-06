@@ -1,6 +1,7 @@
 package org.hibernate.sql.ast.spi;
 
 import org.hibernate.SPI;
+import org.hibernate.sql.ast.spi.query.expression.All;
 import org.hibernate.sql.ast.spi.query.predicate.SqlFragmentPredicate;
 import org.hibernate.query.sqm.tree.spi.expression.Conversion;
 import org.hibernate.sql.ast.spi.query.select.SqlSelection;
@@ -92,6 +93,7 @@ import static org.hibernate.SPI.Role.USE;
 /// @since 8.0
 /// @author Steve Ebersole
 /// @author Andrea Boriero
+/// @author Loïc Lefèvre
 @SPI({ USE, IMPLEMENT })
 public interface SqlAstWalker {
 
@@ -148,6 +150,8 @@ public interface SqlAstWalker {
 	void visitOverflow(Overflow overflow);
 
 	void visitStar(Star star);
+
+	void visitAll(All all);
 
 	void visitTrimSpecification(TrimSpecification trimSpecification);
 

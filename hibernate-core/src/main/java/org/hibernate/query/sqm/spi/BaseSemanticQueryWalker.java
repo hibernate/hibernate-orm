@@ -49,6 +49,7 @@ import org.hibernate.query.sqm.tree.spi.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.spi.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.spi.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.spi.expression.SqmFunction;
+import org.hibernate.query.sqm.tree.spi.expression.SqmGroupByAll;
 import org.hibernate.query.sqm.tree.spi.expression.SqmHqlNumericLiteral;
 import org.hibernate.query.sqm.tree.spi.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.spi.expression.SqmLiteralEmbeddableType;
@@ -114,11 +115,13 @@ import org.hibernate.query.sqm.tree.spi.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.spi.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.spi.update.SqmSetClause;
 import org.hibernate.query.sqm.tree.spi.update.SqmUpdateStatement;
+import org.hibernate.sql.ast.spi.query.expression.All;
 
 /**
  * Base support for an SQM walker
  *
  * @author Steve Ebersole
+ * @author Loïc Lefèvre
  */
 public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Object> {
 
@@ -698,6 +701,11 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 		}
 
 		return expression.accept( this );
+	}
+
+	@Override
+	public Object visitGroupByAllClause(SqmGroupByAll groupByClauseExpression) {
+		return new All();
 	}
 
 	@Override

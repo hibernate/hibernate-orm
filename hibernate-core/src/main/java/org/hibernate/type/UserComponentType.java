@@ -31,6 +31,10 @@ public class UserComponentType<T> extends ComponentType {
 		this.compositeUserType = compositeUserType;
 	}
 
+	public CompositeUserType<T> getCompositeUserType() {
+		return compositeUserType;
+	}
+
 	@Override
 	public boolean isEqual(Object x, Object y) throws HibernateException {
 		return x==y || compositeUserType.equals( (T) x, (T) y );

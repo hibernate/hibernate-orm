@@ -143,6 +143,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		this.subclassToSuperclass = original.subclassToSuperclass;
 		this.customInstantiator = original.customInstantiator;
 		this.type = original.type;
+		this.contextualCompositeUserType = original.contextualCompositeUserType;
 	}
 
 	@Override
@@ -423,7 +424,47 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		}
 	}
 
+	private CompositeUserType<?> contextualCompositeUserType;
+
+	public CompositeUserType<?> getContextualCompositeUserType() {
+		return contextualCompositeUserType;
+	}
+
+	public void setContextualCompositeUserType(CompositeUserType<?> instance) {
+		if ( type != null ) {
+			throw new IllegalStateException( "Composite execution must be configured before type resolution" );
+		}
+		contextualCompositeUserType = instance;
+	}
+
+	private void validateTemporalOffsetHandling() {
+		if ( !(contextualCompositeUserType instanceof org.hibernate.usertype.internal.ContextualTemporalCompositeUserType<?>) ) {
+			return;
+		}
+		if ( properties.size() != 2 ) {
+			throw new MappingException( "Temporal COLUMN requires exactly two components for " + roleName );
+		}
+		final var first = properties.get( 0 );
+		final var dialect = getBuildingContext().getMetadataCollector().getDatabase().getDialect();
+		for ( var property : properties ) {
+			if ( property.isInsertable() != first.isInsertable() || property.isUpdatable() != first.isUpdatable() ) {
+				throw new MappingException( "Temporal COLUMN components require matching insertability and updatability for " + roleName );
+			}
+			if ( property.getValue() instanceof BasicValue basic ) {
+				final var resolved = basic.resolve();
+				if ( resolved.getDomainJavaType().getJavaTypeClass() == java.time.ZoneOffset.class
+						&& dialect.getTemporalPreservation( resolved.getDomainJavaType(), resolved.getJdbcType() ).offset()
+								!= org.hibernate.dialect.temporaltype.spi.TemporalPreservation.Level.SUPPORTED ) {
+					throw new MappingException( "Temporal COLUMN auxiliary offset handling is not established for " + roleName );
+				}
+			}
+		}
+	}
+
 	private CompositeUserType<?> createCompositeUserType(Component component) {
+		if ( contextualCompositeUserType != null ) {
+			return contextualCompositeUserType;
+		}
 		final var buildingContext = getBuildingContext();
 		final var bootstrapContext = buildingContext.getBootstrapContext();
 		final var clazz = classForName( CompositeUserType.class, component.getTypeName(), bootstrapContext );
@@ -460,6 +501,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 								: new ComponentType( this, originalPropertyOrder );
 					}
 					else {
+						validateTemporalOffsetHandling();
 						final CompositeUserType<?> compositeUserType = createCompositeUserType( this );
 						localType = new UserComponentType<>( this, originalPropertyOrder, compositeUserType );
 					}

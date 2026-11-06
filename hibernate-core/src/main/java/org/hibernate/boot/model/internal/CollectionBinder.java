@@ -2216,6 +2216,13 @@ public abstract class CollectionBinder {
 			ClassDetails elementClass,
 			CollectionPropertyHolder holder) {
 		final var elementBinder = new BasicValueBinder( COLLECTION_ELEMENT, buildingContext );
+		final var elementConverter = holder.resolveElementAttributeConverterDescriptor( property, elementClass );
+		if ( buildingContext.isPreferJavaTimeJdbcTypesEnabled() && elementConverter != null
+				&& elementClass != null && elementClass.isRealClass()
+				&& TemporalMappingConfiguration.resolve( property, elementClass.toJavaClass(), buildingContext ).adjustment() != null ) {
+			throw new MappingException( "User converter and timezone adjustment cannot be combined for collection '"
+					+ collection.getRole() + "'" );
+		}
 		elementBinder.setReturnedClassName( elementType.getName() );
 		final var actualColumns = createElementColumnsIfNecessary(
 				collection,
@@ -2229,7 +2236,7 @@ public abstract class CollectionBinder {
 				property,
 				elementType,
 				collection.getOwnerEntityName(),
-				holder.resolveElementAttributeConverterDescriptor( property, elementClass )
+				elementConverter
 		);
 		elementBinder.setPersistentClassName( propertyHolder.getEntityName() );
 		elementBinder.setAccessType( accessType );
@@ -2662,6 +2669,11 @@ public abstract class CollectionBinder {
 			return compositeType.value();
 		}
 		else if ( returnedClass != null ) {
+			final var temporalType = context.isPreferJavaTimeJdbcTypesEnabled()
+					? TimeZoneStorageHelper.resolveTimeZoneStorageCompositeUserType( property, returnedClass, context ) : null;
+			if ( temporalType != null ) {
+				return temporalType;
+			}
 			final var embeddableClass = returnedClass.toJavaClass();
 			return embeddableClass == null
 					? null

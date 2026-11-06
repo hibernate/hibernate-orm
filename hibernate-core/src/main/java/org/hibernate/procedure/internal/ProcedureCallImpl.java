@@ -667,7 +667,13 @@ public class ProcedureCallImpl<R>
 			final var expressible = resolveExpressible( typeReference );
 			// Function returns might not be represented as callable parameters,
 			// but we still want to convert the result to the requested java type if possible
-			firstResultSetMapping.addResultBuilder( new ScalarDomainResultBuilder<>( expressible.getExpressibleJavaType() ) );
+			if ( typeReference instanceof BasicType<?> basic
+					&& basic.getValueConverter() instanceof org.hibernate.type.descriptor.converter.internal.TemporalAdjustmentConverter<?> ) {
+				firstResultSetMapping.addResultBuilder( new org.hibernate.query.results.internal.dynamic.DynamicResultBuilderBasicStandard( 1, basic ) );
+			}
+			else {
+				firstResultSetMapping.addResultBuilder( new ScalarDomainResultBuilder<>( expressible.getExpressibleJavaType() ) );
+			}
 		}
 		functionReturn = new FunctionReturnImpl<>( this, (OutputableType<?>) outputableType );
 		return this;
@@ -679,7 +685,12 @@ public class ProcedureCallImpl<R>
 		if ( firstResultSetMapping.getNumberOfResultBuilders() == 0 ) {
 			// Function returns might not be represented as callable parameters,
 			// but we still want to convert the result to the requested java type if possible
-			firstResultSetMapping.addResultBuilder( new ScalarDomainResultBuilder<>( basicType.getExpressibleJavaType() ) );
+			if ( basicType.getValueConverter() instanceof org.hibernate.type.descriptor.converter.internal.TemporalAdjustmentConverter<?> ) {
+				firstResultSetMapping.addResultBuilder( new org.hibernate.query.results.internal.dynamic.DynamicResultBuilderBasicStandard( 1, basicType ) );
+			}
+			else {
+				firstResultSetMapping.addResultBuilder( new ScalarDomainResultBuilder<>( basicType.getExpressibleJavaType() ) );
+			}
 		}
 		functionReturn = new FunctionReturnImpl<>( this, (OutputableType<?>) basicType );
 	}

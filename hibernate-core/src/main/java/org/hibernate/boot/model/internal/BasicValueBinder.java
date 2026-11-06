@@ -1,5 +1,7 @@
 package org.hibernate.boot.model.internal;
 
+import java.time.ZoneId;
+
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
@@ -118,6 +120,8 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	private EnumType enumType;
 	private TemporalType temporalPrecision;
 	private TimeZoneStorageType timeZoneStorageType;
+	private ZoneId timeZoneAdjustment;
+	private boolean temporalFeaturesExcluded;
 	private boolean partitionKey;
 	private Integer jdbcTypeCode;
 
@@ -309,6 +313,21 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			@Nullable String declaringClassName,
 			@Nullable ConverterDescriptor<?,?> converterDescriptor) {
 		this.memberDetails = memberDetails;
+		final boolean temporalAnnotationRole = kind == Kind.ATTRIBUTE || kind == Kind.COLLECTION_ELEMENT;
+		temporalFeaturesExcluded = !temporalAnnotationRole || TemporalMappingConfiguration.excluded( memberDetails )
+				|| aggregateComponent != null
+				|| columns != null && columns.getPropertyHolder().isOrWithinEmbeddedId()
+				|| columns != null && columns.getPropertyHolder() instanceof ComponentPropertyHolder componentHolder
+						&& componentHolder.getAggregateColumn() != null;
+		if ( temporalAnnotationRole && temporalFeaturesExcluded ) {
+			TemporalMappingConfiguration.rejectExplicitDeclarations( memberDetails, buildingContext.isPreferJavaTimeJdbcTypesEnabled() );
+		}
+		if ( !temporalFeaturesExcluded && typeDetails != null && typeDetails.determineRawClass().isRealClass() ) {
+			final var temporal = TemporalMappingConfiguration.resolve(
+					memberDetails, typeDetails.determineRawClass().toJavaClass(), buildingContext );
+			timeZoneAdjustment = temporal.adjustment();
+		}
+
 		if ( typeDetails != null || memberDetails.isArray() ) {
 			assert columns != null
 				: "BasicValueBinder.setColumns must be called before BasicValueBinder.setType";
@@ -684,6 +703,9 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 						? attribute.getElementType()
 						: explicitElementTypeDetails;
 		final var javaType = elementTypeDetails.determineRawClass().toJavaClass();
+		if ( !temporalFeaturesExcluded ) {
+			timeZoneAdjustment = TemporalMappingConfiguration.resolve( attribute, javaType, buildingContext ).adjustment();
+		}
 
 		implicitJavaTypeAccess = typeConfiguration -> javaType;
 
@@ -1140,6 +1162,10 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		}
 
 		basicValue = new BasicValue( buildingContext, table );
+		if ( memberDetails != null ) {
+			basicValue.setTemporalRole( memberDetails.getDeclaringType().getName(), memberDetails.getName() );
+		}
+
 
 		if ( columns.getPropertyHolder().isComponent() ) {
 			final var propertyHolder = (ComponentPropertyHolder) columns.getPropertyHolder();
@@ -1161,6 +1187,23 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		if ( timeZoneStorageType != null ) {
 			basicValue.setTimeZoneStorageType( timeZoneStorageType );
 		}
+		basicValue.setTimeZoneAdjustment( timeZoneAdjustment );
+		basicValue.setTemporalJdbcOverride( jdbcTypeCode != null || memberDetails != null
+				&& memberDetails.locateAnnotationUsage( org.hibernate.annotations.JdbcType.class,
+						buildingContext.getBootstrapContext().getModelsContext() ) != null );
+
+		if ( temporalFeaturesExcluded ) {
+			basicValue.setTemporalValidationEnabled( false );
+		}
+
+		if ( !temporalFeaturesExcluded && buildingContext.isPreferJavaTimeJdbcTypesEnabled() && memberDetails != null ) {
+			final var rawClass = (kind == Kind.COLLECTION_ELEMENT ? memberDetails.getElementType() : memberDetails.getType()).determineRawClass();
+			if ( rawClass.isRealClass() && TemporalMappingConfiguration.supportsRepresentation( rawClass.toJavaClass() ) ) {
+				final var temporal = TemporalMappingConfiguration.resolve( memberDetails, rawClass.toJavaClass(), buildingContext );
+				basicValue.setTimeZoneStorageType( temporal.nativeStorage() ? TimeZoneStorageType.NATIVE : TimeZoneStorageType.NORMALIZE_UTC );
+			}
+		}
+
 
 		basicValue.setPartitionKey( partitionKey );
 
@@ -1254,6 +1297,23 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		if ( timeZoneStorageType != null ) {
 			basicValue.setTimeZoneStorageType( timeZoneStorageType );
 		}
+		basicValue.setTimeZoneAdjustment( timeZoneAdjustment );
+		basicValue.setTemporalJdbcOverride( jdbcTypeCode != null || memberDetails != null
+				&& memberDetails.locateAnnotationUsage( org.hibernate.annotations.JdbcType.class,
+						buildingContext.getBootstrapContext().getModelsContext() ) != null );
+
+		if ( temporalFeaturesExcluded ) {
+			basicValue.setTemporalValidationEnabled( false );
+		}
+
+		if ( !temporalFeaturesExcluded && buildingContext.isPreferJavaTimeJdbcTypesEnabled() && memberDetails != null ) {
+			final var rawClass = (kind == Kind.COLLECTION_ELEMENT ? memberDetails.getElementType() : memberDetails.getType()).determineRawClass();
+			if ( rawClass.isRealClass() && TemporalMappingConfiguration.supportsRepresentation( rawClass.toJavaClass() ) ) {
+				final var temporal = TemporalMappingConfiguration.resolve( memberDetails, rawClass.toJavaClass(), buildingContext );
+				basicValue.setTimeZoneStorageType( temporal.nativeStorage() ? TimeZoneStorageType.NATIVE : TimeZoneStorageType.NORMALIZE_UTC );
+			}
+		}
+
 
 		if ( temporalPrecision != null ) {
 			basicValue.setTemporalPrecision( temporalPrecision );

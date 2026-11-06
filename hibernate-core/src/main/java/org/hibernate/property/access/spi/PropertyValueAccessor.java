@@ -218,6 +218,9 @@ public final class PropertyValueAccessor {
 			throw e;
 		}
 		catch (Throwable t) {
+			if ( kind == Kind.COMPOSITE_USER_TYPE && t instanceof org.hibernate.TemporalValueException temporalValue ) {
+				throw temporalValue;
+			}
 			if ( t instanceof InterruptedException ie ) {
 				Thread.currentThread().interrupt();
 				throw sneakyThrow( ie );

@@ -1,7 +1,6 @@
 package org.hibernate.annotations;
 
 
-import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.TimeZoneStorageStrategy;
 
@@ -25,6 +24,11 @@ import org.hibernate.type.TimeZoneStorageStrategy;
  *     {@linkplain java.time.ZonedDateTime#getZone() zone} in which the
  *     instant is represented.
  * </ul>
+ * <p>
+ * The strategy descriptions below describe legacy explicit conversion with
+ * {@code hibernate.type.java_time_use_direct_jdbc=false}. Direct-enabled handling
+ * separates representation from adjustment and validates preservation; it does
+ * not select a weaker guarantee automatically.
  * <p>
  * We must also consider the physical representation of the zoned datetime
  * in the database table.
@@ -56,12 +60,21 @@ import org.hibernate.type.TimeZoneStorageStrategy;
  * @author Steve Ebersole
  * @author Andrea Boriero
  *
+ * @deprecated Since 8.0, use {@link TimeZoneRepresentation} to select storage and
+ * {@link TimeZoneAdjustment} to request an explicit timezone adjustment. With
+ * {@code hibernate.type.java_time_use_direct_jdbc=true}, legacy {@code COLUMN}
+ * selects {@code TimeZoneRepresentation.Type.COLUMN}; {@code NORMALIZE_UTC}
+ * contributes INLINE storage and UTC adjustment. Legacy {@code NATIVE} retains
+ * its native-handling constraint. {@code NORMALIZE}, {@code AUTO}, and
+ * {@code DEFAULT} must be replaced with explicit choices. Disabling direct JDBC
+ * handling retains the established legacy behavior.
+ *
  * @since 6.0
  *
  * @see TimeZoneStorage
  * @see TimeZoneStorageStrategy
  */
-@Incubating(since = "8.0")
+@Deprecated(since = "8.0")
 public enum TimeZoneStorageType {
 	/**
 	 * Stores the timezone by using the {@code with time zone}

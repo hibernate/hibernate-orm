@@ -43,6 +43,7 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 public class CollectionPropertyHolder extends AbstractPropertyHolder {
 
 	private final Collection collection;
+	private final MemberDetails collectionMember;
 
 	// assume true, the constructor will opt out where appropriate
 	private boolean canElementBeConverted = true;
@@ -60,10 +61,15 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 			MetadataBuildingContext context) {
 		super( path, parentPropertyHolder, clazzToProcess, context );
 		this.collection = collection;
+		this.collectionMember = property;
 		setCurrentProperty( property );
 
 		this.elementAttributeConversionInfoMap = new HashMap<>();
 		this.keyAttributeConversionInfoMap = new HashMap<>();
+	}
+
+	MemberDetails getCollectionMember() {
+		return collectionMember;
 	}
 
 	public Collection getCollectionBinding() {

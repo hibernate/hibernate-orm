@@ -120,6 +120,13 @@ class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> implements Pro
 						session.getFactory().getQueryEngine().getCriteriaBuilder()
 				);
 
+		if ( mode != ParameterMode.REF_CURSOR && typeToUse instanceof org.hibernate.type.BasicType<?> basic
+				&& session.getFactory().getSessionFactoryOptions().isPreferJavaTimeJdbcTypesEnabled() ) {
+			org.hibernate.type.internal.TemporalMappingValidator.validate(
+					session.getFactory().getJdbcServices().getDialect(), basic,
+					procedureCall.getProcedureName() + " parameter " + (name == null ? startIndex : name) );
+		}
+
 		final String jdbcParamName;
 		final JdbcParameterBinder parameterBinder;
 		final JdbcCallRefCursorExtractorImpl refCursorExtractor;

@@ -79,7 +79,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			Map<ClassDetails, InheritanceState> inheritanceStatePerClass) {
 		super( path, parent, inferredData.getPropertyType().determineRawClass(), context );
 		final var embeddedMemberDetails = inferredData.getAttributeMember();
-		setCurrentProperty( embeddedMemberDetails );
+		setCurrentProperty( embeddedMemberDetails, inferredData.getClassOrElementType().determineRawClass() );
 		this.component = component;
 		this.inheritanceStatePerClass = inheritanceStatePerClass;
 
@@ -197,6 +197,22 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		embeddedMemberDetails.forEachAnnotationUsage( Convert.class, getSourceModelContext(), (usage) -> {
 			final var info = new AttributeConversionInfo( usage, embeddedMemberDetails );
 			if ( isEmpty( info.getAttributeName() ) ) {
+				if ( context.isPreferJavaTimeJdbcTypesEnabled()
+						&& (org.hibernate.usertype.internal.OffsetTimeCompositeUserType.class.getName().equals( component.getTypeName() )
+						|| org.hibernate.usertype.internal.OffsetDateTimeCompositeUserType.class.getName().equals( component.getTypeName() )
+						|| org.hibernate.usertype.internal.ZonedDateTimeCompositeUserType.class.getName().equals( component.getTypeName() )) ) {
+					if ( info.isConversionDisabled() ) {
+						return;
+					}
+					final Class<?> domain = org.hibernate.usertype.internal.OffsetTimeCompositeUserType.class.getName().equals( component.getTypeName() )
+							? java.time.OffsetTime.class
+							: org.hibernate.usertype.internal.OffsetDateTimeCompositeUserType.class.getName().equals( component.getTypeName() )
+									? java.time.OffsetDateTime.class : java.time.ZonedDateTime.class;
+					final var configuration = TemporalMappingConfiguration.resolve( embeddedMemberDetails, domain, context );
+					throw new org.hibernate.MappingException( configuration.adjustment() != null
+							? "User converter and timezone adjustment cannot be combined for '" + getPath() + "'"
+							: "Whole-value user converter cannot be applied to temporal COLUMN mapping '" + getPath() + "'" );
+				}
 				throw new IllegalStateException( "Convert placed on Embedded attribute must define (sub)attributeName" );
 			}
 			infoMap.put( info.getAttributeName(), info );

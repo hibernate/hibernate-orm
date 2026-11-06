@@ -160,7 +160,15 @@ class DirectJavaTimeJdbcSupportTests {
 
 		assertOnlyLocalDateSupported( new SpannerDialect().getDirectJavaTimeJdbcSupport() );
 		assertOnlyLocalDateSupported( new SpannerPostgreSQLDialect().getDirectJavaTimeJdbcSupport() );
-		assertOnlyLocalTypesSupported( new PostgreSQLDialect().getDirectJavaTimeJdbcSupport() );
+		final var postgres = new PostgreSQLDialect().getDirectJavaTimeJdbcSupport();
+		assertThat( postgres.supports( LocalDate.class ) ).isTrue();
+		assertThat( postgres.supports( LocalTime.class ) ).isTrue();
+		assertThat( postgres.supports( LocalDateTime.class ) ).isTrue();
+		assertThat( postgres.supports( OffsetTime.class ) ).isTrue();
+		assertThat( postgres.supports( OffsetDateTime.class ) ).isTrue();
+		assertThat( postgres.supports( ZonedDateTime.class ) ).isFalse();
+		assertThat( postgres.supports( Instant.class ) ).isFalse();
+		assertThat( new org.hibernate.dialect.OracleDialect().getDirectJavaTimeJdbcSupport().supports( ZonedDateTime.class ) ).isTrue();
 		assertOnlyLocalTypesSupported( new MySQLDialect().getDirectJavaTimeJdbcSupport() );
 
 		final var jtds = new SybaseDialect( sybaseInfo(

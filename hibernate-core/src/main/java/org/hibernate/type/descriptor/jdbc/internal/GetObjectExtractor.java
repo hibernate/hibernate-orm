@@ -9,11 +9,10 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JavaTimeJdbcType;
 
-/**
- * Support for extracting values directly through `getObject` JDBC driver calls.
- *
- * @author Steve Ebersole
- */
+/// Support for extracting values directly through \`getObject\` JDBC driver calls.
+///
+/// @since 8.0
+/// @author Steve Ebersole
 public class GetObjectExtractor<T> extends BasicExtractor<T> {
 	private final Class<?> baseClass;
 
@@ -27,16 +26,21 @@ public class GetObjectExtractor<T> extends BasicExtractor<T> {
 			ResultSet rs,
 			int paramIndex,
 			WrapperOptions options) throws SQLException {
-		return getJavaType().wrap( rs.getObject( paramIndex, baseClass ), options );
+		return checked( rs.getObject( paramIndex, baseClass ), options );
 	}
 
 	@Override
 	protected T doExtract(CallableStatement statement, int paramIndex, WrapperOptions options) throws SQLException {
-		return getJavaType().wrap( statement.getObject( paramIndex, baseClass ), options );
+		return checked( statement.getObject( paramIndex, baseClass ), options );
 	}
 
 	@Override
 	protected T doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-		return getJavaType().wrap( statement.getObject( name, baseClass ), options );
+		return checked( statement.getObject( name, baseClass ), options );
 	}
+	private T checked(Object value, WrapperOptions options) {
+		if ( TemporalJdbcValueRanges.isTemporalSqlType( getJdbcType().getDdlTypeCode() ) ) TemporalJdbcValueRanges.check( value, options );
+		return getJavaType().wrap( value, options );
+	}
+
 }

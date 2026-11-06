@@ -1,5 +1,27 @@
 package org.hibernate.dialect;
 
+import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.dialect.temporaltype.spi.TemporalPreservation;
+import org.hibernate.dialect.type.internal.OracleOffsetDateTimeJdbcType;
+import org.hibernate.dialect.type.internal.OracleOffsetTimeJdbcType;
+import org.hibernate.dialect.type.internal.OracleZonedDateTimeJdbcType;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
+import org.hibernate.type.descriptor.java.OffsetDateTimeJavaType;
+import org.hibernate.type.descriptor.jdbc.TimeUtcAsOffsetTimeJdbcType;
+import org.hibernate.type.descriptor.java.ZonedDateTimeJavaType;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
+import org.hibernate.type.descriptor.java.OffsetTimeJavaType;
+import org.hibernate.type.descriptor.java.JavaType;
+import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.time.OffsetTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
+
+import static org.hibernate.dialect.temporaltype.spi.TemporalPreservation.Level.*;
+
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
 
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
@@ -152,6 +174,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.OracleJsonBlobJdbcType;
+import org.hibernate.type.descriptor.jdbc.internal.UtcTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.jboss.logging.Logger;
 
@@ -1111,6 +1134,58 @@ public class OracleDialect extends Dialect implements CurrentTemporalSupport, Te
 	}
 
 	@Override
+	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
+		return DirectJavaTimeJdbcSupports.of(
+				LocalDate.class, LocalTime.class, LocalDateTime.class,
+				OffsetTime.class, OffsetDateTime.class, ZonedDateTime.class );
+	}
+
+	@Override
+	public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
+		if ( javaType.getClass() == org.hibernate.type.descriptor.java.LocalTimeJavaType.class ) {
+			if ( jdbcType.getClass() == org.hibernate.dialect.type.internal.OracleLocalTimeJdbcType.class ) {
+				return new TemporalPreservation( IRRELEVANT, SUPPORTED, IRRELEVANT, IRRELEVANT, IRRELEVANT );
+			}
+			if ( jdbcType.getClass() == org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType.class ) {
+				return new TemporalPreservation( IRRELEVANT, org.hibernate.dialect.temporaltype.spi.TemporalPreservation.Level.UNKNOWN,
+						IRRELEVANT, IRRELEVANT, IRRELEVANT );
+			}
+		}
+
+		final JdbcType carrier = jdbcType instanceof org.hibernate.type.descriptor.jdbc.internal.UtcTimestampJdbcType utc
+				? utc.getDelegate() : jdbcType;
+		if ( carrier.getClass() == org.hibernate.dialect.type.internal.OracleTimestampUtcAsJdbcTimestampJdbcType.class ) {
+			return org.hibernate.dialect.temporaltype.spi.StandardTemporalPreservation.instantOnly( javaType );
+		}
+		if ( carrier.getClass() == org.hibernate.type.descriptor.jdbc.TimestampUtcAsZonedJdbcTimestampJdbcType.class ) {
+			final var report = org.hibernate.dialect.temporaltype.spi.StandardTemporalPreservation.instantOnly( javaType );
+			if ( report != TemporalPreservation.UNKNOWN ) {
+				return new TemporalPreservation( report.date(), report.time(), UNSUPPORTED, report.offset(), report.zoneId() );
+			}
+		}
+
+		if ( javaType.getClass() == OffsetTimeJavaType.class
+				&& jdbcType instanceof UtcTimeJdbcType utc
+				&& utc.getDelegate().getClass() == TimeUtcAsOffsetTimeJdbcType.class ) {
+			return new TemporalPreservation( IRRELEVANT, SUPPORTED, IRRELEVANT, UNSUPPORTED, IRRELEVANT );
+		}
+
+		if ( javaType.getClass() == ZonedDateTimeJavaType.class
+				&& jdbcType.getClass() == OracleZonedDateTimeJdbcType.class ) {
+			return new TemporalPreservation( SUPPORTED, SUPPORTED, SUPPORTED, SUPPORTED, SUPPORTED );
+		}
+		if ( javaType.getClass() == OffsetDateTimeJavaType.class
+				&& jdbcType.getClass() == OracleOffsetDateTimeJdbcType.class ) {
+			return new TemporalPreservation( SUPPORTED, SUPPORTED, SUPPORTED, SUPPORTED, IRRELEVANT );
+		}
+		if ( javaType.getClass() == OffsetTimeJavaType.class
+				&& jdbcType.getClass() == OracleOffsetTimeJdbcType.class ) {
+			return new TemporalPreservation( IRRELEVANT, SUPPORTED, IRRELEVANT, SUPPORTED, IRRELEVANT );
+		}
+		return super.getTemporalPreservation( javaType, jdbcType );
+	}
+
+	@Override
 	@SPI({ IMPLEMENT, SUPPLY })
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final var configurationService = serviceRegistry.requireService( ConfigurationService.class );
@@ -1118,6 +1193,23 @@ public class OracleDialect extends Dialect implements CurrentTemporalSupport, Te
 		useValueLOB = configurationService.getSetting( ORACLE_VALUE_LOB_ENABLED, StandardConverters.BOOLEAN, true );
 
 		super.contributeTypes( typeContributions, serviceRegistry );
+		if ( org.hibernate.boot.spi.MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( serviceRegistry ) ) {
+			typeContributions.contributeJdbcType( org.hibernate.dialect.type.internal.OracleLocalTimeJdbcType.INSTANCE );
+			typeContributions.contributeJdbcType( OracleOffsetTimeJdbcType.INSTANCE );
+			typeContributions.contributeJdbcType( OracleOffsetDateTimeJdbcType.INSTANCE );
+			if ( OracleJdbcTypes.isDriverUsable( serviceRegistry ) ) {
+				try {
+					typeContributions.contributeJdbcType( new OracleZonedDateTimeJdbcType(
+							serviceRegistry.requireService( ClassLoaderService.class ) )
+					);
+				}
+				catch (HibernateException metadataUnavailable) {
+					// Leave this pair unknown; an unused optional capability must not fail bootstrap.
+					DIALECT_LOGGER.log( Logger.Level.DEBUG, "Oracle JDBC timezone metadata unavailable", metadataUnavailable );
+				}
+			}
+		}
+
 		if ( ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( serviceRegistry, this ) == BIT ) {
 			typeContributions.contributeJdbcType( OracleJdbcTypes.booleanType() );
 		}

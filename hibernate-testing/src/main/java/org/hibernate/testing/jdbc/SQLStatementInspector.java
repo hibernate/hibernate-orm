@@ -109,6 +109,12 @@ public class SQLStatementInspector implements StatementInspector {
 		assertTrue( query.toLowerCase( Locale.ROOT ).startsWith( "select" ) );
 	}
 
+	public void assertAllSelect() {
+		Assertions.assertThat( sqlQueries )
+				.isNotEmpty()
+				.allSatisfy( sql -> Assertions.assertThat( sql.toLowerCase( Locale.ROOT ) ).startsWith( "select" ) );
+	}
+
 	public void assertIsInsert(int queryNumber) {
 		String query = sqlQueries.get( queryNumber );
 		assertTrue( query.toLowerCase( Locale.ROOT ).startsWith( "insert" ) );

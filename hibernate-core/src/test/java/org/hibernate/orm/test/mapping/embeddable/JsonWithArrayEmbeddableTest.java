@@ -44,6 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 @JiraKey("HHH-15862")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonAggregate.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructuralArrays.class)
 @BootstrapServiceRegistry(
 		// Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
 		integrators = SharedDriverManagerTypeCacheClearingIntegrator.class

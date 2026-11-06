@@ -1140,6 +1140,14 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsJsonArrayAggOrderBy implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "json_arrayagg" )
+				// CUBRID's group_concat can only be ordered by its own argument
+				&& !( dialect instanceof CUBRIDDialect );
+		}
+	}
+
 	public static class SupportsJsonObjectAgg implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return definesFunction( dialect, "json_objectagg" )
@@ -1187,6 +1195,14 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsJsonArrayInsert implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return definesFunction( dialect, "json_array_insert" );
+		}
+	}
+
+	public static class SupportsLenientJsonModification implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			// CUBRID raises an error when the path of json_remove, json_array_append or json_array_insert
+			// does not exist, and json_array_insert wraps a target that is not an array
+			return !( dialect instanceof CUBRIDDialect );
 		}
 	}
 

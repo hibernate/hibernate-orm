@@ -44,6 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 })
 @SessionFactory
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonArray.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructuralArrays.class)
 public class DescriptiveJsonGeneratingVisitorSmokeTest {
 	private final DescriptiveJsonGeneratingVisitor visitor = new DescriptiveJsonGeneratingVisitor();
 

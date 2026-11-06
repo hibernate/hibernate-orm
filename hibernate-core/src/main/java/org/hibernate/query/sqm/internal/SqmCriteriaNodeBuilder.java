@@ -3019,8 +3019,13 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate between(Expression<?> value, Expression<?> lower, Expression<?> upper, boolean negated) {
+	public SqmPredicate between(
+			@Nonnull Expression<?> value,
+			@Nonnull Expression<?> lower,
+			@Nonnull Expression<?> upper,
+			boolean negated) {
 		return new SqmBetweenPredicate(
 				(SqmExpression<?>) value,
 				(SqmExpression<?>) lower,
@@ -3030,8 +3035,12 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate comparison(Expression<?> x, ComparisonOperator operator, Expression<?> y) {
+	public SqmPredicate comparison(
+			@Nonnull Expression<?> x,
+			@Nonnull ComparisonOperator operator,
+			@Nonnull Expression<?> y) {
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				operator,

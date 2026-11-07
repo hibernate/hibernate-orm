@@ -55,6 +55,7 @@ import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
+import static org.hibernate.dialect.aggregate.internal.AggregateColumnDescriptorAdapter.memberName;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.buildBasicAttributeMapping;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getPropertyPath;
@@ -342,7 +343,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 					temporalPrecision = column.getTemporalPrecision();
 					nullable = column.isNullable();
 					isLob = column.isSqlTypeLob( creationContext.getMetadata() );
-					selectablePath = basicValue.createSelectablePath( column.getQuotedName( dialect ) );
+					selectablePath = basicValue.createSelectablePath( memberName( column, dialect ) );
 					MappingModelCreationHelper.resolveAggregateColumnBasicType( creationProcess, role, column );
 				}
 				else {

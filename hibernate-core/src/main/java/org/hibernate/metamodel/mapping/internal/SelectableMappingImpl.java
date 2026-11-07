@@ -12,6 +12,7 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 
+import static org.hibernate.dialect.aggregate.internal.AggregateColumnDescriptorAdapter.memberName;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
@@ -154,7 +155,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			isLob = column.isSqlTypeLob( creationContext.getMetadata() );
 			selectablePath = parentPath == null
 					? null
-					: parentPath.append( column.getQuotedName( dialect ) );
+					: parentPath.append( memberName( column, dialect ) );
 		}
 		return new SelectableMappingImpl(
 				containingTableExpression,

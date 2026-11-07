@@ -14,6 +14,7 @@ import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.Nulls;
 import jakarta.persistence.metamodel.Type;
 import jakarta.persistence.sql.ResultSetMapping;
 import org.hibernate.CacheMode;
@@ -24,6 +25,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.dialect.function.spi.WindowFunctionSupport;
+import org.hibernate.dialect.sql.ast.spi.NullOrdering;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
@@ -240,6 +242,21 @@ public class SelectionQueryImpl<R>
 		tupleMetadata = buildTupleMetadata( incomingSqm, providedResultType, getQueryOptions().getTupleTransformer() );
 	}
 
+	private static <T> Order<T> prepareKeyOrder(
+			Order<T> order, Nulls defaultNullPrecedence, NullOrdering nullOrdering, boolean backwards) {
+		final var nullPrecedence = order.nullPrecedence() == Nulls.NONE
+				? defaultNullPrecedence
+				: order.nullPrecedence();
+		final boolean nullsFirst = nullPrecedence == Nulls.NONE
+				? NullsHelper.isDefaultOrdering( Nulls.FIRST, order.direction(), nullOrdering )
+				: nullPrecedence == Nulls.FIRST;
+		if ( backwards ) {
+			final var reversedOrder = order.reverse();
+			return nullsFirst ? reversedOrder.withNullsLast() : reversedOrder.withNullsFirst();
+		}
+		return nullsFirst ? order.withNullsFirst() : order.withNullsLast();
+	}
+
 	/// Used for [KeyedResult] handling.
 	// Used by Hibernate Reactive
 	public <E> SelectionQueryImpl(@SuppressWarnings("rawtypes") SelectionQueryImpl original, KeyedPage<E> keyedPage) {
@@ -248,10 +265,14 @@ public class SelectionQueryImpl<R>
 		final var page = keyedPage.getPage();
 		final var key = keyedPage.getKey();
 		final var keyDefinition = keyedPage.getKeyDefinition();
-		final var appliedKeyDefinition =
-				keyedPage.getKeyInterpretation() == KEY_OF_FIRST_ON_NEXT_PAGE
-						? Order.reverse( keyDefinition )
-						: keyDefinition;
+		final boolean backwards = keyedPage.getKeyInterpretation() == KEY_OF_FIRST_ON_NEXT_PAGE;
+		final var sessionFactory = getSessionFactory();
+		final var defaultNullPrecedence = sessionFactory.getSessionFactoryOptions().getDefaultNullPrecedence();
+		final var nullOrdering = sessionFactory.getJdbcServices().getDialect()
+				.getNullOrderingSupport().getDefaultOrdering();
+		final var appliedKeyDefinition = keyDefinition.stream().<Order<? super E>>map(
+				order -> prepareKeyOrder( order, defaultNullPrecedence, nullOrdering, backwards )
+		).toList();
 
 		//noinspection unchecked
 		sqm = (SqmSelectStatement<R>) paginate(

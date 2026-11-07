@@ -1185,8 +1185,20 @@ public class EntityInitializerImpl
 				data.concreteDescriptor = session.getEntityPersister( null, implementation );
 				resolveEntityKey( data, lazyInitializer.getInternalIdentifier() );
 				data.entityHolder = persistenceContext.getEntityHolder( data.entityKey );
-				final Object proxy = data.entityHolder.getProxy();
-				if ( proxy == instance ) {
+				if ( data.entityHolder == null ) {
+					// The initialized proxy is not managed by this session (it was detached),
+					// so its implementation cannot be reused. As for a detached instance
+					// without a proxy, resolve the instance of this session instead
+					data.entityHolder = persistenceContext.claimEntityHolderIfPossible(
+							data.entityKey,
+							null,
+							rowProcessingState.getJdbcValuesSourceProcessingState(),
+							this
+					);
+					resolveEntity( data, null );
+					data.entityKey = data.entityHolder.getEntityKey();
+				}
+				else if ( data.entityHolder.getProxy() == instance ) {
 					data.entityInstanceForNotify = implementation;
 					// Even though the lazyInitializer reports it is initialized,
 					// check if the entity holder reports initialized, because in
@@ -1195,7 +1207,7 @@ public class EntityInitializerImpl
 					data.setState( initializedOrResolved( data, data.entityHolder.isInitialized() ) );
 				}
 				else {
-					resolveEntity( data, proxy );
+					resolveEntity( data, data.entityHolder.getProxy() );
 					data.entityKey = data.entityHolder.getEntityKey();
 				}
 			}

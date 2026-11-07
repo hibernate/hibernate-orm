@@ -30,6 +30,8 @@ import org.hibernate.sql.ast.spi.SqlAstNode;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 import org.hibernate.sql.ast.spi.query.select.SortSpecification;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Objects.requireNonNull;
@@ -39,7 +41,21 @@ import static java.util.Objects.requireNonNull;
  */
 public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
+	private final boolean interpolating;
+
 	public InverseDistributionFunction(String name, FunctionParameterType parameterType, TypeConfiguration typeConfiguration) {
+		this( name, parameterType, false, typeConfiguration );
+	}
+
+	/**
+	 * @param interpolating whether the function computes a value between two rows,
+	 *        like {@code percentile_cont}, rather than picking one of the rows
+	 */
+	public InverseDistributionFunction(
+			String name,
+			FunctionParameterType parameterType,
+			boolean interpolating,
+			TypeConfiguration typeConfiguration) {
 		super(
 				name,
 				FunctionKind.ORDERED_SET_AGGREGATE,
@@ -51,6 +67,7 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 						? null
 						: StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, parameterType )
 		);
+		this.interpolating = interpolating;
 	}
 
 	@Override
@@ -162,7 +179,17 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 				@Nonnull TypeConfiguration typeConfiguration) {
 			final var expressible = requireNonNull( getWithinGroup() )
 					.getSortSpecifications().get( 0 ).getSortExpression().getExpressible();
-			return expressible == null ? null : (ReturnableType<?>) expressible.getSqmType();
+			if ( expressible == null ) {
+				return null;
+			}
+			final var sortKeyType = (ReturnableType<?>) expressible.getSqmType();
+			// an interpolated value of an integer sort key is in general not an integer,
+			// and databases return it as a floating point or decimal value
+			return interpolating
+				&& sortKeyType instanceof BasicType<?> basicType
+				&& basicType.getJdbcType().isInteger()
+					? typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
+					: sortKeyType;
 		}
 
 		@Nullable

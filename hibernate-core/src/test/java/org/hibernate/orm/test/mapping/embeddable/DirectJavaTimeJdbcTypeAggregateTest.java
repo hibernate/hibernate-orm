@@ -30,7 +30,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 ///
 /// @author Steve Ebersole
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonAggregate.class)
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructuralArrays.class)
 @DomainModel(annotatedClasses = DirectJavaTimeJdbcTypeAggregateTest.JsonHolder.class)
 @SessionFactory
 class DirectJavaTimeJdbcTypeAggregateTest {

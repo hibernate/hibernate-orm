@@ -1131,6 +1131,8 @@ abstract public class DialectFeatureChecks {
 				&& !( dialect instanceof CockroachDialect )
 				// Spanner does not support ON ERROR or ON EMPTY clauses
 				&& !( dialect instanceof SpannerDialect )
+				// CUBRID doesn't have a native json_value or json_query function
+				&& !( dialect instanceof CUBRIDDialect )
 				// PostgreSQL added support for native json_value in version 17
 				&& !( dialect instanceof PostgreSQLDialect && dialect.getVersion().isBefore( 17 ) );
 		}

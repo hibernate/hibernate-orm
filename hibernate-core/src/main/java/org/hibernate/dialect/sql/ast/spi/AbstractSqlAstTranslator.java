@@ -2936,21 +2936,21 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private String determineDepthColumnName(CteStatement cte) {
-		String baseName = "depth";
+		String baseName = "dpth";
 		OUTER: for ( int tries = 0; tries < 5; tries++ ) {
 			final String name = tries == 0 ? baseName : (baseName + "_" + tries);
 			for ( CteColumn cteColumn : cte.getCteTable().getCteColumns() ) {
-				if ( name.equals( cteColumn.getColumnExpression() ) ) {
+				if ( hasColumnName( cteColumn, name ) ) {
 					continue OUTER;
 				}
 			}
-			if ( cte.getSearchColumn() != null && name.equals( cte.getSearchColumn().getColumnExpression() ) ) {
+			if ( hasColumnName( cte.getSearchColumn(), name ) ) {
 				continue;
 			}
-			if ( cte.getCycleMarkColumn() != null && name.equals( cte.getCycleMarkColumn().getColumnExpression() ) ) {
+			if ( hasColumnName( cte.getCycleMarkColumn(), name ) ) {
 				continue;
 			}
-			if ( cte.getCyclePathColumn() != null && name.equals( cte.getCyclePathColumn().getColumnExpression() ) ) {
+			if ( hasColumnName( cte.getCyclePathColumn(), name ) ) {
 				continue;
 			}
 
@@ -2968,22 +2968,24 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		OUTER: for ( int tries = 0; tries < 5; tries++ ) {
 			final String name = tries == 0 ? baseName : (baseName + "_" + tries);
 			for ( CteColumn cteColumn : cte.getCteTable().getCteColumns() ) {
-				if ( name.equals( cteColumn.getColumnExpression() ) ) {
+				if ( hasColumnName( cteColumn, name ) ) {
 					continue OUTER;
 				}
 			}
-			if ( cte.getSearchColumn() != null
-					&& name.equals( cte.getSearchColumn().getColumnExpression() ) ) {
+			if ( hasColumnName( cte.getSearchColumn(), name ) ) {
 				continue;
 			}
-			if ( cte.getCycleMarkColumn() != null
-					&& name.equals( cte.getCycleMarkColumn().getColumnExpression() ) ) {
+			if ( hasColumnName( cte.getCycleMarkColumn(), name ) ) {
 				continue;
 			}
 
 			return name;
 		}
 		throw new IllegalStateException( "Could not determine a path column name after 5 tries!" );
+	}
+
+	private boolean hasColumnName(CteColumn cteColumn, String name) {
+		return cteColumn != null && name.equals( StringHelper.unquote( cteColumn.getColumnExpression(), dialect ) );
 	}
 
 	protected boolean isInRecursiveQueryPart() {

@@ -11,7 +11,6 @@ import java.util.UUID;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.HANADialect;
@@ -451,7 +450,6 @@ public class JsonFunctionTests {
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "CockroachDB has no way to throw an error on duplicate json object keys.")
 	@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 15, versionMatchMode = VersionMatchMode.SAME_OR_OLDER, reason = "Before version 16, PostgreSQL didn't support the unique keys clause.")
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class, majorVersion = 15, versionMatchMode = VersionMatchMode.SAME_OR_OLDER, reason = "Before version 16, PostgresPlus didn't support the unique keys clause.")
-	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID has no way to throw an error on duplicate json object keys.")
 	public void testJsonObjectAggUniqueKeys(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

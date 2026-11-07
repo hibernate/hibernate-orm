@@ -1,7 +1,11 @@
 package org.hibernate.orm.test.query.criteria;
 
+import org.hibernate.cfg.AvailableSettings;
+
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
@@ -17,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @JiraKey("HHH-21072")
 @DomainModel(annotatedClasses = EnumLiteralWithoutMappingTest.LiteralEntity.class)
 @SessionFactory
+@ServiceRegistry(settings = @Setting(name = AvailableSettings.CRITERIA_VALUE_HANDLING_MODE, value = "inline"))
 public class EnumLiteralWithoutMappingTest {
 
 	@BeforeEach
@@ -72,6 +77,32 @@ public class EnumLiteralWithoutMappingTest {
 			query.select( root.get( "id" ) )
 					.where( builder.isNotNull( builder.literal( PlainStatus.CLOSED ) ) );
 			assertThat( session.createQuery( query ).getSingleResult() ).isEqualTo( 1L );
+		} );
+	}
+
+	@Test
+	void testConstantBodyCaseResult(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var builder = session.getCriteriaBuilder();
+			final var query = builder.createQuery( Status.class );
+			final var root = query.from( LiteralEntity.class );
+			query.select( builder.<Status>selectCase()
+					.when( builder.equal( root.get( "id" ), 1L ), Status.CLOSED )
+					.otherwise( Status.OPEN ) );
+			assertThat( session.createQuery( query ).getSingleResult() ).isEqualTo( Status.CLOSED );
+		} );
+	}
+
+	@Test
+	void testOrdinaryEnumCaseResult(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var builder = session.getCriteriaBuilder();
+			final var query = builder.createQuery( PlainStatus.class );
+			final var root = query.from( LiteralEntity.class );
+			query.select( builder.<PlainStatus>selectCase()
+					.when( builder.equal( root.get( "id" ), 1L ), PlainStatus.CLOSED )
+					.otherwise( PlainStatus.OPEN ) );
+			assertThat( session.createQuery( query ).getSingleResult() ).isEqualTo( PlainStatus.CLOSED );
 		} );
 	}
 

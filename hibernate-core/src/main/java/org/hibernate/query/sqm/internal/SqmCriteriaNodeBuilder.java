@@ -2002,7 +2002,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	private static <E extends Enum<E>> BasicType<E> resolveEnumType(TypeConfiguration configuration, Enum<E> enumValue) {
-		final var enumJavaType = new EnumJavaType<>( ReflectHelper.getClass( enumValue ) );
+		final var enumJavaType = new EnumJavaType<>( enumValue.getDeclaringClass() );
 		final var jdbcType = enumJavaType.getRecommendedJdbcType( configuration.getCurrentBaseSqlTypeIndicators() );
 		return configuration.getBasicTypeRegistry().resolve( enumJavaType, jdbcType );
 	}

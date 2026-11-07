@@ -4,6 +4,7 @@ import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
 import java.util.Set;
+import java.util.function.UnaryOperator;
 
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -35,7 +36,8 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 			Set<? extends Attribute<?, ?>> attributes,
 			DomainType<?> domainType,
 			CompositeIdentifierMapping delegate,
-			boolean generateColumnNames) {
+			boolean generateColumnNames,
+			UnaryOperator<String> columnNameRenderer) {
 		super(
 				sqmExpressible,
 				sqlTypedMappings,
@@ -47,7 +49,8 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 				delegate.getAttributeName(),
 				delegate,
 				-1,
-				generateColumnNames
+				generateColumnNames,
+				columnNameRenderer
 		);
 		this.delegate = delegate;
 	}

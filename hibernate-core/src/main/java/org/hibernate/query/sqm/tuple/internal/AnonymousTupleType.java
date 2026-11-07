@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 
 import jakarta.annotation.Nonnull;
 import org.hibernate.AssertionFailure;
@@ -146,13 +147,20 @@ public class AnonymousTupleType<T>
 	}
 
 	public static SqlTypedMapping[] toSqlTypedMappings(TupleType<?> tupleType, List<SqlSelection> sqlSelections) {
+		return toSqlTypedMappings( tupleType, sqlSelections, UnaryOperator.identity() );
+	}
+
+	public static SqlTypedMapping[] toSqlTypedMappings(
+			TupleType<?> tupleType,
+			List<SqlSelection> sqlSelections,
+			UnaryOperator<String> columnNameRenderer) {
 		final SqlTypedMapping[] jdbcMappings = new SqlTypedMapping[sqlSelections.size()];
 		for ( int i = 0; i < sqlSelections.size(); i++ ) {
 			final JdbcMappingContainer expressionType = sqlSelections.get( i ).getExpressionType();
 			if ( expressionType instanceof SelectableMapping selectableMapping ) {
 				jdbcMappings[i] = new SelectableMappingImpl(
 						"",
-						tupleType.getComponentName( i ),
+						columnNameRenderer.apply( tupleType.getComponentName( i ) ),
 						null,
 						null,
 						null,

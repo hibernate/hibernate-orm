@@ -5,6 +5,7 @@ import jakarta.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.UnaryOperator;
 
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
@@ -34,31 +35,52 @@ public class CteTupleTableGroupProducer extends AnonymousTupleTableGroupProducer
 			String aliasStem,
 			SqlTypedMapping[] sqlTypedMappings,
 			FromClauseAccess fromClauseAccess) {
-		super( sqmCteTable, aliasStem, sqlTypedMappings, fromClauseAccess );
+		this( sqmCteTable, aliasStem, sqlTypedMappings, fromClauseAccess, UnaryOperator.identity() );
+	}
+
+	public CteTupleTableGroupProducer(
+			SqmCteTable<?> sqmCteTable,
+			String aliasStem,
+			SqlTypedMapping[] sqlTypedMappings,
+			FromClauseAccess fromClauseAccess,
+			UnaryOperator<String> columnNameRenderer) {
+		super( sqmCteTable, aliasStem, sqlTypedMappings, fromClauseAccess, columnNameRenderer );
 		final SqmCteStatement<?> cteStatement = sqmCteTable.getCteStatement();
 		final BasicType<String> stringType = cteStatement.nodeBuilder()
 				.getTypeConfiguration()
 				.getBasicTypeForJavaType( String.class );
-		this.searchModelPart = createModelPart( this, cteStatement.getSearchAttributeName(), stringType );
+		this.searchModelPart = createModelPart(
+				this,
+				cteStatement.getSearchAttributeName(),
+				stringType,
+				columnNameRenderer
+		);
 		this.cycleMarkModelPart = createModelPart(
 				this,
 				cteStatement.getCycleMarkAttributeName(),
 				cteStatement.getCycleLiteral() == null
 						? null
-						: (BasicType<?>) cteStatement.getCycleLiteral().getNodeType()
+						: (BasicType<?>) cteStatement.getCycleLiteral().getNodeType(),
+				columnNameRenderer
 		);
-		this.cyclePathModelPart = createModelPart( this, cteStatement.getCyclePathAttributeName(), stringType );
+		this.cyclePathModelPart = createModelPart(
+				this,
+				cteStatement.getCyclePathAttributeName(),
+				stringType,
+				columnNameRenderer
+		);
 	}
 
 	private static AnonymousTupleBasicValuedModelPart createModelPart(
 			MappingType declaringType,
 			String attributeName,
-			BasicType<?> basicType) {
+			BasicType<?> basicType,
+			UnaryOperator<String> columnNameRenderer) {
 		if ( attributeName != null ) {
 			return new AnonymousTupleBasicValuedModelPart(
 					declaringType,
 					attributeName,
-					attributeName,
+					columnNameRenderer.apply( attributeName ),
 					basicType,
 					basicType,
 					-1

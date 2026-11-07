@@ -1662,7 +1662,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 												cteName,
 												newQueryParts.get( 0 ).getFirstQuerySpec()
 														.getSelectClause().getSqlSelections(),
-												lastPoppedFromClauseIndex
+												lastPoppedFromClauseIndex,
+												this::renderIdentifier
 								);
 								final var cteTable = new CteTable(
 										cteName,
@@ -1705,7 +1706,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final var tableGroupProducer = sqmCteTable.resolveTableGroupProducer(
 						cteName,
 						statement.getQuerySpec().getSelectClause().getSqlSelections(),
-						lastPoppedFromClauseIndex
+						lastPoppedFromClauseIndex,
+						this::renderIdentifier
 		);
 		final var cteTable = new CteTable(
 				cteName,
@@ -1756,13 +1758,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final String generatedName = name != null
 					? generateCteName( name )
 					: generateCteName( "cte" + cteNameMapping.size() );
-			// route the CTE name through the IdentifierHelper so it gets the same quoting
-			// treatment (reserved words, global/auto quoting) as any other identifier
-			final String cteName = getSessionFactory().getJdbcServices().getJdbcEnvironment()
-					.getIdentifierHelper().toIdentifier( generatedName ).render( getDialect() );
+			final String cteName = renderIdentifier( generatedName );
 			cteNameMapping.put( key, cteName );
 			return cteName;
 		}
+	}
+
+	// route CTE names through the IdentifierHelper so they get the same quoting
+	// treatment (reserved words, global/auto quoting) as any other identifier
+	private String renderIdentifier(String name) {
+		return getSessionFactory().getJdbcServices().getJdbcEnvironment()
+				.getIdentifierHelper().toIdentifier( name ).render( getDialect() );
 	}
 
 	private String generateCteName(String baseName) {
@@ -1815,7 +1821,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	protected CteColumn createCteColumn(String cteColumn, JdbcMapping jdbcMapping) {
-		return cteColumn == null ? null : new CteColumn( cteColumn, jdbcMapping );
+		return cteColumn == null ? null : new CteColumn( renderIdentifier( cteColumn ), jdbcMapping );
 	}
 
 	protected void forEachCteColumn(CteTable cteTable, SqmCteTableColumn cteColumn, Consumer<CteColumn> consumer) {
@@ -1823,7 +1829,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final int size = cteColumns.size();
 		for ( int i = 0; i < size; i++ ) {
 			final var column = cteColumns.get( i );
-			final String columnName = column.getColumnExpression();
+			final String columnName = unquote( column.getColumnExpression(), getDialect() );
 			final String sqmName = cteColumn.getName();
 			final int length = sqmName.length();
 			if ( columnName.regionMatches( 0, sqmName, 0, length )

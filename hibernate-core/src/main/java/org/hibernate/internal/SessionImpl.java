@@ -480,6 +480,7 @@ public class SessionImpl
 
 	private void managedFlush() {
 		if ( !isOpenOrWaitingForAutoClose() ) {
+			validateBeforeCompletion();
 			SESSION_LOGGER.skippingAutoFlushSessionClosed();
 		}
 		else {
@@ -2070,7 +2071,13 @@ public class SessionImpl
 			}
 
 			@Override
+			public void validateBeforeCompletion() {
+				SessionImpl.this.validateBeforeCompletion( !closed );
+			}
+
+			@Override
 			public void beforeCompletion() {
+				validateBeforeCompletion();
 				if ( isOpen() && getHibernateFlushMode() !=  FlushMode.MANUAL ) {
 					managedFlush();
 				}
@@ -2113,6 +2120,28 @@ public class SessionImpl
 		if ( mustFlushBeforeCompletion() ) {
 			managedFlush();
 		}
+	}
+
+	@Override
+	public void validateBeforeCompletion() {
+		validateBeforeCompletion( !closed || waitingForAutoClose );
+	}
+
+	private void validateBeforeCompletion(boolean eligible) {
+		if ( getFactory().isClosed()
+				&& eligible
+				&& !isReadOnly()
+				&& mustFlushBeforeCompletion()
+				&& mayHaveUnflushedChanges() ) {
+			throw new IllegalStateException(
+					"SessionFactory was closed before transaction completion; the session may contain unflushed changes" );
+		}
+	}
+
+	private boolean mayHaveUnflushedChanges() {
+		return actionQueue.hasAnyQueuedActions()
+				|| persistenceContext.getNumberOfManagedEntities() > 0
+				|| persistenceContext.getCollectionEntriesSize() > 0;
 	}
 
 	private boolean mustFlushBeforeCompletion() {

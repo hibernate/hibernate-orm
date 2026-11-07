@@ -173,6 +173,10 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 	private void beforeCompletionCallback() {
 		JDBC_LOGGER.notifyingResourceLocalObserversBeforeCompletion();
 		try {
+			transactionCoordinatorOwner.validateBeforeCompletion();
+			for ( var observer : observers() ) {
+				observer.validateBeforeCompletion();
+			}
 			transactionCoordinatorOwner.beforeTransactionCompletion();
 			synchronizationRegistry.notifySynchronizationsBeforeTransactionCompletion();
 			for ( var transactionObserver : observers() ) {

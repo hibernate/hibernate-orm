@@ -37,6 +37,12 @@ public interface SynchronizationCallbackTarget {
 	 */
 	boolean isActive();
 
+	/// Validate retained state before completion, including when the owner is inactive.
+	/// Must not access services destroyed by factory closure.
+	default void validateBeforeCompletion() {
+	}
+
+
 	/**
 	 * Callback of before-completion.
 	 *

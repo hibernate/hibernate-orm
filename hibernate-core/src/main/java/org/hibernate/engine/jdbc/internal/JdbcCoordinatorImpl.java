@@ -451,6 +451,11 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	}
 
 	@Override
+	public void validateBeforeCompletion() {
+		owner.validateBeforeCompletion();
+	}
+
+	@Override
 	public void beforeTransactionCompletion() {
 		if ( TRACE_ENABLED ) {
 			JDBC_LOGGER.transactionBeforeCompletion( hashCode() );

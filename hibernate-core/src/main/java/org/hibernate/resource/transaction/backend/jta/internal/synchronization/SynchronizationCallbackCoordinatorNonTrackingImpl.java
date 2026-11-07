@@ -32,6 +32,7 @@ public class SynchronizationCallbackCoordinatorNonTrackingImpl implements Synchr
 	@Override
 	public void beforeCompletion() {
 		JTA_LOGGER.synchronizationCoordinatorBeforeCompletion();
+		target.validateBeforeCompletion();
 		if ( target.isActive() ) {
 			target.beforeCompletion();
 		}

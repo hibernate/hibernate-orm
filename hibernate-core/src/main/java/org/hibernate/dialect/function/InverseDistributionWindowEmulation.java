@@ -34,9 +34,18 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class InverseDistributionWindowEmulation extends InverseDistributionFunction {
 
 	public InverseDistributionWindowEmulation(String name, FunctionParameterType parameterType, TypeConfiguration typeConfiguration) {
+		this( name, parameterType, false, typeConfiguration );
+	}
+
+	public InverseDistributionWindowEmulation(
+			String name,
+			FunctionParameterType parameterType,
+			boolean interpolating,
+			TypeConfiguration typeConfiguration) {
 		super(
 				name,
 				parameterType,
+				interpolating,
 				typeConfiguration
 		);
 	}

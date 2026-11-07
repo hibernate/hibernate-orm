@@ -2253,7 +2253,7 @@ public class CommonFunctionFactory {
 		);
 		functionRegistry.register(
 				"percentile_cont",
-				new InverseDistributionFunction( "percentile_cont", NUMERIC, typeConfiguration )
+				new InverseDistributionFunction( "percentile_cont", NUMERIC, true, typeConfiguration )
 		);
 		functionRegistry.register(
 				"percentile_disc",
@@ -2264,7 +2264,7 @@ public class CommonFunctionFactory {
 	public void inverseDistributionOrderedSetAggregates_windowEmulation() {
 		functionRegistry.register(
 				"percentile_cont",
-				new InverseDistributionWindowEmulation( "percentile_cont", NUMERIC, typeConfiguration )
+				new InverseDistributionWindowEmulation( "percentile_cont", NUMERIC, true, typeConfiguration )
 		);
 		functionRegistry.register(
 				"percentile_disc",

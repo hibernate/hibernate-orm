@@ -1990,14 +1990,16 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	private <T> BasicType<T> resolveInferredType(T value) {
 		final var typeConfiguration = getTypeConfiguration();
-		final var type = ReflectHelper.getClass( value );
+		final Class<?> type = value instanceof Enum<?> enumValue
+				? enumValue.getDeclaringClass()
+				: ReflectHelper.getClass( value );
 		final var result = typeConfiguration.getBasicTypeForJavaType( type );
 		if ( result == null && value instanceof Enum<?> enumValue ) {
 			return (BasicType<T>)
 					resolveEnumType( typeConfiguration, enumValue );
 		}
 		else {
-			return result;
+			return (BasicType<T>) result;
 		}
 	}
 

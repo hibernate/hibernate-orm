@@ -1173,7 +1173,7 @@ public class PluralAttributeMappingImpl
 
 	private boolean isNestedJoin(SqlAstJoinType joinType, boolean addsPredicate, SqlAstCreationState creationState) {
 		// For inner joins we never need join nesting
-		return joinType != SqlAstJoinType.INNER && joinType != SqlAstJoinType.RIGHT
+		return joinType != SqlAstJoinType.INNER
 			// For outer joins we need nesting if there might be an on-condition that refers to the element table
 			&& ( addsPredicate
 					|| collectionDescriptor.hasWhereRestrictions()
@@ -1227,7 +1227,7 @@ public class PluralAttributeMappingImpl
 					tableGroup,
 					null,
 					sqlAliasBase,
-					nestedJoin ? SqlAstJoinType.INNER : joinType,
+					nestedJoin && joinType != SqlAstJoinType.RIGHT ? SqlAstJoinType.INNER : joinType,
 					fetched,
 					false,
 					creationState

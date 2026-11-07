@@ -113,4 +113,14 @@ public class UpdateCoordinatorTemporal extends AbstractTemporalUpdateCoordinator
 			@Nonnull SharedSessionContractImplementor session) {
 		versionUpdateDelegate.forceVersionIncrement( id, currentVersion, nextVersion, session );
 	}
+
+	@Override
+	public void forceVersionIncrement(
+			@Nonnull Object id,
+			@Nullable Object currentVersion,
+			@Nonnull Object nextVersion,
+			boolean batching,
+			@Nonnull SharedSessionContractImplementor session) {
+		versionUpdateDelegate.forceVersionIncrement( id, currentVersion, nextVersion, batching, session );
+	}
 }

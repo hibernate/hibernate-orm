@@ -523,4 +523,14 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 			@Nonnull SharedSessionContractImplementor session) {
 		currentUpdateCoordinator.forceVersionIncrement( id, currentVersion, nextVersion, session );
 	}
+
+	@Override
+	public void forceVersionIncrement(
+			@Nonnull Object id,
+			@Nullable Object currentVersion,
+			@Nonnull Object nextVersion,
+			boolean batching,
+			@Nonnull SharedSessionContractImplementor session) {
+		currentUpdateCoordinator.forceVersionIncrement( id, currentVersion, nextVersion, batching, session );
+	}
 }

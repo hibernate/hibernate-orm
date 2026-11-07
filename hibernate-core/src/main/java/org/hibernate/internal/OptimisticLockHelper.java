@@ -22,6 +22,14 @@ public final class OptimisticLockHelper {
 	}
 
 	public static void forceVersionIncrement(Object object, EntityEntry entry, SharedSessionContractImplementor session) {
+		forceVersionIncrement( object, entry, true, session );
+	}
+
+	public static void forceVersionIncrement(
+			Object object,
+			EntityEntry entry,
+			boolean batching,
+			SharedSessionContractImplementor session) {
 		final var persister = entry.getPersister();
 		RootTenantCache.invalidateEntity( entry.getId(), persister, session );
 		final Object previousVersion = entry.getVersion();
@@ -35,7 +43,21 @@ public final class OptimisticLockHelper {
 			final var lock = cache.lockItem( session, cacheKey, previousVersion );
 			return new CacheLock( cache, cacheKey, lock );
 		}, null );
-		final Object nextVersion = persister.forceVersionIncrement( entry.getId(), previousVersion, session );
+		final Object nextVersion;
+		try {
+			nextVersion = persister.forceVersionIncrement( entry.getId(), previousVersion, batching, session );
+		}
+		catch (RuntimeException | Error failure) {
+			if ( cacheLock != null ) {
+				try {
+					cacheLock.cache().unlockItem( session, cacheLock.cacheKey(), cacheLock.lock() );
+				}
+				catch (RuntimeException | Error cleanupFailure) {
+					failure.addSuppressed( cleanupFailure );
+				}
+			}
+			throw failure;
+		}
 		entry.forceLocked( object, nextVersion );
 		if ( cacheLock != null ) {
 			final Object cacheEntry = updateCacheItem(

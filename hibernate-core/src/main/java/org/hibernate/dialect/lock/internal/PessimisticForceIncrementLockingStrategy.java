@@ -46,7 +46,7 @@ public class PessimisticForceIncrementLockingStrategy implements LockingStrategy
 	@Override
 	public void lock(Object id, Object version, Object object, Timeout timeout, SharedSessionContractImplementor session) {
 		final var entry = session.getPersistenceContextInternal().getEntry( object );
-		OptimisticLockHelper.forceVersionIncrement( object, entry, session );
+		OptimisticLockHelper.forceVersionIncrement( object, entry, false, session );
 	}
 
 	/**

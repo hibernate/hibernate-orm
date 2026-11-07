@@ -36,7 +36,7 @@ public class DefaultPostLoadEventListener implements PostLoadEventListener {
 			if ( persister.isVersioned() ) {
 				switch ( lockMode ) {
 					case PESSIMISTIC_FORCE_INCREMENT:
-						OptimisticLockHelper.forceVersionIncrement( entity, entry, session );
+						OptimisticLockHelper.forceVersionIncrement( entity, entry, false, session );
 						break;
 					case OPTIMISTIC_FORCE_INCREMENT:
 						session.getActionQueue()

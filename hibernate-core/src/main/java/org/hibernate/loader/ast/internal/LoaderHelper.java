@@ -106,7 +106,7 @@ public class LoaderHelper {
 
 				if ( persister.isVersioned() && requestedLockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT  ) {
 					// todo : should we check the current isolation mode explicitly?
-					OptimisticLockHelper.forceVersionIncrement( object, entry, session );
+					OptimisticLockHelper.forceVersionIncrement( object, entry, false, session );
 				}
 				else if ( entry.isExistsInDatabase() ) {
 					final var eventMonitor = session.getEventMonitor();

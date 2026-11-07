@@ -153,6 +153,7 @@ public class FollowOnLockingAction implements PostAction {
 						OptimisticLockHelper.forceVersionIncrement(
 								entityDetails.instance(),
 								entityDetails.entry(),
+								false,
 								session
 						);
 					}

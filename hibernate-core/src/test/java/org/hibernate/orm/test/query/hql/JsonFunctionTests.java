@@ -372,7 +372,7 @@ public class JsonFunctionTests {
 	}
 
 	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonArrayAgg.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonArrayAggOrderBy.class)
 	public void testJsonArrayAggOrderBy(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -533,6 +533,7 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonRemove.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsLenientJsonModification.class)
 	public void testJsonRemoveNonExisting(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -662,6 +663,7 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonArrayAppend.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsLenientJsonModification.class)
 	public void testJsonArrayAppendNonExisting(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -726,6 +728,7 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonArrayInsert.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsLenientJsonModification.class)
 	public void testJsonArrayInsertNonExisting(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -742,6 +745,7 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonArrayInsert.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsLenientJsonModification.class)
 	public void testJsonArrayInsertNonArray(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -758,6 +762,7 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonArrayInsert.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsLenientJsonModification.class)
 	public void testJsonArrayInsertToNull(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

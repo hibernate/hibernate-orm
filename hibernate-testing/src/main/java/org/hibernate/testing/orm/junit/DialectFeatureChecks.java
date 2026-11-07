@@ -645,7 +645,8 @@ abstract public class DialectFeatureChecks {
 				|| dialect instanceof SQLServerDialect
 				|| dialect instanceof DerbyDialect
 				|| dialect instanceof MySQLDialect && !(dialect instanceof TiDBDialect)
-				|| dialect instanceof MariaDBDialect;
+				|| dialect instanceof MariaDBDialect
+				|| dialect instanceof CUBRIDDialect;
 		}
 	}
 
@@ -996,7 +997,8 @@ abstract public class DialectFeatureChecks {
 				|| dialect instanceof OracleDialect
 				|| dialect instanceof SybaseDialect
 				|| dialect instanceof DerbyDialect
-				|| dialect instanceof HSQLDialect;
+				|| dialect instanceof HSQLDialect
+				|| dialect instanceof CUBRIDDialect;
 		}
 	}
 
@@ -1129,6 +1131,8 @@ abstract public class DialectFeatureChecks {
 				&& !( dialect instanceof CockroachDialect )
 				// Spanner does not support ON ERROR or ON EMPTY clauses
 				&& !( dialect instanceof SpannerDialect )
+				// CUBRID doesn't have a native json_value or json_query function
+				&& !( dialect instanceof CUBRIDDialect )
 				// PostgreSQL added support for native json_value in version 17
 				&& !( dialect instanceof PostgreSQLDialect && dialect.getVersion().isBefore( 17 ) );
 		}
@@ -1137,6 +1141,14 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsJsonArrayAgg implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return definesFunction( dialect, "json_arrayagg" );
+		}
+	}
+
+	public static class SupportsJsonArrayAggOrderBy implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "json_arrayagg" )
+				// CUBRID's group_concat can only be ordered by its own argument
+				&& !( dialect instanceof CUBRIDDialect );
 		}
 	}
 
@@ -1187,6 +1199,14 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsJsonArrayInsert implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return definesFunction( dialect, "json_array_insert" );
+		}
+	}
+
+	public static class SupportsLenientJsonModification implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			// CUBRID raises an error when the path of json_remove, json_array_append or json_array_insert
+			// does not exist, and json_array_insert wraps a target that is not an array
+			return !( dialect instanceof CUBRIDDialect );
 		}
 	}
 

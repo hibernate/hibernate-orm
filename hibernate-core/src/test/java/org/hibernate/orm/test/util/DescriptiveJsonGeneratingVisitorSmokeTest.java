@@ -48,6 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 // Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
 @BootstrapServiceRegistry(integrators = SharedDriverManagerTypeCacheClearingIntegrator.class)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonArray.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructuralArrays.class)
 public class DescriptiveJsonGeneratingVisitorSmokeTest {
 	private final DescriptiveJsonGeneratingVisitor visitor = new DescriptiveJsonGeneratingVisitor();
 

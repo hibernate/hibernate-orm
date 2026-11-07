@@ -4605,9 +4605,19 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				tableGroupToUse = null;
 			}
 			else if ( inferredEntityMapping instanceof EntityMappingType entityMappingType ) {
-				// Render the identifier mapping if the inferred mapping is an EntityMappingType
-				resultModelPart = entityMappingType.getIdentifierMapping();
-				interpretationModelPart = inferredEntityMapping;
+				if ( entityValuedModelPart instanceof ManyToManyCollectionPart manyToManyPart ) {
+					final boolean useCollectionKey = !(path instanceof SqmJoin<?, ?>)
+													|| isFkOptimizationAllowed( path, manyToManyPart );
+					// Match the collection key used by the entity-root side, unless the join
+					// semantics require reading the target entity's identifier instead.
+					resultModelPart = useCollectionKey
+							? manyToManyPart.getForeignKeyDescriptor().getKeyPart()
+							: entityMappingType.getIdentifierMapping();
+				}
+				else {
+					resultModelPart = entityMappingType.getIdentifierMapping();
+				}
+				interpretationModelPart = entityValuedModelPart;
 				tableGroupToUse = null;
 			}
 			else {
@@ -6637,8 +6647,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// For parameters, we resolve to the element descriptor
 			inferredValueMapping = pluralAttributeMapping.getElementDescriptor();
 		}
-		if ( inferredValueMapping instanceof EntityCollectionPart entityCollectionPart ) {
-			// For parameters, we resolve to the entity mapping type to bind the primary key
+		if ( inferredValueMapping instanceof EntityCollectionPart entityCollectionPart
+			&& !(entityCollectionPart instanceof EntityAssociationMapping) ) {
+			// One-to-many elements use the entity identifier. Join-table associations must
+			// retain their FK mapping, which may reference a unique key instead of the PK.
 			return entityCollectionPart.getAssociatedEntityMappingType();
 		}
 		return inferredValueMapping;
@@ -8614,7 +8626,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final var inPredicate = new InListPredicate( testExpression, predicate.isNegated(), getBooleanType() );
 
-		inferrableTypeAccessStack.push( () -> determineValueMapping( predicate.getTestExpression(), fromClauseIndex ) );
+		inferrableTypeAccessStack.push( () -> testExpression instanceof EntityValuedPathInterpretation<?> entityPath
+				? entityPath.getParameterInferenceMapping()
+				: determineValueMapping( predicate.getTestExpression(), fromClauseIndex ) );
 
 		try {
 			for ( var expression : listExpressions ) {
@@ -8687,8 +8701,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			QueryParameterBinding<?> domainParamBinding) {
 		final var iterator = domainParamBinding.getBindValues().iterator();
 
+		final var testExpression = (Expression) visitWithRequiredResult( sqmPredicate.getTestExpression() );
 		final var inListPredicate = new InListPredicate(
-				(Expression) visitWithRequiredResult( sqmPredicate.getTestExpression() ),
+				testExpression,
 				sqmPredicate.isNegated(),
 				getBooleanType()
 		);
@@ -8703,7 +8718,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 
 		inferrableTypeAccessStack.push(
-				() -> determineValueMapping( sqmPredicate.getTestExpression(), fromClauseIndex )
+				// Match entity parameter extraction to the PK or FK actually rendered on the left.
+				() -> testExpression instanceof EntityValuedPathInterpretation<?> entityPath
+						? entityPath.getParameterInferenceMapping()
+						: determineValueMapping( sqmPredicate.getTestExpression(), fromClauseIndex )
 		);
 
 		try {

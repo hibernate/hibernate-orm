@@ -22,11 +22,9 @@ import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import org.geolatte.geom.Geometry;
-import org.geolatte.geom.codec.db.sqlserver.Decoders;
-import org.geolatte.geom.codec.db.sqlserver.Encoders;
 
 /**
- * Type descriptor for the SQL Server 2008 Geometry type.
+ * Type descriptor for the SQL Server 2008 spatial types.
  *
  * @author Karel Maesen, Geovise BVBA
  * creation-date: 8/23/11
@@ -49,22 +47,26 @@ public abstract class AbstractSqlServerGISType implements JdbcType {
 	@Override
 	public abstract <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType);
 
+	protected abstract byte[] encode(Geometry<?> geometry);
+
+	protected abstract Geometry<?> decode(byte[] bytes);
+
 	@Override
 	public <X> ValueBinder<X> getBinder(final JavaType<X> javaType) {
 		return new BasicBinder<X>( javaType, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
-				final Geometry geometry = getJavaType().unwrap( value, Geometry.class, options );
-				final byte[] bytes = Encoders.encode( geometry );
+				final Geometry<?> geometry = getJavaType().unwrap( value, Geometry.class, options );
+				final byte[] bytes = encode( geometry );
 				st.setObject( index, bytes );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				final Geometry geometry = getJavaType().unwrap( value, Geometry.class, options );
-				final byte[] bytes = Encoders.encode( geometry );
+				final Geometry<?> geometry = getJavaType().unwrap( value, Geometry.class, options );
+				final byte[] bytes = encode( geometry );
 				st.setObject( name, bytes );
 			}
 
@@ -93,7 +95,7 @@ public abstract class AbstractSqlServerGISType implements JdbcType {
 		};
 	}
 
-	private Geometry toGeometry(Object obj) {
+	private Geometry<?> toGeometry(Object obj) {
 		byte[] raw = null;
 		if ( obj == null ) {
 			return null;
@@ -107,7 +109,7 @@ public abstract class AbstractSqlServerGISType implements JdbcType {
 		else {
 			throw new IllegalArgumentException( "Expected byte array or BLOB" );
 		}
-		return Decoders.decode( raw );
+		return decode( raw );
 	}
 
 	private byte[] toByteArray(Blob blob) {

@@ -2936,7 +2936,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private String determineDepthColumnName(CteStatement cte) {
-		String baseName = "depth";
+		String baseName = "dpth";
 		OUTER: for ( int tries = 0; tries < 5; tries++ ) {
 			final String name = tries == 0 ? baseName : (baseName + "_" + tries);
 			for ( CteColumn cteColumn : cte.getCteTable().getCteColumns() ) {

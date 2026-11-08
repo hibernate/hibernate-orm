@@ -101,7 +101,10 @@ public class SequenceStructure implements DatabaseStructure {
 					accessCounter++;
 					try {
 					final var jdbcCoordinator = session.getJdbcCoordinator();
-					final var statement = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
+					final var statement =
+							jdbcCoordinator.getStatementPreparer()
+									// a query statement leaves any pending JDBC batch queued
+									.prepareQueryStatement( sql, false, null );
 					final var resourceRegistry = jdbcCoordinator.getLogicalConnection().getResourceRegistry();
 					try {
 						final var resultSet = jdbcCoordinator.getResultSetReturn().extract( statement, sql );

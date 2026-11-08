@@ -802,11 +802,13 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 
 		boolean found = false;
 		TableInformation tableInformation = null;
+		final Identifier metaDataTableName =
+				toIdentifier( toMetaDataObjectName( tableName ), tableName.isQuoted() );
 		while ( resultSet.next() ) {
 			final Identifier identifier =
 					toIdentifier( resultSet.getString( getResultSetTableNameLabel() ),
 							tableName.isQuoted() );
-			if ( tableName.equals( identifier ) ) {
+			if ( metaDataTableName.equals( identifier ) ) {
 				if ( found ) {
 					SCHEMA_LOGGER.multipleTablesFound( tableName.render() );
 					throw new SchemaExtractionException(

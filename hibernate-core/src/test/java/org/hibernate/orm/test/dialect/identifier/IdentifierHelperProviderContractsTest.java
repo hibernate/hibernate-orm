@@ -3,6 +3,8 @@ package org.hibernate.orm.test.dialect.identifier;
 import java.lang.reflect.Proxy;
 import java.util.Set;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.HANADialect;
@@ -97,7 +99,8 @@ public class IdentifierHelperProviderContractsTest {
 
 		final var helper = new DelegatingIdentifierHelper( delegate ) {
 			@Override
-			public Identifier normalizeQuoting(Identifier identifier) {
+			@Nullable
+			public Identifier normalizeQuoting(@Nullable Identifier identifier) {
 				throw new AssertionError( "neighboring operations must not be intercepted" );
 			}
 		};
@@ -122,6 +125,7 @@ public class IdentifierHelperProviderContractsTest {
 		assertThat( helper.isReservedWord( "select" ) ).isTrue();
 		assertThat( helper.applyGlobalQuoting( "integer" ).isQuoted() ).isFalse();
 		assertThat( helper.toMetaDataCatalogName( new Identifier( "catalog", false ) ) ).isNull();
+		assertThat( helper.toMetaDataSchemaName( null ) ).isEmpty();
 		assertThat( helper.toMetaDataSchemaName( new Identifier( "schema", false ) ) ).isEqualTo( "SCHEMA" );
 		assertThat( helper.toMetaDataObjectName( new Identifier( "table", false ) ) ).isEqualTo( "TABLE" );
 	}
@@ -178,10 +182,11 @@ public class IdentifierHelperProviderContractsTest {
 	}
 
 	private static final class TestIdentifierHelper extends DelegatingIdentifierHelper {
-		private TestIdentifierHelper(IdentifierHelper delegate) {
+		private TestIdentifierHelper(@Nonnull IdentifierHelper delegate) {
 			super( delegate );
 		}
 
+		@Nonnull
 		private IdentifierHelper exposedDelegate() {
 			return delegate();
 		}

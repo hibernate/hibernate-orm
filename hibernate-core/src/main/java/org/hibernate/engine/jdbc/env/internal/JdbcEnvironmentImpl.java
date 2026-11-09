@@ -1,5 +1,7 @@
 package org.hibernate.engine.jdbc.env.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.jdbc.env.JdbcMetadataOnBoot;
 
 import org.hibernate.dialect.lock.spi.TransactionConcurrency;
@@ -45,21 +47,21 @@ import static org.hibernate.engine.jdbc.env.internal.LobCreatorBuilderImpl.makeL
  */
 public class JdbcEnvironmentImpl implements JdbcEnvironment {
 
-	private final Dialect dialect;
+	private final @Nonnull Dialect dialect;
 
-	private final SqlAstTranslatorFactory sqlAstTranslatorFactory;
+	private final @Nonnull SqlAstTranslatorFactory sqlAstTranslatorFactory;
 
-	private final SqlExceptionHelper sqlExceptionHelper;
-	private final ExtractedDatabaseMetaDataImpl extractedMetaDataSupport;
-	private final JdbcMetadata jdbcMetadata;
-	private final TransactionConcurrency transactionConcurrency;
-	private final Identifier currentCatalog;
-	private final Identifier currentSchema;
-	private final IdentifierHelper identifierHelper;
-	private final QualifiedObjectNameFormatter qualifiedObjectNameFormatter;
-	private final LobCreatorBuilderImpl lobCreatorBuilder;
+	private final @Nonnull SqlExceptionHelper sqlExceptionHelper;
+	private final @Nonnull ExtractedDatabaseMetaDataImpl extractedMetaDataSupport;
+	private final @Nonnull JdbcMetadata jdbcMetadata;
+	private final @Nonnull TransactionConcurrency transactionConcurrency;
+	private final @Nullable Identifier currentCatalog;
+	private final @Nullable Identifier currentSchema;
+	private final @Nonnull IdentifierHelper identifierHelper;
+	private final @Nonnull QualifiedObjectNameFormatter qualifiedObjectNameFormatter;
+	private final @Nonnull LobCreatorBuilderImpl lobCreatorBuilder;
 
-	private final NameQualifierSupport nameQualifierSupport;
+	private final @Nonnull NameQualifierSupport nameQualifierSupport;
 
 	/**
 	 * Constructor form used when the JDBC {@link DatabaseMetaData} is not available.
@@ -67,7 +69,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	 * @param serviceRegistry The service registry
 	 * @param dialect The resolved dialect.
 	 */
-	public JdbcEnvironmentImpl(final ServiceRegistryImplementor serviceRegistry, final Dialect dialect) {
+	public JdbcEnvironmentImpl(final @Nonnull ServiceRegistryImplementor serviceRegistry, final @Nonnull Dialect dialect) {
 		this.dialect = dialect;
 
 		sqlAstTranslatorFactory = resolveSqlAstTranslatorFactory( dialect );
@@ -108,12 +110,14 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		logJdbcFetchSize( extractedMetaDataSupport.getDefaultFetchSize(), cfgService );
 	}
 
-	private static ConfigurationService configurationService(ServiceRegistryImplementor serviceRegistry) {
+	@Nonnull
+	private static ConfigurationService configurationService(@Nonnull ServiceRegistryImplementor serviceRegistry) {
 		return serviceRegistry.requireService( ConfigurationService.class );
 	}
 
+	@Nonnull
 	private IdentifierHelperBuilder identifierHelperBuilder(
-			ConfigurationService cfgService, NameQualifierSupport nameQualifierSupport) {
+			@Nonnull ConfigurationService cfgService, @Nonnull NameQualifierSupport nameQualifierSupport) {
 		final var builder = IdentifierHelperBuilder.from( this );
 		builder.setGloballyQuoteIdentifiers( globalQuoting( cfgService ) );
 		builder.setSkipGlobalQuotingForColumnDefinitions( globalQuotingSkippedForColumnDefinitions( cfgService ) );
@@ -122,7 +126,8 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		return builder;
 	}
 
-	private IdentifierHelper identifierHelper(Dialect dialect, IdentifierHelperBuilder builder) {
+	@Nonnull
+	private IdentifierHelper identifierHelper(@Nonnull Dialect dialect, @Nonnull IdentifierHelperBuilder builder) {
 		return dialect.getIdentifierSupport().buildIdentifierHelper(
 				new IdentifierHelperBuildRequest(
 						builder,
@@ -133,12 +138,13 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		);
 	}
 
-	private static SqlAstTranslatorFactory resolveSqlAstTranslatorFactory(Dialect dialect) {
+	@Nonnull
+	private static SqlAstTranslatorFactory resolveSqlAstTranslatorFactory(@Nonnull Dialect dialect) {
 		final var sqlAstTranslatorFactory = dialect.getSqlAstTranslatorFactory();
 		return sqlAstTranslatorFactory == null ? new StandardSqlAstTranslatorFactory() : sqlAstTranslatorFactory;
 	}
 
-	private static boolean logWarnings(ConfigurationService cfgService, Dialect dialect) {
+	private static boolean logWarnings(@Nonnull ConfigurationService cfgService, @Nonnull Dialect dialect) {
 		return cfgService.getSetting(
 				JdbcSettings.LOG_JDBC_WARNINGS,
 				StandardConverters.BOOLEAN,
@@ -146,7 +152,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		);
 	}
 
-	private static boolean logErrors(ConfigurationService cfgService) {
+	private static boolean logErrors(@Nonnull ConfigurationService cfgService) {
 		return cfgService.getSetting(
 				JdbcSettings.LOG_JDBC_ERRORS,
 				StandardConverters.BOOLEAN,
@@ -154,7 +160,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		);
 	}
 
-	private static boolean globalQuoting(ConfigurationService cfgService) {
+	private static boolean globalQuoting(@Nonnull ConfigurationService cfgService) {
 		return cfgService.getSetting(
 				MappingSettings.GLOBALLY_QUOTED_IDENTIFIERS,
 				StandardConverters.BOOLEAN,
@@ -162,7 +168,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		);
 	}
 
-	private static boolean globalQuotingSkippedForColumnDefinitions(ConfigurationService cfgService) {
+	private static boolean globalQuotingSkippedForColumnDefinitions(@Nonnull ConfigurationService cfgService) {
 		return cfgService.getSetting(
 				MappingSettings.GLOBALLY_QUOTED_IDENTIFIERS_SKIP_COLUMN_DEFINITIONS,
 				StandardConverters.BOOLEAN,
@@ -170,7 +176,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		);
 	}
 
-	private static boolean autoKeywordQuoting(ConfigurationService cfgService) {
+	private static boolean autoKeywordQuoting(@Nonnull ConfigurationService cfgService) {
 		return cfgService.getSetting(
 				MappingSettings.KEYWORD_AUTO_QUOTING_ENABLED,
 				StandardConverters.BOOLEAN,
@@ -182,9 +188,9 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	 * Constructor form used from testing
 	 */
 	public JdbcEnvironmentImpl(
-			DatabaseMetaData databaseMetaData,
-			Dialect dialect,
-			JdbcConnectionAccess jdbcConnectionAccess) throws SQLException {
+			@Nonnull DatabaseMetaData databaseMetaData,
+			@Nonnull Dialect dialect,
+			@Nonnull JdbcConnectionAccess jdbcConnectionAccess) throws SQLException {
 		this.dialect = dialect;
 
 		sqlAstTranslatorFactory = resolveSqlAstTranslatorFactory( dialect );
@@ -213,13 +219,16 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		lobCreatorBuilder = makeLobCreatorBuilder( dialect );
 	}
 
-	private NameQualifierSupport nameQualifierSupport(DatabaseMetaData databaseMetaData, Dialect dialect)
+	@Nonnull
+	private NameQualifierSupport nameQualifierSupport(@Nonnull DatabaseMetaData databaseMetaData, @Nonnull Dialect dialect)
 			throws SQLException {
 		final var nameQualifierSupport = dialect.getNameQualifierSupport();
 		return nameQualifierSupport == null ? determineNameQualifierSupport( databaseMetaData ) : nameQualifierSupport;
 	}
 
-	private NameQualifierSupport determineNameQualifierSupport(DatabaseMetaData databaseMetaData) throws SQLException {
+	@Nonnull
+	private NameQualifierSupport determineNameQualifierSupport(@Nonnull DatabaseMetaData databaseMetaData)
+			throws SQLException {
 		final boolean supportsCatalogs = databaseMetaData.supportsCatalogsInTableDefinitions();
 		final boolean supportsSchemas = databaseMetaData.supportsSchemasInTableDefinitions();
 		if ( supportsCatalogs && supportsSchemas ) {
@@ -244,9 +253,9 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	 */
 	@Deprecated
 	public JdbcEnvironmentImpl(
-			ServiceRegistryImplementor serviceRegistry,
-			Dialect dialect,
-			DatabaseMetaData databaseMetaData) {
+			@Nonnull ServiceRegistryImplementor serviceRegistry,
+			@Nonnull Dialect dialect,
+			@Nullable DatabaseMetaData databaseMetaData) {
 		this( serviceRegistry, dialect );
 	}
 
@@ -260,10 +269,10 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	 *
 	 */
 	public JdbcEnvironmentImpl(
-			ServiceRegistryImplementor serviceRegistry,
-			Dialect dialect,
-			DatabaseMetaData databaseMetaData,
-			JdbcConnectionAccess jdbcConnectionAccess) throws SQLException {
+			@Nonnull ServiceRegistryImplementor serviceRegistry,
+			@Nonnull Dialect dialect,
+			@Nonnull DatabaseMetaData databaseMetaData,
+			@Nonnull JdbcConnectionAccess jdbcConnectionAccess) throws SQLException {
 		this.dialect = dialect;
 
 		sqlAstTranslatorFactory = resolveSqlAstTranslatorFactory( dialect );
@@ -302,7 +311,11 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		logJdbcFetchSize( extractedMetaDataSupport.getDefaultFetchSize(), cfgService );
 	}
 
-	private static SqlExceptionHelper buildSqlExceptionHelper(Dialect dialect, boolean logWarnings, boolean logErrors) {
+	@Nonnull
+	private static SqlExceptionHelper buildSqlExceptionHelper(
+			@Nonnull Dialect dialect,
+			boolean logWarnings,
+			boolean logErrors) {
 		final var dialectDelegate = dialect.buildSQLExceptionConversionDelegate();
 		final var delegates = dialectDelegate == null
 				? new SQLExceptionConversionDelegate[] { new SQLExceptionTypeDelegate( dialect ), new SQLStateConversionDelegate( dialect ) }
@@ -311,67 +324,79 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	}
 
 	@Override
+	@Nonnull
 	public Dialect getDialect() {
 		return dialect;
 	}
 
 	@Override
+	@Nonnull
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return sqlAstTranslatorFactory;
 	}
 
 	@Override
+	@Nonnull
 	public TransactionConcurrency getTransactionConcurrency() {
 		return transactionConcurrency;
 	}
 
 	@Override
+	@Nonnull
 	public JdbcMetadata getJdbcMetadata() {
 		return jdbcMetadata;
 	}
 
 	@Deprecated(since = "8.0")
 	@Override
+	@Nonnull
 	public ExtractedDatabaseMetaData getExtractedDatabaseMetaData() {
 		return extractedMetaDataSupport;
 	}
 
 	@Override
+	@Nullable
 	public Identifier getCurrentCatalog() {
 		return currentCatalog;
 	}
 
 	@Override
+	@Nullable
 	public Identifier getCurrentSchema() {
 		return currentSchema;
 	}
 
 	@Override
+	@Nonnull
 	public QualifiedObjectNameFormatter getQualifiedObjectNameFormatter() {
 		return qualifiedObjectNameFormatter;
 	}
 
 	@Override
+	@Nonnull
 	public IdentifierHelper getIdentifierHelper() {
 		return identifierHelper;
 	}
 
 	@Override
+	@Nonnull
 	public NameQualifierSupport getNameQualifierSupport() {
 		return nameQualifierSupport;
 	}
 
 	@Override
+	@Nonnull
 	public SqlExceptionHelper getSqlExceptionHelper() {
 		return sqlExceptionHelper;
 	}
 
 	@Override
+	@Nonnull
 	public LobCreatorBuilder getLobCreatorBuilder() {
 		return lobCreatorBuilder;
 	}
 
-	private static void logJdbcFetchSize(int defaultFetchSize, ConfigurationService cfgService) {
+	private static void logJdbcFetchSize(int defaultFetchSize, @Nonnull ConfigurationService cfgService) {
 		if ( !cfgService.getSettings().containsKey( JdbcSettings.STATEMENT_FETCH_SIZE ) ) {
 			if ( defaultFetchSize > 0 && defaultFetchSize < 100 ) {
 				JDBC_LOGGER.warnLowFetchSize( defaultFetchSize );
@@ -381,9 +406,10 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 			}
 		}
 	}
+	@Nonnull
 	private static TransactionConcurrency resolveTransactionConcurrency(
-			Dialect dialect, JdbcMetadata metadata, Connection connection,
-			Object declaration, JdbcMetadataOnBoot access) {
+			@Nonnull Dialect dialect, @Nonnull JdbcMetadata metadata, @Nullable Connection connection,
+			@Nullable Object declaration, @Nonnull JdbcMetadataOnBoot access) {
 		if ( declaration instanceof TransactionConcurrency supplied ) {
 			return supplied;
 		}

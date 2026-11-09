@@ -1,6 +1,7 @@
 package org.hibernate.orm.test.tool.schema.internal;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
@@ -96,47 +97,55 @@ public class CheckForExistingForeignKeyTest {
 	private static class IdentifierHelperImpl implements IdentifierHelper {
 
 		@Override
-		public Identifier normalizeQuoting(Identifier identifier) {
+		@Nullable
+		public Identifier normalizeQuoting(@Nullable Identifier identifier) {
 			return null;
 		}
 
 		@Override
-		public Identifier toIdentifier(String text) {
+		@Nullable
+		public Identifier toIdentifier(@Nullable String text) {
 			return null;
 		}
 
 		@Override
-		public Identifier toIdentifier(String text, boolean quoted) {
+		@Nullable
+		public Identifier toIdentifier(@Nullable String text, boolean quoted) {
 			return null;
 		}
 
 		@Override
-		public Identifier toIdentifier(String text, boolean quoted, boolean isExplicit) {
+		@Nullable
+		public Identifier toIdentifier(@Nullable String text, boolean quoted, boolean isExplicit) {
 			return null;
 		}
 
 		@Override
-		public Identifier applyGlobalQuoting(String text) {
+		@Nullable
+		public Identifier applyGlobalQuoting(@Nullable String text) {
 			return null;
 		}
 
 		@Override
-		public boolean isReservedWord(String word) {
+		public boolean isReservedWord(@Nonnull String word) {
 			return false;
 		}
 
 		@Override
-		public String toMetaDataCatalogName(Identifier catalogIdentifier) {
+		@Nullable
+		public String toMetaDataCatalogName(@Nullable Identifier catalogIdentifier) {
 			return null;
 		}
 
 		@Override
-		public String toMetaDataSchemaName(Identifier schemaIdentifier) {
+		@Nullable
+		public String toMetaDataSchemaName(@Nullable Identifier schemaIdentifier) {
 			return null;
 		}
 
 		@Override
-		public String toMetaDataObjectName(Identifier identifier) {
+		@Nonnull
+		public String toMetaDataObjectName(@Nonnull Identifier identifier) {
 			return identifier.getText();
 		}
 	}

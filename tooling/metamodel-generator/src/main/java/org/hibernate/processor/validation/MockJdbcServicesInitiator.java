@@ -76,9 +76,10 @@ class MockJdbcServicesInitiator extends JdbcServicesInitiator {
 		}
 
 		@Override
-		@Nullable
+		@Nonnull
 		public NameQualifierSupport getNameQualifierSupport() {
-			return dialect.getNameQualifierSupport();
+			final var support = dialect.getNameQualifierSupport();
+			return support == null ? NameQualifierSupport.BOTH : support;
 		}
 	}
 

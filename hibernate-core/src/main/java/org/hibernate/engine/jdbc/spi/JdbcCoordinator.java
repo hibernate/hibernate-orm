@@ -9,6 +9,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.function.Supplier;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.batch.spi.GroupedBatch;
@@ -33,6 +35,7 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	 *
 	 * @return The logical connection
 	 */
+	@Nonnull
 	LogicalConnectionImplementor getLogicalConnection();
 
 	/**
@@ -40,6 +43,7 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	 * mutation operations (insert, update and delete) originating
 	 * from persistent context events, as opposed to Query handling
 	 */
+	@Nonnull
 	MutationStatementPreparer getMutationStatementPreparer();
 
 	/**
@@ -48,30 +52,33 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	 *
 	 * @implNote Any previous Batch is executed and released prior to returning
 	 */
+	@Nonnull
 	GroupedBatch getGroupedBatch(
-			BatchKey key,
-			Integer batchSize,
-			Supplier<PreparedStatementGroup> statementGroupSupplier);
+			@Nonnull BatchKey key,
+			@Nullable Integer batchSize,
+			@Nonnull Supplier<PreparedStatementGroup> statementGroupSupplier);
 
 	/**
 	 * Get a mutation batch for a single preparable mutation operation.
 	 *
 	 * @implNote Any previous Batch is executed and released prior to returning
 	 */
+	@Nonnull
 	GroupedBatch getGroupedBatch(
-			BatchKey key,
-			Integer batchSize,
-			PreparableMutationOperation mutationOperation);
+			@Nonnull BatchKey key,
+			@Nullable Integer batchSize,
+			@Nonnull PreparableMutationOperation mutationOperation);
 
 	/**
 	 * Get a batch for a single JDBC statement shape.
 	 *
 	 * @implNote Any previous Batch is executed and released prior to returning
 	 */
+	@Nonnull
 	SingleStatementBatch getSingleStatementBatch(
-			BatchKey key,
-			Integer batchSize,
-			PreparableMutationOperation mutationOperation);
+			@Nonnull BatchKey key,
+			@Nullable Integer batchSize,
+			@Nonnull PreparableMutationOperation mutationOperation);
 
 	/**
 	 * Execute the currently managed batch (if any)
@@ -80,9 +87,9 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 
 	/**
 	 * Conditionally execute the currently managed batch (if any), if the
-	 * keys do not match
+	 * keys do not match. A null key executes any current batch.
 	 */
-	void conditionallyExecuteBatch(BatchKey key);
+	void conditionallyExecuteBatch(@Nullable BatchKey key);
 
 	/**
 	 * Abort the currently managed batch (if any)
@@ -94,6 +101,7 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	 *
 	 * @return This coordinator's statement preparer
 	 */
+	@Nonnull
 	StatementPreparer getStatementPreparer();
 
 	/**
@@ -101,6 +109,7 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	 *
 	 * @return This coordinator's resultset extractor
 	 */
+	@Nonnull
 	ResultSetReturn getResultSetReturn();
 
 	/**
@@ -117,12 +126,13 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	void flushEnding();
 
 	/**
-	 * Close this coordinator and release and resources.
+	 * Close this coordinator and release its resources.
 	 *
-	 * @return The {@link Connection} associated with the managed {@link #getLogicalConnection() logical connection}
+	 * @return The user-supplied connection, or {@code null} if there is none.
 	 *
 	 * @see LogicalConnectionImplementor#close
 	 */
+	@Nullable
 	Connection close();
 
 	/**
@@ -145,16 +155,17 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	 * might mean that the database has marked the transaction for
 	 * rollback.
 	 */
-	void afterFailedStatementExecution(SQLException sqlException);
+	void afterFailedStatementExecution(@Nonnull SQLException sqlException);
 
 	/**
 	 * Perform the requested work handling exceptions, coordinating and handling return processing.
 	 *
 	 * @param work The work to be performed.
 	 * @param <T> The result type.
-	 * @return The work result.
+	 * @return The work result, which may be {@code null}.
 	 */
-	<T> T coordinateWork(WorkExecutorVisitable<T> work);
+	@Nullable
+	<T> T coordinateWork(@Nonnull WorkExecutorVisitable<T> work);
 
 	/**
 	 * Attempt to cancel the last query sent to the JDBC driver.
@@ -184,9 +195,9 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	/**
 	 * Register a query statement as being able to be cancelled.
 	 *
-	 * @param statement The cancel-able query statement.
+	 * @param statement The query statement, or null to clear the last query.
 	 */
-	void registerLastQuery(Statement statement);
+	void registerLastQuery(@Nullable Statement statement);
 
 	/**
 	 * Can this coordinator be serialized?
@@ -195,6 +206,6 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	 */
 	boolean isReadyForSerialization();
 
-	void serialize(ObjectOutputStream objectOutputStream) throws IOException;
+	void serialize(@Nonnull ObjectOutputStream objectOutputStream) throws IOException;
 
 }

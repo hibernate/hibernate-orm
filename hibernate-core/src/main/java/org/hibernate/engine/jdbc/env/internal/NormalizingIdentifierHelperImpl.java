@@ -3,6 +3,8 @@ package org.hibernate.engine.jdbc.env.internal;
 import java.util.Locale;
 import java.util.TreeSet;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.boot.model.naming.DatabaseIdentifier;
 import org.hibernate.boot.model.naming.Identifier;
@@ -16,29 +18,29 @@ import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 */
 public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 
-	private final JdbcEnvironment jdbcEnvironment;
+	private final @Nullable JdbcEnvironment jdbcEnvironment;
 
-	private final NameQualifierSupport nameQualifierSupport;
+	private final @Nonnull NameQualifierSupport nameQualifierSupport;
 	private final boolean globallyQuoteIdentifiers;
 	private final boolean globallyQuoteIdentifiersSkipColumnDefinitions;
 	private final boolean autoQuoteKeywords;
 	private final boolean autoQuoteInitialUnderscore;
 	private final boolean autoQuoteDollar;
-	private final TreeSet<String> reservedWords;
-	private final IdentifierCaseStrategy unquotedCaseStrategy;
-	private final IdentifierCaseStrategy quotedCaseStrategy;
+	private final @Nonnull TreeSet<String> reservedWords;
+	private final @Nonnull IdentifierCaseStrategy unquotedCaseStrategy;
+	private final @Nonnull IdentifierCaseStrategy quotedCaseStrategy;
 
 	public NormalizingIdentifierHelperImpl(
-			JdbcEnvironment jdbcEnvironment,
-			NameQualifierSupport nameQualifierSupport,
+			@Nullable JdbcEnvironment jdbcEnvironment,
+			@Nonnull NameQualifierSupport nameQualifierSupport,
 			boolean globallyQuoteIdentifiers,
 			boolean globallyQuoteIdentifiersSkipColumnDefinitions,
 			boolean autoQuoteKeywords,
 			boolean autoQuoteInitialUnderscore,
 			boolean autoQuoteDollar,
-			TreeSet<String> reservedWords, //careful, we intentionally omit making a defensive copy to not waste memory
-			IdentifierCaseStrategy unquotedCaseStrategy,
-			IdentifierCaseStrategy quotedCaseStrategy) {
+			@Nonnull TreeSet<String> reservedWords, //careful, we intentionally omit making a defensive copy to not waste memory
+			@Nullable IdentifierCaseStrategy unquotedCaseStrategy,
+			@Nullable IdentifierCaseStrategy quotedCaseStrategy) {
 		this.jdbcEnvironment = jdbcEnvironment;
 		this.nameQualifierSupport = nameQualifierSupport;
 		this.globallyQuoteIdentifiers = globallyQuoteIdentifiers;
@@ -52,7 +54,8 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 	}
 
 	@Override
-	public Identifier normalizeQuoting(Identifier identifier) {
+	@Nullable
+	public Identifier normalizeQuoting(@Nullable Identifier identifier) {
 		if ( identifier == null ) {
 			return null;
 		}
@@ -67,7 +70,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 		}
 	}
 
-	private boolean mustQuote(Identifier identifier) {
+	private boolean mustQuote(@Nonnull Identifier identifier) {
 		final String identifierText = identifier.getText();
 		return globallyQuoteIdentifiers
 			|| autoQuoteKeywords && isReservedWord( identifierText )
@@ -76,27 +79,31 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 	}
 
 	@Override
-	public Identifier toIdentifier(String text) {
+	@Nullable
+	public Identifier toIdentifier(@Nullable String text) {
 		return normalizeQuoting( Identifier.toIdentifier( text ) );
 	}
 
 	@Override
-	public Identifier toIdentifier(String text, boolean quoted) {
+	@Nullable
+	public Identifier toIdentifier(@Nullable String text, boolean quoted) {
 		return normalizeQuoting( Identifier.toIdentifier( text, quoted ) );
 	}
 
 	@Override
-	public Identifier toIdentifier(String text, boolean quoted, boolean isExplicit) {
+	@Nullable
+	public Identifier toIdentifier(@Nullable String text, boolean quoted, boolean isExplicit) {
 		return normalizeQuoting( Identifier.toIdentifier( text, quoted, true, isExplicit ) );
 	}
 
 	@Override
-	public Identifier applyGlobalQuoting(String text) {
+	@Nullable
+	public Identifier applyGlobalQuoting(@Nullable String text) {
 		return Identifier.toIdentifier( text, globallyQuoteIdentifiers && !globallyQuoteIdentifiersSkipColumnDefinitions, false );
 	}
 
 	@Override
-	public boolean isReservedWord(String word) {
+	public boolean isReservedWord(@Nonnull String word) {
 		if ( !autoQuoteKeywords ) {
 			throw new AssertionFailure( "The reserved keywords map is only initialized if autoQuoteKeywords is true" );
 		}
@@ -104,21 +111,23 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 	}
 
 	@Override
-	public String toMetaDataCatalogName(Identifier identifier) {
+	@Nullable
+	public String toMetaDataCatalogName(@Nullable Identifier identifier) {
 		if ( !nameQualifierSupport.supportsCatalogs() ) {
 			// null is used to tell DatabaseMetaData to not limit results based on catalog.
 			return null;
 		}
 		else {
 			final var id =
-					identifier == null
+					identifier == null && jdbcEnvironment != null
 							? jdbcEnvironment.getCurrentCatalog()
 							: identifier;
 			return id == null ? "" : toMetaDataText( id );
 		}
 	}
 
-	private String toMetaDataText(Identifier identifier) {
+	@Nonnull
+	private String toMetaDataText(@Nonnull Identifier identifier) {
 		if ( identifier == null ) {
 			throw new IllegalArgumentException( "Identifier cannot be null; bad usage" );
 		}
@@ -144,14 +153,15 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 	}
 
 	@Override
-	public String toMetaDataSchemaName(Identifier identifier) {
+	@Nullable
+	public String toMetaDataSchemaName(@Nullable Identifier identifier) {
 		if ( !nameQualifierSupport.supportsSchemas() ) {
 			// null is used to tell DatabaseMetaData to not limit results based on schema.
 			return null;
 		}
 		else {
 			final var id =
-					identifier == null
+					identifier == null && jdbcEnvironment != null
 							? jdbcEnvironment.getCurrentSchema()
 							: identifier;
 			return id == null ? "" : toMetaDataText( id );
@@ -160,7 +170,8 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 	}
 
 	@Override
-	public String toMetaDataObjectName(Identifier identifier) {
+	@Nonnull
+	public String toMetaDataObjectName(@Nonnull Identifier identifier) {
 		if ( identifier == null ) {
 			// if this method was called, the value is needed
 			throw new IllegalArgumentException( "null was passed as an object name" );

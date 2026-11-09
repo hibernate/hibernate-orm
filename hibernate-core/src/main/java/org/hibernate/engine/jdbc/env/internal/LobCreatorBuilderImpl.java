@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.util.EnumSet;
 import java.util.Map;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
@@ -20,9 +22,9 @@ import static org.hibernate.engine.jdbc.env.internal.LobCreationLogging.LOB_MESS
  */
 public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 	private final boolean useConnectionToCreateLob;
-	private final EnumSet<LobTypes> supportedContextualLobTypes;
+	private final @Nonnull EnumSet<LobTypes> supportedContextualLobTypes;
 
-	public LobCreatorBuilderImpl(boolean useConnectionToCreateLob, EnumSet<LobTypes> supportedContextualLobTypes) {
+	public LobCreatorBuilderImpl(boolean useConnectionToCreateLob, @Nonnull EnumSet<LobTypes> supportedContextualLobTypes) {
 		this.useConnectionToCreateLob = useConnectionToCreateLob;
 		this.supportedContextualLobTypes = supportedContextualLobTypes;
 	}
@@ -38,10 +40,11 @@ public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 	 * @param jdbcConnection A JDBC {@link Connection} which can be used to gauge the drivers level of support,
 	 * specifically for creating LOB references.
 	 */
+	@Nonnull
 	public static LobCreatorBuilderImpl makeLobCreatorBuilder(
-			Dialect dialect,
-			Map<String,Object> configValues,
-			Connection jdbcConnection) {
+			@Nonnull Dialect dialect,
+			@Nonnull Map<String,Object> configValues,
+			@Nullable Connection jdbcConnection) {
 		return new LobCreatorBuilderImpl( dialect.getLobSupport().useConnectionToCreateLob(),
 				getSupportedContextualLobTypes( dialect, configValues, jdbcConnection ) );
 	}
@@ -51,7 +54,8 @@ public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 	 *
 	 * @return Appropriate LobCreatorBuilder
 	 */
-	public static LobCreatorBuilderImpl makeLobCreatorBuilder(Dialect dialect) {
+	@Nonnull
+	public static LobCreatorBuilderImpl makeLobCreatorBuilder(@Nonnull Dialect dialect) {
 		LOB_MESSAGE_LOGGER.disablingContextualLOBCreationSinceConnectionNull();
 		return new LobCreatorBuilderImpl( dialect.getLobSupport().useConnectionToCreateLob(), NONE );
 	}
@@ -63,7 +67,8 @@ public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 	 *
 	 * @return The LobCreator
 	 */
-	public LobCreator buildLobCreator(LobCreationContext lobCreationContext) {
+	@Nonnull
+	public LobCreator buildLobCreator(@Nonnull LobCreationContext lobCreationContext) {
 		if ( supportedContextualLobTypes.isEmpty() ) {
 			return NonContextualLobCreator.INSTANCE;
 		}

@@ -3,6 +3,8 @@ package org.hibernate.engine.jdbc.env.internal;
 import java.util.List;
 import java.util.Set;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.dialect.jdbc.spi.JdbcMetadataOverrides;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -15,14 +17,14 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 ///
 /// @author Steve Ebersole
 public final class JdbcMetadataImpl implements JdbcMetadata {
-	private final ExtractedDatabaseMetaData extractedMetadata;
+	private final @Nonnull ExtractedDatabaseMetaData extractedMetadata;
 	private final boolean supportsNamedParameters;
 	private final boolean supportsRefCursors;
 	private final boolean supportsBatchUpdates;
 
 	JdbcMetadataImpl(
-			ExtractedDatabaseMetaDataImpl extractedMetadata,
-			JdbcMetadataOverrides overrides) {
+			@Nonnull ExtractedDatabaseMetaDataImpl extractedMetadata,
+			@Nonnull JdbcMetadataOverrides overrides) {
 		this.extractedMetadata = extractedMetadata;
 		supportsNamedParameters = overrides.getNamedParameterSupport()
 				.resolve( extractedMetadata.supportsNamedParameters() );
@@ -32,7 +34,7 @@ public final class JdbcMetadataImpl implements JdbcMetadata {
 				.resolve( extractedMetadata.supportsBatchUpdates() );
 	}
 
-	private static boolean interpretedRefCursorSupport(ExtractedDatabaseMetaDataImpl extractedMetadata) {
+	private static boolean interpretedRefCursorSupport(@Nonnull ExtractedDatabaseMetaDataImpl extractedMetadata) {
 		if ( !extractedMetadata.supportsRefCursors() ) {
 			return false;
 		}
@@ -48,6 +50,7 @@ public final class JdbcMetadataImpl implements JdbcMetadata {
 	}
 
 	@Override
+	@Nonnull
 	public JdbcEnvironment getJdbcEnvironment() {
 		return extractedMetadata.getJdbcEnvironment();
 	}
@@ -58,16 +61,19 @@ public final class JdbcMetadataImpl implements JdbcMetadata {
 	}
 
 	@Override
+	@Nonnull
 	public ExtractedDatabaseMetaData getExtractedDatabaseMetaData() {
 		return extractedMetadata;
 	}
 
 	@Override
+	@Nullable
 	public String getDatabaseProductName() {
 		return extractedMetadata.getDatabaseProductName();
 	}
 
 	@Override
+	@Nullable
 	public String getDatabaseProductVersion() {
 		return extractedMetadata.getDatabaseProductVersion();
 	}
@@ -83,26 +89,31 @@ public final class JdbcMetadataImpl implements JdbcMetadata {
 	}
 
 	@Override
+	@Nullable
 	public String getConnectionCatalogName() {
 		return extractedMetadata.getConnectionCatalogName();
 	}
 
 	@Override
+	@Nullable
 	public String getConnectionSchemaName() {
 		return extractedMetadata.getConnectionSchemaName();
 	}
 
 	@Override
+	@Nonnull
 	public IdentifierCaseStrategy getUnquotedIdentifierCaseStrategy() {
 		return extractedMetadata.getUnquotedIdentifierCaseStrategy();
 	}
 
 	@Override
+	@Nonnull
 	public IdentifierCaseStrategy getQuotedIdentifierCaseStrategy() {
 		return extractedMetadata.getQuotedIdentifierCaseStrategy();
 	}
 
 	@Override
+	@Nonnull
 	public Set<String> getSqlKeywords() {
 		return extractedMetadata.getSqlKeywords();
 	}
@@ -143,16 +154,19 @@ public final class JdbcMetadataImpl implements JdbcMetadata {
 	}
 
 	@Override
+	@Nullable
 	public SQLStateType getSqlStateType() {
 		return extractedMetadata.getSqlStateType();
 	}
 
 	@Override
+	@Nullable
 	public String getUrl() {
 		return extractedMetadata.getUrl();
 	}
 
 	@Override
+	@Nullable
 	public String getDriver() {
 		return extractedMetadata.getDriver();
 	}
@@ -173,6 +187,7 @@ public final class JdbcMetadataImpl implements JdbcMetadata {
 	}
 
 	@Override
+	@Nonnull
 	public List<SequenceInformation> getSequenceInformationList() {
 		return extractedMetadata.getSequenceInformationList();
 	}

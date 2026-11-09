@@ -1,5 +1,7 @@
 package org.hibernate.dialect;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupports;
 
@@ -667,7 +669,8 @@ public class SybaseDialect extends AbstractTransactSQLDialect implements Current
 
 	private static class JTDSSchemaNameResolver implements SchemaNameResolver {
 		@Override
-		public String resolveSchemaName(Connection connection, Dialect dialect) throws SQLException {
+		@Nullable
+		public String resolveSchemaName(@Nonnull Connection connection, @Nonnull Dialect dialect) throws SQLException {
 			try ( var statement = connection.createStatement();
 					var resultSet = statement.executeQuery( "select user_name()" ) ) {
 				return resultSet.next() ? resultSet.getString( 1 ) : null;

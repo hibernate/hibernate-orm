@@ -1,5 +1,7 @@
 package org.example.orm.dialect;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.dialect.identifier.spi.DelegatingIdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -14,12 +16,13 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 /// @since 8.0
 // tag::identifier-helper-decorator[]
 public final class ExampleIdentifierHelper extends DelegatingIdentifierHelper {
-	public ExampleIdentifierHelper(IdentifierHelper delegate) {
+	public ExampleIdentifierHelper(@Nonnull IdentifierHelper delegate) {
 		super( delegate );
 	}
 
 	@Override
-	public Identifier normalizeQuoting(Identifier identifier) {
+	@Nullable
+	public Identifier normalizeQuoting(@Nullable Identifier identifier) {
 		final Identifier normalized = super.normalizeQuoting( identifier );
 		return normalized != null
 				&& !normalized.isQuoted()
@@ -29,17 +32,20 @@ public final class ExampleIdentifierHelper extends DelegatingIdentifierHelper {
 	}
 
 	@Override
-	public Identifier toIdentifier(String text) {
+	@Nullable
+	public Identifier toIdentifier(@Nullable String text) {
 		return normalizeQuoting( Identifier.toIdentifier( text ) );
 	}
 
 	@Override
-	public Identifier toIdentifier(String text, boolean quoted) {
+	@Nullable
+	public Identifier toIdentifier(@Nullable String text, boolean quoted) {
 		return normalizeQuoting( Identifier.toIdentifier( text, quoted ) );
 	}
 
 	@Override
-	public Identifier toIdentifier(String text, boolean quoted, boolean isExplicit) {
+	@Nullable
+	public Identifier toIdentifier(@Nullable String text, boolean quoted, boolean isExplicit) {
 		return normalizeQuoting( Identifier.toIdentifier( text, quoted, false, isExplicit ) );
 	}
 }

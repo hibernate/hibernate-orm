@@ -6,6 +6,8 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.util.function.Function;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
@@ -177,12 +179,12 @@ public class TemporaryTableHelper {
 					return CORE_LOGGER.isDebugEnabled();
 				}
 
-				public void prepare(SQLWarning warning) {
+				public void prepare(@Nonnull SQLWarning warning) {
 					CORE_LOGGER.warningsCreatingTempTable( warning );
 				}
 
 				@Override
-				protected void logWarning(String description, String message) {
+				protected void logWarning(@Nonnull String description, @Nullable String message) {
 					CORE_LOGGER.debug( description );
 					CORE_LOGGER.debug( message );
 				}

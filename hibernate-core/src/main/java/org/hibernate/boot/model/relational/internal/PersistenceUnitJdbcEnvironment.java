@@ -1,5 +1,7 @@
 package org.hibernate.boot.model.relational.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.dialect.lock.spi.TransactionConcurrency;
 
 import java.util.function.BooleanSupplier;
@@ -29,12 +31,12 @@ import static java.util.Objects.requireNonNull;
  */
 @Internal
 public final class PersistenceUnitJdbcEnvironment implements JdbcEnvironment {
-	private final JdbcEnvironment delegate;
-	private final IdentifierHelper identifierHelper;
+	private final @Nonnull JdbcEnvironment delegate;
+	private final @Nonnull IdentifierHelper identifierHelper;
 
 	public PersistenceUnitJdbcEnvironment(
-			JdbcEnvironment delegate,
-			BooleanSupplier globallyQuoteIdentifiers,
+			@Nonnull JdbcEnvironment delegate,
+			@Nonnull BooleanSupplier globallyQuoteIdentifiers,
 			boolean globallyQuoteIdentifiersSkipColumnDefinitions) {
 		this.delegate = requireNonNull( delegate );
 		identifierHelper = new PersistenceUnitIdentifierHelper(
@@ -44,72 +46,84 @@ public final class PersistenceUnitJdbcEnvironment implements JdbcEnvironment {
 	}
 
 	@Override
+	@Nonnull
 	public Dialect getDialect() {
 		return delegate.getDialect();
 	}
 
 	@Override
+	@Nonnull
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return delegate.getSqlAstTranslatorFactory();
 	}
 
 	@Override
+	@Nonnull
 	public JdbcMetadata getJdbcMetadata() {
 		return delegate.getJdbcMetadata();
 	}
 
 	@Override
+	@Nonnull
 	public TransactionConcurrency getTransactionConcurrency() {
 		return delegate.getTransactionConcurrency();
 	}
 
 	@Override
+	@Nonnull
 	public ExtractedDatabaseMetaData getExtractedDatabaseMetaData() {
 		return delegate.getExtractedDatabaseMetaData();
 	}
 
 	@Override
+	@Nullable
 	public Identifier getCurrentCatalog() {
 		return identifierHelper.normalizeQuoting( delegate.getCurrentCatalog() );
 	}
 
 	@Override
+	@Nullable
 	public Identifier getCurrentSchema() {
 		return identifierHelper.normalizeQuoting( delegate.getCurrentSchema() );
 	}
 
 	@Override
 	@SuppressWarnings("deprecation")
+	@Nonnull
 	public QualifiedObjectNameFormatter getQualifiedObjectNameFormatter() {
 		return delegate.getQualifiedObjectNameFormatter();
 	}
 
 	@Override
+	@Nonnull
 	public IdentifierHelper getIdentifierHelper() {
 		return identifierHelper;
 	}
 
 	@Override
+	@Nonnull
 	public NameQualifierSupport getNameQualifierSupport() {
 		return delegate.getNameQualifierSupport();
 	}
 
 	@Override
+	@Nonnull
 	public SqlExceptionHelper getSqlExceptionHelper() {
 		return delegate.getSqlExceptionHelper();
 	}
 
 	@Override
+	@Nonnull
 	public LobCreatorBuilder getLobCreatorBuilder() {
 		return delegate.getLobCreatorBuilder();
 	}
 
 	private final class PersistenceUnitIdentifierHelper implements IdentifierHelper {
-		private final BooleanSupplier globallyQuoteIdentifiers;
+		private final @Nonnull BooleanSupplier globallyQuoteIdentifiers;
 		private final boolean globallyQuoteIdentifiersSkipColumnDefinitions;
 
 		private PersistenceUnitIdentifierHelper(
-				BooleanSupplier globallyQuoteIdentifiers,
+				@Nonnull BooleanSupplier globallyQuoteIdentifiers,
 				boolean globallyQuoteIdentifiersSkipColumnDefinitions) {
 			this.globallyQuoteIdentifiers = globallyQuoteIdentifiers;
 			this.globallyQuoteIdentifiersSkipColumnDefinitions =
@@ -117,11 +131,13 @@ public final class PersistenceUnitJdbcEnvironment implements JdbcEnvironment {
 		}
 
 		@Override
-		public Identifier normalizeQuoting(Identifier identifier) {
+		@Nullable
+		public Identifier normalizeQuoting(@Nullable Identifier identifier) {
 			return withGlobalQuoting( delegateIdentifierHelper().normalizeQuoting( identifier ) );
 		}
 
-		private Identifier withGlobalQuoting(Identifier identifier) {
+		@Nullable
+		private Identifier withGlobalQuoting(@Nullable Identifier identifier) {
 			return identifier == null
 				|| identifier.isQuoted()
 				|| !globallyQuoteIdentifiers.getAsBoolean()
@@ -130,22 +146,26 @@ public final class PersistenceUnitJdbcEnvironment implements JdbcEnvironment {
 		}
 
 		@Override
-		public Identifier toIdentifier(String text) {
+		@Nullable
+		public Identifier toIdentifier(@Nullable String text) {
 			return withGlobalQuoting( delegateIdentifierHelper().toIdentifier( text ) );
 		}
 
 		@Override
-		public Identifier toIdentifier(String text, boolean quoted) {
+		@Nullable
+		public Identifier toIdentifier(@Nullable String text, boolean quoted) {
 			return withGlobalQuoting( delegateIdentifierHelper().toIdentifier( text, quoted ) );
 		}
 
 		@Override
-		public Identifier toIdentifier(String text, boolean quoted, boolean isExplicit) {
+		@Nullable
+		public Identifier toIdentifier(@Nullable String text, boolean quoted, boolean isExplicit) {
 			return withGlobalQuoting( delegateIdentifierHelper().toIdentifier( text, quoted, isExplicit ) );
 		}
 
 		@Override
-		public Identifier applyGlobalQuoting(String text) {
+		@Nullable
+		public Identifier applyGlobalQuoting(@Nullable String text) {
 			return globallyQuoteIdentifiers.getAsBoolean()
 					? Identifier.toIdentifier(
 							text,
@@ -156,29 +176,33 @@ public final class PersistenceUnitJdbcEnvironment implements JdbcEnvironment {
 		}
 
 		@Override
-		public boolean isReservedWord(String word) {
+		public boolean isReservedWord(@Nonnull String word) {
 			return delegateIdentifierHelper().isReservedWord( word );
 		}
 
 		@Override
-		public String toMetaDataCatalogName(Identifier catalogIdentifier) {
+		@Nullable
+		public String toMetaDataCatalogName(@Nullable Identifier catalogIdentifier) {
 			return delegateIdentifierHelper().toMetaDataCatalogName(
 					catalogIdentifier == null ? getCurrentCatalog() : catalogIdentifier
 			);
 		}
 
 		@Override
-		public String toMetaDataSchemaName(Identifier schemaIdentifier) {
+		@Nullable
+		public String toMetaDataSchemaName(@Nullable Identifier schemaIdentifier) {
 			return delegateIdentifierHelper().toMetaDataSchemaName(
 					schemaIdentifier == null ? getCurrentSchema() : schemaIdentifier
 			);
 		}
 
 		@Override
-		public String toMetaDataObjectName(Identifier identifier) {
+		@Nonnull
+		public String toMetaDataObjectName(@Nonnull Identifier identifier) {
 			return delegateIdentifierHelper().toMetaDataObjectName( identifier );
 		}
 
+		@Nonnull
 		private IdentifierHelper delegateIdentifierHelper() {
 			return delegate.getIdentifierHelper();
 		}

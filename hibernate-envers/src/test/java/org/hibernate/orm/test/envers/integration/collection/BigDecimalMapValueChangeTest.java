@@ -3,6 +3,7 @@ package org.hibernate.orm.test.envers.integration.collection;
 import java.math.BigDecimal;
 import java.util.Arrays;
 
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.orm.test.envers.entities.collection.BigDecimalMapEntity;
 import org.hibernate.orm.test.envers.tools.TestTools;
@@ -13,6 +14,8 @@ import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.orm.junit.VersionMatchMode;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -74,6 +77,7 @@ public class BigDecimalMapValueChangeTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, majorVersion = 11, minorVersion = 4, versionMatchMode = VersionMatchMode.OLDER, reason = "CUBRID before 11.4 finds no row when a fractional numeric parameter and a correlated subquery compare the same column, as the default audit strategy's revision lookup does")
 	public void testRevision1Content(EntityManagerFactoryScope scope) {
 		scope.inEntityManager( em -> {
 			final var auditReader = AuditReaderFactory.get( em );
@@ -85,6 +89,7 @@ public class BigDecimalMapValueChangeTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, majorVersion = 11, minorVersion = 4, versionMatchMode = VersionMatchMode.OLDER, reason = "CUBRID before 11.4 finds no row when a fractional numeric parameter and a correlated subquery compare the same column, as the default audit strategy's revision lookup does")
 	public void testRevision2Content(EntityManagerFactoryScope scope) {
 		scope.inEntityManager( em -> {
 			final var auditReader = AuditReaderFactory.get( em );
@@ -96,6 +101,7 @@ public class BigDecimalMapValueChangeTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, majorVersion = 11, minorVersion = 4, versionMatchMode = VersionMatchMode.OLDER, reason = "CUBRID before 11.4 finds no row when a fractional numeric parameter and a correlated subquery compare the same column, as the default audit strategy's revision lookup does")
 	public void testRevision3Content(EntityManagerFactoryScope scope) {
 		scope.inEntityManager( em -> {
 			final var auditReader = AuditReaderFactory.get( em );

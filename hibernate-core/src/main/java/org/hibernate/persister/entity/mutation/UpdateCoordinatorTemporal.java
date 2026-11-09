@@ -5,8 +5,6 @@ import jakarta.annotation.Nullable;
 
 import org.hibernate.Internal;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
-import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
-import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.GeneratedValues;
@@ -94,14 +92,6 @@ public class UpdateCoordinatorTemporal extends AbstractTemporalUpdateCoordinator
 
 			);
 			return entityPersister().getInsertCoordinator().insert( entity, id, values, session );
-		}
-	}
-
-	@Override
-	void bindVersionRestriction(@Nullable Object oldVersion, @Nonnull JdbcValueBindings jdbcValueBindings, @Nonnull String temporalTableName) {
-		final var versionMapping = entityPersister().getVersionMapping();
-		if ( versionMapping != null && entityPersister().optimisticLockStyle().isVersion() ) {
-			jdbcValueBindings.bindValue( oldVersion, versionMapping, ParameterUsage.RESTRICT );
 		}
 	}
 

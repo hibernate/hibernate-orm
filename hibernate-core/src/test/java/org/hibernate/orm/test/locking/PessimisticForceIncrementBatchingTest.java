@@ -15,8 +15,10 @@ import org.hibernate.SessionEventListener;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -139,6 +141,7 @@ public class PessimisticForceIncrementBatchingTest {
 	}
 
 	@Test
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSelectLocking.class )
 	void testFollowOnLockExecutesImmediately(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final var entity = session.createSelectionQuery( "from VersionedEntity", VersionedEntity.class )

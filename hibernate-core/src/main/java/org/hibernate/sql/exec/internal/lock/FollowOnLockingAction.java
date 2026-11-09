@@ -150,10 +150,9 @@ public class FollowOnLockingAction implements PostAction {
 						tableLock.performActions( entityDetailsMap, lockingOptions, session ) );
 				entityDetailsMap.values().forEach( entityDetails -> {
 					if ( lockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT ) {
-						OptimisticLockHelper.forceVersionIncrement(
+						OptimisticLockHelper.forceVersionIncrementImmediately(
 								entityDetails.instance(),
 								entityDetails.entry(),
-								false,
 								session
 						);
 					}

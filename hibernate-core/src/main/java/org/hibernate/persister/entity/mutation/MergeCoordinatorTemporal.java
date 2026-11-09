@@ -8,9 +8,7 @@ import java.sql.SQLException;
 import org.hibernate.Internal;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
-import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.OperationResultChecker;
-import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -160,14 +158,6 @@ public class MergeCoordinatorTemporal extends AbstractTemporalUpdateCoordinator 
 		catch ( SQLException e ) {
 			throw session.getJdbcServices().getSqlExceptionHelper()
 					.convert( e, "Could not check current temporal row of " + entityPersister().getEntityName(), currentRowSelectSql );
-		}
-	}
-
-	@Override
-	void bindVersionRestriction(@Nullable Object oldVersion, @Nonnull JdbcValueBindings jdbcValueBindings, @Nonnull String temporalTableName) {
-		final var versionMapping = entityPersister().getVersionMapping();
-		if ( versionMapping != null && entityPersister().optimisticLockStyle().isVersion() ) {
-			jdbcValueBindings.bindValue( oldVersion, versionMapping, ParameterUsage.RESTRICT );
 		}
 	}
 

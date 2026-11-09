@@ -47,6 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class TemporalEntityTest {
 
 	@Test
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsPrimaryKeyUpdate.class )
 	void testPessimisticForceIncrementExecutesImmediately(SessionFactoryScope scope) {
 		try {
 			scope.inTransaction( session -> {

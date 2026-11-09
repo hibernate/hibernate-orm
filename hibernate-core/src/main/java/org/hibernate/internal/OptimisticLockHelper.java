@@ -25,7 +25,11 @@ public final class OptimisticLockHelper {
 		forceVersionIncrement( object, entry, true, session );
 	}
 
-	public static void forceVersionIncrement(
+	public static void forceVersionIncrementImmediately(Object object, EntityEntry entry, SharedSessionContractImplementor session) {
+		forceVersionIncrement( object, entry, false, session );
+	}
+
+	private static void forceVersionIncrement(
 			Object object,
 			EntityEntry entry,
 			boolean batching,
@@ -45,7 +49,9 @@ public final class OptimisticLockHelper {
 		}, null );
 		final Object nextVersion;
 		try {
-			nextVersion = persister.forceVersionIncrement( entry.getId(), previousVersion, batching, session );
+			nextVersion = batching
+					? persister.forceVersionIncrement( entry.getId(), previousVersion, session )
+					: persister.forceVersionIncrement( entry.getId(), previousVersion, false, session );
 		}
 		catch (RuntimeException | Error failure) {
 			if ( cacheLock != null ) {

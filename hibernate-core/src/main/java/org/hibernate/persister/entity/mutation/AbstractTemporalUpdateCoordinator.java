@@ -60,7 +60,12 @@ abstract class AbstractTemporalUpdateCoordinator extends AbstractMutationCoordin
 		);
 	}
 
-	abstract void bindVersionRestriction(@Nullable Object oldVersion, @Nonnull JdbcValueBindings jdbcValueBindings, @Nonnull String temporalTableName);
+	void bindVersionRestriction(@Nullable Object oldVersion, @Nonnull JdbcValueBindings jdbcValueBindings, @Nonnull String temporalTableName) {
+		final var versionMapping = entityPersister().getVersionMapping();
+		if ( versionMapping != null && entityPersister().optimisticLockStyle().isVersion() ) {
+			jdbcValueBindings.bindValue( oldVersion, versionMapping, ParameterUsage.RESTRICT );
+		}
+	}
 
 	void performRowEndUpdate(
 			@Nonnull Object entity,

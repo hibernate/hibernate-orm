@@ -1,8 +1,11 @@
 package org.hibernate.boot.model.naming;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.internal.util.StringHelper;
+
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
  * Provides centralized normalization of how database object names are handled.
@@ -12,7 +15,7 @@ import org.hibernate.internal.util.StringHelper;
 public class ObjectNameNormalizer {
 	private final MetadataBuildingContext context;
 
-	public ObjectNameNormalizer(MetadataBuildingContext context) {
+	public ObjectNameNormalizer(@Nonnull MetadataBuildingContext context) {
 		this.context = context;
 	}
 
@@ -66,9 +69,10 @@ public class ObjectNameNormalizer {
 	 * @return The logical name
 	 */
 	public Identifier determineLogicalName(String explicitName, NamingStrategyHelper namingStrategyHelper) {
-		final Identifier logicalName = StringHelper.isEmpty( explicitName )
-				? namingStrategyHelper.determineImplicitName( getBuildingContext() )
-				: namingStrategyHelper.handleExplicitName( explicitName, getBuildingContext() );
+		final Identifier logicalName =
+				isEmpty( explicitName )
+						? namingStrategyHelper.determineImplicitName( getBuildingContext() )
+						: namingStrategyHelper.handleExplicitName( explicitName, getBuildingContext() );
 		return database().getJdbcEnvironment().getIdentifierHelper().normalizeQuoting( logicalName );
 	}
 
@@ -80,11 +84,16 @@ public class ObjectNameNormalizer {
 	 *
 	 * @param text The specified column definition
 	 *
-	 * @return The name with global quoting applied
+	 * @return The name with global quoting applied, or {@code null} for null or blank text
 	 */
-	public String applyGlobalQuoting(String text) {
-		return database().getJdbcEnvironment().getIdentifierHelper().applyGlobalQuoting( text )
-				.render( database().getDialect() );
+	@Nullable
+	public String applyGlobalQuoting(@Nullable String text) {
+		final var identifier =
+				database().getJdbcEnvironment().getIdentifierHelper()
+						.applyGlobalQuoting( text );
+		return identifier == null
+				? null
+				: identifier.render( database().getDialect() );
 	}
 
 

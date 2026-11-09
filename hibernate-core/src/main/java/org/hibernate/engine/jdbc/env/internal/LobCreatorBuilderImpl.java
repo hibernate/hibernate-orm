@@ -5,12 +5,12 @@ import java.util.EnumSet;
 import java.util.Map;
 
 import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.env.spi.LobCreatorBuilder;
 
+import static java.util.Objects.requireNonNull;
 import static org.hibernate.engine.jdbc.env.internal.LobCreationHelper.NONE;
 import static org.hibernate.engine.jdbc.env.internal.LobCreationHelper.getSupportedContextualLobTypes;
 import static org.hibernate.engine.jdbc.env.internal.LobCreationLogging.LOB_MESSAGE_LOGGER;
@@ -32,19 +32,21 @@ public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 	// factory methods ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * The public factory method for obtaining the appropriate LOB creator (according to given
-	 * JDBC {@link Connection}).
+	 * The public factory method for obtaining the appropriate LOB creator
+	 * (according to given JDBC {@link Connection}).
 	 *
 	 * @param dialect The {@link Dialect} in use
 	 * @param configValues The map of settings
-	 * @param jdbcConnection A JDBC {@link Connection} which can be used to gauge the drivers level of support,
-	 * specifically for creating LOB references.
+	 * @param jdbcConnection A JDBC {@link Connection} which can be used to
+	 *        gauge the drivers level of support for creating LOB references.
+	 * @see #makeLobCreatorBuilder(Dialect)
 	 */
 	@Nonnull
 	public static LobCreatorBuilderImpl makeLobCreatorBuilder(
 			@Nonnull Dialect dialect,
 			@Nonnull Map<String,Object> configValues,
-			@Nullable Connection jdbcConnection) {
+			@Nonnull Connection jdbcConnection) {
+		requireNonNull( jdbcConnection, "jdbcConnection" );
 		return new LobCreatorBuilderImpl( dialect.getLobSupport().useConnectionToCreateLob(),
 				getSupportedContextualLobTypes( dialect, configValues, jdbcConnection ) );
 	}

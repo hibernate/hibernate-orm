@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.jdbc.env.internal.NormalizingIdentifierHelperImpl;
 import org.jboss.logging.Logger;
 
@@ -33,8 +34,8 @@ public class IdentifierHelperBuilder {
 	private boolean autoQuoteKeywords = true;
 	private boolean autoQuoteInitialUnderscore = false;
 	private boolean autoQuoteDollar = false;
-	private IdentifierCaseStrategy unquotedCaseStrategy = IdentifierCaseStrategy.UPPER;
-	private IdentifierCaseStrategy quotedCaseStrategy = IdentifierCaseStrategy.MIXED;
+	private @Nonnull IdentifierCaseStrategy unquotedCaseStrategy = IdentifierCaseStrategy.UPPER;
+	private @Nonnull IdentifierCaseStrategy quotedCaseStrategy = IdentifierCaseStrategy.MIXED;
 
 	public static IdentifierHelperBuilder from(@Nonnull JdbcEnvironment jdbcEnvironment) {
 		return new IdentifierHelperBuilder( jdbcEnvironment );
@@ -80,20 +81,24 @@ public class IdentifierHelperBuilder {
 		this.nameQualifierSupport = nameQualifierSupport == null ? NameQualifierSupport.BOTH : nameQualifierSupport;
 	}
 
+	@Nonnull
 	public IdentifierCaseStrategy getUnquotedCaseStrategy() {
 		return unquotedCaseStrategy;
 	}
 
-	public void setUnquotedCaseStrategy(IdentifierCaseStrategy unquotedCaseStrategy) {
-		this.unquotedCaseStrategy = unquotedCaseStrategy;
+	/// Pass `null` to restore the default [IdentifierCaseStrategy#UPPER].
+	public void setUnquotedCaseStrategy(@Nullable IdentifierCaseStrategy unquotedCaseStrategy) {
+		this.unquotedCaseStrategy = unquotedCaseStrategy == null ? IdentifierCaseStrategy.UPPER : unquotedCaseStrategy;
 	}
 
+	@Nonnull
 	public IdentifierCaseStrategy getQuotedCaseStrategy() {
 		return quotedCaseStrategy;
 	}
 
-	public void setQuotedCaseStrategy(IdentifierCaseStrategy quotedCaseStrategy) {
-		this.quotedCaseStrategy = quotedCaseStrategy;
+	/// Pass `null` to restore the default [IdentifierCaseStrategy#MIXED].
+	public void setQuotedCaseStrategy(@Nullable IdentifierCaseStrategy quotedCaseStrategy) {
+		this.quotedCaseStrategy = quotedCaseStrategy == null ? IdentifierCaseStrategy.MIXED : quotedCaseStrategy;
 	}
 
 	public void clearReservedWords() {

@@ -41,8 +41,8 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 			boolean autoQuoteInitialUnderscore,
 			boolean autoQuoteDollar,
 			@Nonnull TreeSet<String> reservedWords, //careful, we intentionally omit making a defensive copy to not waste memory
-			@Nullable IdentifierCaseStrategy unquotedCaseStrategy,
-			@Nullable IdentifierCaseStrategy quotedCaseStrategy) {
+			@Nonnull IdentifierCaseStrategy unquotedCaseStrategy,
+			@Nonnull IdentifierCaseStrategy quotedCaseStrategy) {
 		this.jdbcEnvironment = requireNonNull( jdbcEnvironment, "jdbcEnvironment" );
 		this.nameQualifierSupport = nameQualifierSupport;
 		this.globallyQuoteIdentifiers = globallyQuoteIdentifiers;
@@ -51,8 +51,8 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 		this.autoQuoteInitialUnderscore = autoQuoteInitialUnderscore;
 		this.autoQuoteDollar = autoQuoteDollar;
 		this.reservedWords = reservedWords;
-		this.unquotedCaseStrategy = unquotedCaseStrategy == null ? IdentifierCaseStrategy.UPPER : unquotedCaseStrategy;
-		this.quotedCaseStrategy = quotedCaseStrategy == null ? IdentifierCaseStrategy.MIXED : quotedCaseStrategy;
+		this.unquotedCaseStrategy = requireNonNull( unquotedCaseStrategy, "unquotedCaseStrategy" );
+		this.quotedCaseStrategy = requireNonNull( quotedCaseStrategy, "quotedCaseStrategy" );
 	}
 
 	@Override

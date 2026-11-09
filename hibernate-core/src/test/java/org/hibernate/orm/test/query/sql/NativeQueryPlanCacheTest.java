@@ -9,9 +9,15 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.ColumnResult;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.NamedNativeQuery;
+import jakarta.persistence.SqlResultSetMapping;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DomainModel
+@DomainModel(annotatedClasses = NativeQueryPlanCacheTest.MappingEntity.class)
 @SessionFactory
 @RequiresDialect(H2Dialect.class)
 @JiraKey("HHH-21096")
@@ -72,5 +78,52 @@ class NativeQueryPlanCacheTest {
 					.setParameter( "b", 8 ).getResultList() )
 					.containsExactly( 8 );
 		} );
+	}
+
+	@Test
+	void sameNamedParametersInDifferentOrderWithResultSetMapping(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			assertThat( session.createNativeQuery(
+					"select /* mapped */ cast(:a as integer) * 10 + cast(:b as integer) as n", "number", Integer.class )
+					.setParameter( "a", 1 ).setParameter( "b", 2 ).getResultList() )
+					.containsExactly( 12 );
+		} );
+		scope.inSession( session -> {
+			assertThat( session.createNativeQuery(
+					"select /* mapped */ cast(:b as integer) * 10 + cast(:a as integer) as n", "number", Integer.class )
+					.setParameter( "a", 1 ).setParameter( "b", 2 ).getResultList() )
+					.containsExactly( 21 );
+		} );
+	}
+
+	@Test
+	void namedQueriesWithSameResultSetMappingAndDifferentParameterOrder(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			assertThat( session.createNamedQuery( "firstNumber", Integer.class )
+					.setParameter( "a", 1 ).setParameter( "b", 2 ).getResultList() )
+					.containsExactly( 12 );
+		} );
+		scope.inSession( session -> {
+			assertThat( session.createNamedQuery( "secondNumber", Integer.class )
+					.setParameter( "a", 1 ).setParameter( "b", 2 ).getResultList() )
+					.containsExactly( 21 );
+		} );
+	}
+
+	@Entity(name = "MappingEntity")
+	@SqlResultSetMapping(name = "number", columns = @ColumnResult(name = "n", type = Integer.class))
+	@NamedNativeQuery(
+			name = "firstNumber",
+			query = "select /* named mapping */ cast(:a as integer) * 10 + cast(:b as integer) as n",
+			resultSetMapping = "number"
+	)
+	@NamedNativeQuery(
+			name = "secondNumber",
+			query = "select /* named mapping */ cast(:b as integer) * 10 + cast(:a as integer) as n",
+			resultSetMapping = "number"
+	)
+	public static class MappingEntity {
+		@Id
+		private Integer id;
 	}
 }

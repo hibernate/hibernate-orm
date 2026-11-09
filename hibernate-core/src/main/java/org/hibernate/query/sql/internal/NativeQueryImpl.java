@@ -173,8 +173,7 @@ public class NativeQueryImpl<R>
 		resultType = null;
 		resultMappingType = null;
 		var resultSetMappingProducer = factory.getJdbcValuesMappingProducerProvider();
-		// Preserve parameter names and positions in the mapping identifier used by the query plan cache.
-		resultSetMapping = resultSetMappingProducer.buildResultSetMapping( originalSqlString, true, factory );
+		resultSetMapping = resultSetMappingProducer.buildResultSetMapping( sqlString, true, factory );
 		resultMappingSuppliedToCtor = false;
 	}
 
@@ -1306,8 +1305,9 @@ public class NativeQueryImpl<R>
 	}
 
 	private SelectInterpretationsKey selectInterpretationsKey(ResultSetMapping mapping, int parameterStartPosition) {
+		// The cached plan retains parameter occurrences, so preserve their names and positions in the key.
 		return new SelectInterpretationsKey(
-				getQueryString(),
+				originalSqlString,
 				mapping,
 				getSynchronizedQuerySpaces(),
 				parameterStartPosition

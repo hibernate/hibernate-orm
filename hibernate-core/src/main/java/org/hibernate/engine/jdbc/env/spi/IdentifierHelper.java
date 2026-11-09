@@ -1,5 +1,7 @@
 package org.hibernate.engine.jdbc.env.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.SPI;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.dialect.identifier.spi.IdentifierHelperBuildRequest;
@@ -27,23 +29,26 @@ public interface IdentifierHelper {
 	/// or database-specific policy.
 	///
 	/// @param identifier the identifier to normalize
-	/// @return the quoting-normalized identifier
-	Identifier normalizeQuoting(Identifier identifier);
+	/// @return the quoting-normalized identifier, or `null` for a null identifier
+	@Nullable
+	Identifier normalizeQuoting(@Nullable Identifier identifier);
 
 	/// Create an identifier from mapping text, applying configured implicit
 	/// quoting when necessary.
 	///
 	/// @param text the name obtained from mapping information
-	/// @return the identifier form of the name
-	Identifier toIdentifier(String text);
+	/// @return the identifier form of the name, or `null` for null or blank text
+	@Nullable
+	Identifier toIdentifier(@Nullable String text);
 
 	/// Create an identifier from mapping text, honoring explicit quoting and then
 	/// applying configured implicit quoting when necessary.
 	///
 	/// @param text the name obtained from mapping information
 	/// @param quoted whether the identifier is explicitly quoted
-	/// @return the identifier form of the name
-	Identifier toIdentifier(String text, boolean quoted);
+	/// @return the identifier form of the name, or `null` for null or blank text
+	@Nullable
+	Identifier toIdentifier(@Nullable String text, boolean quoted);
 
 	/// Create an identifier from mapping text while retaining whether the mapping
 	/// supplied the name explicitly.
@@ -51,8 +56,9 @@ public interface IdentifierHelper {
 	/// @param text the name obtained from mapping information
 	/// @param quoted whether the identifier is explicitly quoted
 	/// @param isExplicit whether the mapping supplied the name explicitly
-	/// @return the identifier form of the name
-	Identifier toIdentifier(String text, boolean quoted, boolean isExplicit);
+	/// @return the identifier form of the name, or `null` for null or blank text
+	@Nullable
+	Identifier toIdentifier(@Nullable String text, boolean quoted, boolean isExplicit);
 
 	/// Apply global quoting to a `column-definition` fragment as required by
 	/// Jakarta Persistence. Do not use this operation for ordinary identifiers.
@@ -61,33 +67,37 @@ public interface IdentifierHelper {
 	/// [org.hibernate.cfg.MappingSettings#GLOBALLY_QUOTED_IDENTIFIERS_SKIP_COLUMN_DEFINITIONS].
 	///
 	/// @param text the text to quote when global policy requires it
-	/// @return the identifier form
-	Identifier applyGlobalQuoting(String text);
+	/// @return the identifier form, or `null` for null or blank text
+	@Nullable
+	Identifier applyGlobalQuoting(@Nullable String text);
 
 	/// Determine whether the configured environment treats a word as reserved.
 	///
 	/// @param word the word to check
 	/// @return `true` when the word is reserved
-	boolean isReservedWord(String word);
+	boolean isReservedWord(@Nonnull String word);
 
 	/// Render a catalog identifier for `java.sql.DatabaseMetaData` calls.
 	///
 	/// @param catalogIdentifier the catalog identifier, or `null` for the
 	/// configured current-catalog behavior
-	/// @return the JDBC metadata catalog name
-	String toMetaDataCatalogName(Identifier catalogIdentifier);
+	/// @return the JDBC metadata catalog name, or `null` when catalogs are unsupported
+	@Nullable
+	String toMetaDataCatalogName(@Nullable Identifier catalogIdentifier);
 
 	/// Render a schema identifier for `java.sql.DatabaseMetaData` calls.
 	///
 	/// @param schemaIdentifier the schema identifier, or `null` for the
 	/// configured current-schema behavior
-	/// @return the JDBC metadata schema name
-	String toMetaDataSchemaName(Identifier schemaIdentifier);
+	/// @return the JDBC metadata schema name, or `null` when schemas are unsupported
+	@Nullable
+	String toMetaDataSchemaName(@Nullable Identifier schemaIdentifier);
 
 	/// Render a required database-object identifier for
 	/// `java.sql.DatabaseMetaData` calls.
 	///
 	/// @param identifier the required object identifier
 	/// @return the JDBC metadata object name
-	String toMetaDataObjectName(Identifier identifier);
+	@Nonnull
+	String toMetaDataObjectName(@Nonnull Identifier identifier);
 }

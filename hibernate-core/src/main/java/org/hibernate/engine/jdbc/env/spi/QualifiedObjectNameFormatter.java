@@ -1,5 +1,6 @@
 package org.hibernate.engine.jdbc.env.spi;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.QualifiedTableName;
@@ -19,7 +20,8 @@ public interface QualifiedObjectNameFormatter {
 	 *
 	 * @return The formatted name,
 	 */
-	String format(QualifiedTableName qualifiedTableName, Dialect dialect);
+	@Nonnull
+	String format(@Nonnull QualifiedTableName qualifiedTableName, @Nonnull Dialect dialect);
 
 	/**
 	 * Render a formatted sequence name
@@ -29,7 +31,8 @@ public interface QualifiedObjectNameFormatter {
 	 *
 	 * @return The formatted name
 	 */
-	String format(QualifiedSequenceName qualifiedSequenceName, Dialect dialect);
+	@Nonnull
+	String format(@Nonnull QualifiedSequenceName qualifiedSequenceName, @Nonnull Dialect dialect);
 
 	/**
 	 * Render a formatted non-table and non-sequence qualified name
@@ -39,5 +42,6 @@ public interface QualifiedObjectNameFormatter {
 	 *
 	 * @return The formatted name
 	 */
-	String format(QualifiedName qualifiedName, Dialect dialect);
+	@Nonnull
+	String format(@Nonnull QualifiedName qualifiedName, @Nonnull Dialect dialect);
 }

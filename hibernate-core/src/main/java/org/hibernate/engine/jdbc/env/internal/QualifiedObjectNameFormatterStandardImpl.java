@@ -3,6 +3,8 @@ package org.hibernate.engine.jdbc.env.internal;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
@@ -18,18 +20,19 @@ import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
  * @author Steve Ebersole
  */
 public class QualifiedObjectNameFormatterStandardImpl implements QualifiedObjectNameFormatter {
-	private final Format format;
+	private final @Nonnull Format format;
 
 	public QualifiedObjectNameFormatterStandardImpl(
-			NameQualifierSupport nameQualifierSupport,
-			String catalogSeparator,
+			@Nonnull NameQualifierSupport nameQualifierSupport,
+			@Nonnull String catalogSeparator,
 			boolean catalogAtEnd) {
 		this.format = buildFormat( nameQualifierSupport, catalogSeparator, catalogAtEnd );
 	}
 
+	@Nonnull
 	private Format buildFormat(
-			NameQualifierSupport nameQualifierSupport,
-			String catalogSeparator,
+			@Nonnull NameQualifierSupport nameQualifierSupport,
+			@Nonnull String catalogSeparator,
 			boolean catalogAtEnd) {
 		return switch ( nameQualifierSupport ) {
 			case NONE -> NoQualifierSupportFormat.INSTANCE;
@@ -43,14 +46,16 @@ public class QualifiedObjectNameFormatterStandardImpl implements QualifiedObject
 		};
 	}
 
-	public QualifiedObjectNameFormatterStandardImpl(NameQualifierSupport nameQualifierSupport, String catalogSeparator) {
+	public QualifiedObjectNameFormatterStandardImpl(
+			@Nonnull NameQualifierSupport nameQualifierSupport,
+			@Nonnull String catalogSeparator) {
 		// most dbs simply do <catalog>.<schema>.<name>
 		this( nameQualifierSupport, catalogSeparator, false );
 	}
 
 	public QualifiedObjectNameFormatterStandardImpl(
-			NameQualifierSupport nameQualifierSupport,
-			DatabaseMetaData databaseMetaData) throws SQLException {
+			@Nonnull NameQualifierSupport nameQualifierSupport,
+			@Nonnull DatabaseMetaData databaseMetaData) throws SQLException {
 		this(
 				nameQualifierSupport,
 				databaseMetaData.getCatalogSeparator(),
@@ -59,7 +64,8 @@ public class QualifiedObjectNameFormatterStandardImpl implements QualifiedObject
 	}
 
 	@Override
-	public String format(QualifiedTableName qualifiedTableName, Dialect dialect) {
+	@Nonnull
+	public String format(@Nonnull QualifiedTableName qualifiedTableName, @Nonnull Dialect dialect) {
 		return format.format(
 				qualifiedTableName.getCatalogName(),
 				qualifiedTableName.getSchemaName(),
@@ -68,16 +74,9 @@ public class QualifiedObjectNameFormatterStandardImpl implements QualifiedObject
 		);
 	}
 
-	private static String render(Identifier identifier, Dialect dialect) {
-		if ( identifier == null ) {
-			return null;
-		}
-
-		return identifier.render( dialect );
-	}
-
 	@Override
-	public String format(QualifiedSequenceName qualifiedSequenceName, Dialect dialect) {
+	@Nonnull
+	public String format(@Nonnull QualifiedSequenceName qualifiedSequenceName, @Nonnull Dialect dialect) {
 		return format.format(
 				qualifiedSequenceName.getCatalogName(),
 				qualifiedSequenceName.getSchemaName(),
@@ -87,7 +86,8 @@ public class QualifiedObjectNameFormatterStandardImpl implements QualifiedObject
 	}
 
 	@Override
-	public String format(QualifiedName qualifiedName, Dialect dialect) {
+	@Nonnull
+	public String format(@Nonnull QualifiedName qualifiedName, @Nonnull Dialect dialect) {
 		return format.format(
 				qualifiedName.getCatalogName(),
 				qualifiedName.getSchemaName(),
@@ -97,27 +97,42 @@ public class QualifiedObjectNameFormatterStandardImpl implements QualifiedObject
 	}
 
 	private interface Format {
-		String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect);
+		@Nonnull
+		String format(
+				@Nullable Identifier catalog,
+				@Nullable Identifier schema,
+				@Nonnull Identifier name,
+				@Nonnull Dialect dialect);
 	}
 
 	private record NoQualifierSupportFormat() implements Format {
 		public static final NoQualifierSupportFormat INSTANCE = new NoQualifierSupportFormat();
 		@Override
-		public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect) {
-			return render( name, dialect );
+		@Nonnull
+		public String format(
+				@Nullable Identifier catalog,
+				@Nullable Identifier schema,
+				@Nonnull Identifier name,
+				@Nonnull Dialect dialect) {
+			return name.render( dialect );
 		}
 	}
 
 	private record SchemaNameCatalogFormat(String catalogSeparator) implements Format {
 		@Override
-		public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect) {
+		@Nonnull
+		public String format(
+				@Nullable Identifier catalog,
+				@Nullable Identifier schema,
+				@Nonnull Identifier name,
+				@Nonnull Dialect dialect) {
 			final var formatted = new StringBuilder();
 			if ( schema != null ) {
-				formatted.append( render( schema, dialect ) ).append( '.' );
+				formatted.append( schema.render( dialect ) ).append( '.' );
 			}
-			formatted.append( render( name, dialect ) );
+			formatted.append( name.render( dialect ) );
 			if ( catalog != null ) {
-				formatted.append( catalogSeparator ).append( render( catalog, dialect ) );
+				formatted.append( catalogSeparator ).append( catalog.render( dialect ) );
 			}
 			return formatted.toString();
 		}
@@ -126,26 +141,36 @@ public class QualifiedObjectNameFormatterStandardImpl implements QualifiedObject
 	private record CatalogSchemaNameFormat(String catalogSeparator) implements Format {
 
 		@Override
-		public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect) {
+		@Nonnull
+		public String format(
+				@Nullable Identifier catalog,
+				@Nullable Identifier schema,
+				@Nonnull Identifier name,
+				@Nonnull Dialect dialect) {
 			final var formatted = new StringBuilder();
 			if ( catalog != null ) {
-				formatted.append( render( catalog, dialect ) ).append( catalogSeparator );
+				formatted.append( catalog.render( dialect ) ).append( catalogSeparator );
 			}
 			if ( schema != null ) {
-				formatted.append( render( schema, dialect ) ).append( '.' );
+				formatted.append( schema.render( dialect ) ).append( '.' );
 			}
-			formatted.append( render( name, dialect ) );
+			formatted.append( name.render( dialect ) );
 			return formatted.toString();
 		}
 	}
 
 	private record NameCatalogFormat(String catalogSeparator) implements Format {
 		@Override
-		public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect) {
+		@Nonnull
+		public String format(
+				@Nullable Identifier catalog,
+				@Nullable Identifier schema,
+				@Nonnull Identifier name,
+				@Nonnull Dialect dialect) {
 			final var formatted = new StringBuilder();
-			formatted.append( render( name, dialect ) );
+			formatted.append( name.render( dialect ) );
 			if ( catalog != null ) {
-				formatted.append( catalogSeparator ).append( render( catalog, dialect ) );
+				formatted.append( catalogSeparator ).append( catalog.render( dialect ) );
 			}
 			return formatted.toString();
 		}
@@ -153,15 +178,20 @@ public class QualifiedObjectNameFormatterStandardImpl implements QualifiedObject
 
 	private record CatalogNameFormat(String catalogSeparator) implements Format {
 		@Override
-			public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect) {
-				final var formatted = new StringBuilder();
-				if ( catalog != null ) {
-					formatted.append( render( catalog, dialect ) ).append( catalogSeparator );
-				}
-				formatted.append( render( name, dialect ) );
-				return formatted.toString();
+		@Nonnull
+		public String format(
+				@Nullable Identifier catalog,
+				@Nullable Identifier schema,
+				@Nonnull Identifier name,
+				@Nonnull Dialect dialect) {
+			final var formatted = new StringBuilder();
+			if ( catalog != null ) {
+				formatted.append( catalog.render( dialect ) ).append( catalogSeparator );
 			}
+			formatted.append( name.render( dialect ) );
+			return formatted.toString();
 		}
+	}
 
 	private record SchemaNameFormat() implements Format {
 		/**
@@ -169,12 +199,17 @@ public class QualifiedObjectNameFormatterStandardImpl implements QualifiedObject
 		 */
 		public static final SchemaNameFormat INSTANCE = new SchemaNameFormat();
 		@Override
-		public String format(Identifier catalog, Identifier schema, Identifier name, Dialect dialect) {
+		@Nonnull
+		public String format(
+				@Nullable Identifier catalog,
+				@Nullable Identifier schema,
+				@Nonnull Identifier name,
+				@Nonnull Dialect dialect) {
 			final var formatted = new StringBuilder();
 			if ( schema != null ) {
-				formatted.append( render( schema, dialect ) ).append( '.' );
+				formatted.append( schema.render( dialect ) ).append( '.' );
 			}
-			formatted.append( render( name, dialect ) );
+			formatted.append( name.render( dialect ) );
 			return formatted.toString();
 		}
 	}

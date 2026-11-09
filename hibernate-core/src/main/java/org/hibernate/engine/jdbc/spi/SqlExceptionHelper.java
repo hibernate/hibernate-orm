@@ -7,6 +7,8 @@ import java.sql.Statement;
 import java.util.Objects;
 import java.util.function.Supplier;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.JDBCException;
 import org.hibernate.exception.internal.SQLStateConversionDelegate;
 import org.hibernate.exception.internal.StandardSQLExceptionConverter;
@@ -193,14 +195,14 @@ public class SqlExceptionHelper {
 		 *
 		 * @param warning The first warning in the stack.
 		 */
-		void prepare(SQLWarning warning);
+		void prepare(@Nonnull SQLWarning warning);
 
 		/**
 		 * Handle an individual warning in the stack.
 		 *
 		 * @param warning The warning to handle.
 		 */
-		void handleWarning(SQLWarning warning);
+		void handleWarning(@Nonnull SQLWarning warning);
 	}
 
 	/**
@@ -208,7 +210,7 @@ public class SqlExceptionHelper {
 	 */
 	public abstract static class WarningHandlerLoggingSupport implements WarningHandler {
 		@Override
-		public void handleWarning(SQLWarning warning) {
+		public void handleWarning(@Nonnull SQLWarning warning) {
 			logWarning(
 					"SQL Warning Code: " + warning.getErrorCode() + ", SQLState: " + warning.getSQLState(),
 					warning.getMessage()
@@ -221,21 +223,21 @@ public class SqlExceptionHelper {
 		 * @param description A description of the warning
 		 * @param message The warning message
 		 */
-		protected abstract void logWarning(String description, String message);
+		protected abstract void logWarning(@Nonnull String description, @Nullable String message);
 	}
 
 	/**
 	 * Standard SQLWarning handler for logging warnings
 	 */
 	public static class StandardWarningHandler extends WarningHandlerLoggingSupport {
-		private final String introMessage;
+		private final @Nonnull String introMessage;
 
 		/**
 		 * Creates a StandardWarningHandler
 		 *
 		 * @param introMessage The introduction message for the hierarchy
 		 */
-		public StandardWarningHandler(String introMessage) {
+		public StandardWarningHandler(@Nonnull String introMessage) {
 			this.introMessage = introMessage;
 		}
 
@@ -245,18 +247,18 @@ public class SqlExceptionHelper {
 		}
 
 		@Override
-		public void prepare(SQLWarning warning) {
+		public void prepare(@Nonnull SQLWarning warning) {
 			WARNING_LOG.debug( introMessage, warning );
 		}
 
 		@Override
-		public final void handleWarning(SQLWarning warning) {
+		public final void handleWarning(@Nonnull SQLWarning warning) {
 			WARNING_LOG.logErrorCodes( warning.getErrorCode(), warning.getSQLState() );
 			WARNING_LOG.warn( warning.getMessage() );
 		}
 
 		@Override
-		protected void logWarning(String description, String message) {
+		protected void logWarning(@Nonnull String description, @Nullable String message) {
 			WARNING_LOG.warn( description );
 			WARNING_LOG.warn( message );
 		}

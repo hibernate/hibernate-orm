@@ -1,5 +1,7 @@
 package org.hibernate.dialect.identifier.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.SPI;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -28,13 +30,13 @@ import static org.hibernate.SPI.Role.USE;
 /// @see IdentifierSupport#buildIdentifierHelper(IdentifierHelperBuildRequest)
 @SPI({ USE, IMPLEMENT })
 public abstract class DelegatingIdentifierHelper implements IdentifierHelper {
-	private final IdentifierHelper delegate;
+	private final @Nonnull IdentifierHelper delegate;
 
 	/// Create a decorator around the non-null configured helper.
 	///
 	/// @since 8.0
 	@SPI(IMPLEMENT)
-	protected DelegatingIdentifierHelper(IdentifierHelper delegate) {
+	protected DelegatingIdentifierHelper(@Nonnull IdentifierHelper delegate) {
 		this.delegate = requireNonNull( delegate, "delegate" );
 	}
 
@@ -42,61 +44,70 @@ public abstract class DelegatingIdentifierHelper implements IdentifierHelper {
 	///
 	/// @since 8.0
 	@SPI(USE)
+	@Nonnull
 	protected final IdentifierHelper delegate() {
 		return delegate;
 	}
 
 	@Override
 	@SPI({ USE, IMPLEMENT })
-	public Identifier normalizeQuoting(Identifier identifier) {
+	@Nullable
+	public Identifier normalizeQuoting(@Nullable Identifier identifier) {
 		return delegate.normalizeQuoting( identifier );
 	}
 
 	@Override
 	@SPI({ USE, IMPLEMENT })
-	public Identifier toIdentifier(String text) {
+	@Nullable
+	public Identifier toIdentifier(@Nullable String text) {
 		return delegate.toIdentifier( text );
 	}
 
 	@Override
 	@SPI({ USE, IMPLEMENT })
-	public Identifier toIdentifier(String text, boolean quoted) {
+	@Nullable
+	public Identifier toIdentifier(@Nullable String text, boolean quoted) {
 		return delegate.toIdentifier( text, quoted );
 	}
 
 	@Override
 	@SPI({ USE, IMPLEMENT })
-	public Identifier toIdentifier(String text, boolean quoted, boolean isExplicit) {
+	@Nullable
+	public Identifier toIdentifier(@Nullable String text, boolean quoted, boolean isExplicit) {
 		return delegate.toIdentifier( text, quoted, isExplicit );
 	}
 
 	@Override
 	@SPI({ USE, IMPLEMENT })
-	public Identifier applyGlobalQuoting(String text) {
+	@Nullable
+	public Identifier applyGlobalQuoting(@Nullable String text) {
 		return delegate.applyGlobalQuoting( text );
 	}
 
 	@Override
 	@SPI({ USE, IMPLEMENT })
-	public boolean isReservedWord(String word) {
+	public boolean isReservedWord(@Nonnull String word) {
 		return delegate.isReservedWord( word );
 	}
 
 	@Override
 	@SPI({ USE, IMPLEMENT })
-	public String toMetaDataCatalogName(Identifier catalogIdentifier) {
+	@Nullable
+	public String toMetaDataCatalogName(@Nullable Identifier catalogIdentifier) {
 		return delegate.toMetaDataCatalogName( catalogIdentifier );
 	}
 
 	@Override
 	@SPI({ USE, IMPLEMENT })
-	public String toMetaDataSchemaName(Identifier schemaIdentifier) {
+	@Nullable
+	public String toMetaDataSchemaName(@Nullable Identifier schemaIdentifier) {
 		return delegate.toMetaDataSchemaName( schemaIdentifier );
 	}
 
 	@Override
 	@SPI({ USE, IMPLEMENT })
-	public String toMetaDataObjectName(Identifier identifier) {
+	@Nonnull
+	public String toMetaDataObjectName(@Nonnull Identifier identifier) {
 		return delegate.toMetaDataObjectName( identifier );
 	}
 }

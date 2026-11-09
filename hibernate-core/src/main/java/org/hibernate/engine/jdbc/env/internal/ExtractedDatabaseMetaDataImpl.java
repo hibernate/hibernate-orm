@@ -9,6 +9,7 @@ import java.util.Locale;
 import java.util.Set;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -36,19 +37,19 @@ import static org.hibernate.engine.jdbc.env.spi.SQLStateType.interpretReportedSQ
  */
 public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData {
 
-	private final JdbcEnvironment jdbcEnvironment;
-	private final JdbcConnectionAccess connectionAccess;
+	private final @Nonnull JdbcEnvironment jdbcEnvironment;
+	private final @Nullable JdbcConnectionAccess connectionAccess;
 
 	private final boolean supportsSchemas;
 	private final boolean supportsCatalogs;
-	private final String connectionCatalogName;
-	private final String connectionSchemaName;
-	private final IdentifierCaseStrategy unquotedIdentifierCaseStrategy;
-	private final IdentifierCaseStrategy quotedIdentifierCaseStrategy;
-	private final Set<String> sqlKeywords;
+	private final @Nullable String connectionCatalogName;
+	private final @Nullable String connectionSchemaName;
+	private final @Nonnull IdentifierCaseStrategy unquotedIdentifierCaseStrategy;
+	private final @Nonnull IdentifierCaseStrategy quotedIdentifierCaseStrategy;
+	private final @Nonnull Set<String> sqlKeywords;
 
-	private final String databaseProductName;
-	private final String databaseProductVersion;
+	private final @Nullable String databaseProductName;
+	private final @Nullable String databaseProductVersion;
 
 	private final boolean supportsRefCursors;
 	private final boolean supportsNamedParameters;
@@ -57,11 +58,11 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	private final boolean supportsBatchUpdates;
 	private final boolean supportsDataDefinitionInTransaction;
 	private final boolean doesDataDefinitionCauseTransactionCommit;
-	private final SQLStateType sqlStateType;
+	private final @Nullable SQLStateType sqlStateType;
 	private final int transactionIsolation;
 	private final int defaultTransactionIsolation;
-	private final String url;
-	private final String driver;
+	private final @Nullable String url;
+	private final @Nullable String driver;
 	private final int driverMajorVersion;
 	private final boolean jdbcMetadataAccessible;
 	private final int defaultFetchSize;
@@ -69,9 +70,9 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	//Lazily initialized: loading all sequence information upfront has been
 	//shown to be too slow in some cases. In this way we only load it
 	//when there is an actual need for these details.
-	private List<SequenceInformation> sequenceInformationList;
+	private @Nullable List<SequenceInformation> sequenceInformationList;
 
-	ExtractedDatabaseMetaDataImpl(JdbcEnvironment environment) {
+	ExtractedDatabaseMetaDataImpl(@Nonnull JdbcEnvironment environment) {
 		jdbcEnvironment = environment;
 		connectionAccess = null;
 		jdbcMetadataAccessible = false;
@@ -101,9 +102,9 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	}
 
 	ExtractedDatabaseMetaDataImpl(
-			JdbcEnvironment environment,
-			JdbcConnectionAccess connections,
-			DatabaseMetaData metaData)
+			@Nonnull JdbcEnvironment environment,
+			@Nonnull JdbcConnectionAccess connections,
+			@Nonnull DatabaseMetaData metaData)
 			throws SQLException {
 		jdbcEnvironment = environment;
 		connectionAccess = connections;
@@ -141,6 +142,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	}
 
 	@Override
+	@Nonnull
 	public JdbcEnvironment getJdbcEnvironment() {
 		return jdbcEnvironment;
 	}
@@ -186,51 +188,61 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	}
 
 	@Override
+	@Nullable
 	public SQLStateType getSqlStateType() {
 		return sqlStateType;
 	}
 
 	@Override
+	@Nullable
 	public String getConnectionCatalogName() {
 		return connectionCatalogName;
 	}
 
 	@Override
+	@Nullable
 	public String getConnectionSchemaName() {
 		return connectionSchemaName;
 	}
 
 	@Override
+	@Nonnull
 	public IdentifierCaseStrategy getUnquotedIdentifierCaseStrategy() {
 		return unquotedIdentifierCaseStrategy;
 	}
 
 	@Override
+	@Nonnull
 	public IdentifierCaseStrategy getQuotedIdentifierCaseStrategy() {
 		return quotedIdentifierCaseStrategy;
 	}
 
 	@Override
+	@Nonnull
 	public Set<String> getSqlKeywords() {
 		return sqlKeywords;
 	}
 
 	@Override
+	@Nullable
 	public String getDatabaseProductName() {
 		return databaseProductName;
 	}
 
 	@Override
+	@Nullable
 	public String getDatabaseProductVersion() {
 		return databaseProductVersion;
 	}
 
 	@Override
+	@Nullable
 	public String getUrl() {
 		return url;
 	}
 
 	@Override
+	@Nullable
 	public String getDriver() {
 		return driver;
 	}
@@ -255,14 +267,15 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	}
 
 	@Override
+	@Nonnull
 	public synchronized List<SequenceInformation> getSequenceInformationList() {
-		if ( jdbcMetadataAccessible ) {
+		if ( connectionAccess != null ) {
 			//Loading the sequence information can take a while on large databases,
 			//even minutes in some cases.
 			//We trigger this lazily as only certain combinations of configurations,
 			//mappings and used features actually trigger any use of such details.
 			if ( sequenceInformationList == null ) {
-				sequenceInformationList = sequenceInformationList();
+				sequenceInformationList = sequenceInformationList( connectionAccess );
 			}
 			return sequenceInformationList;
 		}
@@ -277,7 +290,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		return jdbcMetadataAccessible;
 	}
 
-	private static int defaultFetchSize(Connection connection) {
+	private static int defaultFetchSize(@Nonnull Connection connection) {
 		try ( var statement = connection.createStatement() ) {
 			return statement.getFetchSize();
 		}
@@ -286,7 +299,8 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		}
 	}
 
-	private static IdentifierCaseStrategy unquotedIdentifierCaseStrategy(DatabaseMetaData metadata)
+	@Nonnull
+	private static IdentifierCaseStrategy unquotedIdentifierCaseStrategy(@Nonnull DatabaseMetaData metadata)
 			throws SQLException {
 		final boolean lower = metadata.storesLowerCaseIdentifiers();
 		final boolean upper = metadata.storesUpperCaseIdentifiers();
@@ -302,7 +316,8 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		return upper ? UPPER : lower ? LOWER : MIXED;
 	}
 
-	private static IdentifierCaseStrategy quotedIdentifierCaseStrategy(DatabaseMetaData metadata)
+	@Nonnull
+	private static IdentifierCaseStrategy quotedIdentifierCaseStrategy(@Nonnull DatabaseMetaData metadata)
 			throws SQLException {
 		final boolean lower = metadata.storesLowerCaseQuotedIdentifiers();
 		final boolean upper = metadata.storesUpperCaseQuotedIdentifiers();
@@ -318,7 +333,8 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		return mixed ? MIXED : lower ? LOWER : UPPER;
 	}
 
-	private static Set<String> sqlKeywords(String keywordList) {
+	@Nonnull
+	private static Set<String> sqlKeywords(@Nullable String keywordList) {
 		final var keywords = new HashSet<String>();
 		for ( String keyword : splitAtCommas( keywordList ) ) {
 			final String normalized = keyword.trim().toLowerCase( Locale.ROOT );
@@ -329,7 +345,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		return Set.copyOf( keywords );
 	}
 
-	private static boolean reportedNamedParameterSupport(DatabaseMetaData metadata) {
+	private static boolean reportedNamedParameterSupport(@Nonnull DatabaseMetaData metadata) {
 		try {
 			return metadata.supportsNamedParameters();
 		}
@@ -338,7 +354,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		}
 	}
 
-	private static boolean reportedBatchUpdateSupport(DatabaseMetaData metadata) {
+	private static boolean reportedBatchUpdateSupport(@Nonnull DatabaseMetaData metadata) {
 		try {
 			return metadata.supportsBatchUpdates();
 		}
@@ -347,7 +363,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		}
 	}
 
-	private static boolean reportedRefCursorSupport(DatabaseMetaData metadata) {
+	private static boolean reportedRefCursorSupport(@Nonnull DatabaseMetaData metadata) {
 		try {
 			return metadata.supportsRefCursors();
 		}
@@ -356,7 +372,8 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		}
 	}
 
-	private static String driverName(DatabaseMetaData metadata) {
+	@Nullable
+	private static String driverName(@Nonnull DatabaseMetaData metadata) {
 		try {
 			return metadata.getDriverName();
 		}
@@ -365,7 +382,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		}
 	}
 
-	private static int driverMajorVersion(DatabaseMetaData metadata, String driverName) {
+	private static int driverMajorVersion(@Nonnull DatabaseMetaData metadata, @Nullable String driverName) {
 		if ( !"Oracle JDBC driver".equals( driverName ) ) {
 			return -1;
 		}
@@ -382,7 +399,8 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	 *
 	 * @return sequence information List
 	 */
-	private List<SequenceInformation> sequenceInformationList() {
+	@Nonnull
+	private List<SequenceInformation> sequenceInformationList(@Nonnull JdbcConnectionAccess connectionAccess) {
 		Connection connection = null;
 		try {
 			connection = connectionAccess.obtainConnection();
@@ -404,7 +422,10 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		}
 	}
 
-	private static Iterable<SequenceInformation> sequenceInformation(Connection connection, JdbcEnvironment jdbcEnvironment)
+	@Nonnull
+	private static Iterable<SequenceInformation> sequenceInformation(
+			@Nonnull Connection connection,
+			@Nonnull JdbcEnvironment jdbcEnvironment)
 			throws SQLException {
 		return jdbcEnvironment.getDialect().getSequenceInformationExtractor().extractMetadata(
 				new ExtractionContext.EmptyExtractionContext() {

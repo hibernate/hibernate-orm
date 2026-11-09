@@ -13,12 +13,14 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 
+import static java.util.Objects.requireNonNull;
+
 /**
 * @author Steve Ebersole
 */
 public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 
-	private final @Nullable JdbcEnvironment jdbcEnvironment;
+	private final @Nonnull JdbcEnvironment jdbcEnvironment;
 
 	private final @Nonnull NameQualifierSupport nameQualifierSupport;
 	private final boolean globallyQuoteIdentifiers;
@@ -31,7 +33,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 	private final @Nonnull IdentifierCaseStrategy quotedCaseStrategy;
 
 	public NormalizingIdentifierHelperImpl(
-			@Nullable JdbcEnvironment jdbcEnvironment,
+			@Nonnull JdbcEnvironment jdbcEnvironment,
 			@Nonnull NameQualifierSupport nameQualifierSupport,
 			boolean globallyQuoteIdentifiers,
 			boolean globallyQuoteIdentifiersSkipColumnDefinitions,
@@ -41,7 +43,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 			@Nonnull TreeSet<String> reservedWords, //careful, we intentionally omit making a defensive copy to not waste memory
 			@Nullable IdentifierCaseStrategy unquotedCaseStrategy,
 			@Nullable IdentifierCaseStrategy quotedCaseStrategy) {
-		this.jdbcEnvironment = jdbcEnvironment;
+		this.jdbcEnvironment = requireNonNull( jdbcEnvironment, "jdbcEnvironment" );
 		this.nameQualifierSupport = nameQualifierSupport;
 		this.globallyQuoteIdentifiers = globallyQuoteIdentifiers;
 		this.globallyQuoteIdentifiersSkipColumnDefinitions = globallyQuoteIdentifiersSkipColumnDefinitions;
@@ -118,10 +120,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 			return null;
 		}
 		else {
-			final var id =
-					identifier == null && jdbcEnvironment != null
-							? jdbcEnvironment.getCurrentCatalog()
-							: identifier;
+			final var id = identifier == null ? jdbcEnvironment.getCurrentCatalog() : identifier;
 			return id == null ? "" : toMetaDataText( id );
 		}
 	}
@@ -160,10 +159,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 			return null;
 		}
 		else {
-			final var id =
-					identifier == null && jdbcEnvironment != null
-							? jdbcEnvironment.getCurrentSchema()
-							: identifier;
+			final var id = identifier == null ? jdbcEnvironment.getCurrentSchema() : identifier;
 			return id == null ? "" : toMetaDataText( id );
 		}
 

@@ -1,6 +1,5 @@
 package org.example.orm.dialect;
 
-import java.lang.reflect.Proxy;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -22,6 +21,8 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /// Exercises sequence metadata extraction from a standalone Dialect provider.
 ///
@@ -30,14 +31,9 @@ public class ExampleSequenceInformationExtractorTest {
 	@Test
 	void extractsProviderDefinedMapping() throws SQLException {
 		final ResultSet rows = fixtureRows();
-		final var identifierHelper = IdentifierHelperBuilder.from( null ).build();
-		final JdbcEnvironment jdbcEnvironment = (JdbcEnvironment) Proxy.newProxyInstance(
-				JdbcEnvironment.class.getClassLoader(),
-				new Class<?>[] { JdbcEnvironment.class },
-				(proxy, method, arguments) -> method.getName().equals( "getIdentifierHelper" )
-						? identifierHelper
-						: null
-		);
+		final JdbcEnvironment jdbcEnvironment = mock( JdbcEnvironment.class );
+		final var identifierHelper = IdentifierHelperBuilder.from( jdbcEnvironment ).build();
+		when( jdbcEnvironment.getIdentifierHelper() ).thenReturn( identifierHelper );
 		final AtomicReference<String> query = new AtomicReference<>();
 		final ExtractionContext context = new ExtractionContext.EmptyExtractionContext() {
 			@Override

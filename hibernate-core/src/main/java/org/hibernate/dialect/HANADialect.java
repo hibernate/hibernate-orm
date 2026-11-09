@@ -1,5 +1,6 @@
 package org.hibernate.dialect;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.dialect.identifier.spi.KeywordRegistration;
 
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
@@ -947,22 +948,26 @@ public class HANADialect extends Dialect implements CurrentTemporalSupport, Temp
 
 		return new DelegatingIdentifierHelper( identifierHelper ) {
 			@Override
-			public Identifier toIdentifier(String text) {
+			@Nullable
+			public Identifier toIdentifier(@Nullable String text) {
 				return normalizeQuoting( Identifier.toIdentifier( text ) );
 			}
 
 			@Override
-			public Identifier toIdentifier(String text, boolean quoted) {
+			@Nullable
+			public Identifier toIdentifier(@Nullable String text, boolean quoted) {
 				return normalizeQuoting( Identifier.toIdentifier( text, quoted ) );
 			}
 
 			@Override
-			public Identifier toIdentifier(String text, boolean quoted, boolean isExplicit) {
+			@Nullable
+			public Identifier toIdentifier(@Nullable String text, boolean quoted, boolean isExplicit) {
 				return normalizeQuoting( Identifier.toIdentifier( text, quoted, false, isExplicit ) );
 			}
 
 			@Override
-			public Identifier normalizeQuoting(Identifier identifier) {
+			@Nullable
+			public Identifier normalizeQuoting(@Nullable Identifier identifier) {
 				Identifier normalizedIdentifier = super.normalizeQuoting( identifier );
 
 				if ( normalizedIdentifier == null ) {

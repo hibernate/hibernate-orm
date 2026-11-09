@@ -3,6 +3,7 @@ package org.hibernate.engine.jdbc.env.spi;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.SPI;
 import org.hibernate.dialect.Dialect;
@@ -23,5 +24,5 @@ import static org.hibernate.SPI.Role.USE;
 @SPI({ USE, IMPLEMENT, SUPPLY })
 public interface SchemaNameResolver {
 	/// Resolve the current schema name without closing `connection`.
-	@Nullable String resolveSchemaName(Connection connection, Dialect dialect) throws SQLException;
+	@Nullable String resolveSchemaName(@Nonnull Connection connection, @Nonnull Dialect dialect) throws SQLException;
 }

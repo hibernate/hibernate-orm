@@ -1,5 +1,7 @@
 package org.hibernate.engine.jdbc.env.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.dialect.lock.spi.TransactionConcurrency;
 
 import org.hibernate.boot.model.naming.Identifier;
@@ -20,8 +22,10 @@ public interface JdbcEnvironment extends Service {
 	 *
 	 * @return The dialect.
 	 */
+	@Nonnull
 	Dialect getDialect();
 
+	@Nonnull
 	SqlAstTranslatorFactory getSqlAstTranslatorFactory();
 
 	/// Obtain the stable effective JDBC metadata view for this environment.
@@ -31,11 +35,13 @@ public interface JdbcEnvironment extends Service {
 	/// requires driver observations.
 	///
 	/// @since 8.0
+	@Nonnull
 	JdbcMetadata getJdbcMetadata();
 
 	/// Immutable concurrency baseline resolved before factory SQL generation.
 	/// Factory connections must use a consistent isolation configuration.
 	/// No connection settings are changed by resolution.
+	@Nonnull
 	TransactionConcurrency getTransactionConcurrency();
 
 	/// Obtain the raw JDBC driver and bootstrap-connection observations.
@@ -45,6 +51,7 @@ public interface JdbcEnvironment extends Service {
 	/// intentional raw access, use
 	/// `getJdbcMetadata().getExtractedDatabaseMetaData()`.
 	@Deprecated(since = "8.0")
+	@Nonnull
 	ExtractedDatabaseMetaData getExtractedDatabaseMetaData();
 
 	/**
@@ -52,19 +59,21 @@ public interface JdbcEnvironment extends Service {
 	 * {@link java.sql.Connection#getCatalog()} or
 	 * {@value org.hibernate.cfg.AvailableSettings#DEFAULT_CATALOG}.
 	 *
-	 * @return The current catalog.
+	 * @return The current catalog, or {@code null} if unknown.
 	 */
+	@Nullable
 	Identifier getCurrentCatalog();
 
 	/**
-	 * Get the current database catalog.  Typically, will come from either
+	 * Get the current database schema.  Typically, will come from either
 	 * {@link java.sql.Connection#getSchema()} or
 	 * {@value org.hibernate.cfg.AvailableSettings#DEFAULT_SCHEMA}.
 	 *
 	 * @see org.hibernate.engine.jdbc.env.spi.SchemaNameResolver
 	 *
-	 * @return The current schema
+	 * @return The current schema, or {@code null} if unknown.
 	 */
+	@Nullable
 	Identifier getCurrentSchema();
 
 	/**
@@ -74,6 +83,7 @@ public interface JdbcEnvironment extends Service {
 	 * @deprecated Use a provided {@link org.hibernate.boot.model.relational.SqlStringGenerationContext} instead.
 	 */
 	@Deprecated
+	@Nonnull
 	QualifiedObjectNameFormatter getQualifiedObjectNameFormatter();
 
 	/**
@@ -84,6 +94,7 @@ public interface JdbcEnvironment extends Service {
 	 *
 	 * @return The identifier helper.
 	 */
+	@Nonnull
 	IdentifierHelper getIdentifierHelper();
 
 	/**
@@ -91,6 +102,7 @@ public interface JdbcEnvironment extends Service {
 	 *
 	 * @return The NameQualifierSupport.
 	 */
+	@Nonnull
 	NameQualifierSupport getNameQualifierSupport();
 
 	/**
@@ -98,6 +110,7 @@ public interface JdbcEnvironment extends Service {
 	 *
 	 * @return This environment's helper.
 	 */
+	@Nonnull
 	SqlExceptionHelper getSqlExceptionHelper();
 
 	/**
@@ -105,5 +118,6 @@ public interface JdbcEnvironment extends Service {
 	 *
 	 * @return The LobCreator builder.
 	 */
+	@Nonnull
 	LobCreatorBuilder getLobCreatorBuilder();
 }

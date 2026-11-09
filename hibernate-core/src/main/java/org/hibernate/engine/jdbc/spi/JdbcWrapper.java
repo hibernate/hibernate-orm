@@ -1,5 +1,6 @@
 package org.hibernate.engine.jdbc.spi;
 
+import jakarta.annotation.Nonnull;
 
 /**
  * Generic contract for wrapped JDBC objects.
@@ -14,5 +15,6 @@ public interface JdbcWrapper<T> {
 	 *
 	 * @return The wrapped object
 	 */
+	@Nonnull
 	T getWrappedObject();
 }

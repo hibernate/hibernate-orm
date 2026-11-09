@@ -1,5 +1,7 @@
 package org.hibernate.engine.jdbc.env.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
 
@@ -13,13 +15,14 @@ import java.sql.SQLException;
  * @author Steve Ebersole
  */
 public class DefaultSchemaNameResolver implements SchemaNameResolver {
-	public static final DefaultSchemaNameResolver INSTANCE = new DefaultSchemaNameResolver();
+	public static final @Nonnull DefaultSchemaNameResolver INSTANCE = new DefaultSchemaNameResolver();
 
 	private DefaultSchemaNameResolver() {
 	}
 
 	@Override
-	public String resolveSchemaName(Connection connection, Dialect dialect) throws SQLException {
+	@Nullable
+	public String resolveSchemaName(@Nonnull Connection connection, @Nonnull Dialect dialect) throws SQLException {
 		try {
 			return connection.getSchema();
 		}

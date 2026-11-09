@@ -47,7 +47,7 @@ public final class PersistenceUnitJdbcServices implements JdbcServices {
 	@Override
 	@Nonnull
 	public Dialect getDialect() {
-		return requireNonNull( delegate.getDialect(), "Session factory has no dialect" );
+		return delegate.getDialect();
 	}
 
 	@Override

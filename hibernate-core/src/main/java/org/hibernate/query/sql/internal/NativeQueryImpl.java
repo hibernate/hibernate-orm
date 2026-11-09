@@ -173,7 +173,8 @@ public class NativeQueryImpl<R>
 		resultType = null;
 		resultMappingType = null;
 		var resultSetMappingProducer = factory.getJdbcValuesMappingProducerProvider();
-		resultSetMapping = resultSetMappingProducer.buildResultSetMapping( sqlString, true, factory );
+		// Preserve parameter names and positions in the mapping identifier used by the query plan cache.
+		resultSetMapping = resultSetMappingProducer.buildResultSetMapping( originalSqlString, true, factory );
 		resultMappingSuppliedToCtor = false;
 	}
 

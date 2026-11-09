@@ -30,7 +30,6 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.ModuleElement;
-import javax.lang.model.element.Name;
 import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
@@ -94,7 +93,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	private final boolean indexing;
 	private final Map<String, String> entityNameMappings;
 	private final Map<String, Set<String>> enumTypesByValue;
-	private final @Nullable Name queryPackageName;
+	private final @Nullable PackageElement queryPackage;
 
 	public ProcessorSessionFactory(
 			ProcessingEnvironment processingEnvironment,
@@ -110,10 +109,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		this.indexing = indexing;
 		this.entityNameMappings = entityNameMappings;
 		this.enumTypesByValue = enumTypesByValue;
-		this.queryPackageName =
-				queryElement == null
-						? null
-						: elementUtil.getPackageOf(queryElement).getQualifiedName();
+		this.queryPackage = queryElement == null ? null : elementUtil.getPackageOf( queryElement );
 	}
 
 	@Override
@@ -552,6 +548,16 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 			}
 		}
 
+		// An inaccessible entity from another persistence unit may have shadowed
+		// this package's entity in the index, which stores one class per name.
+		if ( queryPackage != null ) {
+			final var localEntity = findEntityInQueryPackage( entityName, queryPackage );
+			if ( localEntity != null ) {
+				entityCache.put( entityName, localEntity );
+				return localEntity;
+			}
+		}
+
 		var symbol =
 				findEntityByUnqualifiedName(entityName,
 						elementUtil.getModuleElement(""));
@@ -619,11 +625,33 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		return null;
 	}
 
+	private static @Nullable TypeElement findEntityInQueryPackage(String entityName, Element scope) {
+		for ( var member : scope.getEnclosedElements() ) {
+			if ( member instanceof TypeElement type && !type.getModifiers().contains( Modifier.PRIVATE ) ) {
+				if ( isMatchingEntity( type, entityName ) ) {
+					return type;
+				}
+				final var nestedEntity = findEntityInQueryPackage( entityName, type );
+				if ( nestedEntity != null ) {
+					return nestedEntity;
+				}
+			}
+		}
+		return null;
+	}
+
 	private boolean isVisibleFromQueryPackage(Element symbol) {
-		return symbol.getModifiers().contains( Modifier.PUBLIC )
-			|| queryPackageName == null
-			|| elementUtil.getPackageOf(symbol).getQualifiedName()
-					.contentEquals( queryPackageName );
+		if ( queryPackage == null ) {
+			return true;
+		}
+		final boolean samePackage = queryPackage.equals( elementUtil.getPackageOf( symbol ) );
+		for ( var type = symbol; type instanceof TypeElement; type = type.getEnclosingElement() ) {
+			final var modifiers = type.getModifiers();
+			if ( modifiers.contains( Modifier.PRIVATE ) || !samePackage && !modifiers.contains( Modifier.PUBLIC ) ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	private static boolean isMatchingEntity(Element symbol, String entityName) {

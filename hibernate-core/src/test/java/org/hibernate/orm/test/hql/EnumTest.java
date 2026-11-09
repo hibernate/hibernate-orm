@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.hql;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -19,6 +22,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SessionFactory
 @Jira("https://hibernate.atlassian.net/browse/HHH-16861")
 @Jira("https://hibernate.atlassian.net/browse/HHH-18708")
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 public class EnumTest {
 
 

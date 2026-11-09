@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<entity-mappings xmlns="https://jakarta.ee/xml/ns/persistence/orm" version="3.2">
+    <entity class="org.hibernate.orm.test.mapping.javatime.redesign.context.TemporalPreservingNamedVersionTests$Named" access="FIELD">
+        <table name="preserving_named_version"/>
+        <attributes>
+            <id name="id"/>
+            <basic name="payload"/>
+            <version name="stamp"/>
+        </attributes>
+    </entity>
+</entity-mappings>

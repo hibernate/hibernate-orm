@@ -102,4 +102,18 @@ public abstract class DelegatingTemporalTableSupport implements TemporalTableSup
 	public TemporalTableStrategy getDefaultTemporalTableStrategy() {
 		return delegate.getDefaultTemporalTableStrategy();
 	}
+
+	@Override
+	public org.hibernate.type.descriptor.jdbc.JdbcType getPreservingTemporalJdbcType(
+			TemporalTableStrategy strategy,
+			org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry registry) {
+		return delegate.getPreservingTemporalJdbcType( strategy, registry );
+	}
+
+	@Override
+	public String getPreservingTemporalCurrentTimestampExpression(
+			TemporalTableStrategy strategy, org.hibernate.type.descriptor.jdbc.JdbcType jdbcType) {
+		return delegate.getPreservingTemporalCurrentTimestampExpression( strategy, jdbcType );
+	}
+
 }

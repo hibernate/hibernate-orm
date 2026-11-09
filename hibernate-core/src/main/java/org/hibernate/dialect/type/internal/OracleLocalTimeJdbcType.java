@@ -14,6 +14,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.internal.SetObjectBinder;
 
 /// Oracle LocalTime handling through zone-less LocalDateTime fields. The anchor
@@ -30,6 +31,16 @@ public final class OracleLocalTimeJdbcType extends LocalTimeJdbcType {
 	@Override
 	public int getDdlTypeCode() {
 		return Types.TIMESTAMP;
+	}
+
+	@Override
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
+		return (appender, value, dialect, options) -> dialect.getLiteralSupport().appendDateTimeLiteral(
+				appender,
+				javaType.unwrap( value, LocalTime.class, options ).atDate( ANCHOR ),
+				jakarta.persistence.TemporalType.TIMESTAMP,
+				java.util.TimeZone.getTimeZone( "UTC" )
+		);
 	}
 
 	@Override

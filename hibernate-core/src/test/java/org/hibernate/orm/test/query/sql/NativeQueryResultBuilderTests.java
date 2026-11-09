@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.query.sql;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.Types;
@@ -53,6 +56,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 		standardModels = StandardDomainModel.GAMBIT
 )
 @SessionFactory
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 public class NativeQueryResultBuilderTests {
 	public static final String STRING_VALUE = "a string value";
 	public static final String URL_STRING = "http://hibernate.org";

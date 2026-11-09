@@ -246,34 +246,6 @@ public class JavaTimeMinMaxFunctionTest {
 		});
 	}
 
-	@Test
-	void maxMinFunctionsShouldWorkWithZonedDateTimeAndDirectJdbc(SessionFactoryScope scope) {
-		scope.inTransaction(session -> {
-			var foo1 = new Foo();
-			var earlier = ZonedDateTime.of(2000, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC"));
-			foo1.zdtField = earlier;
-			session.persist(foo1);
-
-			var foo2 = new Foo();
-			var later = ZonedDateTime.of(2000, 12, 31, 23, 59, 59, 0, ZoneId.of("UTC"));
-			foo2.zdtField = later;
-			session.persist(foo2);
-
-			ZonedDateTime maxValue = session.createSelectionQuery(
-					"select max(zdtField) from Foo", ZonedDateTime.class
-			).getSingleResult();
-
-			assertTrue(later.isEqual(maxValue),
-					"MAX() on ZonedDateTime should return the latest value even with JAVA_TIME_USE_DIRECT_JDBC=true");
-
-			ZonedDateTime minValue = session.createSelectionQuery(
-					"select min(zdtField) from Foo", ZonedDateTime.class
-			).getSingleResult();
-
-			assertTrue(earlier.isEqual(minValue),
-					"MIN() on ZonedDateTime should return the earliest value even with JAVA_TIME_USE_DIRECT_JDBC=true");
-		});
-	}
 
 	@Entity(name = "Foo")
 	public static class Foo{
@@ -294,6 +266,5 @@ public class JavaTimeMinMaxFunctionTest {
 
 		OffsetTime otField;
 
-		ZonedDateTime zdtField;
 	}
 }

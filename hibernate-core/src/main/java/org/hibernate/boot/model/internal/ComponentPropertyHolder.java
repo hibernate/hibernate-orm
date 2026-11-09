@@ -211,7 +211,8 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 					final var configuration = TemporalMappingConfiguration.resolve( embeddedMemberDetails, domain, context );
 					throw new org.hibernate.MappingException( configuration.adjustment() != null
 							? "User converter and timezone adjustment cannot be combined for '" + getPath() + "'"
-							: "Whole-value user converter cannot be applied to temporal COLUMN mapping '" + getPath() + "'" );
+							: "Whole-value user converter cannot be applied to temporal COLUMN mapping '" + getPath()
+									+ "'. Use a compatible INLINE conversion mapping or explicitly disable conversion for COLUMN storage." );
 				}
 				throw new IllegalStateException( "Convert placed on Embedded attribute must define (sub)attributeName" );
 			}

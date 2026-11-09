@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.hql;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -15,6 +18,8 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @DomainModel(standardModels = StandardDomainModel.GAMBIT)
 @SessionFactory
 @JiraKey("HHH-18089")
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 public class StringBracketSyntaxTest {
 
 	@BeforeAll

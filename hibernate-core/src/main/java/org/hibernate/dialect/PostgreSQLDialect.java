@@ -1679,4 +1679,12 @@ public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport
 	public TemporalTableSupport getTemporalTableSupport() {
 		return new PostgreSQLTemporalTableSupport( this );
 	}
+
+	@Override
+	public org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection getCurrentTimestampSelection(
+			org.hibernate.type.descriptor.java.JavaType<?> javaType,
+			org.hibernate.type.descriptor.jdbc.JdbcType jdbcType) {
+		return org.hibernate.dialect.temporaltype.internal.PreservingCurrentTimestamp.selection( this, javaType, jdbcType );
+	}
+
 }

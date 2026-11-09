@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.query.criteria;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
@@ -52,6 +55,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @DomainModel(standardModels = StandardDomainModel.GAMBIT)
 @SessionFactory
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 public class CriteriaBuilderNonStandardFunctionsTest {
 
 	private final static String DATETIME_PATTERN = "yyyy-MM-dd HH:mm:ss";

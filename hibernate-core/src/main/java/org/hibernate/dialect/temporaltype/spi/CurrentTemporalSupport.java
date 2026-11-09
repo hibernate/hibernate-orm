@@ -66,4 +66,13 @@ public interface CurrentTemporalSupport {
 	default boolean isCurrentTimestampStable() {
 		return false;
 	}
+
+	/// Select a current value encoded for this exact Java/JDBC pair. A null result
+	/// means typed DB generation is unsupported; it must not fall back to Timestamp.
+	default @Nullable CurrentTimestampSelection getCurrentTimestampSelection(
+			org.hibernate.type.descriptor.java.JavaType<?> javaType,
+			org.hibernate.type.descriptor.jdbc.JdbcType jdbcType) {
+		return null;
+	}
+
 }

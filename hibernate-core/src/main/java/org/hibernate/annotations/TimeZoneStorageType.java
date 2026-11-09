@@ -26,7 +26,7 @@ import org.hibernate.type.TimeZoneStorageStrategy;
  * </ul>
  * <p>
  * The strategy descriptions below describe legacy explicit conversion with
- * {@code hibernate.type.java_time_use_direct_jdbc=false}. Direct-enabled handling
+ * {@code hibernate.type.temporal_preservation=false}. Direct-enabled handling
  * separates representation from adjustment and validates preservation; it does
  * not select a weaker guarantee automatically.
  * <p>
@@ -62,7 +62,7 @@ import org.hibernate.type.TimeZoneStorageStrategy;
  *
  * @deprecated Since 8.0, use {@link TimeZoneRepresentation} to select storage and
  * {@link TimeZoneAdjustment} to request an explicit timezone adjustment. With
- * {@code hibernate.type.java_time_use_direct_jdbc=true}, legacy {@code COLUMN}
+ * {@code hibernate.type.temporal_preservation=true}, legacy {@code COLUMN}
  * selects {@code TimeZoneRepresentation.Type.COLUMN}; {@code NORMALIZE_UTC}
  * contributes INLINE storage and UTC adjustment. Legacy {@code NATIVE} retains
  * its native-handling constraint. {@code NORMALIZE}, {@code AUTO}, and

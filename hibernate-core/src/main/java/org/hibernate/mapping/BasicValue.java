@@ -123,6 +123,7 @@ public class BasicValue extends SimpleValue
 	private ZoneId timeZoneAdjustment;
 	private boolean temporalValidationEnabled = true;
 	private String temporalRole;
+	private java.util.function.Supplier<String> systemPeriodContext;
 	private boolean temporalJdbcOverride;
 	private boolean isSoftDelete;
 	private SoftDeleteType softDeleteStrategy;
@@ -164,6 +165,7 @@ public class BasicValue extends SimpleValue
 		this.timeZoneAdjustment = original.timeZoneAdjustment;
 		this.temporalValidationEnabled = original.temporalValidationEnabled;
 		this.temporalRole = original.temporalRole;
+		this.systemPeriodContext = original.systemPeriodContext;
 		this.temporalJdbcOverride = original.temporalJdbcOverride;
 		this.resolvedJavaType = original.resolvedJavaType;
 		this.ownerName = original.ownerName;
@@ -225,8 +227,23 @@ public class BasicValue extends SimpleValue
 		temporalRole = owner + "." + property;
 	}
 
+	/**
+	 * Marks a Hibernate-owned system-period value for deferred diagnostic context.
+	 * Disabled preservation retains its legacy protocol; enabled preservation
+	 * validates the selected period descriptor and producer.
+	 */
+	public void setSystemPeriodContext(java.util.function.Supplier<String> context) {
+		systemPeriodContext = context;
+	}
+
 	private String temporalRole() {
-		return temporalRole == null ? ownerName + "." + propertyName : temporalRole;
+		if ( systemPeriodContext != null ) {
+			return systemPeriodContext.get();
+		}
+		final String role = temporalRole == null ? ownerName + "." + propertyName : temporalRole;
+		return isVersion() ? role + " [version, table=" + getTable().getName()
+				+ ", columns=" + getColumns().stream().map( Column::getName ).toList()
+				+ ", temporal_preservation=" + getBuildingContext().isTemporalPreservationEnabled() + "]" : role;
 	}
 
 	public void setTimeZoneAdjustment(ZoneId target) {
@@ -359,6 +376,7 @@ public class BasicValue extends SimpleValue
 			timeZoneAdjustment = basicValue.timeZoneAdjustment;
 			temporalValidationEnabled = basicValue.temporalValidationEnabled;
 			temporalRole = basicValue.temporalRole;
+			systemPeriodContext = basicValue.systemPeriodContext;
 			temporalJdbcOverride = basicValue.temporalJdbcOverride;
 			isSoftDelete = basicValue.isSoftDelete;
 			softDeleteStrategy = basicValue.softDeleteStrategy;
@@ -417,8 +435,22 @@ public class BasicValue extends SimpleValue
 		return true;
 	}
 
+	private JavaType<?> temporalPreservationJavaType() {
+		// Application conversion owns X -> Y; preservation is assessed for Y at JDBC.
+		return resolution.getValueConverter() instanceof JpaAttributeConverter<?,?> converter
+				? converter.getRelationalJavaType() : resolution.getDomainJavaType();
+	}
+
 	private void validateTemporalPrecision(Integer precision) {
 		if ( precision == null ) return;
+		if ( resolution.getValueConverter() instanceof JpaAttributeConverter<?,?> ) {
+			final Class<?> carrier = temporalPreservationJavaType().getJavaTypeClass();
+			if ( carrier != java.time.LocalDate.class && carrier != java.time.LocalTime.class
+					&& carrier != java.time.LocalDateTime.class && carrier != java.time.Instant.class
+					&& !TemporalMappingValidator.supportsRepresentation( carrier ) ) {
+				return;
+			}
+		}
 		if ( resolution.getJdbcType().getClass() == org.hibernate.type.descriptor.jdbc.TimeJdbcType.class && precision > 3 ) {
 			throw new MappingException( "Temporal mapping '" + temporalRole() + "' requires precision " + precision
 					+ " but java.sql.Time fallback supports at most millisecond precision" );
@@ -468,6 +500,22 @@ public class BasicValue extends SimpleValue
 
 	@Override
 	public Resolution<?> resolve() {
+		try {
+			return resolveInternal();
+		}
+		catch (MappingException failure) {
+			if ( systemPeriodContext == null ) {
+				throw failure;
+			}
+			throw new MappingException( "Unable to resolve system-period mapping '" + systemPeriodContext.get()
+					+ "'" + (resolution == null ? "" : " (JavaType="
+					+ resolution.getDomainJavaType().getTypeName() + ", JdbcType="
+					+ resolution.getJdbcType().getClass().getName() + ")")
+					+ ": " + failure.getMessage(), failure );
+		}
+	}
+
+	private Resolution<?> resolveInternal() {
 		if ( resolution != null ) {
 			return resolution;
 		}
@@ -480,12 +528,23 @@ public class BasicValue extends SimpleValue
 				throw new IllegalStateException( "Unable to resolve BasicValue: " + this );
 			}
 			else {
-				if ( temporalValidationEnabled && getBuildingContext().isPreferJavaTimeJdbcTypesEnabled() ) {
+				final boolean temporalHandling = (temporalValidationEnabled || isVersion())
+						&& getBuildingContext().isTemporalPreservationEnabled();
+				if ( temporalHandling ) {
+					if ( timeZoneStorageType == TimeZoneStorageType.NATIVE
+							&& TemporalMappingValidator.supportsRepresentation( resolution.getDomainJavaType().getJavaTypeClass() ) ) {
+						final int ddlType = resolution.getJdbcType().getDdlTypeCode();
+						if ( ddlType == org.hibernate.type.SqlTypes.DATE || ddlType == org.hibernate.type.SqlTypes.TIME
+								|| ddlType == org.hibernate.type.SqlTypes.TIMESTAMP
+								|| resolution.getRelationalJavaType().getJavaTypeClass() == String.class
+										&& resolution.getJdbcType().isString() ) {
+							throw new MappingException( "Temporal mapping '" + temporalRole()
+									+ "' requires native timezone storage but its JDBC type declares a plain temporal or string column; "
+									+ "select native handling or replace the legacy NATIVE policy with @TimeZoneRepresentation(INLINE)" );
+						}
+					}
 					validateTemporalPrecision( getColumnPrecision() );
-					TemporalMappingValidator.validate(
-							getDialect(), resolution.getDomainJavaType(), resolution.getJdbcType(), timeZoneAdjustment,
-							temporalRole(), resolution.getValueConverter() instanceof TemporalAdjustmentConverter<?> adjustment
-									&& adjustment.usesUtcTimeCarrier() );
+
 				}
 				final Size size;
 				if ( getColumn() instanceof Column column ) {
@@ -495,8 +554,12 @@ public class BasicValue extends SimpleValue
 				else {
 					size = Size.nil();
 				}
-				if ( temporalValidationEnabled && getBuildingContext().isPreferJavaTimeJdbcTypesEnabled() ) {
+				if ( temporalHandling ) {
 					validateTemporalPrecision( size.getPrecision() );
+					TemporalMappingValidator.validate(
+							getDialect(), temporalPreservationJavaType(), resolution.getJdbcType(), timeZoneAdjustment,
+							temporalRole(), resolution.getValueConverter() instanceof TemporalAdjustmentConverter<?> adjustment
+									&& adjustment.usesUtcTimeCarrier() );
 				}
 				resolution.getJdbcType().addAuxiliaryDatabaseObjects(
 						resolution.getRelationalJavaType(),

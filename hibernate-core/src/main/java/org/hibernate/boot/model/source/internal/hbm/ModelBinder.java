@@ -834,6 +834,7 @@ public class ModelBinder {
 				new BasicValue( sourceDocument, rootEntityDescriptor.getTable() );
 
 		versionValue.makeVersion();
+		versionValue.setTemporalRole( rootEntityDescriptor.getEntityName(), versionAttributeSource.getName() );
 
 		bindSimpleValueType( sourceDocument, versionAttributeSource.getTypeInformation(), versionValue );
 

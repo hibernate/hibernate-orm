@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.query;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import java.time.LocalDate;
 
 import org.hibernate.dialect.CockroachDialect;
@@ -22,6 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @SessionFactory
 @DomainModel( annotatedClasses = EntityOfBasics.class )
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 public class NamedParameterInSelectAndWhereTest {
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {

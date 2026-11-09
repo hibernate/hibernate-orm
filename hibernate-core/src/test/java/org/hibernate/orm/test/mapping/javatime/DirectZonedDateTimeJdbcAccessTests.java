@@ -44,9 +44,14 @@ class DirectZonedDateTimeJdbcAccessTests {
 			),
 			@Setting(name = MappingSettings.JAVA_TIME_USE_DIRECT_JDBC, value = "true")
 	})
-	@DomainModel(annotatedClasses = EntityWithZonedDateTimes.class)
+	@DomainModel
 	@SessionFactory(exportSchema = false)
-	void standardFallbackWarnsOnce(MessageKeyWatcher warningWatcher) {
+	void standardFallbackWarnsOnce(MessageKeyWatcher warningWatcher, org.hibernate.testing.orm.junit.SessionFactoryScope scope) {
+		final var indicators = scope.getSessionFactory().getTypeConfiguration().getCurrentBaseSqlTypeIndicators();
+		for ( int i = 0; i < 2; i++ ) {
+			org.hibernate.type.descriptor.java.ZonedDateTimeJavaType.INSTANCE.getRecommendedJdbcType( indicators );
+		}
+		// A selection warning does not authorize an offset-only ZonedDateTime mapping.
 		assertThat( warningWatcher.getTriggeredMessages() )
 				.singleElement()
 				.asString()
@@ -65,9 +70,14 @@ class DirectZonedDateTimeJdbcAccessTests {
 			),
 			@Setting(name = MappingSettings.JAVA_TIME_USE_DIRECT_JDBC, value = "true")
 	})
-	@DomainModel(annotatedClasses = EntityWithZonedDateTimes.class)
+	@DomainModel
 	@SessionFactory(exportSchema = false)
-	void offsetConversionWarnsOnce(MessageKeyWatcher warningWatcher) {
+	void offsetConversionWarnsOnce(MessageKeyWatcher warningWatcher, org.hibernate.testing.orm.junit.SessionFactoryScope scope) {
+		final var indicators = scope.getSessionFactory().getTypeConfiguration().getCurrentBaseSqlTypeIndicators();
+		for ( int i = 0; i < 2; i++ ) {
+			org.hibernate.type.descriptor.java.ZonedDateTimeJavaType.INSTANCE.getRecommendedJdbcType( indicators );
+		}
+		// A selection warning does not authorize an offset-only ZonedDateTime mapping.
 		assertThat( warningWatcher.getTriggeredMessages() )
 				.singleElement()
 				.asString()

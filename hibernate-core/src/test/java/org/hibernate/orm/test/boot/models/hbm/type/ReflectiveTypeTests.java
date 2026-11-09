@@ -39,7 +39,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RequiresDialect( H2Dialect.class )
 public class ReflectiveTypeTests {
 	@Test
-	@ServiceRegistry(settings = {
+	// Retain the legacy temporal semantics of this regression fixture.
+	@ServiceRegistry(settings = { @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
 			@Setting(name = MappingSettings.JAVA_TIME_USE_DIRECT_JDBC, value = "true"),
 			@Setting(name = MappingSettings.PREFERRED_INSTANT_JDBC_TYPE, value = "INSTANT")
 	} )

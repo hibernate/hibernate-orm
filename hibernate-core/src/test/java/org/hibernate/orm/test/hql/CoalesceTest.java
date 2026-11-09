@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.hql;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -19,6 +22,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @JiraKey( value = "HHH-10463")
 @DomainModel(annotatedClasses = org.hibernate.testing.orm.domain.gambit.EntityOfBasics.class)
 @SessionFactory
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 public class CoalesceTest {
 	final String QRY_STR = "from EntityOfBasics e where e.theString = coalesce(:p , e.theString)";
 

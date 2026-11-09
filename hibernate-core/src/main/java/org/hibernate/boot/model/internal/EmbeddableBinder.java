@@ -664,6 +664,12 @@ public class EmbeddableBinder {
 						+ member.getDeclaringType().getName() + "." + member.getName() + "'" );
 			}
 
+			if ( converter != null ) {
+				throw new MappingException( "Whole-value user converter is incompatible with synthetic COLUMN storage for '"
+						+ member.getDeclaringType().getName() + "." + member.getName()
+						+ "'. Use a compatible INLINE conversion mapping or explicitly disable conversion for COLUMN storage." );
+			}
+
 			return new ContextualTemporalCompositeUserType(
 					composite,
 					context.getBootstrapContext().getTypeConfiguration().getJavaTypeRegistry()

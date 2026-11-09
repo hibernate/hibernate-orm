@@ -2,6 +2,7 @@ package org.hibernate.orm.test.instant;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.JdbcSettings;
@@ -23,7 +24,8 @@ import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Jpa(annotatedClasses = InstantWithNormalizedTest.Instants.class,
+// Retain the legacy temporal semantics of this regression fixture.
+@Jpa(properties = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"), annotatedClasses = InstantWithNormalizedTest.Instants.class,
 		integrationSettings =
 				{@Setting(name = AvailableSettings.TIMEZONE_DEFAULT_STORAGE, value = "NORMALIZE"),
 				@Setting(name = JdbcSettings.JDBC_TIME_ZONE, value = "+01:00")})

@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.version;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -22,6 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @JiraKey("HHH-10026")
 @DomainModel(annotatedClasses = ZonedDateTimeVersionTest.TheEntity.class)
 @SessionFactory
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 public class ZonedDateTimeVersionTest {
 	@AfterEach
 	void dropTestData(SessionFactoryScope factoryScope) {

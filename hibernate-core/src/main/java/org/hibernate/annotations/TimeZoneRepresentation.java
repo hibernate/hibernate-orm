@@ -13,7 +13,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /// Declarations use the mapped member, its declaring class and superclass chain,
 /// exact declaring package, then declaring module, in that order.
 ///
-/// @implSpec Only supported with [org.hibernate.cfg.MappingSettings#JAVA_TIME_USE_DIRECT_JDBC] enabled.
+/// @implSpec Only supported with [org.hibernate.cfg.MappingSettings#TEMPORAL_PRESERVATION] enabled.
 ///
 /// @author Steve Ebersole
 /// @since 8.0

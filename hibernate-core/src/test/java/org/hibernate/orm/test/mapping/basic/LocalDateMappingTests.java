@@ -61,7 +61,7 @@ public class LocalDateMappingTests {
 		private Integer id;
 
 		//tag::basic-localDate-example[]
-		// mapped as DATE
+		// preserves the calendar date, normally in a SQL DATE column
 		private LocalDate localDate;
 		//end::basic-localDate-example[]
 

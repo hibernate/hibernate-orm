@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.query.hql;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 
 import org.hamcrest.Matchers;
 
@@ -88,6 +91,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  */
 @DomainModel( standardModels = StandardDomainModel.GAMBIT )
 @SessionFactory
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 public class FunctionTests {
 
 	public static final double ERROR = 0.00001d;

@@ -442,8 +442,10 @@ include::{multitenancy-guide-examples}[tags=multitenancy-timezone-options]
 [[multitenacy-hibernate-timezone-configuration-registerConnectionProvider-example]]A small tenant-to-option map supplies the session setting; no separate connection pool is needed merely to choose a session's JDBC time zone.
 `configuration(ClockRecord.class)` is the fixture's H2 factory configuration.
 `ClockRecord.createdOn` is a `LocalDateTime`, while the alternate JDBC extraction below returns a `Timestamp`.
-The explicit `hibernate.type.java_time_use_direct_jdbc=false` setting selects legacy JDBC conversion for this Java-time example; direct JDBC Java-time access has a different boundary.
-See <<basic-java-time-direct-jdbc>> and <<basic-datetime-time-zone>> for those details.
+The example uses the deprecated alias `hibernate.type.java_time_use_direct_jdbc=false` to select legacy JDBC conversion.
+For new configuration, use `hibernate.type.temporal_preservation=false`; an explicit value of the new setting takes precedence over the alias.
+Tenant-specific JDBC timezones do not request domain-value adjustment in preservation mode.
+See <<basic-temporal-preservation>> and <<basic-datetime-time-zone>> for those details.
 
 [[multitenacy-hibernate-timezone-configuration-session-example]]
 .Applying the tenant's JDBC time zone

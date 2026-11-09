@@ -221,7 +221,9 @@ public interface MappingSettings {
 	 * field, for example, {@code hibernate.type.preferred_instant_jdbc_type=TIMESTAMP}
 	 * or {@code hibernate.type.preferred_instant_jdbc_type=INSTANT}.
 	 *
-	 * @settingDefault {@link org.hibernate.type.SqlTypes#TIMESTAMP_UTC}.
+	 * @settingDefault {@link org.hibernate.type.SqlTypes#INSTANT} when temporal preservation
+	 * is enabled, otherwise {@link org.hibernate.type.SqlTypes#TIMESTAMP_UTC}. A Dialect
+	 * without direct Instant support uses its TIMESTAMP_UTC fallback.
 	 *
 	 * @since 6.0
 	 */
@@ -229,30 +231,36 @@ public interface MappingSettings {
 	String PREFERRED_INSTANT_JDBC_TYPE = "hibernate.type.preferred_instant_jdbc_type";
 
 	/**
-	 * Indicates whether to use {@linkplain java.time Java Time} references at the JDBC
-	 * boundary for binding and extracting temporal values to/from the database using
-	 * the support added in JDBC 4.2 via {@linkplain java.sql.PreparedStatement#setObject(int, Object, int)}
-	 * and {@linkplain java.sql.ResultSet#getObject(int, Class)}.
-	 * <p>
-	 * Used to set the value across the entire system as opposed to scattered, individual
-	 * {@linkplain org.hibernate.annotations.JdbcTypeCode} and {@linkplain org.hibernate.annotations.JdbcType}
-	 * naming specific {@linkplain JavaTimeJdbcType} implementations.
-	 * The setting is a preference which is applied only when the configured
-	 * {@linkplain org.hibernate.dialect.Dialect Dialect} reports support for the
-	 * Java Time class used at the JDBC boundary.
+	 * Enables preservation of Java Time semantics, including timestamp versions and
+	 * system periods, using direct JDBC access or preservation-capable fallback conversion.
+	 * False retains legacy direct-disabled interpretation. Existing data may require
+	 * migration before enabling this mode. Explicit Instant JDBC preferences override
+	 * the derived default, but do not waive the enabled preservation requirements.
+	 * This setting takes precedence over [#JAVA_TIME_USE_DIRECT_JDBC].
 	 *
-	 * @implNote JDBC 4.2 does not define support for {@linkplain java.time.Instant} or
-	 * {@linkplain java.time.ZonedDateTime}. {@linkplain java.time.Instant} is not included in this setting.
-	 * Some drivers do implement support for it even though it is not part of the JDBC specification.
-	 * To use direct binding and extracting of
-	 * {@linkplain java.time.Instant} references, use {@code hibernate.type.preferred_instant_jdbc_type=INSTANT}.
-	 * See {@linkplain #PREFERRED_INSTANT_JDBC_TYPE}, {@linkplain org.hibernate.type.SqlTypes#INSTANT} and
-	 * {@linkplain org.hibernate.type.descriptor.jdbc.InstantJdbcType}.
-	 *
-	 * @settingDefault {@value #JAVA_TIME_USE_DIRECT_JDBC_DEFAULT}
-	 *
-	 * @since 6.5
+	 * @settingDefault {@value #TEMPORAL_PRESERVATION_DEFAULT}
+	 * @since 8.0
 	 */
+	String TEMPORAL_PRESERVATION = "hibernate.type.temporal_preservation";
+
+	/**
+	 * Default for [#TEMPORAL_PRESERVATION].
+	 *
+	 * @since 8.0
+	 */
+	boolean TEMPORAL_PRESERVATION_DEFAULT = true;
+
+	/**
+	 * Deprecated compatibility alias for {@link #TEMPORAL_PRESERVATION}, used only
+	 * when the replacement setting is absent. An explicit replacement value wins.
+	 * The effective value also supplies the base preferred Instant JDBC type;
+	 * direct access remains conditional on Dialect support for each Java Time type.
+	 *
+	 * @settingDefault {@value #TEMPORAL_PRESERVATION_DEFAULT}
+	 * @since 6.5
+	 * @deprecated Use {@link #TEMPORAL_PRESERVATION}.
+	 */
+	@Deprecated(since = "8.0")
 	@Incubating(since = "6.5")
 	String JAVA_TIME_USE_DIRECT_JDBC = "hibernate.type.java_time_use_direct_jdbc";
 
@@ -261,7 +269,8 @@ public interface MappingSettings {
 	 *
 	 * @since 8.0
 	 */
-	boolean JAVA_TIME_USE_DIRECT_JDBC_DEFAULT = true;
+	@Deprecated(since = "8.0")
+	boolean JAVA_TIME_USE_DIRECT_JDBC_DEFAULT = TEMPORAL_PRESERVATION_DEFAULT;
 
 	/**
 	 * Indicates that named SQL {@code enum} types should be used by default instead

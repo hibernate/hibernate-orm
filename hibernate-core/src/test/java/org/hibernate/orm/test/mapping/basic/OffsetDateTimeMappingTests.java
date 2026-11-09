@@ -64,7 +64,7 @@ public class OffsetDateTimeMappingTests {
 		private Integer id;
 
 		//tag::basic-OffsetDateTime-example[]
-		// mapped as TIMESTAMP or TIMESTAMP_WITH_TIMEZONE
+		// requires INLINE handling that preserves local date-time and offset
 		private OffsetDateTime offsetDateTime;
 		//end::basic-OffsetDateTime-example[]
 

@@ -61,7 +61,7 @@ public class LocalDateTimeMappingTests {
 		private Integer id;
 
 		//tag::basic-localDateTime-example[]
-		// mapped as TIMESTAMP
+		// preserves local date-time fields, normally in a SQL TIMESTAMP column
 		private LocalDateTime localDateTime;
 		//end::basic-localDateTime-example[]
 

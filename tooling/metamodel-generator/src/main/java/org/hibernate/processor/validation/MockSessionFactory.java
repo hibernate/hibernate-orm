@@ -481,6 +481,11 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	public boolean isTemporalPreservationEnabled() {
+		return isPreferJavaTimeJdbcTypesEnabled();
+	}
+
+	@Override
 	@Deprecated(since = "8.0")
 	public boolean isPreferJavaTimeJdbcTypesEnabled() {
 		return MetadataBuildingContext.super.isPreferJavaTimeJdbcTypesEnabled();

@@ -62,7 +62,7 @@ public class InstantMappingTests {
 		private Integer id;
 
 		//tag::basic-instant-example[]
-		// mapped as TIMESTAMP
+		// preserves the instant with the selected timestamp representation
 		private Instant instant;
 		//end::basic-instant-example[]
 

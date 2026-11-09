@@ -143,10 +143,11 @@ Databases differ in temporal precision and time-zone storage and interpretation.
 Verify round-trip behavior for the values and comparisons the application requires;
 see <<basic-timezone>> for storage choices.
 
-The setting `hibernate.type.java_time_use_direct_jdbc` controls direct use of supported Java-time
-types at the JDBC boundary. Some drivers do not correctly implement the required support.
-A database's temporal column support does not by itself establish that a driver's direct
-Java-time access works; see <<basic-java-time-direct-jdbc>> for the setting and affected types.
+The default `hibernate.type.temporal_preservation=true` requires the guarantees in the
+<<basic-temporal-preservation-matrix,Java time preservation matrix>>, whether Hibernate uses direct JDBC
+access or a matched fallback. Unsupported mappings are rejected. A SQL type name alone does not establish
+offset or zone-ID preservation. The deprecated `hibernate.type.java_time_use_direct_jdbc` setting is an alias;
+see <<basic-temporal-preservation>> for precedence, compatibility mode and migration considerations.
 
 [[portability-types-specialized]]
 ==== Database-specific representations

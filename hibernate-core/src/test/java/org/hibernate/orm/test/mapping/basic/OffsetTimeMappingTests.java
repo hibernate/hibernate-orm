@@ -64,7 +64,7 @@ public class OffsetTimeMappingTests {
 		private Integer id;
 
 		//tag::basic-offsetTime-example[]
-		// mapped as TIME or TIME_WITH_TIMEZONE
+		// requires INLINE handling that preserves local time and offset
 		private OffsetTime offsetTime;
 		//end::basic-offsetTime-example[]
 

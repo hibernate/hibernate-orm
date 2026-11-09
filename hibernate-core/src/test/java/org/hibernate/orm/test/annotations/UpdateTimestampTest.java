@@ -1,8 +1,10 @@
 package org.hibernate.orm.test.annotations;
 
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
@@ -24,7 +26,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * @author Borys Piela
  */
-@Jpa( annotatedClasses = {UpdateTimestampTest.Event.class} )
+// Retain the legacy temporal semantics of this regression fixture.
+@Jpa(properties = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),  annotatedClasses = {UpdateTimestampTest.Event.class} )
 public class UpdateTimestampTest {
 
 	@Entity(name = "Event")

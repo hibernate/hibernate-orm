@@ -82,10 +82,12 @@ public record TemporalMappingConfiguration(
 			throw new MappingException( "Timezone representation is not applicable to '" + role + "' (" + type.getName() + ")" );
 		}
 		if ( !direct && (eligible && representation != null || adjustment != null && applicable( adjustment.value(), type )) ) {
-			throw new MappingException( "Temporal annotations on '" + role + "' require hibernate.type.java_time_use_direct_jdbc=true" );
+			throw new MappingException( "Temporal annotations on '" + role + "' require hibernate.type.temporal_preservation=true (deprecated alias: hibernate.type.java_time_use_direct_jdbc=true)" );
 		}
 		ZoneId target = null;
-		if ( adjustment != null && !TimeZoneAdjustment.NONE.equals( adjustment.value() ) ) {
+		// Broader defaults have no target semantics for ineligible domain types.
+		if ( adjustment != null && !TimeZoneAdjustment.NONE.equals( adjustment.value() )
+				&& (eligible || member.hasDirectAnnotationUsage( TimeZoneAdjustment.class )) ) {
 			try {
 				target = ZoneId.of( adjustment.value() );
 			}
@@ -102,7 +104,8 @@ public record TemporalMappingConfiguration(
 		return new TemporalMappingConfiguration(
 				eligible && representation != null ? representation.value() : null,
 				target,
-				adjustment != null && (TimeZoneAdjustment.NONE.equals( adjustment.value() ) || target != null),
+				// A skipped nearer declaration still prevents adjustment fallback.
+				adjustment != null,
 				false
 		);
 	}
@@ -165,7 +168,10 @@ public record TemporalMappingConfiguration(
 			switch ( policy ) {
 				case NORMALIZE, AUTO, DEFAULT -> {
 					if ( representation == null ) {
-						throw legacyFailure( role, policy );
+						throw new MappingException( "Explicit global setting '" + MappingSettings.TIMEZONE_DEFAULT_STORAGE
+								+ "=" + policy + "' has no narrower storage replacement for temporal mapping '" + role
+								+ "'; choose representation and adjustment explicitly with @TimeZoneRepresentation and @TimeZoneAdjustment"
+								+ " (an adjustment target or NONE alone does not replace storage)" );
 					}
 				}
 				case COLUMN -> {
@@ -192,7 +198,7 @@ public record TemporalMappingConfiguration(
 	}
 
 	private static MappingException legacyFailure(String role, TimeZoneStorageType policy) {
-		return new MappingException( "Legacy timezone storage " + policy + " is not supported for '" + role
+		return new MappingException( "Explicit local @TimeZoneStorage(" + policy + ") is not supported for '" + role
 				+ "'; choose representation and adjustment explicitly with @TimeZoneRepresentation and @TimeZoneAdjustment" );
 	}
 

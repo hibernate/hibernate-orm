@@ -28,4 +28,12 @@ public abstract class DelegatingCurrentTemporalSupport implements CurrentTempora
 	@Override public String currentTimestampWithTimeZone() { return delegate.currentTimestampWithTimeZone(); }
 	@Override public @Nullable CurrentTimestampSelection getCurrentTimestampSelection() { return delegate.getCurrentTimestampSelection(); }
 	@Override public boolean isCurrentTimestampStable() { return delegate.isCurrentTimestampStable(); }
+
+	@Override
+	public @Nullable CurrentTimestampSelection getCurrentTimestampSelection(
+			org.hibernate.type.descriptor.java.JavaType<?> javaType,
+			org.hibernate.type.descriptor.jdbc.JdbcType jdbcType) {
+		return delegate.getCurrentTimestampSelection( javaType, jdbcType );
+	}
+
 }

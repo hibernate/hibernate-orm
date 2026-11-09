@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.mapping.basic;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import jakarta.persistence.Entity;
@@ -29,6 +32,8 @@ import static org.hamcrest.Matchers.isOneOf;
  */
 @DomainModel(annotatedClasses = ZonedDateTimeMappingTests.EntityWithZonedDateTime.class)
 @SessionFactory
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 public class ZonedDateTimeMappingTests {
 
 	@Test
@@ -71,10 +76,9 @@ public class ZonedDateTimeMappingTests {
 		@Id
 		private Integer id;
 
-		//tag::basic-ZonedDateTime-example[]
+		// Legacy descriptor selection is intentionally retained here.
 		// mapped as TIMESTAMP or TIMESTAMP_WITH_TIMEZONE
 		private ZonedDateTime zonedDateTime;
-		//end::basic-ZonedDateTime-example[]
 
 		public EntityWithZonedDateTime() {
 		}

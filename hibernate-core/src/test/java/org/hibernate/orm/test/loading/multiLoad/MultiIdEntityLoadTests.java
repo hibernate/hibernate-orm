@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.loading.multiLoad;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import java.util.List;
 
 import org.hibernate.testing.hamcrest.CollectionMatchers;
@@ -28,6 +31,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @DomainModel(standardModels = StandardDomainModel.GAMBIT)
 @SessionFactory
 @SessionFactoryFunctionalTesting
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 public class MultiIdEntityLoadTests {
 	@Test
 	public void testBasicEntitySimpleLoad(SessionFactoryScope scope) {

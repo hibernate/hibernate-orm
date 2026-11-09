@@ -6299,6 +6299,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	/// Reject those uses during SQL AST preparation, before one occurrence's mapping
 	/// can silently determine the value bound for every occurrence.
 	private void validateTemporalParameterUse(SqmParameter<?> parameter, MappingModelExpressible<?> mapping) {
+			// Compatibility mode retains the legacy parameter inference and binding rules.
+			if ( !getSessionFactoryOptions().isTemporalPreservationEnabled() ) {
+				return;
+			}
 		final Object signature;
 		final String description;
 		final String role = mapping instanceof ModelPart part

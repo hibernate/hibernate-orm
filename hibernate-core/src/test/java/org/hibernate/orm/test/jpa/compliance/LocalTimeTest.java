@@ -5,6 +5,7 @@ import java.time.OffsetTime;
 import java.time.ZoneOffset;
 import java.util.List;
 
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.type.descriptor.DateTimeUtils;
 
@@ -23,9 +24,10 @@ import jakarta.persistence.TypedQuery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+// Retain the legacy temporal semantics of this regression fixture.
 @Jpa(
 		annotatedClasses = LocalTimeTest.TestEntity.class,
-		properties = @Setting(name = AvailableSettings.TIMEZONE_DEFAULT_STORAGE, value = "NORMALIZE")
+		properties = { @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"), @Setting(name = AvailableSettings.TIMEZONE_DEFAULT_STORAGE, value = "NORMALIZE") }
 )
 public class LocalTimeTest {
 

@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.query.sqm.mutation.multitable;
 
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.orm.test.mapping.SecondaryTableTests;
@@ -15,6 +16,7 @@ import org.hibernate.query.sqm.mutation.internal.MatchingIdSelectionHelper;
 import org.hibernate.query.sqm.tree.spi.delete.SqmDeleteStatement;
 import org.hibernate.sql.exec.spi.Callback;
 
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -40,7 +42,8 @@ import org.junit.jupiter.api.Test;
 				JoinedInheritanceTest.ForeignCustomer.class
 		}
 )
-@ServiceRegistry
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @SessionFactory( exportSchema = true )
 public class IdSelectionTests {
 

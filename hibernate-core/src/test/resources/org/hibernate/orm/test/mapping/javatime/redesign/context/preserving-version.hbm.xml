@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="org.hibernate.orm.test.mapping.javatime.redesign.context.TemporalPreservingNamedVersionTests$Named" table="preserving_named_version">
+        <id name="id" type="integer" access="field"><generator class="assigned"/></id>
+        <version name="stamp" type="instant" access="field"/>
+        <property name="payload" type="string" access="field"/>
+    </class>
+</hibernate-mapping>

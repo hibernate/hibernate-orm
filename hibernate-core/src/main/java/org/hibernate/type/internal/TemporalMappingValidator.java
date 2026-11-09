@@ -28,9 +28,11 @@ public final class TemporalMappingValidator {
 	}
 
 	public static void validate(Dialect dialect, org.hibernate.type.BasicType<?> type, String role) {
+		final var javaType = type.getValueConverter() instanceof org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter<?,?> application
+				? application.getRelationalJavaType() : type.getJavaTypeDescriptor();
 		final var adjustment = type.getValueConverter() instanceof org.hibernate.type.descriptor.converter.internal.TemporalAdjustmentConverter<?> converter
 				? converter : null;
-		validate( dialect, type.getJavaTypeDescriptor(), type.getJdbcType(), adjustment == null ? null : adjustment.getTarget(),
+		validate( dialect, javaType, type.getJdbcType(), adjustment == null ? null : adjustment.getTarget(),
 				role, adjustment != null && adjustment.usesUtcTimeCarrier() );
 	}
 

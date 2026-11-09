@@ -30,6 +30,10 @@ public class TimeZoneStorageHelper {
 			MemberDetails attributeMember,
 			ClassDetails returnedClass,
 			MetadataBuildingContext context) {
+		// Dynamic XML components have no backing Java class for declaration lookup.
+		if ( returnedClass == null || !returnedClass.isRealClass() ) {
+			return null;
+		}
 		if ( context.isPreferJavaTimeJdbcTypesEnabled()
 				? TemporalMappingConfiguration.resolve( attributeMember, returnedClass.toJavaClass(), context ).representation()
 						== TimeZoneRepresentation.Type.COLUMN

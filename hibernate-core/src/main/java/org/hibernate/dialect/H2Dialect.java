@@ -1217,4 +1217,18 @@ public class H2Dialect extends Dialect implements CurrentTemporalSupport, Tempor
 		return NamespaceSupports.standard( true, true );
 	}
 
+
+	@Override
+	public org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection getCurrentTimestampSelection(
+			org.hibernate.type.descriptor.java.JavaType<?> javaType,
+			org.hibernate.type.descriptor.jdbc.JdbcType jdbcType) {
+		return org.hibernate.dialect.temporaltype.internal.PreservingCurrentTimestamp.selection( this, javaType, jdbcType );
+	}
+
+
+	@Override
+	public org.hibernate.dialect.temporal.spi.TemporalTableSupport getTemporalTableSupport() {
+		return new org.hibernate.dialect.temporal.internal.H2TemporalTableSupport( this );
+	}
+
 }

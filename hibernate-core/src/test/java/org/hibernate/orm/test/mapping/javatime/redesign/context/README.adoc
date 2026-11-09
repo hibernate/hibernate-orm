@@ -83,3 +83,76 @@ separate regression controls.
 
 Aggregate families unsupported by the configured Dialect remain explicit skips.
 The seven-type matrix supplies separate descriptor/range/timezone coverage.
+
+== Declaration and legacy compatibility tests
+
+TemporalScopeDeclarationTests covers active field/getter access, declaring type and
+exact package lookup, inherited members, invalid targets and zone identity.
+TemporalModuleDeclarationTests compiles temporary module-info/package-info fixtures
+using the test JDK's JavaCompiler. Each realm has its own loader/layer identity;
+identically named classes/modules intentionally carry different defaults. Automatic
+and unnamed modules provide controls. A full JDK is required; no fixture changes
+JVM timezone or mutates annotations.
+
+TemporalLegacyDeclarationTests and TemporalPrecedenceRegressionTests exercise local
+legacy/new selector combinations, independently selected global contributions,
+fully replaced versus uncovered global policies and ineligible nearer defaults.
+TemporalDeclarationLogTests isolates the explicit-setting deprecation report per
+bootstrap, including overridden, unused and rejected policies. These declaration
+suites use H2 with metadata enabled and guarded disabled bootstrap.
+
+TemporalColumnLayoutTests checks all matching tuple operation flags and rejects
+mismatches in either direction, including component overrides. Independent JDBC
+seeds and fresh uncached sessions establish update-only/read-only results.
+TemporalColumnNamingTests compares hand-checked identifiers and quoting across the
+new selector, legacy COLUMN alias and direct-disabled legacy handling; quoted
+physical names also undergo live DDL/read/schema validation.
+TemporalNativeConstraintTests distinguishes preserving plain handling from a retained
+NATIVE constraint and exercises its scoped replacement through live reads. Naming
+and native cases run on H2, PostgreSQL and Oracle; SQL Server remains deferred.
+
+TemporalConverterRelationalTests checks preservation of an active application's
+relational Java type with its resolved JdbcType. It covers explicit/auto converters,
+identity and differing carriers, non-temporal domains converted to Java Time,
+precision boundaries, and retained rejection of unknown pairs. The converter still
+owns domain conversion; its presence alone does not establish JDBC preservation.
+
+TemporalDynamicModelTests uses the original dynamic XML composite-ID mapping beside
+a real Java temporal mapping, including JDBC persist/load and both metadata modes.
+TemporalRegistryContextTests checks standalone null-registry defaults and supplied
+registry true/false isolation. Its SQL Server descriptor checks are model-only;
+SQL Server live verification remains deferred.
+
+== Internal system-period compatibility
+
+`TemporalSystemPeriodTests` covers Hibernate-owned row-start/end mappings separately
+from application Java Time attributes. It exercises both emulated storage strategies,
+entity and collection history, configured suppliers and server generation, copies,
+precision diagnostics and bootstrap with JDBC metadata access disabled. The ordinary
+Instant/raw TIMESTAMP negative case ensures the compatibility exception stays local.
+Legacy temporal/conversion tests are unchanged.
+
+Run with aligned JVM/session zones, for example
+`-PtemporalTestJvmTimeZone=America/Denver -PtemporalTestSessionTimeZone=America/Denver`,
+and separately with UTC. The raw timestamp assertions intentionally verify the existing
+local-clock encoding. These tests do not request UTC normalization or a migration of
+historical data. Mismatched JDBC Calendar/server-clock behavior and DST ambiguity remain
+limitations of that legacy protocol; a future UTC encoding setting requires explicit
+opt-in and a historical-data migration design. SQL Server live verification is deferred.
+The descriptor-isolation control also verifies that the previous internal period
+handling can coexist with the new application descriptor and custom contributions.
+
+
+== Preservation mode and internal temporal roles
+
+TemporalPreservationModeTests, TemporalPreservingNamedVersionTests and
+TemporalPreservingVersionCacheTests exercise the new temporal_preservation setting,
+its deprecated alias, version mapping views, generated tokens, optimistic locking and
+cache/dirty-checking behavior. TemporalPreservingPeriodTests checks exact history
+boundaries and collection history with UTC-encoded H2 periods, including a JDBC timezone
+mismatch. Run these with UTC and non-UTC temporalTestJvmTimeZone profiles.
+
+The prior TemporalSystemPeriodTests remains a record of the earlier unconditional
+compatibility contract. Its enabled-mode legacy-descriptor/raw-field assertions are
+not expectations for the replacement default-enabled protocol. Keep those tests intact
+when analyzing full-suite differences; disabled-mode legacy coverage remains necessary.

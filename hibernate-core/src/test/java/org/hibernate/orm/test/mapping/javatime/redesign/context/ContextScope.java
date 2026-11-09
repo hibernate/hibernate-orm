@@ -32,11 +32,17 @@ final class ContextScope implements AutoCloseable {
 		return new ContextScope( metadataAccess, direct, settings, classes );
 	}
 	static ContextScope open(boolean metadataAccess, Class<?>... classes) {
-		final var schema = boot( true, true, classes );
+		return open( metadataAccess, Map.of(), classes );
+	}
+	static ContextScope open(boolean metadataAccess, Map<String,Object> settings, Class<?>... classes) {
+		return open( metadataAccess, true, settings, List.of(), classes );
+	}
+	static ContextScope open(boolean metadataAccess, boolean direct, Map<String,Object> settings, List<String> mappings, Class<?>... classes) {
+		final var schema = new ContextScope( true, direct, settings, mappings, classes );
 		try {
 			schema.factory.getSchemaManager().drop( false );
 			schema.factory.getSchemaManager().create( false );
-			final var runtime = boot( metadataAccess, true, classes );
+			final var runtime = new ContextScope( metadataAccess, direct, settings, mappings, classes );
 			runtime.provision = schema;
 			runtime.provider.blocked = false;
 			return runtime;
@@ -44,8 +50,13 @@ final class ContextScope implements AutoCloseable {
 		catch (RuntimeException | Error failure) { schema.close(); throw failure; }
 	}
 	private ContextScope(boolean metadataAccess, boolean direct, Map<String,Object> settings, Class<?>... classes) {
+		this( metadataAccess, direct, settings, List.of(), classes );
+	}
+	private ContextScope(boolean metadataAccess, boolean direct, Map<String,Object> settings, List<String> mappings, Class<?>... classes) {
 		provider = new ContextConnectionProvider( !metadataAccess );
-		final var loaders = new org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl() {
+		final var loaders = new org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl(
+				Arrays.stream(classes).map(Class::getClassLoader).distinct().toList(),
+				org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence.AFTER ) {
 			@Override public <S> java.util.Collection<S> loadJavaServices(Class<S> contract) {
 				final var found = new ArrayList<S>( super.loadJavaServices( contract ) );
 				if ( direct && contract == org.hibernate.boot.model.TypeContributor.class ) {
@@ -76,6 +87,7 @@ final class ContextScope implements AutoCloseable {
 		try {
 			final var sources = new MetadataSources( registry );
 			for ( var type : classes ) sources.addAnnotatedClass( type );
+			for ( var resource : mappings ) sources.addResource( resource );
 			metadata = sources.buildMetadata();
 			factory = (SessionFactoryImplementor) metadata.buildSessionFactory();
 			if ( !metadataAccess ) assertThat( provider.attempts ).as( "guarded bootstrap acquisitions" ).isZero();

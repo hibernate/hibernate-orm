@@ -562,7 +562,8 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 
 		if ( context.isPreferJavaTimeJdbcTypesEnabled()
 				&& (created.insertable() != column.insertable() || created.updatable() != column.updatable()) ) {
-			throw new org.hibernate.MappingException( "Temporal COLUMN components must have matching insertability and updatability" );
+			throw new org.hibernate.MappingException( "Temporal COLUMN components must have matching insertability and updatability for "
+					+ (element instanceof MemberDetails member ? member.getDeclaringType().getName() + "." + member.getName() : element) );
 		}
 		return created;
 	}
@@ -617,6 +618,11 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		}
 		created.precision( precision );
 		created.secondPrecision( secondPrecision );
+		if ( annotatedColumn != null && context.isPreferJavaTimeJdbcTypesEnabled() ) {
+			// An implicit primary name does not discard the declared tuple operation flags.
+			created.insertable( annotatedColumn.insertable() );
+			created.updatable( annotatedColumn.updatable() );
+		}
 		return created;
 	}
 

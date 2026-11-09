@@ -114,4 +114,14 @@ public class OracleTemporalTableSupport extends DefaultTemporalTableSupport {
 		return List.of();
 	}
 
+
+	@Override
+	public org.hibernate.type.descriptor.jdbc.JdbcType getPreservingTemporalJdbcType(
+			TemporalTableStrategy strategy, org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry registry) {
+		if ( strategy != HISTORY_TABLE ) { return null; }
+		final var descriptor = registry.getDescriptor( getTemporalColumnType() );
+		return descriptor.getClass() == org.hibernate.type.descriptor.jdbc.TimestampJdbcType.class
+				? org.hibernate.type.descriptor.jdbc.TimestampUtcAsPlainJdbcTimestampJdbcType.INSTANCE : descriptor;
+	}
+
 }

@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.query.hql;
 
+import org.hibernate.cfg.MappingSettings;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -15,6 +16,7 @@ import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.SpannerDialect;
 
 import org.hamcrest.number.IsCloseTo;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -40,7 +42,8 @@ import static org.hibernate.testing.orm.domain.gambit.EntityOfBasics.Gender.FEMA
  * @author Steve Ebersole
  */
 @SuppressWarnings("deprecation")
-@ServiceRegistry
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel( standardModels = StandardDomainModel.GAMBIT )
 @SessionFactory
 public class StandardFunctionTests {

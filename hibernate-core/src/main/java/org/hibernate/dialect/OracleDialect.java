@@ -1943,4 +1943,12 @@ public class OracleDialect extends Dialect implements CurrentTemporalSupport, Te
 		return true;
 	}
 
+
+	@Override
+	public org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection getCurrentTimestampSelection(
+			org.hibernate.type.descriptor.java.JavaType<?> javaType,
+			org.hibernate.type.descriptor.jdbc.JdbcType jdbcType) {
+		return org.hibernate.dialect.temporaltype.internal.PreservingCurrentTimestamp.selection( this, javaType, jdbcType );
+	}
+
 }

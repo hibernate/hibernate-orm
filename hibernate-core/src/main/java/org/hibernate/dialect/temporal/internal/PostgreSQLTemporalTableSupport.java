@@ -56,4 +56,23 @@ public class PostgreSQLTemporalTableSupport extends DefaultTemporalTableSupport 
 	public int getTemporalColumnType() {
 		return SqlTypes.TIMESTAMP_UTC;
 	}
+
+	@Override
+	public org.hibernate.type.descriptor.jdbc.JdbcType getPreservingTemporalJdbcType(
+			org.hibernate.temporal.TemporalTableStrategy strategy,
+			org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry registry) {
+		if ( strategy == org.hibernate.temporal.TemporalTableStrategy.NATIVE ) { return null; }
+		final var descriptor = registry.getDescriptor( getTemporalColumnType() );
+		return descriptor.getClass() == org.hibernate.type.descriptor.jdbc.TimestampUtcAsPlainJdbcTimestampJdbcType.class
+				? org.hibernate.dialect.type.internal.PostgreSQLTimestampUtcAsJdbcTimestampJdbcType.INSTANCE : descriptor;
+	}
+
+	@Override
+	public String getPreservingTemporalCurrentTimestampExpression(
+			org.hibernate.temporal.TemporalTableStrategy strategy, org.hibernate.type.descriptor.jdbc.JdbcType jdbcType) {
+		return strategy == org.hibernate.temporal.TemporalTableStrategy.NATIVE ? null
+				: org.hibernate.dialect.temporaltype.internal.PreservingCurrentTimestamp.expression(
+						dialect, org.hibernate.type.descriptor.java.InstantJavaType.INSTANCE, jdbcType );
+	}
+
 }

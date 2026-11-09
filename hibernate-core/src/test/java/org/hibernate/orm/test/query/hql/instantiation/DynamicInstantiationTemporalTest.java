@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.query.hql.instantiation;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -22,6 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DomainModel(standardModels = StandardDomainModel.GAMBIT)
 @SessionFactory
 @Jira("https://hibernate.atlassian.net/browse/HHH-4179")
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 public class DynamicInstantiationTemporalTest {
 	@BeforeAll
 	public void prepareData(final SessionFactoryScope scope) {

@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.temporal;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -51,6 +54,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 public class FractionalSecondsTests {
 	@Test
 	@DomainModel(annotatedClasses = {TestEntity.class, TestEntity0.class, TestEntity3.class, TestEntity9.class} )

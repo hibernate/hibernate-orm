@@ -279,6 +279,13 @@ Active application converters are assessed at their relational Java/JDBC boundar
 application-owned. Whole-value converters over synthetic COLUMN mappings and active converters combined
 with non-NONE adjustment are rejected.
 
+Custom descriptor integrations may now use `PreservationAwareTemporalJavaType` for temporal
+requirements and `TemporalJdbcType` for pair-specific preservation reports. Existing subclasses
+and explicit `@JdbcType`/`@JdbcTypeCode` selections are not automatically certified. A Java-side
+declaration alone does not establish conversion compatibility. Existing Dialect assessments
+remain valid; see the link:{userGuideBase}#basic-temporal-custom-descriptors[custom descriptor SPI]
+for precedence, inheritance responsibilities and custom-domain limits.
+
 ==== Existing schemas and data
 
 Changing the flag does not migrate schema or stored values. A blanket timestamp rewrite is not required:

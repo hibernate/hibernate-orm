@@ -189,3 +189,23 @@ These sequential matrices opt into `hibernate.test.temporal.reuse_connection` to
 retain at most one idle connection per test provider and close it at registry shutdown.
 This limits Oracle Free connection churn. Existing connection-isolation tests keep
 physical acquisition/close behavior unchanged.
+
+== Custom descriptor contracts
+
+`TemporalDescriptorAssessmentTests` verifies optional Java-side requirements, pair-aware JDBC
+reports, conservative replacement recognition, inherited explicit contracts, precedence and
+recursion diagnostics. Its PostgreSQL/Oracle Dialects are offline dispatch controls, not live
+driver evidence. Reports are assessed per configured instance without a global result cache.
+
+`TemporalDescriptorMappingTests` executes H2 custom pairs for Instant and an immutable date
+value, including raw columns, fresh reads, nulls, collections, predicates, bulk assignment,
+converter relational types and explicit function results. Both metadata modes are exercised;
+legacy-disabled and older TemporalJavaType controls forbid new callback invocation. Separate
+factories contribute differently configured instances of the same descriptor class.
+
+Run these with `--tests '*TemporalDescriptor*Tests' -Pdb=h2`, first with
+`-PtemporalTestJvmTimeZone=UTC -PtemporalTestSessionTimeZone=UTC`, then with
+`-PtemporalTestJvmTimeZone=America/Denver -PtemporalTestSessionTimeZone=Asia/Tokyo
+-PtemporalTestJdbcTimeZone=Europe/Paris`. These tests supplement the existing adjustment,
+COLUMN, converter and query/callable regressions; they do not replace legacy conversion coverage.
+SQL Server live verification remains deferred.

@@ -934,6 +934,66 @@ the guarantees. Member-level `AUTO`, `DEFAULT`, and `NORMALIZE` require an expli
 compatibility mode. An explicitly configured global legacy policy may also require narrower declarations;
 setting adjustment to NONE alone does not replace its storage choice.
 
+[[basic-temporal-custom-descriptors]]
+===== Custom temporal descriptors
+
+`@JavaType`, `@JdbcType` and `@JdbcTypeCode` select handling; they do not waive preservation
+requirements. Hibernate assesses the actual resolved Java/JDBC descriptor pair. Extending a
+supported built-in descriptor does not automatically establish that a replacement preserves
+its conversions.
+
+A custom `TemporalJavaType` may implement `PreservationAwareTemporalJavaType` to declare the
+independent temporal parts needed to reconstruct its values. Its `getRequiredTemporalParts()`
+returns a stable, nonempty set without null elements. For the seven Java Time classes in the
+guarantee matrix, a participating replacement must declare the existing contract exactly:
+for example, `OffsetDateTime` requires `INSTANT` and `OFFSET`. Other custom domain classes opt
+into validation through this interface; existing `TemporalJavaType` implementations are unchanged.
+This declaration alone does not certify a JDBC pairing or add COLUMN decomposition, timezone
+adjustment, identifier/version generation, or system-period support for a custom domain.
+
+A `JdbcType` may implement `TemporalJdbcType` to assess its actual pairing with a supplied
+`JavaType` and `Dialect`. Its `getTemporalPreservation()` returns an `Optional<TemporalPreservation>`:
+
+* `Optional.empty()` declines the pair and allows normal Dialect fallback.
+* A present report is authoritative at this stage. Required parts must be `SUPPORTED`;
+`UNKNOWN`, `UNSUPPORTED` and `IRRELEVANT` do not satisfy them. Hibernate does not fill gaps
+with more optimistic fallback reports.
+
+The report must account for wrapping/unwrapping, binding, extraction and reconstruction.
+Recognize descriptor behavior that the implementation actually understands, not merely a
+matching domain class or SQL type code. For example, a delegating JDBC adapter whose execution
+uses an established pair can reuse that pair's assessment:
+
+[source,java]
+----
+@Override
+public Optional<TemporalPreservation> getTemporalPreservation(
+        JavaType<?> javaType, Dialect dialect) {
+    if ( javaType != supportedJavaType ) {
+        return Optional.empty();
+    }
+    // Binding and extraction delegate using exactly these underlying descriptors.
+    return Optional.of( dialect.getTemporalPreservation( delegateJavaType, delegateJdbcType ) );
+}
+----
+
+Here the adapter must also establish that its conversion to and from `delegateJavaType` preserves
+the required parts. Delegating an assessment does not prove that conversion. Delegation must
+use a distinct pair; recursive assessment fails with a mapping diagnostic.
+
+Built-in Dialects consult this SPI before their existing pair recognition. An application
+Dialect override remains authoritative; delegating to `super` gives the descriptor its SPI
+opportunity. The existing Dialect override mechanism therefore remains valid.
+
+An explicitly adopted SPI contract may be inherited, but a subclass changing execution must
+update or decline its assessment. Callbacks must be deterministic for the configured descriptor
+instances, side-effect-free, and independent of boot metadata access. They must not acquire
+connections or change execution. Reports do not certify arbitrary schemas, supported value
+ranges, precision, or every callable operation; those remain separate responsibilities.
+Active application converters are assessed using their relational Java descriptor, not a
+requirement declaration on the converter's domain type. With `temporal_preservation=false`,
+ordinary mapping and query execution does not invoke these new validation callbacks.
+
 [[basic-legacy-temporal-conversions]]
 ===== Legacy temporal conversions
 

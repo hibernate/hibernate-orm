@@ -41,6 +41,7 @@ import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.AbstractQuery;
+import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderBasicStandard;
 import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.query.spi.MutationQueryImplementor;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
@@ -59,9 +60,12 @@ import org.hibernate.sql.exec.spi.JdbcOperationQueryCall;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.OutputableType;
+import org.hibernate.type.descriptor.converter.internal.TemporalAdjustmentConverter;
+import org.hibernate.type.descriptor.java.PreservationAwareTemporalJavaType;
 
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -677,9 +681,10 @@ public class ProcedureCallImpl<R>
 			// parameters. Retain the explicit temporal pair on that path too.
 			if ( typeReference instanceof BasicType<?> basic
 					&& ( getSessionFactory().getSessionFactoryOptions().isPreferJavaTimeJdbcTypesEnabled()
-							&& java.time.temporal.Temporal.class.isAssignableFrom( basic.getJdbcJavaType().getJavaTypeClass() )
-						|| basic.getValueConverter() instanceof org.hibernate.type.descriptor.converter.internal.TemporalAdjustmentConverter<?> ) ) {
-				firstResultSetMapping.addResultBuilder( new org.hibernate.query.results.internal.dynamic.DynamicResultBuilderBasicStandard( 1, basic ) );
+							&& ( Temporal.class.isAssignableFrom( basic.getJdbcJavaType().getJavaTypeClass() )
+								|| basic.getJdbcJavaType() instanceof PreservationAwareTemporalJavaType<?> )
+						|| basic.getValueConverter() instanceof TemporalAdjustmentConverter<?> ) ) {
+				firstResultSetMapping.addResultBuilder( new DynamicResultBuilderBasicStandard( 1, basic ) );
 			}
 			else {
 				firstResultSetMapping.addResultBuilder( new ScalarDomainResultBuilder<>( expressible.getExpressibleJavaType() ) );

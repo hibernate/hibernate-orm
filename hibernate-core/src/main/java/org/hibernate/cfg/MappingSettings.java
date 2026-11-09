@@ -1,6 +1,5 @@
 package org.hibernate.cfg;
 
-
 import org.hibernate.Incubating;
 import org.hibernate.Remove;
 import org.hibernate.SessionFactory;
@@ -13,7 +12,6 @@ import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
 import org.hibernate.id.enhanced.StandardOptimizerDescriptor;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.type.WrapperArrayHandling;
-import org.hibernate.type.descriptor.jdbc.JavaTimeJdbcType;
 import org.hibernate.type.format.FormatMapper;
 
 import jakarta.persistence.Column;

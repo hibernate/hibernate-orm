@@ -3,7 +3,6 @@ package org.hibernate.orm.test.mapping.javatime.redesign.context;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;

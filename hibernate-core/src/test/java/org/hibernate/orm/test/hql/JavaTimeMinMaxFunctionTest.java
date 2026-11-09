@@ -14,8 +14,6 @@ import org.junit.jupiter.api.*;
 import java.time.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 
 @DomainModel(annotatedClasses = JavaTimeMinMaxFunctionTest.Foo.class)
 @ServiceRegistry(settings = {@Setting(name = AvailableSettings.JAVA_TIME_USE_DIRECT_JDBC, value = "true")})

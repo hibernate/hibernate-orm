@@ -29,6 +29,11 @@ public final class ContextualTemporalCompositeUserType<T> implements CompositeUs
 		this.role = role;
 	}
 
+	/// Mapping role retained for bootstrap and execution diagnostics.
+	public String getRole() {
+		return role;
+	}
+
 	private T adjust(T value) {
 		return adjustment == null ? value : adjustment.toDomainValue( value );
 	}

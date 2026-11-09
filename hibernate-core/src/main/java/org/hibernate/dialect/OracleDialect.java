@@ -2,12 +2,18 @@ package org.hibernate.dialect;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.dialect.temporaltype.internal.TemporalPreservationHelper;
+import org.hibernate.dialect.temporaltype.spi.StandardTemporalPreservation;
 import org.hibernate.dialect.temporaltype.spi.TemporalPreservation;
+import org.hibernate.dialect.type.internal.OracleLocalTimeJdbcType;
 import org.hibernate.dialect.type.internal.OracleOffsetDateTimeJdbcType;
 import org.hibernate.dialect.type.internal.OracleOffsetTimeJdbcType;
+import org.hibernate.dialect.type.internal.OracleTimestampUtcAsJdbcTimestampJdbcType;
 import org.hibernate.dialect.type.internal.OracleZonedDateTimeJdbcType;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
+import org.hibernate.type.descriptor.java.LocalTimeJavaType;
 import org.hibernate.type.descriptor.java.OffsetDateTimeJavaType;
+import org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimeUtcAsOffsetTimeJdbcType;
 import org.hibernate.type.descriptor.java.ZonedDateTimeJavaType;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
@@ -174,7 +180,9 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.OracleJsonBlobJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsZonedJdbcTimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.internal.UtcTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.internal.UtcTimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.jboss.logging.Logger;
 
@@ -1142,23 +1150,27 @@ public class OracleDialect extends Dialect implements CurrentTemporalSupport, Te
 
 	@Override
 	public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
-		if ( javaType.getClass() == org.hibernate.type.descriptor.java.LocalTimeJavaType.class ) {
-			if ( jdbcType.getClass() == org.hibernate.dialect.type.internal.OracleLocalTimeJdbcType.class ) {
+		final var contributed = TemporalPreservationHelper.assess( javaType, jdbcType, this );
+		if ( contributed != null ) {
+			return contributed;
+		}
+		if ( javaType.getClass() == LocalTimeJavaType.class ) {
+			if ( jdbcType.getClass() == OracleLocalTimeJdbcType.class ) {
 				return new TemporalPreservation( IRRELEVANT, SUPPORTED, IRRELEVANT, IRRELEVANT, IRRELEVANT );
 			}
-			if ( jdbcType.getClass() == org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType.class ) {
-				return new TemporalPreservation( IRRELEVANT, org.hibernate.dialect.temporaltype.spi.TemporalPreservation.Level.UNKNOWN,
-						IRRELEVANT, IRRELEVANT, IRRELEVANT );
+			if ( jdbcType.getClass() == LocalTimeJdbcType.class ) {
+				return new TemporalPreservation( IRRELEVANT, TemporalPreservation.Level.UNKNOWN, IRRELEVANT, IRRELEVANT, IRRELEVANT );
 			}
 		}
 
-		final JdbcType carrier = jdbcType instanceof org.hibernate.type.descriptor.jdbc.internal.UtcTimestampJdbcType utc
-				? utc.getDelegate() : jdbcType;
-		if ( carrier.getClass() == org.hibernate.dialect.type.internal.OracleTimestampUtcAsJdbcTimestampJdbcType.class ) {
-			return org.hibernate.dialect.temporaltype.spi.StandardTemporalPreservation.instantOnly( javaType );
+		final JdbcType carrier = jdbcType instanceof UtcTimestampJdbcType utc
+				? utc.getDelegate()
+				: jdbcType;
+		if ( carrier.getClass() == OracleTimestampUtcAsJdbcTimestampJdbcType.class ) {
+			return StandardTemporalPreservation.instantOnly( javaType );
 		}
-		if ( carrier.getClass() == org.hibernate.type.descriptor.jdbc.TimestampUtcAsZonedJdbcTimestampJdbcType.class ) {
-			final var report = org.hibernate.dialect.temporaltype.spi.StandardTemporalPreservation.instantOnly( javaType );
+		if ( carrier.getClass() == TimestampUtcAsZonedJdbcTimestampJdbcType.class ) {
+			final var report = StandardTemporalPreservation.instantOnly( javaType );
 			if ( report != TemporalPreservation.UNKNOWN ) {
 				return new TemporalPreservation( report.date(), report.time(), UNSUPPORTED, report.offset(), report.zoneId() );
 			}
@@ -1194,7 +1206,7 @@ public class OracleDialect extends Dialect implements CurrentTemporalSupport, Te
 
 		super.contributeTypes( typeContributions, serviceRegistry );
 		if ( org.hibernate.boot.spi.MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( serviceRegistry ) ) {
-			typeContributions.contributeJdbcType( org.hibernate.dialect.type.internal.OracleLocalTimeJdbcType.INSTANCE );
+			typeContributions.contributeJdbcType( OracleLocalTimeJdbcType.INSTANCE );
 			typeContributions.contributeJdbcType( OracleOffsetTimeJdbcType.INSTANCE );
 			typeContributions.contributeJdbcType( OracleOffsetDateTimeJdbcType.INSTANCE );
 			if ( OracleJdbcTypes.isDriverUsable( serviceRegistry ) ) {

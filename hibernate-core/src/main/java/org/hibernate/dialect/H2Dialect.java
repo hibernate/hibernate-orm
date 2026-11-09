@@ -1,5 +1,10 @@
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.temporaltype.internal.TemporalPreservationHelper;
+import org.hibernate.dialect.temporaltype.spi.StandardTemporalPreservation;
+import org.hibernate.type.descriptor.java.OffsetTimeJavaType;
+import org.hibernate.type.descriptor.jdbc.OffsetTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsZonedJdbcTimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneJdbcType;
 import org.hibernate.dialect.temporaltype.spi.TemporalPreservation;
 import org.hibernate.type.descriptor.jdbc.OffsetDateTimeJdbcType;
@@ -129,6 +134,8 @@ import org.hibernate.type.descriptor.jdbc.OrdinalEnumJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimeUtcAsOffsetTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampUtcAsInstantJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
+import org.hibernate.type.descriptor.jdbc.internal.UtcTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.internal.UtcTimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -767,32 +774,34 @@ public class H2Dialect extends Dialect implements CurrentTemporalSupport, Tempor
 
 	@Override
 	public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
-		final JdbcType carrier = jdbcType instanceof org.hibernate.type.descriptor.jdbc.internal.UtcTimestampJdbcType utc
-				? utc.getDelegate() : jdbcType;
-		if ( carrier.getClass() == org.hibernate.type.descriptor.jdbc.TimestampUtcAsZonedJdbcTimestampJdbcType.class ) {
-			return org.hibernate.dialect.temporaltype.spi.StandardTemporalPreservation.instantOnly( javaType );
+		final var contributed = TemporalPreservationHelper.assess( javaType, jdbcType, this );
+		if ( contributed != null ) {
+			return contributed;
+		}
+		final JdbcType carrier = jdbcType instanceof UtcTimestampJdbcType utc
+				? utc.getDelegate()
+				: jdbcType;
+		if ( carrier.getClass() == TimestampUtcAsZonedJdbcTimestampJdbcType.class ) {
+			return StandardTemporalPreservation.instantOnly( javaType );
 		}
 
-		if ( javaType.getClass() == org.hibernate.type.descriptor.java.OffsetTimeJavaType.class
-				&& jdbcType instanceof org.hibernate.type.descriptor.jdbc.internal.UtcTimeJdbcType utc
-				&& utc.getDelegate().getClass() == org.hibernate.type.descriptor.jdbc.TimeUtcAsOffsetTimeJdbcType.class ) {
-			return new org.hibernate.dialect.temporaltype.spi.TemporalPreservation(
-					IRRELEVANT, SUPPORTED, IRRELEVANT, UNSUPPORTED, IRRELEVANT );
+		if ( javaType.getClass() == OffsetTimeJavaType.class
+				&& jdbcType instanceof UtcTimeJdbcType utc
+				&& utc.getDelegate().getClass() == TimeUtcAsOffsetTimeJdbcType.class ) {
+			return new TemporalPreservation( IRRELEVANT, SUPPORTED, IRRELEVANT, UNSUPPORTED, IRRELEVANT );
 		}
 
-		if ( javaType.getClass() == org.hibernate.type.descriptor.java.OffsetTimeJavaType.class
-				&& jdbcType.getClass() == org.hibernate.type.descriptor.jdbc.OffsetTimeJdbcType.class ) {
+		if ( javaType.getClass() == OffsetTimeJavaType.class
+				&& jdbcType.getClass() == OffsetTimeJdbcType.class ) {
 			return new TemporalPreservation( IRRELEVANT, SUPPORTED, IRRELEVANT, SUPPORTED, IRRELEVANT );
 		}
 		if ( jdbcType.getClass() == OffsetDateTimeJdbcType.class
 				|| jdbcType.getClass() == TimestampWithTimeZoneJdbcType.class ) {
 			if ( javaType.getClass() == OffsetDateTimeJavaType.class ) {
-				return new TemporalPreservation(
-						SUPPORTED, SUPPORTED, SUPPORTED, SUPPORTED, IRRELEVANT );
+				return new TemporalPreservation( SUPPORTED, SUPPORTED, SUPPORTED, SUPPORTED, IRRELEVANT );
 			}
 			if ( javaType.getClass() == ZonedDateTimeJavaType.class ) {
-				return new TemporalPreservation(
-						SUPPORTED, SUPPORTED, SUPPORTED, SUPPORTED, UNSUPPORTED );
+				return new TemporalPreservation( SUPPORTED, SUPPORTED, SUPPORTED, SUPPORTED, UNSUPPORTED );
 			}
 		}
 		return super.getTemporalPreservation( javaType, jdbcType );

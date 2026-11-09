@@ -1,5 +1,6 @@
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.temporaltype.internal.TemporalPreservationHelper;
 import org.hibernate.dialect.temporaltype.spi.StandardTemporalPreservation;
 import org.hibernate.dialect.type.spi.DdlTypeBuilder;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
@@ -2122,11 +2123,18 @@ public abstract class Dialect implements ConversionContext, AlterTableSupport,
 	/// a Java class or SQL type code. Override only for handling whose complete
 	/// binding, extraction and reconstruction behavior is established.
 	///
+	/// Built-in Dialects first consult [org.hibernate.type.descriptor.jdbc.TemporalJdbcType].
+	/// A present report is authoritative; a declined pair follows existing recognition.
+	/// An application override retains precedence unless it delegates to this method.
 	/// Adjustment and auxiliary storage are assessed by mapping validation.
 	///
 	/// @since 8.0
 	@SPI({ IMPLEMENT, SUPPLY })
 	public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
+		final var contributed = TemporalPreservationHelper.assess( javaType, jdbcType, this );
+		if ( contributed != null ) {
+			return contributed;
+		}
 		return StandardTemporalPreservation.assess( javaType, jdbcType, getDirectJavaTimeJdbcSupport() );
 	}
 

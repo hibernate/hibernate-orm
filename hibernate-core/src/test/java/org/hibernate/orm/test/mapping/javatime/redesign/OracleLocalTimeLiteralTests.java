@@ -1,7 +1,6 @@
 package org.hibernate.orm.test.mapping.javatime.redesign;
 
 import java.sql.PreparedStatement;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.TimeZone;
 

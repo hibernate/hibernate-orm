@@ -330,7 +330,7 @@ public final class ExecuteWithTemporaryTableHelper {
 						session
 				);
 			}
-			final var resultSet = jdbcCoordinator.getResultSetReturn().execute( preparedStatement, sqlSelect );
+			final var resultSet = jdbcCoordinator.getResultSetReturn().extract( preparedStatement, sqlSelect );
 			final var rowNumbers = new int[rows];
 			try {
 				int rowIndex = 0;

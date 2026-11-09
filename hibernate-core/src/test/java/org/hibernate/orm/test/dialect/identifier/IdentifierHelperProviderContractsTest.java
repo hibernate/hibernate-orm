@@ -6,6 +6,7 @@ import java.util.Set;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.internal.PersistenceUnitJdbcEnvironment;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -20,6 +21,8 @@ import org.hibernate.engine.jdbc.env.spi.JdbcMetadata;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -131,6 +134,36 @@ public class IdentifierHelperProviderContractsTest {
 		final IdentifierHelper sybase = new SybaseDialect().buildIdentifierHelper( request() );
 		assertThat( sybase.toMetaDataObjectName( Identifier.toIdentifier( "MixedName" ) ) )
 				.isEqualTo( "MixedName" );
+	}
+
+	@Test
+	void nullCaseStrategiesRestoreBuilderDefaults() {
+		final var builder = IdentifierHelperBuilder.from( mock( JdbcEnvironment.class ) );
+		builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.LOWER );
+		builder.setQuotedCaseStrategy( IdentifierCaseStrategy.UPPER );
+		builder.setUnquotedCaseStrategy( null );
+		builder.setQuotedCaseStrategy( null );
+
+		assertThat( builder.getUnquotedCaseStrategy() ).isEqualTo( IdentifierCaseStrategy.UPPER );
+		assertThat( builder.getQuotedCaseStrategy() ).isEqualTo( IdentifierCaseStrategy.MIXED );
+		final var helper = builder.build();
+		assertThat( helper.toMetaDataObjectName( new Identifier( "MixedName", false ) ) ).isEqualTo( "MIXEDNAME" );
+		assertThat( helper.toMetaDataObjectName( new Identifier( "MixedName", true ) ) ).isEqualTo( "MixedName" );
+	}
+
+	@ParameterizedTest
+	@ValueSource(booleans = { true, false })
+	void globalQuotingAcceptsNullAndBlankDefinitions(boolean globallyQuoteIdentifiers) {
+		final var environment = mock( JdbcEnvironment.class );
+		final var delegate = IdentifierHelperBuilder.from( environment ).build();
+		when( environment.getIdentifierHelper() ).thenReturn( delegate );
+		final var helper = new PersistenceUnitJdbcEnvironment( environment, () -> globallyQuoteIdentifiers, false )
+				.getIdentifierHelper();
+
+		assertThat( helper.applyGlobalQuoting( "integer" ).isQuoted() ).isEqualTo( globallyQuoteIdentifiers );
+		assertThat( helper.applyGlobalQuoting( null ) ).isNull();
+		assertThat( helper.applyGlobalQuoting( "" ) ).isNull();
+		assertThat( helper.applyGlobalQuoting( " \t" ) ).isNull();
 	}
 
 	private static IdentifierHelperBuildRequest request() {

@@ -1,8 +1,10 @@
 package org.hibernate.orm.test.procedure;
 
+import org.hibernate.Session;
 import org.hibernate.dialect.H2Dialect;
 
 import org.hibernate.jpa.HibernateHints;
+import org.hibernate.query.UnknownParameterException;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -13,6 +15,7 @@ import jakarta.persistence.ParameterMode;
 import jakarta.persistence.StoredProcedureQuery;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Tests for registering and binding parameters
@@ -28,6 +31,34 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RequiresDialect( H2Dialect.class )
 @JiraKey("https://hibernate.atlassian.net/browse/HHH-11447")
 public class ProcedureParameterTests {
+
+	@Test
+	void parameterMetadataBeforeAndAfterRegistration(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var call = em.unwrap( Session.class ).createStoredProcedureCall( "locate" );
+			final var metadata = call.getParameterMetadata();
+			assertThat( metadata.getParameters() ).isEmpty();
+
+			final var parameter = call.registerParameter( 1, String.class, ParameterMode.IN );
+			assertThat( metadata.getParameters() ).containsExactly( parameter );
+			assertThat( metadata.resolve( parameter ) ).isSameAs( parameter );
+		} );
+	}
+
+	@Test
+	void rejectsParameterFromAnotherProcedureCall(EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var session = em.unwrap( Session.class );
+			final var first = session.createStoredProcedureCall( "locate" );
+			final var parameter = first.registerParameter( 1, String.class, ParameterMode.IN );
+			final var second = session.createStoredProcedureCall( "locate" );
+			second.registerParameter( 1, String.class, ParameterMode.IN );
+
+			assertThatThrownBy( () -> second.isBound( parameter ) )
+					.isInstanceOf( IllegalArgumentException.class )
+					.hasCauseInstanceOf( UnknownParameterException.class );
+		} );
+	}
 
 	@Test
 	public void testRegisteredParameter(EntityManagerFactoryScope scope) {

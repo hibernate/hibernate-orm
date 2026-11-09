@@ -10,6 +10,8 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.SessionFactoryBuilder;
@@ -68,7 +70,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize
  */
 public class MetadataImpl implements MetadataImplementor, Serializable {
 
-	private final UUID uuid;
+	private final @Nonnull UUID uuid;
 	private final MetadataBuildingOptions metadataBuildingOptions;
 	private final BootstrapContext bootstrapContext;
 
@@ -93,7 +95,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Database database;
 
 	public MetadataImpl(
-			UUID uuid,
+			@Nonnull UUID uuid,
 			MetadataBuildingOptions metadataBuildingOptions,
 			Map<String, PersistentClass> entityBindingMap,
 			List<Component> composites,
@@ -160,6 +162,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
+	@Nonnull
 	public SessionFactoryBuilder getSessionFactoryBuilder() {
 		final var defaultBuilder = getFactoryBuilder();
 		SessionFactoryBuilder builder = null;
@@ -201,131 +204,154 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
+	@Nonnull
 	public SessionFactoryImplementor buildSessionFactory() {
 		return (SessionFactoryImplementor) getSessionFactoryBuilder().build();
 	}
 
 	@Override
+	@Nonnull
 	public UUID getUUID() {
 		return uuid;
 	}
 
 	@Override
+	@Nonnull
 	public Database getDatabase() {
 		return database;
 	}
 
 	@Override
+	@Nonnull
 	public java.util.Collection<PersistentClass> getEntityBindings() {
 		return entityBindingMap.values();
 	}
 
 	@Override
-	public PersistentClass getEntityBinding(String entityName) {
+	@Nullable
+	public PersistentClass getEntityBinding(@Nonnull String entityName) {
 		return entityBindingMap.get( entityName );
 	}
 
 	@Override
+	@Nonnull
 	public java.util.Collection<Collection> getCollectionBindings() {
 		return collectionBindingMap.values();
 	}
 
 	@Override
-	public Collection getCollectionBinding(String role) {
+	@Nullable
+	public Collection getCollectionBinding(@Nonnull String role) {
 		return collectionBindingMap.get( role );
 	}
 
 	@Override
+	@Nonnull
 	public Map<String, String> getImports() {
 		return imports;
 	}
 
 	@Override
-	public NamedHqlQueryDefinition<?> getNamedHqlQueryMapping(String name) {
+	@Nullable
+	public NamedHqlQueryDefinition<?> getNamedHqlQueryMapping(@Nonnull String name) {
 		return namedQueryMap.get( name );
 	}
 
 	@Override
-	public void visitNamedHqlQueryDefinitions(Consumer<NamedHqlQueryDefinition<?>> definitionConsumer) {
+	public void visitNamedHqlQueryDefinitions(@Nonnull Consumer<NamedHqlQueryDefinition<?>> definitionConsumer) {
 		namedQueryMap.values().forEach( definitionConsumer );
 	}
 
 	@Override
-	public NamedNativeQueryDefinition<?> getNamedNativeQueryMapping(String name) {
+	@Nullable
+	public NamedNativeQueryDefinition<?> getNamedNativeQueryMapping(@Nonnull String name) {
 		return namedNativeQueryMap.get( name );
 	}
 
 	@Override
-	public void visitNamedNativeQueryDefinitions(Consumer<NamedNativeQueryDefinition<?>> definitionConsumer) {
+	public void visitNamedNativeQueryDefinitions(@Nonnull Consumer<NamedNativeQueryDefinition<?>> definitionConsumer) {
 		namedNativeQueryMap.values().forEach( definitionConsumer );
 	}
 
 	@Override
-	public NamedProcedureCallDefinition getNamedProcedureCallMapping(String name) {
+	@Nullable
+	public NamedProcedureCallDefinition getNamedProcedureCallMapping(@Nonnull String name) {
 		return namedProcedureCallMap.get( name );
 	}
 
 	@Override
-	public void visitNamedProcedureCallDefinition(Consumer<NamedProcedureCallDefinition> definitionConsumer) {
+	public void visitNamedProcedureCallDefinition(@Nonnull Consumer<NamedProcedureCallDefinition> definitionConsumer) {
 		namedProcedureCallMap.values().forEach( definitionConsumer );
 	}
 
 	@Override
-	public NamedResultSetMappingDescriptor getResultSetMapping(String name) {
+	@Nullable
+	public NamedResultSetMappingDescriptor getResultSetMapping(@Nonnull String name) {
 		return sqlResultSetMappingMap.get( name );
 	}
 
 	@Override
-	public void visitNamedResultSetMappingDefinition(Consumer<NamedResultSetMappingDescriptor> definitionConsumer) {
+	public void visitNamedResultSetMappingDefinition(
+			@Nonnull Consumer<NamedResultSetMappingDescriptor> definitionConsumer) {
 		sqlResultSetMappingMap.values().forEach( definitionConsumer );
 	}
 
 	@Override
-	public TypeDefinition getTypeDefinition(String typeName) {
+	@Nullable
+	public TypeDefinition getTypeDefinition(@Nonnull String typeName) {
 		return typeDefinitionMap.get( typeName );
 	}
 
 	@Override
+	@Nonnull
 	public Map<String, FilterDefinition> getFilterDefinitions() {
 		return filterDefinitionMap;
 	}
 
 	@Override
-	public FilterDefinition getFilterDefinition(String name) {
+	@Nullable
+	public FilterDefinition getFilterDefinition(@Nonnull String name) {
 		return filterDefinitionMap.get( name );
 	}
 
 	@Override
-	public FetchProfile getFetchProfile(String name) {
+	@Nullable
+	public FetchProfile getFetchProfile(@Nonnull String name) {
 		return fetchProfileMap.get( name );
 	}
 
 	@Override
+	@Nonnull
 	public java.util.Collection<FetchProfile> getFetchProfiles() {
 		return fetchProfileMap.values();
 	}
 
 	@Override
-	public NamedEntityGraphDefinition getNamedEntityGraph(String name) {
+	@Nullable
+	public NamedEntityGraphDefinition getNamedEntityGraph(@Nonnull String name) {
 		return namedEntityGraphMap.get( name );
 	}
 
 	@Override
+	@Nonnull
 	public Map<String, NamedEntityGraphDefinition> getNamedEntityGraphs() {
 		return namedEntityGraphMap;
 	}
 
 	@Override
-	public IdentifierGeneratorDefinition getIdentifierGenerator(String name) {
+	@Nullable
+	public IdentifierGeneratorDefinition getIdentifierGenerator(@Nonnull String name) {
 		return idGeneratorDefinitionMap.get( name );
 	}
 
 	@Override
+	@Nonnull
 	public Map<String, SqmFunctionDescriptor> getSqlFunctionMap() {
 		return sqlFunctionMap;
 	}
 
 	@Override
+	@Nonnull
 	public Set<String> getContributors() {
 		final HashSet<String> contributors = new HashSet<>();
 		entityBindingMap.forEach( (s, persistentClass)
@@ -342,6 +368,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
+	@Nonnull
 	public java.util.Collection<Table> collectTableMappings() {
 		final ArrayList<Table> tables = new ArrayList<>();
 		for ( var namespace : database.getNamespaces() ) {

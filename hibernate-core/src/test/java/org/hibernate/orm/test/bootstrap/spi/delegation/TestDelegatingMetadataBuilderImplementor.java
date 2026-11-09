@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.bootstrap.spi.delegation;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.spi.AbstractDelegatingMetadataBuilderImplementor;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -19,6 +21,7 @@ public class TestDelegatingMetadataBuilderImplementor extends AbstractDelegating
 	}
 
 	@Override
+	@Nonnull
 	protected TestDelegatingMetadataBuilderImplementor getThis() {
 		return this;
 	}
@@ -30,7 +33,8 @@ public class TestDelegatingMetadataBuilderImplementor extends AbstractDelegating
 
 	@Override
 	@Deprecated(since = "8.0", forRemoval = true)
-	public MetadataBuilder applyImplicitListSemantics(CollectionClassification classification) {
+	@Nonnull
+	public MetadataBuilder applyImplicitListSemantics(@Nullable CollectionClassification classification) {
 		return delegate().applyImplicitListSemantics( classification );
 	}
 }

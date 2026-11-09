@@ -2,6 +2,9 @@ package org.hibernate.boot;
 
 import java.net.URL;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 /**
  * Abstraction for locating class-path resources
  *
@@ -19,5 +22,6 @@ public interface ResourceLocator {
 	 *
 	 * @return The located URL, or {@code null} if no match found
 	 */
-	URL locateResource(String resourceName);
+	@Nullable
+	URL locateResource(@Nonnull String resourceName);
 }

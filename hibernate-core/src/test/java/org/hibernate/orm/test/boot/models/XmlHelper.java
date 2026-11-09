@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.ResourceStreamLocator;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
@@ -28,26 +30,28 @@ public class XmlHelper {
 	public static JaxbEntityMappingsImpl loadMapping(String resourceName, ClassLoading classLoadingAccess) {
 		final ResourceStreamLocatorImpl resourceStreamLocator = new ResourceStreamLocatorImpl( classLoadingAccess );
 		final MappingBinder mappingBinder = new MappingBinder( resourceStreamLocator, NON_VALIDATING );
+		final var stream = resourceStreamLocator.locateResourceStream( resourceName );
+		if ( stream == null ) {
+			throw new XmlResourceException( "Could not locate XML mapping resource - " + resourceName );
+		}
 		final Binding<JaxbBindableMappingDescriptor> binding = mappingBinder.bind(
-				resourceStreamLocator.locateResourceStream( resourceName ),
+				stream,
 				new Origin( SourceType.RESOURCE, resourceName )
 		);
 		return (JaxbEntityMappingsImpl) binding.getRoot();
 	}
 
 	private record ResourceStreamLocatorImpl(ClassLoading classLoadingAccess) implements ResourceStreamLocator {
-			@Override
-			public InputStream locateResourceStream(String resourceName) {
-				final URL resource = classLoadingAccess.locateResource( resourceName );
-				if ( resource == null ) {
-					throw new XmlResourceException( "Could not locate XML mapping resource - " + resourceName );
-				}
-				try {
-					return resource.openStream();
-				}
-				catch (IOException e) {
-					throw new XmlResourceException( "Could not open XML mapping resource stream - " + resourceName, e );
-				}
+		@Override
+		@Nullable
+		public InputStream locateResourceStream(@Nonnull String resourceName) {
+			final URL resource = classLoadingAccess.locateResource( resourceName );
+			try {
+				return resource == null ? null : resource.openStream();
+			}
+			catch (IOException e) {
+				throw new XmlResourceException( "Could not open XML mapping resource stream - " + resourceName, e );
 			}
 		}
+	}
 }

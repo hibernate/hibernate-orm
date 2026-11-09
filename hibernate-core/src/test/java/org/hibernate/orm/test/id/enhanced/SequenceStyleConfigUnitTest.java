@@ -53,6 +53,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Tests that SequenceStyleGenerator configures itself as expected in various scenarios
@@ -91,18 +92,18 @@ public class SequenceStyleConfigUnitTest {
 					props
 			);
 
+			final DatabaseStructure databaseStructure = generator.getDatabaseStructure();
+			assertThrows( IllegalStateException.class, databaseStructure::getPhysicalName );
 			Database database = new Database( buildingContext.getBuildingOptions() );
 			generator.registerExportables( database );
+			assertEquals( "ID_SEQ", databaseStructure.getPhysicalName().render() );
 			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
 
-			final DatabaseStructure databaseStructure = generator.getDatabaseStructure();
 			assertTrue( databaseStructure.isPhysicalSequence() );
 
 			final Optimizer optimizer = generator.getOptimizer();
 			assertThat( optimizer, instanceOf( PooledOptimizer.class ) );
 			assertEquals( optimizer.getIncrementSize(), OptimizableGenerator.DEFAULT_INCREMENT_SIZE );
-
-			assertEquals( "ID_SEQ", databaseStructure.getPhysicalName().render() );
 		}
 	}
 
@@ -137,18 +138,18 @@ public class SequenceStyleConfigUnitTest {
 					props
 			);
 
+			final DatabaseStructure databaseStructure = generator.getDatabaseStructure();
+			assertThrows( IllegalStateException.class, databaseStructure::getPhysicalName );
 			Database database = new Database( buildingContext.getBuildingOptions() );
 			generator.registerExportables( database );
+			assertEquals( "ID_SEQ", databaseStructure.getPhysicalName().render() );
 			generator.initialize( SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() ) );
 
-			final DatabaseStructure databaseStructure = generator.getDatabaseStructure();
 			final Optimizer optimizer = generator.getOptimizer();
 
 			assertFalse( databaseStructure.isPhysicalSequence() );
 			assertThat( optimizer, instanceOf( PooledOptimizer.class ) );
 			assertEquals( 50, databaseStructure.getIncrementSize());
-
-			assertEquals( "ID_SEQ", databaseStructure.getPhysicalName().render() );
 		}
 	}
 

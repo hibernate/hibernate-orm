@@ -6,7 +6,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.hibernate.AssertionFailure;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.LockOptions;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.model.naming.Identifier;
@@ -40,31 +41,31 @@ import static org.hibernate.id.enhanced.TableGeneratorLogger.TABLE_GENERATOR_LOG
  */
 public class TableStructure implements DatabaseStructure {
 
-	private final QualifiedName logicalQualifiedTableName;
-	private final Identifier logicalValueColumnNameIdentifier;
+	private final @Nonnull QualifiedName logicalQualifiedTableName;
+	private final @Nonnull Identifier logicalValueColumnNameIdentifier;
 	private final int initialValue;
 	private final int incrementSize;
-	private final String options;
+	private final @Nullable String options;
 
-	private final String contributor;
+	private final @Nonnull String contributor;
 
-	private QualifiedName physicalTableName;
-	private String valueColumnNameText;
+	private @Nullable QualifiedName physicalTableName;
+	private @Nullable String valueColumnNameText;
 
-	private String selectQuery;
-	private String updateQuery;
+	private @Nullable String selectQuery;
+	private @Nullable String updateQuery;
 
 	private boolean applyIncrementSizeToSourceValues;
 	private int accessCounter;
 
 
 	public TableStructure(
-			String contributor,
-			QualifiedName qualifiedTableName,
-			Identifier valueColumnNameIdentifier,
+			@Nonnull String contributor,
+			@Nonnull QualifiedName qualifiedTableName,
+			@Nonnull Identifier valueColumnNameIdentifier,
 			int initialValue,
 			int incrementSize,
-			Class<?> numberType) {
+			@Nullable Class<?> numberType) {
 		this(
 				contributor,
 				qualifiedTableName,
@@ -77,13 +78,13 @@ public class TableStructure implements DatabaseStructure {
 	}
 
 	public TableStructure(
-			String contributor,
-			QualifiedName qualifiedTableName,
-			Identifier valueColumnNameIdentifier,
+			@Nonnull String contributor,
+			@Nonnull QualifiedName qualifiedTableName,
+			@Nonnull Identifier valueColumnNameIdentifier,
 			int initialValue,
 			int incrementSize,
-			String options,
-			Class<?> numberType) {
+			@Nullable String options,
+			@Nullable Class<?> numberType) {
 		this.contributor = contributor;
 		this.logicalQualifiedTableName = qualifiedTableName;
 		this.logicalValueColumnNameIdentifier = valueColumnNameIdentifier;
@@ -94,14 +95,17 @@ public class TableStructure implements DatabaseStructure {
 	}
 
 	@Override
-	public QualifiedName getPhysicalName() {
+	public @Nonnull QualifiedName getPhysicalName() {
+		if ( physicalTableName == null ) {
+			throw new IllegalStateException( "The physical table name is unavailable before registerExportables()" );
+		}
 		return physicalTableName;
 	}
 
 	/*
 	 * Used by Hibernate Reactive
 	 */
-	public Identifier getLogicalValueColumnNameIdentifier() {
+	public @Nonnull Identifier getLogicalValueColumnNameIdentifier() {
 		return logicalValueColumnNameIdentifier;
 	}
 
@@ -121,20 +125,17 @@ public class TableStructure implements DatabaseStructure {
 	}
 
 	@Override @Deprecated
-	public String[] getAllSqlForTests() {
+	public @Nonnull String[] getAllSqlForTests() {
 		return new String[] { selectQuery, updateQuery };
 	}
 
 	@Override @Deprecated
-	public void prepare(Optimizer optimizer) {
+	public void prepare(@Nonnull Optimizer optimizer) {
 		applyIncrementSizeToSourceValues = optimizer.applyIncrementSizeToSourceValues();
 	}
 
 	@Override
-	public AccessCallback buildCallback(final SharedSessionContractImplementor session) {
-		if ( selectQuery == null || updateQuery == null ) {
-			throw new AssertionFailure( "SequenceStyleGenerator's TableStructure was not properly initialized" );
-		}
+	public @Nonnull AccessCallback buildCallback(final @Nonnull SharedSessionContractImplementor session) {
 
 		final var statsCollector = session.getEventListenerManager();
 		final var statementLogger =
@@ -147,7 +148,10 @@ public class TableStructure implements DatabaseStructure {
 				return session.getTransactionCoordinator().createIsolationDelegate().delegateWork(
 						new AbstractReturningWork<>() {
 							@Override
-							public Long execute(Connection connection) throws SQLException {
+							public @Nonnull Long execute(@Nonnull Connection connection) throws SQLException {
+								if ( selectQuery == null || updateQuery == null || physicalTableName == null ) {
+									throw new IllegalStateException( "The TableStructure was not properly initialized" );
+								}
 								long value;
 								int rows;
 								do {
@@ -205,43 +209,43 @@ public class TableStructure implements DatabaseStructure {
 			}
 
 			@Override
-			public String getTenantIdentifier() {
+			public @Nullable String getTenantIdentifier() {
 				return session.getTenantIdentifier();
 			}
 		};
 	}
 
-	private PreparedStatement prepareStatement(
-			Connection connection,
-			String sql,
-			SqlStatementLogger logger,
-			SessionEventListenerManager statsCollector,
-			SharedSessionContractImplementor session) throws SQLException {
+	private @Nonnull PreparedStatement prepareStatement(
+			@Nonnull Connection connection,
+			@Nonnull String sql,
+			@Nonnull SqlStatementLogger logger,
+			@Nonnull SessionEventListenerManager statsCollector,
+			@Nonnull SharedSessionContractImplementor session) throws SQLException {
 		logger.logStatement( sql, FormatStyle.BASIC.getFormatter() );
 		final var eventMonitor = session.getEventMonitor();
 		final var creationEvent = eventMonitor.beginJdbcPreparedStatementCreationEvent();
-		final var stats = session.getFactory().getStatistics();
+		final var statistics = session.getFactory().getStatistics();
 		try {
 			statsCollector.jdbcPrepareStatementStart();
-			if ( stats != null && stats.isStatisticsEnabled() ) {
-				stats.prepareStatement();
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.prepareStatement();
 			}
 			return connection.prepareStatement( sql );
 		}
 		finally {
 			eventMonitor.completeJdbcPreparedStatementCreationEvent( creationEvent, sql );
 			statsCollector.jdbcPrepareStatementEnd();
-			if ( stats != null && stats.isStatisticsEnabled() ) {
-				stats.closeStatement();
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.closeStatement();
 			}
 		}
 	}
 
 	private int executeUpdate(
-			PreparedStatement ps,
-			SessionEventListenerManager statsCollector,
-			String sql,
-			SharedSessionContractImplementor session) throws SQLException {
+			@Nonnull PreparedStatement ps,
+			@Nonnull SessionEventListenerManager statsCollector,
+			@Nonnull String sql,
+			@Nonnull SharedSessionContractImplementor session) throws SQLException {
 		final var eventMonitor = session.getEventMonitor();
 		final var executionEvent = eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 		try {
@@ -255,11 +259,11 @@ public class TableStructure implements DatabaseStructure {
 
 	}
 
-	private ResultSet executeQuery(
-			PreparedStatement ps,
-			SessionEventListenerManager statsCollector,
-			String sql,
-			SharedSessionContractImplementor session) throws SQLException {
+	private @Nonnull ResultSet executeQuery(
+			@Nonnull PreparedStatement ps,
+			@Nonnull SessionEventListenerManager statsCollector,
+			@Nonnull String sql,
+			@Nonnull SharedSessionContractImplementor session) throws SQLException {
 		final var eventMonitor = session.getEventMonitor();
 		final var executionEvent = eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 		try {
@@ -278,7 +282,7 @@ public class TableStructure implements DatabaseStructure {
 	}
 
 	@Override
-	public void registerExportables(Database database) {
+	public void registerExportables(@Nonnull Database database) {
 		final var namespace = database.locateNamespace(
 				logicalQualifiedTableName.getCatalogName(),
 				logicalQualifiedTableName.getSchemaName()
@@ -316,7 +320,7 @@ public class TableStructure implements DatabaseStructure {
 	}
 
 	@Override
-	public void initialize(SqlStringGenerationContext context) {
+	public void initialize(@Nonnull SqlStringGenerationContext context) {
 		final var dialect = context.getDialect();
 		final String formattedPhysicalTableName = context.format( physicalTableName );
 		final String lockingClause = dialect.getLockingSupport().getLockingClauseRenderer().render(
@@ -335,7 +339,7 @@ public class TableStructure implements DatabaseStructure {
 	}
 
 	@Override
-	public void registerExtraExportables(Table table, Optimizer optimizer) {
+	public void registerExtraExportables(@Nonnull Table table, @Nonnull Optimizer optimizer) {
 		table.addResyncCommand( (sqlContext, isolator) -> {
 			final String sequenceTableName = sqlContext.format( physicalTableName );
 			final String tableName = sqlContext.format( table.getQualifiedTableName() );

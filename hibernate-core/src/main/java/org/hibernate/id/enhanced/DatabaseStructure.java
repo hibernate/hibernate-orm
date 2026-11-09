@@ -1,5 +1,7 @@
 package org.hibernate.id.enhanced;
 
+import jakarta.annotation.Nonnull;
+import org.hibernate.Internal;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.QualifiedName;
@@ -16,13 +18,11 @@ import org.hibernate.mapping.Table;
 public interface DatabaseStructure extends ExportableProducer {
 	/**
 	 * The physical name of the database structure (table or sequence).
-	 * <p>
-	 * Only available after {@link #registerExportables(Database)}
-	 * has been called.
 	 *
 	 * @return The structure name.
+	 * @throws IllegalStateException if called before {@link #registerExportables(Database)}
 	 */
-	QualifiedName getPhysicalName();
+	@Nonnull QualifiedName getPhysicalName();
 
 	/**
 	 * How many times has this structure been accessed through this reference?
@@ -47,9 +47,9 @@ public interface DatabaseStructure extends ExportableProducer {
 	 * structure as needed.
 	 *
 	 * @param session The session.
-	 * @return The next value.
+	 * @return The callback that retrieves the next value.
 	 */
-	AccessCallback buildCallback(SharedSessionContractImplementor session);
+	@Nonnull AccessCallback buildCallback(@Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Prepare this structure for use.  Called sometime after instantiation,
@@ -60,7 +60,7 @@ public interface DatabaseStructure extends ExportableProducer {
 	 * @deprecated Use {@link #configure(Optimizer)} instead.
 	 */
 	@Deprecated
-	default void prepare(Optimizer optimizer) {
+	default void prepare(@Nonnull Optimizer optimizer) {
 	}
 
 	/**
@@ -70,7 +70,7 @@ public interface DatabaseStructure extends ExportableProducer {
 	 *
 	 * @param optimizer The optimizer being applied to the generator.
 	 */
-	default void configure(Optimizer optimizer) {
+	default void configure(@Nonnull Optimizer optimizer) {
 		prepare( optimizer );
 	}
 
@@ -83,7 +83,7 @@ public interface DatabaseStructure extends ExportableProducer {
 	 * @param database The database instance
 	 */
 	@Override
-	void registerExportables(Database database);
+	void registerExportables(@Nonnull Database database);
 
 	/**
 	 * Register additional database objects which need to be aware of the
@@ -97,7 +97,7 @@ public interface DatabaseStructure extends ExportableProducer {
 	 *
 	 * @since 7.2
 	 */
-	default void registerExtraExportables(Table table, Optimizer optimizer) {
+	default void registerExtraExportables(@Nonnull Table table, @Nonnull Optimizer optimizer) {
 	}
 
 	/**
@@ -108,7 +108,7 @@ public interface DatabaseStructure extends ExportableProducer {
 	 *
 	 * @param context A context to help generate SQL strings
 	 */
-	default void initialize(SqlStringGenerationContext context) {
+	default void initialize(@Nonnull SqlStringGenerationContext context) {
 	}
 
 	/**
@@ -119,10 +119,12 @@ public interface DatabaseStructure extends ExportableProducer {
 	boolean isPhysicalSequence();
 
 	/**
+	 * @return The SQL statements. Entries may be {@code null} before {@link #initialize(SqlStringGenerationContext)}.
+	 *
 	 * @deprecated Exposed for tests only.
 	 */
-	@Deprecated
-	default String[] getAllSqlForTests() {
+	@Deprecated @Internal
+	default @Nonnull String[] getAllSqlForTests() {
 		return new String[] { };
 	}
 }

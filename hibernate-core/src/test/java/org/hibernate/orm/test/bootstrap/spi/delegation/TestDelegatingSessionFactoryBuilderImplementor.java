@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.bootstrap.spi.delegation;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.spi.AbstractDelegatingSessionFactoryBuilderImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
 
@@ -17,6 +18,7 @@ public class TestDelegatingSessionFactoryBuilderImplementor extends AbstractDele
 	}
 
 	@Override
+	@Nonnull
 	protected TestDelegatingSessionFactoryBuilderImplementor getThis() {
 		return this;
 	}

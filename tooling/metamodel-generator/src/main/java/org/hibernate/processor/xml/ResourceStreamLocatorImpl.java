@@ -7,6 +7,7 @@ import javax.tools.StandardLocation;
 import org.hibernate.boot.ResourceStreamLocator;
 import org.hibernate.processor.Context;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
 /**
@@ -25,7 +26,7 @@ public class ResourceStreamLocatorImpl implements ResourceStreamLocator {
 	}
 
 	@Override
-	public @Nullable InputStream locateResourceStream(String resourceName) {
+	public @Nullable InputStream locateResourceStream(@Nonnull String resourceName) {
 		// METAGEN-75
 		if ( !resourceName.startsWith( RESOURCE_PATH_SEPARATOR ) ) {
 			resourceName = RESOURCE_PATH_SEPARATOR + resourceName;

@@ -1,6 +1,7 @@
 package org.hibernate.orm.test.boot.cfgXml;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.cfgxml.internal.ConfigLoader;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -54,9 +55,13 @@ public class CfgXmlResourceNameClosingTest {
 		boolean stopped = false;
 
 		@Override
-		@Nonnull
+		@Nullable
 		public InputStream locateResourceStream(@Nonnull String name) {
-			var stream = new InputStreamWrapper( super.locateResourceStream( name ) );
+			final var resource = super.locateResourceStream( name );
+			if ( resource == null ) {
+				return null;
+			}
+			var stream = new InputStreamWrapper( resource );
 			openedStreams.add( stream );
 			return stream;
 		}

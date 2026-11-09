@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.ResourceStreamLocator;
 import org.hibernate.models.spi.ClassLoading;
 
@@ -20,10 +22,11 @@ public class ResourceStreamLocatorImpl implements ResourceStreamLocator {
 	}
 
 	@Override
-	public InputStream locateResourceStream(String resourceName) {
+	@Nullable
+	public InputStream locateResourceStream(@Nonnull String resourceName) {
 		final URL resource = classLoadingAccess.locateResource( resourceName );
 		try {
-			return resource.openStream();
+			return resource == null ? null : resource.openStream();
 		}
 		catch (IOException e) {
 			throw new RuntimeException( e );

@@ -1,5 +1,7 @@
 package org.hibernate.boot.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.MapsId;
 import org.hibernate.AnnotationException;
@@ -206,6 +208,7 @@ public class InFlightMetadataCollectorImpl
 	}
 
 	@Override
+	@Nullable
 	public UUID getUUID() {
 		return null;
 	}
@@ -241,6 +244,7 @@ public class InFlightMetadataCollectorImpl
 	}
 
 	@Override
+	@Nonnull
 	public Database getDatabase() {
 		// important to delay this instantiation until as late as possible.
 		if ( database == null ) {
@@ -261,11 +265,13 @@ public class InFlightMetadataCollectorImpl
 	}
 
 	@Override
+	@Nonnull
 	public Map<String, SqmFunctionDescriptor> getSqlFunctionMap() {
 		return sqlFunctionMap;
 	}
 
 	@Override
+	@Nonnull
 	public Set<String> getContributors() {
 		throw new UnsupportedOperationException();
 	}
@@ -337,6 +343,7 @@ public class InFlightMetadataCollectorImpl
 	}
 
 	@Override
+	@Nonnull
 	public SessionFactoryBuilder getSessionFactoryBuilder() {
 		throw new UnsupportedOperationException(
 				"""
@@ -347,6 +354,7 @@ public class InFlightMetadataCollectorImpl
 	}
 
 	@Override
+	@Nonnull
 	public SessionFactoryImplementor buildSessionFactory() {
 		throw new UnsupportedOperationException(
 				"""
@@ -360,6 +368,7 @@ public class InFlightMetadataCollectorImpl
 	// Entity handling
 
 	@Override
+	@Nonnull
 	public java.util.Collection<PersistentClass> getEntityBindings() {
 		return entityBindingMap.values();
 	}
@@ -370,7 +379,8 @@ public class InFlightMetadataCollectorImpl
 	}
 
 	@Override
-	public PersistentClass getEntityBinding(String entityName) {
+	@Nullable
+	public PersistentClass getEntityBinding(@Nonnull String entityName) {
 		return entityBindingMap.get( entityName );
 	}
 
@@ -404,12 +414,14 @@ public class InFlightMetadataCollectorImpl
 	// Collection handling
 
 	@Override
+	@Nonnull
 	public java.util.Collection<Collection> getCollectionBindings() {
 		return collectionBindingMap.values();
 	}
 
 	@Override
-	public Collection getCollectionBinding(String role) {
+	@Nullable
+	public Collection getCollectionBinding(@Nonnull String role) {
 		return collectionBindingMap.get( role );
 	}
 
@@ -433,7 +445,8 @@ public class InFlightMetadataCollectorImpl
 	}
 
 	@Override
-	public TypeDefinition getTypeDefinition(String registrationKey) {
+	@Nullable
+	public TypeDefinition getTypeDefinition(@Nonnull String registrationKey) {
 		return typeDefRegistry.resolve( registrationKey );
 	}
 
@@ -570,12 +583,14 @@ public class InFlightMetadataCollectorImpl
 	// filter definitions
 
 	@Override
+	@Nonnull
 	public Map<String, FilterDefinition> getFilterDefinitions() {
 		return filterDefinitionMap;
 	}
 
 	@Override
-	public FilterDefinition getFilterDefinition(String name) {
+	@Nullable
+	public FilterDefinition getFilterDefinition(@Nonnull String name) {
 		return filterDefinitionMap.get( name );
 	}
 
@@ -592,12 +607,14 @@ public class InFlightMetadataCollectorImpl
 	// fetch profiles
 
 	@Override
+	@Nonnull
 	public java.util.Collection<FetchProfile> getFetchProfiles() {
 		return fetchProfileMap.values();
 	}
 
 	@Override
-	public FetchProfile getFetchProfile(String name) {
+	@Nullable
+	public FetchProfile getFetchProfile(@Nonnull String name) {
 		return fetchProfileMap.get( name );
 	}
 
@@ -617,7 +634,8 @@ public class InFlightMetadataCollectorImpl
 	// identifier generators
 
 	@Override
-	public IdentifierGeneratorDefinition getIdentifierGenerator(String name) {
+	@Nullable
+	public IdentifierGeneratorDefinition getIdentifierGenerator(@Nonnull String name) {
 		if ( name == null ) {
 			throw new IllegalArgumentException( "null is not a valid generator name" );
 		}
@@ -625,6 +643,7 @@ public class InFlightMetadataCollectorImpl
 	}
 
 	@Override
+	@Nonnull
 	public java.util.Collection<Table> collectTableMappings() {
 		final ArrayList<Table> tables = new ArrayList<>();
 		for ( Namespace namespace : getDatabase().getNamespaces() ) {
@@ -668,11 +687,13 @@ public class InFlightMetadataCollectorImpl
 	// Named EntityGraph handling
 
 	@Override
-	public NamedEntityGraphDefinition getNamedEntityGraph(String name) {
+	@Nullable
+	public NamedEntityGraphDefinition getNamedEntityGraph(@Nonnull String name) {
 		return namedEntityGraphMap.get( name );
 	}
 
 	@Override
+	@Nonnull
 	public Map<String, NamedEntityGraphDefinition> getNamedEntityGraphs() {
 		return namedEntityGraphMap;
 	}
@@ -690,7 +711,8 @@ public class InFlightMetadataCollectorImpl
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Named query handling
 
-	public NamedHqlQueryDefinition<?> getNamedHqlQueryMapping(String name) {
+	@Nullable
+	public NamedHqlQueryDefinition<?> getNamedHqlQueryMapping(@Nonnull String name) {
 		if ( name == null ) {
 			throw new IllegalArgumentException( "null is not a valid query name" );
 		}
@@ -698,7 +720,7 @@ public class InFlightMetadataCollectorImpl
 	}
 
 	@Override
-	public void visitNamedHqlQueryDefinitions(Consumer<NamedHqlQueryDefinition<?>> definitionConsumer) {
+	public void visitNamedHqlQueryDefinitions(@Nonnull Consumer<NamedHqlQueryDefinition<?>> definitionConsumer) {
 		namedQueryMap.values().forEach( definitionConsumer );
 	}
 
@@ -736,12 +758,13 @@ public class InFlightMetadataCollectorImpl
 	// Named native-query handling
 
 	@Override
-	public NamedNativeQueryDefinition<?> getNamedNativeQueryMapping(String name) {
+	@Nullable
+	public NamedNativeQueryDefinition<?> getNamedNativeQueryMapping(@Nonnull String name) {
 		return namedNativeQueryMap.get( name );
 	}
 
 	@Override
-	public void visitNamedNativeQueryDefinitions(Consumer<NamedNativeQueryDefinition<?>> definitionConsumer) {
+	public void visitNamedNativeQueryDefinitions(@Nonnull Consumer<NamedNativeQueryDefinition<?>> definitionConsumer) {
 		namedNativeQueryMap.values().forEach( definitionConsumer );
 	}
 
@@ -775,12 +798,13 @@ public class InFlightMetadataCollectorImpl
 
 
 	@Override
-	public NamedProcedureCallDefinition getNamedProcedureCallMapping(String name) {
+	@Nullable
+	public NamedProcedureCallDefinition getNamedProcedureCallMapping(@Nonnull String name) {
 		return namedProcedureCallMap.get( name );
 	}
 
 	@Override
-	public void visitNamedProcedureCallDefinition(Consumer<NamedProcedureCallDefinition> definitionConsumer) {
+	public void visitNamedProcedureCallDefinition(@Nonnull Consumer<NamedProcedureCallDefinition> definitionConsumer) {
 		namedProcedureCallMap.values().forEach( definitionConsumer );
 	}
 
@@ -811,12 +835,14 @@ public class InFlightMetadataCollectorImpl
 	// result-set mapping handling
 
 	@Override
-	public NamedResultSetMappingDescriptor getResultSetMapping(String name) {
+	@Nullable
+	public NamedResultSetMappingDescriptor getResultSetMapping(@Nonnull String name) {
 		return sqlResultSetMappingMap.get( name );
 	}
 
 	@Override
-	public void visitNamedResultSetMappingDefinition(Consumer<NamedResultSetMappingDescriptor> definitionConsumer) {
+	public void visitNamedResultSetMappingDefinition(
+			@Nonnull Consumer<NamedResultSetMappingDescriptor> definitionConsumer) {
 		sqlResultSetMappingMap.values().forEach( definitionConsumer );
 	}
 
@@ -864,6 +890,7 @@ public class InFlightMetadataCollectorImpl
 	// imports
 
 	@Override
+	@Nonnull
 	public Map<String,String> getImports() {
 		return imports;
 	}

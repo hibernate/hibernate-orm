@@ -54,6 +54,15 @@ This section describes changes to contracts (classes, interfaces, methods, etc.)
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#spi[SPI].
 
+[[statement-preparer]]
+=== Query preparation in `StatementPreparer`
+
+Custom implementations of `StatementPreparer` must implement two new overloads,
+`prepareQueryStatement(String sql)` and `prepareQueryStatement(String sql, boolean isCallable)`.
+Both may delegate to the existing three-argument overload with a null scroll mode.
+The single-argument overload uses `false` for `isCallable`.
+Hibernate uses these methods to fetch sequence values and database timestamps while leaving pending JDBC batches queued.
+
 [[persistence-context]]
 === Removed `PersistenceContext.reentrantSafeEntityEntries()`
 

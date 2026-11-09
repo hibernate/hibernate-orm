@@ -44,7 +44,7 @@ public class CurrentTimestampGenerationSelectionTest {
 
 		when( session.getJdbcCoordinator() ).thenReturn( coordinator );
 		when( coordinator.getStatementPreparer() ).thenReturn( preparer );
-		when( preparer.prepareStatement( command, false ) ).thenReturn( statement );
+		when( preparer.prepareQueryStatement( command, false ) ).thenReturn( statement );
 		when( coordinator.getResultSetReturn() ).thenReturn( resultSetReturn );
 		when( resultSetReturn.extract( statement, command ) ).thenReturn( resultSet );
 		when( resultSet.getTimestamp( 1 ) ).thenReturn( expected );
@@ -71,7 +71,7 @@ public class CurrentTimestampGenerationSelectionTest {
 
 		when( session.getJdbcCoordinator() ).thenReturn( coordinator );
 		when( coordinator.getStatementPreparer() ).thenReturn( preparer );
-		when( preparer.prepareStatement( command, true ) ).thenReturn( statement );
+		when( preparer.prepareQueryStatement( command, true ) ).thenReturn( statement );
 		when( coordinator.getResultSetReturn() ).thenReturn( resultSetReturn );
 		when( statement.getTimestamp( 1 ) ).thenReturn( expected );
 		when( coordinator.getLogicalConnection() ).thenReturn( logicalConnection );

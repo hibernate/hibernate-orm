@@ -128,6 +128,16 @@ class StatementPreparerImpl implements StatementPreparer {
 	}
 
 	@Override
+	public PreparedStatement prepareQueryStatement(String sql) {
+		return prepareQueryStatement( sql, false, null );
+	}
+
+	@Override
+	public PreparedStatement prepareQueryStatement(String sql, boolean isCallable) {
+		return prepareQueryStatement( sql, isCallable, null );
+	}
+
+	@Override
 	public PreparedStatement prepareQueryStatement(
 			String sql,
 			boolean isCallable,

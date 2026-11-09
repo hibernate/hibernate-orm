@@ -256,7 +256,7 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 		PreparedStatement statement = null;
 		try {
 			// a query statement leaves any pending JDBC batch queued
-			statement = statementPreparer.prepareQueryStatement( timestampSelectString, callable, null );
+			statement = statementPreparer.prepareQueryStatement( timestampSelectString, callable );
 			final Timestamp ts = callable
 					? extractCalledResult( statement, coordinator, timestampSelectString )
 					: extractResult( statement, coordinator, timestampSelectString );

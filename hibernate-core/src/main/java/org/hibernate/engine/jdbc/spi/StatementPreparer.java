@@ -91,6 +91,25 @@ public interface StatementPreparer {
 	 * Get a prepared statement for use in loading / querying, leaving any pending JDBC batch queued.
 	 *
 	 * @param sql The SQL the statement to be prepared
+	 *
+	 * @return the prepared statement
+	 */
+	PreparedStatement prepareQueryStatement(String sql);
+
+	/**
+	 * Get a prepared statement for use in loading / querying, leaving any pending JDBC batch queued.
+	 *
+	 * @param sql The SQL the statement to be prepared
+	 * @param isCallable Whether to prepare as a callable statement.
+	 *
+	 * @return the prepared statement
+	 */
+	PreparedStatement prepareQueryStatement(String sql, boolean isCallable);
+
+	/**
+	 * Get a prepared statement for use in loading / querying, leaving any pending JDBC batch queued.
+	 *
+	 * @param sql The SQL the statement to be prepared
 	 * @param isCallable Whether to prepare as a callable statement.
 	 * @param scrollMode (optional) scroll mode to be applied to the resulting result set;
 	 *                   may be null to indicate no scrolling should be applied.

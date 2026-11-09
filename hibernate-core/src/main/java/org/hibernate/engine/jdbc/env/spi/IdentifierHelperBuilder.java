@@ -5,9 +5,11 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.engine.jdbc.env.internal.NormalizingIdentifierHelperImpl;
 import org.jboss.logging.Logger;
 
+import static java.util.Objects.requireNonNull;
 
 /**
  * Builder for {@link IdentifierHelper} instances.  Mainly here to allow progressive
@@ -18,7 +20,7 @@ import org.jboss.logging.Logger;
 public class IdentifierHelperBuilder {
 	private static final Logger LOG = Logger.getLogger( IdentifierHelperBuilder.class );
 
-	private final JdbcEnvironment jdbcEnvironment;
+	private final @Nonnull JdbcEnvironment jdbcEnvironment;
 
 	private NameQualifierSupport nameQualifierSupport = NameQualifierSupport.BOTH;
 
@@ -34,12 +36,12 @@ public class IdentifierHelperBuilder {
 	private IdentifierCaseStrategy unquotedCaseStrategy = IdentifierCaseStrategy.UPPER;
 	private IdentifierCaseStrategy quotedCaseStrategy = IdentifierCaseStrategy.MIXED;
 
-	public static IdentifierHelperBuilder from(JdbcEnvironment jdbcEnvironment) {
+	public static IdentifierHelperBuilder from(@Nonnull JdbcEnvironment jdbcEnvironment) {
 		return new IdentifierHelperBuilder( jdbcEnvironment );
 	}
 
-	private IdentifierHelperBuilder(JdbcEnvironment jdbcEnvironment) {
-		this.jdbcEnvironment = jdbcEnvironment;
+	private IdentifierHelperBuilder(@Nonnull JdbcEnvironment jdbcEnvironment) {
+		this.jdbcEnvironment = requireNonNull( jdbcEnvironment, "jdbcEnvironment" );
 	}
 
 	public boolean isGloballyQuoteIdentifiers() {

@@ -15,6 +15,7 @@ import org.hibernate.dialect.identifier.spi.KeywordSupport;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.JdbcMetadata;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 
@@ -146,7 +147,7 @@ public class IdentifierHelperProviderContractsTest {
 		);
 		final KeywordSupport keywordSupport = () -> Set.of( "select" );
 		return new IdentifierHelperBuildRequest(
-				IdentifierHelperBuilder.from( null ),
+				IdentifierHelperBuilder.from( mock( JdbcEnvironment.class ) ),
 				metadata,
 				keywordSupport,
 				NameQualifierSupport.SCHEMA

@@ -175,67 +175,78 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public MetadataBuilder applyImplicitSchemaName(String implicitSchemaName) {
+	@Nonnull
+	public MetadataBuilder applyImplicitSchemaName(@Nullable String implicitSchemaName) {
 		options.mappingDefaults.implicitSchemaName = implicitSchemaName;
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyImplicitCatalogName(String implicitCatalogName) {
+	@Nonnull
+	public MetadataBuilder applyImplicitCatalogName(@Nullable String implicitCatalogName) {
 		options.mappingDefaults.implicitCatalogName = implicitCatalogName;
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyImplicitNamingStrategy(ImplicitNamingStrategy namingStrategy) {
+	@Nonnull
+	public MetadataBuilder applyImplicitNamingStrategy(@Nonnull ImplicitNamingStrategy namingStrategy) {
 		options.implicitNamingStrategy = namingStrategy;
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyPhysicalNamingStrategy(PhysicalNamingStrategy namingStrategy) {
+	@Nonnull
+	public MetadataBuilder applyPhysicalNamingStrategy(@Nonnull PhysicalNamingStrategy namingStrategy) {
 		options.physicalNamingStrategy = namingStrategy;
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyColumnOrderingStrategy(ColumnOrderingStrategy columnOrderingStrategy) {
+	@Nonnull
+	public MetadataBuilder applyColumnOrderingStrategy(@Nonnull ColumnOrderingStrategy columnOrderingStrategy) {
 		options.columnOrderingStrategy = columnOrderingStrategy;
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applySharedCacheMode(SharedCacheMode sharedCacheMode) {
+	@Nonnull
+	public MetadataBuilder applySharedCacheMode(@Nonnull SharedCacheMode sharedCacheMode) {
 		options.sharedCacheMode = sharedCacheMode;
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyAccessType(AccessType implicitCacheAccessType) {
+	@Nonnull
+	public MetadataBuilder applyAccessType(@Nullable AccessType implicitCacheAccessType) {
 		options.mappingDefaults.implicitCacheAccessType = implicitCacheAccessType;
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyIndexView(Object jandexView) {
+	@Nonnull
+	public MetadataBuilder applyIndexView(@Nullable Object jandexView) {
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyScanning(ScanningProvider scanningProvider) {
+	@Nonnull
+	public MetadataBuilder applyScanning(@Nullable ScanningProvider scanningProvider) {
 		bootstrapContext.injectScanning( scanningProvider );
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyArchiveDescriptorFactory(ArchiveDescriptorFactory factory) {
+	@Nonnull
+	public MetadataBuilder applyArchiveDescriptorFactory(@Nullable ArchiveDescriptorFactory factory) {
 		bootstrapContext.injectArchiveDescriptorFactory( factory );
 		return this;
 	}
 
 	@Override
 	@Deprecated(since = "8.0", forRemoval = true)
-	public MetadataBuilder applyImplicitListSemantics(CollectionClassification classification) {
+	@Nonnull
+	public MetadataBuilder applyImplicitListSemantics(@Nullable CollectionClassification classification) {
 		if ( classification != null ) {
 			options.mappingDefaults.implicitListClassification = classification;
 		}
@@ -243,55 +254,64 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
+	@Nonnull
 	public MetadataBuilder enableExplicitDiscriminatorsForJoinedSubclassSupport(boolean supported) {
 		options.explicitDiscriminatorsForJoinedInheritanceSupported = supported;
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public MetadataBuilder enableImplicitDiscriminatorsForJoinedSubclassSupport(boolean supported) {
 		options.implicitDiscriminatorsForJoinedInheritanceSupported = supported;
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public MetadataBuilder enableImplicitForcingOfDiscriminatorsInSelect(boolean supported) {
 		options.implicitlyForceDiscriminatorInSelect = supported;
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public MetadataBuilder enableGlobalNationalizedCharacterDataSupport(boolean enabled) {
 		options.useNationalizedCharacterData = enabled;
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyDefaultToOneFetchType(FetchType defaultToOneFetchType) {
+	@Nonnull
+	public MetadataBuilder applyDefaultToOneFetchType(@Nullable FetchType defaultToOneFetchType) {
 		options.mappingDefaults.toOnesAreLazyByDefault = defaultToOneFetchType == FetchType.LAZY;
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyBasicType(BasicType<?> type) {
+	@Nonnull
+	public MetadataBuilder applyBasicType(@Nonnull BasicType<?> type) {
 		options.basicTypeRegistrations.add( new BasicTypeRegistration( type ) );
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyBasicType(BasicType<?> type, String... keys) {
+	@Nonnull
+	public MetadataBuilder applyBasicType(@Nonnull BasicType<?> type, @Nullable String... keys) {
 		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys ) );
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyBasicType(UserType<?> type, String... keys) {
+	@Nonnull
+	public MetadataBuilder applyBasicType(@Nonnull UserType<?> type, @Nullable String... keys) {
 		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys, getTypeConfiguration() ) );
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyTypes(TypeContributor typeContributor) {
+	@Nonnull
+	public MetadataBuilder applyTypes(@Nonnull TypeContributor typeContributor) {
 		typeContributor.contribute( this, options.serviceRegistry );
 		return this;
 	}
@@ -333,13 +353,15 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public MetadataBuilder applyCacheRegionDefinition(CacheRegionDefinition cacheRegionDefinition) {
+	@Nonnull
+	public MetadataBuilder applyCacheRegionDefinition(@Nonnull CacheRegionDefinition cacheRegionDefinition) {
 		bootstrapContext.addCacheRegionDefinition( cacheRegionDefinition );
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyTempClassLoader(ClassLoader tempClassLoader) {
+	@Nonnull
+	public MetadataBuilder applyTempClassLoader(@Nullable ClassLoader tempClassLoader) {
 		bootstrapContext.injectJpaTempClassLoader( tempClassLoader );
 		return this;
 	}
@@ -350,7 +372,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public MetadataBuilder applyFunctions(FunctionContributor functionContributor) {
+	@Nonnull
+	public MetadataBuilder applyFunctions(@Nonnull FunctionContributor functionContributor) {
 		functionContributor.contributeFunctions( new FunctionContributions() {
 			@Override
 			public SqmFunctionRegistry getFunctionRegistry() {
@@ -371,25 +394,30 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public MetadataBuilder applySqlFunction(String functionName, SqmFunctionDescriptor function) {
+	@Nonnull
+	public MetadataBuilder applySqlFunction(@Nonnull String functionName, @Nonnull SqmFunctionDescriptor function) {
 		bootstrapContext.addSqlFunction( functionName, function );
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject) {
+	@Nonnull
+	public MetadataBuilder applyAuxiliaryDatabaseObject(@Nonnull AuxiliaryDatabaseObject auxiliaryDatabaseObject) {
 		bootstrapContext.addAuxiliaryDatabaseObject( auxiliaryDatabaseObject );
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applyAttributeConverter(ConverterDescriptor<?,?> descriptor) {
+	@Nonnull
+	public MetadataBuilder applyAttributeConverter(@Nonnull ConverterDescriptor<?,?> descriptor) {
 		bootstrapContext.addAttributeConverterDescriptor( descriptor );
 		return this;
 	}
 
 	@Override
-	public <O,R> MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<O,R>> attributeConverterClass) {
+	@Nonnull
+	public <O,R> MetadataBuilder applyAttributeConverter(
+			@Nonnull Class<? extends AttributeConverter<O,R>> attributeConverterClass) {
 		bootstrapContext.addAttributeConverterDescriptor(
 				ConverterDescriptors.of( attributeConverterClass )
 		);
@@ -397,7 +425,10 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public <O,R> MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<O,R>> attributeConverterClass, boolean autoApply) {
+	@Nonnull
+	public <O,R> MetadataBuilder applyAttributeConverter(
+			@Nonnull Class<? extends AttributeConverter<O,R>> attributeConverterClass,
+			boolean autoApply) {
 		bootstrapContext.addAttributeConverterDescriptor(
 				ConverterDescriptors.of( attributeConverterClass, autoApply, false )
 		);
@@ -405,7 +436,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public <O,R> MetadataBuilder applyAttributeConverter(AttributeConverter<O,R> attributeConverter) {
+	@Nonnull
+	public <O,R> MetadataBuilder applyAttributeConverter(@Nonnull AttributeConverter<O,R> attributeConverter) {
 		bootstrapContext.addAttributeConverterDescriptor(
 				ConverterDescriptors.of( attributeConverter )
 		);
@@ -413,7 +445,10 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public MetadataBuilder applyAttributeConverter(AttributeConverter<?,?> attributeConverter, boolean autoApply) {
+	@Nonnull
+	public MetadataBuilder applyAttributeConverter(
+			@Nonnull AttributeConverter<?,?> attributeConverter,
+			boolean autoApply) {
 		bootstrapContext.addAttributeConverterDescriptor(
 				ConverterDescriptors.of( attributeConverter, autoApply )
 		);
@@ -421,6 +456,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
+	@Nonnull
 	public MetadataImplementor build() {
 		MappingSourceHelper.applyConfigurationMappings( sources, options.serviceRegistry );
 

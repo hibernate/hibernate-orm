@@ -5,6 +5,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.Remove;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
@@ -38,22 +40,25 @@ public interface Metadata extends MappingContext {
 	 * @return The builder for {@link SessionFactory} instances.
 	 */
 	@Remove
+	@Nonnull
 	SessionFactoryBuilder getSessionFactoryBuilder();
 
 	/**
-	 * Short-hand form of building a {@link SessionFactory} through the builder without any additional
+	 * Shorthand form of building a {@link SessionFactory} through the builder without any additional
 	 * option overrides.
 	 *
 	 * @return THe built SessionFactory.
 	 */
 	@Remove
+	@Nonnull
 	SessionFactory buildSessionFactory();
 
 	/**
 	 * Gets the {@link UUID} for this metamodel.
 	 *
-	 * @return the UUID.
+	 * @return the UUID, or {@code null} while the metadata is being collected.
 	 */
+	@Nullable
 	UUID getUUID();
 
 	/**
@@ -61,6 +66,7 @@ public interface Metadata extends MappingContext {
 	 *
 	 * @return The database model.
 	 */
+	@Nonnull
 	Database getDatabase();
 
 	/**
@@ -70,6 +76,7 @@ public interface Metadata extends MappingContext {
 	 *
 	 * @return All PersistentClass representations.
 	 */
+	@Nonnull
 	java.util.Collection<PersistentClass> getEntityBindings();
 
 	/**
@@ -80,7 +87,8 @@ public interface Metadata extends MappingContext {
 	 *
 	 * @return The entity mapping metadata, or {@code null} if no matching entity found.
 	 */
-	PersistentClass getEntityBinding(String entityName);
+	@Nullable
+	PersistentClass getEntityBinding(@Nonnull String entityName);
 
 	/**
 	 * Retrieves the Collection metadata representation for all known collections.
@@ -89,6 +97,7 @@ public interface Metadata extends MappingContext {
 	 *
 	 * @return All Collection representations.
 	 */
+	@Nonnull
 	java.util.Collection<Collection> getCollectionBindings();
 
 	/**
@@ -98,13 +107,15 @@ public interface Metadata extends MappingContext {
 	 *
 	 * @return The collection mapping metadata, or {@code null} if no matching collection found.
 	 */
-	Collection getCollectionBinding(String role);
+	@Nullable
+	Collection getCollectionBinding(@Nonnull String role);
 
 	/**
 	 * Retrieves all defined imports (class renames).
 	 *
 	 * @return All imports
 	 */
+	@Nonnull
 	Map<String,String> getImports();
 
 	/**
@@ -112,36 +123,39 @@ public interface Metadata extends MappingContext {
 	 *
 	 * @return The named query metadata, or {@code null}.
 	 */
-	NamedHqlQueryDefinition<?> getNamedHqlQueryMapping(String name);
+	@Nullable
+	NamedHqlQueryDefinition<?> getNamedHqlQueryMapping(@Nonnull String name);
 
 	/**
 	 * Visit all named HQL query definitions
 	 */
-	void visitNamedHqlQueryDefinitions(Consumer<NamedHqlQueryDefinition<?>> definitionConsumer);
+	void visitNamedHqlQueryDefinitions(@Nonnull Consumer<NamedHqlQueryDefinition<?>> definitionConsumer);
 
 	/**
 	 * Retrieve named SQL query metadata.
 	 *
 	 * @return The named query metadata, or {@code null}
 	 */
-	NamedNativeQueryDefinition<?> getNamedNativeQueryMapping(String name);
+	@Nullable
+	NamedNativeQueryDefinition<?> getNamedNativeQueryMapping(@Nonnull String name);
 
 	/**
 	 * Visit all named native query definitions
 	 */
-	void visitNamedNativeQueryDefinitions(Consumer<NamedNativeQueryDefinition<?>> definitionConsumer);
+	void visitNamedNativeQueryDefinitions(@Nonnull Consumer<NamedNativeQueryDefinition<?>> definitionConsumer);
 
 	/**
 	 * Retrieve named procedure metadata.
 	 *
 	 * @return The named procedure metadata, or {@code null}
 	 */
-	NamedProcedureCallDefinition getNamedProcedureCallMapping(String name);
+	@Nullable
+	NamedProcedureCallDefinition getNamedProcedureCallMapping(@Nonnull String name);
 
 	/**
 	 * Visit all named callable query definitions
 	 */
-	void visitNamedProcedureCallDefinition(Consumer<NamedProcedureCallDefinition> definitionConsumer);
+	void visitNamedProcedureCallDefinition(@Nonnull Consumer<NamedProcedureCallDefinition> definitionConsumer);
 
 	/**
 	 * Retrieve the metadata for a named SQL result set mapping.
@@ -150,19 +164,21 @@ public interface Metadata extends MappingContext {
 	 *
 	 * @return The named result set mapping metadata, or {@code null} if none found.
 	 */
-	NamedResultSetMappingDescriptor getResultSetMapping(String name);
+	@Nullable
+	NamedResultSetMappingDescriptor getResultSetMapping(@Nonnull String name);
 
 	/**
 	 * Visit all named SQL result set mapping definitions
 	 */
-	void visitNamedResultSetMappingDefinition(Consumer<NamedResultSetMappingDescriptor> definitionConsumer);
+	void visitNamedResultSetMappingDefinition(@Nonnull Consumer<NamedResultSetMappingDescriptor> definitionConsumer);
 
 	/**
 	 * Retrieve a type definition by name.
 	 *
 	 * @return The named type definition, or {@code null}
 	 */
-	TypeDefinition getTypeDefinition(String typeName);
+	@Nullable
+	TypeDefinition getTypeDefinition(@Nonnull String typeName);
 
 	/**
 	 * Retrieves the complete map of filter definitions.
@@ -171,6 +187,7 @@ public interface Metadata extends MappingContext {
 	 *
 	 * @return The filter definition map.
 	 */
+	@Nonnull
 	Map<String,FilterDefinition> getFilterDefinitions();
 
 	/**
@@ -180,25 +197,34 @@ public interface Metadata extends MappingContext {
 	 * .
 	 * @return The filter definition, or {@code null}.
 	 */
-	FilterDefinition getFilterDefinition(String name);
+	@Nullable
+	FilterDefinition getFilterDefinition(@Nonnull String name);
 
-	FetchProfile getFetchProfile(String name);
+	@Nullable
+	FetchProfile getFetchProfile(@Nonnull String name);
 
+	@Nonnull
 	java.util.Collection<FetchProfile> getFetchProfiles();
 
-	NamedEntityGraphDefinition getNamedEntityGraph(String name);
+	@Nullable
+	NamedEntityGraphDefinition getNamedEntityGraph(@Nonnull String name);
 
+	@Nonnull
 	Map<String, NamedEntityGraphDefinition> getNamedEntityGraphs();
 
 	@Remove
-	IdentifierGeneratorDefinition getIdentifierGenerator(String name);
+	@Nullable
+	IdentifierGeneratorDefinition getIdentifierGenerator(@Nonnull String name);
 
+	@Nonnull
 	java.util.Collection<Table> collectTableMappings();
 
+	@Nonnull
 	Map<String, SqmFunctionDescriptor> getSqlFunctionMap();
 
 	/**
 	 * All of the known model contributors
 	 */
+	@Nonnull
 	Set<String> getContributors();
 }

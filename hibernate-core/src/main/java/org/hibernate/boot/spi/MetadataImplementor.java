@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
 import org.hibernate.MappingException;
 import org.hibernate.Remove;
@@ -75,5 +76,6 @@ public interface MetadataImplementor extends Metadata {
 
 	@Override
 	@Remove
+	@Nonnull
 	SessionFactoryImplementor buildSessionFactory();
 }

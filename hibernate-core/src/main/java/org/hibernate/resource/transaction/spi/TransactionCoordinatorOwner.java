@@ -1,5 +1,6 @@
 package org.hibernate.resource.transaction.spi;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 
 /**
@@ -50,6 +51,7 @@ public interface TransactionCoordinatorOwner {
 	 */
 	void afterTransactionCompletion(boolean successful, boolean delayed);
 
+	@Nonnull
 	JdbcSessionOwner getJdbcSessionOwner();
 
 	/**

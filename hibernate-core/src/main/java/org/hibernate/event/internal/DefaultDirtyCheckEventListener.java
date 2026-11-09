@@ -3,12 +3,14 @@ package org.hibernate.event.internal;
 import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.DirtyCheckEvent;
 import org.hibernate.event.spi.DirtyCheckEventListener;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.internal.util.collections.InstanceIdentityMap;
 import org.hibernate.persister.collection.CollectionPersister;
 import jakarta.annotation.Nonnull;
 
@@ -34,15 +36,21 @@ public class DefaultDirtyCheckEventListener implements DirtyCheckEventListener {
 	public void onDirtyCheck(@Nonnull DirtyCheckEvent event) {
 		final var session = event.getSession();
 		final var persistenceContext = session.getPersistenceContextInternal();
-		for ( var holder : persistenceContext.getEntityHoldersByKey().values() ) {
-			if ( isEntityDirty( holder, session ) ) {
-				event.setDirty( true );
-				return;
+		final var holdersByKey = persistenceContext.getEntityHoldersByKey();
+		if ( holdersByKey != null ) {
+			for ( var holder : holdersByKey.values().toArray( new EntityHolder[0] ) ) {
+				if ( isEntityDirty( holder, session ) ) {
+					event.setDirty( true );
+					return;
+				}
 			}
 		}
 		final var entriesByCollection = persistenceContext.getCollectionEntries();
 		if ( entriesByCollection != null ) {
-			for ( var entry : entriesByCollection.entrySet() ) {
+			final var identityMap =
+					(InstanceIdentityMap<PersistentCollection<?>, CollectionEntry>)
+							entriesByCollection;
+			for ( var entry : identityMap.toArray() ) {
 				if ( isCollectionDirty( entry.getKey(), entry.getValue().getLoadedPersister() ) ) {
 					event.setDirty( true );
 					return;

@@ -2,6 +2,7 @@ package org.hibernate.processor.annotation;
 
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.annotations.processing.GenericDialect;
 import org.hibernate.dialect.Dialect;
@@ -16,6 +17,8 @@ import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import java.util.List;
 
@@ -27,6 +30,7 @@ import static org.hibernate.processor.util.Constants.NAMED_QUERY;
 import static org.hibernate.processor.util.Constants.TYPED_QUERY_REFERENCE;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationMirror;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationValue;
+import static org.hibernate.processor.util.SqmTypeUtils.resultType;
 
 public abstract class AnnotationMeta implements Metamodel {
 
@@ -114,7 +118,6 @@ public abstract class AnnotationMeta implements Metamodel {
 			final var value = getAnnotationValue( mirror, "query" );
 			if ( value != null && value.getValue() instanceof String hql ) {
 				dialect = dialect != null ? dialect : context.determineDialect( getElement() );
-				final var factory = ProcessorSessionFactory.create( context, getElement(), dialect );
 				final var statement =
 					Validation.validate(
 								hql,
@@ -125,15 +128,17 @@ public abstract class AnnotationMeta implements Metamodel {
 								// result in warnings, so we don't break working code.
 								new WarningErrorHandler( context, getElement(), mirror, value, hql,
 										reportErrors, checkHql ),
-								factory
+								ProcessorSessionFactory.create( context.getProcessingEnvironment(),
+										context.getEntityNameMappings(), context.getEnumTypesByValue(),
+										context.isIndexing(), getElement(), dialect )
 						);
 				if ( !isJakartaDataStyle()
 					&& statement instanceof SqmSelectStatement<?> selectStatement ) {
-					final var resultClass = getAnnotationValue( mirror, "resultClass" );
-					final var resultType = resultClass == null
-							? factory.inferredResultType( selectStatement, context )
-							: resultClass.getValue().toString();
 					if ( isQueryMethodName( name ) ) {
+						final var annotationValue = getAnnotationValue( mirror, "resultClass" );
+						final var resultType = annotationValue != null
+								? annotationValue.getValue().toString()
+								: inferredResultType( selectStatement );
 						putMember( name,
 								new NamedQueryMethod(
 										this,
@@ -147,14 +152,44 @@ public abstract class AnnotationMeta implements Metamodel {
 								)
 						);
 					}
-					if ( resultClass == null ) {
-						putMember( "QUERY_" + name,
-								new TypedMetaAttribute( this, name, "QUERY_", resultType,
-										TYPED_QUERY_REFERENCE, hql ) );
+					if ( getAnnotationValue( mirror, "resultClass" ) == null ) {
+						final var resultType = inferredResultType( selectStatement );
+						if ( resultType != null ) {
+							putMember( "QUERY_" + name,
+									new TypedMetaAttribute( this, name, "QUERY_", resultType,
+											TYPED_QUERY_REFERENCE, hql ) );
+						}
 					}
 				}
 			}
 		}
+	}
+
+	private @Nullable String inferredResultType(SqmSelectStatement<?> statement) {
+		final var name = resultType( statement );
+		if ( name != null ) {
+			for ( Element type = getContext().getElementUtils()
+					.getTypeElement( name.replace( "[]", "" ) );
+				type instanceof TypeElement;
+				type = type.getEnclosingElement() ) {
+				if ( isInaccessible( type ) ) {
+					return JAVA_OBJECT;
+				}
+			}
+		}
+		return name;
+	}
+
+	private boolean isInaccessible(@Nonnull Element type) {
+		final var modifiers = type.getModifiers();
+		return modifiers.contains( Modifier.PRIVATE )
+			|| !modifiers.contains( Modifier.PUBLIC ) && !inPackage( type );
+	}
+
+	private boolean inPackage(@Nonnull Element type) {
+		return getContext().getElementUtils()
+				.getPackageOf( type ).getQualifiedName()
+				.contentEquals( getPackageName() );
 	}
 
 	private static boolean isQueryMethodName(String name) {

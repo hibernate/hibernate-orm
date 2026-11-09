@@ -1,7 +1,6 @@
 package org.hibernate.processor;
 
 import jakarta.annotation.Nullable;
-import jakarta.persistence.Entity;
 import org.hibernate.Incubating;
 import org.hibernate.processor.annotation.AnnotationMetaEntity;
 import org.hibernate.processor.annotation.AnnotationMetaPackage;
@@ -47,7 +46,6 @@ import static java.util.stream.Collectors.joining;
 import static java.lang.Boolean.parseBoolean;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
-import static javax.lang.model.util.ElementFilter.typesIn;
 import static org.hibernate.processor.HibernateProcessor.ADD_GENERATED_ANNOTATION;
 import static org.hibernate.processor.HibernateProcessor.ADD_GENERATION_DATE;
 import static org.hibernate.processor.HibernateProcessor.ADD_SUPPRESS_WARNINGS_ANNOTATION;
@@ -458,13 +456,6 @@ public class HibernateProcessor extends AbstractProcessor {
 	}
 
 	private void processClasses(RoundEnvironment roundEnvironment) {
-		// Collect names before validating named queries, regardless of source order.
-		for ( var entity : typesIn( roundEnvironment.getElementsAnnotatedWith( Entity.class ) ) ) {
-			if ( !isExcluded( entity ) ) {
-				indexEntityName( entity );
-			}
-		}
-
 		final var roots = new HashSet<String>();
 		for ( var root : roundEnvironment.getRootElements() ) {
 			if ( root instanceof TypeElement type ) {
@@ -535,16 +526,11 @@ public class HibernateProcessor extends AbstractProcessor {
 		return pack != null && hasAnnotation( pack, annotation );
 	}
 
-	private boolean isExcluded(Element element) {
-		return !included( element )
+	private void inspectRootElement(Element element, @Nullable Element parent, @Nullable TypeElement primaryEntity) {
+		if ( !included( element )
 			|| hasAnnotation( element, Constants.EXCLUDE )
 			|| hasPackageAnnotation( element, Constants.EXCLUDE )
-			|| element.getModifiers().contains( Modifier.PRIVATE )
-			|| element.getEnclosingElement() instanceof TypeElement parent && isExcluded( parent );
-	}
-
-	private void inspectRootElement(Element element, @Nullable Element parent, @Nullable TypeElement primaryEntity) {
-		if ( isExcluded( element ) ) {
+			|| element.getModifiers().contains( Modifier.PRIVATE ) ) {
 			// skip it completely
 			return;
 		}
@@ -823,6 +809,7 @@ public class HibernateProcessor extends AbstractProcessor {
 		if ( isClassRecordOrInterfaceType( element ) ) {
 			if ( isEntityOrEmbeddable( element ) ) {
 				final var typeElement = (TypeElement) element;
+				indexEntityName( typeElement );
 				indexEnumFields( typeElement );
 
 				final var qualifiedName = typeElement.getQualifiedName().toString();

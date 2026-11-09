@@ -1,15 +1,20 @@
 package org.hibernate.processor.test.innerclass;
 
+import java.lang.reflect.ParameterizedType;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.NamedQuery;
 import org.hibernate.processor.test.innerclass.InnerClassTest.One.Two;
+import org.hibernate.processor.test.innerclass.query.InnerQueries;
 import org.hibernate.processor.test.util.CompilationTest;
+import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.WithClasses;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.assertNoMetamodelClassGeneratedFor;
+import static org.hibernate.processor.test.util.TestUtil.getFieldFromMetamodelFor;
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -34,6 +39,14 @@ class InnerClassTest {
 		assertNoMetamodelClassGeneratedFor( Dummy.class );
 		assertMetamodelClassGeneratedFor( Dummy.DummyEmbeddable.class );
 		System.out.println( getMetaModelSourceAsString( Dummy.DummyEmbeddable.class ) );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-21095")
+	@WithClasses({ Inner.class, InnerQueries.class })
+	void inaccessibleNamedQueryResult() {
+		var field = getFieldFromMetamodelFor( InnerQueries.class, "_inners_" );
+		assertEquals( Object.class, ( (ParameterizedType) field.getGenericType() ).getActualTypeArguments()[0] );
 	}
 
 	@Entity(name = "Inner")

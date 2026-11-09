@@ -117,7 +117,6 @@ public final class Context {
 	private boolean indexing = true;
 
 	private final Map<String, String> entityNameMappings = new HashMap<>();
-	private final Set<String> ambiguousEntityNames = new HashSet<>();
 	private final Map<String, Set<String>> enumTypesByValue = new HashMap<>();
 
 	public Context(ProcessingEnvironment processingEnvironment) {
@@ -559,16 +558,7 @@ public final class Context {
 	}
 
 	public void addEntityNameMapping(String entityName, String qualifiedName) {
-		final var previous = entityNameMappings.put( entityName, qualifiedName );
-		if ( previous != null && !previous.equals( qualifiedName ) ) {
-			ambiguousEntityNames.add( entityName );
-		}
-	}
-
-	public boolean isUnambiguousEntityName(String entityName, TypeElement resolvedType) {
-		final var indexedName = entityNameMappings.get( entityName );
-		return !ambiguousEntityNames.contains( entityName )
-				&& ( indexedName == null || resolvedType.getQualifiedName().contentEquals( indexedName ) );
+		entityNameMappings.put( entityName, qualifiedName );
 	}
 
 	public @Nullable String qualifiedNameForEntityName(String entityName) {

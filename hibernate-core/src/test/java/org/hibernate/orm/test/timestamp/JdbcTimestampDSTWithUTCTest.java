@@ -42,7 +42,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 )
 @SessionFactory
 @ServiceRegistry(
-		settings = @Setting(name = AvailableSettings.JDBC_TIME_ZONE, value = "UTC")
+		settings = {
+				@Setting(name = AvailableSettings.JDBC_TIME_ZONE, value = "UTC"),
+				@Setting(name = AvailableSettings.JAVA_TIME_USE_DIRECT_JDBC, value = "false")
+		}
 )
 public class JdbcTimestampDSTWithUTCTest {
 

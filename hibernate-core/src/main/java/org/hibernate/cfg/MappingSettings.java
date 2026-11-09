@@ -229,10 +229,25 @@ public interface MappingSettings {
 	String PREFERRED_INSTANT_JDBC_TYPE = "hibernate.type.preferred_instant_jdbc_type";
 
 	/**
-	 * Indicates whether to use {@linkplain java.time Java Time} references at the JDBC
+	 * Controls whether {@linkplain java.time Java Time} references are used at the JDBC
 	 * boundary for binding and extracting temporal values to/from the database using
 	 * the support added in JDBC 4.2 via {@linkplain java.sql.PreparedStatement#setObject(int, Object, int)}
 	 * and {@linkplain java.sql.ResultSet#getObject(int, Class)}.
+	 * <p>
+	 * Accepted values are {@code true}, {@code false}, and {@code auto}.
+	 * <ul>
+	 *     <li>{@code true} &mdash; always use direct JDBC access for supported Java Time types.
+	 *         The configured {@link JdbcSettings#JDBC_TIME_ZONE} and
+	 *         {@linkplain org.hibernate.annotations.TimeZoneStorage timezone storage strategy}
+	 *         are <em>not</em> applied by direct JDBC types.</li>
+	 *     <li>{@code false} &mdash; always use legacy {@code java.sql} wrappers which honor
+	 *         {@link JdbcSettings#JDBC_TIME_ZONE} and the configured timezone storage strategy.</li>
+	 *     <li>{@code auto} &mdash; use direct JDBC access when it is safe to do so.
+	 *         An error is raised during bootstrap if a mapping uses a direct Java Time
+	 *         JDBC type while the configuration or per-attribute annotations require
+	 *         JDBC timezone or timezone-storage normalization that direct access
+	 *         cannot honor.</li>
+	 * </ul>
 	 * <p>
 	 * Used to set the value across the entire system as opposed to scattered, individual
 	 * {@linkplain org.hibernate.annotations.JdbcTypeCode} and {@linkplain org.hibernate.annotations.JdbcType}
@@ -251,6 +266,8 @@ public interface MappingSettings {
 	 *
 	 * @settingDefault {@value #JAVA_TIME_USE_DIRECT_JDBC_DEFAULT}
 	 *
+	 * @see org.hibernate.type.JavaTimeJdbcMode
+	 *
 	 * @since 6.5
 	 */
 	@Incubating(since = "6.5")
@@ -261,7 +278,7 @@ public interface MappingSettings {
 	 *
 	 * @since 8.0
 	 */
-	boolean JAVA_TIME_USE_DIRECT_JDBC_DEFAULT = true;
+	String JAVA_TIME_USE_DIRECT_JDBC_DEFAULT = "auto";
 
 	/**
 	 * Indicates that named SQL {@code enum} types should be used by default instead

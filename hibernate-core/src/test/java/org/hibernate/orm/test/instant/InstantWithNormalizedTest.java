@@ -26,7 +26,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Jpa(annotatedClasses = InstantWithNormalizedTest.Instants.class,
 		integrationSettings =
 				{@Setting(name = AvailableSettings.TIMEZONE_DEFAULT_STORAGE, value = "NORMALIZE"),
-				@Setting(name = JdbcSettings.JDBC_TIME_ZONE, value = "+01:00")})
+				@Setting(name = JdbcSettings.JDBC_TIME_ZONE, value = "+01:00"),
+				@Setting(name = AvailableSettings.JAVA_TIME_USE_DIRECT_JDBC, value = "false")})
 @SkipForDialect(dialectClass = MySQLDialect.class, reason = "MySQL hangs dropping the table")
 @SkipForDialect(dialectClass = TiDBDialect.class, reason = "Values stored in timestamp DDL type columns get the JDBC time zone offset subtracted")
 public class InstantWithNormalizedTest {

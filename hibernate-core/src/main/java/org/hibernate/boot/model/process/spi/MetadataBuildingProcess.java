@@ -13,6 +13,8 @@ import java.io.InputStream;
 import java.sql.Types;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
@@ -63,6 +65,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.AdditionalMappingContributions;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware;
@@ -72,10 +75,15 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.type.JavaTimeJdbcMode;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.type.WrapperArrayHandling;
 import org.hibernate.type.descriptor.java.ByteArrayJavaType;
 import org.hibernate.type.descriptor.java.CharacterArrayJavaType;
@@ -94,6 +102,10 @@ import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.internal.NamedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
+
+import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.engine.config.spi.ConfigurationService;
 
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForArray;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForDuration;
@@ -354,6 +366,8 @@ public class MetadataBuildingProcess {
 		processor.processResultSetMappings();
 
 		metadataCollector.processSecondPasses( rootMetadataBuildingContext );
+
+		validateDirectJdbcCompatibility( rootMetadataBuildingContext, metadataCollector );
 
 		// Make sure collections are fully bound before processing
 		// named queries as hbm result set mappings require it
@@ -690,6 +704,111 @@ public class MetadataBuildingProcess {
 		if ( extraQueryImports != null && !extraQueryImports.isEmpty() ) {
 			for ( var entry : extraQueryImports.entrySet() ) {
 				metadataCollector.addImport( entry.getKey(), entry.getValue().getName() );
+			}
+		}
+	}
+
+	private static void validateDirectJdbcCompatibility(
+			MetadataBuildingContext buildingContext,
+			InFlightMetadataCollectorImpl metadataCollector) {
+		final var configurationService =
+				buildingContext.getBootstrapContext().getServiceRegistry()
+						.requireService( ConfigurationService.class );
+		final var mode = MetadataBuildingContext.resolveJavaTimeJdbcMode( configurationService );
+		if ( mode != JavaTimeJdbcMode.AUTO ) {
+			return;
+		}
+
+		final var settings = configurationService.getSettings();
+		final boolean jdbcTimeZoneSet = settings.get( JdbcSettings.JDBC_TIME_ZONE ) != null;
+
+		final var conflicts = new ArrayList<String>();
+		for ( var persistentClass : metadataCollector.getEntityBindings() ) {
+			collectDirectJdbcConflicts(
+					persistentClass,
+					jdbcTimeZoneSet,
+					buildingContext,
+					conflicts
+			);
+		}
+
+		if ( !conflicts.isEmpty() ) {
+			throw new MappingException(
+					"Direct Java Time JDBC access (the default since Hibernate 8.0) is active for temporal"
+							+ " attribute(s) whose configuration requires JDBC timezone or timezone-storage"
+							+ " normalization that direct access cannot honor:\n"
+							+ String.join( "\n", conflicts )
+							+ "\nEither set '" + MappingSettings.JAVA_TIME_USE_DIRECT_JDBC + "=false'"
+							+ " to use legacy java.sql wrappers that honor these settings,"
+							+ " or set it to 'true' to use direct JDBC access and accept"
+							+ " that the JDBC timezone / timezone-storage settings will not be applied."
+							+ "\nSee the Hibernate ORM migration guide for details:"
+							+ " https://docs.jboss.org/hibernate/orm/8.1/migration-guide/migration-guide.html"
+							+ "#direct-jdbc-java-time"
+			);
+		}
+	}
+
+	private static void collectDirectJdbcConflicts(
+			PersistentClass persistentClass,
+			boolean jdbcTimeZoneSet,
+			MetadataBuildingContext buildingContext,
+			List<String> conflicts) {
+		for ( var property : persistentClass.getProperties() ) {
+			checkPropertyForDirectJdbcConflict(
+					persistentClass.getEntityName(),
+					property,
+					jdbcTimeZoneSet,
+					buildingContext,
+					conflicts
+			);
+		}
+	}
+
+	private static void checkPropertyForDirectJdbcConflict(
+			String entityName,
+			Property property,
+			boolean jdbcTimeZoneSet,
+			MetadataBuildingContext buildingContext,
+			List<String> conflicts) {
+		final var value = property.getValue();
+		if ( !( value instanceof BasicValue basicValue ) ) {
+			return;
+		}
+		final var resolution = basicValue.getResolution();
+		if ( resolution == null || !( resolution.getJdbcType() instanceof JavaTimeJdbcType ) ) {
+			return;
+		}
+		final var resolvedJavaType = basicValue.getResolvedJavaType();
+		if ( resolvedJavaType == null ) {
+			return;
+		}
+		final var javaClass = resolvedJavaType instanceof Class<?> c ? c : null;
+		if ( javaClass == null ) {
+			return;
+		}
+
+		if ( jdbcTimeZoneSet ) {
+			if ( javaClass == LocalDateTime.class || javaClass == LocalTime.class ) {
+				conflicts.add( "  - " + entityName + "." + property.getName()
+						+ " (" + javaClass.getSimpleName() + "): direct JDBC access ignores"
+						+ " the configured '" + JdbcSettings.JDBC_TIME_ZONE + "'" );
+				return;
+			}
+		}
+
+		if ( javaClass == OffsetDateTime.class
+				|| javaClass == ZonedDateTime.class
+				|| javaClass == OffsetTime.class ) {
+			final var strategy = BasicValue.timeZoneStorageStrategy(
+					basicValue.getTimeZoneStorageType(),
+					buildingContext
+			);
+			if ( strategy == TimeZoneStorageStrategy.NORMALIZE
+					|| strategy == TimeZoneStorageStrategy.NORMALIZE_UTC ) {
+				conflicts.add( "  - " + entityName + "." + property.getName()
+						+ " (" + javaClass.getSimpleName() + "): direct JDBC access does not apply"
+						+ " timezone storage strategy '" + strategy + "'" );
 			}
 		}
 	}

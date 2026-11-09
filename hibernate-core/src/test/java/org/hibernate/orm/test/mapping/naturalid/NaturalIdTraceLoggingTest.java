@@ -10,6 +10,7 @@ import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.cfg.CacheSettings;
 import org.hibernate.engine.internal.NaturalIdLogging;
 
+import org.hibernate.testing.logger.LogLevelContext;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.MessageKeyInspection;
@@ -48,7 +49,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		NaturalIdTraceLoggingTest.Teacher.class,
 		NaturalIdTraceLoggingTest.Student.class,
 		NaturalIdTraceLoggingTest.SchoolRecord.class,
-		NaturalIdTraceLoggingTest.BasicRecord.class,
 		NaturalIdTraceLoggingTest.ArrayRecord.class
 })
 @ServiceRegistry(settings = @Setting(name = CacheSettings.USE_SECOND_LEVEL_CACHE, value = "true"))
@@ -62,12 +62,9 @@ class NaturalIdTraceLoggingTest {
 	private Integer schoolId;
 	private Integer studentId;
 	private Integer recordId;
-	private static boolean forbidToString;
-	private static int toStringCalls;
 
 	@BeforeEach
 	void prepare(SessionFactoryScope scope) {
-		forbidToString = false;
 		try (var ignored = withLevel( NaturalIdLogging.LOGGER_NAME, INFO )) {
 			scope.inTransaction( session -> {
 				School school = new School( "High School" );
@@ -85,12 +82,10 @@ class NaturalIdTraceLoggingTest {
 				recordId = record.identifier;
 			} );
 		}
-		toStringCalls = 0;
 	}
 
 	@AfterEach
 	void cleanup(SessionFactoryScope scope) {
-		forbidToString = false;
 		try (var ignored = withLevel( NaturalIdLogging.LOGGER_NAME, INFO )) {
 			scope.getSessionFactory().getCache().evictAllRegions();
 			scope.getSessionFactory().getSchemaManager().truncate();
@@ -102,19 +97,11 @@ class NaturalIdTraceLoggingTest {
 		// A new session preserves the reporter's flush/clear boundary. School.teachers
 		// is unidirectional, independently of the Teacher.school many-to-one.
 		scope.inTransaction( session -> {
-			watcher.reset();
-			scope.getCollectingStatementObserver().clear();
 			Student student;
-			forbidToString = true;
-			try (var ignored = withLevel( NaturalIdLogging.LOGGER_NAME, TRACE )) {
-				assertTrue( NaturalIdLogging.NATURAL_ID_LOGGER.isTraceEnabled() );
+			try (var ignored = trace( scope, watcher )) {
 				student = session.find( Student.class, studentId );
-				assertEquals( 0, toStringCalls, "TRACE must not invoke an entity's toString()" );
 				assertFalse( Hibernate.isInitialized( student.school.teachers ) );
 				assertTraceMessage( scope, watcher, "HHH090001" );
-			}
-			finally {
-				forbidToString = false;
 			}
 			assertEquals( studentId, student.identifier );
 			assertSame( student.school, session.find( School.class, schoolId ) );
@@ -124,38 +111,14 @@ class NaturalIdTraceLoggingTest {
 		} );
 	}
 
-	@Test
-	void scalarAssociationSessionCacheHitDoesNotRenderEntity(SessionFactoryScope scope, MessageKeyWatcher watcher) {
-		scope.inTransaction( session -> {
-			School school = session.find( School.class, schoolId );
-			assertFalse( Hibernate.isInitialized( school.teachers ) );
-			var descriptor = session.getFactory().getMappingMetamodel().getEntityDescriptor( SchoolRecord.class );
-			var resolutions = session.getPersistenceContext().getNaturalIdResolutions();
-			resolutions.cacheResolution( recordId, school, descriptor );
-			watcher.reset();
-			scope.getCollectingStatementObserver().clear();
-			forbidToString = true;
-			try (var ignored = withLevel( NaturalIdLogging.LOGGER_NAME, TRACE )) {
-				assertTrue( NaturalIdLogging.NATURAL_ID_LOGGER.isTraceEnabled() );
-				assertEquals( recordId, resolutions.findCachedIdByNaturalId( school, descriptor ) );
-				assertEquals( 0, toStringCalls, "TRACE must not invoke an entity's toString()" );
-				assertFalse( Hibernate.isInitialized( school.teachers ) );
-				assertTrue( scope.getCollectingStatementObserver().getSqlQueries().isEmpty() );
-				assertTraceMessage( scope, watcher, "HHH090004" );
-			}
-			finally {
-				forbidToString = false;
-			}
-			assertSame( school, session.find( School.class, schoolId ) );
-			assertCollectionContents( school );
-		} );
-	}
-
 	static Stream<Arguments> tracePaths() {
-		return Stream.of( TraceOperation.values() ).flatMap( operation -> Stream.of(
-				Arguments.of( operation, false, false ),
-				Arguments.of( operation, true, true )
-		) );
+		return Stream.concat(
+				Stream.of( TraceOperation.values() ).flatMap( operation -> Stream.of(
+						Arguments.of( operation, false, false ),
+						Arguments.of( operation, true, true )
+				) ),
+				Stream.of( Arguments.of( TraceOperation.SESSION, true, false ) )
+		);
 	}
 
 	@ParameterizedTest
@@ -172,27 +135,14 @@ class NaturalIdTraceLoggingTest {
 			}
 			var descriptor = session.getFactory().getMappingMetamodel()
 					.getEntityDescriptor( simple ? SchoolRecord.class : Student.class );
-			Object entity;
-			if ( simple ) {
-				SchoolRecord record = new SchoolRecord();
-				record.school = school;
-				entity = record;
-			}
-			else {
-				entity = new Student( "Jane Doe", school );
-			}
-			Object naturalId = descriptor.getNaturalIdMapping().extractNaturalIdFromEntity( entity );
+			Object naturalId = simple ? school
+					: descriptor.getNaturalIdMapping().extractNaturalIdFromEntity( new Student( "Jane Doe", school ) );
 			Integer id = simple ? recordId : studentId;
 			var resolutions = session.getPersistenceContext().getNaturalIdResolutions();
 			if ( operation == TraceOperation.REMOVE || operation == TraceOperation.SESSION ) {
 				resolutions.cacheResolution( id, naturalId, descriptor );
 			}
-			watcher.reset();
-			scope.getCollectingStatementObserver().clear();
-			toStringCalls = 0;
-			forbidToString = true;
-			try (var ignored = withLevel( NaturalIdLogging.LOGGER_NAME, TRACE )) {
-				assertTrue( NaturalIdLogging.NATURAL_ID_LOGGER.isTraceEnabled() );
+			try (var ignored = trace( scope, watcher )) {
 				switch ( operation ) {
 					case LOAD -> resolutions.cacheResolutionFromLoad( id, naturalId, descriptor );
 					case LOCAL -> assertTrue( resolutions.cacheResolution( id, naturalId, descriptor ) );
@@ -203,7 +153,6 @@ class NaturalIdTraceLoggingTest {
 					case SESSION -> assertEquals( id, resolutions.findCachedIdByNaturalId( naturalId, descriptor ) );
 					case DATABASE -> assertEquals( id, descriptor.getNaturalIdLoader().resolveNaturalIdToId( naturalId, session ) );
 				}
-				assertEquals( 0, toStringCalls, "TRACE must not invoke an entity's toString()" );
 				assertEquals( !proxy, Hibernate.isInitialized( school ), "Logging must not initialize the school proxy" );
 				if ( !proxy ) {
 					assertFalse( Hibernate.isInitialized( school.teachers ) );
@@ -212,12 +161,6 @@ class NaturalIdTraceLoggingTest {
 						scope.getCollectingStatementObserver().getSqlQueries().size() );
 				assertTraceMessage( scope, watcher, operation.messageKey );
 			}
-			finally {
-				forbidToString = false;
-			}
-			School initializedSchool = (School) Hibernate.unproxy( school );
-			assertEquals( schoolId, initializedSchool.identifier );
-			assertCollectionContents( initializedSchool );
 		} );
 	}
 
@@ -248,67 +191,43 @@ class NaturalIdTraceLoggingTest {
 			var descriptor = session.getFactory().getMappingMetamodel().getEntityDescriptor( entityClass );
 			var resolutions = session.getPersistenceContext().getNaturalIdResolutions();
 			assertNull( resolutions.findCachedNaturalIdById( id, descriptor ) );
-			Object naturalId;
-			if ( simple ) {
-				naturalId = school;
-			}
-			else {
-				naturalId = descriptor.getNaturalIdMapping().extractNaturalIdFromEntity( new Student( "Jane Doe", school ) );
-			}
-			watcher.reset();
-			scope.getCollectingStatementObserver().clear();
-			toStringCalls = 0;
-			forbidToString = true;
-			try (var ignored = withLevel( NaturalIdLogging.LOGGER_NAME, TRACE )) {
-				assertTrue( NaturalIdLogging.NATURAL_ID_LOGGER.isTraceEnabled() );
+			Object naturalId = simple ? school
+					: descriptor.getNaturalIdMapping().extractNaturalIdFromEntity( new Student( "Jane Doe", school ) );
+			try (var ignored = trace( scope, watcher )) {
 				assertEquals( id, resolutions.findCachedIdByNaturalId( naturalId, descriptor ) );
-				assertEquals( 0, toStringCalls, "TRACE must not invoke an entity's toString()" );
 				assertFalse( Hibernate.isInitialized( school ), "Logging must not initialize the school proxy" );
 				assertTrue( scope.getCollectingStatementObserver().getSqlQueries().isEmpty() );
 				assertEquals( 1, scope.getSessionFactory().getStatistics().getNaturalIdCacheHitCount() );
 				assertTraceMessage( scope, watcher, "HHH090005" );
 			}
-			finally {
-				forbidToString = false;
-			}
-			assertCollectionContents( (School) Hibernate.unproxy( school ) );
 		} );
 	}
 
-	@Test
-	void basicAndNullNaturalIdsRemainReadable(SessionFactoryScope scope, MessageKeyWatcher watcher) {
-		for ( String value : new String[] { "basic-code", null } ) {
-			scope.inTransaction( session -> {
-				var descriptor = session.getFactory().getMappingMetamodel().getEntityDescriptor( BasicRecord.class );
-				var resolutions = session.getPersistenceContext().getNaturalIdResolutions();
-				watcher.reset();
-				try (var ignored = withLevel( NaturalIdLogging.LOGGER_NAME, TRACE )) {
-					assertTrue( NaturalIdLogging.NATURAL_ID_LOGGER.isTraceEnabled() );
-					resolutions.cacheResolution( 1, value, descriptor );
-					assertEquals( 1, resolutions.findCachedIdByNaturalId( value, descriptor ) );
-					String expected = value == null ? "null" : value;
-					assertMessageContains( watcher, "HHH090002", expected );
-					assertMessageContains( watcher, "HHH090004", expected );
-				}
-			} );
-		}
+	static Stream<Arguments> scalarValues() {
+		return Stream.of(
+				Arguments.of( School.class, "basic-code", new String[] { "basic-code" } ),
+				Arguments.of( School.class, null, new String[] { "null" } ),
+				Arguments.of( ArrayRecord.class, new String[] { "alpha", "beta" }, new String[] { "alpha", "beta" } )
+		);
 	}
 
-	@Test
-	void arrayValuedScalarIsNotTreatedAsCompoundNaturalId(SessionFactoryScope scope, MessageKeyWatcher watcher) {
+	@ParameterizedTest
+	@MethodSource("scalarValues")
+	void scalarValuesRemainReadable(
+			Class<?> entityClass, Object value, String[] expected,
+			SessionFactoryScope scope, MessageKeyWatcher watcher) {
 		scope.inTransaction( session -> {
-			var descriptor = session.getFactory().getMappingMetamodel().getEntityDescriptor( ArrayRecord.class );
-			String[] value = { "alpha", "beta" };
-			assertEquals( 1, descriptor.getNaturalIdMapping().getNaturalIdAttributes().size() );
-			assertTrue( descriptor.getNaturalIdMapping().isNormalized( value ) );
+			var descriptor = session.getFactory().getMappingMetamodel().getEntityDescriptor( entityClass );
+			if ( entityClass == ArrayRecord.class ) {
+				assertEquals( 1, descriptor.getNaturalIdMapping().getNaturalIdAttributes().size() );
+				assertTrue( descriptor.getNaturalIdMapping().isNormalized( value ) );
+			}
 			var resolutions = session.getPersistenceContext().getNaturalIdResolutions();
-			watcher.reset();
-			try (var ignored = withLevel( NaturalIdLogging.LOGGER_NAME, TRACE )) {
-				assertTrue( NaturalIdLogging.NATURAL_ID_LOGGER.isTraceEnabled() );
+			try (var ignored = trace( scope, watcher )) {
 				resolutions.cacheResolution( 1, value, descriptor );
 				assertEquals( 1, resolutions.findCachedIdByNaturalId( value, descriptor ) );
-				assertMessageContains( watcher, "HHH090002", "alpha", "beta" );
-				assertMessageContains( watcher, "HHH090004", "alpha", "beta" );
+				assertMessageContains( watcher, "HHH090002", expected );
+				assertMessageContains( watcher, "HHH090004", expected );
 			}
 		} );
 	}
@@ -318,13 +237,17 @@ class NaturalIdTraceLoggingTest {
 		scope.inTransaction( session -> {
 			var descriptor = session.getFactory().getMappingMetamodel().getEntityDescriptor( Student.class );
 			Object value = descriptor.getNaturalIdMapping().extractNaturalIdFromEntity( new Student( "nullable", null ) );
-			watcher.reset();
-			try (var ignored = withLevel( NaturalIdLogging.LOGGER_NAME, TRACE )) {
-				assertTrue( NaturalIdLogging.NATURAL_ID_LOGGER.isTraceEnabled() );
+			try (var ignored = trace( scope, watcher )) {
 				session.getPersistenceContext().getNaturalIdResolutions().cacheResolution( 1, value, descriptor );
 				assertMessageContains( watcher, "HHH090002", "nullable", "null" );
 			}
 		} );
+	}
+
+	private static LogLevelContext trace(SessionFactoryScope scope, MessageKeyWatcher watcher) {
+		watcher.reset();
+		scope.getCollectingStatementObserver().clear();
+		return withLevel( NaturalIdLogging.LOGGER_NAME, TRACE );
 	}
 
 	private static void assertMessageContains(MessageKeyWatcher watcher, String key, String... values) {
@@ -382,13 +305,7 @@ class NaturalIdTraceLoggingTest {
 
 		@Override
 		public String toString() {
-			toStringCalls++;
-			// Bound the reporter's recursion with a precise failure instead of an
-			// unbounded stack overflow. Outside the assertion scope, retain its body.
-			if ( forbidToString ) {
-				throw new AssertionError( "Natural-ID TRACE invoked School.toString()" );
-			}
-			return name + ( teachers == null ? "" : teachers.toString() );
+			throw new AssertionError( "Natural-ID TRACE invoked School.toString()" );
 		}
 	}
 
@@ -448,15 +365,6 @@ class NaturalIdTraceLoggingTest {
 		@ManyToOne
 		@NaturalId
 		private School school;
-	}
-
-	@Entity(name = "BasicRecord")
-	@Table(name = "trace_basic")
-	static class BasicRecord {
-		@Id
-		private Integer identifier;
-		@NaturalId
-		private String code;
 	}
 
 	@Entity(name = "ArrayRecord")

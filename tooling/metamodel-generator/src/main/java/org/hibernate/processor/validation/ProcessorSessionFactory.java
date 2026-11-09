@@ -8,6 +8,9 @@ import org.hibernate.PropertyNotFoundException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
+import org.hibernate.processor.Context;
+import org.hibernate.query.sqm.tree.spi.select.SqmSelectClause;
+import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
@@ -30,6 +33,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.ModuleElement;
+import javax.lang.model.element.Name;
 import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
@@ -57,6 +61,8 @@ import static java.util.Arrays.stream;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.processor.util.Constants.JAVA_OBJECT;
+import static org.hibernate.processor.util.SqmTypeUtils.resultType;
+import static org.hibernate.processor.util.TypeUtils.isPrimitive;
 
 /**
  * Implementation of the {@code Mock} objects based on standard
@@ -78,6 +84,11 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		return instance.make(environment, indexing, entityNameMappings, enumTypesByValue, queryElement, dialect);
 	}
 
+	public static ProcessorSessionFactory create(Context context, Element queryElement, @Nullable Dialect dialect) {
+		return instance.make( context.getProcessingEnvironment(), context.isIndexing(),
+				context.getEntityNameMappings(), context.getEnumTypesByValue(), queryElement, dialect );
+	}
+
 	static final Mocker<ProcessorSessionFactory> instance = Mocker.variadic(ProcessorSessionFactory.class);
 	private static final Mocker<Component> component = Mocker.variadic(Component.class);
 	private static final Mocker<ToManyAssociationPersister> toManyPersister = Mocker.variadic(ToManyAssociationPersister.class);
@@ -93,7 +104,8 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	private final boolean indexing;
 	private final Map<String, String> entityNameMappings;
 	private final Map<String, Set<String>> enumTypesByValue;
-	private final @Nullable PackageElement queryPackage;
+	private final @Nullable Name queryPackageName;
+	private final @Nullable TypeElement declaringEntity;
 
 	public ProcessorSessionFactory(
 			ProcessingEnvironment processingEnvironment,
@@ -109,7 +121,11 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		this.indexing = indexing;
 		this.entityNameMappings = entityNameMappings;
 		this.enumTypesByValue = enumTypesByValue;
-		this.queryPackage = queryElement == null ? null : elementUtil.getPackageOf( queryElement );
+		this.declaringEntity = queryElement instanceof TypeElement type && isEntity( type ) ? type : null;
+		this.queryPackageName =
+				queryElement == null
+						? null
+						: elementUtil.getPackageOf(queryElement).getQualifiedName();
 	}
 
 	@Override
@@ -535,6 +551,10 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	private final Map<String,TypeElement> entityCache = new HashMap<>();
 
 	private TypeElement findEntityByUnqualifiedName(String entityName) {
+		// A named query on an entity belongs to a persistence unit containing that entity.
+		if ( declaringEntity != null && entityName.equals( getJpaEntityName( declaringEntity ) ) ) {
+			return declaringEntity;
+		}
 		final var cached = entityCache.get(entityName);
 		if ( cached != null ) {
 			return cached;
@@ -545,16 +565,6 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 			if ( indexedEntity != null ) {
 				entityCache.put(entityName, indexedEntity);
 				return indexedEntity;
-			}
-		}
-
-		// An inaccessible entity from another persistence unit may have shadowed
-		// this package's entity in the index, which stores one class per name.
-		if ( queryPackage != null ) {
-			final var localEntity = findEntityInQueryPackage( entityName, queryPackage );
-			if ( localEntity != null ) {
-				entityCache.put( entityName, localEntity );
-				return localEntity;
 			}
 		}
 
@@ -625,26 +635,33 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		return null;
 	}
 
-	private static @Nullable TypeElement findEntityInQueryPackage(String entityName, Element scope) {
-		for ( var member : scope.getEnclosedElements() ) {
-			if ( member instanceof TypeElement type && !type.getModifiers().contains( Modifier.PRIVATE ) ) {
-				if ( isMatchingEntity( type, entityName ) ) {
-					return type;
-				}
-				final var nestedEntity = findEntityInQueryPackage( entityName, type );
-				if ( nestedEntity != null ) {
-					return nestedEntity;
-				}
+	public String inferredResultType(SqmSelectStatement<?> select, Context context) {
+		if ( select.getSelection() instanceof SqmSelectClause clause && clause.getSelectionItems().size() > 1 ) {
+			return "Object[]";
+		}
+		// This factory records the unqualified names resolved while validating this query.
+		for ( var entry : entityCache.entrySet() ) {
+			if ( !context.isUnambiguousEntityName( entry.getKey(), entry.getValue() ) ) {
+				return JAVA_OBJECT;
 			}
 		}
-		return null;
+		final var name = resultType( select );
+		if ( name == null ) {
+			return JAVA_OBJECT;
+		}
+		final var componentName = name.replace( "[]", "" );
+		if ( isPrimitive( componentName ) ) {
+			return name;
+		}
+		final var type = elementUtil.getTypeElement( componentName );
+		return type != null && isVisibleFromQueryPackage( type ) ? name : JAVA_OBJECT;
 	}
 
 	private boolean isVisibleFromQueryPackage(Element symbol) {
-		if ( queryPackage == null ) {
+		if ( queryPackageName == null ) {
 			return true;
 		}
-		final boolean samePackage = queryPackage.equals( elementUtil.getPackageOf( symbol ) );
+		final boolean samePackage = elementUtil.getPackageOf( symbol ).getQualifiedName().contentEquals( queryPackageName );
 		for ( var type = symbol; type instanceof TypeElement; type = type.getEnclosingElement() ) {
 			final var modifiers = type.getModifiers();
 			if ( modifiers.contains( Modifier.PRIVATE ) || !samePackage && !modifiers.contains( Modifier.PUBLIC ) ) {

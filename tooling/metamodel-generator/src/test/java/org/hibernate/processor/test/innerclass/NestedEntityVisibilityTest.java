@@ -21,7 +21,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		sources = "org.hibernate.processor.test.innerclass.hidden.OtherModel")
 class NestedEntityVisibilityTest {
 	@Entity(name = "NestedBook")
+	@NamedQuery(name = "declaredBooks", query = "from NestedBook")
 	static class Book {
+		@Id
+		long id;
+	}
+
+	@Entity
+	@NamedQuery(name = "otherBooks", query = "from NestedBook")
+	static class Magazine {
 		@Id
 		long id;
 	}
@@ -29,14 +37,27 @@ class NestedEntityVisibilityTest {
 	@MappedSuperclass
 	@NamedQuery(name = "books", query = "from NestedBook")
 	@NamedQuery(name = "hiddenBooks", query = "from HiddenBook")
+	@NamedQuery(name = "magazines", query = "from Magazine")
+	@NamedQuery(name = "typedBooks", query = "from NestedBook", resultClass = Book.class)
+	@NamedQuery(name = "pairs", query = "select b.id, b.id from NestedBook b")
+	@NamedQuery(name = "categories", query = "select a.category from Article a")
 	static class Queries {
 	}
 
 	@Test
 	void infersOnlyAccessibleQueryResultTypes() {
-		var books = getFieldFromMetamodelFor( Queries.class, "_books_" );
-		var hiddenBooks = getFieldFromMetamodelFor( Queries.class, "_hiddenBooks_" );
-		assertEquals( Book.class, ( (ParameterizedType) books.getGenericType() ).getActualTypeArguments()[0] );
-		assertEquals( Object.class, ( (ParameterizedType) hiddenBooks.getGenericType() ).getActualTypeArguments()[0] );
+		assertResultType( Queries.class, "_books_", Object.class );
+		assertResultType( Book.class, "_declaredBooks_", Book.class );
+		assertResultType( Magazine.class, "_otherBooks_", Object.class );
+		assertResultType( Queries.class, "_hiddenBooks_", Object.class );
+		assertResultType( Queries.class, "_magazines_", Magazine.class );
+		assertResultType( Queries.class, "_typedBooks_", Book.class );
+		assertResultType( Queries.class, "_pairs_", Object[].class );
+		assertResultType( Queries.class, "_categories_", Object.class );
+	}
+
+	private static void assertResultType(Class<?> owner, String fieldName, Class<?> expected) {
+		var field = getFieldFromMetamodelFor( owner, fieldName );
+		assertEquals( expected, ( (ParameterizedType) field.getGenericType() ).getActualTypeArguments()[0] );
 	}
 }

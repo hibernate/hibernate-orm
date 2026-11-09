@@ -1,5 +1,7 @@
 package org.hibernate.envers.enhanced;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.QualifiedName;
@@ -16,25 +18,25 @@ import org.hibernate.id.enhanced.SequenceStructure;
  */
 public class OrderedSequenceStructure extends SequenceStructure {
 
-	private final AuxiliaryDatabaseObject sequenceObject;
-	private final String suffix;
+	private final @Nonnull AuxiliaryDatabaseObject sequenceObject;
+	private final @Nullable String suffix;
 
 	public OrderedSequenceStructure(
-			JdbcEnvironment jdbcEnvironment,
-			QualifiedName qualifiedSequenceName,
+			@Nonnull JdbcEnvironment jdbcEnvironment,
+			@Nonnull QualifiedName qualifiedSequenceName,
 			int initialValue,
 			int incrementSize,
-			Class<?> numberType) {
+			@Nullable Class<?> numberType) {
 		this( jdbcEnvironment, qualifiedSequenceName, initialValue, incrementSize, false, numberType );
 	}
 
 	public OrderedSequenceStructure(
-			JdbcEnvironment jdbcEnvironment,
-			QualifiedName qualifiedSequenceName,
+			@Nonnull JdbcEnvironment jdbcEnvironment,
+			@Nonnull QualifiedName qualifiedSequenceName,
 			int initialValue,
 			int incrementSize,
 			boolean noCache,
-			Class<?> numberType) {
+			@Nullable Class<?> numberType) {
 		super( "envers", qualifiedSequenceName, initialValue, incrementSize, numberType );
 		this.sequenceObject = new OrderedSequence();
 		final Dialect dialect = jdbcEnvironment.getDialect();
@@ -47,19 +49,19 @@ public class OrderedSequenceStructure extends SequenceStructure {
 	}
 
 	@Override
-	protected void buildSequence(Database database) {
+	protected void buildSequence(@Nonnull Database database) {
 		database.addAuxiliaryDatabaseObject( sequenceObject );
 		this.physicalSequenceName = getQualifiedName();
 	}
 
 	private class OrderedSequence implements AuxiliaryDatabaseObject {
 		@Override
-		public String getExportIdentifier() {
+		public @Nonnull String getExportIdentifier() {
 			return getQualifiedName().render();
 		}
 
 		@Override
-		public boolean appliesToDialect(Dialect dialect) {
+		public boolean appliesToDialect(@Nonnull Dialect dialect) {
 			// applies to all dialects
 			// sqlCreateStrings applies dialect specific changes
 			return true;
@@ -71,7 +73,7 @@ public class OrderedSequenceStructure extends SequenceStructure {
 		}
 
 		@Override
-		public String[] sqlCreateStrings(SqlStringGenerationContext context) {
+		public @Nonnull String[] sqlCreateStrings(@Nonnull SqlStringGenerationContext context) {
 			Dialect dialect = context.getDialect();
 			final String[] createStrings = dialect.getSequenceSupport().getCreateSequenceStrings(
 					context.format( getPhysicalName() ),
@@ -89,7 +91,7 @@ public class OrderedSequenceStructure extends SequenceStructure {
 		}
 
 		@Override
-		public String[] sqlDropStrings(SqlStringGenerationContext context) {
+		public @Nonnull String[] sqlDropStrings(@Nonnull SqlStringGenerationContext context) {
 			Dialect dialect = context.getDialect();
 			return dialect.getSequenceSupport().getDropSequenceStrings( context.format( getPhysicalName() ) );
 		}

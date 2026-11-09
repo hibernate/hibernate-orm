@@ -125,11 +125,11 @@ SQL Server live verification remains deferred.
 
 == Internal system-period compatibility
 
-`TemporalSystemPeriodTests` covers Hibernate-owned row-start/end mappings separately
+`TemporalSystemPeriodTests` explicitly selects `temporal_preservation=false` and covers Hibernate-owned row-start/end mappings separately
 from application Java Time attributes. It exercises both emulated storage strategies,
 entity and collection history, configured suppliers and server generation, copies,
 precision diagnostics and bootstrap with JDBC metadata access disabled. The ordinary
-Instant/raw TIMESTAMP negative case ensures the compatibility exception stays local.
+Instant/raw TIMESTAMP negative case separately checks enabled preservation.
 Legacy temporal/conversion tests are unchanged.
 
 Run with aligned JVM/session zones, for example
@@ -137,8 +137,7 @@ Run with aligned JVM/session zones, for example
 and separately with UTC. The raw timestamp assertions intentionally verify the existing
 local-clock encoding. These tests do not request UTC normalization or a migration of
 historical data. Mismatched JDBC Calendar/server-clock behavior and DST ambiguity remain
-limitations of that legacy protocol; a future UTC encoding setting requires explicit
-opt-in and a historical-data migration design. SQL Server live verification is deferred.
+limitations of that legacy protocol; enabling preservation requires migration analysis of historical data. SQL Server live verification is deferred.
 The descriptor-isolation control also verifies that the previous internal period
 handling can coexist with the new application descriptor and custom contributions.
 
@@ -152,7 +151,41 @@ cache/dirty-checking behavior. TemporalPreservingPeriodTests checks exact histor
 boundaries and collection history with UTC-encoded H2 periods, including a JDBC timezone
 mismatch. Run these with UTC and non-UTC temporalTestJvmTimeZone profiles.
 
-The prior TemporalSystemPeriodTests remains a record of the earlier unconditional
-compatibility contract. Its enabled-mode legacy-descriptor/raw-field assertions are
-not expectations for the replacement default-enabled protocol. Keep those tests intact
-when analyzing full-suite differences; disabled-mode legacy coverage remains necessary.
+TemporalSystemPeriodTests verifies the disabled-mode compatibility contract.
+TemporalPreservingPeriodTests verifies the default-enabled protocol; their different
+raw-field expectations intentionally cover the two selected modes.
+
+== Query and callable boundaries
+
+`TemporalColumnQueryTests` checks existing SQL tuple semantics for OffsetTime,
+OffsetDateTime and ZonedDateTime COLUMN mappings. Equal primary values with different
+offsets remain distinct unless an explicit adjustment makes both components equal.
+The fixtures include offset seconds and microsecond precision. Scalar Criteria literals
+cannot represent these composite values; a whole-value parameter is the supported
+alternative. Bulk assignments are checked in fresh sessions and against physical
+primary/offset columns.
+
+`TemporalNativeQueryTests` passes the resolved attribute type explicitly for native
+parameters and scalar results, with two independent adjustment targets. A class-only
+scalar follows ordinary driver interpretation and does not inherit an attribute's
+adjustment from its SQL alias. The Instant control uses the established UTC fallback.
+
+`TemporalCallableQueryTests` exercises live ORM calls and function returns. Oracle
+covers IN/OUT/INOUT, PostgreSQL covers IN plus its unsupported timetz OUT/INOUT boundary,
+and composite callable parameters/returns fail before JDBC binding. The optional
+`hibernate.test.temporal.observe_callable` test-provider setting records actual JDBC
+method names and parameter positions/names. Named ORM registration adapted to JDBC
+positions is reported separately from actual named JDBC calls. Metadata-disabled
+bootstrap still forbids connection acquisition; normal runtime calls may connect.
+Provider-specific cases are deliberately inapplicable on other databases.
+
+The function fixture uses the same plain TIMESTAMP UTC carrier as its explicit
+mapping-aware type. Its SQL signature must not introduce an implicit conversion to
+TIMESTAMP WITH TIME ZONE. Native SQL/schema compatibility remains the caller's
+responsibility. Physical tuple checks read TIME and TIME WITH TIME ZONE in their own
+JDBC forms, avoiding session-dependent casts through Timestamp.
+
+These sequential matrices opt into `hibernate.test.temporal.reuse_connection` to
+retain at most one idle connection per test provider and close it at registry shutdown.
+This limits Oracle Free connection churn. Existing connection-isolation tests keep
+physical acquisition/close behavior unchanged.

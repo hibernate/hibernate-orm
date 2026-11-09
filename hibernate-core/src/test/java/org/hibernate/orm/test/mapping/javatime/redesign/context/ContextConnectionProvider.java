@@ -11,15 +11,18 @@ import org.hibernate.testing.jdbc.GradleParallelTestingResolver;
 /// Lazy physical connections make all bootstrap acquisition attempts observable.
 ///
 /// @author Steve Ebersole
-final class ContextConnectionProvider implements ConnectionProvider, Configurable {
+final class ContextConnectionProvider implements ConnectionProvider, Configurable, org.hibernate.service.spi.Stoppable {
 	boolean blocked;
 	int attempts;
+	final List<String> callableMethods = new ArrayList<>();
 	private Map<String,Object> settings;
+	private Connection idle;
 	ContextConnectionProvider(boolean blocked) { this.blocked = blocked; }
 	@Override public void configure(Map<String,Object> settings) { this.settings = new HashMap<>( settings ); }
 	@Override public Connection getConnection() throws SQLException {
 		attempts++;
 		if ( blocked ) throw new SQLException( "Context bootstrap attempted JDBC access" );
+		if ( idle != null ) { var connection=idle;idle=null;return connection; }
 		try { Class.forName( (String) settings.get( "hibernate.connection.driver_class" ) ); }
 		catch (ClassNotFoundException ex) { throw new SQLException( ex ); }
 		final var properties = ConnectionProviderInitiator.getConnectionProperties( settings );
@@ -28,9 +31,47 @@ final class ContextConnectionProvider implements ConnectionProvider, Configurabl
 		connection.setAutoCommit( false );
 		final var init = settings.get( "hibernate.connection.init_sql" );
 		if ( init != null ) try ( var statement = connection.createStatement() ) { statement.execute( init.toString() ); }
+		if ( Boolean.TRUE.equals( settings.get( "hibernate.test.temporal.observe_callable" ) ) ) {
+			return (Connection) java.lang.reflect.Proxy.newProxyInstance( Connection.class.getClassLoader(),
+					new Class<?>[] { Connection.class }, (proxy, method, args) -> {
+						final var result = invoke( connection, method, args );
+						return method.getName().equals( "prepareCall" ) ? observe( (CallableStatement) result ) : result;
+					} );
+		}
 		return connection;
 	}
-	@Override public void closeConnection(Connection connection) throws SQLException { connection.close(); }
+	// Observe the actual driver boundary, including named-to-positional adaptation.
+	// Delegate to the live driver and retain its original exception/cause.
+	private CallableStatement observe(CallableStatement statement) {
+		return (CallableStatement) java.lang.reflect.Proxy.newProxyInstance( CallableStatement.class.getClassLoader(),
+				new Class<?>[] { CallableStatement.class }, (proxy, method, args) -> {
+					final var name = method.getName();
+					if ( name.startsWith( "set" ) || name.startsWith( "get" )
+							|| name.equals( "registerOutParameter" ) || name.startsWith( "execute" ) ) {
+						callableMethods.add( name + (args == null || args.length == 0 ? "" : ":" + args[0]) );
+					}
+					return invoke( statement, method, args );
+				} );
+	}
+	private static Object invoke(Object target, java.lang.reflect.Method method, Object[] args) throws Throwable {
+		try { return method.invoke( target, args ); }
+		catch (java.lang.reflect.InvocationTargetException failure) { throw failure.getCause(); }
+	}
+	// Optional single idle connection avoids exhausting Oracle Free's server processes
+	// during these sequential operation matrices. Existing isolation tests do not opt in.
+	@Override public void closeConnection(Connection connection) throws SQLException {
+		if ( Boolean.TRUE.equals(settings.get("hibernate.test.temporal.reuse_connection")) && idle==null ) {
+			connection.rollback();
+			idle=connection;
+		}
+		else connection.close();
+	}
+	@Override public void stop() {
+		if(idle!=null) {
+			try {idle.close();} catch(SQLException e) {throw new org.hibernate.HibernateException("Could not close test connection",e);}
+			finally {idle=null;}
+		}
+	}
 	@Override public boolean supportsAggressiveRelease() { return false; }
 	@Override public boolean isUnwrappableAs(Class<?> type) { return type.isInstance( this ); }
 	@Override public <T> T unwrap(Class<T> type) {

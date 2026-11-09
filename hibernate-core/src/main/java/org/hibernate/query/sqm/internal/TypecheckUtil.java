@@ -420,7 +420,10 @@ public class TypecheckUtil {
 		final Integer rightTupleLength = right.getTupleLength();
 		if ( leftTupleLength != null && rightTupleLength != null
 				&& leftTupleLength.intValue() != rightTupleLength.intValue() ) {
-			throw new SemanticException( "Cannot compare tuples of different lengths", (String) null );
+			throw new SemanticException( "Cannot compare tuples of different lengths ("
+					+ leftTupleLength + " and " + rightTupleLength + ") in '" + left.toHqlString()
+					+ " = " + right.toHqlString() + "'. A scalar literal cannot represent a multi-column value; "
+					+ "use a parameter bound to the whole mapped value or compatible tuple expressions.", (String) null );
 		}
 
 		// SqmMemberOfPredicate is the only one allowing multivalued paths, its comparability is now evaluated in areTypesComparable

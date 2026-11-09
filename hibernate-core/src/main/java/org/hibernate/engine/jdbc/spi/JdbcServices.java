@@ -1,5 +1,6 @@
 package org.hibernate.engine.jdbc.spi;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreationContext;
@@ -28,17 +29,20 @@ public interface JdbcServices extends Service {
 	/**
 	 * Obtain the {@link JdbcEnvironment} backing this {@code JdbcServices} instance.
 	 */
+	@Nonnull
 	JdbcEnvironment getJdbcEnvironment();
 
 	/**
 	 * Obtain a {@link JdbcConnectionAccess} usable from bootstrap actions
 	 * (hbm2ddl.auto, {@code Dialect} resolution, etc).
 	 */
+	@Nonnull
 	JdbcConnectionAccess getBootstrapJdbcConnectionAccess();
 
 	/**
 	 * Obtain the dialect of the database.
 	 */
+	@Nonnull
 	Dialect getDialect();
 
 	/**
@@ -46,13 +50,15 @@ public interface JdbcServices extends Service {
 	 *
 	 * @return The SQL statement logger.
 	 */
+	@Nonnull
 	SqlStatementLogger getSqlStatementLogger();
 
 	/**
-	 * Obtains the service used for marking SQL parameters
+	 * Obtains the service used for marking SQL parameters.
 	 * @return the registered ParameterMarkerStrategy implementation.
 	 */
 	@Incubating(since = "6.2")
+	@Nonnull
 	ParameterMarkerStrategy getParameterMarkerStrategy();
 
 	/**
@@ -60,6 +66,7 @@ public interface JdbcServices extends Service {
 	 *
 	 * @return The exception helper service.
 	 */
+	@Nonnull
 	SqlExceptionHelper getSqlExceptionHelper();
 
 	/// Obtain the stable effective JDBC metadata view.
@@ -69,6 +76,7 @@ public interface JdbcServices extends Service {
 	/// requires driver observations.
 	///
 	/// @since 8.0
+	@Nonnull
 	JdbcMetadata getJdbcMetadata();
 
 	/// Obtain the raw JDBC driver and bootstrap-connection observations.
@@ -78,6 +86,7 @@ public interface JdbcServices extends Service {
 	/// intentional raw access, use
 	/// `getJdbcMetadata().getExtractedDatabaseMetaData()`.
 	@Deprecated(since = "8.0")
+	@Nonnull
 	ExtractedDatabaseMetaData getExtractedMetaDataSupport();
 
 	/**
@@ -91,11 +100,13 @@ public interface JdbcServices extends Service {
 	 * @param lobCreationContext The context in which the LOB is being created
 	 * @return The LOB creator.
 	 */
-	LobCreator getLobCreator(LobCreationContext lobCreationContext);
+	@Nonnull
+	LobCreator getLobCreator(@Nonnull LobCreationContext lobCreationContext);
 
 	/**
 	 * Access the executor for {@link JdbcOperationQuerySelect} operations.
 	 */
+	@Nonnull
 	default JdbcSelectExecutor getJdbcSelectExecutor() {
 		return JdbcSelectExecutorStandardImpl.INSTANCE;
 	}
@@ -103,6 +114,7 @@ public interface JdbcServices extends Service {
 	/**
 	 * Access the executor for {@link JdbcOperationQueryMutation} operations.
 	 */
+	@Nonnull
 	default JdbcMutationExecutor getJdbcMutationExecutor() {
 		return StandardJdbcMutationExecutor.INSTANCE;
 	}

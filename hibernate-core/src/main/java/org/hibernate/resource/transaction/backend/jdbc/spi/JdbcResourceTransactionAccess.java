@@ -1,5 +1,7 @@
 package org.hibernate.resource.transaction.backend.jdbc.spi;
 
+import jakarta.annotation.Nonnull;
+
 /**
  * Provides access to {@link JdbcResourceTransaction} (JDBC transaction stand-in) for use in
  * building resource-local {@link org.hibernate.resource.transaction.spi.TransactionCoordinator}
@@ -15,5 +17,6 @@ public interface JdbcResourceTransactionAccess {
 	 *
 	 * @return The resource-local transaction
 	 */
+	@Nonnull
 	JdbcResourceTransaction getResourceLocalTransaction();
 }

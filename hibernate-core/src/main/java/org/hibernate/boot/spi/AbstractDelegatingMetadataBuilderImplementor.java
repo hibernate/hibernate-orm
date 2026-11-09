@@ -1,5 +1,7 @@
 package org.hibernate.boot.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.FetchType;
 import org.hibernate.Remove;
 import org.hibernate.boot.CacheRegionDefinition;
@@ -48,178 +50,211 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Met
 	 * href="http://www.angelikalanger.com/GenericsFAQ/FAQSections/ProgrammingIdioms.html#FAQ206">What is the
 	 * "getThis trick?"</a>.
 	 */
+	@Nonnull
 	protected abstract T getThis();
 
 	@Override
-	public MetadataBuilder applyImplicitSchemaName(String implicitSchemaName) {
+	@Nonnull
+	public MetadataBuilder applyImplicitSchemaName(@Nullable String implicitSchemaName) {
 		delegate.applyImplicitSchemaName( implicitSchemaName );
 		return getThis();
 	}
 
 	@Override
-	public MetadataBuilder applyImplicitCatalogName(String implicitCatalogName) {
+	@Nonnull
+	public MetadataBuilder applyImplicitCatalogName(@Nullable String implicitCatalogName) {
 		delegate.applyImplicitCatalogName( implicitCatalogName );
 		return getThis();
 	}
 
 	@Override
-	public MetadataBuilder applyImplicitNamingStrategy(ImplicitNamingStrategy namingStrategy) {
+	@Nonnull
+	public MetadataBuilder applyImplicitNamingStrategy(@Nonnull ImplicitNamingStrategy namingStrategy) {
 		delegate.applyImplicitNamingStrategy( namingStrategy );
 		return getThis();
 	}
 
 	@Override
-	public MetadataBuilder applyPhysicalNamingStrategy(PhysicalNamingStrategy namingStrategy) {
+	@Nonnull
+	public MetadataBuilder applyPhysicalNamingStrategy(@Nonnull PhysicalNamingStrategy namingStrategy) {
 		delegate.applyPhysicalNamingStrategy( namingStrategy );
 		return getThis();
 	}
 
 	@Override
-	public MetadataBuilder applyColumnOrderingStrategy(ColumnOrderingStrategy columnOrderingStrategy) {
+	@Nonnull
+	public MetadataBuilder applyColumnOrderingStrategy(@Nonnull ColumnOrderingStrategy columnOrderingStrategy) {
 		delegate.applyColumnOrderingStrategy( columnOrderingStrategy );
 		return getThis();
 	}
 
 	@Override
-	public MetadataBuilder applySharedCacheMode(SharedCacheMode cacheMode) {
+	@Nonnull
+	public MetadataBuilder applySharedCacheMode(@Nonnull SharedCacheMode cacheMode) {
 		delegate.applySharedCacheMode( cacheMode );
 		return getThis();
 	}
 
 	@Override
-	public MetadataBuilder applyAccessType(AccessType accessType) {
+	@Nonnull
+	public MetadataBuilder applyAccessType(@Nullable AccessType accessType) {
 		delegate.applyAccessType( accessType );
 		return getThis();
 	}
 
 	@Override
-	public MetadataBuilder applyIndexView(Object jandexView) {
+	@Nonnull
+	public MetadataBuilder applyIndexView(@Nullable Object jandexView) {
 		delegate.applyIndexView( jandexView );
 		return getThis();
 	}
 
 	@Override
-	public MetadataBuilder applyScanning(ScanningProvider scanningProvider) {
+	@Nonnull
+	public MetadataBuilder applyScanning(@Nullable ScanningProvider scanningProvider) {
 		delegate.applyScanning( scanningProvider );
 		return getThis();
 	}
 
 	@Override
-	public MetadataBuilder applyArchiveDescriptorFactory(ArchiveDescriptorFactory factory) {
+	@Nonnull
+	public MetadataBuilder applyArchiveDescriptorFactory(@Nullable ArchiveDescriptorFactory factory) {
 		delegate.applyArchiveDescriptorFactory( factory );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public MetadataBuilder enableExplicitDiscriminatorsForJoinedSubclassSupport(boolean enabled) {
 		delegate.enableExplicitDiscriminatorsForJoinedSubclassSupport( enabled );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public MetadataBuilder enableImplicitDiscriminatorsForJoinedSubclassSupport(boolean enabled) {
 		delegate.enableImplicitDiscriminatorsForJoinedSubclassSupport( enabled );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public MetadataBuilder enableImplicitForcingOfDiscriminatorsInSelect(boolean supported) {
 		delegate.enableImplicitForcingOfDiscriminatorsInSelect( supported );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public MetadataBuilder enableGlobalNationalizedCharacterDataSupport(boolean enabled) {
 		delegate.enableGlobalNationalizedCharacterDataSupport( enabled );
 		return getThis();
 	}
 
 	@Override
-	public MetadataBuilder applyDefaultToOneFetchType(FetchType defaultToOneFetchType) {
+	@Nonnull
+	public MetadataBuilder applyDefaultToOneFetchType(@Nullable FetchType defaultToOneFetchType) {
 		delegate.applyDefaultToOneFetchType( defaultToOneFetchType );
 		return getThis();
 	}
 
 	@Override
-	public MetadataBuilder applyBasicType(BasicType<?> type) {
+	@Nonnull
+	public MetadataBuilder applyBasicType(@Nonnull BasicType<?> type) {
 		delegate.applyBasicType( type );
 		return getThis();
 	}
 
 	@Override
-	public MetadataBuilder applyBasicType(BasicType<?> type, String... keys) {
+	@Nonnull
+	public MetadataBuilder applyBasicType(@Nonnull BasicType<?> type, @Nullable String... keys) {
 		delegate.applyBasicType( type, keys );
 		return getThis();
 	}
 
 	@Override
-	public MetadataBuilder applyBasicType(UserType<?> type, String... keys) {
+	@Nonnull
+	public MetadataBuilder applyBasicType(@Nonnull UserType<?> type, @Nullable String... keys) {
 		delegate.applyBasicType( type, keys );
 		return getThis();
 	}
 
 	@Override
-	public MetadataBuilder applyTypes(TypeContributor typeContributor) {
+	@Nonnull
+	public MetadataBuilder applyTypes(@Nonnull TypeContributor typeContributor) {
 		delegate.applyTypes( typeContributor );
 		return getThis();
 	}
 
 	@Override
-	public MetadataBuilder applyCacheRegionDefinition(CacheRegionDefinition cacheRegionDefinition) {
+	@Nonnull
+	public MetadataBuilder applyCacheRegionDefinition(@Nonnull CacheRegionDefinition cacheRegionDefinition) {
 		delegate.applyCacheRegionDefinition( cacheRegionDefinition );
 		return getThis();
 	}
 
 	@Override
-	public MetadataBuilder applyTempClassLoader(ClassLoader tempClassLoader) {
+	@Nonnull
+	public MetadataBuilder applyTempClassLoader(@Nullable ClassLoader tempClassLoader) {
 		delegate.applyTempClassLoader( tempClassLoader );
 		return getThis();
 	}
 
 	@Override
-	public MetadataBuilder applyFunctions(FunctionContributor functionContributor) {
+	@Nonnull
+	public MetadataBuilder applyFunctions(@Nonnull FunctionContributor functionContributor) {
 		delegate.applyFunctions( functionContributor );
 		return this;
 	}
 
 	@Override
-	public MetadataBuilder applySqlFunction(String functionName, SqmFunctionDescriptor function) {
+	@Nonnull
+	public MetadataBuilder applySqlFunction(@Nonnull String functionName, @Nonnull SqmFunctionDescriptor function) {
 		delegate.applySqlFunction( functionName, function );
 		return getThis();
 	}
 
 	@Override
-	public MetadataBuilder applyAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject) {
+	@Nonnull
+	public MetadataBuilder applyAuxiliaryDatabaseObject(@Nonnull AuxiliaryDatabaseObject auxiliaryDatabaseObject) {
 		delegate.applyAuxiliaryDatabaseObject( auxiliaryDatabaseObject );
 		return getThis();
 	}
 
 	@Override
-	public MetadataBuilder applyAttributeConverter(ConverterDescriptor<?,?> descriptor) {
+	@Nonnull
+	public MetadataBuilder applyAttributeConverter(@Nonnull ConverterDescriptor<?,?> descriptor) {
 		delegate.applyAttributeConverter( descriptor );
 		return getThis();
 	}
 
 	@Override
-	public <O, R> MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<O, R>> attributeConverterClass) {
+	@Nonnull
+	public <O, R> MetadataBuilder applyAttributeConverter(
+			@Nonnull Class<? extends AttributeConverter<O, R>> attributeConverterClass) {
 		delegate.applyAttributeConverter( attributeConverterClass );
 		return getThis();
 	}
 
 	@Override
-	public <O,R> MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<O,R>> attributeConverterClass, boolean autoApply) {
+	@Nonnull
+	public <O,R> MetadataBuilder applyAttributeConverter(
+			@Nonnull Class<? extends AttributeConverter<O,R>> attributeConverterClass,
+			boolean autoApply) {
 		delegate.applyAttributeConverter( attributeConverterClass, autoApply );
 		return getThis();
 	}
 
 	@Override
-	public MetadataBuilder applyAttributeConverter(AttributeConverter attributeConverter) {
+	@Nonnull
+	public MetadataBuilder applyAttributeConverter(@Nonnull AttributeConverter attributeConverter) {
 		delegate.applyAttributeConverter( attributeConverter );
 		return getThis();
 	}
 
 	@Override
-	public MetadataBuilder applyAttributeConverter(AttributeConverter attributeConverter, boolean autoApply) {
+	@Nonnull
+	public MetadataBuilder applyAttributeConverter(@Nonnull AttributeConverter attributeConverter, boolean autoApply) {
 		delegate.applyAttributeConverter( attributeConverter, autoApply );
 		return getThis();
 	}
@@ -230,6 +265,7 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Met
 	}
 
 	@Override
+	@Nonnull
 	public Metadata build() {
 		return delegate.build();
 	}

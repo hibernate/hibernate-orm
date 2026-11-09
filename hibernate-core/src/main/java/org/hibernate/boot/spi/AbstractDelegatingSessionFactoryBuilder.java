@@ -23,6 +23,8 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.type.format.FormatMapper;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.criteria.Nulls;
 
 /**
@@ -50,6 +52,7 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	 * href="http://www.angelikalanger.com/GenericsFAQ/FAQSections/ProgrammingIdioms.html#FAQ206">What is the
 	 * "getThis trick?"</a>.
 	 */
+	@Nonnull
 	protected abstract T getThis();
 
 	protected SessionFactoryBuilder delegate() {
@@ -57,138 +60,161 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public T applyValidatorFactory(Object validatorFactory) {
+	@Nonnull
+	public T applyValidatorFactory(@Nullable Object validatorFactory) {
 		delegate.applyValidatorFactory( validatorFactory );
 		return getThis();
 	}
 
 	@Override
-	public T applyBeanManager(Object beanManager) {
+	@Nonnull
+	public T applyBeanManager(@Nullable Object beanManager) {
 		delegate.applyBeanManager( beanManager );
 		return getThis();
 	}
 
 	@Override
-	public T applyName(String sessionFactoryName) {
+	@Nonnull
+	public T applyName(@Nullable String sessionFactoryName) {
 		delegate.applyName( sessionFactoryName );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T applyNameAsJndiName(boolean isJndiName) {
 		delegate.applyNameAsJndiName( isJndiName );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T applyAutoClosing(boolean enabled) {
 		delegate.applyAutoClosing( enabled );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T applyAutoFlushing(boolean enabled) {
 		delegate.applyAutoFlushing( enabled );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T applyStatisticsSupport(boolean enabled) {
 		delegate.applyStatisticsSupport( enabled );
 		return getThis();
 	}
 
 	@Override
-	public T applyInterceptor(Interceptor interceptor) {
+	@Nonnull
+	public T applyInterceptor(@Nullable Interceptor interceptor) {
 		delegate.applyInterceptor( interceptor );
 		return getThis();
 	}
 
 	@Override
-	public T applyStatementInspector(StatementInspector statementInspector) {
+	@Nonnull
+	public T applyStatementInspector(@Nullable StatementInspector statementInspector) {
 		delegate.applyStatementInspector( statementInspector );
 		return getThis();
 	}
 
 	@Override
-	public T addSessionFactoryObservers(SessionFactoryObserver... observers) {
+	@Nonnull
+	public T addSessionFactoryObservers(@Nonnull SessionFactoryObserver... observers) {
 		delegate.addSessionFactoryObservers( observers );
 		return getThis();
 	}
 
 	@Override
-	public T applyCustomEntityDirtinessStrategy(CustomEntityDirtinessStrategy strategy) {
+	@Nonnull
+	public T applyCustomEntityDirtinessStrategy(@Nonnull CustomEntityDirtinessStrategy strategy) {
 		delegate.applyCustomEntityDirtinessStrategy( strategy );
 		return getThis();
 	}
 
 	@Override
-	public T addEntityNameResolver(EntityNameResolver... entityNameResolvers) {
+	@Nonnull
+	public T addEntityNameResolver(@Nonnull EntityNameResolver... entityNameResolvers) {
 		delegate.addEntityNameResolver( entityNameResolvers );
 		return getThis();
 	}
 
 	@Override
-	public T applyEntityNotFoundDelegate(EntityNotFoundDelegate entityNotFoundDelegate) {
+	@Nonnull
+	public T applyEntityNotFoundDelegate(@Nonnull EntityNotFoundDelegate entityNotFoundDelegate) {
 		delegate.applyEntityNotFoundDelegate( entityNotFoundDelegate );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T applyIdentifierRollbackSupport(boolean enabled) {
 		delegate.applyIdentifierRollbackSupport( enabled );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T applyNullabilityChecking(boolean enabled) {
 		delegate.applyNullabilityChecking( enabled );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T applyLazyInitializationOutsideTransaction(boolean enabled) {
 		delegate.applyLazyInitializationOutsideTransaction( enabled );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T applyDefaultBatchFetchSize(int size) {
 		delegate.applyDefaultBatchFetchSize( size );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T applyMaximumFetchDepth(int depth) {
 		delegate.applyMaximumFetchDepth( depth );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T applySubselectFetchEnabled(boolean enabled) {
 		delegate.applySubselectFetchEnabled( enabled );
 		return getThis();
 	}
 
 	@Override
-	public T applyDefaultNullPrecedence(Nulls nullPrecedence) {
+	@Nonnull
+	public T applyDefaultNullPrecedence(@Nonnull Nulls nullPrecedence) {
 		delegate.applyDefaultNullPrecedence( nullPrecedence );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T applyOrderingOfInserts(boolean enabled) {
 		delegate.applyOrderingOfInserts( enabled );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T applyOrderingOfUpdates(boolean enabled) {
 		delegate.applyOrderingOfUpdates( enabled );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T applyMultiTenancy(boolean enabled) {
 		delegate.applyMultiTenancy(enabled);
 		return getThis();
@@ -196,226 +222,261 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 
 	@Override
 	@Deprecated(since = "8.0", forRemoval = true)
-	public T applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver<?> resolver) {
+	@Nonnull
+	public T applyCurrentTenantIdentifierResolver(@Nullable CurrentTenantIdentifierResolver<?> resolver) {
 		delegate.applyCurrentTenantIdentifierResolver( resolver );
 		return getThis();
 	}
 
 	@Override
 	@Deprecated(since = "8.0", forRemoval = true)
-	public SessionFactoryBuilder applyTenantSchemaMapper(TenantSchemaMapper<?> mapper) {
+	@Nonnull
+	public SessionFactoryBuilder applyTenantSchemaMapper(@Nullable TenantSchemaMapper<?> mapper) {
 		delegate.applyTenantSchemaMapper( mapper );
 		return getThis();
 	}
 
 	@Override
 	@Deprecated(since = "8.0", forRemoval = true)
-	public SessionFactoryBuilder applyTenantCredentialsMapper(TenantCredentialsMapper<?> mapper) {
+	@Nonnull
+	public SessionFactoryBuilder applyTenantCredentialsMapper(@Nullable TenantCredentialsMapper<?> mapper) {
 		delegate.applyTenantCredentialsMapper( mapper );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T applyJtaTrackingByThread(boolean enabled) {
 		delegate.applyJtaTrackingByThread( enabled );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T applyPreferUserTransactions(boolean preferUserTransactions) {
 		delegate.applyPreferUserTransactions( preferUserTransactions );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T applyNamedQueryCheckingOnStartup(boolean enabled) {
 		delegate.applyNamedQueryCheckingOnStartup( enabled );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T applySecondLevelCacheSupport(boolean enabled) {
 		delegate.applySecondLevelCacheSupport( enabled );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T applyQueryCacheSupport(boolean enabled) {
 		delegate.applyQueryCacheSupport( enabled );
 		return getThis();
 	}
 
 	@Override
-	public T applyQueryCacheLayout(CacheLayout cacheLayout) {
+	@Nonnull
+	public T applyQueryCacheLayout(@Nonnull CacheLayout cacheLayout) {
 		delegate.applyQueryCacheLayout( cacheLayout );
 		return getThis();
 	}
 
 	@Override
-	public T applyTimestampsCacheFactory(TimestampsCacheFactory factory) {
+	@Nonnull
+	public T applyTimestampsCacheFactory(@Nullable TimestampsCacheFactory factory) {
 		delegate.applyTimestampsCacheFactory( factory );
 		return getThis();
 	}
 
 	@Override
-	public T applyCacheRegionPrefix(String prefix) {
+	@Nonnull
+	public T applyCacheRegionPrefix(@Nullable String prefix) {
 		delegate.applyCacheRegionPrefix( prefix );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T applyMinimalPutsForCaching(boolean enabled) {
 		delegate.applyMinimalPutsForCaching( enabled );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T applyStructuredCacheEntries(boolean enabled) {
 		delegate.applyStructuredCacheEntries( enabled );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T applyDirectReferenceCaching(boolean enabled) {
 		delegate.applyDirectReferenceCaching( enabled );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T applyAutomaticEvictionOfCollectionCaches(boolean enabled) {
 		delegate.applyAutomaticEvictionOfCollectionCaches( enabled );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T applyJdbcBatchSize(int size) {
 		delegate.applyJdbcBatchSize( size );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T applyScrollableResultsSupport(boolean enabled) {
 		delegate.applyScrollableResultsSupport( enabled );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T applyGetGeneratedKeysSupport(boolean enabled) {
 		delegate.applyGetGeneratedKeysSupport( enabled );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T applyJdbcFetchSize(int size) {
 		delegate.applyJdbcFetchSize( size );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T applyConnectionProviderDisablesAutoCommit(boolean providerDisablesAutoCommit) {
 		delegate.applyConnectionProviderDisablesAutoCommit( providerDisablesAutoCommit );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T applySqlComments(boolean enabled) {
 		delegate.applySqlComments( enabled );
 		return getThis();
 	}
 
 	@Override
-	public T applySqlFunction(
-			String registrationName,
-			SqmFunctionDescriptor sqlFunction) {
+	@Nonnull
+	public T applySqlFunction(@Nonnull String registrationName, @Nonnull SqmFunctionDescriptor sqlFunction) {
 		delegate.applySqlFunction( registrationName, sqlFunction );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T applyCollectionsInDefaultFetchGroup(boolean enabled) {
 		delegate.applyCollectionsInDefaultFetchGroup( enabled );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T allowOutOfTransactionUpdateOperations(boolean allow) {
 		delegate.allowOutOfTransactionUpdateOperations( allow );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T enableJpaQueryCompliance(boolean enabled) {
 		delegate.enableJpaQueryCompliance( enabled );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T enableJpaOrderByMappingCompliance(boolean enabled) {
 		delegate.enableJpaOrderByMappingCompliance( enabled );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T enableJpaTransactionCompliance(boolean enabled) {
 		delegate.enableJpaTransactionCompliance( enabled );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public T enableJpaClosedCompliance(boolean enabled) {
 		delegate.enableJpaClosedCompliance( enabled );
 		return getThis();
 	}
 
 	@Override
-	public T applyStatelessInterceptor(Supplier<? extends Interceptor> statelessInterceptorSupplier) {
+	@Nonnull
+	public T applyStatelessInterceptor(@Nullable Supplier<? extends Interceptor> statelessInterceptorSupplier) {
 		delegate.applyStatelessInterceptor(statelessInterceptorSupplier);
 		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyStatementObserver(StatementObserver statementObserver) {
+	@Nonnull
+	public SessionFactoryBuilder applyStatementObserver(@Nullable StatementObserver statementObserver) {
 		delegate.applyStatementObserver( statementObserver );
 		return this;
 	}
 
 	@Override
-	public T applyStatelessInterceptor(Class<? extends Interceptor> statelessInterceptorClass) {
+	@Nonnull
+	public T applyStatelessInterceptor(@Nonnull Class<? extends Interceptor> statelessInterceptorClass) {
 		delegate.applyStatelessInterceptor(statelessInterceptorClass);
 		return getThis();
 	}
 
 	@Override
-	public T applyConnectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode) {
+	@Nonnull
+	public T applyConnectionHandlingMode(@Nonnull PhysicalConnectionHandlingMode connectionHandlingMode) {
 		delegate.applyConnectionHandlingMode( connectionHandlingMode );
 		return getThis();
 	}
 
 	@Override
-	public T applyJsonFormatMapper(FormatMapper jsonFormatMapper) {
+	@Nonnull
+	public T applyJsonFormatMapper(@Nullable FormatMapper jsonFormatMapper) {
 		delegate.applyJsonFormatMapper( jsonFormatMapper );
 		return getThis();
 	}
 
 	@Override
-	public T applyXmlFormatMapper(FormatMapper xmlFormatMapper) {
+	@Nonnull
+	public T applyXmlFormatMapper(@Nullable FormatMapper xmlFormatMapper) {
 		delegate.applyXmlFormatMapper( xmlFormatMapper );
 		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyTemporalTableStrategy(TemporalTableStrategy strategy) {
+	@Nonnull
+	public SessionFactoryBuilder applyTemporalTableStrategy(@Nonnull TemporalTableStrategy strategy) {
 		delegate.applyTemporalTableStrategy( strategy );
 		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyAuditStrategy(AuditStrategy strategy) {
+	@Nonnull
+	public SessionFactoryBuilder applyAuditStrategy(@Nonnull AuditStrategy strategy) {
 		delegate.applyAuditStrategy( strategy );
 		return getThis();
 	}
 
 	@Override
+	@Nonnull
 	public SessionFactory build() {
 		return delegate.build();
 	}

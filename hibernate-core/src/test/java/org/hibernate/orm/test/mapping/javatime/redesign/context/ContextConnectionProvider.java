@@ -30,7 +30,7 @@ final class ContextConnectionProvider implements ConnectionProvider, Configurabl
 		final var connection = DriverManager.getConnection( GradleParallelTestingResolver.resolveUrl( (String) settings.get( "hibernate.connection.url" ) ), properties );
 		connection.setAutoCommit( false );
 		final var init = settings.get( "hibernate.connection.init_sql" );
-		if ( init != null ) try ( var statement = connection.createStatement() ) { statement.execute( init.toString() ); }
+		if ( init != null && !init.toString().isBlank() ) try ( var statement = connection.createStatement() ) { statement.execute( init.toString() ); }
 		if ( Boolean.TRUE.equals( settings.get( "hibernate.test.temporal.observe_callable" ) ) ) {
 			return (Connection) java.lang.reflect.Proxy.newProxyInstance( Connection.class.getClassLoader(),
 					new Class<?>[] { Connection.class }, (proxy, method, args) -> {

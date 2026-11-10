@@ -147,6 +147,45 @@ when calling the superclass implementation.
 
 This section describes changes in behavior that applications should be aware of.
 
+[[field-access-overridden-fields]]
+=== Field access for overridden fields
+
+When an entity subclass declares a field with the same name as an inherited field mapped using field access,
+Hibernate now accesses the overriding field, if its type matches the inherited attribute type.
+Previously, Hibernate generally accessed the field declared by the superclass, with some inconsistencies for
+identifiers, bulk access, and bytecode-enhanced entities.
+
+For example, given the following hierarchy, Hibernate now persists and loads `Child.id`:
+
+[source,java]
+----
+@Entity
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+abstract class Parent {
+    @Id
+    private String id;
+
+    public String getId() {
+        return id;
+    }
+}
+
+@Entity
+class Child extends Parent {
+    private String id;
+
+    @Override
+    public String getId() {
+        return id;
+    }
+}
+----
+
+The mapping metadata, including annotations such as `@Id` and column mappings, is still inherited from the
+original mapped attribute. If the fields have different types, Hibernate continues to access the inherited field.
+Applications with fields of the same name in an entity hierarchy should ensure that persistent state is assigned
+to the most-derived compatible field, or avoid hiding persistent fields.
+
 [[filtered-to-one-associations]]
 === Filters and SQL restrictions on to-one associations
 

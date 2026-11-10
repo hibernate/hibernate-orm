@@ -1176,10 +1176,12 @@ public class EntityBinder {
 			InheritanceState inheritanceState,
 			Map<ClassDetails, InheritanceState> inheritanceStates) {
 		if ( persistentClass.isAbstract() == null || !persistentClass.isAbstract() ) {
+			final var processedPropertyNames = new HashSet<String>();
 			var superclass = persistentClass.getSuperPersistentClass();
 			while ( superclass != null ) {
 				for ( var declaredProperty : superclass.getDeclaredProperties() ) {
-					if ( declaredProperty.isGeneric() ) {
+					if ( processedPropertyNames.add( declaredProperty.getName() )
+							&& declaredProperty.isGeneric() ) {
 						final var memberDetails = getMemberDetails( inheritanceState, inheritanceStates, declaredProperty, superclass );
 						final var typeDetails = resolveRelativeType( memberDetails.getType(), inheritanceState.getClassDetails() );
 						final var returnedClassName = typeDetails.getName();

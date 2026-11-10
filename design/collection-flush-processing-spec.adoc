@@ -14,6 +14,10 @@ Approval date: 2026-08-10
 
 Revision history::
 
+* `2026-11-10` -- Approved documentation reconciliation for HHH-21102. Made
+  coordinator-owned batch lifetime explicit and added alternating-key regression
+  traceability without changing batching policy or broader acceptance status.
+
 * `2026-11-10` -- Approved documentation reconciliation for HHH-21101. Added
   concrete history obligations and regression traceability under the existing
   completion/ordering requirements; revision 1.4's broader acceptance status
@@ -1389,6 +1393,16 @@ or completion.  A semantic mutation containing multiple bindings completes only
 after every binding assigned to its physical work succeeds, including any
 synthesized fixup.
 
+=== JDBC batch ownership (HHH-21102)
+
+The JDBC coordinator owns batch lifetime. An executor reused across intervening
+batch-key switches MUST NOT add work to a batch that the coordinator has already
+executed or released. Statement access and subsequent batch additions MUST use
+the currently coordinator-owned batch. `MutationExecutorSingleBatched` satisfies
+this by reacquiring the batch at both access points rather than caching it.
+This clarification supports `CFS-CMP-005` and `CFS-GRP-002`; it does not require
+flushing after each row or change the configured batch-size policy.
+
 === History-table obligations (HHH-21101)
 
 For history-table collections, `CFS-CMP-002`, `CFS-CMP-008`, and `CFS-GRP-005`
@@ -1889,6 +1903,17 @@ as history. A failure in history work MUST prevent successful completion and
 rollback MUST restore current and historical state. Exercise interpreted and
 fallback paths, direct and batched execution, and existing audit controls.
 
+=== `CFS-SCN-018`: Reused executors with alternating batch keys
+
+Given reused executors alternating current-row update, history interval closure,
+and history insertion across multiple rows, all intended mutations MUST reach
+the database even when key changes execute and release intermediate batches.
+Assert exact current/history contents, not only execution counts. Same-key
+controls MUST retain threshold and final-tail behavior. Failure controls MUST
+prove rollback and resource release. Exercise batch sizes spanning boundaries
+and both preservation modes; temporal interpretation is not the cause of this
+executor-lifetime contract.
+
 == Test Traceability
 
 [cols="1,4,2",options="header"]
@@ -1950,6 +1975,9 @@ fallback paths, direct and batched execution, and existing audit controls.
   `HistoryCollectionDecomposerTest` and `TemporalCollectionHistoryRepairTests`
   add HHH-21101 history ordering, row/remove-all/value/index mutation, and
   completion/failure controls (`CFS-SCN-017`).
+  `InterleavedMutationExecutorTest` and `TemporalLegacyHistoryBatchTests` add
+  HHH-21102 alternating-key, exact-row/interval, batch-boundary, rollback, and
+  enabled/legacy preservation controls (`CFS-SCN-018`).
 | No known group-level gap. This is not a claim that every provider or
   state-management combination has been verified.
 

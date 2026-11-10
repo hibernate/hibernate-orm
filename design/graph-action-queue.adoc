@@ -261,6 +261,20 @@ operations.
 Self-executing operations should be reserved for lifecycle carriers or work that
 is not naturally batchable.
 
+The JDBC coordinator owns the active batch's lifetime. A reusable mutation
+executor must not retain a `GroupedBatch` across another executor's batch-key
+switch: that batch may already have been executed and released. HHH-21102 makes
+`MutationExecutorSingleBatched` resolve the coordinator-owned batch for statement
+access and for adding work. This is an executor ownership rule, not a new graph
+ordering or batching policy. It applies to legacy collection-history execution
+as well as any caller reusing the executor across interleaved keys.
+
+`InterleavedMutationExecutorTest` checks actual stored rows for alternating keys,
+same-key threshold/tail execution, and failure rollback. Together with
+`TemporalLegacyHistoryBatchTests`, it protects against lost current/history
+updates and duplicate open intervals. Do not infer correctness only from batch
+counts or resolver calls.
+
 == Core Concepts
 
 `FlushOperation`::

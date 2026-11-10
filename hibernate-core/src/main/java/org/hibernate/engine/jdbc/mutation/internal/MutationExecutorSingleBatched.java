@@ -35,19 +35,14 @@ public class MutationExecutorSingleBatched extends AbstractSingleMutationExecuto
 		return (PreparedStatementGroupSingleTable) resolveBatch().getStatementGroup();
 	}
 
-	private GroupedBatch batch;
-
 	private GroupedBatch resolveBatch() {
-		if ( batch == null ) {
-			batch = session.getJdbcCoordinator().getGroupedBatch(
-					batchKey,
-					batchSize,
-					getMutationOperation()
-			);
-			assert batch != null;
-		}
-
-		return batch;
+		// The coordinator owns the batch lifetime. Another executor may have switched
+		// keys and executed/released our previous batch since this executor last ran.
+		return session.getJdbcCoordinator().getGroupedBatch(
+				batchKey,
+				batchSize,
+				getMutationOperation()
+		);
 	}
 
 	@Override

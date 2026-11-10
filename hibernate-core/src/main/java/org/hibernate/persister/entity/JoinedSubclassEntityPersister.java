@@ -1049,7 +1049,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			@Nonnull SharedSessionContractImplementor session) throws HibernateException {
 		final var superMappingType = getSuperMappingType();
 		return superMappingType != null
-				? superMappingType.getEntityPersister().forceVersionIncrement( id, currentVersion, session )
+				? superMappingType.getEntityPersister().forceVersionIncrement( id, currentVersion, batching, session )
 				: super.forceVersionIncrement( id, currentVersion, batching, session );
 	}
 

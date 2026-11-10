@@ -6,6 +6,7 @@ import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
+import org.hibernate.LockMode;
 import org.hibernate.annotations.Audited;
 import org.hibernate.audit.AuditLogFactory;
 import org.hibernate.cfg.StateManagementSettings;
@@ -24,6 +25,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
@@ -44,6 +46,44 @@ class AuditEntityTest {
 			return ++currentTxId;
 		}
 
+	}
+
+	@Test
+	void testPessimisticForceIncrementExecutesImmediately(SessionFactoryScope scope) {
+		currentTxId = 20417;
+		try {
+			scope.inTransaction( session -> {
+				final var entity = new AuditEntity();
+				entity.id = 20417L;
+				entity.text = "force increment";
+				session.persist( entity );
+			} );
+			scope.inTransaction( session -> {
+				session.setJdbcBatchSize( 10 );
+				final var entity = session.find( AuditEntity.class, 20417L );
+				session.lock( entity, LockMode.PESSIMISTIC_FORCE_INCREMENT );
+				assertEquals( 1, entity.version );
+				final int databaseVersion = session.doReturningWork( connection -> {
+					try ( var statement = connection.prepareStatement(
+							"select version from AuditEntity where id = ?" ) ) {
+						statement.setLong( 1, entity.id );
+						try ( var resultSet = statement.executeQuery() ) {
+							assertTrue( resultSet.next() );
+							return resultSet.getInt( 1 );
+						}
+					}
+				} );
+				assertEquals( 1, databaseVersion );
+			} );
+		}
+		finally {
+			scope.inTransaction( session -> {
+				final var entity = session.find( AuditEntity.class, 20417L );
+				if ( entity != null ) {
+					session.remove( entity );
+				}
+			} );
+		}
 	}
 
 	@Test

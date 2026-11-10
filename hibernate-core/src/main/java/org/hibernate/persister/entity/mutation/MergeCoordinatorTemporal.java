@@ -8,9 +8,7 @@ import java.sql.SQLException;
 import org.hibernate.Internal;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
-import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.OperationResultChecker;
-import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -164,11 +162,12 @@ public class MergeCoordinatorTemporal extends AbstractTemporalUpdateCoordinator 
 	}
 
 	@Override
-	void bindVersionRestriction(@Nullable Object oldVersion, @Nonnull JdbcValueBindings jdbcValueBindings, @Nonnull String temporalTableName) {
-		final var versionMapping = entityPersister().getVersionMapping();
-		if ( versionMapping != null && entityPersister().optimisticLockStyle().isVersion() ) {
-			jdbcValueBindings.bindValue( oldVersion, versionMapping, ParameterUsage.RESTRICT );
-		}
+	public void forceVersionIncrement(
+			@Nonnull Object id,
+			@Nullable Object currentVersion,
+			@Nonnull Object nextVersion,
+			@Nonnull SharedSessionContractImplementor session) {
+		versionUpdateDelegate.forceVersionIncrement( id, currentVersion, nextVersion, session );
 	}
 
 	@Override
@@ -176,7 +175,8 @@ public class MergeCoordinatorTemporal extends AbstractTemporalUpdateCoordinator 
 			@Nonnull Object id,
 			@Nullable Object currentVersion,
 			@Nonnull Object nextVersion,
+			boolean batching,
 			@Nonnull SharedSessionContractImplementor session) {
-		versionUpdateDelegate.forceVersionIncrement( id, currentVersion, nextVersion, session );
+		versionUpdateDelegate.forceVersionIncrement( id, currentVersion, nextVersion, batching, session );
 	}
 }

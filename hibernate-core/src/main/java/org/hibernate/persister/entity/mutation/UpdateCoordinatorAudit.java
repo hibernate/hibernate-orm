@@ -70,6 +70,16 @@ public class UpdateCoordinatorAudit extends AbstractAuditCoordinator implements 
 		currentUpdateCoordinator.forceVersionIncrement( id, currentVersion, nextVersion, session );
 	}
 
+	@Override
+	public void forceVersionIncrement(
+			@Nonnull Object id,
+			@Nullable Object currentVersion,
+			@Nonnull Object nextVersion,
+			boolean batching,
+			@Nonnull SharedSessionContractImplementor session) {
+		currentUpdateCoordinator.forceVersionIncrement( id, currentVersion, nextVersion, batching, session );
+	}
+
 	boolean shouldAuditUpdate(@Nullable int[] dirtyAttributeIndexes, boolean hasDirtyCollection) {
 		if ( dirtyAttributeIndexes == null || dirtyAttributeIndexes.length == 0 ) {
 			return true;

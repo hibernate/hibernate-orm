@@ -9,6 +9,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Version;
+import org.hibernate.LockMode;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.cfg.StateManagementSettings;
@@ -44,6 +45,44 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ServiceRegistry(settings = @Setting(name = StateManagementSettings.TEMPORAL_TABLE_STRATEGY, value = "SINGLE_TABLE"))
 @SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 10, minorVersion = 11, versionMatchMode = VersionMatchMode.OLDER, reason = "See https://jira.mariadb.org/browse/MDEV-39230")
 class TemporalEntityTest {
+
+	@Test
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsPrimaryKeyUpdate.class )
+	void testPessimisticForceIncrementExecutesImmediately(SessionFactoryScope scope) {
+		try {
+			scope.inTransaction( session -> {
+				final var entity = new TemporalEntity1();
+				entity.id = 20417L;
+				entity.text = "force increment";
+				session.persist( entity );
+			} );
+			scope.inTransaction( session -> {
+				session.setJdbcBatchSize( 10 );
+				final var entity = session.find( TemporalEntity1.class, 20417L );
+				session.lock( entity, LockMode.PESSIMISTIC_FORCE_INCREMENT );
+				assertEquals( 1, entity.version );
+				final int databaseVersion = session.doReturningWork( connection -> {
+					try ( var statement = connection.prepareStatement(
+							"select version from TemporalEntity1 where id = ?" ) ) {
+						statement.setLong( 1, entity.id );
+						try ( var resultSet = statement.executeQuery() ) {
+							assertTrue( resultSet.next() );
+							return resultSet.getInt( 1 );
+						}
+					}
+				} );
+				assertEquals( 1, databaseVersion );
+			} );
+		}
+		finally {
+			scope.inTransaction( session -> {
+				final var entity = session.find( TemporalEntity1.class, 20417L );
+				if ( entity != null ) {
+					session.remove( entity );
+				}
+			} );
+		}
+	}
 
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsPrimaryKeyUpdate.class )

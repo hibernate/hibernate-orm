@@ -1,5 +1,6 @@
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.type.spi.ObjectNullBindingStrategy;
 import org.hibernate.dialect.type.spi.StringValueSemantics;
 
@@ -24,6 +25,20 @@ public class TypeAndLobSupportTest {
 		assertThat( gauss.getEnumSupport().getCreateTypeCommands( "priority", new String[] { "low" } ) )
 				.hasSize( 3 );
 		assertThat( gauss.getObjectNullBindingStrategy() )
+				.isEqualTo( ObjectNullBindingStrategy.SET_NULL_WITH_NULL_TYPE );
+	}
+
+	@Test
+	void postgresqlLegacyFamilyBindsUntypedNullWithNullType() {
+		assertThat( new PostgreSQLLegacyDialect().getObjectNullBindingStrategy() )
+				.isEqualTo( ObjectNullBindingStrategy.SET_NULL_WITH_NULL_TYPE );
+		assertThat( new PostgreSQLLegacyDialect( DatabaseVersion.make( 8, 0 ) ).getObjectNullBindingStrategy() )
+				.isEqualTo( ObjectNullBindingStrategy.SET_NULL_WITH_NULL_TYPE );
+		assertThat( new PostgreSQLLegacyDialect( DatabaseVersion.make( 9, 4 ) ).getObjectNullBindingStrategy() )
+				.isEqualTo( ObjectNullBindingStrategy.SET_NULL_WITH_NULL_TYPE );
+		assertThat( new PostgreSQLLegacyDialect( DatabaseVersion.make( 12 ) ).getObjectNullBindingStrategy() )
+				.isEqualTo( ObjectNullBindingStrategy.SET_NULL_WITH_NULL_TYPE );
+		assertThat( new PostgresPlusLegacyDialect().getObjectNullBindingStrategy() )
 				.isEqualTo( ObjectNullBindingStrategy.SET_NULL_WITH_NULL_TYPE );
 	}
 

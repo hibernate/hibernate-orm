@@ -239,7 +239,11 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 				"temporal removal",
 				List.of( endingBinding ),
 				restrictionBindings,
-				List.of( nullEndingBinding )
+				List.of( nullEndingBinding ),
+				null,
+				// Closing a collection is a remove-all, even though its SQL is an UPDATE.
+				tableReference.getTableMapping().getDeleteDetails().getExpectation(),
+				List.of()
 		);
 	}
 

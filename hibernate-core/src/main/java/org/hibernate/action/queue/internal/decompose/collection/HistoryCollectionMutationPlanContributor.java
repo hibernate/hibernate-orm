@@ -22,6 +22,8 @@ import org.hibernate.sql.spi.mutation.TableMapping.MutationDetails;
 import org.hibernate.sql.ast.spi.model.MutatingTableReference;
 import org.hibernate.sql.ast.spi.model.builder.TableInsertBuilderStandard;
 
+import java.util.function.Consumer;
+
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionOrdinalSupport.Slot;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionOrdinalSupport.calculateOrdinal;
 import static org.hibernate.temporal.TemporalTableStrategy.HISTORY_TABLE;
@@ -68,6 +70,89 @@ public class HistoryCollectionMutationPlanContributor implements CollectionMutat
 				calculateOrdinal( context.ordinalBase(), Slot.INSERT ) + 500,
 				"InsertRow(" + context.persister().getRole() + "#history)"
 		) );
+	}
+
+	@Override
+	public void contributeCollectionChange(CollectionChangeContext context, Consumer<FlushOperation> operations) {
+		final String historyTable = context.persister().getAttributeMapping().getTemporalMapping().getTableName();
+		FlushOperation lastEnd = null;
+		// End every old interval before any new interval can match an open-end restriction.
+		// The explicit prerequisites survive regrouping and do not depend on encounter order.
+		for ( var operation : context.plannedOperations() ) {
+			if ( operation.getTableExpression().equals( historyTable ) && operation.getKind() == MutationKind.UPDATE ) {
+				operation.setExecutionPrerequisite( lastEnd );
+				lastEnd = operation;
+			}
+		}
+		if ( lastEnd != null ) {
+			for ( var operation : context.plannedOperations() ) {
+				if ( operation.getTableExpression().equals( historyTable ) && operation.getKind() == MutationKind.INSERT ) {
+					operation.setExecutionPrerequisite( lastEnd );
+				}
+			}
+		}
+	}
+
+	@Override
+	public void contributeAdditionalDelete(RowDeleteContext context, Consumer<FlushOperation> operations) {
+		final var temporal = context.persister().getAttributeMapping().getTemporalMapping();
+		final var table = createHistoryTableDescriptor( context.tableDescriptor(), temporal );
+		operations.accept( new FlushOperation(
+				table, MutationKind.UPDATE,
+				buildHistoryEndOperation( context.persister(), table, temporal, context.factory(), context.sqlWhereString(), false ),
+				(bindings, operation, session) -> {
+					CollectionMutationPlanSupport.bindTemporalEndingValue( context.persister(), bindings, session );
+					CollectionMutationPlanSupport.bindDeleteRestrictions( context.persister(), context.collection(),
+							context.key(), context.rowValue(), context.rowPosition(), session, bindings );
+				},
+				calculateOrdinal( context.ordinalBase(), Slot.DELETE ) + 400,
+				"EndHistoryRow(" + context.persister().getRole() + ")"
+		) );
+	}
+
+	@Override
+	public void contributeAdditionalRemove(RemoveContext context, Consumer<FlushOperation> operations) {
+		final var temporal = context.persister().getAttributeMapping().getTemporalMapping();
+		final var table = createHistoryTableDescriptor( context.tableDescriptor(), temporal );
+		operations.accept( new FlushOperation(
+				table, MutationKind.UPDATE,
+				buildHistoryEndOperation( context.persister(), table, temporal, context.factory(), context.sqlWhereString(), true ),
+				(bindings, operation, session) -> {
+					CollectionMutationPlanSupport.bindTemporalEndingValue( context.persister(), bindings, session );
+					CollectionMutationPlanSupport.bindRemoveRestrictions( context.persister(), context.key(), session, bindings );
+				},
+				calculateOrdinal( context.ordinalBase(), Slot.DELETE ) + 400,
+				"EndHistoryCollection(" + context.persister().getRole() + ")"
+		) );
+	}
+
+	@Override
+	public void contributeAdditionalUpdate(RowUpdateContext context, Consumer<FlushOperation> operations) {
+		contributeAdditionalDelete( new RowDeleteContext(
+				context.persister(), context.tableDescriptor(), context.factory(), context.jdbcOperations(),
+				context.collection(), context.key(), context.oldRowValue(), context.oldPosition(),
+				context.ordinalBase(), context.sqlWhereString()
+		), operations );
+		contributeAdditionalInsert( new RowInsertContext(
+				context.persister(), context.tableDescriptor(), context.factory(), context.jdbcOperations(),
+				context.collection(), context.key(), context.newRowValue(), context.newPosition(), context.ordinalBase()
+		), operations );
+	}
+
+	private static MutationOperation buildHistoryEndOperation(
+			CollectionPersister persister, CollectionTableDescriptor table, TemporalMapping temporal,
+			org.hibernate.engine.spi.SessionFactoryImplementor factory, String sqlWhereString, boolean allRows) {
+		final var reference = new MutatingTableReference( CollectionMutationPlanSupport.createTableMapping( table ) );
+		final var builder = new org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard<>(
+				(CollectionMutationTarget) persister, reference, factory, sqlWhereString );
+		if ( allRows ) {
+			CollectionMutationPlanSupport.applyRemoveRestrictions( persister, null, builder );
+		}
+		else {
+			CollectionMutationPlanSupport.applyRowDeleteRestrictions( persister, null, builder );
+		}
+		return CollectionMutationPlanSupport.buildTemporalDeleteMutation( builder, reference, temporal )
+				.createMutationOperation( null, factory );
 	}
 
 	private static MutationOperation buildHistoryInsertOperation(

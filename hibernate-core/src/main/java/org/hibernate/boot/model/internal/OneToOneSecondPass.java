@@ -294,6 +294,7 @@ public class OneToOneSecondPass implements SecondPass {
 
 		//no check constraints available on joins
 		join.setTable( originalJoin.getTable() );
+		join.setSqlRestriction( originalJoin.getSqlRestriction() );
 		join.setInverse( true );
 		final var key = new DependantValue( buildingContext, join.getTable(), persistentClass.getIdentifier() );
 

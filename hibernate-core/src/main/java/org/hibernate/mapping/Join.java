@@ -33,6 +33,7 @@ public class Join implements AttributeContainer, AuxiliaryTableHolder, Serializa
 	private PersistentClass persistentClass;
 	private boolean inverse;
 	private boolean optional;
+	private String sqlRestriction;
 	private boolean disableForeignKeyCreation;
 
 	// Custom SQL
@@ -111,6 +112,14 @@ public class Join implements AttributeContainer, AuxiliaryTableHolder, Serializa
 			auxiliaryColumns = new HashMap<>();
 		}
 		auxiliaryColumns.put( name, column );
+	}
+
+	public String getSqlRestriction() {
+		return sqlRestriction;
+	}
+
+	public void setSqlRestriction(String sqlRestriction) {
+		this.sqlRestriction = sqlRestriction;
 	}
 
 	public KeyValue getKey() {

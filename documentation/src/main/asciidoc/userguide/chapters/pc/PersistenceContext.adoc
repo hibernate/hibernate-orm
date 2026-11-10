@@ -935,7 +935,9 @@ Native result mappings require an additional visibility query when the associati
 [[pc-where-join-table]]
 ==== `@SQLJoinTableRestriction`
 
-Like `@SQLRestriction`, `@SQLJoinTableRestriction` is used to filter out collections using a joined table (e.g. @ManyToMany association).
+`@SQLJoinTableRestriction` filters the rows of an association's join table.
+It applies to collections and to `@ManyToOne` and `@OneToOne` associations mapped with `@JoinTable`.
+If no join-table row satisfies the predicate, an optional to-one association is loaded as null.
 
 [[pc-where-join-table-example]]
 .`@SQLJoinTableRestriction` mapping example

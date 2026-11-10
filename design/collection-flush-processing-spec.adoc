@@ -14,6 +14,11 @@ Approval date: 2026-08-10
 
 Revision history::
 
+* `2026-11-10` -- Approved documentation reconciliation for HHH-21101. Added
+  concrete history obligations and regression traceability under the existing
+  completion/ordering requirements; revision 1.4's broader acceptance status
+  and unresolved coverage remain unchanged.
+
 * `0.1` -- Initial working specification.
 * `0.2` -- Moved detailed cascade planning to a companion specification,
   confirmed mutation visibility for interceptor hooks and pre-event listeners, and
@@ -1384,6 +1389,22 @@ or completion.  A semantic mutation containing multiple bindings completes only
 after every binding assigned to its physical work succeeds, including any
 synthesized fixup.
 
+=== History-table obligations (HHH-21101)
+
+For history-table collections, `CFS-CMP-002`, `CFS-CMP-008`, and `CFS-GRP-005`
+include the following obligations. Effective row removal and remove-all MUST
+close the corresponding old open history intervals. A logical value or index
+change MUST close its old interval and insert its replacement, without recording
+temporary positions used during reorder execution. Current-table work remains
+in place; history work is additive in both interpreted and snapshot fallback
+paths. Explicit execution dependencies MUST order old-interval closures before
+replacement history inserts, and completion MUST include all contributed work.
+
+A bulk temporal closure implemented as SQL `UPDATE` MUST retain the remove-all
+result-check expectation. Individual row closures MUST retain their per-row
+checks. This clarification does not change audit hook applicability or introduce
+a separate semantic lifecycle for history operations.
+
 == Speculative Auto-Flush
 
 The target `ActionQueue` SPI has this conceptual shape; exact names and record
@@ -1859,6 +1880,15 @@ remove-all plus create-all, interpretation freezes
 `RemoveAllAndCreateAll` with the same kind of complete current-row projection.
 Both queues execute that projection without enumerating the collection again.
 
+=== `CFS-SCN-017`: Collection history maintenance
+
+Given a history-table collection, exercise row removal, an unloaded remove-all,
+value replacement, and list swaps/shifts. Current contents and exact historical
+intervals MUST reflect the logical changes; temporary positions MUST NOT appear
+as history. A failure in history work MUST prevent successful completion and
+rollback MUST restore current and historical state. Exercise interpreted and
+fallback paths, direct and batched execution, and existing audit controls.
+
 == Test Traceability
 
 [cols="1,4,2",options="header"]
@@ -1917,7 +1947,11 @@ Both queues execute that projection without enumerating the collection again.
   `CollectionRowCompactionTest`, and `GroupedCollectionInsertBindPlanTest` cover
   zero/direct/batched completion, failure, queued work, fixups, mutation identity,
   compact row grouping, and per-row binding/result checks.
-| No known group-level gap.
+  `HistoryCollectionDecomposerTest` and `TemporalCollectionHistoryRepairTests`
+  add HHH-21101 history ordering, row/remove-all/value/index mutation, and
+  completion/failure controls (`CFS-SCN-017`).
+| No known group-level gap. This is not a claim that every provider or
+  state-management combination has been verified.
 
 | `CFS-AFL-*`
 | `ActionQueueCheckpointTest` invokes the checkpoint contract for both queues and

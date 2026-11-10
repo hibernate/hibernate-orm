@@ -3,6 +3,7 @@ package org.hibernate.boot.model.naming;
 import java.io.Serializable;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Remove;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -233,7 +234,10 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 	 * @param buildingContext Access to the {@code IdentifierHelper}
 	 *
 	 * @return The identifier
+	 *
+	 * @implNote This will be removed in 9.0 as part of a holistic improvement to naming strategies.
 	 */
+	@Remove
 	protected Identifier toIdentifier(String stringForm, MetadataBuildingContext buildingContext) {
 		return toIdentifier( stringForm,
 				buildingContext.getMetadataCollector()
@@ -289,7 +293,10 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 
 	/**
 	 * Obtain a {@link NamingHelper} for use in constraint name generation.
+	 *
+	 * @implNote This will be removed in 9.0 as part of a holistic improvement to naming strategies.
 	 */
+	@Remove
 	protected NamingHelper namingHelper(MetadataBuildingContext context) {
 		return NamingHelper.withCharset( context.getBuildingOptions().getSchemaCharset() );
 	}

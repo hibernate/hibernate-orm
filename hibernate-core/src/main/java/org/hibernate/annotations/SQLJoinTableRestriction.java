@@ -10,7 +10,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Specifies a restriction written in native SQL to add to the generated SQL
  * when querying the {@linkplain jakarta.persistence.JoinTable join table}
- * of a collection.
+ * of a collection or a to-one association.
  * <p>
  * For example, <code>&#64;SQLJoinTableRestriction("status &lt;&gt; 'DELETED'")</code>
  * could be used to hide associations which have been soft-deleted from an

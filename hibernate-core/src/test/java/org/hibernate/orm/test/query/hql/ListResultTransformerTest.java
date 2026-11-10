@@ -15,26 +15,30 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @JiraKey( "HHH-20328" )
 public class ListResultTransformerTest {
 	@Test
-	public void testHqlListIsUnmodifiable() {
+	public void testHqlListAllowsNullsAndReplacement() {
 		Object[] row = { 1L, null };
 		List<Object> result = RowTransformerListImpl.instance().transformRow( row );
 		assertEquals( 2, result.size() );
 		assertEquals( 1L, result.get( 0 ) );
 		assertNull( result.get( 1 ) );
-		assertThrows( UnsupportedOperationException.class, () -> result.set( 0, 3L ) );
+		assertEquals( 1L, result.set( 0, 3L ) );
+		assertNull( result.set( 1, "updated" ) );
+		assertEquals( List.of( 3L, "updated" ), result );
 		assertThrows( UnsupportedOperationException.class, () -> result.add( 3L ) );
 		assertThrows( UnsupportedOperationException.class, () -> result.remove( 0 ) );
 	}
 
 	@Test
-	public void testNativeListIsUnmodifiable() {
+	public void testNativeListAllowsNullsAndReplacement() {
 		Object[] tuple = { 1L, null };
 		List<Object> result = NativeQueryListTransformer.INSTANCE.transformTuple(
 				tuple, new String[] { "id", "name" } );
 		assertEquals( 2, result.size() );
 		assertEquals( 1L, result.get( 0 ) );
 		assertNull( result.get( 1 ) );
-		assertThrows( UnsupportedOperationException.class, () -> result.set( 0, 3L ) );
+		assertEquals( 1L, result.set( 0, 3L ) );
+		assertNull( result.set( 1, "updated" ) );
+		assertEquals( List.of( 3L, "updated" ), result );
 		assertThrows( UnsupportedOperationException.class, () -> result.add( 3L ) );
 		assertThrows( UnsupportedOperationException.class, () -> result.remove( 0 ) );
 	}

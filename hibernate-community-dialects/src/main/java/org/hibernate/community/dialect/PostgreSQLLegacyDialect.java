@@ -26,6 +26,7 @@ import org.hibernate.dialect.type.spi.StandardDdlTypes;
 import org.hibernate.dialect.type.spi.TypeSizingProfile;
 import org.hibernate.dialect.type.spi.EnumSupport;
 import org.hibernate.dialect.type.spi.EnumSupports;
+import org.hibernate.dialect.type.spi.ObjectNullBindingStrategy;
 import org.hibernate.dialect.type.spi.UserDefinedTypeDdlSupport;
 import org.hibernate.dialect.lob.spi.LobSupport;
 import org.hibernate.dialect.lob.spi.LobSupports;
@@ -1603,6 +1604,12 @@ public class PostgreSQLLegacyDialect extends Dialect implements CurrentTemporalS
 	@Override
 	public MutationSyntaxSupport getMutationSyntaxSupport() {
 		return MutationSyntaxSupport.of( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE );
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public ObjectNullBindingStrategy getObjectNullBindingStrategy() {
+		return ObjectNullBindingStrategy.SET_NULL_WITH_NULL_TYPE;
 	}
 
 	@Override

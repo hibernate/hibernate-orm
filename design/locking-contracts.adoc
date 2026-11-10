@@ -1,0 +1,1008 @@
+:toc2:
+:toclevels: 3
+:sectanchors:
+:numbered:
+:core: ../hibernate-core/src/main/java/org/hibernate
+:guide: ../documentation/src/main/asciidoc/userguide/chapters/locking/Locking.adoc
+:jira: https://hibernate.atlassian.net/browse/
+= Locking
+
+This document is a contributor-oriented design guide to Hibernate's locking
+execution paths. It describes how requests become database protection, how
+acquisition interacts with managed state and version work, and how to verify
+changes to those paths.
+
+The Required Behavior subsections record the agreed constraints which later
+changes must preserve. Implementation names describe the current design;
+refactoring them is permitted while retaining those constraints and supported
+extension points. Open Design Areas identifies work which is not yet a
+guarantee.
+
+This guide consolidates the implemented work under {jira}HHH-21025[HHH-21025],
+using `sebersole/locking-investigations` at
+`71e80c9babd134d5c03e997c1fe76cab6aa34eae` as its source baseline. See the
+link:{guide}[user guide] for application-facing usage.
+
+== Goals
+
+The investigation addressed disagreements between requested locks, recorded lock
+modes, and actual database protection. Its main goals are:
+
+* Reject requests whose selected execution path cannot honor the required locks.
+* Keep reusable query plans separate from invocation-specific acquisition state.
+* Preserve local managed state while keeping newly adopted versions coherent.
+* Compose entity mode, lock scope, refresh, and version increments deliberately.
+* Complete required acquisition before increments and result exposure.
+* Avoid follow-on locking where the dialect and target structure establish that
+  direct locking is safe.
+* Verify database behavior independently of SQL shape and reported lock modes.
+* Preserve supported SPI customization and both action queues.
+
+== Source Map
+
+`org.hibernate.dialect.lock.spi`::
+Locking capabilities, refresh policy, concurrency descriptors, and timeout
+strategies. `LockingSupport` and `TransactionConcurrency` are the principal
+boundaries for dialect-specific behavior.
+
+`org.hibernate.dialect.lock.internal`::
+Standard capability implementations and acquisition strategies.
+`NonNullLockTargetChecker` proves the bounded outer-join optimization;
+`SqlAstBasedLockingStrategy` implements entity acquisition.
+
+`org.hibernate.sql.ast.spi.query.select` and `org.hibernate.sql.results.graph.internal`::
+`QuerySpec` records required paths and immutable `LockingResultCoverage`
+describes which paths can supply registrations. The SQM converter and SQL AST
+translator use these facts when choosing and validating execution strategies.
+
+`org.hibernate.sql.exec.spi` and `org.hibernate.sql.exec.internal`::
+`JdbcSelect` owns reusable definitions; `JdbcActionExecution` owns one
+invocation. `StandardJdbcActionExecution`, `LockTimeoutHandler`, and
+`JdbcSelectExecutorStandardImpl` implement action pairing, cleanup, and
+execution.
+
+`org.hibernate.sql.exec.internal.lock`::
+Follow-on entity acquisition, supplemental collection acquisition, identity
+correlation, loaded-value collection, and direct force-increment completion. The
+main coordinators are `FollowOnLockingAction`, `CollectionLockingAction`,
+`LockingHelper`, and `DirectLockingCompletion`.
+
+`org.hibernate.loader.ast.internal` and `org.hibernate.event.internal`::
+`LoaderHelper` composes managed mode upgrades with scope acquisition;
+`DefaultRefreshEventListener` chooses a reload which preserves existing
+protection and visibility semantics.
+
+`org.hibernate.sql.results` and `org.hibernate.internal.scrollable`::
+Materialized-result finalization and cursor exposure boundaries.
+`EntityInitializerImpl` and `JdbcValuesSourceProcessingStateStandardImpl`
+connect entity loading and managed-only results to acquisition callbacks.
+
+`org.hibernate.action.internal` and `org.hibernate.internal`::
+Deferred optimistic validation/increment processes and explicit version/cache
+coordination. Their transaction lifetime differs from invocation-owned locking
+completion. Both graph and legacy queues must preserve that distinction.
+
+== Mental Model
+
+Mode::
+The protection or version work requested for an entity. A recorded mode
+describes stateful bookkeeping; it is not independent proof that database
+acquisition ran.
+
+Scope::
+The additional mapped rows included in acquisition. An equal or stronger entity
+mode does not discharge a new scope requirement.
+
+State::
+Existing managed values may be locally changed. Acquiring protection does not
+implicitly authorize replacing them with database values.
+
+Concurrency::
+Stable snapshots, current reads, and prevention of concurrent modification are
+separate facts. A strategy must establish the fact its caller actually needs.
+
+Ownership::
+Plans own reusable definitions, invocations own action/timeout/acquisition
+state, and transactions own independently scheduled optimistic callbacks.
+
+Exposure::
+Lifecycle notification and row transformation happen during loading. Where
+supplemental acquisition and increments are pending, logical result completion
+controls when callers and eligible list transformers may observe the result.
+
+== Lock Acquisition Lifecycle
+
+For an execution with supplemental acquisition, the conceptual flow is:
+
+[source]
+----
+query / entity loader
+  -> choose direct or follow-on strategy
+  -> validate targets and unsupported combinations
+  -> create invocation-local action execution
+  -> pre-actions and primary row processing
+  -> supplemental entity / collection acquisition
+  -> pending version work
+  -> eligible result finalization
+  -> result exposure
+----
+
+The placement of physical work depends on the strategy. Direct SQL can establish
+root protection in the primary read; follow-on acquisition happens after initial
+selection. Materialized results complete their acquisition unit before return.
+Cursors register incremental work and complete each logical result before
+exposure. The detailed rules below define which observers can see pending state.
+
+These phase boundaries are intentional. Filtering a list after skipped
+acquisition, advancing a final mode before success, or moving arbitrary tuple
+transformers after acquisition changes observable behavior.
+
+[[baseline]]
+== Database and Session Boundaries
+
+=== Required Behavior
+
+. The supported baseline for these contracts is at least `READ_COMMITTED`; it is
+  not `REPEATABLE_READ`.
+. Protection concerns existing rows covered by the requested mode and scope. It
+  does not by itself protect every reachable object, predicate, phantom
+  insertion, or graph invariant.
+. A pessimistic write lock excludes conflicting writers and incompatible locking
+  requests. It does not promise to exclude ordinary MVCC snapshot readers.
+. Automatic versioned or versionless checks protect eligible entity mutations.
+  Reading a versioned entity does not itself schedule explicit optimistic
+  validation. Bulk mutations do not acquire those per-entity checks
+  automatically.
+. Explicit optimistic modes and pessimistic force increment require versioned
+  entities; ordinary pessimistic read/write can protect unversioned entities.
+  Force-increment support also depends on the version generator.
+. Lock acquisition is not a general refresh of already managed state. Use
+  explicit refresh when replacement of that state is required.
+. Successful return from a deferred optimistic request is not proof that
+  validation or commit succeeded.
+. Database locks have database transaction lifetime. Entity detachment,
+  persistence-context clearing, statement closure, and cursor closure are
+  different events.
+
+Hibernate `LockMode.READ` is an internal/read-state concept accepted by native
+APIs; Jakarta Persistence `LockModeType.READ` is an alias for `OPTIMISTIC`.
+Likewise, Jakarta Persistence `WRITE` aliases `OPTIMISTIC_FORCE_INCREMENT`;
+Hibernate `LockMode.WRITE` is not an application lock request.
+
+[[concurrency]]
+== Concurrency Baseline
+
+Concurrency descriptors express configuration-specific facts used to select a
+strategy. They describe protection between transactions using the same factory
+configuration, not observations of a particular active session.
+
+=== Required Behavior
+
+The concurrency descriptor distinguishes:
+
+[cols="2,4",options="header"]
+|===
+|Fact |Required interpretation
+|Stable row view
+|Repeated reads preserve the earlier row view. A snapshot can provide this while concurrent writers continue.
+|Current read
+|A successful read observes current committed state, waiting for an uncommitted conflicting write's outcome rather than returning an obsolete snapshot. A classified conflict may instead fail the read.
+|Prevention of concurrent modification
+|Other transactions cannot modify/delete returned rows until the protecting transaction completes.
+|Retained row lock
+|An actual row lock lasts until transaction completion.
+|Blocking duration
+|Directional protection for an ordered pair of operations. `READ -> WRITE` and `WRITE -> READ` are different questions. `NONE` is not a promise of immediate success; incidental waits and serialization failures remain possible.
+|===
+
+`TransactionConcurrency` resolution observes isolation and relevant database
+settings at factory bootstrap. It does not set isolation or configure a pool.
+All connections used by the factory must retain consistent isolation and
+relevant settings; a named declaration is not a per-session override mechanism.
+
+`hibernate.transaction.concurrency` accepts the dialect-interpreted named
+declarations documented by `TransactionSettings`. An observed contradiction with
+a named declaration fails bootstrap. With metadata `ALLOW`, an unsuccessful
+supported probe can leave facts unresolved while retaining other metadata;
+`REQUIRE` fails bootstrap and `DISALLOW` does not probe. A programmatically
+supplied descriptor bypasses derivation, probing, and validation; its accuracy
+and immutability are the caller's responsibility. Unknown facts do not establish
+freshness or exclusion.
+
+For SQL Server, ordinary reads in RCSI and native SNAPSHOT have `READ -> WRITE =
+NONE`. Locking `READ_COMMITTED` ordinary reads can have statement-duration
+exclusion. An explicit `CURRENT_READ` can use statement-duration protection even
+when ordinary reads are versioned; shared/update locking reads retain their own
+transaction-duration contracts. Do not generalize a database family name into
+one blocking rule across all configurations.
+
+[[secondary-actions]]
+== Secondary Actions
+
+Action definitions may be cached with a plan. Mutable execution state belongs to
+one invocation, so overlapping or failed executions cannot share timeout
+baselines or completion progress.
+
+=== Required Behavior
+
+. Cached `JdbcSelect` objects may retain reusable definitions, not
+  execution-specific baselines, completion flags, or live connection state.
+. Obtain `JdbcSelect.createActionExecution()` once per invocation and use that
+  runner for both phases. A runner is single-use and must not be called
+  concurrently; asynchronous continuation does not require thread affinity.
+. `SecondaryAction.createExecutionAction()` may return `this` for a reusable
+  stateless action. Stateful definitions must create a fresh instance supporting
+  every registered phase role.
+. The same definition registered across pre/post phases maps by object identity
+  to the same execution instance. Null definitions, duplicate registration
+  within a phase, invalid execution roles, and null execution instances are
+  rejected before callbacks run.
+. Preserve pre-action and post-action registration order. Advance post-action
+  progress before evaluating eligibility or invoking a callback so failure
+  cannot replay that slot.
+. Once failure occurs, attempt the remaining failure-eligible post-actions once.
+  Retain the original failure and suppress cleanup failures on it; when a
+  post-action is the first failure, that failure becomes primary.
+. Protect setup and consumption after pre-actions, not just the call that
+  obtains results. Failure after cursor construction but before handoff must
+  release this invocation's JDBC resources without replaying consumer completion
+  or query-cache finalization.
+
+Compatibility requirements:
+
+* `JdbcSelect`'s old phase methods remain deprecated adapters; new execution
+  code uses the runner.
+* `JdbcSelectWithActions` remains subclassable. Subclasses overriding the old
+  phase callbacks must move customization to `createActionExecution()` and
+  preserve cleanup, ordering, and exception precedence when wrapping the runner.
+* Asynchronous integrations may use `JdbcActionExecution.materializeActions()`
+  to obtain paired invocation-local instances without executing callbacks.
+  Retain that materialization through completion.
+
+[[timeouts]]
+=== Timeout Restoration
+
+Connection timeout handling uses the existing post-action order. Cleanup was
+extended to cover failures without introducing a different ordering model.
+
+==== Required Behavior
+
+`LockTimeoutHandler` is a definition which rejects direct phase execution; the
+materialized action owns its baseline and restoration state.
+
+. Capture the connection's original timeout before setting the requested value.
+. Mark restoration required before invoking the setter: a setter can change the
+  setting and then fail.
+. If baseline capture fails, do not invent a baseline to restore.
+. Clear restoration-required state before the restoration attempt. A failing
+  restoration must not be retried by subsequent failure cleanup.
+. Preserve normal post-action ordering, including the relative positions of
+  locking work and timeout restoration.
+. Restore the invocation's setting on applicable success/failure exits; failures
+  in consumption, supplemental acquisition, and restoration must preserve
+  exception precedence.
+. Verify physical connection reuse, including server settings which are
+  transaction-local versus settings which persist after rollback.
+
+These changes do not introduce a new connection-disposal policy or promise a
+cursor-lifetime timeout. Do not extend a connection action's lifetime to
+stream/scroll closure merely because later fetching uses that cursor.
+Lock-acquisition timeout, query-execution timeout, and transaction timeout are
+distinct contracts with distinct API settings and units.
+
+Implementation:
+link:{core}/sql/exec/internal/StandardJdbcActionExecution.java[`StandardJdbcActionExecution`],
+link:{core}/sql/exec/internal/LockTimeoutHandler.java[`LockTimeoutHandler`], and
+link:{core}/sql/exec/internal/JdbcSelectExecutorStandardImpl.java[`JdbcSelectExecutorStandardImpl`].
+
+== Follow-on Locking
+
+Follow-on locking selects results first and acquires protection in later
+statements. The design validates that the result can supply every required
+identity and that acquisition actually returned those identities. Unsupported
+requests are rejected instead of returning successful-looking results.
+
+[[result-coverage]]
+=== Result Coverage
+
+==== Required Behavior
+
+When the final strategy is follow-on acquisition, every required target must be
+supplied by the primary result graph. An identifier column alone is not an
+entity registration. Scalar properties, identifier projections, scalar-only
+DTOs, and aggregate/count projections cannot silently satisfy an entity lock
+request. Entity results, entity-bearing tuples/arrays/DTOs, and qualifying
+fetched paths can supply coverage.
+
+Coverage is structural and path-specific:
+
+* Validate every contributing set-query branch, including a branch whose domain
+  results are not retained as the executable mapping.
+* Subquery domain results must not supply outer-query coverage or introduce
+  unrelated outer targets.
+* Treated paths must correlate to their underlying entity target; two aliases do
+  not become the same required target merely because they might produce equal
+  identifiers.
+* Delayed fetches and entity fetches without a participating table group do not
+  supply acquisition registrations.
+* Pagination wrappers must retain the original target's coverage metadata.
+* Coverage snapshots are immutable. The shared `LockingResultCoverage.EMPTY`
+  instance must never acquire per-query mutable state.
+
+Reject an uncovered follow-on request before the query's acquisition/timeout
+execution and SQL. Preserve direct-locking, explicit `IGNORE`, and applicable
+native-plan policy decisions; this is not a blanket prohibition on scalar SQL
+queries using a directly supported database lock.
+
+Implementation:
+link:{core}/sql/results/graph/internal/LockingResultCoverage.java[`LockingResultCoverage`],
+`QuerySpec`, `BaseSqmToSqlAstConverter`, and
+`LockingHelper.validateFollowOnLockingResults()`.
+
+[[skip-locked]]
+=== Skip-locked Requests
+
+Filtering an already selected list after skip-locked acquisition would change
+cardinality, order, and pagination, and would need separate cursor semantics.
+The selected policy is to reject the follow-on combination.
+
+==== Required Behavior
+
+Reject a pessimistic skip-locked request when Hibernate's final execution
+strategy requires follow-on entity locking. Recognize both
+`Timeouts.SKIP_LOCKED` and legacy `UPGRADE_SKIPLOCKED`. Do not return entities
+whose rows were skipped in the later acquisition, and do not silently compensate
+by filtering the original result list.
+
+The rejection precedes the query's JDBC connection acquisition, secondary-action
+materialization, callbacks, and SQL, independent of contention and result
+contents. Earlier automatic flush work is outside this boundary; a terminal
+no-execution shortcut such as a zero result limit need not reject. Preserve the
+existing list wrapper around `IllegalQueryOperationException` and the
+scroll/stream exception behavior. The skip-locked diagnostic takes precedence
+over uncovered projection diagnostics where both apply.
+
+For `RAW_SQL` plans, determine final skip-locked disposition through
+`JdbcSelectSqlFinalizer.finalizeSql()` before execution and retain its result
+only for that invocation. Pass that result into `DeferredResultSetAccess` to
+avoid repeating pagination, policy, and decoration callbacks. Do not change
+finalization timing for unrelated requests or allow pre-actions to invalidate
+already finalized SQL-shaping options. Execution integrations bypassing the
+standard executor must apply the same guard.
+
+Direct skip-locked selection remains supported where the dialect and query shape
+support it. It remains a selection facility, not a way to pretend an already
+managed entity was successfully locked.
+
+[[required-rows]]
+=== Required Rows
+
+==== Required Behavior
+
+. Validate returned identity coverage for each non-skipping required-table
+  acquisition, including the identifier table, required secondary tables, and
+  required inheritance tables.
+. Optional non-identifier table rows are exempt. Empty collections do not imply
+  a missing entity row.
+. Validate the whole table's acquired identities before applying that table's
+  reread handlers. Do not use row count alone: duplicates cannot hide a missing
+  identity.
+. On missing required rows, throw `StaleObjectStateException` with the first
+  missing entity name/identifier in expected acquisition-input order. Include
+  the table and all missing identifiers from that table acquisition in the
+  diagnostic.
+. Preserve optimistic-failure statistics and normal API exception conversion,
+  including unversioned entities. A missing row is not successful locking or a
+  lock timeout.
+. An acquired identity without collected entity details is an invariant failure;
+  do not correlate it to an arbitrary entity or apply its state.
+
+The validation boundary is per table acquisition. It does not undo state already
+applied by an earlier successful table acquisition or make multiple SQL
+statements atomic. After failure, use the transaction/context failure rules
+rather than exposing a successful final lock mode. Low-level skip-locked
+exemptions retained in acquisition helpers do not authorize bypassing
+<<skip-locked>> at the query boundary.
+
+Implementation: `TableLock.resolveAcquiredDetails()`,
+`LockingHelper.validateAcquiredRows()`, and
+`LockingHelper.validateAcquiredIdentities()`.
+
+[[state-adoption]]
+=== Managed State and State Adoption
+
+Acquisition preserves already managed state. Newly loaded follow-on entities may
+adopt reread state, which requires an explicit metadata-only version assignment.
+Making all acquisition a refresh would lose local changes; removing adoption
+would change the newly loaded path.
+
+==== Required Behavior
+
+Newly loaded entities may adopt the state reread while acquiring follow-on
+locks. After all table acquisitions for that entity segment succeed, synchronize
+the entry version with the acquired entity version before final mode publication
+or force increment. This includes read-only entities which have no loaded-state
+array.
+
+`EntityEntry.setVersion(Object)` is a metadata-only assignment, including null.
+It must not change entity values, the loaded snapshot, status, lock mode, dirty
+tracking, SQL, cache state, or lifecycle callbacks. Custom `EntityEntry`
+implementations must implement it. Do not substitute a helper such as
+`forceLocked()` whose additional effects change the operation's meaning.
+
+Previously managed entities retain their existing state and version-checking
+upgrade route. Acquisition must not overwrite dirty values or refresh a clean
+managed instance implicitly. An already managed result must still participate in
+acquisition callbacks, including a cursor consisting entirely of managed
+entities and duplicate entity selections.
+
+[[identity]]
+== Identity and Collection Keys
+
+Identity correlation must avoid constructing identifier graphs or evaluating
+ordinary composite-identifier equality in ways which initialize associations.
+The current implementation combines an acquisition-specific composite result
+with an identifier-facing map backed by Hibernate identity semantics.
+
+=== Required Behavior
+
+Support embedded identifiers, IdClass identifiers, and association-valued
+identifier components from the outset of the composite path. Cover mapped
+inheritance/secondary-table keys, duplicate selections, null JDBC components,
+mutable JDBC values such as arrays, and JDBC value ordering.
+
+`CompositeIdentifierLockResult` is specific to acquisition: read relational key
+values and correlate them with expected `EntityKey` instances instead of
+constructing an ordinary identifier object graph. Use the JDBC Java types'
+equality, hashing, and defensive copying for relational correlation. Predicates
+and result correlation use the same stable relational values. Reject unexpected
+or ambiguous identity correlation rather than applying results to another
+entity.
+
+Basic identifiers keep the ordinary result-assembly route; the identity index
+and coverage checks apply to both basic and composite keys. Do not call a
+composite identifier's ordinary Java `equals()` or `hashCode()` in a way which
+initializes association-valued components. The no-initialization requirement
+applies across the entire follow-on phase, including collection segmentation and
+scope acquisition, not only result assembly. Temporary effective-fetch-graph
+changes used during acquisition must restore the original graph and semantic on
+both success and failure.
+
+`EntityDetailsMap` remains compatible with the identifier-facing `Map` contract
+and backed views used by integrations. Internal `EntityKey` storage must not
+leak as the public map key type. Foreign maps and maps modified through
+supported identifier-facing operations must retain a correct fallback path.
+
+Collection acquisition must handle composite owner/foreign keys, property-ref
+keys, one-column composite mappings, fetched keys, duplicate owners, and empty
+collections. Use persisted keys where local replacement or null clearing would
+otherwise erase the key needed to acquire existing rows. Retain scalar
+predicates for one-column keys and allow dialect tuple rendering/emulation for
+multicolumn keys. This does not establish new batching or arbitrary
+parameter-limit support; those remain items for the broader mapping/path audit.
+
+[[allocation]]
+=== Allocation and Performance
+
+Reuse invocation-local identity indexing and compact positional coverage
+tracking on the successful path instead of rebuilding equivalent identity sets
+for every table. Allocate missing/unexpected-identity diagnostic structures when
+needed, preserving input order and the same exception precedence. Preserve map
+compatibility, composite comparison semantics, and the
+validation-before-state-application boundary.
+
+The JMH fixtures `LockingBenchmark` and `CompositeLockingBenchmark` exercise row
+counts 1, 10, 100, and 1000 and distinguish ordinary/direct/follow-on execution
+where applicable. Measure CPU and allocation under the same JDK, database,
+query, result count, and fork/warmup conditions. The existence of benchmarks is
+not a portable performance guarantee or justification to remove correctness
+checks.
+
+[[mode-scope]]
+== Mode and Scope Composition
+
+Mode upgrade and wider scope acquisition are independent operations. A satisfied
+entity mode can still require database work for collection-table scope.
+
+=== Required Behavior
+
+An `EXTENDED` pessimistic request may acquire collection-table/owned join-table
+protection even when an equal or stronger entity mode is already held. Preserve
+the stronger recorded mode and use the requested acquisition strength without
+mutating the caller's options. Repeating scope acquisition can be necessary
+after relevant managed-state changes, collection replacement, or null clearing.
+Do not treat a previous scope request as a permanent promise covering later
+state changes.
+
+A scope-only repetition of `PESSIMISTIC_FORCE_INCREMENT` uses a non-incrementing
+acquisition and does not increment again solely to acquire scope. Requests
+outside the applicable extended pessimistic scope retain their existing
+satisfied-mode no-op behavior. Do not generalize this managed-state
+reacquisition rule to `FETCHED`, which follows the operation's fetch plan.
+
+For a genuine managed force-increment upgrade, acquire the requested extended
+scope before incrementing. If acquisition fails, do not perform that increment
+or publish its final mode. Preserve read-only entry/snapshot behavior,
+monitoring completion, and release of cache soft locks on failed version work. A
+null cache entry must not be published as a successful cache update during
+completion.
+
+[[refresh]]
+== Refresh
+
+A held database lock alone does not prove that an ordinary reload observes the
+right version of a row. The dialect hook permits a cheaper plain reload only
+where the relevant mode pair has established visibility and conflict semantics.
+
+=== Required Behavior
+
+Refresh with an equal/weaker mode, including refresh without an explicit mode,
+must preserve existing pessimistic protection and suitable reread semantics. Use
+a non-incrementing locking reload unless
+`LockingSupport.canUsePlainReadForRefresh(currentMode, requestedMode)` permits a
+plain read. That hook defaults to `false`; a custom implementation may permit a
+pair only when it preserves the required visibility and conflict behavior across
+its supported configurations. Standard profiles supply explicit policies.
+
+MySQL, MariaDB, and TiDB retain locking reloads for every relevant mode pair: a
+plain read can use an older snapshot, and a timestamp force increment need not
+create a different value establishing own-write visibility. Other
+profile-specific permissions are recorded by the implementations and
+`RefreshLockingPolicyTest` families; they must not be inferred solely from a
+database's name. Refresh must not repeat an already satisfied forced increment,
+and wider scope remains an independent acquisition concern.
+
+[[force-increment]]
+== Force Increments and Result Exposure
+
+Direct extended-scope force increments use invocation-owned completion rather
+than reusing optimistic transaction callbacks. This preserves separately
+scheduled optimistic work and gates increments on supplemental acquisition.
+
+=== Required Behavior
+
+For direct entity loading with `PESSIMISTIC_FORCE_INCREMENT` and `EXTENDED`
+scope:
+
+. The primary read establishes root protection; pending entries use provisional
+  `PESSIMISTIC_WRITE` rather than claiming the force increment is complete.
+. Track pending increments by `EntityKey` in the collector's invocation-owned
+  `DirectLockingCompletion`. Do not place the state in reusable plans,
+  thread-locals, session-wide flags, or the optimistic transaction process.
+. Complete supplemental acquisition for the acquisition unit before starting any
+  of that unit's pending increments.
+. Verify that each original registered entity instance is still managed under
+  its key. A different managed instance or detachment cannot silently redirect
+  the pending work.
+. Complete each applicable identity once; an already satisfied force-increment
+  mode must not cause an extra increment for duplicate results or scope
+  repetition.
+. After failure, discard pending work and make the failed completion unusable.
+  Do not resume it on cursor movement or reuse it in a later execution.
+
+[cols="2,4",options="header"]
+|===
+|Boundary |What observers may rely on
+|`@PostLoad` and row/tuple transformation
+|Still execute during loading. They may see the original version and provisional protection; arbitrary transformation code is not moved after acquisition.
+|Standard result-list transformation
+|For the affected deferred executions, runs after successful supplemental acquisition and increments, with completed versions, once.
+|Stream/scroll exposure
+|Complete the logical result after all its post-load notifications and before exposing it. This includes managed-only results and rows containing multiple entities.
+|Later cursor failure
+|Earlier exposed results have already completed their work. Transaction rollback rules still apply; failure does not restore their Java values automatically.
+|Early close
+|Do not increment unconsumed results. This is not a promise that a database/driver has acquired no locks on prefetched rows.
+|===
+
+An optimistic force increment scheduled before the pessimistic request remains
+independent and may advance the version again before commit. Neither successful
+nor failed pessimistic acquisition cancels that existing callback. A new
+`OPTIMISTIC_FORCE_INCREMENT` request made after pessimistic protection is held
+retains the existing weaker-mode composition behavior; it does not independently
+schedule another increment just because the caller asked again.
+
+[[result-consumers]]
+=== Custom Result Consumers
+
+==== Required Behavior
+
+`ResultsConsumer.supportsDeferredResultFinalization()` defaults to `false`,
+preserving existing custom consumption timing. Participating materializing
+consumers receive query options with the result-list transformer withheld only
+for affected direct force-increment executions. Their `finishResult()` receives
+the original context/options after successful post-actions. Complete row
+processing inside `consume()` and do not retain row-processing state to replay
+it during finalization. Apply deferred list transformation once; failure before
+completion must not invoke it. Ordinary non-deferred executions do not call this
+hook. Decorators must preserve the wrapped consumer's participation and
+finalization behavior.
+
+Cursor consumers instead may transfer processing state to the returned cursor,
+which owns it until closure. They must honor the logical-result completion
+boundary in <<force-increment>>. Asynchronous integrations must preserve the
+same acquisition/increment ordering and keep the invocation's completion state
+alive until both finish. Protected acquisition/cache helpers retained for
+integrations are not a license to bypass this ordering.
+
+[[direct-locking]]
+== Avoiding Follow-on Locking
+
+The direct outer-join optimization requires both a dialect capability and proof
+that every actual lock target is preserved by the join structure. A blanket
+outer-join permission would admit nullable targets or weaken requested scope.
+
+=== Required Behavior
+
+`OuterJoinLockingType.NON_NULL_TARGETS` means direct outer-join locking is
+supported when every explicitly identified target is guaranteed not to be
+null-extended by the join structure. It concerns absent joined rows, not the
+nullability of an identifier's columns. Exact table/column targeting or
+equivalent table-hint support is an independent prerequisite; neither
+prerequisite establishes the other. Existing outer-join capability values retain
+their meanings, and exhaustive switches must account for the new value.
+
+The implemented optimization is deliberately narrower than every query
+expressible by that capability:
+
+* One top-level, unpaginated query specification with one complete, single-table
+  entity root as the sole required and registered lock target.
+* `NORMAL` scope, a physical named root table and usable aliases, and result
+  coverage for that root.
+* Transparent INNER/LEFT to-one join trees only, including supported virtual
+  embeddable groups and recursively checked nested joins.
+* No DISTINCT, grouping, HAVING, aggregation, set/derived/CTE/opaque sources,
+  lateral/temporal sources, multitable inheritance/secondary-table shapes,
+  plural joins, additional targets, or pagination.
+* Do not initialize unused lazy table groups or mutate the AST/coverage merely
+  to prove eligibility.
+
+When proof fails, apply the existing follow-on policy; do not silently drop
+nullable/additional targets or infer unrestricted outer-join support. Apply the
+acquired mode only to the targeted root initializer, not to joined fetched
+entities sharing the result. The source enables this capability for PostgreSQL;
+other dialects require their own established support and coverage.
+
+Implementation:
+link:{core}/dialect/lock/internal/NonNullLockTargetChecker.java[`NonNullLockTargetChecker`]
+and `NonNullTargetJdbcValuesMappingProducer`.
+
+[[optimistic-lifecycle]]
+== Optimistic Locking Lifecycle
+
+Stateful requests schedule transaction-completion work. Stateless requests need
+immediate protection because they do not retain the same managed-entity
+lifecycle. A fresh version read cannot replace the protection required by the
+stateless contract.
+
+=== Required Behavior
+
+Stateful explicit optimistic requests validate an unchanged versioned entity
+before transaction completion; optimistic force increment also increments then.
+The callback must respect whether the original entity remains managed and
+applicable, including removal, detach, clear, replacement, merge, read-only
+state, flush, refresh, repeated requests, and rollback. Cover both `graph` and
+`legacy` action queues; do not assume passing one proves the other. Force
+increments composed with ordinary mutations and second-level cache work must
+remain coherent, including rollback after an earlier callback succeeds and a
+later callback fails. Fresh transactions must not replay failed or completed
+work.
+
+The actual deferred persister version-read path must establish a current read,
+not validate an obsolete snapshot. It may return current state and detect a
+mismatch, wait for the writer's outcome, or fail with the configured database
+concurrency conflict. Snapshot stability alone is not proof of valid optimistic
+read validation.
+
+Stateless `OPTIMISTIC` instead requires immediate protection which prevents
+concurrent modification until transaction completion. Use an ordinary read only
+when the descriptor establishes that retained protection; otherwise use an
+established shared/update-lock strategy or reject the unsupported request. A
+fresh read or stable snapshot with no retained protection is insufficient.
+Stateless force increments execute immediately rather than scheduling stateful
+completion-time version work.
+
+Verify stateless find, refresh, multiple-id loading, list, stream, partial/early
+stream, and legacy alias requests. Warmed second-level cache state must not
+substitute for actual protection. Unsupported freshness-only descriptors are
+rejected before query SQL on the tested public routes. Protection survives
+consumption/resource closure and temporary-context cleanup until transaction
+commit/rollback, and the subsequent transaction does not replay an increment.
+
+[[failures]]
+== Failure Handling
+
+=== Required Behavior
+
+Distinguish stale-version/missing-row failures, unsupported requests,
+acquisition timeouts, transaction-aborting pessimistic failures, query timeouts,
+and database snapshot/serialization conflicts. Deferred validation can fail
+before a version comparison with converted JDBC exceptions such as
+`TransactionSerializationException`, `SnapshotIsolationException`, or
+`LockAcquisitionException`. Commit can wrap a failure in `RollbackException`; an
+optimistic validation request does not guarantee an `OptimisticLockException`
+for every database conflict.
+
+An exception's rollback-only policy, the database transaction's viability, and
+reliability of managed state are separate questions. After failure invalidates
+the unit of work, roll back and discard the affected stateful context; retry the
+whole transaction where appropriate. Stateless exception handling does not
+automatically mark rollback-only, but the database may abort the transaction and
+rollback does not restore detached object values.
+
+[[graph-root]]
+== Graph-root Coordination
+
+=== Required Behavior
+
+Follow-on selection and locking are separate SQL steps. Acquisition does not
+guarantee that selected rows still satisfy the original predicate, ordering, or
+page membership, and a sequence of table acquisitions has no single atomic
+graph-lock point.
+
+For a graph-root protocol, all participants must coordinate through the same
+root. Acquire the required root protection before reading graph state whose
+validity depends on that protection, or use a deliberately designed optimistic
+root-validation/increment protocol. A join fetch or initial follow-on selection
+may already have read graph state before acquisition; requesting the root lock
+in that query does not itself prove the required ordering. Consider existing
+managed objects and previously established transaction snapshots when choosing
+subsequent reads. Neither locking nor validating the root automatically locks,
+versions, refreshes, or validates every associated object.
+
+== Contributor Guidelines
+
+=== Changing an Execution Path
+
+Identify which paths the change affects: direct/follow-on, new/managed/dirty,
+normal/extended scope, list/cursor, and stateful/stateless. Check the
+corresponding Required Behavior subsections and preserve their failure
+boundaries as well as successful outcomes.
+
+Keep acquisition state local to the execution and use the shared identity and
+cleanup helpers where appropriate. Preserve supported extension points when
+changing their internal representation. Do not update a recorded mode or entry
+version merely to make an incomplete acquisition appear successful.
+
+=== Changing a Dialect Policy
+
+Establish the required facts for each supported isolation and database setting.
+Keep target preservation separate from targeting syntax, freshness separate from
+retained protection, and lock timeout separate from query timeout. An unknown
+fact is a reason to retain the established fallback or report a coverage gap.
+
+=== Reviewing for Deviation
+
+Compare a change with the agreed behavior before selecting tests. Use the
+regression families below as evidence, and inspect cases where an implementation
+and this guide disagree. A passing test does not itself authorize a contract
+change.
+
+Intentional behavior changes need an explicit design proposal, working
+specification, and approval. Update the guide and regression coverage as part of
+that approved change. Internal refactorings can retain the same agreed behavior
+without preserving every implementation class described here.
+
+[[verification]]
+== Testing Strategy
+
+=== Evidence Layers
+
+Use unit tests for action lifetimes, exact cleanup/error ordering, coverage
+validation, identity semantics, and non-mutating eligibility checks. Use
+translation tests for SQL clauses/hints, target selection, result shape, and
+tuple emulation. Use database tests with independent transactions for physical
+exclusion, current-read behavior, visibility, rollback, and release/retry.
+Reported lock mode, statement count, SQL text, and a stable returned value are
+individually insufficient proof of database protection.
+
+For a retained-protection proof in `ConcurrencyTestSupport`:
+
+. Keep the owner transaction active while a contender attempts an actual UPDATE
+  using the same factory concurrency configuration.
+. Require a classified native lock conflict before releasing the owner. A
+  readiness latch, elapsed delay, future timeout, or query watchdog is not
+  evidence that JDBC dispatch reached a conflicting database operation.
+. Release the owner on failure as well as success, roll back an aborted
+  contender, then require a fresh UPDATE to succeed after release.
+. Roll back probe writes, restore changed native settings, and close/release
+  resources.
+
+The delayed-dispatch regression deliberately delays JDBC execution without
+holding an owner lock; the proof helper must fail this case. The real-lock
+control must pass and restore the original timeout. Oracle has an explicit
+test-only exception: its exclusive `FOR UPDATE NOWAIT` supplies native conflict
+evidence (ORA-00054), followed by an actual UPDATE after release, because the
+fixture has no connection-level native DML wait control. Do not replace actual
+modification probes portably with a generic pessimistic-write SELECT: some
+update-lock modes are compatible with shared locks. Other helpers/tests must be
+assessed on their own evidence; the shared helper's guarantees do not
+automatically validate every timing-based test in the repository.
+
+Snapshot/serialization rejection demonstrates refusal of an invalid operation,
+not retained row protection. Deletion races and current-read validation tests
+must classify allowed native conflicts under their actual
+isolation/configuration rather than requiring one universal exception.
+
+=== Database Configurations
+
+[cols="2,3,4",options="header"]
+|===
+|Family |Selected fixture configurations |Controls and limits
+|H2 |READ_COMMITTED, REPEATABLE_READ, native SNAPSHOT (6), SERIALIZABLE
+|Native timeout read/set/restore; shared-read fallback exclusions remain explicit.
+|PostgreSQL |READ_COMMITTED, REPEATABLE_READ, SERIALIZABLE
+|Check current-read serialization outcomes as well as actual retained shared/write exclusion.
+|SQL Server |Locking READ_COMMITTED; READ_COMMITTED with RCSI; native SNAPSHOT (4096)
+|Create/configure/drop a disposable database. Never flip the user's shared database options. Distinguish versioned ordinary reads from explicit current reads.
+|MySQL |READ_COMMITTED, REPEATABLE_READ, SERIALIZABLE
+|Exclude impossible writer-after-read races where the initial SERIALIZABLE read already retains protection. Account for native timeout granularity.
+|MariaDB |READ_COMMITTED; REPEATABLE_READ with snapshot setting OFF and ON
+|Observe/configure the session setting before use. Explicitly exclude unavailable ON profiles on older versions; classify snapshot conflicts separately.
+|Oracle |READ_COMMITTED, SERIALIZABLE
+|Use suitable committed fixture/segment setup. Completed-writer validation runs; uncommitted deferred version-SELECT cases are explicitly ineligible without native connection wait control.
+|DB2 LUW |READ_COMMITTED baseline
+|Do not assert unobserved currently-committed facts. Test-local native wait control does not establish identical DB2 i/z support.
+|Sybase ASE |READ_COMMITTED baseline
+|Pessimistic-write syntax can acquire a shared lock; exclude tests requiring an actual `UPDATE_LOCK_READ` rather than weakening their premise. Timeout-only lifecycle prerequisites are assessed separately.
+|Spanner / Spanner PostgreSQL |SERIALIZABLE baseline
+|Classify before the PostgreSQL superclass family. Run contention-free unsupported-strategy rejections even when concurrent-transaction tests are ineligible; do not inherit PostgreSQL guarantees.
+|Other dialects |Individually supported baseline/profiles
+|Unsupported configuration and absent native proof controls need explicit eligibility outcomes. Do not turn unknown facts into successful conformance.
+|===
+
+Assertions about retained protection must not be skipped merely because the
+descriptor under test reports that its expected guarantee is absent. Keep
+independently selected expectations and narrowly justified fixture prerequisites
+distinct. A capability guard such as `SupportsConcurrentTransactions` belongs on
+cases which need contention, not on a whole class containing contention-free
+negative tests. Isolation changes used solely for fixture setup/probes must not
+silently change the configuration whose behavior is being asserted.
+
+=== Regression Families
+
+Paths below are relative to `hibernate-core/src/test/java/`; they name the
+primary regression families, not an exhaustive list of all locking tests.
+
+[cols="2,4",options="header"]
+|===
+|Area |Regression families
+|Secondary actions and timeout restoration
+|`org/hibernate/orm/test/sql/exec/spi/JdbcActionExecutionTest`, `JdbcSelectFailureCleanupTest`; `org/hibernate/orm/test/locking/LockTimeoutActionStateTest`, `LockTimeoutExecutionIntegrationTest`, `ProductionConnectionLockTimeoutTest`, `ProductionLockTimeoutLifecycleTest`, `LockTimeoutCursorLifecycleTest`.
+|Result coverage and skip-locked rejection
+|`org/hibernate/orm/test/sql/exec/spi/FollowOnResultCoverageTest`, `SkipLockedPreflightTest`; `org/hibernate/orm/test/locking/FollowOnScalarLockingTest`, `FollowOnProjectionLockingTest`, `FollowOnSkipLockedTest`, `FollowOnSkipLockedRejectionTest`; dialect `JdbcSelectSqlFinalizerTest` and `SQLServerFollowOnLockingRenderingTest`.
+|Required acquisition rows
+|`org/hibernate/orm/test/sql/exec/spi/FollowOnLockingCoverageTest`; `org/hibernate/orm/test/locking/FollowOnLockingMissingRowsTest`, `FollowOnLockingRequiredTablesTest`; composite missing-row cases.
+|State adoption and managed callbacks
+|`org/hibernate/orm/test/engine/spi/EntityEntryTest`; `org/hibernate/orm/test/locking/FollowOnLockingVersionAdoptionTest`, `FollowOnLockingVersionConsistencyTest`, `ManagedOnlyLockingCursorTest`.
+|Identity, collection keys, and allocation
+|`org/hibernate/orm/test/locking/CompositeIdentifierLockResultTest`, `CompositeIdentifierEntityDetailsMapTest`, `CompositeIdentifierFollowOnLockingTest`, `CompositeIdentifierLockTranslationTest`, `CompositeCollectionLockingTest`, `CompositeCollectionLockingEmulationTest`, `CompositeCollectionLockTranslationTest`; `org/hibernate/sql/exec/internal/lock/AcquisitionIdentityIndexTest`.
+|Mode/scope composition
+|`org/hibernate/orm/test/locking/PessimisticLockScopeAcquisitionTest`, `PessimisticLockScopeExpansionTest`, `PessimisticForceIncrementScopeTest`, `ForceIncrementExecutionTest`; dialect `EntityLockingStrategyFactoryTest`.
+|Refresh policy
+|`org/hibernate/orm/test/locking/PessimisticRefreshLockingTest`, `PessimisticRefreshSnapshotTest`; core/community `RefreshLockingPolicyTest`.
+|Force-increment completion and result consumers
+|`org/hibernate/orm/test/locking/DirectForceIncrementOrderingTest`, `ForceIncrementCompositionTest`, `ManagedOnlyLockingCursorTest`; `org/hibernate/sql/exec/internal/lock/DirectLockingCompletionTest`; cleanup consumer-failure cases.
+|Direct outer-join locking
+|Dialect unit `NonNullLockTargetCheckerTest`, `NonNullTargetJdbcValuesMappingProducerTest`, `NonNullTargetLockingRenderingTest`; `org/hibernate/orm/test/locking/PostgreSQLNonNullTargetsTest` for physical exclusion and negative shapes.
+|Concurrency, optimistic lifecycle, and failures
+|`org/hibernate/orm/test/jdbc/env/TransactionConcurrencyTest`, `TransactionConcurrencyConformanceTest`; `org/hibernate/orm/test/locking/ConcurrencyConfigurationTest`, `ConcurrencyTestSupportTest`, `OptimisticLockLifecycleTest`, `OptimisticValidationConfigurationTest`; `org/hibernate/orm/test/stateless/StatelessOptimisticProtectionTest`.
+|===
+
+Acceptance for an affected contract requires preserving its relevant negative
+cases, compatibility route, and failure path, as well as the happy path.
+Examples include partial/all missing rows, setter/restorer failure, managed
+dirty versus newly loaded state, callback replacement/detachment,
+multiple-entity logical results, tuple/list transformer failure, and
+fresh-transaction/cache cleanup after rollback. Cursor coverage must include
+partial consumption, managed-only results, duplicate identities, early close,
+and later-result failure where the contract applies.
+
+=== Running and Recording Checks
+
+From the repository root, choose the suites relevant to the proposed change. For
+example, this focused execution/identity batch needs no external database:
+
+[source,shell]
+----
+./gradlew :hibernate-core:test -Pdb=h2 \
+  --tests org.hibernate.orm.test.sql.exec.spi.JdbcActionExecutionTest \
+  --tests org.hibernate.orm.test.sql.exec.spi.JdbcSelectFailureCleanupTest \
+  --tests org.hibernate.orm.test.locking.CompositeIdentifierLockResultTest \
+  --tests org.hibernate.sql.exec.internal.lock.AcquisitionIdentityIndexTest \
+  --tests org.hibernate.sql.exec.internal.lock.DirectLockingCompletionTest
+----
+
+For database conformance and actual optimistic lifecycles, run the following
+batch first on H2 and then on the relevant production database profiles:
+
+[source,shell]
+----
+./gradlew :hibernate-core:test -Pdb=h2 \
+  --tests org.hibernate.orm.test.jdbc.env.TransactionConcurrencyConformanceTest \
+  --tests org.hibernate.orm.test.locking.OptimisticLockLifecycleTest \
+  --tests org.hibernate.orm.test.locking.OptimisticValidationConfigurationTest \
+  --tests org.hibernate.orm.test.stateless.StatelessOptimisticProtectionTest
+----
+
+Use the repository's current database startup/profile instructions for `pgsql`,
+`mysql`, `mariadb`, `mssql`, `db2`, `sybase`, Oracle, and Spanner variants. Do
+not copy credentials or fixed temporary ports from an earlier investigation.
+Connection-timeout tests additionally require production `CONNECTION` routing
+and the relevant native capabilities; synthetic/unit coverage cannot replace
+that verification.
+
+Record XML suite totals, failures, errors, and justified skips. Parameterized
+display names can repeat: do not deduplicate test cases by name and undercount
+execution. Retain the tested source revision and whether SQL/descriptor-only or
+real database behavior was exercised. Test-local native lock-timeout controls
+must be restored and must not be confused with the feature's production timeout
+strategy. Repeat or broaden checks when a changed path, failure, or unresolved
+concern warrants it, rather than rerunning unchanged successes without a reason.
+
+For documentation changes, render the user guide, migration guide, and Javadoc
+and inspect the affected generated sections. Keep query-timeout hints/setters
+linked to query timeout and lock-timeout hints/setters linked to lock
+acquisition; cross-linking them as equivalents is incorrect.
+
+== Common Failure Modes
+
+Cached definition captures invocation state::
+A reusable action retains a connection baseline or progress flag. Materialize
+execution state once per invocation and pair its phases by definition identity.
+
+Cleanup replays failed work::
+A restoration or post-action fails before progress is recorded, then failure
+cleanup invokes it again. Advance progress before callbacks and suppress cleanup
+failures on the original failure.
+
+Satisfied mode suppresses scope acquisition::
+A stronger entity mode causes an early return even though EXTENDED collection
+scope is requested. Evaluate mode and scope independently.
+
+Acquisition overwrites managed state::
+A follow-on reread replaces local values or changes the version without updating
+entry metadata. Preserve managed state; synchronize newly adopted state at the
+successful acquisition boundary.
+
+Identifier handling initializes associations::
+A domain identifier's Java hash/equality or ordinary result assembly traverses
+association-valued components. Use acquisition correlation and Hibernate/JDBC
+identity semantics across the entire follow-on phase.
+
+Managed-only cursor skips callbacks::
+Acquisition runs only from newly loaded entity notifications. Already managed
+results need the same applicable acquisition before exposure.
+
+Increment or transformation runs too early::
+A first-entity callback increments before all supplemental locks for the logical
+result are acquired, or a list transformer copies pending versions. Preserve the
+acquisition, increment, and result-finalization boundaries.
+
+Snapshot mistaken for protection::
+A stable returned value or current version read is treated as transaction-long
+exclusion. Verify the actual property needed by the caller and use a real
+conflicting modification for retained-protection evidence.
+
+Readiness signal mistaken for contention::
+The owner is released after a latch or delay before JDBC dispatch has reached
+the database. Require native conflict evidence while the owner remains active
+and verify progress after release.
+
+== Open Design Areas
+
+{jira}HHH-21034[HHH-21034] remains a broader pessimistic coverage audit,
+partially addressed by the regression families above. Do not mark its whole
+mapping/execution matrix complete solely because the individual fixes passed. At
+the source baseline, `org.hibernate.orm.test.locking.jpa.FollowOnLockingTest`
+remains disabled. Remaining audit work includes reconciling that suite and
+establishing coverage across native result mappings, parameter limits, mapping
+variants, entity states, direct/follow-on contention, and selection/acquisition
+state changes. Some of these dimensions already have targeted tests; the missing
+work is a systematic inventory and justified closure of the remaining
+combinations, not an assertion that every listed area is wholly untested.
+
+Broader follow-on avoidance, new dialect capability declarations, different
+cursor filtering semantics, global acquisition atomicity, expanded lock-scope
+semantics, and new connection-disposal policies require separate design decisions
+and approval before changing the agreed behavior.

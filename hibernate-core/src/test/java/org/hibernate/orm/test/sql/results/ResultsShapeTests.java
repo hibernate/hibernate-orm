@@ -9,6 +9,9 @@ import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Tuple;
 
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 import org.hibernate.query.TypedTupleTransformer;
 
@@ -33,6 +36,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Steve Ebersole
  */
+// Retain Product's legacy generated version while testing the retail model.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel( standardModels = StandardDomainModel.RETAIL )
 @SessionFactory
 @Jira( "https://hibernate.atlassian.net/browse/HHH-15133" )

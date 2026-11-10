@@ -5,6 +5,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.action.queue.spi.QueueType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -27,12 +28,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Steve Ebersole
  */
+// Retain Product's legacy generated version while testing the retail model.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @SingleTableWithSecondaryTableStaticInsertTests.DomainAndFactory
 public class SingleTableWithSecondaryTableStaticInsertTests {
 	@Test
 	@DomainAndFactory
 	@ServiceRegistry(
 			settings = {
+					@Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
 					@Setting(name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
 					@Setting(name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "-1")
 			}
@@ -45,6 +49,7 @@ public class SingleTableWithSecondaryTableStaticInsertTests {
 	@DomainAndFactory
 	@ServiceRegistry(
 			settings = {
+					@Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
 					@Setting(name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
 					@Setting(name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "5")
 			}

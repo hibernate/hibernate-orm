@@ -2,6 +2,9 @@ package org.hibernate.orm.test.mapping;
 
 import java.time.Instant;
 
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.MappingMetamodel;
@@ -35,6 +38,8 @@ import static org.assertj.core.api.Assertions.assertThatCode;
  *
  * @author Steve Ebersole
  */
+// Retain Product's legacy generated version while testing the retail model.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel(standardModels = StandardDomainModel.RETAIL)
 @SessionFactory(exportSchema = false)
 public class MappingModelAccessTests {

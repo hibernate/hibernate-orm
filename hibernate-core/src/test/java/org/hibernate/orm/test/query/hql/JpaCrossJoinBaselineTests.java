@@ -1,6 +1,9 @@
 package org.hibernate.orm.test.query.hql;
 
 
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -14,6 +17,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Steve Ebersole
  */
+// Retain Product's legacy generated version while testing the retail model.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel( standardModels = StandardDomainModel.RETAIL )
 @SessionFactory( useCollectingStatementObserver = true )
 public class JpaCrossJoinBaselineTests {

@@ -773,6 +773,18 @@ now also accepts a `boolean useQualifier` parameter immediately before `SqlAstCr
 Custom collection persisters overriding this method must update their signature and forward this argument
 when calling the superclass implementation.
 
+[[sqlserver-spatial-type-spi]]
+=== SQL Server spatial JDBC types
+
+`org.hibernate.spatial.dialect.sqlserver.AbstractSqlServerGISType` now declares two abstract methods,
+`encode(Geometry<?>)` and `decode(byte[])`, which convert between a geolatte `Geometry` and SQL Server's
+native serialization. The binders and extractors call them, so each subclass picks the codec for its database type.
+`SqlServerGeometryType` delegates to geolatte's `Encoders`/`Decoders`, and `SqlServerGeographyType` to the new
+`GeographyEncoders`/`GeographyDecoders`.
+
+Custom subclasses must implement both methods. Use `Encoders`/`Decoders` for a `geometry` column and
+`GeographyEncoders`/`GeographyDecoders` for a `geography` column.
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Changes in Behavior
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1709,6 +1721,49 @@ Previously, one setting silently took precedence over the other with no indicati
 
 Applications that set both must choose one: `hibernate.session_factory.interceptor` for a shared instance or CDI-managed global interceptor, or `hibernate.session_factory.session_scoped_interceptor` for a per-session interceptor obtained from a `Supplier` or a CDI-managed class.
 
+[[sqlserver-geography-axis-order]]
+=== Axis order of SQL Server `geography` values
+
+On SQL Server, values mapped to a `geography` column (for example with `@JdbcTypeCode(SqlTypes.GEOGRAPHY)`)
+are now serialized in SQL Server's native `geography` format, which stores each point latitude first.
+Earlier versions serialized them in the `geometry` format, which stores the longitude (the "x"-axis) first. In the
+database, these values therefore had their latitude and longitude swapped. Because Hibernate also read the values back
+swapped, entities loaded through Hibernate looked correct. SQL Server's own spatial functions (`Lat`, `Long`,
+`STDistance()`, `STIntersects()`, ...) and other clients saw the swapped coordinates.
+
+As a result:
+
+* Values written by SQL Server itself (`geography::Point()`, `geography::STGeomFromText()`, ...) or by other
+  clients are now read with the correct coordinates. Remove any code that swapped coordinates to work
+  around the old behavior.
+* Points whose longitude lies outside [-90, 90] can now be stored. Before, SQL Server rejected them because
+  the longitude ended up in the latitude position.
+* A geometry without an SRID is now written with SRID 4326. A geometry with an SRID outside 4120–4999
+  now fails with an `IllegalArgumentException` before it reaches the database.
+* `geometry` columns are not affected.
+
+[WARNING]
+====
+Geographies written by an earlier version of Hibernate are still stored with swapped axes, and this
+version reads them back swapped. Convert them once after upgrading. The statement below reinterprets the
+stored bytes in the `geometry` format, which recovers the correct longitude/latitude. It
+then rebuilds the value as a proper `geography` (Well-Known Text is longitude first). `AsTextZM()` keeps any
+Z and M values.
+
+[source,sql]
+----
+UPDATE my_table
+SET g = geography::STGeomFromText(CAST(CAST(g AS varbinary(max)) AS geometry).AsTextZM(), g.STSrid)
+WHERE g IS NOT NULL;
+----
+
+Replace `my_table` and `g` with each affected table and `geography` column. Before running it:
+
+* Run it exactly once per column. A second run swaps the axes back.
+* Convert only rows that Hibernate wrote. Rows created by SQL Server functions, native SQL, or other tools
+  already have the correct axis order and must be excluded with the `WHERE` clause.
+====
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // XSD changes
@@ -1947,6 +2002,12 @@ This section describes changes to dependencies used by Hibernate ORM.
 
 The `hibernate-micrometer` module no longer pulls `io.micrometer:micrometer-core` as a transitive runtime dependency.
 Applications using this module must now explicitly add `io.micrometer:micrometer-core` to their classpath.
+
+[[dependency-changes-geolatte]]
+=== GeoLatte upgraded to 1.13
+
+`hibernate-spatial` now depends on `org.geolatte:geolatte-geom` 1.13, which adds the SQL Server `geography`
+codecs described in <<sqlserver-geography-axis-order>>.
 
 [[bean-container-lifecycle]]
 == Bean container lifecycle

@@ -31,7 +31,6 @@ import org.hibernate.IdentifierLoadAccess;
 import org.hibernate.KeyType;
 import org.hibernate.LobHelper;
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.MultiIdentifierLoadAccess;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.NaturalIdMultiLoadAccess;
@@ -244,20 +243,8 @@ public abstract class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	@SuppressWarnings("removal")
-	public void lock(@Nonnull Object object, @Nonnull LockOptions lockOptions) {
-		this.delegate().lock( object, lockOptions );
-	}
-
-	@Override
 	public void refresh(@Nonnull Object object) {
 		this.delegate().refresh( object );
-	}
-
-	@Override
-	@SuppressWarnings("removal")
-	public void refresh(@Nonnull Object object, @Nonnull LockOptions lockOptions) {
-		this.delegate().refresh( object, lockOptions );
 	}
 
 	@Override
@@ -315,37 +302,9 @@ public abstract class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	@SuppressWarnings("removal")
-	@Nonnull
-	public <T> T get(@Nonnull Class<T> entityType, @Nonnull Object id, @Nonnull LockMode lockMode) {
-		return this.delegate().get( entityType, id, lockMode );
-	}
-
-	@Override
 	@Nonnull
 	public Object get(@Nonnull String entityName, @Nonnull Object key, @Nullable FindOption... findOptions) {
 		return this.delegate().get( entityName, key, findOptions );
-	}
-
-	@Override
-	@SuppressWarnings("removal")
-	@Nonnull
-	public Object get(@Nonnull String entityName, @Nonnull Object id, @Nonnull LockMode lockMode) {
-		return this.delegate().get( entityName, id, lockMode );
-	}
-
-	@Override
-	@SuppressWarnings("removal")
-	@Nonnull
-	public <T> T get(@Nonnull Class<T> entityType, @Nonnull Object id, @Nonnull LockOptions lockOptions) {
-		return this.delegate().get( entityType, id, lockOptions );
-	}
-
-	@Override
-	@SuppressWarnings("removal")
-	@Nonnull
-	public Object get(@Nonnull String entityName, @Nonnull Object id, @Nonnull LockOptions lockOptions) {
-		return this.delegate().get( entityName, id, lockOptions );
 	}
 
 	@Override

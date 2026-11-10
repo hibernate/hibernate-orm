@@ -1223,12 +1223,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	@SuppressWarnings("removal")
-	public void lock(@Nonnull Object object, @Nonnull LockOptions lockOptions) {
-		delegate.lock( object, lockOptions );
-	}
-
-	@Override
 	public void refresh(@Nonnull Object object) {
 		delegate.refresh( object );
 	}
@@ -1246,12 +1240,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void refresh(@Nonnull Object entity, @Nullable RefreshOption... options) {
 		delegate.refresh( entity, options );
-	}
-
-	@Override
-	@SuppressWarnings("removal")
-	public void refresh(@Nonnull Object object, @Nonnull LockOptions lockOptions) {
-		delegate.refresh( object, lockOptions );
 	}
 
 	@Override
@@ -1288,37 +1276,9 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	@SuppressWarnings("removal")
-	@Nonnull
-	public <T> T get(@Nonnull Class<T> theClass, @Nonnull Object id, @Nonnull LockMode lockMode) {
-		return delegate.get( theClass, id, lockMode );
-	}
-
-	@Override
 	@Nonnull
 	public Object get(@Nonnull String entityName, @Nonnull Object key, @Nullable FindOption... findOptions) {
 		return delegate.get( entityName, key, findOptions );
-	}
-
-	@Override
-	@SuppressWarnings("removal")
-	@Nonnull
-	public Object get(@Nonnull String entityName, @Nonnull Object id, @Nonnull LockMode lockMode) {
-		return delegate.get( entityName, id, lockMode );
-	}
-
-	@Override
-	@SuppressWarnings("removal")
-	@Nonnull
-	public <T> T get(@Nonnull Class<T> entityType, @Nonnull Object id, @Nonnull LockOptions lockOptions) {
-		return delegate.get( entityType, id, lockOptions );
-	}
-
-	@Override
-	@SuppressWarnings("removal")
-	@Nonnull
-	public Object get(@Nonnull String entityName, @Nonnull Object id, @Nonnull LockOptions lockOptions) {
-		return delegate.get( entityName, id, lockOptions );
 	}
 
 	@Override

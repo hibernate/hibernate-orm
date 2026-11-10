@@ -1,6 +1,9 @@
 package org.hibernate.orm.test.batch;
 
 import java.util.List;
+import org.hibernate.JDBCException;
+import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.exception.ConstraintViolationException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.persistence.Entity;
@@ -104,7 +107,15 @@ class InterleavedMutationExecutorTest {
 				apply( update, 1, session ); apply( end, 1, session ); apply( insert, 11, session );
 				apply( update, 2, session ); apply( end, 2, session ); apply( insert, 1, session );
 				assertThatThrownBy( () -> session.getJdbcCoordinator().executeBatch() )
-						.isInstanceOf( org.hibernate.exception.ConstraintViolationException.class );
+						.satisfies( failure -> {
+							if ( session.getJdbcServices().getDialect() instanceof SybaseDialect ) {
+								assertThat( failure ).isInstanceOf( JDBCException.class );
+								var sql = ((JDBCException) failure).getSQLException();
+								assertThat( sql.getSQLState() ).isEqualTo( "JZ0BE" );
+								assertThat( sql.getMessage() ).contains( "Attempt to insert duplicate key row", "lb_row" );
+							}
+							else assertThat( failure ).isInstanceOf( ConstraintViolationException.class );
+						} );
 			}
 			finally { tx.rollback(); update.release(); end.release(); insert.release(); }
 			assertThat( session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().hasRegisteredResources() ).isFalse();
@@ -137,7 +148,7 @@ class InterleavedMutationExecutorTest {
 	static void seed(SessionImplementor session, int count) {
 		session.doWork( connection -> {
 			try ( var statement = connection.createStatement() ) {
-				statement.executeUpdate( "delete from lb_row" );
+				statement.executeUpdate( "delete from lb_row where 1=1" );
 				for ( int id = 1; id <= count; id++ ) statement.executeUpdate(
 						"insert into lb_row (id,counter,closed) values (" + id + ",0,0)" );
 			}

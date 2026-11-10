@@ -10,7 +10,9 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.mapping.BasicValue;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,19 +27,11 @@ public final class TemporalHandoffProcess {
 
 	static void periods(Path directory, boolean server) throws Exception {
 		Files.createDirectories( directory );
-		var config = new Properties();
-		Environment.getProperties().forEach( (key, value) -> {
-			if ( key instanceof String name && value instanceof String text
-					&& ( name.startsWith( "hibernate." ) || name.startsWith( "jakarta.persistence." ) ) ) {
-				config.setProperty( name, text );
-			}
-		} );
-		String worker = System.getProperty( "org.gradle.test.worker" );
-		if ( worker != null ) config.setProperty( "org.gradle.test.worker", worker );
+		var config = ContextEnvironment.handoffSettings();
 		config.setProperty( "handoff.server", Boolean.toString( server ) );
 		config.setProperty( "handoff.manifest", directory.resolve( "manifest.properties" ).toAbsolutePath().toString() );
 		config.setProperty( "handoff.source_revision", revision() );
-		if ( config.getProperty( "hibernate.dialect" ).contains( "H2" ) ) {
+		if ( ContextEnvironment.is( config.getProperty( "hibernate.dialect" ), H2Dialect.class ) ) {
 			config.setProperty( "hibernate.connection.url", "jdbc:h2:" + directory.resolve( "periods" ).toAbsolutePath() );
 			config.setProperty( "hibernate.connection.username", "sa" );
 			config.setProperty( "hibernate.connection.password", "" );
@@ -59,15 +53,7 @@ public final class TemporalHandoffProcess {
 
 	static void versions(Path directory, String profile, String kind, boolean database, boolean metadata) throws Exception {
 		Files.createDirectories( directory );
-		var config = new Properties();
-		Environment.getProperties().forEach( (key, value) -> {
-			if ( key instanceof String name && value instanceof String text
-					&& ( name.startsWith( "hibernate." ) || name.startsWith( "jakarta.persistence." ) ) ) {
-				config.setProperty( name, text );
-			}
-		} );
-		String worker = System.getProperty( "org.gradle.test.worker" );
-		if ( worker != null ) config.setProperty( "org.gradle.test.worker", worker );
+		var config = ContextEnvironment.handoffSettings();
 		config.setProperty( "handoff.task", kind.equals( "Period" ) ? "period-migration" : "version" );
 		config.setProperty( "handoff.profile", profile );
 		config.setProperty( "handoff.kind", kind );
@@ -75,7 +61,7 @@ public final class TemporalHandoffProcess {
 		config.setProperty( "handoff.metadata", Boolean.toString( metadata ) );
 		config.setProperty( "handoff.manifest", directory.resolve( "manifest.properties" ).toAbsolutePath().toString() );
 		config.setProperty( "handoff.source_revision", revision() );
-		if ( config.getProperty( "hibernate.dialect" ).contains( "H2" ) ) {
+		if ( ContextEnvironment.is( config.getProperty( "hibernate.dialect" ), H2Dialect.class ) ) {
 			config.setProperty( "hibernate.connection.url", "jdbc:h2:" + directory.resolve( "versions" ).toAbsolutePath() );
 			config.setProperty( "hibernate.connection.username", "sa" ); config.setProperty( "hibernate.connection.password", "" );
 		}
@@ -86,10 +72,10 @@ public final class TemporalHandoffProcess {
 			String dialect = config.getProperty( "hibernate.dialect" );
 			boolean separateJvm = !metadata && switch ( profile ) {
 				case "M01" -> database;
-				case "M02" -> dialect.contains( "H2" ) && !database;
-				case "M03" -> dialect.contains( "PostgreSQL" ) && database;
-				case "M04" -> dialect.contains( "Oracle" ) && !database;
-				case "M05" -> dialect.contains( "H2" );
+				case "M02" -> ContextEnvironment.is( dialect, H2Dialect.class ) && !database;
+				case "M03" -> ContextEnvironment.is( dialect, PostgreSQLDialect.class ) && database;
+				case "M04" -> ContextEnvironment.is( dialect, OracleDialect.class ) && !database;
+				case "M05" -> ContextEnvironment.is( dialect, H2Dialect.class );
 				case "M06" -> kind.equals( "Zoned" ) && database;
 				default -> false;
 			};
@@ -109,6 +95,9 @@ public final class TemporalHandoffProcess {
 	}
 
 	private static void phase(Properties config, Path settings, String phase, String jvm, String session, Path directory) throws Exception {
+		System.out.println( "HANDOFF_OWNER phase=" + phase
+				+ " catalog=" + config.getProperty( "hibernate.test.temporal.expected_catalog", "private" )
+				+ " schema=" + config.getProperty( "hibernate.test.temporal.expected_schema", "private" ) );
 		config.setProperty( "hibernate.test.temporal.jvm_zone", jvm );
 		config.setProperty( "hibernate.test.temporal.session_zone", session );
 		if ( config.containsKey( "handoff.task" ) ) {
@@ -116,7 +105,7 @@ public final class TemporalHandoffProcess {
 			else config.remove( "hibernate.jdbc.time_zone" );
 		}
 		else config.setProperty( "hibernate.jdbc.time_zone", "Europe/Paris" );
-		config.setProperty( "hibernate.connection.init_sql", config.getProperty( "hibernate.dialect" ).contains( "Oracle" )
+		config.setProperty( "hibernate.connection.init_sql", ContextEnvironment.is( config.getProperty( "hibernate.dialect" ), OracleDialect.class )
 				? "alter session set time_zone='" + session + "'" : "set time zone '" + session + "'" );
 		try ( var output = Files.newOutputStream( settings ) ) { config.store( output, "Temporary test connection configuration" ); }
 		Path log = directory.resolve( phase + ".log" );
@@ -161,6 +150,7 @@ public final class TemporalHandoffProcess {
 		var settings = new Properties();
 		try ( var input = Files.newInputStream( Path.of( args[0] ) ) ) { settings.load( input ); }
 		settings.forEach( (key, value) -> System.setProperty( (String) key, (String) value ) );
+		ContextEnvironment.inheritVersion( settings.getProperty( "jakarta.persistence.database-product-version" ) );
 		assertThat( java.time.ZoneId.systemDefault() ).isEqualTo(
 				java.time.ZoneId.of( settings.getProperty( "hibernate.test.temporal.jvm_zone" ) ) );
 		if ( "period-migration".equals( settings.getProperty( "handoff.task" ) ) ) {
@@ -220,7 +210,7 @@ public final class TemporalHandoffProcess {
 		if ( phase.equals( "write" ) || phase.equals( "cleanup" ) ) {
 			try ( var scope = ContextScope.boot( false, false, bootstrap, TemporalPeriodFixture.Period.class ) ) {
 				scope.provider.blocked = false;
-				if ( phase.equals( "cleanup" ) ) scope.factory.getSchemaManager().drop( false );
+				if ( phase.equals( "cleanup" ) ) scope.drop();
 				else scope.factory.getSchemaManager().create( false );
 			}
 		}

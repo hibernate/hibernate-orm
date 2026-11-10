@@ -1,5 +1,10 @@
 package org.hibernate.orm.test.mapping.javatime.redesign.context;
 
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+
 import java.time.OffsetDateTime;
 import java.util.*;
 import jakarta.persistence.*;
@@ -14,6 +19,9 @@ import static org.assertj.core.api.Assertions.*;
 /// ordinary conversion and mapping-owned context for scalar and collection values.
 ///
 /// @author Steve Ebersole
+@RequiresDialect(H2Dialect.class)
+@RequiresDialect(PostgreSQLDialect.class)
+@RequiresDialect(OracleDialect.class)
 class TemporalConverterContextTests {
 	@ParameterizedTest @ValueSource(booleans = {true, false})
 	void noneDoesNotSilentlyDiscardAnUnsupportedWholeColumnConverter(boolean metadata) {
@@ -70,7 +78,7 @@ class TemporalConverterContextTests {
 	}
 	@ParameterizedTest @ValueSource(booleans={true,false})
 	void noneDoesNotCreateAConverterConflict(boolean metadata) {
-		if(org.hibernate.cfg.Environment.getProperties().getProperty("hibernate.dialect").contains("PostgreSQL")) {
+		if(ContextEnvironment.is( PostgreSQLDialect.class )) {
 			assertThatThrownBy(()->{try(var ignored=ContextScope.boot(metadata,true,Controls.class,Identity.class)) {}}).isInstanceOf(MappingException.class).hasMessageContaining("OFFSET preservation").hasMessageNotContaining("converter and timezone adjustment");
 			return;
 		}

@@ -1,5 +1,10 @@
 package org.hibernate.orm.test.mapping.javatime.redesign.context;
 
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+
 import java.io.Serializable;
 import java.time.ZonedDateTime;
 import jakarta.persistence.*;
@@ -19,6 +24,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 /// construction/copy/cache behavior beside contextual temporal implementations.
 ///
 /// @author Steve Ebersole
+@RequiresDialect(H2Dialect.class)
+@RequiresDialect(PostgreSQLDialect.class)
+@RequiresDialect(OracleDialect.class)
 class TemporalCustomCompositeContextTests {
 	@ParameterizedTest @ValueSource(booleans={true,false})
 	void customRegistrationAndTemporalSubclassAreNotContextualized(boolean metadata) {

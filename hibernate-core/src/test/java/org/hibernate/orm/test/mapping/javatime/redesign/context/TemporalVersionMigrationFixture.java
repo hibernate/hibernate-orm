@@ -1,5 +1,13 @@
 package org.hibernate.orm.test.mapping.javatime.redesign.context;
 
+import org.hibernate.dialect.OracleDialect;
+
+import org.hibernate.dialect.PostgreSQLDialect;
+
+import org.hibernate.dialect.H2Dialect;
+
+import org.hibernate.orm.test.mapping.javatime.redesign.TemporalSchemaCleanup;
+
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.time.Instant;
@@ -74,7 +82,7 @@ final class TemporalVersionMigrationFixture {
 	}
 
 	boolean cacheControl() {
-		return profile.equals( "M03" ) && org.hibernate.cfg.Environment.getProperties().getProperty( "hibernate.dialect" ).contains( "H2" );
+		return profile.equals( "M03" ) && ContextEnvironment.is( H2Dialect.class );
 	}
 
 	ContextScope open(boolean target, boolean negative) {
@@ -217,8 +225,8 @@ final class TemporalVersionMigrationFixture {
 
 	void cleanup() throws Exception {
 		try ( var source = open( false, false ); var connection = source.provider.getConnection() ) {
-			if ( profile.equals( "M03" ) || profile.equals( "M06" ) ) execute( connection, "drop table " + NEGATIVE );
-			source.factory.getSchemaManager().drop( false ); connection.commit();
+			if ( profile.equals( "M03" ) || profile.equals( "M06" ) ) TemporalSchemaCleanup.dropStatement( connection, "drop table " + NEGATIVE );
+			source.drop(); connection.commit();
 		}
 	}
 
@@ -234,8 +242,8 @@ final class TemporalVersionMigrationFixture {
 					"alter table mh_version rename column vstamp_new to vstamp" } ) execute( connection, sql );
 		}
 		else {
-			String expression = provider.contains( "PostgreSQL" ) ? "vstamp at time zone 'UTC' at time zone 'America/Denver'"
-					: provider.contains( "Oracle" ) ? "cast(from_tz(cast(vstamp as timestamp), 'UTC') at time zone 'America/Denver' as timestamp(6))"
+			String expression = ContextEnvironment.is( PostgreSQLDialect.class ) ? "vstamp at time zone 'UTC' at time zone 'America/Denver'"
+					: ContextEnvironment.is( OracleDialect.class ) ? "cast(from_tz(cast(vstamp as timestamp), 'UTC') at time zone 'America/Denver' as timestamp(6))"
 					: "cast(formatdatetime(cast(cast(vstamp as varchar) || ' UTC' as timestamp with time zone),'yyyy-MM-dd HH:mm:ss.SSSSSS','en','America/Denver') as timestamp(6))";
 			execute( connection, "update " + TABLE + " set vstamp=" + expression );
 		}

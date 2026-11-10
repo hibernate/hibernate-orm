@@ -18,7 +18,11 @@ final class ContextConnectionProvider implements ConnectionProvider, Configurabl
 	private Map<String,Object> settings;
 	private Connection idle;
 	ContextConnectionProvider(boolean blocked) { this.blocked = blocked; }
-	@Override public void configure(Map<String,Object> settings) { this.settings = new HashMap<>( settings ); }
+	@Override public void configure(Map<String,Object> settings) { this.settings = new HashMap<>( settings );
+		this.settings.putIfAbsent( "hibernate.connection.url", settings.get( "jakarta.persistence.jdbc.url" ) );
+		this.settings.putIfAbsent( "hibernate.connection.driver_class", settings.get( "jakarta.persistence.jdbc.driver" ) );
+		this.settings.putIfAbsent( "hibernate.connection.username", settings.get( "jakarta.persistence.jdbc.user" ) );
+		this.settings.putIfAbsent( "hibernate.connection.password", settings.get( "jakarta.persistence.jdbc.password" ) ); }
 	@Override public Connection getConnection() throws SQLException {
 		attempts++;
 		if ( blocked ) throw new SQLException( "Context bootstrap attempted JDBC access" );
@@ -28,6 +32,13 @@ final class ContextConnectionProvider implements ConnectionProvider, Configurabl
 		final var properties = ConnectionProviderInitiator.getConnectionProperties( settings );
 		GradleParallelTestingResolver.resolve( properties );
 		final var connection = DriverManager.getConnection( GradleParallelTestingResolver.resolveUrl( (String) settings.get( "hibernate.connection.url" ) ), properties );
+		for ( String part : List.of( "catalog", "schema" ) ) {
+			final Object expected = settings.get( "hibernate.test.temporal.expected_" + part );
+			if ( expected != null && !expected.equals( part.equals( "catalog" ) ? connection.getCatalog() : connection.getSchema() ) ) {
+				connection.close();
+				throw new SQLException( "Child connection does not belong to the parent's " + part );
+			}
+		}
 		connection.setAutoCommit( false );
 		final var init = settings.get( "hibernate.connection.init_sql" );
 		if ( init != null && !init.toString().isBlank() ) {

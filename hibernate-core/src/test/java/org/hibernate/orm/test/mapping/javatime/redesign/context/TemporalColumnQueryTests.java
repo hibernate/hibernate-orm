@@ -1,5 +1,10 @@
 package org.hibernate.orm.test.mapping.javatime.redesign.context;
 
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+
 import java.time.*;
 import java.util.List;
 import jakarta.persistence.*;
@@ -13,6 +18,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /// Query expectations follow independently specified UTC-primary/offset tuples.
 /// @author Steve Ebersole
+@RequiresDialect(H2Dialect.class)
+@RequiresDialect(PostgreSQLDialect.class)
+@RequiresDialect(OracleDialect.class)
 class TemporalColumnQueryTests {
 	static final OffsetDateTime FIRST = OffsetDateTime.parse("2026-07-01T12:00:45.123456+02:00:45");
 	static final OffsetDateTime SECOND = OffsetDateTime.parse("2026-07-01T11:00:30.123456+01:00:30");

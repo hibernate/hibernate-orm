@@ -29,22 +29,22 @@ class TemporalMigrationHandoffTests {
 			for ( boolean metadata : new boolean[] {false, true} ) {
 				cells.add( Arguments.of( "M02", "Local", database, metadata ) );
 				cells.add( Arguments.of( "M03", "Local", database, metadata ) );
-				if ( dialect.contains( "PostgreSQL" ) ) cells.add( Arguments.of( "M01", "Instant", database, metadata ) );
-				if ( dialect.contains( "Oracle" ) ) {
+				if ( ContextEnvironment.is( dialect, PostgreSQLDialect.class ) ) cells.add( Arguments.of( "M01", "Instant", database, metadata ) );
+				if ( ContextEnvironment.is( dialect, OracleDialect.class ) ) {
 					cells.add( Arguments.of( "M06", "Offset", database, metadata ) );
 					cells.add( Arguments.of( "M06", "Zoned", database, metadata ) );
 				}
 			}
 		}
-		if ( !dialect.contains( "Oracle" ) ) {
+		if ( !ContextEnvironment.is( dialect, OracleDialect.class ) ) {
 			cells.add( Arguments.of( "M07", "Zoned", false, false ) );
-			if ( dialect.contains( "PostgreSQL" ) ) cells.add( Arguments.of( "M07", "Offset", false, false ) );
+			if ( ContextEnvironment.is( dialect, PostgreSQLDialect.class ) ) cells.add( Arguments.of( "M07", "Offset", false, false ) );
 		}
 		return cells.stream();
 	}
 
 	static Stream<Arguments> periods() {
-		boolean postgres = Environment.getProperties().getProperty( "hibernate.dialect" ).contains( "PostgreSQL" );
+		boolean postgres = ContextEnvironment.is( PostgreSQLDialect.class );
 		var cells = new ArrayList<Arguments>();
 		for ( boolean metadata : new boolean[] {false, true} ) {
 			for ( boolean server : new boolean[] {false, true} ) cells.add( Arguments.of( postgres ? "M01" : "M04", server, metadata ) );

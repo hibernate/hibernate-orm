@@ -98,7 +98,7 @@ class TemporalProviderPeriodTests {
 	}
 
 	static List<String> strategies() {
-		return org.hibernate.cfg.Environment.getProperties().getProperty("hibernate.dialect").contains("Oracle")
+		return ContextEnvironment.is( OracleDialect.class )
 				?List.of("HISTORY_TABLE"):List.of("SINGLE_TABLE","HISTORY_TABLE");
 	}
 	@ParameterizedTest @ValueSource(booleans={true,false})

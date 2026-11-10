@@ -38,8 +38,9 @@ public interface JavaTimeJdbcType extends JdbcType {
 	}
 
 	/**
-	 * Convert a direct Java Time JDBC value to the representation expected by a
-	 * native JDBC container.
+	 * Adapt a component value already produced by its binder to the representation
+	 * expected by a native JDBC container. The value need not have the mapped
+	 * Java type: a provider binder may use a different temporal carrier.
 	 */
 	static <T> Object toPhysicalJdbcValue(
 			JavaTimeJdbcType jdbcType,
@@ -50,14 +51,15 @@ public interface JavaTimeJdbcType extends JdbcType {
 		if ( physicalJavaTypeClass.isInstance( value ) ) {
 			return value;
 		}
-		final T relationalValue = javaType.isInstance( value )
-				? javaType.cast( value )
-				: javaType.wrap( value, options );
-		return javaType.unwrap(
-				relationalValue,
-				physicalJavaTypeClass,
-				options
-		);
+		// The component binder has already produced a JDBC value. Its Java class
+		// may differ from the mapped relational class (for example, Oracle's
+		// LocalTime binder returns an anchored LocalDateTime).
+		if ( javaType.isInstance( value ) ) {
+			return javaType.unwrap( javaType.cast( value ), physicalJavaTypeClass, options );
+		}
+		final JavaType<Object> physicalJavaType = options.getTypeConfiguration()
+				.getJavaTypeRegistry().getDescriptor( value.getClass() );
+		return physicalJavaType.unwrap( value, physicalJavaTypeClass, options );
 	}
 
 	/**

@@ -275,3 +275,22 @@ completion timing and rollback. Existing legacy tests remain unchanged.
 and historical list contents, batch sizes 0/1/5, and failure/rollback controls. These legacy
 controls complement the graph regressions; neither substitutes for the other.
 SQL Server live/native-period verification remains deferred.
+
+== CI environment and subprocess ownership
+
+Context fixtures discover the database version during setup, outside the guarded
+runtime bootstrap. Metadata-disabled factories receive that version as an explicit
+input and still assert zero bootstrap connection acquisitions. Explicit synthetic
+version inputs remain available for offline bootstrap controls; they are not live
+provider evidence.
+
+Handoff processes receive connection settings after the parent resolves Gradle's
+worker placeholders. Writer, reader and cleanup therefore retain the same database
+assignment even though the children have different process parents. Keep at least
+two test workers when verifying this isolation on a provider configured with worker
+namespaces; a single-worker pass cannot establish parallel safety. The H2 handoffs
+retain their private file-backed databases.
+
+Provider selection recognizes Dialect subclasses, including PostgreSQL's EDB family.
+Fixture eligibility is evaluated outside expected-mapping-failure assertions. These
+gates describe the fixture matrix and do not declare additional production guarantees.

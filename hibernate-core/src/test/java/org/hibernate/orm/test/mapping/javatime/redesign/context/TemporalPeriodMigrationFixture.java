@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.mapping.javatime.redesign.context;
 
+import org.hibernate.orm.test.mapping.javatime.redesign.TemporalSchemaCleanup;
+
 import java.sql.Connection;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -162,11 +164,11 @@ final class TemporalPeriodMigrationFixture {
 			if ( profile.equals( "M04" ) ) {
 				try ( var c = scope.provider.getConnection() ) {
 					for ( String table : List.of( "pp_tags_history", "pp_tags", "pp_period_history", "pp_period" ) ) {
-						TemporalVersionMigrationFixture.execute( c, "drop table neg_" + table );
+						TemporalSchemaCleanup.dropStatement( c, "drop table neg_" + table );
 					} c.commit();
 				}
 			}
-			scope.factory.getSchemaManager().drop( false );
+			scope.drop();
 		}
 	}
 	static List<String> tables(TemporalPeriodFixture f) { return List.of( "pp_period", f.entityTable, "pp_tags", f.collectionTable ); }

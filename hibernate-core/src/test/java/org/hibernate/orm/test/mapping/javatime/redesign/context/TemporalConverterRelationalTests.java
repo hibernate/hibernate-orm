@@ -1,5 +1,10 @@
 package org.hibernate.orm.test.mapping.javatime.redesign.context;
 
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+
 import java.time.*;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -20,6 +25,9 @@ import static org.assertj.core.api.Assertions.*;
 /// the relational Java value and JDBC descriptor, including identity converters.
 ///
 /// @author Steve Ebersole
+@RequiresDialect(H2Dialect.class)
+@RequiresDialect(PostgreSQLDialect.class)
+@RequiresDialect(OracleDialect.class)
 class TemporalConverterRelationalTests {
 	@ParameterizedTest
 	@ValueSource( booleans = { true, false } )
@@ -95,8 +103,7 @@ class TemporalConverterRelationalTests {
 	@ParameterizedTest
 	@ValueSource( booleans = { true, false } )
 	void nonTemporalDomainStillRequiresOffsetPreservation( boolean metadata ) {
-		if ( org.hibernate.cfg.Environment.getProperties().getProperty( "hibernate.dialect" )
-				.contains( "PostgreSQL" ) ) {
+		if ( ContextEnvironment.is( PostgreSQLDialect.class ) ) {
 			assertThatThrownBy( () -> {
 				try ( var ignored = ContextScope.boot( metadata, true, OffsetCarrier.class ) ) {
 				}

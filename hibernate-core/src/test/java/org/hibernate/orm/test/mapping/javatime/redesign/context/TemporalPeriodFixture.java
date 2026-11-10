@@ -11,7 +11,6 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 

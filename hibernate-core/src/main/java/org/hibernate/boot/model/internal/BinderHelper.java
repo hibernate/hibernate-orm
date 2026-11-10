@@ -996,7 +996,24 @@ public class BinderHelper {
 	}
 
 	static ForeignKey resolveContainerForeignKey(ForeignKey containerFk, PrimaryKeyJoinColumn[] columns) {
-		return resolveContainerForeignKey( containerFk, columns.length != 0 ? columns[0].foreignKey() : null );
+		if ( isSpecified( containerFk ) ) {
+			return containerFk;
+		}
+		for ( var column : columns ) {
+			final var columnFk = column.foreignKey();
+			if ( isSpecified( columnFk ) ) {
+				return columnFk;
+			}
+		}
+		return containerFk;
+	}
+
+	private static boolean isSpecified(ForeignKey foreignKey) {
+		return foreignKey != null
+				&& ( foreignKey.value() == NO_CONSTRAINT
+						|| !isEmpty( foreignKey.name() )
+						|| !isEmpty( foreignKey.foreignKeyDefinition() )
+						|| !isEmpty( foreignKey.options() ) );
 	}
 
 	static ForeignKey resolveContainerForeignKey(ForeignKey containerFk, ForeignKey... columnFks) {

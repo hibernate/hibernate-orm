@@ -41,6 +41,7 @@ class TemporalCrossEnvironmentTests {
 	}
 	@Test
 	void preservesAcrossEnvironments() throws Exception {
+		TemporalLiveProfile.requireSupported();
 		final String phase = System.getProperty( "hibernate.test.temporal.cross_phase", "distinct" );
 		assertThat( phase ).isIn( "write", "read", "distinct" );
 		final var builder = ServiceRegistryUtil.serviceRegistryBuilder()

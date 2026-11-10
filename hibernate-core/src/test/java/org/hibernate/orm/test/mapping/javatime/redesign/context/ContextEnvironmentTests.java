@@ -49,6 +49,19 @@ class ContextEnvironmentTests {
 	}
 
 	@Test
+	void changedConnectionSettingsDoNotReuseVersionEvidence() {
+		final String original = ContextEnvironment.version();
+		final var differentConnection = Map.<String, Object>of(
+				"hibernate.connection.driver_class", "no.such.temporal.TestDriver" );
+		assertThrows( IllegalStateException.class,
+				() -> ContextEnvironment.bootstrapVersion( true, differentConnection ) );
+		// A failed discovery must not cache the old version under the new settings.
+		assertThrows( IllegalStateException.class,
+				() -> ContextEnvironment.bootstrapVersion( true, differentConnection ) );
+		assertEquals( original, ContextEnvironment.version() );
+	}
+
+	@Test
 	void recognizesDialectFamilyRatherThanClassNameSpelling() {
 		assertTrue( ContextEnvironment.is( PostgresPlusDialect.class.getName(), PostgreSQLDialect.class ) );
 		assertFalse( ContextEnvironment.is( PostgresPlusDialect.class.getName(), H2Dialect.class ) );

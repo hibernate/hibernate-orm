@@ -7,6 +7,8 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -27,7 +29,9 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 
+// Retain the shared fixture's legacy temporal interpretation while testing query behavior.
 @Jpa(
+		properties = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
 		standardModels = StandardDomainModel.CONTACTS,
 		settingProviders = {
 				@SettingProvider(settingName = AvailableSettings.CONNECTION_PROVIDER,

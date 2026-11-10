@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.sql;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.Setting;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.Tuple;
 import org.hibernate.Session;
@@ -43,7 +45,9 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Vlad Mihalcea
  */
+// Retain the shared fixture's legacy temporal interpretation while testing query behavior.
 @Jpa(
+		properties = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
 		annotatedClasses = {
 				Person.class,
 				Partner.class,

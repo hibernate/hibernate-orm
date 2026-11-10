@@ -2,6 +2,7 @@ package org.hibernate.orm.test.mapping.javatime.redesign.context;
 
 import java.util.*;
 import java.sql.SQLException;
+import org.hibernate.orm.test.mapping.javatime.redesign.TemporalLiveProfile;
 import org.hibernate.orm.test.mapping.javatime.redesign.TemporalSchemaCleanup;
 import java.util.function.Consumer;
 import org.hibernate.Session;
@@ -40,6 +41,7 @@ final class ContextScope implements AutoCloseable {
 		return open( metadataAccess, true, settings, List.of(), classes );
 	}
 	static ContextScope open(boolean metadataAccess, boolean direct, Map<String,Object> settings, List<String> mappings, Class<?>... classes) {
+		TemporalLiveProfile.requireSupported();
 		final var schema = new ContextScope( true, direct, settings, mappings, classes );
 		try {
 			schema.drop();

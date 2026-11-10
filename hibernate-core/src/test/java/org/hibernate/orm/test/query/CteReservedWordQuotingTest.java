@@ -19,7 +19,8 @@ import jakarta.persistence.Tuple;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@ServiceRegistry(settings = @Setting(name = MappingSettings.KEYWORD_AUTO_QUOTING_ENABLED, value = "true"))
+// Retain the shared fixture's legacy temporal interpretation while testing query behavior.
+@ServiceRegistry(settings = {@Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"), @Setting(name = MappingSettings.KEYWORD_AUTO_QUOTING_ENABLED, value = "true")})
 @DomainModel(standardModels = StandardDomainModel.CONTACTS)
 @SessionFactory(useCollectingStatementObserver = true)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsRecursiveCtes.class)

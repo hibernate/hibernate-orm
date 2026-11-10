@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.hibernate.orm.test.mapping.javatime.redesign.TemporalLiveProfile;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
@@ -17,6 +18,7 @@ import org.hibernate.testing.jdbc.GradleParallelTestingResolver;
 final class ContextEnvironment {
 	private static final String VERSION = "jakarta.persistence.database-product-version";
 	private static String discoveredVersion;
+	private static Properties discoveredSettings;
 	private static String discoveredCatalog;
 	private static String discoveredSchema;
 
@@ -37,22 +39,42 @@ final class ContextEnvironment {
 
 	static synchronized void inheritVersion(String version) {
 		discoveredVersion = version;
+		discoveredSettings = new Properties();
+		discoveredSettings.putAll( Environment.getProperties() );
 	}
 
 	static synchronized String version() {
-		if ( discoveredVersion == null ) {
+		return version( Map.of() );
+	}
+
+	private static synchronized String version(Map<String, Object> overrides) {
+		TemporalLiveProfile.requireSupported();
+		final var candidate = new Properties();
+		candidate.putAll( Environment.getProperties() );
+		// Mapping/cache options do not change the provisioning database.
+		overrides.forEach( (key, value) -> {
+			if ( key.startsWith( "hibernate.connection." ) || key.startsWith( "jakarta.persistence.jdbc." )
+					|| key.equals( VERSION ) || key.equals( "hibernate.dialect" )
+					|| key.startsWith( "hibernate.test.temporal.expected_" ) ) {
+				candidate.put( key, value );
+			}
+		} );
+		if ( discoveredVersion == null || !candidate.equals( discoveredSettings ) ) {
 			final Map<String, Object> settings = new HashMap<>();
-			Environment.getProperties().forEach( (key, value) -> settings.put( key.toString(), value ) );
+			candidate.forEach( (key, value) -> settings.put( key.toString(), value ) );
 			final var provider = new ContextConnectionProvider( false );
 			provider.configure( settings );
 			try ( var connection = provider.getConnection() ) {
 				final var metadata = connection.getMetaData();
-				discoveredCatalog = connection.getCatalog();
-				discoveredSchema = connection.getSchema();
+				final String catalog = connection.getCatalog();
+				final String schema = connection.getSchema();
 				final int major = metadata.getDatabaseMajorVersion();
 				final int minor = metadata.getDatabaseMinorVersion();
 				final String explicit = (String) settings.get( VERSION );
 				discoveredVersion = checkedVersion( explicit, major, minor );
+				discoveredCatalog = catalog;
+				discoveredSchema = schema;
+				discoveredSettings = candidate;
 			}
 			catch (SQLException e) {
 				throw new IllegalStateException( "Could not discover provisioning database version", e );
@@ -66,9 +88,9 @@ final class ContextEnvironment {
 
 	static String bootstrapVersion(boolean metadataAccess, Map<String, Object> settings) {
 		final String explicit = (String) settings.get( VERSION );
-		if ( explicit == null ) return version();
+		if ( explicit == null ) return version( settings );
 		if ( metadataAccess ) {
-			final String[] actual = version().split( "\\." );
+			final String[] actual = version( settings ).split( "\\." );
 			return checkedVersion( explicit, Integer.parseInt( actual[0] ), Integer.parseInt( actual[1] ) );
 		}
 		// An explicit input permits genuinely offline/synthetic bootstrap tests.

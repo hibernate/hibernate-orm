@@ -85,3 +85,23 @@ binding, PostgreSQL uses UTC Calendar binding, and Oracle constructs an explicit
 UTC TIMESTAMPTZ datum to retain historical instants across session zones.
 The legacy TimestampUtcAsJdbcTimestampJdbcType remains a separate compatibility path.
 A columnDefinition changes DDL and does not select a matching JDBC descriptor.
+
+== Live environment eligibility and compatibility fixtures
+
+The live timezone and connection matrices use explicit H2, PostgreSQL/PostGIS/EDB,
+and Oracle profiles. A PostgreSQL Dialect subclass does not by itself establish
+support for session timezone SQL or physical-session identity queries; in particular,
+Spanner PostgreSQL is not admitted to these live regression matrices. Unsupported profiles are
+reported before provisioning. Ordinary mapping tests retain their own eligibility.
+
+The type-specific preservation matrix discovers the actual server version through a
+separate setup connection. Runtime bootstrap with JDBC metadata access disabled still
+uses its guarded provider and must acquire no bootstrap connections. Oracle setup
+uses owned-object cleanup followed by creation, including servers before version 23.
+
+Shared query and history fixtures that exercise legacy interpretation set
+`hibernate.type.temporal_preservation=false` on their own factory. This does not
+change the suite default. Enabled descriptor selection, preservation, rejection,
+period and migration tests remain separate. The PostgreSQL instant-only array case
+formerly in `GlobalJavaTimeJdbcTypeTests.testArray` now resides unchanged in
+`LegacyJavaTimeArrayJdbcTypeTests.testArray`; the original local-type tests stay enabled.

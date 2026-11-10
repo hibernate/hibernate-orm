@@ -1,5 +1,6 @@
 package org.hibernate.temporal;
 
+import org.hibernate.cfg.MappingSettings;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -30,7 +31,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 		TemporalHistoryTableBeanValidationDDLTest.Parent.class,
 		TemporalHistoryTableBeanValidationDDLTest.TemporalEntity.class
 })
+// Exercise established history/period mutations under legacy timestamp interpretation.
 @ServiceRegistry(settings = {
+		@Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
 		@Setting(name = StateManagementSettings.TEMPORAL_TABLE_STRATEGY, value = "HISTORY_TABLE"),
 		@Setting(name = ValidationSettings.JAKARTA_VALIDATION_MODE, value = "DDL"),
 		@Setting(name = SchemaToolingSettings.APPLY_VALIDATION_CONSTRAINTS, value = "")

@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.type.temporal.preservation;
 
+
+import org.hibernate.orm.test.mapping.javatime.redesign.TemporalSchemaCleanup;
 import org.hibernate.SessionFactory;
 import org.hibernate.TemporalValueException;
 import org.hibernate.MappingException;
@@ -173,7 +175,12 @@ public abstract class AbstractPreservationTests<T> {
 		if ( accepted.isEmpty() ) return;
 		if ( env.writer() ) {
 			// Independent setup completes before the guarded registry exists.
-			try ( var setup = boot( accepted, handling, metadataEnabled, new GuardedConnectionProvider( false ), "create", env ) ) {}
+			final var setupProvider = new GuardedConnectionProvider( false );
+			try ( var setup = boot( accepted, handling, metadataEnabled, setupProvider, "none", env );
+					var connection = setupProvider.getConnection() ) {
+				TemporalSchemaCleanup.drop( setup.metadata, setup.registry, connection );
+				setup.factory.getSchemaManager().create( false );
+			}
 		}
 		final var provider = new GuardedConnectionProvider( !metadataEnabled );
 		try ( var runtime = boot( accepted, handling, metadataEnabled, provider, "none", env ) ) {
@@ -274,7 +281,7 @@ public abstract class AbstractPreservationTests<T> {
 				.applySetting( "hibernate.hbm2ddl.auto", schema )
 				.applySetting( "hibernate.hbm2ddl.halt_on_error", true )
 				.applySetting( "jakarta.persistence.sql-load-script-source", "" )
-				.applySetting( "jakarta.persistence.database-product-version", env.pg() ? "18.6" : env.oracle() ? "23.26.1" : "2.5.252" )
+				.applySetting( "jakarta.persistence.database-product-version", env.version() )
 				.build();
 		try {
 			final var sources = new MetadataSources( registry );

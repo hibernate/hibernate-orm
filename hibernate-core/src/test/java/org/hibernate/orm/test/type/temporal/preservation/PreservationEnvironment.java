@@ -1,31 +1,49 @@
 package org.hibernate.orm.test.type.temporal.preservation;
 
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Locale;
 import java.sql.Connection;
 import java.time.*;
 import java.util.TimeZone;
+import org.hibernate.orm.test.mapping.javatime.redesign.TemporalLiveProfile;
 import org.hibernate.cfg.Environment;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /// Named environment profiles keep JVM initialization, session state and JDBC
-/// conversion settings independent. No DialectContext or boot connection is used.
+/// conversion settings independent. A separate provisioning connection discovers
+/// the version before any guarded runtime bootstrap; no DialectContext is used.
 ///
 /// @author Steve Ebersole
-record PreservationEnvironment(String profile, String phase, String platform) {
+record PreservationEnvironment(String profile, String phase, String platform, String version) {
 	static PreservationEnvironment current() {
-		final String dialect = Environment.getProperties().getProperty( "hibernate.dialect" );
-		final String platform = dialect.contains( "PostgreSQL" )
-				? "postgresql"
-				: dialect.contains( "Oracle" )
-						? "oracle"
-						: dialect.contains( "H2" )
-								? "h2"
-								: "unavailable";
-		org.junit.jupiter.api.Assumptions.assumeTrue( !platform.equals( "unavailable" ), "Live matrix supports H2/PostgreSQL/Oracle; SQL Server remains deferred" );
+		final String platform = TemporalLiveProfile.requireSupported().name().toLowerCase( Locale.ROOT );
+		final var settings = new HashMap<String, Object>();
+		Environment.getProperties().forEach( (key, value) -> settings.put( key.toString(), value ) );
+		final var provider = new GuardedConnectionProvider( false );
+		provider.configure( settings );
+		final String version;
+		try ( var connection = provider.getConnection() ) {
+			final var metadata = connection.getMetaData();
+			version = checkedVersion( (String) settings.get( "jakarta.persistence.database-product-version" ),
+					metadata.getDatabaseMajorVersion(), metadata.getDatabaseMinorVersion() );
+		}
+		catch (SQLException failure) {
+			throw new IllegalStateException( "Could not discover matrix provisioning version", failure );
+		}
 		return new PreservationEnvironment(
 				System.getProperty( "hibernate.test.temporal.matrix_profile", "E0" ),
 				System.getProperty( "hibernate.test.temporal.matrix_phase", "both" ),
-				platform
+				platform, version
 		);
+	}
+
+	static String checkedVersion(String explicit, int major, int minor) {
+		final String actual = major + "." + minor;
+		if ( explicit != null && !explicit.equals( actual ) && !explicit.startsWith( actual + "." ) ) {
+			throw new IllegalStateException( "Configured test database version " + explicit + " disagrees with discovered version " + actual );
+		}
+		return explicit == null ? actual : explicit;
 	}
 
 	boolean pg() { return platform.equals( "postgresql" ); }

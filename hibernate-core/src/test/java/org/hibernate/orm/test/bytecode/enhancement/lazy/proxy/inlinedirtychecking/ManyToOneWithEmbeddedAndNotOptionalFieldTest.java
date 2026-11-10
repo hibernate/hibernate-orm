@@ -1,6 +1,7 @@
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy.inlinedirtychecking;
 
 import java.time.OffsetDateTime;
+import org.hibernate.cfg.MappingSettings;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
@@ -38,8 +39,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 				ManyToOneWithEmbeddedAndNotOptionalFieldTest.User.class
 		}
 )
+// Keep Log.creationDate's legacy offset mapping while checking enhanced dirty tracking.
 @ServiceRegistry(
 		settings = {
+				@Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
 				@Setting( name = AvailableSettings.FORMAT_SQL, value = "false" ),
 				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
 				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),

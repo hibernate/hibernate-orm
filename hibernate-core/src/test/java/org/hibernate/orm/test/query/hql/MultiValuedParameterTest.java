@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.boot.MetadataSources;
 
 import org.hibernate.testing.orm.domain.contacts.Contact;
@@ -31,6 +33,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsNumericPrimaryKey.class )
 public class MultiValuedParameterTest extends BaseSessionFactoryFunctionalTest {
+	@Override
+	protected void applySettings(StandardServiceRegistryBuilder builder) {
+		super.applySettings( builder );
+		// The contacts fixture retains its legacy temporal interpretation.
+		builder.applySetting( MappingSettings.TEMPORAL_PRESERVATION, false );
+	}
+
 
 	@Override
 	protected void applyMetadataSources(MetadataSources metadataSources) {

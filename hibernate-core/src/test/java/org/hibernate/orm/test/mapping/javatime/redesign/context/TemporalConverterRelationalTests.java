@@ -2,7 +2,6 @@ package org.hibernate.orm.test.mapping.javatime.redesign.context;
 
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.OracleDialect;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 
 import java.time.*;
@@ -26,8 +25,6 @@ import static org.assertj.core.api.Assertions.*;
 ///
 /// @author Steve Ebersole
 @RequiresDialect(H2Dialect.class)
-@RequiresDialect(PostgreSQLDialect.class)
-@RequiresDialect(OracleDialect.class)
 class TemporalConverterRelationalTests {
 	@ParameterizedTest
 	@ValueSource( booleans = { true, false } )
@@ -134,8 +131,7 @@ class TemporalConverterRelationalTests {
 
 	@ParameterizedTest
 	@ValueSource( booleans = { true, false } )
-	@org.hibernate.testing.orm.junit.RequiresDialect( org.hibernate.dialect.H2Dialect.class )
-	void legacySqlTimeCarrierUsesExistingPrecisionRules( boolean metadata ) {
+		void legacySqlTimeCarrierUsesExistingPrecisionRules( boolean metadata ) {
 		try ( var scope = ContextScope.open( metadata, Map.of( "hibernate.cache.use_second_level_cache", false ),
 				ConvertedTime.class ) ) {
 			final var row = new ConvertedTime();
@@ -149,8 +145,7 @@ class TemporalConverterRelationalTests {
 
 	@ParameterizedTest
 	@ValueSource( booleans = { true, false } )
-	@org.hibernate.testing.orm.junit.RequiresDialect( org.hibernate.dialect.H2Dialect.class )
-	void javaTimeRelationalCarrierRetainsPrecisionChecks( boolean metadata ) {
+		void javaTimeRelationalCarrierRetainsPrecisionChecks( boolean metadata ) {
 		assertThatThrownBy( () -> {
 			try ( var ignored = ContextScope.boot( metadata, true, ImpreciseTime.class ) ) {
 			}

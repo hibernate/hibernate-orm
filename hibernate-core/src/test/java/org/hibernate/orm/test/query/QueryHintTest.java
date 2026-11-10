@@ -3,6 +3,9 @@ package org.hibernate.orm.test.query;
 import java.time.LocalDate;
 import java.util.Collections;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.graph.GraphParser;
 
 import org.hibernate.testing.orm.assertj.HibernateInitializedCondition;
@@ -23,6 +26,8 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOAD_GRAPH;
 /**
  * @author Steve Ebersole
  */
+// Retain the shared fixture's legacy temporal interpretation while testing query behavior.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel( standardModels = StandardDomainModel.CONTACTS )
 @SessionFactory
 public class QueryHintTest {

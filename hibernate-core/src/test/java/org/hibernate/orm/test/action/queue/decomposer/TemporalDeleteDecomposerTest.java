@@ -3,6 +3,7 @@ package org.hibernate.orm.test.action.queue.decomposer;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.cfg.MappingSettings;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -30,9 +31,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *
  * @author Steve Ebersole
  */
+// Exercise established history/period mutations under legacy timestamp interpretation.
 @Jpa(
 		annotatedClasses = TemporalDeleteDecomposerTest.TemporalEntity.class,
 		properties = {
+				@Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
 				@Setting(name = FlushSettings.FLUSH_QUEUE_TYPE, value = "graph"),
 				@Setting(name = StateManagementSettings.TEMPORAL_TABLE_STRATEGY, value = "SINGLE_TABLE")
 		}

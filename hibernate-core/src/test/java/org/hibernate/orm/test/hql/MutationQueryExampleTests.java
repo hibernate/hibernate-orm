@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.hql;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.domain.userguide.Account;
 import org.hibernate.testing.orm.domain.userguide.Call;
 import org.hibernate.testing.orm.domain.userguide.CreditCardPayment;
@@ -18,6 +21,8 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Steve Ebersole
  */
+// Retain the shared fixture's legacy temporal interpretation while testing query behavior.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel(
 		annotatedClasses = {
 				Person.class,

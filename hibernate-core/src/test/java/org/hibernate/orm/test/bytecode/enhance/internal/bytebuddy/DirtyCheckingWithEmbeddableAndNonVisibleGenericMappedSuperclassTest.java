@@ -1,6 +1,8 @@
 package org.hibernate.orm.test.bytecode.enhance.internal.bytebuddy;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.testing.util.ReflectionUtil.getFieldValue;
+import static org.hibernate.testing.orm.assertj.ClassAssert.assertThatClass;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.extractor.Extractors.resultOf;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.ENTITY_ENTRY_FIELD_NAME;
@@ -53,7 +55,7 @@ public class DirtyCheckingWithEmbeddableAndNonVisibleGenericMappedSuperclassTest
 
 	@Test
 	public void shouldDeclareFieldsInEntityClass() {
-		assertThat( MyEntity.class )
+		assertThatClass( MyEntity.class )
 				.hasDeclaredFields( ENTITY_ENTRY_FIELD_NAME, PREVIOUS_FIELD_NAME, NEXT_FIELD_NAME, TRACKER_FIELD_NAME );
 	}
 
@@ -69,7 +71,7 @@ public class DirtyCheckingWithEmbeddableAndNonVisibleGenericMappedSuperclassTest
 
 	@Test
 	public void shouldDeclareFieldsInEmbeddedClass() {
-		assertThat( MyEmbeddable.class )
+		assertThatClass( MyEmbeddable.class )
 				.hasDeclaredFields( TRACKER_COMPOSITE_FIELD_NAME );
 	}
 
@@ -84,21 +86,21 @@ public class DirtyCheckingWithEmbeddableAndNonVisibleGenericMappedSuperclassTest
 	public void shouldCreateTheTracker() {
 		MyEntity entity = new MyEntity( 0, "value1" );
 		assertThat( entity )
-				.extracting( NEXT_FIELD_NAME ).isNull();
+				.extracting( value -> getFieldValue( value, NEXT_FIELD_NAME ) ).isNull();
 		assertThat( entity )
-				.extracting( PREVIOUS_FIELD_NAME ).isNull();
+				.extracting( value -> getFieldValue( value, PREVIOUS_FIELD_NAME ) ).isNull();
 		assertThat( entity )
-				.extracting( ENTITY_ENTRY_FIELD_NAME ).isNull();
+				.extracting( value -> getFieldValue( value, ENTITY_ENTRY_FIELD_NAME ) ).isNull();
 		assertThat( entity )
-				.extracting( TRACKER_FIELD_NAME ).isInstanceOf( SimpleFieldTracker.class );
+				.extracting( value -> getFieldValue( value, TRACKER_FIELD_NAME ) ).isInstanceOf( SimpleFieldTracker.class );
 		assertThat( entity.getEmbedded() )
-				.extracting( TRACKER_COMPOSITE_FIELD_NAME ).isInstanceOf( CompositeOwnerTracker.class );
+				.extracting( value -> getFieldValue( value, TRACKER_COMPOSITE_FIELD_NAME ) ).isInstanceOf( CompositeOwnerTracker.class );
 
 		assertThat( entity ).extracting( resultOf( TRACKER_HAS_CHANGED_NAME ) ).isEqualTo( true );
 		assertThat( entity ).extracting( resultOf( TRACKER_GET_NAME ) )
 				.isEqualTo( new String[] { "embedded" } );
 		assertThat( entity.getEmbedded() )
-				.extracting( TRACKER_COMPOSITE_FIELD_NAME + ".names" ).isEqualTo( new String[] { "embedded" } );
+				.extracting( value -> getFieldValue( value, TRACKER_COMPOSITE_FIELD_NAME ) ).extracting( "names" ).isEqualTo( new String[] { "embedded" } );
 	}
 
 	@Test
@@ -131,7 +133,7 @@ public class DirtyCheckingWithEmbeddableAndNonVisibleGenericMappedSuperclassTest
 		assertThat( entity ).extracting( resultOf( TRACKER_GET_NAME ) )
 				.isEqualTo( new String[] { "embedded" } );
 		assertThat( entity.getEmbedded() )
-				.extracting( TRACKER_COMPOSITE_FIELD_NAME + ".names" ).isEqualTo( new String[] { "embedded" } );
+				.extracting( value -> getFieldValue( value, TRACKER_COMPOSITE_FIELD_NAME ) ).extracting( "names" ).isEqualTo( new String[] { "embedded" } );
 	}
 
 	@Embeddable

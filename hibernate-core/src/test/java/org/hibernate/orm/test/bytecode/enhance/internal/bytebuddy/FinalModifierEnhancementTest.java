@@ -51,6 +51,25 @@ public class FinalModifierEnhancementTest {
 	}
 
 	@Test
+	void enhancementAddedFieldsAreSynthetic() {
+		final var original = TypeDescription.ForLoadedType.of( FinalImmutableBasicFields.class );
+		final var enhanced = enhanceAndDescribe( FinalImmutableBasicFields.class );
+		int addedFields = 0;
+		for ( var field : enhanced.getDeclaredFields() ) {
+			final var originalFields = original.getDeclaredFields().filter( named( field.getName() ) );
+			if ( originalFields.isEmpty() ) {
+				assertThat( field.isSynthetic() ).as( field.getName() ).isTrue();
+				addedFields++;
+			}
+			else {
+				assertThat( field.isSynthetic() ).as( field.getName() )
+						.isEqualTo( originalFields.getOnly().isSynthetic() );
+			}
+		}
+		assertThat( addedFields ).isPositive();
+	}
+
+	@Test
 	void finalImmutableBasicFieldsAreMarkedImmutable() {
 		final var typeDescription = enhanceAndDescribe( FinalImmutableBasicFields.class );
 

@@ -101,6 +101,41 @@ public interface CollectionMutationPlanContributor {
 			Consumer<FlushOperation> operationConsumer) {
 	}
 
+	/// Mirrors an effective row removal without replacing its current-table operation.
+	default void contributeAdditionalDelete(RowDeleteContext context, Consumer<FlushOperation> operations) {
+	}
+
+	/// Mirrors an effective remove-all, including removal of an unloaded collection.
+	default void contributeAdditionalRemove(RemoveContext context, Consumer<FlushOperation> operations) {
+	}
+
+	/// Mirrors one logical value or position change, never an intermediate temporary position.
+	default void contributeAdditionalUpdate(RowUpdateContext context, Consumer<FlushOperation> operations) {
+	}
+
+	/// The old row representation follows the existing delete-row binding contract.
+	record RowDeleteContext(
+			CollectionPersister persister, CollectionTableDescriptor tableDescriptor,
+			SessionFactoryImplementor factory, CollectionJdbcOperations jdbcOperations,
+			PersistentCollection<?> collection, Object key, Object rowValue, int rowPosition,
+			int ordinalBase, String sqlWhereString) {
+	}
+
+	/// The collection may be null when an unloaded owner's rows are removed.
+	record RemoveContext(
+			CollectionPersister persister, CollectionTableDescriptor tableDescriptor,
+			SessionFactoryImplementor factory, CollectionJdbcOperations jdbcOperations,
+			PersistentCollection<?> collection, Object key, int ordinalBase, String sqlWhereString) {
+	}
+
+	/// Old identity is captured during planning; the final entry follows the insert binding contract.
+	record RowUpdateContext(
+			CollectionPersister persister, CollectionTableDescriptor tableDescriptor,
+			SessionFactoryImplementor factory, CollectionJdbcOperations jdbcOperations,
+			PersistentCollection<?> collection, Object key, Object oldRowValue, int oldPosition,
+			Object newRowValue, int newPosition, int ordinalBase, String sqlWhereString) {
+	}
+
 	/// Optionally contributes operations or callbacks for a logical collection change.
 	///
 	/// This hook is action-scoped rather than row-scoped.  It is called when a
@@ -207,6 +242,7 @@ public interface CollectionMutationPlanContributor {
 	/// @param collection The persistent collection instance.
 	/// @param key The collection key.
 	/// @param ordinalBase The graph ordinal base assigned to the enclosing action.
+	/// @param plannedOperations Read-only snapshot of operations already planned for this action; may establish dependencies.
 	record CollectionChangeContext(
 			CollectionPersister persister,
 			CollectionTableDescriptor tableDescriptor,
@@ -214,7 +250,15 @@ public interface CollectionMutationPlanContributor {
 			CollectionJdbcOperations jdbcOperations,
 			PersistentCollection<?> collection,
 			Object key,
-			int ordinalBase) {
+			int ordinalBase,
+			java.util.List<FlushOperation> plannedOperations) {
+		/// Retains the original context constructor for contributors without row ordering work.
+		public CollectionChangeContext(
+				CollectionPersister persister, CollectionTableDescriptor tableDescriptor,
+				SessionFactoryImplementor factory, CollectionJdbcOperations jdbcOperations,
+				PersistentCollection<?> collection, Object key, int ordinalBase) {
+			this( persister, tableDescriptor, factory, jdbcOperations, collection, key, ordinalBase, java.util.List.of() );
+		}
 	}
 
 	/// Context passed to [#contributeValueChange(ValueChangeContext, Consumer)].

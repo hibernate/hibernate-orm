@@ -186,7 +186,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 					action.getKey(),
 					ordinalBase,
 					session,
-					operations::add
+					operations
 			);
 			DecompositionSupport.attachExecutionMonitor(
 					operations,
@@ -416,7 +416,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			final boolean affectedByFilters = persister.isAffectedByEnabledFilters( session );
 			if ( !affectedByFilters && collection.empty() ) {
 				if ( !action.isEmptySnapshot() ) {
-					var removeOperation = planRemoveOperation( key, ordinalBase );
+					var removeOperation = planRemoveOperation( collection, key, ordinalBase, session, operations::add );
 					if ( removeOperation != null ) {
 						operations.add( removeOperation );
 					}
@@ -431,7 +431,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 					) );
 				}
 				if ( !action.isEmptySnapshot() ) {
-					var removeOperation = planRemoveOperation( key, ordinalBase );
+					var removeOperation = planRemoveOperation( collection, key, ordinalBase, session, operations::add );
 					if ( removeOperation != null ) {
 						operations.add( removeOperation );
 					}
@@ -461,7 +461,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 
 		// Create callback to handle post-execution work (afterAction, cache, events, stats)
 		if ( !operations.isEmpty() ) {
-			contributeCollectionChange( collection, key, ordinalBase, session, operations::add );
+			contributeCollectionChange( collection, key, ordinalBase, session, operations );
 			DecompositionSupport.attachExecutionMonitor(
 					operations,
 					CollectionExecutionMonitor.Kind.UPDATE,
@@ -509,7 +509,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		}
 		if ( physicalMutation instanceof PhysicalCollectionMutation.RemoveAll removeAll ) {
 			if ( removeAll.removalMode() == PhysicalCollectionMutation.RemovalMode.EXECUTE ) {
-				final var removeOperation = planRemoveOperation( key, ordinalBase );
+				final var removeOperation = planRemoveOperation( collection, key, ordinalBase, session, operations::add );
 				if ( removeOperation != null ) {
 					operations.add( removeOperation );
 				}
@@ -539,7 +539,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 				) );
 			}
 			if ( replaceAll.removalMode() == PhysicalCollectionMutation.RemovalMode.EXECUTE ) {
-				final var removeOperation = planRemoveOperation( key, ordinalBase );
+				final var removeOperation = planRemoveOperation( collection, key, ordinalBase, session, operations::add );
 				if ( removeOperation != null ) {
 					operations.add( removeOperation );
 				}
@@ -612,6 +612,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 						deleteOrigin,
 						deleteShapeKey
 				) );
+				contributeAdditionalDelete( collection, key, removal, -1, ordinalBase, session, operationConsumer );
 			}
 		}
 		else {
@@ -636,7 +637,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			}
 			else {
 				// For element collections, use position-based comparison
-				planElementUpdateOperations( collection, key, ordinalBase, updateRowPlan, operationConsumer );
+				planElementUpdateOperations( collection, key, ordinalBase, updateRowPlan, session, operationConsumer );
 			}
 		}
 	}
@@ -683,6 +684,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 						deleteOrigin,
 						deleteShapeKey
 				) );
+				contributeAdditionalDelete( collection, key, removal, -1, ordinalBase, session, operationConsumer );
 			}
 		}
 
@@ -727,6 +729,9 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 							updateRowOrigin,
 							updateShapeKey
 					) );
+					contributeAdditionalUpdate( collection, key,
+							new CollectionChangeSet.Removal( shift.element(), shift.snapshotIndex() ), (int) shift.snapshotIndex(),
+							shift.element(), (int) shift.currentIndex(), ordinalBase, session, operationConsumer );
 				}
 			}
 			else if ( orderUpdatePlan != null ) {
@@ -784,6 +789,9 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 							shiftFinalOrigin,
 							orderUpdateShapeKey
 					) );
+					contributeAdditionalUpdate( collection, key,
+							new CollectionChangeSet.Removal( shift.element(), shift.snapshotIndex() ), (int) shift.snapshotIndex(),
+							shift.element(), (int) shift.currentIndex(), ordinalBase, session, operationConsumer );
 				}
 
 				tempPhaseOps.forEach( operationConsumer );
@@ -891,6 +899,9 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 							updateValueOrigin,
 							updateShapeKey
 					) );
+					contributeAdditionalUpdate( collection, key,
+							new CollectionChangeSet.Removal( valueChange.oldValue(), valueChange.index() ), entryIndex,
+							entry, entryIndex, ordinalBase, session, operationConsumer );
 				}
 			}
 		}
@@ -1010,6 +1021,9 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 										shiftFinalOrigin,
 										orderUpdateShapeKey
 								) );
+								contributeAdditionalUpdate( collection, key,
+										new CollectionChangeSet.Removal( currentEntity, snapshotPos ), snapshotPos,
+										currentEntity, currentPos, ordinalBase, session, operationConsumer );
 							}
 						}
 					}
@@ -1032,6 +1046,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			Object key,
 			int ordinalBase,
 			CollectionJdbcOperations.UpdateRowPlan updateRowPlan,
+			SharedSessionContractImplementor session,
 			Consumer<FlushOperation> operationConsumer) {
 
 		final var entries = collection.entries( persister );
@@ -1064,6 +1079,12 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 							updateRowOrigin,
 							updateShapeKey
 					) );
+					final var oldIdentity = persister.getAttributeMapping().getIdentifierDescriptor() != null
+							? collection.getIdentifier( entry, entryCount )
+							: persister.hasIndex() ? collection.getIndex( entry, entryCount, persister ) : null;
+					contributeAdditionalUpdate( collection, key,
+							new CollectionChangeSet.Removal( collection.getSnapshotElement( entry, entryCount ), oldIdentity ), entryCount,
+							entry, entryCount, ordinalBase, session, updateOperations::add );
 				}
 				entryCount++;
 			}
@@ -1260,10 +1281,11 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		);
 
 
+		final List<FlushOperation> operations = new ArrayList<>();
 		final var removeOperation =
 				action.isEmptySnapshot()
 						? null
-						: planRemoveOperation( action.getKey(), ordinalBase );
+						: planRemoveOperation( collection, action.getKey(), ordinalBase, session, operations::add );
 		if ( removeOperation == null ) {
 			operationConsumer.accept( DecompositionSupport.createNoOpCallbackCarrier(
 					tableDescriptor,
@@ -1272,25 +1294,33 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			) );
 		}
 		else {
+			operations.add( removeOperation );
 			DecompositionSupport.attachExecutionMonitor(
-					List.of( removeOperation ),
+					operations,
 					CollectionExecutionMonitor.Kind.REMOVE,
 					action.getKey(),
 					persister.getRole()
 			);
 			removeOperation.setPostExecutionCallback( postRemoveHandling );
-			operationConsumer.accept( removeOperation );
+			operations.forEach( operationConsumer );
 		}
 	}
 
 	private FlushOperation planRemoveOperation(
+			PersistentCollection<?> collection,
 			Object key,
-			int ordinalBase) {
+			int ordinalBase,
+			SharedSessionContractImplementor session,
+			Consumer<FlushOperation> operations) {
 		final var jdbcOperation = jdbcOperations.removeOperation();
 		if ( jdbcOperation == null ) {
 			return null;
 		}
 		else {
+			mutationPlanContributor.contributeAdditionalRemove(
+					new CollectionMutationPlanContributor.RemoveContext(
+							persister, tableDescriptor, session.getFactory(), jdbcOperations,
+							collection, key, ordinalBase, persister.getSqlWhereString() ), operations );
 			return new FlushOperation(
 					tableDescriptor,
 					MutationKind.DELETE,
@@ -1309,6 +1339,25 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 				tableDescriptor,
 				jdbcOperation
 		);
+	}
+
+	private void contributeAdditionalDelete(
+			PersistentCollection<?> collection, Object key, Object removal, int position,
+			int ordinalBase, SharedSessionContractImplementor session, Consumer<FlushOperation> operations) {
+		mutationPlanContributor.contributeAdditionalDelete(
+				new CollectionMutationPlanContributor.RowDeleteContext(
+						persister, tableDescriptor, session.getFactory(), jdbcOperations, collection,
+						key, removal, position, ordinalBase, persister.getSqlWhereString() ), operations );
+	}
+
+	private void contributeAdditionalUpdate(
+			PersistentCollection<?> collection, Object key, Object oldValue, int oldPosition,
+			Object newValue, int newPosition, int ordinalBase, SharedSessionContractImplementor session,
+			Consumer<FlushOperation> operations) {
+		mutationPlanContributor.contributeAdditionalUpdate(
+				new CollectionMutationPlanContributor.RowUpdateContext(
+						persister, tableDescriptor, session.getFactory(), jdbcOperations, collection,
+						key, oldValue, oldPosition, newValue, newPosition, ordinalBase, persister.getSqlWhereString() ), operations );
 	}
 
 	private void contributeAdditionalInsert(
@@ -1340,7 +1389,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			Object key,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
-			Consumer<FlushOperation> operationConsumer) {
+			List<FlushOperation> operations) {
 		mutationPlanContributor.contributeCollectionChange(
 				new CollectionMutationPlanContributor.CollectionChangeContext(
 						persister,
@@ -1349,9 +1398,10 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 						jdbcOperations,
 						collection,
 						key,
-						ordinalBase
+						ordinalBase,
+						List.copyOf( operations )
 				),
-				operationConsumer
+				operations::add
 		);
 	}
 

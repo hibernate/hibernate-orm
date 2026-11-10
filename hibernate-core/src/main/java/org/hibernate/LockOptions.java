@@ -14,17 +14,14 @@ import static java.util.Collections.emptyIterator;
 import static java.util.Collections.emptySet;
 
 /**
- * Contains a set of options describing how a row of a database table
- * mapped by an entity should be locked. For
- * {@link Session#lock(Object, LockOptions)},
- * {@link Session#get(Class, Object, LockOptions)}, or
- * {@link Session#refresh(Object, LockOptions)}, the relevant options
- * are:
- * <ul>
- * <li>the {@linkplain #getLockMode lock mode},
- * <li>the {@linkplain #getTimeOut pessimistic lock timeout}, and
- * <li>the {@linkplain #getLockScope lock scope}, controlling which
- *     entity, collection, or fetched association rows participate.
+ * Aggregates together the {@linkplain jakarta.persistence.LockOption locak options}
+ * to be applied to an operation: <ul>
+ *     <li>the {@linkplain #getLockMode lock mode}
+ *     <li>the {@linkplain #getTimeOut pessimistic lock timeout}
+ * 	   <li>the {@linkplain #getLockScope lock scope}, controlling which
+ * 		    entity, collection, or fetched association rows participate
+ * 	   <li>the {@linkplain Locking.FollowOn}, allowing to control whether Hibernate
+ * 	   		can/should/never use follow-on SQL for locking
  * </ul>
  * <p>
  * For stateful sessions, timeout and pessimistic lock scope do not control

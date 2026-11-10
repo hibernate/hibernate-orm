@@ -1,7 +1,7 @@
 package org.hibernate.internal;
 
-import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.Entity;
@@ -16,14 +16,39 @@ import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.RefreshOption;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.EntityType;
-import org.hibernate.*;
+import org.hibernate.CacheMode;
+import org.hibernate.DetachedObjectException;
+import org.hibernate.FlushMode;
+import org.hibernate.Hibernate;
+import org.hibernate.HibernateException;
+import org.hibernate.KeyType;
+import org.hibernate.LobHelper;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.Locking;
+import org.hibernate.MappingException;
+import org.hibernate.MultiIdentifierLoadAccess;
+import org.hibernate.NaturalIdLoadAccess;
+import org.hibernate.NaturalIdMultiLoadAccess;
+import org.hibernate.ObjectDeletedException;
+import org.hibernate.ReadOnlyMode;
+import org.hibernate.Session;
+import org.hibernate.SessionEventListener;
+import org.hibernate.SessionException;
+import org.hibernate.SimpleNaturalIdLoadAccess;
+import org.hibernate.Timeouts;
+import org.hibernate.TypeMismatchException;
+import org.hibernate.UnknownEntityTypeException;
+import org.hibernate.UnknownProfileException;
+import org.hibernate.UnmanagedObjectException;
+import org.hibernate.UnresolvableObjectException;
+import org.hibernate.action.queue.spi.ActionQueue;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.creation.internal.SessionCreationOptions;
 import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
 import org.hibernate.engine.creation.internal.options.StatefulOptions;
 import org.hibernate.engine.internal.PersistenceContexts;
-import org.hibernate.action.queue.spi.ActionQueue;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
@@ -32,8 +57,40 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroups;
-import org.hibernate.event.spi.*;
+import org.hibernate.event.spi.AutoFlushEvent;
+import org.hibernate.event.spi.AutoFlushEventListener;
+import org.hibernate.event.spi.ClearEvent;
+import org.hibernate.event.spi.ClearEventListener;
+import org.hibernate.event.spi.DeleteContext;
+import org.hibernate.event.spi.DeleteEvent;
+import org.hibernate.event.spi.DeleteEventListener;
+import org.hibernate.event.spi.DirtyCheckEvent;
+import org.hibernate.event.spi.DirtyCheckEventListener;
+import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.spi.EvictEvent;
+import org.hibernate.event.spi.EvictEventListener;
+import org.hibernate.event.spi.FlushEvent;
+import org.hibernate.event.spi.FlushEventListener;
+import org.hibernate.event.spi.InitializeCollectionEvent;
+import org.hibernate.event.spi.InitializeCollectionEventListener;
+import org.hibernate.event.spi.LoadEvent;
+import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.event.spi.LoadEventListener.LoadType;
+import org.hibernate.event.spi.LockEvent;
+import org.hibernate.event.spi.LockEventListener;
+import org.hibernate.event.spi.MergeContext;
+import org.hibernate.event.spi.MergeEvent;
+import org.hibernate.event.spi.MergeEventListener;
+import org.hibernate.event.spi.PersistContext;
+import org.hibernate.event.spi.PersistEvent;
+import org.hibernate.event.spi.PersistEventListener;
+import org.hibernate.event.spi.PostLoadEvent;
+import org.hibernate.event.spi.PostLoadEventListener;
+import org.hibernate.event.spi.PreFlushEvent;
+import org.hibernate.event.spi.PreFlushEventListener;
+import org.hibernate.event.spi.RefreshContext;
+import org.hibernate.event.spi.RefreshEvent;
+import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.find.FindByKeyOperation;
@@ -41,6 +98,7 @@ import org.hibernate.internal.find.Helper;
 import org.hibernate.internal.find.StatefulFindByKeyOperation;
 import org.hibernate.internal.find.StatefulFindMultipleByKeyOperation;
 import org.hibernate.internal.find.StatefulGetReferenceOperation;
+import org.hibernate.internal.find.StatefulLoadAccessContext;
 import org.hibernate.internal.util.ExceptionHelper;
 import org.hibernate.internal.util.OptionsHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -51,7 +109,6 @@ import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.loader.internal.CacheLoadHelper;
 import org.hibernate.loader.internal.IdentifierLoadAccessImpl;
-import org.hibernate.internal.find.StatefulLoadAccessContext;
 import org.hibernate.loader.internal.NaturalIdLoadAccessImpl;
 import org.hibernate.loader.internal.SimpleNaturalIdLoadAccessImpl;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -613,12 +670,6 @@ public class SessionImpl
 
 	@Override
 	@SuppressWarnings("removal")
-	public void lock(@Nonnull Object object, @Nonnull LockOptions lockOptions) {
-		fireLock( new LockEvent( object, lockOptions, this ) );
-	}
-
-	@Override
-	@SuppressWarnings("removal")
 	public void lock(@Nonnull String entityName, @Nonnull Object object, @Nonnull LockOptions lockOptions) {
 		fireLock( new LockEvent( entityName, object, lockOptions, this ) );
 	}
@@ -634,6 +685,10 @@ public class SessionImpl
 	@Override
 	public void lock(@Nonnull Object object, @Nonnull LockMode lockMode, @Nullable LockOption... lockOptions) {
 		lock( object, buildLockOptions( lockMode, lockOptions ) );
+	}
+
+	private void lock(@Nonnull Object object, @Nonnull LockOptions lockOptions) {
+		fireLock( new LockEvent( object, lockOptions, this ) );
 	}
 
 	private void fireLock(final LockEvent lockEvent) {
@@ -1148,34 +1203,6 @@ public class SessionImpl
 		}
 	}
 
-	@Override @Deprecated
-	@SuppressWarnings("removal")
-	@Nonnull
-	public <T> T get(@Nonnull Class<T> entityClass, @Nonnull Object id, @Nonnull LockMode lockMode) {
-		return this.byId( entityClass ).with( new LockOptions( lockMode ) ).load( id );
-	}
-
-	@Override @Deprecated
-	@SuppressWarnings("removal")
-	@Nonnull
-	public Object get(@Nonnull String entityName, @Nonnull Object id, @Nonnull LockMode lockMode) {
-		return this.byId( entityName ).with( new LockOptions( lockMode ) ).load( id );
-	}
-
-	@Override @Deprecated
-	@SuppressWarnings("removal")
-	@Nonnull
-	public <T> T get(@Nonnull Class<T> entityClass, @Nonnull Object id, @Nonnull LockOptions lockOptions) {
-		return this.byId( entityClass ).with( lockOptions ).load( id );
-	}
-
-	@Override @Deprecated
-	@SuppressWarnings("removal")
-	@Nonnull
-	public Object get(@Nonnull String entityName, @Nonnull Object id, @Nonnull LockOptions lockOptions) {
-		return this.byId( entityName ).with( lockOptions ).load( id );
-	}
-
 	@Override
 	@SuppressWarnings("removal")
 	@Nonnull
@@ -1301,12 +1328,6 @@ public class SessionImpl
 	@Override
 	public void refresh(@Nonnull Object object) {
 		fireRefresh( new RefreshEvent( object, this ) );
-	}
-
-	@Override
-	@SuppressWarnings("removal")
-	public void refresh(@Nonnull Object object, @Nonnull LockOptions lockOptions) {
-		fireRefresh( new RefreshEvent( object, lockOptions, this ) );
 	}
 
 	@Override
@@ -2579,6 +2600,10 @@ public class SessionImpl
 		finally {
 			setCacheMode( previousCacheMode );
 		}
+	}
+
+	private void refresh(@Nonnull Object object, @Nonnull LockOptions lockOptions) {
+		fireRefresh( new RefreshEvent( object, lockOptions, this ) );
 	}
 
 	@Override

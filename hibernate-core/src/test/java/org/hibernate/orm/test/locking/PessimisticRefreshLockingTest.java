@@ -433,17 +433,10 @@ class PessimisticRefreshLockingTest implements ServiceRegistryProducer {
 	void retainsCallerOptionsForNonIncrementingAcquisition(Timeout timeout, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final var item = session.get( Item.class, 1, PESSIMISTIC_FORCE_INCREMENT );
-			final var options = new LockOptions( PESSIMISTIC_FORCE_INCREMENT )
-					.setLockScope( PessimisticLockScope.EXTENDED ).setTimeout( timeout )
-					.setFollowOnStrategy( Locking.FollowOn.FORCE );
 			clearInvocations( support );
 			scope.getCollectingStatementObserver().clear();
-			session.refresh( item, options );
+			session.refresh( item, PESSIMISTIC_FORCE_INCREMENT, PessimisticLockScope.EXTENDED, timeout, Locking.FollowOn.FORCE );
 			assertVersion( session, item, 1 );
-			assertThat( options.getLockMode() ).isEqualTo( PESSIMISTIC_FORCE_INCREMENT );
-			assertThat( options.getLockScope() ).isEqualTo( PessimisticLockScope.EXTENDED );
-			assertThat( options.getTimeout() ).isEqualTo( timeout );
-			assertThat( options.getFollowOnStrategy() ).isEqualTo( Locking.FollowOn.FORCE );
 			verify( support, never() ).canUsePlainReadForRefresh( any(), any() );
 			assertReload( scope, PESSIMISTIC_WRITE, true, timeout );
 		} );

@@ -235,6 +235,14 @@ when calling the superclass implementation.
 
 This section describes changes in behavior that applications should be aware of.
 
+[[enhancement-synthetic-fields]]
+=== Bytecode enhancement fields are synthetic
+
+Fields added by Hibernate's bytecode enhancer are now marked synthetic.  `java.lang.reflect.Field#isSynthetic()` now returns `true` for these fields.
+Reflection-based libraries that filter out synthetic fields may no longer expose
+them.
+
+
 [[pessimistic-refresh-visibility]]
 === Refreshing pessimistically locked entities
 

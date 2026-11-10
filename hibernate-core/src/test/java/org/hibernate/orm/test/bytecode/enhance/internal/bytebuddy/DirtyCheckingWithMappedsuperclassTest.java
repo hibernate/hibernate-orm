@@ -1,6 +1,8 @@
 package org.hibernate.orm.test.bytecode.enhance.internal.bytebuddy;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.testing.util.ReflectionUtil.getFieldValue;
+import static org.hibernate.testing.orm.assertj.ClassAssert.assertThatClass;
 import static org.assertj.core.extractor.Extractors.resultOf;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.ENTITY_ENTRY_FIELD_NAME;
 import static org.hibernate.bytecode.enhance.spi.EnhancerConstants.ENTITY_ENTRY_GETTER_NAME;
@@ -39,7 +41,7 @@ public class DirtyCheckingWithMappedsuperclassTest {
 
 	@Test
 	public void shouldDeclareFieldsInEntityClass() {
-		assertThat( CardGame.class )
+		assertThatClass( CardGame.class )
 				.hasDeclaredFields( ENTITY_ENTRY_FIELD_NAME, PREVIOUS_FIELD_NAME, NEXT_FIELD_NAME, TRACKER_FIELD_NAME );
 	}
 
@@ -58,13 +60,13 @@ public class DirtyCheckingWithMappedsuperclassTest {
 	public void shouldCreateTheTracker() throws Exception {
 		CardGame entity = new CardGame( "MTG", "Magic the Gathering" );
 		assertThat( entity )
-				.extracting( NEXT_FIELD_NAME ).isNull();
+				.extracting( value -> getFieldValue( value, NEXT_FIELD_NAME ) ).isNull();
 		assertThat( entity )
-				.extracting( PREVIOUS_FIELD_NAME ).isNull();
+				.extracting( value -> getFieldValue( value, PREVIOUS_FIELD_NAME ) ).isNull();
 		assertThat( entity )
-				.extracting( ENTITY_ENTRY_FIELD_NAME ).isNull();
+				.extracting( value -> getFieldValue( value, ENTITY_ENTRY_FIELD_NAME ) ).isNull();
 		assertThat( entity )
-				.extracting( TRACKER_FIELD_NAME ).isInstanceOf( SimpleFieldTracker.class );
+				.extracting( value -> getFieldValue( value, TRACKER_FIELD_NAME ) ).isInstanceOf( SimpleFieldTracker.class );
 
 		assertThat( entity ).extracting( resultOf( TRACKER_HAS_CHANGED_NAME ) ).isEqualTo( true );
 		assertThat( entity ).extracting( resultOf( TRACKER_GET_NAME ) ).isEqualTo( new String[] { "name", "code" } );

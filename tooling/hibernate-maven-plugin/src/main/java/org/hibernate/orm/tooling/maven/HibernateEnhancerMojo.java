@@ -103,6 +103,16 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 	private Boolean enableClientEnhancement;
 
 	/**
+	 * Whether to fall back to raw field access instead of failing when constructor
+	 * bytecode analysis encounters unrecognized instructions. This can happen with
+	 * Java 25+ flexible constructors (JEP 513) that use unusual bytecode patterns.
+	 *
+	 * @see org.hibernate.bytecode.enhance.spi.EnhancementOptions#doLenientConstructorTracking()
+	 */
+	@Parameter(defaultValue = "false")
+	private boolean lenientConstructorTracking;
+
+	/**
 	 * The Maven Project Object
 	 */
 	@Parameter(defaultValue = "${project}", readonly = true, required = true)
@@ -224,7 +234,9 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 	}
 
 	private EnhancementOptions createEnhancementOptions() {
-		return EnhancementOptions.of(enableDirtyTracking, enableLazyInitialization, enableAssociationManagement);
+		return EnhancementOptions.of(
+				enableDirtyTracking, enableLazyInitialization,
+				enableAssociationManagement, lenientConstructorTracking );
 	}
 
 	private void createEnhancer() throws MojoExecutionException {

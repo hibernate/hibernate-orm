@@ -67,6 +67,7 @@ public class EnhancementTask extends Task {
 	private boolean enableLazyInitialization = true;
 	private boolean enableDirtyTracking = true;
 	private boolean enableAssociationManagement = false;
+	private boolean lenientConstructorTracking = false;
 	private Boolean enableExtendedEnhancement;
 	private Boolean enableClientEnhancement;
 	private List<File> sourceSet = new ArrayList<>();
@@ -97,6 +98,10 @@ public class EnhancementTask extends Task {
 
 	public void setEnableAssociationManagement(boolean enableAssociationManagement) {
 		this.enableAssociationManagement = enableAssociationManagement;
+	}
+
+	public void setLenientConstructorTracking(boolean lenientConstructorTracking) {
+		this.lenientConstructorTracking = lenientConstructorTracking;
 	}
 
 	@Deprecated(forRemoval = true)
@@ -177,7 +182,9 @@ public class EnhancementTask extends Task {
 
 		ClassLoader classLoader = toClassLoader( Collections.singletonList( new File( base ) ) );
 
-		final var options = EnhancementOptions.of(enableDirtyTracking, enableLazyInitialization, enableAssociationManagement);
+		final var options = EnhancementOptions.of(
+				enableDirtyTracking, enableLazyInitialization,
+				enableAssociationManagement, lenientConstructorTracking );
 
 		if ( enableAssociationManagement ) {
 			DEPRECATION_LOGGER.deprecatedSettingForRemoval( "management of bidirectional association persistent attributes", "false" );

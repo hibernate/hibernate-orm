@@ -89,6 +89,10 @@ class ByteBuddyEnhancementContext {
 		session.discoveredTypes.put(typeDescription.getName(), type);
 	}
 
+	public boolean doLenientConstructorTracking() {
+		return options.doLenientConstructorTracking();
+	}
+
 	public UnsupportedEnhancementStrategy getUnsupportedEnhancementStrategy() {
 		return options.getUnsupportedEnhancementStrategy();
 	}

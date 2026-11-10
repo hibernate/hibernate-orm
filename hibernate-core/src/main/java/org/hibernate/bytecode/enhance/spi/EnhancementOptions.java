@@ -1,5 +1,7 @@
 package org.hibernate.bytecode.enhance.spi;
 
+import org.hibernate.Incubating;
+
 /// Controls generated enhancement features and handling of unsupported classes.
 /// These choices are independent of the persistent attributes described by an
 /// [EnhancementModel] and the bytecode supplied by an [EnhancementEnvironment].
@@ -24,6 +26,23 @@ public interface EnhancementOptions {
 	/// @param associationManagement whether to generate bidirectional association management
 	/// @return options exposing these flags through the no-argument feature methods
 	static EnhancementOptions of(boolean dirtyTracking, boolean lazyInitialization, boolean associationManagement) {
+		return of( dirtyTracking, lazyInitialization, associationManagement, false );
+	}
+
+	/// Creates immutable settings for the three managed-generation features plus
+	/// lenient constructor tracking.
+	///
+	/// @param dirtyTracking whether to generate inline dirty tracking
+	/// @param lazyInitialization whether to generate lazy-loading support for
+	///                           attributes permitted by the model
+	/// @param associationManagement whether to generate bidirectional association management
+	/// @param lenientConstructorTracking whether to fall back to raw field access
+	///        instead of failing when constructor bytecode analysis encounters
+	///        unrecognized instructions
+	/// @return options exposing these flags through the no-argument feature methods
+	static EnhancementOptions of(
+			boolean dirtyTracking, boolean lazyInitialization,
+			boolean associationManagement, boolean lenientConstructorTracking) {
 		return new EnhancementOptions() {
 			@Override
 			public boolean doDirtyCheckingInline() {
@@ -37,7 +56,24 @@ public interface EnhancementOptions {
 			public boolean doBiDirectionalAssociationManagement() {
 				return associationManagement;
 			}
+			@Override
+			public boolean doLenientConstructorTracking() {
+				return lenientConstructorTracking;
+			}
 		};
+	}
+
+	/// Whether to fall back to raw field access instead of failing when constructor
+	/// bytecode analysis encounters unrecognized instructions. This can happen with
+	/// Java 25+ flexible constructors (JEP 513) that use unusual bytecode patterns.
+	/// When disabled (the default), enhancement fails with an error.
+	///
+	/// @return false by default
+	///
+	/// @since 7.1
+	@Incubating(since = "7.1")
+	default boolean doLenientConstructorTracking() {
+		return false;
 	}
 
 	/// Whether to generate lazy-loading support. Attribute eligibility is separately

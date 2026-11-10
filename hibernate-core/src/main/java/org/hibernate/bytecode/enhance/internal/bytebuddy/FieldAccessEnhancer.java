@@ -71,63 +71,76 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 			public void visitFieldInsn(int opcode, String owner, String name, String desc) {
 				if ( opcode != Opcodes.GETFIELD && opcode != Opcodes.PUTFIELD ) {
 					super.visitFieldInsn( opcode, owner, name, desc );
+					return;
 				}
-				else {
-					final var declaredOwnerType = findDeclaredType( owner );
-					final var field = findField( declaredOwnerType, name, desc );
-					// try to discover composite types on the fly to support some testing scenarios
-					enhancementContext.discoverCompositeTypes( declaredOwnerType, typePool );
 
-					if ( (enhancementContext.isEntityClass( declaredOwnerType.asErasure() )
-						|| enhancementContext.isCompositeClass( declaredOwnerType.asErasure() )
-						|| enhancementContext.isMappedSuperclassClass( declaredOwnerType.asErasure() ))
-							&& enhancementContext.isPersistentField( field )
-							&& !field.hasAnnotation( Id.class )
-							&& !field.hasAnnotation( EmbeddedId.class )
-							&& !field.getName().startsWith( "$$_hibernate_" )
-							&& !field.getName().equals( "this$0" )
-							&& !( opcode == Opcodes.PUTFIELD && field.getFieldDescription().isFinal() )
-							&& eligibleField.isEligible( declaredOwnerType, field, opcode ) ) {
+				final var declaredOwnerType = findDeclaredType( owner );
+				final var field = findField( declaredOwnerType, name, desc );
 
-						ENHANCEMENT_LOGGER.extendedTransformingFieldAccess(
-								declaredOwnerType.getName(),
-								field.getName(),
-								instrumentedType.getName(),
-								instrumentedMethod.getName()
-						);
-
-						switch ( opcode ) {
-							case Opcodes.GETFIELD:
-								transformed = true;
-								methodVisitor.visitMethodInsn(
-										Opcodes.INVOKEVIRTUAL,
-										owner,
-										EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + name,
-										Type.getMethodDescriptor( Type.getType( desc ) ),
-										false
-								);
-								return;
-							case Opcodes.PUTFIELD:
-								transformed = true;
-								if ( field.getFieldDescription().isFinal() ) {
-									// Final fields will only be written to from the constructor,
-									// so there's no point trying to replace final field writes with a method call.
-									break;
-								}
-								methodVisitor.visitMethodInsn(
-										Opcodes.INVOKEVIRTUAL,
-										owner,
-										EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + name,
-										Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( desc ) ),
-										false
-								);
-								return;
-							default:
-								throw new EnhancementException( "Unexpected opcode: " + opcode );
-						}
-					}
+				// Fields declared directly on this class are handled by
+				// PersistentAttributeTransformer. We must not replace them here,
+				// because that would also break Java 25+ flexible constructors
+				// (JEP 513) where field writes occur before super() on uninitializedThis.
+				// Note: we check the field's declaring type, not the bytecode owner,
+				// because javac may emit e.g. PUTFIELD SubClass.superField even though
+				// the field is declared in the superclass.
+				if ( field.getDeclaringType().asErasure().equals( managedCtClass ) ) {
 					super.visitFieldInsn( opcode, owner, name, desc );
+					return;
 				}
+
+				// try to discover composite types on the fly to support some testing scenarios
+				enhancementContext.discoverCompositeTypes( declaredOwnerType, typePool );
+
+				if ( (enhancementContext.isEntityClass( declaredOwnerType.asErasure() )
+					|| enhancementContext.isCompositeClass( declaredOwnerType.asErasure() )
+					|| enhancementContext.isMappedSuperclassClass( declaredOwnerType.asErasure() ))
+						&& enhancementContext.isPersistentField( field )
+						&& !field.hasAnnotation( Id.class )
+						&& !field.hasAnnotation( EmbeddedId.class )
+						&& !field.getName().startsWith( "$$_hibernate_" )
+						&& !field.getName().equals( "this$0" )
+						&& !( opcode == Opcodes.PUTFIELD && field.getFieldDescription().isFinal() )
+						&& eligibleField.isEligible( declaredOwnerType, field, opcode ) ) {
+
+					ENHANCEMENT_LOGGER.extendedTransformingFieldAccess(
+							declaredOwnerType.getName(),
+							field.getName(),
+							instrumentedType.getName(),
+							instrumentedMethod.getName()
+					);
+
+					switch ( opcode ) {
+						case Opcodes.GETFIELD:
+							transformed = true;
+							methodVisitor.visitMethodInsn(
+									Opcodes.INVOKEVIRTUAL,
+									owner,
+									EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + name,
+									Type.getMethodDescriptor( Type.getType( desc ) ),
+									false
+							);
+							return;
+						case Opcodes.PUTFIELD:
+							transformed = true;
+							if ( field.getFieldDescription().isFinal() ) {
+								// Final fields will only be written to from the constructor,
+								// so there's no point trying to replace final field writes with a method call.
+								break;
+							}
+							methodVisitor.visitMethodInsn(
+									Opcodes.INVOKEVIRTUAL,
+									owner,
+									EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + name,
+									Type.getMethodDescriptor( Type.getType( void.class ), Type.getType( desc ) ),
+									false
+							);
+							return;
+						default:
+							throw new EnhancementException( "Unexpected opcode: " + opcode );
+					}
+				}
+				super.visitFieldInsn( opcode, owner, name, desc );
 			}
 		};
 	}

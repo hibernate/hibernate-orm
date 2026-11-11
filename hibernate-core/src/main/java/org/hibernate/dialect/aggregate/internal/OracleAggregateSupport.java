@@ -67,6 +67,9 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 	private static final String XML_QUERY_START = "xmlquery(";
 	private static final String XML_QUERY_SEPARATOR = "' passing ";
 	private static final String XML_QUERY_END = " returning content)";
+	private static final String XML_NULL_GUARD_START = "case when ";
+	private static final String XML_NULL_GUARD_MIDDLE = " is null then null else xmlelement(\"" + XmlHelper.ROOT_TAG + "\",";
+	private static final String XML_NULL_GUARD_END = ") end";
 
 	private final boolean checkConstraintSupport;
 	private final JsonSupport jsonSupport;
@@ -329,7 +332,8 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 					case SQLXML:
 						return template.replace(
 								placeholder,
-								XML_EXTRACT_START + xmlExtractArguments( aggregateParentReadExpression, columnExpression + "/*" ) + "))"
+								nullPreservingXmlExtract( "xmlquery("
+										+ xmlExtractArguments( aggregateParentReadExpression, columnExpression + "/*" ) + ")" )
 						);
 					case XML_ARRAY:
 						if ( typeConfiguration.getCurrentBaseSqlTypeIndicators().isXmlFormatMapperLegacyFormatEnabled() ) {
@@ -394,7 +398,33 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 		}
 	}
 
+	private static String nullPreservingXmlExtract(String query) {
+		// XMLELEMENT turns a missing child into <e/>. Guard the child query so
+		// aggregate projections and SQL null predicates retain its nullness.
+		return XML_NULL_GUARD_START + query + XML_NULL_GUARD_MIDDLE + query + XML_NULL_GUARD_END;
+	}
+
+	private static String unwrapXmlNullGuard(String expression) {
+		if ( expression.startsWith( XML_NULL_GUARD_START ) && expression.endsWith( XML_NULL_GUARD_END ) ) {
+			// Recognize only our exact generated shape, whose query occurs twice.
+			// This avoids parsing SQL or finding delimiters inside the parent query.
+			final int queryLength = (expression.length() - XML_NULL_GUARD_START.length()
+					- XML_NULL_GUARD_MIDDLE.length() - XML_NULL_GUARD_END.length()) / 2;
+			if ( queryLength > 0 ) {
+				final String query = expression.substring( XML_NULL_GUARD_START.length(),
+						XML_NULL_GUARD_START.length() + queryLength );
+				if ( expression.equals( nullPreservingXmlExtract( query ) ) ) {
+					return "xmlelement(\"" + XmlHelper.ROOT_TAG + "\"," + query + ")";
+				}
+			}
+		}
+		return expression;
+	}
+
 	private static String xmlExtractArguments(String aggregateParentReadExpression, String xpathFragment) {
+		// Compose paths against the original document, not nested CASE wrappers.
+		// Otherwise each additional aggregate level duplicates the parent SQL.
+		aggregateParentReadExpression = unwrapXmlNullGuard( aggregateParentReadExpression );
 		final String extractArguments;
 		int separatorIndex;
 		if ( aggregateParentReadExpression.startsWith( XML_EXTRACT_START )

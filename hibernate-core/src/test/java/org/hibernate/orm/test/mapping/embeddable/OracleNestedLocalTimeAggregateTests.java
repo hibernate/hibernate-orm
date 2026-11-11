@@ -11,7 +11,6 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.orm.test.mapping.embeddable.OracleLocalTimeAggregateTestSupport.Clock;
 import org.hibernate.orm.test.mapping.embeddable.OracleLocalTimeAggregateTestSupport.TimeValue;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -52,7 +51,6 @@ class OracleNestedLocalTimeAggregateTests {
 	@Test
 	@DomainModel(annotatedClasses = NestedXmlClock.class)
 	@SessionFactory
-	@FailureExpected(jiraKey = "HHH-21087", reason = "Cleared nested XML aggregate projects as a non-null embeddable; separate repair follow-up")
 	void clearedNestedXmlProjectsNull(SessionFactoryScope scope) {
 		final var row = new NestedXmlClock();
 		row.id = 1;
@@ -63,6 +61,45 @@ class OracleNestedLocalTimeAggregateTests {
 			scope.inTransaction( session -> assertThat( session.createMutationQuery(
 					"update NestedXmlClock e set e.payload.clock=null where e.id=1" ).executeUpdate() ).isEqualTo( 1 ) );
 			check( scope, "NestedXmlClock", true, null, null );
+		}
+		finally {
+			scope.dropData();
+		}
+	}
+
+	@Test
+	@DomainModel(annotatedClasses = NestedXmlClock.class)
+	@SessionFactory
+	void allNullXmlChildRetainsExistingAssembly(SessionFactoryScope scope) {
+		final var row = new NestedXmlClock();
+		row.id = 1;
+		row.payload = new XmlData();
+		row.payload.clock = new Clock();
+		try {
+			scope.inTransaction( session -> session.persist( row ) );
+			// An all-null child is distinct from absent child content. Keep the existing
+			// entity/projection assembly outside the SQL null-extraction repair.
+			scope.inTransaction( session -> {
+				final var loaded = session.find( NestedXmlClock.class, 1 );
+				assertThat( loaded.payload.clock ).isNotNull();
+				assertThat( loaded.payload.clock.time ).isNull();
+				assertThat( loaded.payload.clock.converted ).isNull();
+			} );
+			scope.inTransaction( session -> {
+				final var projected = session.createSelectionQuery(
+						"select e.payload.clock from NestedXmlClock e", Clock.class ).getSingleResult();
+				assertThat( projected ).isNotNull();
+				assertThat( projected.time ).isNull();
+				assertThat( projected.converted ).isNull();
+			} );
+			scope.inTransaction( session -> {
+				assertThat( session.createSelectionQuery(
+						"select e.id from NestedXmlClock e where e.payload.clock is null", Integer.class )
+						.getResultList() ).isEmpty();
+				assertThat( session.createSelectionQuery(
+						"select e.id from NestedXmlClock e where e.payload.clock is not null", Integer.class )
+						.getResultList() ).containsExactly( 1 );
+			} );
 		}
 		finally {
 			scope.dropData();

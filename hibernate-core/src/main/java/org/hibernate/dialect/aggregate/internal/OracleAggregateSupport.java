@@ -9,6 +9,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.type.internal.OracleArrayJdbcType;
+import org.hibernate.dialect.type.internal.OracleLocalTimeJdbcType;
 import org.hibernate.sql.spi.StringBuilderSqlAppender;
 import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.engine.jdbc.Size;
@@ -27,6 +28,7 @@ import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.LocalTimeJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -118,6 +120,10 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 						}
 						else {
 							parentPartExpression = aggregateParentReadExpression + ",'$.";
+						}
+						if ( !supportsOson() && isLocalTimeText( column.getJdbcMapping() ) ) {
+							return template.replace( placeholder, localTimeTextReadExpression(
+									"json_value(" + parentPartExpression + columnExpression + "')" ) );
 						}
 						switch ( JavaTimeJdbcType.getPhysicalJdbcTypeCode( column.getJdbcMapping().getJdbcType() ) ) {
 							case BIT:
@@ -269,6 +275,11 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 				}
 			case SQLXML:
 			case XML_ARRAY:
+				if ( isLocalTimeText( column.getJdbcMapping() ) ) {
+					return template.replace( placeholder, localTimeTextReadExpression(
+							"xmlcast(xmlquery(" + xmlExtractArguments( aggregateParentReadExpression, columnExpression + "/text()" )
+									+ ") as varchar2(35))" ) );
+				}
 				switch ( JavaTimeJdbcType.getPhysicalJdbcTypeCode( column.getJdbcMapping().getJdbcType() ) ) {
 					case BIT:
 					case BOOLEAN:
@@ -352,6 +363,27 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumnTypeCode );
 	}
 
+	// Only this built-in pair has the established ISO time-only aggregate text
+	// contract despite using an anchored timestamp as its JDBC carrier. Custom
+	// descriptors and native JSON/STRUCT retain their own representations.
+	private static boolean isLocalTimeText(JdbcMapping mapping) {
+		return mapping.getJdbcType().getClass() == OracleLocalTimeJdbcType.class
+				&& mapping.getJdbcJavaType().getClass() == LocalTimeJavaType.class;
+	}
+
+	private static String localTimeTextReadExpression(String text) {
+		// Oracle supplies current date fields when a time-only mask is used.
+		// Match the binder's fixed date instead, and explicitly guard null since
+		// Oracle concatenation would otherwise turn it into a non-null date.
+		// Exact FF9 parsing needs nine digits. Pad short fractions, but never
+		// truncate overlong input into a valid value.
+		return "case when " + text + " is null then null else to_timestamp('1970-01-01 '||case"
+				+ " when length(" + text + ")=5 then " + text + "||':00.000000000'"
+				+ " when instr(" + text + ",'.')=0 then " + text + "||'.000000000'"
+				+ " when length(" + text + ")<18 then rpad(" + text + ",18,'0') else " + text
+				+ " end,'FXYYYY-MM-DD HH24:MI:SS.FF9') end";
+	}
+
 	private static WrapperOptions getWrapperOptions(TypeConfiguration typeConfiguration) {
 		try {
 			return typeConfiguration.getWrapperOptions();
@@ -433,6 +465,12 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 			Runnable renderFunction,
 			JdbcMapping jdbcMapping,
 			TypeConfiguration typeConfiguration) {
+		if ( !supportsOson() && isLocalTimeText( jdbcMapping ) ) {
+			sqlAppender.appendSql( "to_char(" );
+			renderFunction.run();
+			sqlAppender.appendSql( ",'HH24:MI:SS.FF9')" );
+			return;
+		}
 		final int sqlTypeCode = JavaTimeJdbcType.getPhysicalJdbcTypeCode( jdbcMapping.getJdbcType() );
 		switch ( sqlTypeCode ) {
 			case CLOB:
@@ -544,6 +582,9 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 	}
 
 	private static String xmlCustomWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping, TypeConfiguration typeConfiguration) {
+		if ( isLocalTimeText( jdbcMapping ) ) {
+			return "to_char(" + customWriteExpression + ",'HH24:MI:SS.FF9')";
+		}
 		final int sqlTypeCode = JavaTimeJdbcType.getPhysicalJdbcTypeCode( jdbcMapping.getJdbcType() );
 		switch ( sqlTypeCode ) {
 			case UUID:

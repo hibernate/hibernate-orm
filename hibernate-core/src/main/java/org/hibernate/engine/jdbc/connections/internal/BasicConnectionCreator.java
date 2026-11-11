@@ -58,15 +58,8 @@ public abstract class BasicConnectionCreator implements ConnectionCreator {
 		}
 
 		try {
-			try {
-				if ( isolation != null ) {
-					conn.setTransactionIsolation( isolation );
-				}
-			}
-			catch (SQLException e) {
-				throw convertSqlException( "Unable to set transaction isolation (" + isolation + ")", e );
-			}
-
+			// Set auto-commit first: some drivers reject changing the
+			// isolation level while the connection is in auto-commit mode
 			try {
 				if ( conn.getAutoCommit() != autoCommit ) {
 					conn.setAutoCommit( autoCommit );
@@ -74,6 +67,15 @@ public abstract class BasicConnectionCreator implements ConnectionCreator {
 			}
 			catch (SQLException e) {
 				throw convertSqlException( "Unable to set auto-commit (" + autoCommit + ")", e );
+			}
+
+			try {
+				if ( isolation != null ) {
+					conn.setTransactionIsolation( isolation );
+				}
+			}
+			catch (SQLException e) {
+				throw convertSqlException( "Unable to set transaction isolation (" + isolation + ")", e );
 			}
 
 			if ( initSql != null && !initSql.trim().isEmpty() ) {

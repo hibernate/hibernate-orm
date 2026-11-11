@@ -36,6 +36,7 @@ public class PropertyAccessFieldImpl implements PropertyAccess {
 				propertyAccessorService
 						.hibernateAccessorFactory().valueReader( field ),
 				valueWriterOrNull( propertyAccessorService.hibernateAccessorFactory(), field ),
+				containerJavaType,
 				propertyName
 		);
 	}

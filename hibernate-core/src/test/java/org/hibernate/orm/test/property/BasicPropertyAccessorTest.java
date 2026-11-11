@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.property;
 
+import org.hibernate.PropertyAccessException;
 import org.hibernate.accessor.AccessorFactory;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import java.lang.invoke.MethodHandles;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 
 /**
@@ -83,6 +85,20 @@ public class BasicPropertyAccessorTest {
 			assertThat( access.getGetter().getReturnTypeClass() ).isEqualTo( String.class );
 			assertThat( access.getSetter().getMethod().getParameterTypes()[0] ).isEqualTo( String.class );
 		}
+	}
+
+	@Test
+	public void wrongReceiverReportsExpectedAndActualTypes() {
+		final var accessor = PropertyAccessStrategyBasicImpl.INSTANCE
+				.buildPropertyAccess( TestPropertyAccessorService.INSTANCE, Duper.class, "it", true )
+				.getPropertyValueAccessor();
+		final var wrongReceiver = new Object();
+		final var read = assertThrows( PropertyAccessException.class, () -> accessor.get( wrongReceiver ) );
+		final var write = assertThrows( PropertyAccessException.class, () -> accessor.set( wrongReceiver, "value" ) );
+		assertThat( read.getPersistentClass() ).isEqualTo( Duper.class );
+		assertThat( write.getPersistentClass() ).isEqualTo( Duper.class );
+		assertThat( read ).hasMessageContaining( "but was 'java.lang.Object'" ).hasMessageContaining( "(getter)" );
+		assertThat( write ).hasMessageContaining( "but was 'java.lang.Object'" ).hasMessageContaining( "(setter)" );
 	}
 
 	private static class TestPropertyAccessorService implements PropertyAccessorService {

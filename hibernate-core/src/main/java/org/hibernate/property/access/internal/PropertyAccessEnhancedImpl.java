@@ -69,6 +69,7 @@ public class PropertyAccessEnhancedImpl implements PropertyAccess {
 						propertyAccessorService.hibernateAccessorFactory().valueReader( field ),
 						valueWriterOrNull( propertyAccessorService.hibernateAccessorFactory(), field ),
 						determineEnhancementState( containerJavaType, field.getType() ),
+						containerJavaType,
 						propertyName
 				);
 				break;
@@ -111,6 +112,7 @@ public class PropertyAccessEnhancedImpl implements PropertyAccess {
 						reader,
 						writer,
 						enhancementState,
+						containerJavaType,
 						propertyName
 				);
 				break;

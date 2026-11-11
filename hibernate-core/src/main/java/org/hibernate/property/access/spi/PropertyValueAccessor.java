@@ -64,6 +64,7 @@ public final class PropertyValueAccessor {
 	private final @Nullable ValueReader<?> reader;
 	private final @Nullable ValueWriter writer;
 	private final int enhancementState;
+	private final @Nullable Class<?> containerJavaType;
 	private final @Nullable String propertyName;
 
 	// MAP mode
@@ -86,6 +87,7 @@ public final class PropertyValueAccessor {
 			@Nullable ValueReader<?> reader,
 			@Nullable ValueWriter writer,
 			int enhancementState,
+			@Nullable Class<?> containerJavaType,
 			@Nullable String propertyName,
 			@Nullable String mapKey,
 			@Nullable CompositeUserType<?> compositeUserType,
@@ -97,6 +99,7 @@ public final class PropertyValueAccessor {
 		this.reader = reader;
 		this.writer = writer;
 		this.enhancementState = enhancementState;
+		this.containerJavaType = containerJavaType;
 		this.propertyName = propertyName;
 		this.mapKey = mapKey;
 		this.compositeUserType = compositeUserType;
@@ -110,22 +113,26 @@ public final class PropertyValueAccessor {
 			ValueReader<?> reader,
 			@Nullable ValueWriter writer,
 			String propertyName) {
-		if ( writer == null ) {
-			return readonly( reader, propertyName );
-		}
-		return new PropertyValueAccessor(
-				Kind.STANDARD, reader, writer, ENHANCEMENT_STATE_NONE, propertyName,
-				null, null, -1, null, null, null
-		);
+		return standard( reader, writer, null, propertyName );
+	}
+
+	public static PropertyValueAccessor standard(
+			ValueReader<?> reader,
+			@Nullable ValueWriter writer,
+			@Nullable Class<?> containerJavaType,
+			String propertyName) {
+		return enhanced( reader, writer, ENHANCEMENT_STATE_NONE, containerJavaType, propertyName );
+	}
+
+	public static PropertyValueAccessor readonly(ValueReader<?> reader, String propertyName) {
+		return readonly( reader, null, propertyName );
 	}
 
 	public static PropertyValueAccessor readonly(
 			ValueReader<?> reader,
+			@Nullable Class<?> containerJavaType,
 			String propertyName) {
-		return new PropertyValueAccessor(
-				Kind.READ_ONLY, reader, null, ENHANCEMENT_STATE_NONE, propertyName,
-				null, null, -1, null, null, null
-		);
+		return standard( reader, null, containerJavaType, propertyName );
 	}
 
 	public static PropertyValueAccessor enhanced(
@@ -133,21 +140,30 @@ public final class PropertyValueAccessor {
 			@Nullable ValueWriter writer,
 			int enhancementState,
 			String propertyName) {
+		return enhanced( reader, writer, enhancementState, null, propertyName );
+	}
+
+	public static PropertyValueAccessor enhanced(
+			ValueReader<?> reader,
+			@Nullable ValueWriter writer,
+			int enhancementState,
+			@Nullable Class<?> containerJavaType,
+			String propertyName) {
 		return new PropertyValueAccessor(
-				writer == null ? Kind.READ_ONLY : Kind.STANDARD, reader, writer, enhancementState, propertyName,
-				null, null, -1, null, null, null
+				writer == null ? Kind.READ_ONLY : Kind.STANDARD, reader, writer, enhancementState,
+				containerJavaType, propertyName, null, null, -1, null, null, null
 		);
 	}
 
 	public static PropertyValueAccessor map(String propertyName) {
 		return new PropertyValueAccessor(
-				Kind.MAP, null, null, ENHANCEMENT_STATE_NONE, null,
+				Kind.MAP, null, null, ENHANCEMENT_STATE_NONE, null, null,
 				propertyName, null, -1, null, null, null
 		);
 	}
 
 	private static final PropertyValueAccessor EMBEDDED_INSTANCE = new PropertyValueAccessor(
-			Kind.EMBEDDED, null, null, ENHANCEMENT_STATE_NONE, null,
+			Kind.EMBEDDED, null, null, ENHANCEMENT_STATE_NONE, null, null,
 			null, null, -1, null, null, null
 	);
 
@@ -156,7 +172,7 @@ public final class PropertyValueAccessor {
 	}
 
 	private static final PropertyValueAccessor NOOP_INSTANCE = new PropertyValueAccessor(
-			Kind.NOOP, null, null, ENHANCEMENT_STATE_NONE, null,
+			Kind.NOOP, null, null, ENHANCEMENT_STATE_NONE, null, null,
 			null, null, -1, null, null, null
 	);
 
@@ -168,28 +184,28 @@ public final class PropertyValueAccessor {
 			CompositeUserType<?> compositeUserType,
 			int propertyIndex) {
 		return new PropertyValueAccessor(
-				Kind.COMPOSITE_USER_TYPE, null, null, ENHANCEMENT_STATE_NONE, null,
+				Kind.COMPOSITE_USER_TYPE, null, null, ENHANCEMENT_STATE_NONE, null, null,
 				null, compositeUserType, propertyIndex, null, null, null
 		);
 	}
 
 	public static PropertyValueAccessor backRef(String entityName, String propertyName) {
 		return new PropertyValueAccessor(
-				Kind.BACK_REF, null, null, ENHANCEMENT_STATE_NONE, null,
+				Kind.BACK_REF, null, null, ENHANCEMENT_STATE_NONE, null, null,
 				null, null, -1, entityName, propertyName, null
 		);
 	}
 
 	public static PropertyValueAccessor indexBackRef(String entityName, String propertyName) {
 		return new PropertyValueAccessor(
-				Kind.INDEX_BACK_REF, null, null, ENHANCEMENT_STATE_NONE, null,
+				Kind.INDEX_BACK_REF, null, null, ENHANCEMENT_STATE_NONE, null, null,
 				null, null, -1, entityName, propertyName, null
 		);
 	}
 
 	public static PropertyValueAccessor chained(PropertyValueAccessor[] chain) {
 		return new PropertyValueAccessor(
-				Kind.CHAINED, null, null, ENHANCEMENT_STATE_NONE, null,
+				Kind.CHAINED, null, null, ENHANCEMENT_STATE_NONE, null, null,
 				null, null, -1, null, null, chain
 		);
 	}
@@ -222,13 +238,10 @@ public final class PropertyValueAccessor {
 				Thread.currentThread().interrupt();
 				throw sneakyThrow( ie );
 			}
-			throw new org.hibernate.PropertyAccessException(
-					t,
-					"Accessing the underlying property resulted in an exception: " + t.getMessage(),
-					false,
-					owner.getClass(),
-					propertyName
-			);
+			if ( kind == Kind.CHAINED && t instanceof org.hibernate.PropertyAccessException cause ) {
+				throw cause;
+			}
+			throw accessException( t, owner, false );
 		}
 	}
 
@@ -252,13 +265,7 @@ public final class PropertyValueAccessor {
 						Thread.currentThread().interrupt();
 						throw sneakyThrow( ie );
 					}
-					throw new org.hibernate.PropertyAccessException(
-							t,
-							"Accessing the underlying property resulted in an exception: " + t.getMessage(),
-							false,
-							target.getClass(),
-							propertyName
-					);
+					throw accessException( t, target, true );
 				}
 			}
 			case READ_ONLY -> throw new UnsupportedOperationException( "Cannot set read-only property" );
@@ -272,6 +279,16 @@ public final class PropertyValueAccessor {
 					"Setting through a chained property access is not supported"
 			);
 		}
+	}
+
+	private org.hibernate.PropertyAccessException accessException(Throwable cause, Object receiver, boolean setter) {
+		final String message =
+				containerJavaType != null && !containerJavaType.isInstance( receiver )
+						? "Expected an object of type '" + containerJavaType.getName()
+								+ "' but was " + ( receiver == null ? "null" : "'" + receiver.getClass().getName() + "'" )
+						: "Exception during property access: " + cause.getMessage();
+		return new org.hibernate.PropertyAccessException( cause, message, setter,
+				containerJavaType == null ? receiver.getClass() : containerJavaType, propertyName );
 	}
 
 	public @Nullable Object getForInsert(

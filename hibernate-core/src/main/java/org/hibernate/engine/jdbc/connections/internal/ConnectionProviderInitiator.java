@@ -401,7 +401,11 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	public static String extractSetting(Map<String, Object> settings, String... names) {
 		for ( String name : names ) {
 			if ( settings.containsKey( name ) ) {
-				return (String) settings.get( name );
+				final String value = (String) settings.get( name );
+				if ( value != null && value.isBlank() ) {
+					throw new ConnectionProviderConfigurationException( "Configuration property '" + name + "' is blank" );
+				}
+				return value;
 			}
 		}
 		return null;

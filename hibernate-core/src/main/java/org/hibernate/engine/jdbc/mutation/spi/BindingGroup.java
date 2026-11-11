@@ -4,10 +4,12 @@
  */
 package org.hibernate.engine.jdbc.mutation.spi;
 
-import java.util.Comparator;
+import java.util.AbstractSet;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.function.Consumer;
 
 import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
@@ -19,13 +21,11 @@ import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
  */
 public class BindingGroup {
 	private final String tableName;
-	private final Set<Binding> bindings;
+	private final BindingSet bindings;
 
 	public BindingGroup(String tableName) {
 		this.tableName = tableName;
-		// todo (6.2) : TreeSet to log the parameter binding sequentially
-		//		- if we don't care, this can be another type of Set for perf
-		this.bindings = new TreeSet<>( Comparator.comparing( Binding::getPosition ) );
+		this.bindings = new BindingSet();
 	}
 
 	/**
@@ -62,5 +62,40 @@ public class BindingGroup {
 	 */
 	public void clear() {
 		bindings.clear();
+	}
+
+	private static class BindingSet extends AbstractSet<Binding> {
+		private final List<Binding> bindings = new ArrayList<>();
+
+		@Override
+		public boolean add(Binding binding) {
+			final int position = binding.getPosition();
+			for ( int i = 0; i < bindings.size(); i++ ) {
+				final int existingPosition = bindings.get( i ).getPosition();
+				if ( position == existingPosition ) {
+					return false;
+				}
+				else if ( position < existingPosition ) {
+					bindings.add( i, binding );
+					return true;
+				}
+			}
+			return bindings.add( binding );
+		}
+
+		@Override
+		public Iterator<Binding> iterator() {
+			return bindings.iterator();
+		}
+
+		@Override
+		public int size() {
+			return bindings.size();
+		}
+
+		@Override
+		public void clear() {
+			bindings.clear();
+		}
 	}
 }

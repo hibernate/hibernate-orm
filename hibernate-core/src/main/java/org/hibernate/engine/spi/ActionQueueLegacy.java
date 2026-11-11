@@ -20,7 +20,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.PropertyValueException;
 import org.hibernate.Session;
-import org.hibernate.TransientPropertyValueException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.action.internal.CollectionAction;
@@ -538,23 +537,7 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQ
 	 * @throws HibernateException error executing queued actions.
 	 */
 	public void executeActions() throws HibernateException {
-		if ( hasUnresolvedEntityInsertActions() ) {
-			final var insertAction =
-					unresolvedInsertions.getDependentEntityInsertActions()
-							.iterator().next();
-			final var transientEntities = insertAction.findNonNullableTransientEntities();
-			final Object transientEntity = transientEntities.getNonNullableTransientEntities().iterator().next();
-			final String path = transientEntities.getNonNullableTransientPropertyPaths( transientEntity ).iterator().next();
-			final String transientEntityName = session.bestGuessEntityName( transientEntity );
-			final String entityName = insertAction.getEntityName();
-			throw new TransientPropertyValueException(
-					"Persistent instance of '" + entityName + "' with id [" + insertAction.getId()
-					+ "] references an unsaved transient instance of '" + transientEntityName
-					+ "' (persist the transient instance before flushing)",
-					entityName,
-					transientEntityName,
-					path );
-		}
+		checkNoUnresolvedActionsAfterOperation();
 
 		for ( var action : ORDERED_OPERATIONS ) {
 			executeActions( action.getActions( this ) );

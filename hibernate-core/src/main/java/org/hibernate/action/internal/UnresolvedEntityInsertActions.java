@@ -3,9 +3,13 @@ package org.hibernate.action.internal;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.TreeSet;
 
 import jakarta.annotation.Nonnull;
@@ -101,24 +105,89 @@ public class UnresolvedEntityInsertActions {
 
 			logCannotResolveNonNullableTransientDependencies( firstDependentAction.getSession() );
 
-			final var nonNullableTransientDependencies = dependenciesByAction.get( firstDependentAction );
-			final Object firstTransientDependency =
-					nonNullableTransientDependencies.getNonNullableTransientEntities().iterator().next();
-			final String firstPropertyPath =
-					nonNullableTransientDependencies.getNonNullableTransientPropertyPaths( firstTransientDependency )
-							.iterator().next();
-			final String entityName = firstDependentAction.getEntityName();
-			final String transientEntityName =
-					firstDependentAction.getSession().guessEntityName( firstTransientDependency );
-			throw new TransientPropertyValueException(
-					"Instance of '" + entityName
-						+ "' references an unsaved transient instance of '" + transientEntityName
-						+ "' (persist the transient instance)",
-					transientEntityName,
-					entityName,
-					firstPropertyPath
-			);
+			throw unresolvedInsertException( firstDependentAction, dependenciesByAction );
 		}
+	}
+
+	public static TransientPropertyValueException unresolvedInsertException(
+			AbstractEntityInsertAction firstInsert,
+			Map<AbstractEntityInsertAction, NonNullableTransientDependencies> unresolvedInserts) {
+		// Keep the first unresolved association in the structured exception fields.
+		final Object firstTarget = unresolvedInserts.get( firstInsert ).getNonNullableTransientEntities().iterator().next();
+		return new TransientPropertyValueException(
+				describeInsertBlocker( firstInsert, unresolvedInserts ),
+				firstInsert.getSession().guessEntityName( firstTarget ), firstInsert.getEntityName(),
+				propertyPath( unresolvedInserts, firstInsert, firstTarget ) );
+	}
+
+	/** Find a cycle reachable from the reported insert, or an association with no queued insert. */
+	private static String describeInsertBlocker(
+			AbstractEntityInsertAction firstInsert,
+			Map<AbstractEntityInsertAction, NonNullableTransientDependencies> unresolvedInserts) {
+		final var insertsByInstance = new IdentityHashMap<Object, AbstractEntityInsertAction>();
+		final var remainingTargets = new IdentityHashMap<AbstractEntityInsertAction, Iterator<Object>>();
+		for ( var entry : unresolvedInserts.entrySet() ) {
+			final var insert = entry.getKey();
+			insertsByInstance.put( insert.getInstance(), insert );
+			remainingTargets.put( insert, entry.getValue().getNonNullableTransientEntities().iterator() );
+		}
+
+		AbstractEntityInsertAction missingTargetOwner = null;
+		Object missingTarget = null;
+		final var path = new ArrayList<AbstractEntityInsertAction>();
+		final var positions = new IdentityHashMap<AbstractEntityInsertAction, Integer>();
+		path.add( firstInsert );
+		positions.put( firstInsert, 0 );
+		while ( !path.isEmpty() ) {
+			final var insert = path.get( path.size() - 1 );
+			final var targets = remainingTargets.get( insert );
+			if ( !targets.hasNext() ) {
+				positions.remove( path.remove( path.size() - 1 ) );
+				continue;
+			}
+			final Object target = targets.next();
+			final var targetInsert = insertsByInstance.get( target );
+			if ( targetInsert == null ) {
+				if ( missingTargetOwner == null ) {
+					missingTargetOwner = insert;
+					missingTarget = target;
+				}
+			}
+			else if ( positions.containsKey( targetInsert ) ) {
+				final var cycle = path.subList( positions.get( targetInsert ), path.size() );
+				return "Cannot insert '" + firstInsert.getEntityName() + "' due to a cycle of non-nullable associations: "
+						+ describeCycle( cycle, unresolvedInserts );
+			}
+			else if ( remainingTargets.get( targetInsert ).hasNext() ) {
+				positions.put( targetInsert, path.size() );
+				path.add( targetInsert );
+			}
+		}
+		assert missingTargetOwner != null;
+		final String property = propertyPath( unresolvedInserts, missingTargetOwner, missingTarget );
+		final String targetName = firstInsert.getSession().guessEntityName( missingTarget );
+		return "Cannot insert '" + firstInsert.getEntityName()
+				+ "' because non-null association '" + missingTargetOwner.getEntityName() + "." + property
+				+ "' references an unsaved transient instance of '" + targetName
+				+ "' (persist the target before flushing)";
+	}
+
+	private static String describeCycle(
+			List<AbstractEntityInsertAction> cycle,
+			Map<AbstractEntityInsertAction, NonNullableTransientDependencies> unresolvedInserts) {
+		final var path = new StringJoiner( " -> " );
+		for ( int i = 0; i < cycle.size(); i++ ) {
+			final var insert = cycle.get( i );
+			final var next = i + 1 == cycle.size() ? cycle.get( 0 ) : cycle.get( i + 1 );
+			path.add( insert.getEntityName() + "." + propertyPath( unresolvedInserts, insert, next.getInstance() ) );
+		}
+		return path.add( cycle.get( 0 ).getEntityName() ).toString();
+	}
+
+	private static String propertyPath(
+			Map<AbstractEntityInsertAction, NonNullableTransientDependencies> unresolvedInserts,
+			AbstractEntityInsertAction insert, Object target) {
+		return unresolvedInserts.get( insert ).getNonNullableTransientPropertyPaths( target ).iterator().next();
 	}
 
 	private void logCannotResolveNonNullableTransientDependencies(@Nonnull SharedSessionContractImplementor session) {

@@ -5,6 +5,8 @@ import java.util.Map;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.sql.ast.spi.CteSupport;
+import org.hibernate.dialect.sql.ast.spi.MutationSyntaxSupport;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -33,6 +35,13 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 
 	private @Nullable SqlStatementLogger sqlStatementLogger;
 	private @Nullable ParameterMarkerStrategy parameterMarkerStrategy;
+
+	// The SQL AST translators need these for every translation, and dialects
+	// usually build them anew on every call. The Dialect contract requires
+	// them to be immutable and stable for the lifetime of the dialect, so it
+	// is enough to obtain them once; a racy initialization is harmless.
+	private volatile @Nullable CteSupport cteSupport;
+	private volatile @Nullable MutationSyntaxSupport mutationSyntaxSupport;
 
 	public JdbcServicesImpl() {
 	}
@@ -72,6 +81,28 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 	@Nonnull
 	public Dialect getDialect() {
 		return getJdbcEnvironment().getDialect();
+	}
+
+	@Override
+	@Nonnull
+	public CteSupport getCteSupport() {
+		CteSupport cteSupport = this.cteSupport;
+		if ( cteSupport == null ) {
+			cteSupport = getDialect().getCteSupport();
+			this.cteSupport = cteSupport;
+		}
+		return cteSupport;
+	}
+
+	@Override
+	@Nonnull
+	public MutationSyntaxSupport getMutationSyntaxSupport() {
+		MutationSyntaxSupport mutationSyntaxSupport = this.mutationSyntaxSupport;
+		if ( mutationSyntaxSupport == null ) {
+			mutationSyntaxSupport = getDialect().getMutationSyntaxSupport();
+			this.mutationSyntaxSupport = mutationSyntaxSupport;
+		}
+		return mutationSyntaxSupport;
 	}
 
 	@Override

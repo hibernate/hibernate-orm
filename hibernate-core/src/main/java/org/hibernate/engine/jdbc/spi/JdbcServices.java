@@ -2,7 +2,10 @@ package org.hibernate.engine.jdbc.spi;
 
 import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
+import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.sql.ast.spi.CteSupport;
+import org.hibernate.dialect.sql.ast.spi.MutationSyntaxSupport;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -44,6 +47,28 @@ public interface JdbcServices extends Service {
 	 */
 	@Nonnull
 	Dialect getDialect();
+
+	/// Obtain the [CteSupport] of the [dialect][#getDialect()].
+	///
+	/// [Dialect#getCteSupport()] must return a profile that is stable for the
+	/// lifetime of the dialect, but dialects usually build a new instance on
+	/// every call. Implementations may obtain it once and reuse it.
+	@Internal
+	@Nonnull
+	default CteSupport getCteSupport() {
+		return getDialect().getCteSupport();
+	}
+
+	/// Obtain the [MutationSyntaxSupport] of the [dialect][#getDialect()].
+	///
+	/// [Dialect#getMutationSyntaxSupport()] must return a profile that is stable
+	/// for the lifetime of the dialect, but dialects usually build a new
+	/// instance on every call. Implementations may obtain it once and reuse it.
+	@Internal
+	@Nonnull
+	default MutationSyntaxSupport getMutationSyntaxSupport() {
+		return getDialect().getMutationSyntaxSupport();
+	}
 
 	/**
 	 * Obtain service for logging SQL statements.

@@ -432,8 +432,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final SessionFactoryImplementor sessionFactory = request.sessionFactory();
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
 		this.dialect = jdbcServices.getDialect();
-		this.cteSupport = dialect.getCteSupport();
-		this.mutationSyntaxSupport = dialect.getMutationSyntaxSupport();
+		this.cteSupport = jdbcServices.getCteSupport();
+		this.mutationSyntaxSupport = jdbcServices.getMutationSyntaxSupport();
 		this.statementStack.push( statement );
 		this.parameterMarkerStrategy = jdbcServices.getParameterMarkerStrategy();
 

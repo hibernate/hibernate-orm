@@ -1487,6 +1487,8 @@ public class SqlAstTranslatorSurfaceTests {
 		);
 		when( dialect.getLockingSupport() ).thenReturn( lockingSupport );
 		when( jdbcServices.getDialect() ).thenReturn( dialect );
+		when( jdbcServices.getCteSupport() ).thenAnswer( invocation -> dialect.getCteSupport() );
+		when( jdbcServices.getMutationSyntaxSupport() ).thenAnswer( invocation -> dialect.getMutationSyntaxSupport() );
 		return new TestingTranslator(
 				new SqlAstTranslationRequest.Select(
 						sessionFactory,
@@ -1507,6 +1509,8 @@ public class SqlAstTranslatorSurfaceTests {
 		when( dialect.getSubquerySupport() ).thenReturn( SubquerySupport.STANDARD );
 		when( dialect.getLockingSupport() ).thenReturn( LockingSupportSimple.STANDARD_SUPPORT );
 		when( jdbcServices.getDialect() ).thenReturn( dialect );
+		when( jdbcServices.getCteSupport() ).thenAnswer( invocation -> dialect.getCteSupport() );
+		when( jdbcServices.getMutationSyntaxSupport() ).thenAnswer( invocation -> dialect.getMutationSyntaxSupport() );
 		return new TestingH2Translator( new SqlAstTranslationRequest.Select(
 				sessionFactory,
 				new SelectStatement( new QuerySpec( true ) )
@@ -1539,6 +1543,8 @@ public class SqlAstTranslatorSurfaceTests {
 		when( dialect.getValuesListSupport() ).thenReturn( valuesListSupport );
 		when( dialect.getLockingSupport() ).thenReturn( LockingSupportSimple.STANDARD_SUPPORT );
 		when( jdbcServices.getDialect() ).thenReturn( dialect );
+		when( jdbcServices.getCteSupport() ).thenAnswer( invocation -> dialect.getCteSupport() );
+		when( jdbcServices.getMutationSyntaxSupport() ).thenAnswer( invocation -> dialect.getMutationSyntaxSupport() );
 		return new TestingMutationTranslator(
 				new SqlAstTranslationRequest.QueryMutation( sessionFactory, statement )
 		);
@@ -1557,6 +1563,8 @@ public class SqlAstTranslatorSurfaceTests {
 		when( dialect.getSubquerySupport() ).thenReturn( SubquerySupport.STANDARD );
 		when( dialect.getLockingSupport() ).thenReturn( LockingSupportSimple.STANDARD_SUPPORT );
 		when( jdbcServices.getDialect() ).thenReturn( dialect );
+		when( jdbcServices.getCteSupport() ).thenAnswer( invocation -> dialect.getCteSupport() );
+		when( jdbcServices.getMutationSyntaxSupport() ).thenAnswer( invocation -> dialect.getMutationSyntaxSupport() );
 		return new TestingPostgreSQLFamilyTranslator(
 				new SqlAstTranslationRequest.QueryMutation( sessionFactory, statement )
 		);

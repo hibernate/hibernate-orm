@@ -508,6 +508,12 @@ public class AltibaseDialect extends Dialect {
 		return 1_000_000_000; //seconds
 	}
 
+	@Override
+	public boolean doesRoundTemporalOnOverflow() {
+		// Altibase JDBC truncates nanoseconds to microseconds when binding timestamps.
+		return false;
+	}
+
 	/**
 	 * Altibase supports a limited list of temporal fields in the
 	 * extract() function, but we can emulate some of them by

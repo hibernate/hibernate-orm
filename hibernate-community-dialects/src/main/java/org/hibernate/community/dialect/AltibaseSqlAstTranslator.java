@@ -372,6 +372,10 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 			super.visitCaseSearchedExpression( caseSearchedExpression, false );
 			return;
 		}
+		if ( caseSearchedExpression.getWhenFragments().isEmpty() ) {
+			renderCaseWithoutWhenFragments( caseSearchedExpression.getOtherwise() );
+			return;
+		}
 
 		appendSql( "case" );
 		for ( CaseSearchedExpression.WhenFragment whenFragment : caseSearchedExpression.getWhenFragments() ) {
@@ -407,6 +411,10 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 			super.visitCaseSimpleExpression( caseSimpleExpression, false );
 			return;
 		}
+		if ( caseSimpleExpression.getWhenFragments().isEmpty() ) {
+			renderCaseWithoutWhenFragments( caseSimpleExpression.getOtherwise() );
+			return;
+		}
 
 		appendSql( "case " );
 		withParameterRenderingMode(
@@ -436,6 +444,20 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		}
 
 		appendSql( " end" );
+	}
+
+	// A CASE without WHEN fragments (e.g. the @ConcreteProxy discriminator CASE of HHH-20949) would
+	// render as the invalid "case end", so render only the ELSE result or null, as the base translator does.
+	private void renderCaseWithoutWhenFragments(Expression otherwise) {
+		if ( otherwise == null ) {
+			appendSql( "null" );
+		}
+		else {
+			withParameterRenderingMode(
+					SqlAstNodeRenderingMode.INLINE_PARAMETERS,
+					() -> otherwise.accept( this )
+			);
+		}
 	}
 
 	// Renders optimistic-lock version seeds through the JDBC literal formatter when possible.

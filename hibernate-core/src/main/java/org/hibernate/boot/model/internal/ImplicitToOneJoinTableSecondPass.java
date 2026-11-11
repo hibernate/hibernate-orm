@@ -115,8 +115,7 @@ public class ImplicitToOneJoinTableSecondPass implements SecondPass {
 		final var property = owner.getProperty( inferredData.getPropertyName() );
 		assert property != null;
 		// move the property from the main table to the new join table
-		owner.removeProperty( property );
-		join.addProperty( property );
+		owner.movePropertyToJoin( property, join );
 		ToOneBinder.configureJoinTable( join, joinColumns, inferredData.getAttributeMember(), notFoundAction );
 	}
 }

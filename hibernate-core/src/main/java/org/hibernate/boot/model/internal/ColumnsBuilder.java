@@ -27,6 +27,8 @@ import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromN
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildFormulaFromAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
+import static org.hibernate.boot.model.internal.PropertyBinder.isManyToOne;
+import static org.hibernate.boot.model.internal.PropertyBinder.isOneToOne;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
@@ -99,8 +101,7 @@ class ColumnsBuilder {
 
 		//set default values if needed
 		if ( joinColumns == null
-				&& ( property.hasDirectAnnotationUsage( ManyToOne.class )
-						|| property.hasDirectAnnotationUsage( OneToOne.class ) ) ) {
+				&& ( isManyToOne( property ) || isOneToOne( property ) ) ) {
 			joinColumns = buildDefaultJoinColumnsForToOne( property, inferredData );
 		}
 		else if ( joinColumns == null
@@ -174,6 +175,12 @@ class ColumnsBuilder {
 		// process @JoinColumns before @Columns to handle collection of entities properly
 		final var joinColumns = getJoinColumnAnnotations( property );
 		if ( joinColumns != null ) {
+			if ( ( isManyToOne( property ) || isOneToOne( property ) )
+					&& propertyHolder.getOverriddenJoinColumn( getPath( propertyHolder, inferredData ) ) != null
+					&& propertyHolder.getJoinTable( property ) != null ) {
+				// The join table override supplies the association's inverse join columns.
+				return buildDefaultJoinColumnsForToOne( property, inferredData );
+			}
 			return AnnotatedJoinColumns.buildJoinColumns(
 					joinColumns,
 					null,

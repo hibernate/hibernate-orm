@@ -31,10 +31,14 @@ import jakarta.persistence.Column;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 
 import static java.util.Collections.emptyMap;
+import static org.hibernate.boot.model.internal.PropertyBinder.isManyToOne;
+import static org.hibernate.boot.model.internal.PropertyBinder.isOneToOne;
 import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.isOffsetTimeClass;
 import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.useColumnForTimeZoneStorage;
+import static org.hibernate.boot.models.annotations.internal.AssociationOverrideJpaAnnotation.DEFAULT_JOIN_TABLE;
 import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
@@ -377,11 +381,29 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	 */
 	@Override
 	public JoinTable getJoinTable(MemberDetails attributeMember) {
-		final String propertyName = qualify( getPath(), attributeMember.getName() );
+		final String propertyName = qualify( getPath(), attributeMember.resolveAttributeName() );
+		if ( isNotEmpty( getOverriddenJoinColumn( propertyName ) )
+				&& !attributeMember.hasDirectAnnotationUsage( ManyToMany.class ) ) {
+			return null;
+		}
 		final var result = getOverriddenJoinTable( propertyName );
-		return result == null
-				? attributeMember.getDirectAnnotationUsage( JoinTable.class )
-				: result;
+		if ( result == null ) {
+			return attributeMember.getDirectAnnotationUsage( JoinTable.class );
+		}
+		// With no join table settings, the override uses the kind of mapping declared on the association.
+		if ( DEFAULT_JOIN_TABLE.equals( result )
+				&& ( isManyToOne( attributeMember ) || isOneToOne( attributeMember ) ) ) {
+			final var foreignKey = getOverriddenForeignKey( propertyName );
+			if ( foreignKey != null && isNotBlank( foreignKey.name() ) ) {
+				throw new AnnotationException( "'@AssociationOverride' for '" + propertyName + "' names foreign key '"
+						+ foreignKey.name() + "' but does not specify its 'joinColumns'" );
+			}
+			if ( !attributeMember.hasDirectAnnotationUsage( JoinTable.class ) ) {
+				throw new AnnotationException( "'@AssociationOverride' for '" + propertyName
+						+ "' must specify 'joinColumns' to override a foreign key mapping" );
+			}
+		}
+		return result;
 	}
 
 	/**

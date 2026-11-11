@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.type.temporal.preservation;
 
+import java.time.LocalDate;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -17,6 +19,14 @@ class PreservationEnvironmentTest {
 		assertEquals( true, edb.edb() );
 		assertEquals( true, pg.pg() );
 		assertEquals( false, pg.edb() );
+		var edbSamples = PreservationRangeSamples.samples( LocalDate.class, null, edb, false );
+		var pgSamples = PreservationRangeSamples.samples( LocalDate.class, null, pg, false );
+		assertEquals( LocalDate.of( 294276, 12, 31 ), edbSamples.stream()
+				.filter( sample -> sample.id().equals( "range-max" ) ).findFirst().orElseThrow().value() );
+		assertEquals( LocalDate.of( 5874897, 12, 31 ), pgSamples.stream()
+				.filter( sample -> sample.id().equals( "range-max" ) ).findFirst().orElseThrow().value() );
+		assertEquals( true, edbSamples.stream().anyMatch( sample -> sample.rejected()
+				&& sample.value().equals( LocalDate.of( 294277, 1, 1 ) ) ) );
 	}
 
 	@Test

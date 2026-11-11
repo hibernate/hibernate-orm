@@ -15,6 +15,7 @@ final class PreservationRangeSamples {
 		final LocalDate min = environment.oracle() ? LocalDate.of( -4711, 1, 1 )
 				: environment.pg() ? LocalDate.of( -4712, 1, 1 ) : LocalDate.MIN;
 		final LocalDate max = environment.oracle() ? LocalDate.of( 9999, 12, 31 )
+				: environment.edb() ? LocalDate.of( 294276, 12, 31 )
 				: environment.pg() ? LocalDate.of( type == LocalDate.class ? 5874897 : 294276, 12, 31 ) : LocalDate.MAX;
 		if ( type == LocalDate.class ) {
 			add( result, type, "range-min", min, false ); add( result, type, "range-max", max, false );

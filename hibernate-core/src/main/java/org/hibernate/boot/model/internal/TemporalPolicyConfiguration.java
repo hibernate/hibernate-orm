@@ -20,14 +20,29 @@ import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.type.internal.TemporalPolicySettings;
 import org.hibernate.type.internal.TemporalPolicySettings.Selection;
 
-/// Resolves repeatable policy declarations at the validated relational Java type boundary.
+/// Resolves mapping-scoped temporal preservation policies and validates their declarations.
+/// Precedence is member, declaring class, nearest superclass, declaring package,
+/// declaring module, then factory settings. Within a non-member scope, an exact
+/// type selector takes precedence over that scope's untargeted default.
+///
+/// All visited annotation scopes are checked for malformed or overlapping declarations,
+/// even when a nearer scope has already supplied the effective policy. This class
+/// determines policy and provenance; validation of the selected Java/JDBC pair and
+/// execution of the policy belong to the type handling layer.
 ///
 /// @author Steve Ebersole
 public final class TemporalPolicyConfiguration {
 	private TemporalPolicyConfiguration() {
 	}
 
-	/// Resolve the [Selection] allowing for scopes.
+	/// Rejects an explicit member declaration on a role that cannot carry a policy.
+	/// This early check also covers embedded and association members whose values are
+	/// not resolved as ordinary basic mappings. A version member is not excluded merely
+	/// because it is annotated with [Version]. Broader defaults are handled by [#resolve].
+	///
+	/// @param member the mapped field or property to inspect, never null
+	/// @param excludedContext whether the containing mapping context excludes temporal policies
+	/// @throws MappingException if the member declares a policy on an excluded role
 	public static void rejectExcludedDeclaration(MemberDetails member, boolean excludedContext) {
 		final boolean declared = member.hasDirectAnnotationUsage( TemporalPreservationPolicy.class )
 				|| member.hasDirectAnnotationUsage( TemporalPreservationPolicies.class );
@@ -40,6 +55,35 @@ public final class TemporalPolicyConfiguration {
 		}
 	}
 
+	/// Resolves the policy for one mapping without modifying its annotations or factory settings.
+	/// An excluded mapping rejects a local declaration but ignores broader defaults and
+	/// returns [Selection#DEFAULT]. Without a member, only exclusion and factory-default
+	/// resolution apply, as for mappings without a backing Java field or property.
+	///
+	/// A selected annotation requires preservation to be enabled. Factory-setting
+	/// restrictions are validated separately by [TemporalPolicySettings#validate]; the
+	/// {@code enabled} argument does not replace that factory-wide validation.
+	///
+	/// @param member the field or property supplying annotation scopes, or null when
+	/// there is no backing Java member; class/package/module lookup starts from its
+	/// declaring type, not the entity type that happens to inherit the attribute
+	/// @param javaType the Java class used to match annotation type selectors and
+	/// type-specific settings. At final basic-value resolution this is the preservation
+	/// boundary type: an application converter's relational Java type, otherwise the
+	/// mapped domain type. Early declaration checks may use the declared attribute type
+	/// before converter resolution
+	/// @param settings the owning factory's configuration, with policy settings already validated
+	/// @param enabled the effective temporal-preservation flag, not a claim that this
+	/// particular mapping or JDBC descriptor can fulfill the selected policy
+	/// @param excluded whether this mapping role is outside policy application; the
+	/// caller supplies mapping-context knowledge which cannot be inferred from the
+	/// member alone, and must account for supported version mappings
+	/// @param role the mapping path used in diagnostics, typically {@code Entity.attribute};
+	/// it is not used to discover declarations or determine precedence
+	/// @return the selected policy and declaration source, never null; the default
+	/// selection for excluded mappings does not itself enable preservation validation
+	/// @throws MappingException for malformed declarations, an explicit declaration
+	/// on an excluded role, or a selected annotation when preservation is disabled
 	public static Selection resolve(
 			MemberDetails member,
 			Class<?> javaType,

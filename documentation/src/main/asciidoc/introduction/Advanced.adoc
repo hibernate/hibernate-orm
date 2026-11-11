@@ -123,10 +123,10 @@ var enabledFilter =
 						  // argument to the filter parameter
                           Map.of("region", "es"));
 try (var session = factory.createEntityManager(enabledFilter)) {
-    var document =
-            // read the version of the document
-            // effective at the specified instant
-            session.find(Document.class, documentId);
+    var spanishUsers =
+            // retrieve all users with region 'es'
+            session.createQuery("from User", User.class)
+                   .getResultList();
     ...
 }
 ----
@@ -356,15 +356,15 @@ static class ChangesetInfo {
 
     @Changelog.Timestamp
     @Column(name = "REVTSTMP")
-    long timestamp;
+    long timestamp = System.currentTimeMillis();
 
-    @Basic(optional=false)
     String description;
 }
 ----
 
 Notice that the changelog entity is much more than a source of ids.
 It also stores information about each changeset, including the moment at which the change occurred.
+To supply a description, we can register a link:{doc-javadoc-url}org/hibernate/audit/ChangesetListener.html[`ChangesetListener`] using `@Changelog(listener=...)`.
 For those familiar with Envers, the changelog entity fills the role of the Envers "revision entity".
 A typical custom changelog entity helps answer questions like "who?", "why?", and "when?".
 

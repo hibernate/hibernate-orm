@@ -25,13 +25,16 @@ import org.hibernate.type.descriptor.java.TemporalJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
+import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.query.sqm.tree.spi.select.DynamicInstantiationNature.CLASS;
 import static org.hibernate.query.sqm.tree.spi.select.DynamicInstantiationNature.LIST;
 import static org.hibernate.query.sqm.tree.spi.select.DynamicInstantiationNature.MAP;
+import static org.hibernate.sql.results.graph.instantiation.internal.InstantiationHelper.firstIncompatibleArgument;
 import static org.hibernate.sql.results.graph.instantiation.internal.InstantiationHelper.isConstructorCompatible;
 import static org.hibernate.sql.results.graph.instantiation.internal.InstantiationHelper.isInjectionCompatible;
 
@@ -181,6 +184,33 @@ public class SqmDynamicInstantiation<T>
 			// TODO: is there anything we need to check for list/map instantiation?
 			return true;
 		}
+	}
+
+	@Nonnull
+	public String getInstantiationError(@Nonnull TypeConfiguration typeConfiguration) {
+		final var target = getInstantiationTarget().getJavaType();
+		final var types = argumentTypes();
+		final String signature = types.stream()
+				.map( type -> type == Void.class ? "null" : type.getTypeName() )
+				.collect( joining( ", ", "(", ")" ) );
+		if ( isFullyAliased() ) {
+			return "Missing constructor or attributes for injection into type '" + target.getName()
+					+ "' for argument types " + signature;
+		}
+
+		final String message = "Missing constructor for type '" + target.getName() + "' accepting " + signature;
+		final var candidates = stream( target.getDeclaredConstructors() )
+				.filter( constructor -> constructor.getGenericParameterTypes().length == types.size() )
+				.limit( 2 )
+				.toList();
+		if ( candidates.size() == 1 ) {
+			final var parameters = candidates.get( 0 ).getGenericParameterTypes();
+			final int mismatch = firstIncompatibleArgument( parameters, types, typeConfiguration );
+			if ( mismatch >= 0 ) {
+				return message + " (argument " + (mismatch + 1) + " requires '" + parameters[mismatch].getTypeName() + "')";
+			}
+		}
+		return message;
 	}
 
 	@Nonnull

@@ -72,23 +72,11 @@ public class StatelessFindByKeyOperation<T> extends AbstractFindByKeyOperation<T
 				Helper.coerceId( getEntityDescriptor(), key,
 						getSession().getFactory() );
 
-		final Object cachedEntity = loadFromSecondLevelCache( key, loadAccessContext );
-		if ( cachedEntity != null ) {
-			final var temporaryPersistenceContext = getSession().getPersistenceContext();
-			if ( temporaryPersistenceContext.isLoadFinished() ) {
-				temporaryPersistenceContext.clear();
-			}
-			//noinspection unchecked
-			return (T) cachedEntity;
-		}
-
 		return withOptions( () -> {
-			final Object result = getEntityDescriptor().load(
-					keyToLoad,
-					null,
-					getNullSafeLockMode(),
-					getSession()
-			);
+			final Object cachedEntity = loadFromSecondLevelCache( key, loadAccessContext );
+			final Object result = cachedEntity != null
+					? cachedEntity
+					: getEntityDescriptor().load( keyToLoad, null, getNullSafeLockMode(), getSession() );
 			//noinspection unchecked
 			return (T) result;
 		} );

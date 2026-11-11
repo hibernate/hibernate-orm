@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hibernate.type.SqlTypes.JSON;
 import static org.hibernate.type.SqlTypes.SQLXML;
 
-/// Executes older-profile expressions on the actual configured Oracle server.
+/// Executes text-profile expressions, including disabled OSON, on the configured Oracle server.
 /// This is expression evidence, not a claim of live Oracle19/21 ORM coverage.
 ///
 /// @author Steve Ebersole
@@ -71,7 +71,7 @@ class OracleLocalTimeAggregateExpressionTests {
 		return OracleLocalTimeAggregateSqlTests.read( profile, format,
 				format == JSON ? "doc" : "case when doc is null then null else xmltype(doc) end",
 				nested ? (format == JSON ? "nested.value" : "nested/value") : "value",
-				OracleLocalTimeAggregateSqlTests.TIME );
+				OracleLocalTimeAggregateSqlTests.TIME, OracleLocalTimeAggregateSqlTests.types( false ) );
 	}
 
 	private static void assertRead(Connection connection, int profile, int format, String time, boolean nested)
@@ -119,7 +119,7 @@ class OracleLocalTimeAggregateExpressionTests {
 
 	private static void assertWriteRead(Connection connection, int profile) throws SQLException {
 		final String write = OracleLocalTimeAggregateSqlTests.write( profile, "cast(? as timestamp(9))",
-				OracleLocalTimeAggregateSqlTests.TIME );
+				OracleLocalTimeAggregateSqlTests.TIME, OracleLocalTimeAggregateSqlTests.types( false ) );
 		try ( var statement = connection.prepareStatement( "select " + write + " from dual" ) ) {
 			for ( LocalTime time : Arrays.asList( LocalTime.MIDNIGHT, LocalTime.of( 12, 34, 56, 123456789 ), null ) ) {
 				statement.setObject( 1, time == null ? null : time.atDate( LocalDate.of( 1970, 1, 1 ) ) );
@@ -148,7 +148,7 @@ class OracleLocalTimeAggregateExpressionTests {
 	private static void assertXmlWriteRead(Connection connection, int profile) throws SQLException {
 		final String write = OracleLocalTimeAggregateSqlTests.xmlWrite( profile, "cast(? as timestamp(9))" );
 		final String read = OracleLocalTimeAggregateSqlTests.read( profile, SQLXML, "doc", "value",
-				OracleLocalTimeAggregateSqlTests.TIME );
+				OracleLocalTimeAggregateSqlTests.TIME, OracleLocalTimeAggregateSqlTests.types( false ) );
 		try ( var statement = connection.prepareStatement( "select " + read
 				+ ",xmlserialize(content doc as varchar2(4000)) from (select " + write + " doc from dual)" ) ) {
 			for ( LocalTime time : Arrays.asList( LocalTime.MIDNIGHT, LocalTime.of( 23, 59, 59, 123456789 ), null ) ) {

@@ -975,13 +975,15 @@ The following fixes change behavior applications may observe after upgrading:
 [[java-time-direct-jdbc]]
 === Direct JDBC handling of `java.time` values
 
-The default value of `hibernate.type.java_time_use_direct_jdbc` is now `true`.
-Previously, Hibernate converted `java.time` values to legacy `java.sql` representations before passing them to JDBC.
-Hibernate now uses `java.time` values directly where the configured dialect reports support for the Java type.
+The default value of `hibernate.type.java_time_use_direct_jdbc` remains `false` in Hibernate 8.0.
+By default, Hibernate converts `java.time` values to legacy JDBC representations.
+Applications may opt in to direct JDBC access by setting `hibernate.type.java_time_use_direct_jdbc=true`.
+When enabled, Hibernate uses `java.time` values directly where the configured dialect reports support for the Java type.
 For unsupported types, Hibernate falls back to the legacy JDBC representation and logs the driver/database limitation.
 
-Applications should verify temporal value handling with their JDBC driver when upgrading, particularly where they rely on the previous conversion behavior.
-Set `hibernate.type.java_time_use_direct_jdbc=false` to retain the legacy behavior.
+Enabling direct access can change temporal value handling. Verify the behavior with the application's JDBC driver,
+particularly when migrating from the legacy conversions. Applications upgrading from an earlier 8.0 prerelease
+that relied on direct access being enabled by default must now set the preference explicitly to retain that choice.
 
 [[lock-cascading]]
 === Removal of lock cascading

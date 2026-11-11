@@ -8,11 +8,13 @@ import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
+import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.tool.schema.Action;
 
 import org.hibernate.testing.env.TestingDatabaseInfo;
 import org.hibernate.testing.orm.domain.library.Book;
 import org.hibernate.testing.orm.domain.library.Person;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.transaction.TransactionUtil2;
 import org.junit.jupiter.api.Test;
@@ -27,6 +29,7 @@ import static jakarta.persistence.PersistenceConfiguration.JDBC_URL;
 import static jakarta.persistence.PersistenceConfiguration.JDBC_USER;
 import static jakarta.persistence.PersistenceConfiguration.SCHEMAGEN_CREATE_TARGET;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.cfg.PersistenceSettings.JAKARTA_PERSISTENCE_PROVIDER;
 
 /**
  * Simple tests for {@linkplain PersistenceConfiguration} and {@linkplain HibernatePersistenceConfiguration}.
@@ -41,6 +44,33 @@ public class PersistenceConfigurationTests {
 			assert emf.isOpen();
 		}
 		try (EntityManagerFactory emf = new HibernatePersistenceConfiguration( "emf" ).createEntityManagerFactory()) {
+			assert emf.isOpen();
+		}
+	}
+
+	@Test
+	@JiraKey( "HHH-21138" )
+	void testOtherProviderNamed() {
+		final HibernatePersistenceProvider provider = new HibernatePersistenceProvider();
+
+		final PersistenceConfiguration cfg1 = new PersistenceConfiguration( "emf" ).provider( "org.example.OtherProvider" );
+		assertThat( provider.createEntityManagerFactory( cfg1 ) ).isNull();
+		assertThat( provider.generateSchema( cfg1 ) ).isFalse();
+
+		final PersistenceConfiguration cfg2 = new PersistenceConfiguration( "emf" )
+				.property( JAKARTA_PERSISTENCE_PROVIDER, "org.example.OtherProvider" );
+		assertThat( provider.createEntityManagerFactory( cfg2 ) ).isNull();
+		assertThat( provider.generateSchema( cfg2 ) ).isFalse();
+	}
+
+	@Test
+	@JiraKey( "HHH-21138" )
+	@RequiresDialect( H2Dialect.class )
+	void testHibernateProviderNamed() {
+		final PersistenceConfiguration cfg = new PersistenceConfiguration( "emf" )
+				.provider( HibernatePersistenceProvider.class.getName() );
+		try (EntityManagerFactory emf = new HibernatePersistenceProvider().createEntityManagerFactory( cfg )) {
+			assertThat( emf ).isNotNull();
 			assert emf.isOpen();
 		}
 	}

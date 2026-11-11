@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.query.restriction;
 
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import jakarta.data.Order;
 import jakarta.data.Sort;
 import jakarta.data.constraint.In;
@@ -34,6 +37,7 @@ import static org.hibernate.query.restriction.JakartaDataRestriction.adaptRestri
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @SessionFactory
 @DomainModel(annotatedClasses = {
 		JakartaDataRestrictionTest.Book.class,

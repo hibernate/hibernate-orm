@@ -11,6 +11,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.SpannerDialect;
+import org.hibernate.dialect.SybaseASEDialect;
+import org.junit.jupiter.api.Test;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
@@ -29,9 +31,17 @@ class TemporalCachePrecisionEligibilityTests {
 		return Stream.of(
 				Arguments.of( H2Dialect.class, true ),
 				Arguments.of( HSQLDialect.class, true ),
+				Arguments.of( SybaseASEDialect.class, false ),
 				Arguments.of( SpannerDialect.class, false ),
 				Arguments.of( SpannerPostgreSQLDialect.class, false )
 		);
+	}
+
+	@Test
+	void changingFixedTypeNamesDoesNotImplementFractionalPrecision() {
+		assertThat( TemporalCachePrecisionSupport.rendersFractionalPrecision( "bigdatetime", "datetime" ) ).isFalse();
+		assertThat( TemporalCachePrecisionSupport.rendersFractionalPrecision( "timestamp(0)", "datetime(3)" ) ).isFalse();
+		assertThat( TemporalCachePrecisionSupport.rendersFractionalPrecision( "timestamp(0)", "timestamp(3)" ) ).isTrue();
 	}
 
 	@ParameterizedTest

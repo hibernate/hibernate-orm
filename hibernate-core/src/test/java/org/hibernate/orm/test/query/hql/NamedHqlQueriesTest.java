@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.query.hql;
 
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.List;
@@ -22,6 +25,7 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 
 @DomainModel( annotatedClasses = NamedHqlQueriesTest.VideoGame.class )
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @SessionFactory
 public class NamedHqlQueriesTest {
 

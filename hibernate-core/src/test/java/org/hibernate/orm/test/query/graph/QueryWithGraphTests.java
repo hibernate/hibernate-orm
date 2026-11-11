@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.query.graph;
 
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import jakarta.persistence.ColumnResult;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityGraph;
@@ -34,6 +37,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * @author Steve Ebersole
  */
 @DomainModel(annotatedClasses = {Book.class, QueryWithGraphTests.Publisher.class})
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @SessionFactory
 public class QueryWithGraphTests {
 	@BeforeEach

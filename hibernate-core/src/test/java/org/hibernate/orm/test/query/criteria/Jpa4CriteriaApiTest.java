@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.query.criteria;
 
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import java.time.LocalDate;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -26,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 @JiraKey("HHH-20363")
-@Jpa(annotatedClasses = Jpa4CriteriaApiTest.Article.class)
+@Jpa(properties = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"), annotatedClasses = Jpa4CriteriaApiTest.Article.class)
 class Jpa4CriteriaApiTest {
 
 	@Test

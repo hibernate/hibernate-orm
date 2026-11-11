@@ -11,8 +11,9 @@ import org.hibernate.mapping.Component;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /// Inspects the actual COLUMN primary descriptors, not a generic TIMESTAMP type.
-/// Rendering the same type at two precisions distinguishes parameterized SQL
-/// types from fixed-precision types without parsing arbitrary SQL definitions.
+/// Requires an explicit fractional precision parameter on the same SQL type.
+/// Switching between fixed-precision types (for example Sybase bigdatetime and
+/// datetime) is not evidence that a requested precision of zero is implemented.
 ///
 /// @author Steve Ebersole
 final class TemporalCachePrecisionSupport {
@@ -37,12 +38,18 @@ final class TemporalCachePrecisionSupport {
 			final var three = descriptor.getTypeName( new Size().setPrecision( 3 )
 					.setLength( actualSize.getLength() ).setScale( actualSize.getScale() ), primary.getType(), registry );
 			assertThat( column.getSqlType( metadata ) ).isEqualTo( zero );
-			supported &= !zero.equals( three );
+			supported &= rendersFractionalPrecision( zero, three );
 			descriptions.add( property + ": " + zero + " (precision 3: " + three + ")" );
 		}
 		final var result = new Precision( supported, List.copyOf( descriptions ) );
 		System.out.println( "TEMPORAL_CACHE_PRECISION " + dialect.getClass().getSimpleName() + " " + result );
 		return result;
+	}
+
+	static boolean rendersFractionalPrecision(String zero, String three) {
+		// Deliberately recognize only an explicit timestamp precision parameter,
+		// retaining suffixes such as WITH TIME ZONE. Unknown renderings stay ineligible.
+		return zero.contains( "(0)" ) && three.equals( zero.replace( "(0)", "(3)" ) );
 	}
 
 	record Precision(boolean supported, List<String> primaryTypes) {

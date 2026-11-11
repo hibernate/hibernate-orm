@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.schemaupdate;
 
+import org.hibernate.cfg.MappingSettings;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -38,7 +39,9 @@ public class LocalDateTimeAndEnumSchemaUpdateTest {
 	public void setUp() throws IOException {
 		output = File.createTempFile( "update_script", ".sql" );
 		output.deleteOnExit();
-		ssr = ServiceRegistryUtil.serviceRegistry();
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
+				.applySetting( MappingSettings.TEMPORAL_PRESERVATION, false )
+				.build();
 	}
 
 	@AfterEach

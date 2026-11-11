@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.write;
 
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -14,6 +17,7 @@ import jakarta.persistence.Table;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DomainModel(annotatedClasses = CustomSqlGeneratedUpdateTest.Item.class)
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @SessionFactory
 class CustomSqlGeneratedUpdateTest {
 	@Test

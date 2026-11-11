@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.mapping.javatime.redesign.context;
 
+import org.hibernate.orm.test.mapping.javatime.redesign.TemporalLiveProfile;
+import org.junit.jupiter.api.BeforeEach;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Map;
@@ -23,6 +25,11 @@ import static org.assertj.core.api.Assertions.*;
 		@org.hibernate.testing.orm.junit.RequiresDialect( org.hibernate.dialect.PostgreSQLDialect.class ),
 		@org.hibernate.testing.orm.junit.RequiresDialect( org.hibernate.dialect.OracleDialect.class ) } )
 class TemporalNativeConstraintTests {
+	@BeforeEach
+	void requireLiveProfile() {
+		TemporalLiveProfile.requireSupported();
+	}
+
 	@ParameterizedTest
 	@ValueSource( booleans = { true, false } )
 	void nativeAndPlainStorageRemainDistinct( boolean metadata ) {

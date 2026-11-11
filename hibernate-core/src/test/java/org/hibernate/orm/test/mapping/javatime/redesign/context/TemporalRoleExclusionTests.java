@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.mapping.javatime.redesign.context;
 
+import org.hibernate.orm.test.mapping.javatime.redesign.TemporalLiveProfile;
+import org.junit.jupiter.api.BeforeEach;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.OracleDialect;
@@ -28,6 +30,11 @@ import static org.assertj.core.api.Assertions.*;
 @RequiresDialect(PostgreSQLDialect.class)
 @RequiresDialect(OracleDialect.class)
 class TemporalRoleExclusionTests {
+	@BeforeEach
+	void requireLiveProfile() {
+		TemporalLiveProfile.requireSupported();
+	}
+
 	@ParameterizedTest @ValueSource(booleans={true,false})
 	void explicitExcludedDeclarationsFail(boolean metadata) {
 		for(Class<?> type:List.of(IdNone.class,IdColumn.class,VersionNone.class,VersionColumn.class,EmbeddedId.class,MapNone.class,MapColumn.class,MapRep.class,ArrayNone.class,ArrayColumn.class,ArrayRep.class,BasicList.class)) {

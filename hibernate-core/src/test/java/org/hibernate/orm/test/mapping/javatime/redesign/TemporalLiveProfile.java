@@ -26,7 +26,10 @@ public enum TemporalLiveProfile {
 	}
 
 	public static TemporalLiveProfile requireSupported() {
-		final String dialect = Environment.getProperties().getProperty( "hibernate.dialect" );
+		return requireSupported( Environment.getProperties().getProperty( "hibernate.dialect" ) );
+	}
+
+	public static TemporalLiveProfile requireSupported(String dialect) {
 		final var profile = classify( dialect );
 		assumeTrue( profile != UNSUPPORTED, "Temporal live harness has no established session/DDL profile for " + dialect );
 		return profile;

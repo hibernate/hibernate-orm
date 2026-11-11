@@ -76,8 +76,8 @@ abstract class OracleLocalTimeAggregateTestSupport {
 			if ( xml || scope.getSessionFactory().getJdbcServices().getDialect().getVersion().isBefore( 23 ) ) {
 				session.doWork( connection -> {
 					final String valueExpression = xml
-							? "xmlcast(xmlquery('/e/clock/clock_time/text()' passing payload returning content) as varchar2(35))"
-							: "json_value(payload,'$.clock.clock_time')";
+							? "xmlcast(xmlquery('/e/clock_time/text()' passing payload returning content) as varchar2(35))"
+							: "json_value(payload,'$.clock_time')";
 					try ( var statement = connection.createStatement();
 							var result = statement.executeQuery( "select " + valueExpression + " from " + entityName + " where id=1" ) ) {
 						assertThat( result.next() ).isTrue();

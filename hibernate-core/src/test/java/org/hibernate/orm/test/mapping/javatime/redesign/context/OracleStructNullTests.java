@@ -42,7 +42,8 @@ class OracleStructNullTests {
 	@MethodSource("modes")
 	void nullLifecycleAndCallableInputs(boolean preservation, boolean metadata) {
 		try ( var scope = ContextScope.open( metadata, false,
-				Map.of( "hibernate.type.temporal_preservation", preservation ), List.of(), Row.class ) ) {
+				Map.of( "hibernate.type.temporal_preservation", preservation,
+						"hibernate.test.temporal.reuse_connection", true ), List.of(), Row.class ) ) {
 			// A non-temporal member proves that the defect is independent of Java Time.
 			scope.tx( session -> {
 				var row = new Row();

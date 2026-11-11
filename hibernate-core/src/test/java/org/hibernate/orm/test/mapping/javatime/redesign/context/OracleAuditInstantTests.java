@@ -60,6 +60,7 @@ class OracleAuditInstantTests {
 	void utcKeysAndHistoricalBoundaries(boolean preservation, boolean metadata, String strategy) throws Exception {
 		var supplier = new TemporalPeriodFixture.Fixed();
 		try ( var scope = ContextScope.open( metadata, false, Map.of(
+				"hibernate.test.temporal.reuse_connection", true,
 				"hibernate.type.temporal_preservation", preservation,
 				"hibernate.temporal.changeset_id_supplier", supplier,
 				"hibernate.audit.strategy", strategy ), List.of(), Row.class, ApplicationInstant.class ) ) {

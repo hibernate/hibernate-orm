@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.annotations.collectionelement;
 
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -34,6 +37,7 @@ import jakarta.persistence.Id;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel(
 		annotatedClasses = {
 				OnDeleteCascadeToElementCollectionTest.Cascading.class,

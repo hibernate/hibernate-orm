@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.mapping.converted.converter;
 
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import java.time.LocalDate;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Convert;
@@ -25,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Steve Ebersole
  */
 @JiraKey( value = "HHH-8842" )
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel(annotatedClasses = {BasicCustomTimeConversionTest.TheEntity.class})
 @SessionFactory
 public class BasicCustomTimeConversionTest {

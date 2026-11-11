@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.mapping.javatime.redesign.context;
 
+import org.hibernate.orm.test.mapping.javatime.redesign.TemporalLiveProfile;
+import org.junit.jupiter.api.BeforeEach;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.OracleDialect;
@@ -21,6 +23,11 @@ import static org.assertj.core.api.Assertions.*;
 @RequiresDialect(PostgreSQLDialect.class)
 @RequiresDialect(OracleDialect.class)
 class TemporalColumnConverterTests {
+	@BeforeEach
+	void requireLiveProfile() {
+		TemporalLiveProfile.requireSupported();
+	}
+
 	@ParameterizedTest @ValueSource(booleans={true,false})
 	void rejectsWholeValueConvertersWithoutAdjustment(boolean metadata) {
 		for (Class<?> model : List.of(OffsetDateTimeScalarAbsent.class, OffsetDateTimeScalarNone.class, OffsetDateTimeSetAbsent.class, OffsetDateTimeSetNone.class, OffsetDateTimeListAbsent.class, OffsetDateTimeListNone.class, OffsetDateTimeBagAbsent.class, OffsetDateTimeBagNone.class, OffsetTimeScalarAbsent.class, OffsetTimeScalarNone.class, OffsetTimeSetAbsent.class, OffsetTimeSetNone.class, ZonedDateTimeScalarAbsent.class, ZonedDateTimeScalarNone.class, ZonedDateTimeListAbsent.class, ZonedDateTimeListNone.class)) {

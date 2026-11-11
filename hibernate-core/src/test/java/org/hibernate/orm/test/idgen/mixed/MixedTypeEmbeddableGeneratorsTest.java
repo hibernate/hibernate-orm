@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.idgen.mixed;
 
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Embeddable;
@@ -26,19 +28,18 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@DomainModel(
-		annotatedClasses = {
-				MixedTypeEmbeddableGeneratorsTest.Event.class,
-				MixedTypeEmbeddableGeneratorsTest.History.class,
-		}
-)
-@SessionFactory( useCollectingStatementObserver = true )
 @ServiceRegistry(
+		settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
 		settingProviders = @SettingProvider(
 				settingName = CurrentTimestampGeneration.CLOCK_SETTING_NAME,
 				provider = MutableClockSettingProvider.class
 		)
 )
+@DomainModel( annotatedClasses = {
+		MixedTypeEmbeddableGeneratorsTest.Event.class,
+		MixedTypeEmbeddableGeneratorsTest.History.class,
+} )
+@SessionFactory( useCollectingStatementObserver = true )
 class MixedTypeEmbeddableGeneratorsTest {
 
 	private MutableClock clock;

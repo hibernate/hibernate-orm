@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.annotations.generics;
 
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAccessor;
@@ -26,11 +29,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Marco Belladelli
  */
-@SessionFactory
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel( annotatedClasses = {
 		MappedSuperclassTemporalAccessorTest.AbstractSuperclass.class,
 		MappedSuperclassTemporalAccessorTest.TestEntity.class,
 } )
+@SessionFactory
 @Jira( "https://hibernate.atlassian.net/browse/HHH-16784" )
 public class MappedSuperclassTemporalAccessorTest {
 	@BeforeAll

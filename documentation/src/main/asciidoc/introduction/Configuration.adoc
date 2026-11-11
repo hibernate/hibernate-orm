@@ -76,7 +76,7 @@ driver for your database.
 | DB2                       | `com.ibm.db2:jcc:{version}`
 | SQL Server                | `com.microsoft.sqlserver:mssql-jdbc:{version}`
 | Oracle                    | `com.oracle.database.jdbc:ojdbc17:{version}`
-| Informix                  | `com.informix.jdbc.IfxDriver:{version}`
+| Informix                  | `com.ibm.informix:jdbc:{version}`
 | H2                        | `com.h2database:h2:{version}`
 | HSQLDB                    | `org.hsqldb:hsqldb:{version}`
 | MongoDB                   | The JDBC driver is bundled with the dialect mentioned in <<optional-dependencies>>

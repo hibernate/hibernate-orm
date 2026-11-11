@@ -79,7 +79,7 @@ There are many to choose from, as enumerated by link:{doc-javadoc-url}/org/hiber
 | `hibernate.agroal.leakTimeout` | The duration of time a connection can be held without causing a leak to be reported
 | `hibernate.agroal.idleValidationTimeout` | A foreground validation is executed if a connection has been idle on the pool for longer than this duration
 | `hibernate.agroal.validationTimeout` | The interval between background validation checks
-| `hibernate.agroal.initialSql` | A SQL command to be executed when a connection is created
+| `hibernate.agroal.initialSQL` | A SQL command to be executed when a connection is created
 |===
 
 The following settings are common to all connection pools supported by Hibernate:

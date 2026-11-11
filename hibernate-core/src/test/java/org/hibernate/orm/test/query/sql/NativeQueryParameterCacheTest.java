@@ -72,7 +72,7 @@ class NativeQueryParameterCacheTest {
 	void permutedParameterNames(boolean reverse, boolean scroll, SessionFactoryScope scope) {
 		String first = reverse ? "bar" : "foo";
 		String second = reverse ? "foo" : "bar";
-		String prefix = "select id, name from native_parameter_cache where first_value = :";
+		String prefix = "select id, name from native_parameter_cache where first_number = :";
 		scope.inTransaction( session -> {
 			assertThat( results( session.createNativeQuery(
 					prefix + first + " and second_value = :" + second, "row", Row.class )
@@ -91,7 +91,7 @@ class NativeQueryParameterCacheTest {
 	void repeatedParameterOccurrences(boolean reverse, SessionFactoryScope scope) {
 		String first = reverse ? "bar" : "foo";
 		String second = reverse ? "foo" : "bar";
-		String prefix = "select id, name from native_parameter_cache where first_value = :";
+		String prefix = "select id, name from native_parameter_cache where first_number = :";
 		scope.inTransaction( session -> {
 			assertThat( session.createNativeQuery(
 					prefix + first + " or second_value = :" + first + " order by id", "row", Row.class )
@@ -155,7 +155,7 @@ class NativeQueryParameterCacheTest {
 	void nativeMutationParameterOrder(boolean reverse, SessionFactoryScope scope) {
 		String first = reverse ? "bar" : "foo";
 		String second = reverse ? "foo" : "bar";
-		String prefix = "update native_parameter_cache set first_value = :";
+		String prefix = "update native_parameter_cache set first_number = :";
 		scope.inTransaction( session -> {
 			assertThat( session.createNativeMutationQuery( prefix + first + " where id = :" + second )
 					.setParameter( first, 11 ).setParameter( second, 1 ).executeUpdate() ).isEqualTo( 1 );
@@ -199,7 +199,7 @@ class NativeQueryParameterCacheTest {
 		@Id
 		Integer id;
 		String name;
-		@Column(name = "first_value")
+		@Column(name = "first_number")
 		Integer firstValue;
 		@Column(name = "second_value")
 		Integer secondValue;

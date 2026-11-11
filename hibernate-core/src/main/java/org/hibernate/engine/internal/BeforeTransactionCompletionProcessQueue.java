@@ -1,5 +1,7 @@
 package org.hibernate.engine.internal;
 
+import jakarta.persistence.PersistenceException;
+
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TransactionCompletionCallbacks.BeforeCompletionCallback;
@@ -20,8 +22,8 @@ class BeforeTransactionCompletionProcessQueue
 			try {
 				process.doBeforeTransactionCompletion( session );
 			}
-			catch (HibernateException he) {
-				throw he;
+			catch (PersistenceException e) {
+				throw e;
 			}
 			catch (Exception e) {
 				throw new HibernateException(

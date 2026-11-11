@@ -53,6 +53,7 @@ public class PropertyAccessMixedImpl implements PropertyAccess {
 				propertyValueAccessor = PropertyValueAccessor.standard(
 						propertyAccessorService.hibernateAccessorFactory().valueReader( field ),
 						valueWriterOrNull( propertyAccessorService.hibernateAccessorFactory(), field ),
+						containerJavaType,
 						propertyName
 				);
 				break;
@@ -71,6 +72,7 @@ public class PropertyAccessMixedImpl implements PropertyAccess {
 				propertyValueAccessor = PropertyValueAccessor.standard(
 						propertyAccessorService.hibernateAccessorFactory().valueReader( getterMethod ),
 						propertyAccessorService.hibernateAccessorFactory().valueWriter( setterMethod ),
+						containerJavaType,
 						propertyName
 				);
 				break;

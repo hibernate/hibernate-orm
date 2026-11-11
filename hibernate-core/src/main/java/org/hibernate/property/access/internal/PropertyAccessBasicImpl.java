@@ -53,6 +53,7 @@ public class PropertyAccessBasicImpl implements PropertyAccess {
 						.valueReader( getterMethod ),
 				setterMethod == null ? null : propertyAccessorService.hibernateAccessorFactory()
 						.valueWriter( setterMethod ),
+				containerJavaType,
 				propertyName
 		);
 	}

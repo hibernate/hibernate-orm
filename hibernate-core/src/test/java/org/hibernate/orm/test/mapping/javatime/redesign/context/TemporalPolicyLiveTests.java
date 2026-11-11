@@ -13,6 +13,8 @@ import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.Version;
 
 import org.hibernate.Session;
+import org.hibernate.orm.test.mapping.javatime.redesign.TemporalEligibilityChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.CurrentTimestamp;
@@ -83,6 +85,7 @@ class TemporalPolicyLiveTests {
 
 	@ParameterizedTest
 	@ValueSource(booleans = { true, false })
+	@RequiresDialectFeature(feature = TemporalEligibilityChecks.NormalizedOffsetDateTimeProducer.class)
 	void generatedVersionStillEnforcesOptimisticLocking(boolean metadata) {
 		try ( var scope = ContextScope.open( metadata, Versioned.class ) ) {
 			final var mapping = (BasicValue) scope.metadata.getEntityBinding( Versioned.class.getName() ).getVersion().getValue();

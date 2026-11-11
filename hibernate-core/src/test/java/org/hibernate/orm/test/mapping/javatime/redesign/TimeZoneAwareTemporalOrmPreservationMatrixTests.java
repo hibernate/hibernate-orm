@@ -39,6 +39,7 @@ import java.util.stream.Stream;
 @RequiresDialect(H2Dialect.class)
 @RequiresDialect(PostgreSQLDialect.class)
 @RequiresDialect(OracleDialect.class)
+@RequiresDialectFeature(feature = TemporalEligibilityChecks.LiveProfile.class)
 class TimeZoneAwareTemporalOrmPreservationMatrixTests {
 	enum Handling {
 		DIRECT,

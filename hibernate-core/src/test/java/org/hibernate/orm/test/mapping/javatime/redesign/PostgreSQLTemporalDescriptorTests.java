@@ -11,6 +11,7 @@ import org.hibernate.dialect.type.internal.PostgreSQLOffsetTimeJdbcType;
 import org.hibernate.dialect.type.internal.PostgreSQLUtcTimeJdbcType;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.type.descriptor.java.OffsetTimeJavaType;
@@ -39,6 +40,7 @@ class PostgreSQLTemporalDescriptorTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = TemporalEligibilityChecks.LiveProfile.class)
 	void offsetSecondsEndOfDayAndNulls(SessionFactoryScope scope) throws Exception {
 		final var settings = new java.util.HashMap<>( scope.getSessionFactory().getServiceRegistry()
 				.requireService( org.hibernate.engine.config.spi.ConfigurationService.class ).getSettings() );

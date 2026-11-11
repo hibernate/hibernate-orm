@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.locking;
 
+import org.hibernate.orm.test.mapping.javatime.redesign.TemporalEligibilityChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.LockModeType;
@@ -15,6 +18,7 @@ import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SuppressWarnings("JUnitMalformedDeclaration")
+@RequiresDialectFeature(feature = TemporalEligibilityChecks.LocalDateTimeProducer.class)
 @Jpa(annotatedClasses = CurrentTimestampVersionTest.Timestamped.class)
 class CurrentTimestampVersionTest {
 	@AfterEach

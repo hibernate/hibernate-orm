@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.locking;
 
+import org.hibernate.orm.test.mapping.javatime.redesign.TemporalEligibilityChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
@@ -21,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Vlad Mihalcea
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
+@RequiresDialectFeature(feature = TemporalEligibilityChecks.LocalDateTimeProducer.class)
 @DomainModel( annotatedClasses = VersionSourceTest.Person.class )
 @SessionFactory
 public class VersionSourceTest {

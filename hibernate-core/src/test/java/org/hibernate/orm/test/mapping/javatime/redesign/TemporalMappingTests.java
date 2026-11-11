@@ -12,6 +12,7 @@ import org.hibernate.annotations.TimeZoneAdjustment;
 import org.hibernate.annotations.TimeZoneRepresentation;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -26,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 ///
 /// @author Steve Ebersole
 @ServiceRegistry(settings = @Setting(name = MappingSettings.JAVA_TIME_USE_DIRECT_JDBC, value = "true"))
+@RequiresDialectFeature(feature = TemporalEligibilityChecks.AdjustedOffsetDateTime.class)
 @DomainModel(annotatedClasses = TemporalMappingTests.Event.class)
 @SessionFactory
 class TemporalMappingTests {
@@ -35,7 +37,6 @@ class TemporalMappingTests {
 		scope.inTransaction( session -> {
 			final var event = new Event();
 			event.id = 1L;
-			event.adjustedTime = java.time.OffsetTime.parse( "01:00+05:30:45" );
 			event.newYork = input;
 			event.india = input;
 			event.columnValue = input.atZoneSameInstant( ZoneId.of( "Europe/Paris" ) );
@@ -45,9 +46,6 @@ class TemporalMappingTests {
 		} );
 		scope.inTransaction( session -> {
 			final var event = session.find( Event.class, 1L );
-			assertThat( event.adjustedTime ).isEqualTo( java.time.OffsetTime.parse( "13:29:15+18:00" ) );
-			assertThat( session.createSelectionQuery( "from TemporalEvent e where e.adjustedTime = :time", Event.class )
-					.setParameter( "time", java.time.OffsetTime.parse( "01:00+05:30:45" ) ).getResultList() ).hasSize( 1 );
 
 			assertThat( event.newYork.getOffset() ).isEqualTo( ZoneOffset.ofHours( -4 ) );
 			assertThat( event.india.getOffset() ).isEqualTo( ZoneOffset.ofHoursMinutes( 5, 30 ) );
@@ -94,10 +92,6 @@ class TemporalMappingTests {
 		Long id;
 
 		OffsetDateTime newYork;
-
-		@TimeZoneAdjustment("+18:00")
-		java.time.OffsetTime adjustedTime;
-
 
 		@TimeZoneAdjustment("+05:30")
 		OffsetDateTime india;

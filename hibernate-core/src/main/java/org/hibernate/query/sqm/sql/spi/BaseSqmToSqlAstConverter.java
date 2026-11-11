@@ -2220,6 +2220,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				// This is arguably silly, but let's play safe here and disable the transformation in this case.
 				return false;
 			}
+			else if ( sqmQueryPart instanceof SqmQuerySpec<?> spec && whereReferencesFetchedPluralJoin( spec ) ) {
+				// When WHERE clause references a fetched plural join, applying
+				// a WHERE predicate to the fetched collection changes the
+				// collection's contents (partial collection). This breaks
+				// pagination semantics - we can't push pagination down.
+				return false;
+			}
 			else if ( sqmQueryPart.getFetchExpression() != null
 					|| sqmQueryPart.getOffsetExpression() != null ) {
 				return true;
@@ -2321,6 +2328,58 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			assert referencedPath.getLhs() != null;
 			return !allowedPaths.contains( referencedPath.getLhs() );
 		}
+	}
+
+	public static boolean whereReferencesFetchedPluralJoin(SqmQuerySpec<?> spec) {
+		final var whereClause = spec.getWhereClause();
+		if ( whereClause == null ) {
+			return false;
+		}
+
+		final Set<SqmFrom<?, ?>> fetchedPluralJoins = new HashSet<>();
+		for ( var root : spec.getFromClause().getRoots() ) {
+			collectFetchedPluralJoins( root, fetchedPluralJoins );
+		}
+
+		if ( fetchedPluralJoins.isEmpty() ) {
+			return false;
+		}
+
+		return predicateReferencesAnyJoin( whereClause.getPredicate(), fetchedPluralJoins );
+	}
+
+	private static void collectFetchedPluralJoins(SqmFrom<?, ?> from, Set<SqmFrom<?, ?>> joins) {
+		for ( var join : from.getSqmJoins() ) {
+			if ( join instanceof SqmAttributeJoin<?, ?> attributeJoin && attributeJoin.isFetched() ) {
+				if ( attributeJoin.getAttribute() instanceof PluralPersistentAttribute<?, ?, ?> ) {
+					joins.add( join );
+				}
+				collectFetchedPluralJoins( join, joins );
+			}
+		}
+	}
+
+	private static boolean predicateReferencesAnyJoin(SqmPredicate predicate, Set<SqmFrom<?, ?>> joins) {
+		if ( predicate == null || joins.isEmpty() ) {
+			return false;
+		}
+		final Set<SqmPath<?>> predicatePaths = new HashSet<>();
+		predicate.accept( new SqmPathVisitor( predicatePaths::add ) );
+		for ( SqmPath<?> path : predicatePaths ) {
+			SqmPath<?> current = path;
+			while ( current != null ) {
+				if ( joins.contains( current ) ) {
+					return true;
+				}
+				if ( current instanceof SqmFrom<?, ?> from && from.isCorrelated() ) {
+					current = from.getCorrelationParent();
+				}
+				else {
+					current = current.getLhs();
+				}
+			}
+		}
+		return false;
 	}
 
 	/**

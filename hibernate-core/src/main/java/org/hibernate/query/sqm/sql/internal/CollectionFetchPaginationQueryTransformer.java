@@ -115,6 +115,14 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 
 		final var roots = querySpec.getFromClause().getRoots();
 		final var movedJoins = collectMovedJoins( primaryRoot );
+
+		// Disqualify if WHERE clause references any moved collection join
+		if ( whereReferencesMovedJoins( querySpec, movedJoins ) ) {
+			// Return unchanged - in-memory pagination will be applied instead
+			// The offset/fetch are already omitted by limitOmittingExecutionContext()
+			return querySpec;
+		}
+
 		// Aliases that will still be directly reachable from the outer query after
 		// the plural fetch joins are moved there. Anything else referenced by the
 		// outer query has to be projected through the derived table first.
@@ -176,6 +184,20 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 		final List<MovedJoin> movedJoins = new ArrayList<>();
 		collectMovedPluralFetches( primaryRoot, movedJoins );
 		return movedJoins;
+	}
+
+	private static boolean whereReferencesMovedJoins(QuerySpec querySpec, List<MovedJoin> movedJoins) {
+		final var whereClause = querySpec.getWhereClauseRestrictions();
+		if ( whereClause == null || movedJoins.isEmpty() ) {
+			return false;
+		}
+
+		final Set<String> movedAliases = new HashSet<>();
+		for ( var moved : movedJoins ) {
+			collectAliases( moved.join().getJoinedGroup(), movedAliases );
+		}
+
+		return sqlAstReferencesAnyAlias( whereClause, movedAliases, null );
 	}
 
 	private static Set<String> collectOuterAliases(String primaryAlias, List<MovedJoin> movedJoins) {

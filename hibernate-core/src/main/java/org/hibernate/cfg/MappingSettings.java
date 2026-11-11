@@ -261,7 +261,7 @@ public interface MappingSettings {
 	 *
 	 * @since 8.0
 	 */
-	boolean JAVA_TIME_USE_DIRECT_JDBC_DEFAULT = true;
+	boolean JAVA_TIME_USE_DIRECT_JDBC_DEFAULT = false;
 
 	/**
 	 * Indicates that named SQL {@code enum} types should be used by default instead

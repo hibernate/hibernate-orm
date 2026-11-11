@@ -327,6 +327,14 @@ or require a schema rewrite. Existing history may already contain gaps or incons
 boundaries. Check continuity before migration: this repair does not rewrite historical intervals, and
 ambiguous repairs require an application-specific decision.
 
+Preservation-enabled EDB `LocalDate` handling accepts the finite range `-4712-01-01`
+through `+294276-12-31`. This common range accommodates EDB's timestamp-backed
+`DATE` when `edb_redwood_date` is enabled, without depending on bootstrap metadata
+or session settings. Explicit `pg_catalog.date` columns do not widen this handler
+contract. Values outside the range, including infinity sentinels, are rejected;
+review existing rows before enabling preservation. Ordinary PostgreSQL's wider
+`DATE` range and legacy explicit-conversion handling are unchanged.
+
 On Oracle, implicit `Instant` audit changeset identifiers using the built-in `TIMESTAMP_UTC`
 mapping now use plain `TIMESTAMP` with UTC binding, extraction and historical-query parameters
 in both preservation modes. Explicitly different preferred types, custom descriptors and

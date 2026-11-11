@@ -92,7 +92,11 @@ and rejected values are recorded explicitly. Connections, temporary tables and
 compatibility setting changes are confined to the test transactions.
 
 EDB shares PostgreSQL session SQL, but `providerDialect` retains its separate
-identity in `TP_CASE` output and child-process environments. Existing production
-bounds and positive range samples remain unchanged until live typed JDBC evidence
-establishes the EDB finite domain. Do not substitute a PostgreSQL or H2 pass for
-that evidence or skip the existing failing EDB endpoint to claim closure.
+identity in `TP_CASE` output and child-process environments. Its LocalDate matrix
+uses the common finite interval `-4712-01-01` through `+294276-12-31`, independently
+of production constants. EDB 17.4 / EDB JDBC 42.7.3.5 typed probes established these
+endpoints with `edb_redwood_date` on/off and explicit `pg_catalog.date`; the latter
+can store wider values but does not widen the default handler contract. Neighboring
+out-of-domain dates and Java infinity sentinels remain rejection cases. Ordinary
+PostgreSQL retains its wider DATE maximum. pgJDBC-on-EDB verification remains
+separate; a PostgreSQL or H2 pass is not live EDB evidence.

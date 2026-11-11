@@ -4,6 +4,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.PessimisticLockException;
 
 import org.hibernate.HibernateException;
 
@@ -20,6 +21,8 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DomainModel(annotatedClasses = {CustomBeforeCompletionTest.SimpleEntity.class})
 @SessionFactory
@@ -78,6 +81,17 @@ public class CustomBeforeCompletionTest {
 					.uniqueResult();
 			assertEquals( 0L, count );
 		} );
+	}
+
+	@Test
+	@JiraKey("HHH-13386")
+	void propagatesPersistenceExceptionFromCallback(SessionFactoryScope scope) {
+		final var lockFailure = new PessimisticLockException();
+		final var thrown = assertThrows( PessimisticLockException.class, () ->
+				scope.inTransaction( session -> session.getTransactionCompletionCallbacks().registerCallback( s -> {
+					throw lockFailure;
+				} ) ) );
+		assertSame( lockFailure, thrown );
 	}
 
 	@Entity(name = "SimpleEntity")

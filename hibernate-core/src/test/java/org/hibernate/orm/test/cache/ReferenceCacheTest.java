@@ -3,18 +3,21 @@ package org.hibernate.orm.test.cache;
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.PostLoad;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.cfg.Environment;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -75,6 +78,24 @@ public class ReferenceCacheTest {
 		} );
 	}
 
+	@Test
+	@JiraKey("HHH-21109")
+	void statelessQueryInvokesPostLoad(SessionFactoryScope scope) {
+		final var data = new MyReferenceData( 2, "second item", "xyz" );
+		scope.inTransaction( session -> session.persist( data ) );
+		try {
+			scope.inStatelessTransaction( session -> {
+				var result = session.createSelectionQuery( "from MyReferenceData where id = 2", MyReferenceData.class )
+						.getSingleResult();
+				assertSame( data, result );
+				assertEquals( 1, result.postLoadCalls );
+			} );
+		}
+		finally {
+			scope.inTransaction( session -> session.remove( data ) );
+		}
+	}
+
 	@Entity(name = "MyReferenceData")
 	@Immutable
 	@Cacheable
@@ -85,6 +106,12 @@ public class ReferenceCacheTest {
 		private Integer id;
 		private String name;
 		private String theValue;
+		private transient int postLoadCalls;
+
+		@PostLoad
+		void postLoad() {
+			postLoadCalls++;
+		}
 
 		public MyReferenceData(Integer id, String name, String theValue) {
 			this.id = id;

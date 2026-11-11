@@ -15,6 +15,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
@@ -44,7 +45,9 @@ public class TimeZoneColumnTest {
 	public void setUp() throws IOException {
 		output = File.createTempFile( "update_script", ".sql" );
 		output.deleteOnExit();
-		ssr = ServiceRegistryUtil.serviceRegistry();
+		// This fixture tests legacy annotation column options/comments, not preservation.
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
+				.applySetting( MappingSettings.TEMPORAL_PRESERVATION, false ).build();
 	}
 
 	@AfterEach

@@ -36,6 +36,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @RequiresDialect(OracleDialect.class)
 @DomainModel
 @SessionFactory(exportSchema = false)
+@RequiresDialectFeature(feature = TemporalEligibilityChecks.LiveProfile.class)
 class TimeZoneAwareTemporalPreservationMatrixTests {
 	enum Handling { DIRECT, FALLBACK }
 	enum Form { PLAIN, WITH_TIME_ZONE }

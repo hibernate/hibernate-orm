@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.*;
 @RequiresDialect(H2Dialect.class)
 @RequiresDialect(PostgreSQLDialect.class)
 @RequiresDialect(OracleDialect.class)
+@RequiresDialectFeature(feature = TemporalEligibilityChecks.LiveProfile.class)
 class NonTimeZoneAwareTemporalPreservationMatrixTests {
 	record Combination(Class<? extends ValueEntity> entity, boolean fallback) {}
 

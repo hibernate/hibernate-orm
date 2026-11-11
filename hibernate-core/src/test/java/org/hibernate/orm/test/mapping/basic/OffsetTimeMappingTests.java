@@ -6,6 +6,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.orm.test.mapping.javatime.redesign.TemporalEligibilityChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
@@ -26,6 +28,7 @@ import static org.hamcrest.Matchers.isOneOf;
 /**
  * @author Steve Ebersole
  */
+@RequiresDialectFeature(feature = TemporalEligibilityChecks.InlineOffsetTime.class)
 @DomainModel(annotatedClasses = OffsetTimeMappingTests.EntityWithOffsetTime.class)
 @SessionFactory
 public class OffsetTimeMappingTests {
@@ -48,12 +51,18 @@ public class OffsetTimeMappingTests {
 
 		scope.inTransaction(
 				(session) -> {
-					session.persist(new EntityWithOffsetTime(1, OffsetTime.now()));
+					session.persist(new EntityWithOffsetTime(1, OffsetTime.parse( "12:34:56+02:00" )));
 				}
 		);
 
 		scope.inTransaction(
-				(session) -> session.find(EntityWithOffsetTime.class, 1)
+				(session) -> {
+					final var actual = session.find(EntityWithOffsetTime.class, 1);
+					if ( sf.getSessionFactoryOptions().isTemporalPreservationEnabled() ) {
+						assertThat( actual.offsetTime, equalTo( OffsetTime.parse( "12:34:56+02:00" ) ) );
+					}
+					session.remove( actual );
+				}
 		);
 	}
 

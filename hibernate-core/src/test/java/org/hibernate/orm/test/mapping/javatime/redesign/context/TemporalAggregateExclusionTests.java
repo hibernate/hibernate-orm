@@ -71,6 +71,13 @@ class TemporalAggregateExclusionTests {
 				final var row=(Holder)control.getDeclaredConstructor().newInstance();row.id=1;final var nestedValue=new Nested();nestedValue.member=new DefaultMember();nestedValue.member.value=OffsetDateTime.parse("2026-07-01T12:00Z");row.aggregate(nestedValue);row.ordinary=new DefaultMember();row.ordinary.value=nestedValue.member.value;
 				scope.tx(session->session.persist(row));
 				scope.tx(session->{final var actual=(Holder)session.find(control,1);assertThat(actual.aggregate().member.value.toInstant()).isEqualTo(row.aggregate().member.value.toInstant());assertThat(actual.ordinary.value).isEqualTo(row.ordinary.value.withOffsetSameInstant(ZoneOffset.ofHoursMinutes(5,30)));});
+				scope.tx(session->{final var actual=(Holder)session.find(control,1);actual.aggregate().member.value=OffsetDateTime.parse("2026-07-02T13:00Z");});
+				scope.tx(session->{final var actual=(Holder)session.find(control,1);assertThat(actual.aggregate().member.value.toInstant()).isEqualTo(Instant.parse("2026-07-02T13:00:00Z"));});
+				// Exercise null binding on both driver-backed and casting paths of the EDB repair.
+				if ( scope.factory.getJdbcServices().getDialect() instanceof PostgreSQLDialect ) {
+					scope.tx(session->{final var actual=(Holder)session.find(control,1);actual.aggregate(null);});
+					scope.tx(session->{final var actual=(Holder)session.find(control,1);assertThat(actual.aggregate()).isNull();});
+				}
 			}
 			catch(ReflectiveOperationException ex) {throw new AssertionError(ex);}
 		}

@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import static org.hibernate.action.internal.ActionLogging.ACTION_LOGGER;
+import static org.hibernate.action.internal.UnresolvedEntityInsertActions.unresolvedInsertException;
 
 /// Manages decomposition of [actions][Executable] into table operations for planning.
 ///
@@ -530,36 +531,7 @@ public class Decomposer implements DecompositionContext {
 			return;
 		}
 
-		// Get first unresolved insert for error reporting
-		final var firstEntry = unresolvedInserts.entrySet().iterator().next();
-		final AbstractEntityInsertAction firstInsert = firstEntry.getKey();
-		final NonNullableTransientDependencies dependencies = firstEntry.getValue();
-
-		// Get first transient dependency for error message
-		final Object firstTransient = dependencies.getNonNullableTransientEntities().iterator().next();
-		final String firstPropertyPath = dependencies.getNonNullableTransientPropertyPaths(firstTransient).iterator().next();
-
-		final String entityName = firstInsert.getEntityName();
-		final String transientEntityName = session.guessEntityName(firstTransient);
-
-		// Log all unresolved dependencies for debugging
-		logUnresolvedDependencies();
-
-		throw new TransientPropertyValueException(
-				"Instance of '" + entityName +
-						"' references an unsaved transient instance of '" + transientEntityName +
-						"' (persist the transient instance before flushing)",
-				transientEntityName,
-				entityName,
-				firstPropertyPath
-		);
-	}
-
-	/// Log details about all unresolved dependencies for debugging purposes.
-	private void logUnresolvedDependencies() {
-		// Log via ActionLogger or similar when available
-		// For now, just track the data for error reporting
-		// The error message already includes the first unresolved dependency
+		throw unresolvedInsertException( unresolvedInserts.entrySet().iterator().next().getKey(), unresolvedInserts );
 	}
 
 	/// Clear all tracked unresolved inserts. Used for cleanup.

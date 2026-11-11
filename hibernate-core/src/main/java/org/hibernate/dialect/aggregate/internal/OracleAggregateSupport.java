@@ -10,6 +10,7 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.type.internal.OracleArrayJdbcType;
 import org.hibernate.dialect.type.internal.OracleLocalTimeJdbcType;
+import org.hibernate.dialect.type.internal.OracleJsonJdbcType;
 import org.hibernate.sql.spi.StringBuilderSqlAppender;
 import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.engine.jdbc.Size;
@@ -92,9 +93,13 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 		};
 	}
 
-	private boolean supportsOson() {
-		// OSON is supported when check constraints are supported
-		return checkConstraintSupport;
+	private boolean supportsOson(TypeConfiguration typeConfiguration) {
+		// Server JSON syntax and check constraints are independent of the selected
+		// JDBC representation. Inspect this factory's contribution without loading
+		// optional OSON driver classes or changing these shared support instances.
+		return jsonSupport == JsonSupport.OSON
+				&& typeConfiguration.getJdbcTypeRegistry().getDescriptor( JSON ) instanceof OracleJsonJdbcType jsonType
+				&& jsonType.usesOsonTemporalValues();
 	}
 
 	@Override
@@ -124,7 +129,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 						else {
 							parentPartExpression = aggregateParentReadExpression + ",'$.";
 						}
-						if ( !supportsOson() && isLocalTimeText( column.getJdbcMapping() ) ) {
+						if ( !supportsOson( typeConfiguration ) && isLocalTimeText( column.getJdbcMapping() ) ) {
 							return template.replace( placeholder, localTimeTextReadExpression(
 									"json_value(" + parentPartExpression + columnExpression + "')" ) );
 						}
@@ -158,7 +163,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 								);
 
 							case DATE:
-								if (supportsOson()) {
+								if (supportsOson( typeConfiguration )) {
 									// Oracle OSON extension is used, value is not stored as string
 									return template.replace(
 											placeholder,
@@ -178,7 +183,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 										"to_timestamp(json_value(" + parentPartExpression + columnExpression + "'),'hh24:mi:ss')"
 								);
 							case TIMESTAMP:
-								if (supportsOson()) {
+								if (supportsOson( typeConfiguration )) {
 									return template.replace(
 											placeholder,
 											"json_value(" + parentPartExpression + columnExpression + "' returning timestamp(9))"
@@ -192,7 +197,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 								}
 							case TIMESTAMP_WITH_TIMEZONE:
 							case TIMESTAMP_UTC:
-								if (supportsOson()) {
+								if (supportsOson( typeConfiguration )) {
 									// Oracle OSON extension is used, value is not stored as string
 									return template.replace(
 											placeholder,
@@ -495,7 +500,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 			Runnable renderFunction,
 			JdbcMapping jdbcMapping,
 			TypeConfiguration typeConfiguration) {
-		if ( !supportsOson() && isLocalTimeText( jdbcMapping ) ) {
+		if ( !supportsOson( typeConfiguration ) && isLocalTimeText( jdbcMapping ) ) {
 			sqlAppender.appendSql( "to_char(" );
 			renderFunction.run();
 			sqlAppender.appendSql( ",'HH24:MI:SS.FF9')" );
@@ -586,7 +591,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 				sqlAppender.append( ",'HH24:MI:SS')" );
 				break;
 			case TIMESTAMP:
-				if ( supportsOson() ) {
+				if ( supportsOson( typeConfiguration ) ) {
 					renderFunction.run();
 				}
 				else {
@@ -596,7 +601,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 				}
 				break;
 			case TIMESTAMP_UTC:
-				if ( supportsOson() ) {
+				if ( supportsOson( typeConfiguration ) ) {
 					renderFunction.run();
 				}
 				else {

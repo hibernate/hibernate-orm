@@ -925,3 +925,16 @@ precision but its column was created as plain `time`, review the physical schema
 Reducing its precision may change stored values, including values near a second or midnight boundary.
 Declare precision seven or retain an appropriate explicit column definition when that existing storage
 precision is intended, subject to the selected JDBC handler's capabilities.
+
+[[oracle-json-temporal-representation]]
+== Oracle JSON temporal members and converted casts
+
+Oracle JSON member reads and updates now follow the selected JDBC representation, including
+Oracle 21 OSON and the text fallback selected when OSON extensions are disabled or unavailable.
+This keeps member operations consistent with whole-aggregate serialization. SQL casts of converted
+values also derive their default sizes from the converter's relational Java type, avoiding invalid
+casts such as `timestamp(19)` for a domain object converted to `LocalTime`.
+
+These corrections apply with `hibernate.type.temporal_preservation` enabled or disabled.
+They do not change the schema or rewrite stored JSON. Previously written values containing mixed
+or malformed temporal representations are not automatically repaired.

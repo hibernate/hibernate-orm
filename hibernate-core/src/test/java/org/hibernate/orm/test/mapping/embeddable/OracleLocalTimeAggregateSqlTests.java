@@ -14,18 +14,22 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.aggregate.internal.OracleAggregateSupport;
 import org.hibernate.dialect.type.internal.OracleLocalTimeJdbcType;
+import org.hibernate.dialect.type.internal.OracleJsonJdbcType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.sql.spi.StringBuilderSqlAppender;
 import org.hibernate.type.descriptor.java.JdbcTimeJavaType;
 import org.hibernate.type.descriptor.java.LocalDateTimeJavaType;
+import org.hibernate.type.descriptor.java.LocalDateJavaType;
+import org.hibernate.type.descriptor.java.OffsetDateTimeJavaType;
+import org.hibernate.type.descriptor.jdbc.DateJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneJdbcType;
 import org.hibernate.type.descriptor.java.LocalTimeJavaType;
 import org.hibernate.type.descriptor.jdbc.LocalDateTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimeJdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -51,14 +55,31 @@ class OracleLocalTimeAggregateSqlTests {
 	}
 
 	static String read(int version, int format, String parent, String member, JdbcMapping mapping) {
+		return read( version, format, parent, member, mapping, types( version >= 21 ) );
+	}
+
+	static TypeConfiguration types(boolean oson) {
+		final var types = new TypeConfiguration();
+		// Synthetic representation only; live/boot tests assert actual contributions.
+		types.getJdbcTypeRegistry().addDescriptor( new OracleJsonJdbcType( null ) {
+			@Override public boolean usesOsonTemporalValues() { return oson; }
+		} );
+		return types;
+	}
+
+	static String read(int version, int format, String parent, String member, JdbcMapping mapping, TypeConfiguration types) {
 		return support( version ).aggregateComponentCustomReadExpression(
-				"?", "?", parent, member, format, new SqlTypedMappingImpl( mapping ), new TypeConfiguration() );
+				"?", "?", parent, member, format, new SqlTypedMappingImpl( mapping ), types );
 	}
 
 	static String write(int version, String expression, JdbcMapping mapping) {
+		return write( version, expression, mapping, types( version >= 21 ) );
+	}
+
+	static String write(int version, String expression, JdbcMapping mapping, TypeConfiguration types) {
 		final var appender = new StringBuilderSqlAppender();
 		support( version ).appendJsonWriteExpression(
-				appender, () -> appender.appendSql( expression ), mapping, new TypeConfiguration() );
+				appender, () -> appender.appendSql( expression ), mapping, types );
 		return appender.toString();
 	}
 
@@ -90,23 +111,40 @@ class OracleLocalTimeAggregateSqlTests {
 	}
 
 	@ParameterizedTest
-	@ValueSource(ints = {19, 21})
+	@ValueSource(ints = {19, 21, 23})
 	void textProfilesRetainClockFields(int version) {
 		for ( int format : new int[] { JSON, JSON_ARRAY, SQLXML, XML_ARRAY } ) {
-			assertThat( read( version, format, "doc", "value", TIME ) )
+			assertThat( read( version, format, "doc", "value", TIME, types( false ) ) )
 					.contains( "1970-01-01", "case when", "HH24:MI:SS.FF9" );
 		}
-		assertThat( write( version, "value", TIME ) )
+		assertThat( write( version, "value", TIME, types( false ) ) )
 				.isEqualTo( "to_char(value,'HH24:MI:SS.FF9')" );
 		assertThat( xmlWrite( version, "value" ) ).contains( "to_char(value,'HH24:MI:SS.FF9')" ).doesNotContain( "YYYY-MM-DD" );
 	}
 
-	@Test
-	void nativeJsonAndOtherTemporalTypesKeepTheirContracts() {
-		assertThat( read( 23, JSON, "doc", "value", TIME ) )
-				.isEqualTo( "json_value(doc,'$.value' returning timestamp(9))" );
-		assertThat( write( 23, "value", TIME ) ).isEqualTo( "value" );
+	@ParameterizedTest
+	@ValueSource(ints = {21, 22, 23})
+	void nativeJsonAndOtherTemporalTypesKeepTheirContracts(int version) {
+		for ( int format : new int[] { JSON, JSON_ARRAY } ) {
+			assertThat( read( version, format, "doc", "value", TIME ) )
+					.isEqualTo( "json_value(doc,'$.value' returning timestamp(9))" );
+		}
+		assertThat( write( version, "value", TIME ) ).isEqualTo( "value" );
+		for ( int format : new int[] { SQLXML, XML_ARRAY } ) {
+			assertThat( read( version, format, "doc", "value", TIME ) ).contains( "1970-01-01", "HH24:MI:SS.FF9" );
+		}
 		final var timestamp = new BasicTypeImpl<>( LocalDateTimeJavaType.INSTANCE, LocalDateTimeJdbcType.INSTANCE );
+		final var date = new BasicTypeImpl<>( LocalDateJavaType.INSTANCE, DateJdbcType.INSTANCE );
+		final var zoned = new BasicTypeImpl<>( OffsetDateTimeJavaType.INSTANCE, TimestampWithTimeZoneJdbcType.INSTANCE );
+		for ( int format : new int[] { JSON, JSON_ARRAY } ) {
+			assertThat( read( version, format, "doc", "value", timestamp ) ).contains( "returning timestamp(9)" );
+			assertThat( read( version, format, "doc", "value", date ) ).contains( "returning date" );
+			assertThat( read( version, format, "doc", "value", zoned ) ).contains( "returning timestamp(9) with time zone" );
+			assertThat( read( version, format, "doc", "value", timestamp, types( false ) ) ).contains( "to_timestamp(" );
+			assertThat( read( version, format, "doc", "value", date, types( false ) ) ).contains( "to_date(" );
+			assertThat( read( version, format, "doc", "value", zoned, types( false ) ) ).contains( "to_timestamp_tz(" );
+		}
+		assertThat( write( version, "value", timestamp ) ).isEqualTo( "value" );
 		assertThat( read( 19, JSON, "doc", "value", timestamp ) ).contains( "YYYY-MM-DD\"T\"" )
 				.doesNotContain( "1970-01-01" );
 		assertThat( write( 19, "value", timestamp ) ).contains( "YYYY-MM-DD HH24" );

@@ -24,6 +24,14 @@ public class OracleJsonJdbcType extends OracleJsonBlobJdbcType {
 		super( embeddableMappingType );
 	}
 
+	/**
+	 * Whether this stock descriptor writes temporal members as typed OSON values,
+	 * rather than JSON strings. Native JSON column support alone does not imply this.
+	 */
+	public boolean usesOsonTemporalValues() {
+		return false;
+	}
+
 	@Override
 	public int getDdlTypeCode() {
 		return SqlTypes.JSON;

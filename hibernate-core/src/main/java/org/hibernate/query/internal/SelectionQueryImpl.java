@@ -1400,6 +1400,9 @@ public class SelectionQueryImpl<R>
 		if ( BaseSqmToSqlAstConverter.ordersByPluralFetchBeforeOwner( spec ) ) {
 			return false;
 		}
+		if ( BaseSqmToSqlAstConverter.whereReferencesFetchedPluralJoin( spec ) ) {
+			return false;
+		}
 		// The transformer only rewrites when at least one root contributes a
 		// fetched plural join (directly, or through a chain of fetched
 		// singulars). Without that, the converter leaves the limit on the

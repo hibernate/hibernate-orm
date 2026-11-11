@@ -437,8 +437,8 @@ Either way, a single SQL `select` statement is executed:
 ----
 select b1_0.isbn,a1_0.books_isbn,a1_1.id,a1_1.bio,a1_1.name,b1_0.price,b1_0.published,b1_0.publisher_id,b1_0.title
 from Book b1_0
-    join (Book_Author a1_0 join Author a1_1 on a1_1.id=a1_0.authors_id)
-        on b1_0.isbn=a1_0.books_isbn
+    left join Book_Author a1_0 on b1_0.isbn=a1_0.books_isbn
+    left join Author a1_1 on a1_1.id=a1_0.authors_id
 order by b1_0.isbn
 ----
 

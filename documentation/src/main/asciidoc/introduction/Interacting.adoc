@@ -633,7 +633,7 @@ Instances of `FetchOption` influence how a node of a graph is fetched.
 ----
 var graph = entityManager.createEntityGraph(Book.class);
 graph.addAttributeNode(Book_.publisher)
-     .addOption(FetchMethod.BULK_SELECT)
+     .addOption(FetchMethod.BY_SUBQUERY)
      .addOption(CacheStoreMode.BYPASS);
 Book book = entityManager.find(graph, bookId);
 ----

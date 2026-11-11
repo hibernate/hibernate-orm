@@ -33,6 +33,7 @@ import org.hibernate.sql.ast.spi.query.expression.CastTarget;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.FunctionExpression;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.sql.ast.spi.query.expression.Over;
 import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
@@ -59,6 +60,8 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 
 	// Tracks SELECT-list expression rendering so CASE result parameters can be rendered Altibase-compatibly.
 	private boolean renderingSelectExpression;
+	// Guards against re-casting the parameter rendered inside the cast emitted by visitParameter.
+	private boolean renderingCastedSelectParameter;
 
 	public AltibaseSqlAstTranslator(SqlAstTranslationRequest<? extends Statement, T> request) {
 		super( request );
@@ -485,6 +488,26 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 			appendSql( "floor" );
 		}
 		super.visitBinaryArithmeticExpression(arithmeticExpression);
+	}
+
+	@Override
+	public void visitParameter(JdbcParameter jdbcParameter) {
+		// Altibase rejects untyped parameter markers in the SELECT clause, including ones nested in
+		// function arguments, so give plain parameters there an explicit type.
+		if ( !renderingCastedSelectParameter
+				&& getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT
+				&& getCurrentClauseStack().getCurrent() == Clause.SELECT ) {
+			renderingCastedSelectParameter = true;
+			try {
+				renderCasted( jdbcParameter );
+			}
+			finally {
+				renderingCastedSelectParameter = false;
+			}
+		}
+		else {
+			super.visitParameter( jdbcParameter );
+		}
 	}
 
 	@Override

@@ -527,7 +527,8 @@ package org.hibernate.example;
 
 import jakarta.data.repository.Query;
 import jakarta.data.repository.Repository;
-import jakarta.persistence.EntityAgent;
+import jakarta.data.repository.stateful.Persist;
+import jakarta.persistence.EntityManager;
 
 import java.util.List;
 

@@ -140,7 +140,7 @@ The `TypedQuery` and `Statement` interfaces provide a number of operations for c
 [source,java]
 ----
 var recentPublications =
-        entityAgent.createQuery("from Book where year(book) = year(local date)")
+        entityAgent.createQuery("from Book where year(publicationDate) = year(local date)")
                    .ofType(Book.class)
                    .setTimeout(Timeout.ms(60_000))
                    .setQueryFlushMode(QueryFlushMode.NO_FLUSH)
@@ -156,7 +156,7 @@ import org.hibernate.ReadOnlyMode;
 import static org.hibernate.query.QueryOption.*;
 ...
 var recentPublications =
-        entityAgent.createQuery("from Book where year(book) = year(local date)")
+        entityAgent.createQuery("from Book where year(publicationDate) = year(local date)")
                    .ofType(Book.class)
                    .addOption(new ResultSetCache("recent-publications"))
                    .addOption(new JdbcFetchSize(100))
@@ -742,25 +742,20 @@ It's most easily illustrated with an example:
 
 [source,java]
 ----
-String QUERY = "from Book where publicationDate > :minDate";
+var query = entityAgent.unwrap(StatelessSession.class)
+        .createQuery("from Book where publicationDate > :minDate", Book.class)
+        .setParameter("minDate", minDate);
 
 // obtain the first page of results
 KeyedResultList<Book> first =
-        entityAgent.createQuery(QUERY, Book.class)
-                   .setParameter("minDate", minDate)
-                   .unwrap(SelectionQuery.class)
-                   .getKeyedResultList(Page.first(25)
-                           .keyedBy(Order.asc(Book_.isbn)));
+        query.getKeyedResultList(Page.first(25).keyedBy(Order.asc(Book_.isbn)));
 List<Book> firstPage = first.getResultList();
 ...
 
-if (!firstPage.isLastPage()) {
+if (!first.isLastPage()) {
     // obtain the second page of results
     KeyedResultList<Book> second =
-            entityAgent.createQuery(QUERY, Book.class)
-                       .setParameter("minDate", minDate)
-                       .unwrap(SelectionQuery.class)
-                       .getKeyedResultList(firstPage.getNextPage());
+            query.getKeyedResultList(first.getNextPage());
     List<Book> secondPage = second.getResultList();
     ...
 }

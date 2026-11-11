@@ -732,7 +732,7 @@ A generated query or finder method can make use of <<key-based-pagination,key-ba
 
 [source,java]
 ----
-@Query("where publicationDate > :minDate")
+@HQL("where publicationDate > :minDate")
 KeyedResultList<Book> booksFromDate(Session session, LocalDate minDate, KeyedPage<Book> page);
 ----
 
@@ -752,11 +752,11 @@ KeyedResultList<Book> first =
 List<Book> firstPage = first.getResultList();
 ...
 
-if (!firstPage.isLastPage()) {
+if (!first.isLastPage()) {
     // obtain the second page of results
     KeyedResultList<Book> second =
             Queries_.booksFromDate(session, minDate,
-                    firstPage.getNextPage());
+                    first.getNextPage());
     List<Book> secondPage = second.getResultList();
     ...
 }

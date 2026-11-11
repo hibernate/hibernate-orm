@@ -5,6 +5,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Tuple;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @DomainModel(
 		annotatedClasses = {
@@ -205,6 +207,90 @@ public class ImplicitInstantiationTest {
 		);
 	}
 
+
+	@Test
+	@JiraKey( "HHH-20328" )
+	public void testListInstantiationWithNullValues(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			List<?> result = session.createSelectionQuery( "select null, null", List.class )
+					.getSingleResult();
+			assertEquals( 2, result.size() );
+			assertNull( result.get( 0 ) );
+			assertNull( result.get( 1 ) );
+		} );
+	}
+
+
+	@Test
+	@JiraKey( "HHH-20328" )
+	public void testListInstantiationWithNullableAttribute(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.persist( new Thing( 1L, null ) );
+			List<?> result = session.createSelectionQuery( "select id, name from Thing", List.class )
+					.getSingleResult();
+			assertEquals( 2, result.size() );
+			assertEquals( 1L, result.get( 0 ) );
+			assertNull( result.get( 1 ) );
+			session.getTransaction().setRollbackOnly();
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20328" )
+	public void testSingleNullListInstantiation(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.persist( new Thing( 1L, null ) );
+			List<?> result = session.createSelectionQuery( "select name from Thing", List.class )
+					.getSingleResult();
+			assertEquals( 1, result.size() );
+			assertNull( result.get( 0 ) );
+			session.getTransaction().setRollbackOnly();
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20328" )
+	public void testSqlListInstantiationWithNullValues(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.persist( new Thing( 1L, null ) );
+			List<?> result = session.createNativeQuery( "select name, name from thingy_table", List.class )
+					.addSynchronizedEntityClass( Thing.class )
+					.getSingleResult();
+			assertEquals( 2, result.size() );
+			assertNull( result.get( 0 ) );
+			assertNull( result.get( 1 ) );
+			session.getTransaction().setRollbackOnly();
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20328" )
+	public void testSqlListInstantiationWithNullableAttribute(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.persist( new Thing( 1L, null ) );
+			List<?> result = session.createNativeQuery( "select id, name from thingy_table", List.class )
+					.addSynchronizedEntityClass( Thing.class )
+					.getSingleResult();
+			assertEquals( 2, result.size() );
+			assertEquals( 1L, result.get( 0 ) );
+			assertNull( result.get( 1 ) );
+			session.getTransaction().setRollbackOnly();
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20328" )
+	public void testSqlSingleNullListInstantiation(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.persist( new Thing( 1L, null ) );
+			List<?> result = session.createNativeQuery( "select name from thingy_table", List.class )
+					.addSynchronizedEntityClass( Thing.class )
+					.getSingleResult();
+			assertEquals( 1, result.size() );
+			assertNull( result.get( 0 ) );
+			session.getTransaction().setRollbackOnly();
+		} );
+	}
 
 	@Entity(name = "Thing")
 	@Table(name = "thingy_table")

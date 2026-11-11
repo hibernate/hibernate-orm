@@ -4,6 +4,10 @@ import java.sql.Time;
 import java.time.LocalTime;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.List;
+import java.util.stream.Stream;
+
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -24,6 +28,7 @@ import org.hibernate.type.SqlTypes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -101,6 +106,103 @@ class SQLServerTimePrecisionTests {
 						"select cast(e.omitted as LocalTime) from TimePrecisionRow e", LocalTime.class ).getSingleResult() )
 						.isEqualTo( round( input, 7 ) ) );
 			}
+		}
+		finally { scope.dropData(); }
+	}
+
+	static Stream<String> boundaryInputs() {
+		return Stream.of( null, "12:34:56.1230000", "12:34:56.1234999", "12:34:56.1235000",
+				"12:34:56.1235001", "12:34:56.4999999", "12:34:56.5000000", "12:34:56.5000001",
+				"12:34:56.123456789", "12:34:56.123456749", "12:34:56.123456750", "12:34:56.123456751",
+				"12:34:56.9995000", "23:59:59.9994999", "23:59:59.9995000", "23:59:59.9995001",
+				"23:59:59.9999999" );
+	}
+
+	static Stream<String> serverInputs() {
+		return boundaryInputs().filter( text -> text == null || LocalTime.parse( text ).getNano() % 100 == 0 );
+	}
+
+	// Independent observations deliberately do not bless a new boundary expectation.
+	// CI evidence from these methods must precede changing the regression above.
+	@ParameterizedTest
+	@MethodSource("serverInputs")
+	void serverBoundaryCharacterization(String text, SessionFactoryScope scope) {
+		assertMode( scope );
+		scope.inTransaction( session -> session.doWork( connection -> {
+			for ( int precision : new int[] { 0, 3, 7 } ) {
+				try ( var statement = connection.prepareStatement(
+						"select cast(cast(? as time(7)) as time(" + precision + "))" ) ) {
+					statement.setString( 1, text );
+					try ( var rows = statement.executeQuery() ) {
+						assertThat( rows.next() ).isTrue();
+						System.out.println( "SQLSERVER_TIME_SERVER mode=" + preservationEnabled()
+								+ " input=" + text + " precision=" + precision + " output=" + rows.getString( 1 ) );
+						if ( text == null ) assertThat( rows.getString( 1 ) ).isNull();
+					}
+				}
+			}
+		} ) );
+	}
+
+	@ParameterizedTest
+	@MethodSource("boundaryInputs")
+	void jdbcBoundaryCharacterization(String text, SessionFactoryScope scope) {
+		characterizeBoundary( text, scope, true );
+	}
+
+	@ParameterizedTest
+	@MethodSource("boundaryInputs")
+	void ormBoundaryCharacterization(String text, SessionFactoryScope scope) {
+		characterizeBoundary( text, scope, false );
+	}
+
+	private void characterizeBoundary(String text, SessionFactoryScope scope, boolean rawJdbc) {
+		assertMode( scope );
+		final var value = text == null ? null : LocalTime.parse( text );
+		final var row = new TimeRow(); row.id = 1;
+		row.omitted = row.p0 = row.p3 = row.p7 = row.retained = rawJdbc ? null : value;
+		try {
+			scope.inTransaction( session -> session.persist( row ) );
+			scope.inTransaction( session -> session.doWork( connection -> {
+				final var metadata = connection.getMetaData();
+				System.out.println( "SQLSERVER_TIME_PROFILE driver=" + metadata.getDriverName() + "/"
+						+ metadata.getDriverVersion() + " database=" + metadata.getDatabaseProductVersion()
+						+ " mode=" + preservationEnabled() + " rawJdbc=" + rawJdbc + " input=" + text );
+				for ( String column : List.of( "p0", "p3", "p7", "omitted", "retained" ) ) {
+					final var mapping = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( TimeRow.class )
+							.findAttributeMapping( column ).getSingleJdbcMapping();
+					if ( rawJdbc ) {
+						try ( var statement = connection.prepareStatement( "update TimePrecisionRow set " + column + "=? where id=1" ) ) {
+							mapping.getJdbcValueBinder().bind( statement, value, 1, (SharedSessionContractImplementor) session );
+							assertThat( statement.executeUpdate() ).isEqualTo( 1 );
+						}
+					}
+					final int precision = column.equals( "p0" ) ? 0 : column.equals( "p3" ) ? 3 : 7;
+					final long unit = (long) Math.pow( 10, 9 - precision );
+					final String rounded = value == null ? "null" : "cast('" + round( value, precision ) + "' as time(" + precision + "))";
+					final String truncated = value == null ? "null" : "cast('" + value.withNano( (int) (value.getNano() / unit * unit) ) + "' as time(" + precision + "))";
+					try ( var statement = connection.createStatement(); var rows = statement.executeQuery(
+							"select " + column + ", convert(varchar(30)," + column + "), case when " + column + "=" + rounded
+									+ " then 1 else 0 end, case when " + column + "=" + truncated
+									+ " then 1 else 0 end from TimePrecisionRow where id=1" ) ) {
+						assertThat( rows.next() ).isTrue();
+						final var typed = rows.getObject( 1, LocalTime.class );
+						final var extracted = mapping.getJdbcValueExtractor().extract( rows, 1, (SharedSessionContractImplementor) session );
+						System.out.println( "SQLSERVER_TIME_JDBC column=" + column + " pair=" + mapping.getJdbcJavaType().getClass().getName()
+								+ "/" + mapping.getJdbcType().getClass().getName() + " typed=" + typed
+								+ " extracted=" + extracted + " serverText=" + rows.getString( 2 )
+								+ " equalsWrappedRound=" + rows.getInt( 3 ) + " equalsTruncated=" + rows.getInt( 4 ) );
+						assertThat( extracted ).isEqualTo( typed );
+						if ( value == null ) assertThat( typed ).isNull();
+					}
+				}
+			} ) );
+			scope.inTransaction( session -> {
+				final var loaded = session.find( TimeRow.class, 1 );
+				System.out.println( "SQLSERVER_TIME_ORM rawJdbc=" + rawJdbc + " input=" + text
+						+ " p0=" + loaded.p0 + " p3=" + loaded.p3 + " p7=" + loaded.p7
+						+ " omitted=" + loaded.omitted + " retained=" + loaded.retained );
+			} );
 		}
 		finally { scope.dropData(); }
 	}

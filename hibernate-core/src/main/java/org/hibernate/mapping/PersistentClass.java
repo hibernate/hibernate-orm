@@ -295,8 +295,12 @@ public abstract sealed class PersistentClass
 		assert joins.contains( join );
 		assert property.getPersistentClass() == this;
 		properties.remove( property );
-		declaredProperties.remove( property );
-		join.addProperty( property );
+		if ( declaredProperties.remove( property ) ) {
+			join.addProperty( property );
+		}
+		else {
+			join.addMappedSuperclassProperty( property );
+		}
 	}
 
 	@Internal

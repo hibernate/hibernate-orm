@@ -8,6 +8,7 @@ import org.hibernate.models.spi.ModelsContext;
 
 
 import jakarta.persistence.AssociationOverride;
+import jakarta.persistence.JoinTable;
 
 import static org.hibernate.boot.models.JpaAnnotations.ASSOCIATION_OVERRIDE;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
@@ -15,6 +16,8 @@ import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkV
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
 public class AssociationOverrideJpaAnnotation implements AssociationOverride {
+	public static final JoinTable DEFAULT_JOIN_TABLE = (JoinTable) ASSOCIATION_OVERRIDE
+			.getAttribute( "joinTable" ).getAttributeMethod().getDefaultValue();
 
 	private String name;
 	private jakarta.persistence.JoinColumn[] joinColumns;
@@ -27,7 +30,7 @@ public class AssociationOverrideJpaAnnotation implements AssociationOverride {
 	public AssociationOverrideJpaAnnotation(ModelsContext modelContext) {
 		this.joinColumns = new jakarta.persistence.JoinColumn[0];
 		this.foreignKey = JpaAnnotations.FOREIGN_KEY.createUsage( modelContext );
-		this.joinTable = JpaAnnotations.JOIN_TABLE.createUsage( modelContext );
+		this.joinTable = JpaAnnotations.JOIN_TABLE.createUsage( DEFAULT_JOIN_TABLE, modelContext );
 	}
 
 	/**

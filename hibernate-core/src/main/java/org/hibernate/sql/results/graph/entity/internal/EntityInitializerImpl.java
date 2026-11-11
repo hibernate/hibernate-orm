@@ -1615,7 +1615,7 @@ public class EntityInitializerImpl
 		return withCacheRetrieveMode(
 				session,
 				() -> loadFromSecondLevelCache(
-						session.asEventSource(),
+						session,
 						null,
 						data.lockMode,
 						entityDescriptor,

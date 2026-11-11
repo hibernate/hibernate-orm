@@ -221,6 +221,10 @@ public class CacheLoadHelper {
 		}
 		else {
 			makeEntityCircularReferenceSafe( referenceCacheEntry, session, entity, entityKey );
+			if ( session.isStateless() ) {
+				final var persister = referenceCacheEntry.getSubclassPersister();
+				session.runEntityLifecycleCallback( () -> persister.getEntityCallbacks().postLoad( entity ) );
+			}
 			return entity;
 		}
 	}
@@ -360,6 +364,9 @@ public class CacheLoadHelper {
 		subclassPersister.afterInitialize( entity, source );
 		entityEntry.postLoad( entity );
 		persistenceContext.initializeNonLazyCollections();
+		if ( source.isStateless() && persister.isInstance( entity ) ) {
+			source.runEntityLifecycleCallback( () -> subclassPersister.getEntityCallbacks().postLoad( entity ) );
+		}
 
 		return entity;
 	}

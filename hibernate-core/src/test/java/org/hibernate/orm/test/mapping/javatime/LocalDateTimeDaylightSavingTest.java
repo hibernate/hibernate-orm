@@ -12,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.cfg.MappingSettings;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.testing.orm.junit.DialectFeatureCheck;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -21,6 +22,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.ResourceLock;
@@ -34,6 +36,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ServiceRegistry(settings = @Setting(name = MappingSettings.JAVA_TIME_USE_DIRECT_JDBC, value = "true"/*the default anyway, but...*/))
 @SessionFactory
 @RequiresDialectFeature(feature = LocalDateTimeDaylightSavingTest.DirectLocalDateTimeSupport.class)
+@SkipForDialect(dialectClass = AltibaseDialect.class,
+		reason = "Altibase JDBC converts LocalDateTime through java.sql.Timestamp in the JVM default time zone, shifting values in daylight-saving gaps")
 @JiraKey("HHH-16722")
 @ResourceLock("java.util.TimeZone")
 public class LocalDateTimeDaylightSavingTest {

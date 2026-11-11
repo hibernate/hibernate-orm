@@ -877,8 +877,8 @@ Those retain their established mapping semantics. Enabling preservation can stil
 for example, a `java.sql.Time` handler cannot satisfy requested precision beyond milliseconds.
 
 These guarantees apply within the supported finite SQL range and column precision.
-Fractional seconds may be rounded to the supported precision; they are not a promise to retain all nine
-Java nanosecond digits in a lower-precision column. Java minimum/maximum sentinels are not a portable
+Fractional seconds may be rounded or truncated according to the supported driver/database handling and column precision;
+these guarantees do not promise to retain all nine Java nanosecond digits in a lower-precision column. Java minimum/maximum sentinels are not a portable
 way to store database infinity.
 
 There is one explicit representation qualification: `@TimeZoneRepresentation(COLUMN)` stores an offset

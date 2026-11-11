@@ -84,7 +84,8 @@ Unsupported mappings fail rather than silently dropping offsets or zone IDs.
 
 The new `hibernate.type.temporal_preservation` setting, defaulting to `true`, opts in or out of these guarantees.
 
-Supported finite SQL ranges and fractional-second precision still apply. Explicit COLUMN representation
+Supported finite SQL ranges and fractional-second precision still apply, including the supported driver/database path's rounding or truncation.
+Explicit COLUMN representation
 for `ZonedDateTime` is offset-only: it retains local date-time and offset but reconstructs a fixed-offset
 zone. It does not retain a regional zone ID, even with a zoned primary column.
 
@@ -219,3 +220,12 @@ Such changes typically do not impact programs using a relational schema managed 
 == Changes in Dependencies
 
 This section describes changes to dependencies used by Hibernate ORM.
+
+[[oracle-nested-xml-nulls]]
+== Oracle nested XML null extraction
+
+Nested XML aggregate projections and null predicates now preserve SQL nulls when the extracted child content is absent.
+Previously, the extraction expression manufactured an empty XML root, so a projection could return an empty embeddable
+and an `is null` predicate could incorrectly exclude a null child or null parent payload.
+This corrects existing query behavior independently of `hibernate.type.temporal_preservation`; stored XML is unchanged
+and no data migration is required. Explicitly present aggregates with all-null members retain their existing behavior.

@@ -15,8 +15,8 @@ import org.hibernate.annotations.TimeZoneRepresentation;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.junit.jupiter.api.Test;
 import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -59,11 +59,15 @@ class TemporalCacheTests {
 		cacheReconstructsEachInstant( "2026-03-08T06:59:59.123456789Z", scope );
 	}
 
-	@Test
-	@RequiresDialect(SybaseASEDialect.class)
-	@FailureExpected(jiraKey = "HHH-21087", reason = "Sybase driver truncates microseconds while Dialect predicts rounding; separate follow-up")
-	void sybaseDatabaseRoundingAndBothCachePopulationPaths(SessionFactoryScope scope) {
-		cacheReconstructsEachInstant( "2026-03-08T06:59:59.123456789Z", scope );
+	@ParameterizedTest
+	@ValueSource(strings = { "2026-03-08T06:59:59.123456789Z", "2026-03-08T06:59:59.999999900Z" })
+	@RequiresDialectFeature(feature = SybaseCachePrecisionSupport.JConnect.class)
+	void sybaseDatabasePrecisionAndBothCachePopulationPaths(String instant, DomainModelScope model, SessionFactoryScope scope) {
+		final var input = Instant.parse( instant ).atZone( ZoneId.of( "Europe/Paris" ) );
+		final var event = new Event(); event.id = 1L; event.adjusted = input; event.unadjusted = input;
+		final var databaseValue = SybaseCachePrecisionSupport.databaseValue( model.getDomainModel(), Event.class, input.toInstant() );
+		TemporalCacheAssertions.verify( scope, Event.class, event, event.id, input, databaseValue,
+				row -> row.adjusted, row -> row.unadjusted );
 	}
 
 	@Entity(name = "TemporalCacheEvent")

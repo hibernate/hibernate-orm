@@ -67,7 +67,8 @@ public class LegacyJavaTimeFractionalSecondsTests {
 		final PersistentClass entityBinding = scope.getEntityBinding( TestEntity.class );
 		checkPrecision( "theInstant", defaultPrecision, entityBinding, domainModel );
 		checkPrecision( "theLocalDateTime", defaultPrecision, entityBinding, domainModel );
-		checkPrecision( "theLocalTime", 0, entityBinding, domainModel );
+		// SQL Server retains an unspecified TIME precision (server default), distinct from explicit zero.
+		checkPrecision( "theLocalTime", dialect instanceof SQLServerDialect ? null : 0, entityBinding, domainModel );
 		checkPrecision( "theOffsetDateTime", defaultPrecision, entityBinding, domainModel );
 		checkPrecision( "theOffsetTime", 0, entityBinding, domainModel );
 		checkPrecision( "theZonedDateTime", defaultPrecision, entityBinding, domainModel );
@@ -89,7 +90,7 @@ public class LegacyJavaTimeFractionalSecondsTests {
 
 	private void checkPrecision(
 			String propertyName,
-			int expectedMinimumSize,
+			Integer expectedMinimumSize,
 			PersistentClass entityBinding,
 			MetadataImplementor domainModel) {
 		final Property theInstant = entityBinding.getProperty( propertyName );

@@ -105,3 +105,15 @@ change the suite default. Enabled descriptor selection, preservation, rejection,
 period and migration tests remain separate. The PostgreSQL instant-only array case
 formerly in `GlobalJavaTimeJdbcTypeTests.testArray` now resides unchanged in
 `LegacyJavaTimeArrayJdbcTypeTests.testArray`; the original local-type tests stay enabled.
+
+== SQL Server TIME precision
+
+`org.hibernate.orm.test.temporal.SQLServerTimePrecisionMetadataTests` builds actual SQL Server
+contributions with boot JDBC disabled. Omitted TIME precision is unspecified and renders `time`;
+explicit zero renders `time(0)`. Both preservation settings retain this distinction. SQL Server's
+physical default of seven digits does not constitute a requested seven-digit Java/JDBC guarantee.
+
+`SQLServerTimePrecisionTests` and its independent legacy factory are SQL Server CI controls for
+catalog scale, strict prepared round trips, retained default storage, nulls, casts and callable
+parameters. H2 skips these provider tests; offline success is not live SQL Server evidence.
+The original fractional-second tests and legacy explicit-conversion coverage remain active.

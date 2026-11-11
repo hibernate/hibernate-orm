@@ -164,9 +164,10 @@ Then we may execute the query as follows:
 [source,java]
 ----
 var books =
-        entityManager.createNamedQuery(Queries_._findBooksByTitle_)
+        entityManager.createQuery(Book_._findBooksByTitle_)
                 .setParameter("title", titlePattern)
-                .setPage(page)
+                .setFirstResult(page.getFirstResult())
+                .setMaxResults(page.getSize())
                 .getResultList();
 ----
 
@@ -304,7 +305,7 @@ We'll need a place to put this method, and since our `Book` entity isn't an abst
 ----
 interface Queries {
     @HQL("where title like :title and type = :type")
-    List<Book> findBooksByTitleAndType(String title, String type);
+    List<Book> findBooksByTitleAndType(String title, Type type);
 }
 ----
 
@@ -330,7 +331,7 @@ public abstract class Queries_ {
     }
 
     static final String FIND_BOOKS_BY_TITLE_AND_TYPE_String_Type =
-            "where title like :title and type = :type";
+            "from Book where title like :title and type = :type";
 
 }
 
@@ -344,7 +345,7 @@ If we want to explicitly specify the name and type of this parameter, we may dec
 ----
 interface Queries {
     @HQL("where title like :title and type = :type")
-    List<Book> findBooksByTitleAndType(EntityAgent agent, String title, String type);
+    List<Book> findBooksByTitleAndType(EntityAgent agent, String title, Type type);
 }
 ----
 
@@ -392,7 +393,7 @@ interface Queries {
     EntityManager entityManager();
 
     @HQL("where title like :title and type = :type")
-    List<Book> findBooksByTitleAndType(String title, String type);
+    List<Book> findBooksByTitleAndType(String title, Type type);
 }
 ----
 
@@ -429,7 +430,7 @@ public class _Queries implements Queries {
     }
 
     static final String FIND_BOOKS_BY_TITLE_AND_TYPE_String_Type =
-            "where title like :title and type = :type";
+            "from Book where title like :title and type = :type";
 
 }
 ----
@@ -441,7 +442,7 @@ Of course, the protocol for calling the query method has to change:
 [source,java]
 ----
 Queries queries = new _Queries(entityManager);
-List<Book> books = queries.findByTitleAndType(titlePattern, Type.BOOK);
+List<Book> books = queries.findBooksByTitleAndType(titlePattern, Type.BOOK);
 ----
 
 If we ever need to swap out the generated query method with one we write by hand, without impacting clients, all we need to do is replace the abstract method with a `default` method of the `Queries` interface.
@@ -453,8 +454,8 @@ interface Queries {
     EntityManager entityManager();
 
     // handwritten method replacing previous generated implementation
-    default List<Book> findBooksByTitleAndType(String title, String type) {
-        entityManager()
+    default List<Book> findBooksByTitleAndType(String title, Type type) {
+        return entityManager()
                 .createQuery("where title like :title and type = :type", Book.class)
                         .setParameter("title", title)
                         .setParameter("type", type)
@@ -624,7 +625,7 @@ A finder method may specify <<fetch-profiles,fetch profiles>>, for example:
 
 [source,java]
 ----
-@Find(namedFetchProfiles=Book_.FETCH_WITH_AUTHORS)
+@Find(enabledFetchProfiles=Book_.PROFILE_EAGER_BOOK)
 Book getBookWithAuthors(String isbn);
 ----
 

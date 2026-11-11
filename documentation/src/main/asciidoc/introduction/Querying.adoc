@@ -126,8 +126,8 @@ For example, we may pass a <<static-metamodel,static metamodel>> reference to `s
 
 [source,java]
 ----
-entityManager.createQuery("from Person where address = :address")
-             .setParameter("address" address, Person_.address.getType())
+entityManager.createQuery("from Person where address = :address", Person.class)
+             .setParameter("address", address, Person_.address.getType())
              .getResultList();
 ----
 ====
@@ -252,7 +252,7 @@ if (titlePattern != null) {
     where = builder.and(where, book.get(Book_.title).like(titlePattern));
 }
 if (namePattern != null) {
-    Join<Book,Author> author = book.join(Book_.author);
+    Join<Book,Author> author = book.join(Book_.authors);
     where = builder.and(where, author.get(Author_.name).like(namePattern));
 }
 query.select(book).where(where)
@@ -349,7 +349,7 @@ var query =
 
 // modify the resulting criteria query
 var root = (Root<Book>) query.getRootList().get(0);
-query.where(root.get(Book_.title).like("Hibernate%"))
+query.where(query.getRestriction(), root.get(Book_.title).like("Hibernate%"))
      .orderBy(root.get(Book_.title).asc(), root.get(Book_.isbn).desc());
 
 // execute the modified query
@@ -375,13 +375,14 @@ Our <<criteria-query-example,previous example>> would look like this:
 [source,java]
 ----
 CriteriaQuery<Book> query =
-        new CriteriaDefinition(entityManagerFactory, Book.class) {{
+        new CriteriaDefinition<>(entityManagerFactory, Book.class) {{
+            var book = from(Book.class);
             select(book);
             if (titlePattern != null) {
                 restrict(book.get(Book_.title).like(titlePattern));
             }
             if (namePattern != null) {
-                var author = book.join(Book_.author);
+                var author = book.join(Book_.authors);
                 restrict(author.get(Author_.name).like(namePattern));
             }
             orderBy(asc(book.get(Book_.title)));
@@ -529,7 +530,7 @@ var selection =
 
 // add programmatic restrictions:
 if (titlePattern != null)
-    selection.restrict(Restriction.like(Book_.title, namePattern));
+    selection.restrict(Restriction.like(Book_.title, titlePattern));
 if (isbns != null && !isbns.isEmpty())
     selection.restrict(Restriction.in(Book_.isbn, isbns));
 
@@ -549,7 +550,7 @@ Notice that:
 - The link:{doc-javadoc-url}org/hibernate/query/restriction/Restriction.html[`Restriction`] interface has static methods for constructing a variety of different kinds of restriction in a completely typesafe way.
 - Similarly, the link:{doc-javadoc-url}org/hibernate/query/Order.html[`Order`] interface has a variety of static methods for constructing different kinds of sorting criteria.
 
-We need the following methods of link:{doc-javadoc-url}org/hibernate/query/programmatic/SelectionSpecification.html[`SelectionSpecification`]:
+We need the following methods of link:{doc-javadoc-url}org/hibernate/query/specification/SelectionSpecification.html[`SelectionSpecification`]:
 
 .Methods for query restriction and ordering
 [%breakable,cols="20,~]
@@ -562,7 +563,7 @@ We need the following methods of link:{doc-javadoc-url}org/hibernate/query/progr
 | `augment()` | Add a custom function which directly manipulates the select query
 |===
 
-Two of these operations are also available for a link:{doc-javadoc-url}org/hibernate/query/programmatic/MutationSpecification.html[`MutationSpecification`]:
+Two of these operations are also available for a link:{doc-javadoc-url}org/hibernate/query/specification/MutationSpecification.html[`MutationSpecification`]:
 
 .Methods for mutation restriction
 [%breakable,cols="20,~]
@@ -611,8 +612,8 @@ var books =
         SelectionSpecification.create(Book.class)
               .augment((builder, query, book) ->
                       // augment the query via JPA Criteria API
-                      query.where(builder.like(book.get(Book_.title), titlePattern)))
-                           .orderBy(builder.asc(book.get(Book_.isbn)))
+                      query.where(builder.like(book.get(Book_.title), titlePattern))
+                           .orderBy(builder.asc(book.get(Book_.isbn))))
               .createQuery(entityAgent)
               .getResultList();
 ----
@@ -626,7 +627,7 @@ var books =
               .augment((builder, query, book) ->
                   // eliminate explicit references to 'builder'
                   new CriteriaDefinition<>(query) {{
-                      where(like(entity.get(BasicEntity_.title), titlePattern),
+                      where(like(book.get(Book_.title), titlePattern),
                             greaterThan(book.get(Book_.pages), minPages));
                       orderBy(asc(book.get(Book_.isbn)));
                   }}

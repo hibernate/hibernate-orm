@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.mapping.javatime.redesign.context;
 
+import org.hibernate.orm.test.mapping.javatime.redesign.TemporalLiveProfile;
+import org.junit.jupiter.api.BeforeEach;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.OracleDialect;
@@ -23,6 +25,11 @@ import static org.assertj.core.api.Assertions.*;
 @RequiresDialect(PostgreSQLDialect.class)
 @RequiresDialect(OracleDialect.class)
 class TemporalConverterContextTests {
+	@BeforeEach
+	void requireLiveProfile() {
+		TemporalLiveProfile.requireSupported();
+	}
+
 	@ParameterizedTest @ValueSource(booleans = {true, false})
 	void noneDoesNotSilentlyDiscardAnUnsupportedWholeColumnConverter(boolean metadata) {
 		assertThatThrownBy( () -> { try ( var ignored = ContextScope.boot( metadata, true, WholeColumnConverter.class ) ) {} } )

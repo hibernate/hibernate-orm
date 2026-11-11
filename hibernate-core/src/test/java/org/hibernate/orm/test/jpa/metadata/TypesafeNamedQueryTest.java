@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.jpa.metadata;
 
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
@@ -9,7 +11,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Jpa(annotatedClasses = Record.class)
+@Jpa(properties = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"), annotatedClasses = Record.class)
 public class TypesafeNamedQueryTest {
 	@Test void test(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {

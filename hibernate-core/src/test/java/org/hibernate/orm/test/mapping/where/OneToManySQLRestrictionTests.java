@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.mapping.where;
 
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -26,6 +29,7 @@ import jakarta.persistence.OneToMany;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DomainModel(annotatedClasses = { OneToManySQLRestrictionTests.Parent.class, OneToManySQLRestrictionTests.Child.class })
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @SessionFactory(useCollectingStatementObserver = true)
 @Jira("https://hibernate.atlassian.net/browse/HHH-17854")
 public class OneToManySQLRestrictionTests {

@@ -51,12 +51,18 @@ final class ContextScope implements AutoCloseable {
 			runtime.provider.blocked = false;
 			return runtime;
 		}
-		catch (RuntimeException | Error failure) { schema.close(); throw failure; }
+		catch (RuntimeException | Error failure) {
+			try { schema.close(); }
+			catch (RuntimeException | Error cleanup) { failure.addSuppressed( cleanup ); }
+			throw failure;
+		}
 	}
 	private ContextScope(boolean metadataAccess, boolean direct, Map<String,Object> settings, Class<?>... classes) {
 		this( metadataAccess, direct, settings, List.of(), classes );
 	}
 	private ContextScope(boolean metadataAccess, boolean direct, Map<String,Object> settings, List<String> mappings, Class<?>... classes) {
+		// Discover outside owned registries so a failed probe cannot strand one.
+		final var version = ContextEnvironment.bootstrapVersion( metadataAccess, settings );
 		provider = new ContextConnectionProvider( !metadataAccess );
 		final var loaders = new org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl(
 				Arrays.stream(classes).map(Class::getClassLoader).distinct().toList(),
@@ -74,7 +80,7 @@ final class ContextScope implements AutoCloseable {
 		final var builder = ServiceRegistryUtil.serviceRegistryBuilder( new org.hibernate.boot.registry.BootstrapServiceRegistryBuilder().applyClassLoaderService( loaders ).build() )
 				.applySetting( "hibernate.type.java_time_use_direct_jdbc", direct )
 				.applySetting( "hibernate.boot.allow_jdbc_metadata_access", metadataAccess )
-				.applySetting( "jakarta.persistence.database-product-version", ContextEnvironment.bootstrapVersion( metadataAccess, settings ) )
+				.applySetting( "jakarta.persistence.database-product-version", version )
 				.applySetting( "hibernate.hbm2ddl.auto", "none" )
 				.applySetting( "hibernate.hbm2ddl.halt_on_error", true )
 				.applySetting( "hibernate.cache.use_second_level_cache", true )
@@ -88,16 +94,31 @@ final class ContextScope implements AutoCloseable {
 				.addService( ConnectionProvider.class, provider );
 		provider.configure( builder.getSettings() );
 		registry = builder.build();
+		SessionFactoryImplementor builtFactory = null;
 		try {
 			final var sources = new MetadataSources( registry );
 			for ( var type : classes ) sources.addAnnotatedClass( type );
 			for ( var resource : mappings ) sources.addResource( resource );
 			metadata = sources.buildMetadata();
-			factory = (SessionFactoryImplementor) metadata.buildSessionFactory();
+			builtFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
+			factory = builtFactory;
 			if ( !metadataAccess ) assertThat( provider.attempts ).as( "guarded bootstrap acquisitions" ).isZero();
 			System.out.println( "CONTEXT_BOOT metadata=" + metadataAccess + " acquisitions=" + provider.attempts + " classes=" + Arrays.toString( classes ) );
 		}
-		catch (RuntimeException | Error failure) { if ( !metadataAccess ) assertThat( provider.attempts ).as( "failed guarded bootstrap acquisitions" ).isZero(); StandardServiceRegistryBuilder.destroy( registry ); throw failure; }
+		catch (RuntimeException | Error failure) {
+			final var failedFactory = builtFactory;
+			try {
+				cleanup(
+						() -> { if ( failedFactory != null ) failedFactory.close(); },
+						() -> {
+							if ( !metadataAccess ) assertThat( provider.attempts ).as( "failed guarded bootstrap acquisitions" ).isZero();
+						},
+						() -> StandardServiceRegistryBuilder.destroy( registry )
+				);
+			}
+			catch (RuntimeException | Error cleanup) { failure.addSuppressed( cleanup ); }
+			throw failure;
+		}
 	}
 
 	void drop() {
@@ -122,12 +143,26 @@ final class ContextScope implements AutoCloseable {
 	}
 	void noSelect() { assertThat( sql.stream().filter( s -> s.matches( "(?is).*\\bselect\\b.*" ) ).toList() ).isEmpty(); }
 	@Override public void close() {
-		try {
-			if ( provision != null ) { provider.blocked = false; drop(); }
+		cleanup(
+				() -> { if ( provision != null ) { provider.blocked = false; drop(); } },
+				factory::close,
+				() -> StandardServiceRegistryBuilder.destroy( registry ),
+				() -> { if ( provision != null ) provision.close(); }
+		);
+	}
+
+	// Try every owned resource and preserve the first failure with cleanup failures
+	// suppressed. A failed drop or factory close must not strand the other owner.
+	static void cleanup(Runnable... actions) {
+		Throwable first = null;
+		for ( var action : actions ) {
+			try { action.run(); }
+			catch (RuntimeException | Error failure) {
+				if ( first == null ) first = failure;
+				else first.addSuppressed( failure );
+			}
 		}
-		finally {
-			factory.close(); StandardServiceRegistryBuilder.destroy( registry );
-			if ( provision != null ) provision.close();
-		}
+		if ( first instanceof RuntimeException failure ) throw failure;
+		if ( first instanceof Error failure ) throw failure;
 	}
 }

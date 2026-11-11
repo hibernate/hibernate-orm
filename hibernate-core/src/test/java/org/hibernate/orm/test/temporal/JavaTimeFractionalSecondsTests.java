@@ -6,6 +6,7 @@ import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 
 import org.hibernate.annotations.FractionalSeconds;
+import org.hibernate.orm.test.mapping.javatime.redesign.TemporalEligibilityChecks;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.community.dialect.AltibaseDialect;
@@ -54,6 +55,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class JavaTimeFractionalSecondsTests {
 	@Test
 	@DomainModel(annotatedClasses = {TestEntity.class, TestEntity0.class, TestEntity3.class, TestEntity9.class} )
+	@RequiresDialectFeature(feature = TemporalEligibilityChecks.ExplicitLocalFields.class)
 	void testMapping(DomainModelScope scope) {
 		final MetadataImplementor domainModel = scope.getDomainModel();
 
@@ -77,6 +79,30 @@ public class JavaTimeFractionalSecondsTests {
 		checkPrecision( "theInstant", 9, entityBinding9, domainModel );
 	}
 
+	@Test
+	@DomainModel(annotatedClasses = { InstantEntity.class, InstantEntity3.class })
+	void instantMappings(DomainModelScope scope) {
+		final var metadata = scope.getDomainModel();
+		checkPrecision( "theInstant", metadata.getDatabase().getDialect().getTypeSizingProfile().defaultTimestampPrecision(),
+				scope.getEntityBinding( InstantEntity.class ), metadata );
+		checkPrecision( "theInstant", 3, scope.getEntityBinding( InstantEntity3.class ), metadata );
+	}
+
+	@Test
+	@DomainModel(annotatedClasses = InstantEntity3.class)
+	@SessionFactory
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTimestampPrecision3.class)
+	void instantPrecisionThree(SessionFactoryScope scope) {
+		final var start = Instant.parse( "2024-02-29T12:34:56.123456789Z" );
+		final var dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+		scope.inTransaction( session -> {
+			final var row = new InstantEntity3(); row.id = 1; row.theInstant = start;
+			session.persist( row );
+		} );
+		scope.inTransaction( session -> assertThat( session.find( InstantEntity3.class, 1 ).theInstant )
+				.isEqualTo( DateTimeUtils.adjustToPrecision( start, 3, dialect ) ) );
+	}
+
 	private void checkPrecision(
 			String propertyName,
 			int expectedMinimumSize,
@@ -90,7 +116,7 @@ public class JavaTimeFractionalSecondsTests {
 	}
 
 	@Test
-	@DomainModel(annotatedClasses = TestEntity.class)
+	@DomainModel(annotatedClasses = InstantEntity.class)
 	@SessionFactory
 	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "Because... Sybase...", matchSubTypes = true)
 	void testUsage(SessionFactoryScope scope) {
@@ -104,14 +130,14 @@ public class JavaTimeFractionalSecondsTests {
 		}
 
 		scope.inTransaction( (session) -> {
-			final TestEntity testEntity = new TestEntity();
+			final InstantEntity testEntity = new InstantEntity();
 			testEntity.id = 1;
 			testEntity.theInstant = start;
 			session.persist( testEntity );
 		} );
 
 		scope.inTransaction( (session) -> {
-			final TestEntity testEntity = session.find( TestEntity.class, 1 );
+			final InstantEntity testEntity = session.find( InstantEntity.class, 1 );
 			assertThat( testEntity.theInstant ).isEqualTo( DateTimeUtils.adjustToDefaultPrecision( start, dialect ) );
 		} );
 	}
@@ -162,6 +188,7 @@ public class JavaTimeFractionalSecondsTests {
 	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support specifying precision on timestamps")
 	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner doesn't support specifying precision on timestamps")
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTimestampPrecision3.class)
+	@RequiresDialectFeature(feature = TemporalEligibilityChecks.ExplicitLocalFields.class)
 	void testUsage3(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final Instant start;
@@ -226,6 +253,18 @@ public class JavaTimeFractionalSecondsTests {
 
 			assertThat( testEntity.theInstant ).isEqualTo( start );
 		} );
+	}
+
+	@Entity(name = "InstantEntity")
+	public static class InstantEntity {
+		@Id Integer id;
+		Instant theInstant;
+	}
+
+	@Entity(name = "InstantEntity3")
+	public static class InstantEntity3 {
+		@Id Integer id;
+		@FractionalSeconds(3) Instant theInstant;
 	}
 
 	@Entity(name="TestEntity")

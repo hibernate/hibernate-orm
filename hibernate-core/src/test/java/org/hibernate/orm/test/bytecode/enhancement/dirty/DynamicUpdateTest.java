@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.bytecode.enhancement.dirty;
 
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -21,6 +24,7 @@ import jakarta.persistence.OneToOne;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel(
 		annotatedClasses = {
 				DynamicUpdateTest.Payment.class,

@@ -12,6 +12,8 @@ import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.orm.test.mapping.javatime.redesign.TemporalEligibilityChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -24,6 +26,7 @@ import static org.hamcrest.Matchers.equalTo;
 /**
  * @author Steve Ebersole
  */
+@RequiresDialectFeature(feature = TemporalEligibilityChecks.LocalTimeMapping.class)
 @DomainModel(annotatedClasses = LocalTimeMappingTests.EntityWithLocalTime.class)
 @SessionFactory
 public class LocalTimeMappingTests {

@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.where.annotations;
 
+import org.hibernate.cfg.MappingSettings;
 import java.time.LocalDateTime;
 
 import org.hibernate.annotations.CurrentTimestamp;
@@ -29,7 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DomainModel(annotatedClasses = { RestrictedToOneBitmapTest.Owner.class,
 		RestrictedToOneTest.SqlTarget.class, RestrictedToOneTest.FilterTarget.class })
 @SessionFactory(useCollectingStatementObserver = true)
-@ServiceRegistry(settings = @Setting(name = "hibernate.check_nullability", value = "true"))
+@ServiceRegistry(settings = { @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"), @Setting(name = "hibernate.check_nullability", value = "true") })
 class RestrictedToOneBitmapTest {
 	@AfterEach
 	void cleanup(SessionFactoryScope scope) {

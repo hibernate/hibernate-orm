@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.query.hql.set;
 
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import java.time.LocalDate;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -20,6 +23,7 @@ import jakarta.persistence.ManyToOne;
 @DomainModel(
 		annotatedClasses = {UnionOfPartitionResultsTest.Apple.class, UnionOfPartitionResultsTest.Pie.class}
 )
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @SessionFactory
 @JiraKey( "HHH-18069" )
 public class UnionOfPartitionResultsTest {

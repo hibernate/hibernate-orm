@@ -1,6 +1,8 @@
 package org.hibernate.orm.test.version;
 
 import java.time.LocalDateTime;
+import org.hibernate.orm.test.mapping.javatime.redesign.TemporalEligibilityChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -20,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey("HHH-10026")
+@RequiresDialectFeature(feature = TemporalEligibilityChecks.LocalDateTimeMapping.class)
 @DomainModel(annotatedClasses = LocalDateTimeVersionTest.TheEntity.class)
 @SessionFactory
 public class LocalDateTimeVersionTest {

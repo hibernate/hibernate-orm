@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.hql;
 
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import java.time.LocalDate;
 
 import org.hibernate.community.dialect.DerbyDialect;
@@ -19,6 +22,7 @@ import jakarta.persistence.Query;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel(
 		annotatedClasses = {
 				QueryComparingAssociationToNullTest.Parent.class,

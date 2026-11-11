@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.query.hql;
 
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -30,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * @author Marco Belladelli
  */
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @SessionFactory(useCollectingStatementInspector = true)
 @DomainModel(annotatedClasses = SameTableAliasInSubqueryWithEmbeddedTest.MasterDataFileEntity.class)
 public class SameTableAliasInSubqueryWithEmbeddedTest {

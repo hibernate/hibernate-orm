@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.idgen.mixed;
 
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -15,12 +18,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
-@DomainModel(
-		annotatedClasses = {
-				MixedTimingEmbeddableGeneratorsTest.Event.class,
-				MixedTimingEmbeddableGeneratorsTest.History.class,
-		}
-)
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
+@DomainModel( annotatedClasses = {
+		MixedTimingEmbeddableGeneratorsTest.Event.class,
+		MixedTimingEmbeddableGeneratorsTest.History.class,
+} )
 @SessionFactory
 class MixedTimingEmbeddableGeneratorsTest {
 

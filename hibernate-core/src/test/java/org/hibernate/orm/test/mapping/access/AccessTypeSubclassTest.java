@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.mapping.access;
 
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.AttributeOverride;
@@ -21,10 +23,13 @@ import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
-@Jpa(annotatedClasses = {
-		AccessTypeSubclassTest.Base.class,
-		AccessTypeSubclassTest.SomeEntity.class
-})
+@Jpa(
+		properties = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
+		annotatedClasses = {
+				AccessTypeSubclassTest.Base.class,
+				AccessTypeSubclassTest.SomeEntity.class
+		}
+)
 @Jira("https://hibernate.atlassian.net/browse/HHH-20418")
 class AccessTypeSubclassTest {
 	@Test void test(EntityManagerFactoryScope scope) {

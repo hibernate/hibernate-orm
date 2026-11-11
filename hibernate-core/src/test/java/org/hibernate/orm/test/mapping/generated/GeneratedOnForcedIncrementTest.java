@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.mapping.generated;
 
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -15,7 +17,10 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Jpa(annotatedClasses = GeneratedOnForcedIncrementTest.WithUpdateTimestamp.class)
+@Jpa(
+		properties = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
+		annotatedClasses = GeneratedOnForcedIncrementTest.WithUpdateTimestamp.class
+)
 class GeneratedOnForcedIncrementTest {
 	@Test void test(EntityManagerFactoryScope scope) {
 		var persisted = scope.fromTransaction( em -> {

@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.annotations.beanvalidation;
 
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -28,10 +30,14 @@ import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@Jpa(annotatedClasses = {
-		CollectionActionsValidationTest.TestEntity.class,
-		CollectionActionsValidationTest.ChildEntity.class,
-}, validationMode = ValidationMode.AUTO)
+@Jpa(
+		properties = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
+		annotatedClasses = {
+				CollectionActionsValidationTest.TestEntity.class,
+				CollectionActionsValidationTest.ChildEntity.class,
+		},
+		validationMode = ValidationMode.AUTO
+)
 @Jira( "https://hibernate.atlassian.net/browse/HHH-19232" )
 public class CollectionActionsValidationTest {
 	@Test

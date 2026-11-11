@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /// the version before any guarded runtime bootstrap; no DialectContext is used.
 ///
 /// @author Steve Ebersole
-record PreservationEnvironment(String profile, String phase, String platform, String version) {
+record PreservationEnvironment(String profile, String phase, String platform, String version, String providerDialect) {
 	static PreservationEnvironment current() {
 		final String platform = TemporalLiveProfile.requireSupported().name().toLowerCase( Locale.ROOT );
 		final var settings = new HashMap<String, Object>();
@@ -34,7 +34,7 @@ record PreservationEnvironment(String profile, String phase, String platform, St
 		return new PreservationEnvironment(
 				System.getProperty( "hibernate.test.temporal.matrix_profile", "E0" ),
 				System.getProperty( "hibernate.test.temporal.matrix_phase", "both" ),
-				platform, version
+				platform, version, (String) settings.get( "hibernate.dialect" )
 		);
 	}
 
@@ -45,6 +45,10 @@ record PreservationEnvironment(String profile, String phase, String platform, St
 		}
 		return explicit == null ? actual : explicit;
 	}
+
+	// SQL-profile sharing must not erase EDB identity in range evidence. Child
+	// processes inherit the concrete dialect along with their connection settings.
+	boolean edb() { return "org.hibernate.dialect.PostgresPlusDialect".equals( providerDialect ); }
 
 	boolean pg() { return platform.equals( "postgresql" ); }
 	boolean oracle() { return platform.equals( "oracle" ); }

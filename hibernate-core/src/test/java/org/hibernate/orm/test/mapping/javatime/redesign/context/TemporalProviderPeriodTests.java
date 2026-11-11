@@ -112,7 +112,7 @@ class TemporalProviderPeriodTests {
 		for(var strategy:strategies())try(var f=new TemporalPeriodFixture(metadata,strategy,true,TemporalPeriodFixture.Period.class)) {
 			f.lifecycle(1,TemporalPeriodFixture.SEASONAL);
 			boolean inline=f.scope.factory.getChangesetCoordinator().useServerTimestamp(f.scope.factory.getJdbcServices().getDialect());
-			assertThat(inline).isEqualTo(!f.oracle());
+			assertThat(inline).isEqualTo(!f.oracle() && !ContextEnvironment.is(PostgresPlusDialect.class));
 			assertThat(f.scope.sql).anyMatch(sql->sql.contains("current_timestamp")||sql.contains("current_timestamp()"));
 		}
 	}

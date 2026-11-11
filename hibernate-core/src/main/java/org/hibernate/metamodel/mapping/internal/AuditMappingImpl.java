@@ -48,7 +48,6 @@ import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.exec.internal.TemporalJdbcParameter;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.annotation.Nullable;
 
@@ -101,13 +100,13 @@ public class AuditMappingImpl implements AuditMapping {
 		this.entityMappingType = entityMappingType;
 
 		final var creationContext = creationProcess.getCreationContext();
-		final var typeConfiguration = creationContext.getTypeConfiguration();
 		this.sessionFactory = creationContext.getSessionFactory();
 		this.auditStrategy = sessionFactory.getSessionFactoryOptions().getAuditStrategy();
-		final var changesetIdJavaType = sessionFactory.getChangesetCoordinator().getIdentifierType();
 
-		jdbcMapping = resolveJdbcMapping( typeConfiguration, changesetIdJavaType );
-		changesetIdBasicType = resolveBasicType( typeConfiguration, changesetIdJavaType );
+		// Historical predicates must use the same mapping as the audit columns,
+		// rather than resolving an application-wide default again from the Java type.
+		jdbcMapping = tableAuditInfoMap.values().iterator().next().changesetIdMapping().getJdbcMapping();
+		changesetIdBasicType = (BasicType<?>) jdbcMapping;
 
 		final var dialect = sessionFactory.getJdbcServices().getDialect();
 		currentTimestampFunctionName =
@@ -351,24 +350,6 @@ public class AuditMappingImpl implements AuditMapping {
 			return selfRendering;
 		}
 		throw new IllegalStateException( "Function 'max' is not a self rendering function" );
-	}
-
-	private static JdbcMapping resolveJdbcMapping(
-			TypeConfiguration typeConfiguration,
-			Class<?> javaType) {
-		final var basicType = typeConfiguration.getBasicTypeForJavaType( javaType );
-		return basicType != null
-				? basicType
-				: typeConfiguration.standardBasicTypeForJavaType( javaType );
-	}
-
-	private static <J> BasicType<J> resolveBasicType(
-			TypeConfiguration typeConfiguration,
-			Class<J> javaType) {
-		final var basicType = typeConfiguration.getBasicTypeForJavaType( javaType );
-		return basicType == null
-				? typeConfiguration.standardBasicTypeForJavaType( javaType )
-				: basicType;
 	}
 
 	private static List<SelectableMapping> collectEntityKeySelectables(EntityMappingType entityDescriptor) {

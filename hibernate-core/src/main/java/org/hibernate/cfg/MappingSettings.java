@@ -249,6 +249,51 @@ public interface MappingSettings {
 	boolean TEMPORAL_PRESERVATION_DEFAULT = true;
 
 	/**
+	 * Preservation requirement default. Accepts DOMAIN_VALUE or NORMALIZED, or a
+	 * {@linkplain org.hibernate.annotations.TemporalPreservationPolicy.Type} enum value.
+	 * Requires temporal preservation enabled; does not select storage or adjustment.
+	 *
+	 * @see org.hibernate.annotations.TemporalPreservationPolicy
+	 *
+	 * @since 8.0
+	 */
+	String TEMPORAL_PRESERVATION_POLICY = "hibernate.type.temporal_preservation_policy";
+
+	/**
+	 * Preservation requirement for offset_datetime. Accepts DOMAIN_VALUE or NORMALIZED, or a
+	 * {@linkplain org.hibernate.annotations.TemporalPreservationPolicy.Type} enum value.
+	 * Requires temporal preservation enabled; does not select storage or adjustment.
+	 *
+	 * @see org.hibernate.annotations.TemporalPreservationPolicy
+	 *
+	 * @since 8.0
+	 */
+	String TEMPORAL_PRESERVATION_POLICY_OFFSET_DATETIME = "hibernate.type.temporal_preservation_policy.offset_datetime";
+
+	/**
+	 * Preservation requirement for zoned_datetime. Accepts DOMAIN_VALUE or NORMALIZED, or a
+	 * {@linkplain org.hibernate.annotations.TemporalPreservationPolicy.Type} enum value.
+	 * Requires temporal preservation enabled; does not select storage or adjustment.
+	 *
+	 * @see org.hibernate.annotations.TemporalPreservationPolicy
+	 *
+	 * @since 8.0
+	 */
+	String TEMPORAL_PRESERVATION_POLICY_ZONED_DATETIME = "hibernate.type.temporal_preservation_policy.zoned_datetime";
+
+	/**
+	 * Preservation requirement for offset_time. Accepts DOMAIN_VALUE or NORMALIZED, or a
+	 * {@linkplain org.hibernate.annotations.TemporalPreservationPolicy.Type} enum value.
+	 * Requires temporal preservation enabled; does not select storage or adjustment.
+	 *
+	 * @see org.hibernate.annotations.TemporalPreservationPolicy
+	 *
+	 * @since 8.0
+	 */
+	String TEMPORAL_PRESERVATION_POLICY_OFFSET_TIME = "hibernate.type.temporal_preservation_policy.offset_time";
+
+
+	/**
 	 * Deprecated compatibility alias for {@link #TEMPORAL_PRESERVATION}, used only
 	 * when the replacement setting is absent. An explicit replacement value wins.
 	 * The effective value also supplies the base preferred Instant JDBC type;

@@ -614,8 +614,7 @@ Alternatively, you can configure SQL Server to use the UTF-8 enabled collation `
 === Date and time types and JDBC
 
 Use `java.time` types for temporal values. With `hibernate.type.temporal_preservation=true`, the default,
-Hibernate requires the following round-trip guarantees, whether it uses direct JDBC access or a preserving
-fallback conversion:
+Hibernate defaults to the following domain-value round-trip guarantees, whether it uses direct JDBC access or a preserving fallback conversion:
 
 [cols="1,3",options="header"]
 |===
@@ -634,6 +633,15 @@ A lower-precision column may round fractional seconds. Explicit COLUMN represent
 is the qualified offset-only alternative: it reconstructs a fixed-offset zone, not the original region ID.
 Unsupported mappings fail instead of silently reducing the guarantee. In particular, a database's
 `WITH TIME ZONE` type does not necessarily retain offsets or named zones.
+
+To accept offset loss explicitly while retaining validation, use
+`hibernate.type.temporal_preservation_policy=normalized`, or independently set its `.offset_datetime`,
+`.zoned_datetime` and `.offset_time` overrides. Normalized date-times preserve their instant;
+normalized `OffsetTime` preserves UTC-equivalent time of day modulo 24 hours, discarding day displacement.
+This does not require UTC output. `domain_value` remains the default.
+`@TemporalPreservationPolicy(NORMALIZED)` selects the policy on a member. At class/package/module scope,
+repeatable declarations may use `types = { OffsetDateTime.class, ZonedDateTime.class }` to target types.
+A nearer `DOMAIN_VALUE` restores the domain guarantee. Policy annotations and settings require preservation enabled.
 
 Storage and adjustment are separate choices. `@TimeZoneRepresentation` selects INLINE (the default) or COLUMN
 storage. `@TimeZoneAdjustment` explicitly requests a target zone or offset on both write and read; it is not

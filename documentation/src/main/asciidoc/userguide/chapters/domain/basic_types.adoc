@@ -800,18 +800,74 @@ The guarantee follows the Java type, not the SQL type name or whether direct JDB
 Hibernate rejects a mapping when its resolved Java/JDBC handling cannot establish the required guarantee;
 it does not silently substitute instant-only handling for an offset- or zone-preserving mapping.
 
+[[basic-temporal-preservation-policy]]
+====== Configurable preservation policies
+
+`hibernate.type.temporal_preservation_policy` selects `domain_value` (the default) or `normalized`.
+Preservation must remain enabled. `NORMALIZED` requires the same instant for `OffsetDateTime` and
+`ZonedDateTime`, while allowing the original offset and zone ID to change. For `OffsetTime`, it requires
+the same UTC-equivalent time of day modulo 24 hours: `00:30+02:00` and `22:30Z` are equivalent.
+This explicitly discards day displacement and differs from `OffsetTime.isEqual()` across midnight.
+It does not invent a date, require UTC output, select storage, or request timezone adjustment.
+Local Java Time types and `Instant` retain their existing guarantees.
+
+Each offset-bearing type may override the common default:
+
+[source,properties]
+----
+hibernate.type.temporal_preservation=true
+hibernate.type.temporal_preservation_policy=domain_value
+hibernate.type.temporal_preservation_policy.offset_datetime=normalized
+hibernate.type.temporal_preservation_policy.zoned_datetime=normalized
+hibernate.type.temporal_preservation_policy.offset_time=domain_value
+----
+
+`@TemporalPreservationPolicy` overrides configuration on a member, declaring class, package or module.
+Its `Type` enum contains `DOMAIN_VALUE` and `NORMALIZED`. For example, using static imports of these constants:
+
+[source,java]
+----
+@TemporalPreservationPolicy(NORMALIZED)
+OffsetDateTime occurredAt;
+
+@TemporalPreservationPolicy(DOMAIN_VALUE)
+OffsetDateTime enteredAt;
+----
+
+On a class, package or module, the annotation is repeatable and may select exact types:
+
+[source,java]
+----
+@TemporalPreservationPolicy(value = NORMALIZED, types = { OffsetDateTime.class, ZonedDateTime.class })
+@TemporalPreservationPolicy(value = DOMAIN_VALUE, types = OffsetTime.class)
+----
+
+Lookup uses the mapped member, its declaring class and superclass chain, exact declaring package,
+module, per-type setting, then common setting. At one scope, a matching typed declaration wins over an
+untargeted default. A nearer untargeted default wins over a farther typed declaration. Overlapping type
+selectors or multiple untargeted declarations at one scope are invalid. On members, omit `types`.
+For an application converter, selectors and validation use its relational Java type.
+A broad normalized default leaves local types unchanged; directly requesting normalization on a local type is invalid.
+
+The selected requirement must still be supported by the actual descriptors. Policy changes do not migrate
+historical data or establish its interpretation. Equality, dirty checking and cache serialization remain
+unchanged: an offset-only change may be dirty, and a cache hit may retain an offset that a database reload
+normalizes. Both must meet the selected precision-qualified guarantee.
+
+====== Guarantees by policy
+
 [[basic-temporal-preservation-matrix]]
 .Guarantees with temporal preservation enabled and no timezone adjustment
-[cols="1,3",options="header"]
+[cols="1,3,3",options="header"]
 |===
-|Java type |Preserved value
-|`LocalDate` |Calendar date.
-|`LocalTime` |Local time of day.
-|`LocalDateTime` |Local date and time.
-|`Instant` |Instant on the UTC timeline.
-|`OffsetTime` |Local time of day and offset.
-|`OffsetDateTime` |Local date-time and offset, and therefore the same instant.
-|`ZonedDateTime` |Local date-time, zone ID and resolved offset, and therefore the same instant.
+|Java type |`DOMAIN_VALUE` (default) |`NORMALIZED`
+|`LocalDate` |Calendar date. |Unchanged under a broad default.
+|`LocalTime` |Local time of day. |Unchanged under a broad default.
+|`LocalDateTime` |Local date and time. |Unchanged under a broad default.
+|`Instant` |Instant on the UTC timeline. |Same instant.
+|`OffsetTime` |Local time of day and offset. |UTC-equivalent time of day modulo 24 hours; original offset and day displacement need not survive.
+|`OffsetDateTime` |Local date-time and offset, and therefore the same instant. |Same instant; original offset and local date-time need not survive.
+|`ZonedDateTime` |Local date-time, zone ID and resolved offset, and therefore the same instant. |Same instant; original zone ID, offset and local date-time need not survive.
 |===
 
 The matrix defines guarantees for these seven Java Time types, including their supported version mappings,
@@ -833,8 +889,8 @@ by this decomposition. Choose this representation only when the offset-only cont
 Database support for `TIMESTAMP WITH TIME ZONE` alone does not establish zone-ID or offset preservation.
 For example, H2's offset-only inline handling cannot meet the baseline `ZonedDateTime` guarantee, and
 PostgreSQL's instant-preserving timestamp handling does not preserve an arbitrary original offset.
-Provider limitations do not weaken the contract: choose a supported mapping or an explicit adjustment
-whose semantics match the application.
+Provider limitations do not silently weaken the contract: choose a supported mapping, an explicit preservation
+policy, or an explicit adjustment whose semantics match the application.
 
 For an active application `AttributeConverter`, validation follows its relational Java type and JDBC mapping.
 Thus, a non-Java-Time attribute converted to `Instant` receives the Instant guarantee at the JDBC boundary;
@@ -958,6 +1014,12 @@ A `JdbcType` may implement `TemporalJdbcType` to assess its actual pairing with 
 * A present report is authoritative at this stage. Required parts must be `SUPPORTED`;
 `UNKNOWN`, `UNSUPPORTED` and `IRRELEVANT` do not satisfy them. Hibernate does not fill gaps
 with more optimistic fallback reports.
+
+The Java-side declaration remains the domain contract even when a mapping selects `NORMALIZED`;
+Hibernate applies the mapping's policy afterward. `NORMALIZED_TIME` is the separate assessment for
+UTC-equivalent time of day modulo 24 hours. `TIME` alone does not establish it. Supported `TIME` and
+`OFFSET` together imply it when no explicit normalized-time assessment is supplied. The original
+five-argument report constructor remains available and leaves the new component unknown.
 
 The report must account for wrapping/unwrapping, binding, extraction and reconstruction.
 Recognize descriptor behavior that the implementation actually understands, not merely a

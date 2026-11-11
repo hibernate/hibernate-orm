@@ -22,13 +22,19 @@ public record TemporalPreservation(
 		Level time,
 		Level instant,
 		Level offset,
-		Level zoneId) {
+		Level zoneId,
+		Level normalizedTime) {
 
 	public static final TemporalPreservation UNKNOWN = new TemporalPreservation(
-			Level.UNKNOWN, Level.UNKNOWN, Level.UNKNOWN, Level.UNKNOWN, Level.UNKNOWN );
+			Level.UNKNOWN, Level.UNKNOWN, Level.UNKNOWN, Level.UNKNOWN, Level.UNKNOWN, Level.UNKNOWN );
+
+	/// Compatibility constructor for contributors that do not assess normalized time.
+	public TemporalPreservation(Level date, Level time, Level instant, Level offset, Level zoneId) {
+		this( date, time, instant, offset, zoneId, Level.UNKNOWN );
+	}
 
 	public TemporalPreservation {
-		if ( date == null || time == null || instant == null || offset == null || zoneId == null ) {
+		if ( date == null || time == null || instant == null || offset == null || zoneId == null || normalizedTime == null ) {
 			throw new IllegalArgumentException( "Temporal preservation parts must not be null" );
 		}
 	}
@@ -40,6 +46,8 @@ public record TemporalPreservation(
 			case INSTANT -> instant;
 			case OFFSET -> offset;
 			case ZONE_ID -> zoneId;
+			case NORMALIZED_TIME -> normalizedTime != Level.UNKNOWN ? normalizedTime
+					: time == Level.SUPPORTED && offset == Level.SUPPORTED ? Level.SUPPORTED : Level.UNKNOWN;
 		};
 	}
 
@@ -48,6 +56,6 @@ public record TemporalPreservation(
 	}
 
 	public enum TemporalPart {
-		DATE, TIME, INSTANT, OFFSET, ZONE_ID
+		DATE, TIME, INSTANT, OFFSET, ZONE_ID, NORMALIZED_TIME
 	}
 }

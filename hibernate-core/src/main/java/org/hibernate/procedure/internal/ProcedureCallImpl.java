@@ -1,5 +1,7 @@
 package org.hibernate.procedure.internal;
 
+import org.hibernate.type.internal.TemporalMappingValidator;
+
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
@@ -668,9 +670,9 @@ public class ProcedureCallImpl<R>
 
 		if ( typeReference instanceof BasicType<?> basic
 				&& getSessionFactory().getSessionFactoryOptions().isPreferJavaTimeJdbcTypesEnabled() ) {
-			org.hibernate.type.internal.TemporalMappingValidator.validate(
+			TemporalMappingValidator.validate(
 					getSessionFactory().getJdbcServices().getDialect(), basic,
-					getProcedureName() + " function return" );
+					getProcedureName() + " function return", getSessionFactory().getProperties() );
 		}
 
 		assert !resultSetMappings.isEmpty();

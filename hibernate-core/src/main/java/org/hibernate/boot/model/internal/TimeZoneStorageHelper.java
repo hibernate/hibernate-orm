@@ -1,5 +1,8 @@
 package org.hibernate.boot.model.internal;
 
+import org.hibernate.engine.config.spi.ConfigurationService;
+import jakarta.persistence.Version;
+
 import org.hibernate.annotations.TimeZoneRepresentation;
 
 
@@ -33,6 +36,14 @@ public class TimeZoneStorageHelper {
 		// Dynamic XML components have no backing Java class for declaration lookup.
 		if ( returnedClass == null || !returnedClass.isRealClass() ) {
 			return null;
+		}
+		if ( TemporalMappingConfiguration.supportsRepresentation( returnedClass.toJavaClass() ) ) {
+			TemporalPolicyConfiguration.resolve( attributeMember, returnedClass.toJavaClass(),
+					context.getBootstrapContext().getServiceRegistry().requireService( ConfigurationService.class ).getSettings(),
+					context.isTemporalPreservationEnabled(),
+					TemporalMappingConfiguration.excluded( attributeMember )
+							&& !attributeMember.hasDirectAnnotationUsage( Version.class ),
+					attributeMember.getDeclaringType().getName() + "." + attributeMember.getName() );
 		}
 		if ( context.isPreferJavaTimeJdbcTypesEnabled()
 				? TemporalMappingConfiguration.resolve( attributeMember, returnedClass.toJavaClass(), context ).representation()

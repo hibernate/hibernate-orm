@@ -294,3 +294,19 @@ retain their private file-backed databases.
 Provider selection recognizes Dialect subclasses, including PostgreSQL's EDB family.
 Fixture eligibility is evaluated outside expected-mapping-failure assertions. These
 gates describe the fixture matrix and do not declare additional production guarantees.
+
+== Configurable preservation policies
+
+`TemporalPolicyTests` checks setting and declaration precedence, relational converter types,
+metadata-disabled bootstrap, exclusions, and independent strict/normalized mapping requirements.
+`TemporalNormalizedTimeTests` uses an H2-only contributed descriptor that actually normalizes offsets,
+including exact midnight wrapping, second offsets, nulls and H2's end-of-day precision saturation.
+`TemporalPolicyLiveTests` checks entity/cache/query round trips and optimistic locking on H2,
+PostgreSQL and Oracle. Its write and read sessions use different fixed timezone offsets;
+JDBC conversion is configured for America/Los_Angeles and physical connections are closed between sessions.
+Use `-PtemporalTestJvmTimeZone=America/Denver` for a controlled JVM timezone in provider runs.
+
+The Persistence TCK remains unchanged and runs with preservation enabled, normalized OffsetDateTime
+and strict OffsetTime. Its datetime test compares entity identities, so its success does not replace
+these dedicated preservation assertions. Do not run separate Gradle builds against shared class/jar
+outputs while either test JVM is active.

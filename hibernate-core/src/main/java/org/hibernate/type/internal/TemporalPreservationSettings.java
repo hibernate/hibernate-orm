@@ -17,9 +17,11 @@ public record TemporalPreservationSettings(boolean enabled, String source) {
 				? MappingSettings.TEMPORAL_PRESERVATION
 				: settings.get( MappingSettings.JAVA_TIME_USE_DIRECT_JDBC ) != null
 						? MappingSettings.JAVA_TIME_USE_DIRECT_JDBC : null;
-		return new TemporalPreservationSettings(
+		final var result = new TemporalPreservationSettings(
 				source == null ? MappingSettings.TEMPORAL_PRESERVATION_DEFAULT
 						: getBoolean( source, settings, MappingSettings.TEMPORAL_PRESERVATION_DEFAULT ), source );
+		TemporalPolicySettings.validate( settings, result.enabled() );
+		return result;
 	}
 
 	public int baseInstantJdbcType() {

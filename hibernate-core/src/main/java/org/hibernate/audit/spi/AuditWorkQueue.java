@@ -65,7 +65,7 @@ public class AuditWorkQueue implements TransactionCompletionCallbacks.BeforeComp
 			AuditWriter writer,
 			SharedSessionContractImplementor session) {
 		if ( !registered ) {
-			session.getTransactionCompletionCallbacks().registerCallback( this );
+			registerCallbacks( session );
 			trackingListener = resolveTrackingListener( session );
 			registered = true;
 		}
@@ -93,7 +93,7 @@ public class AuditWorkQueue implements TransactionCompletionCallbacks.BeforeComp
 			CollectionAuditWriter writer,
 			SharedSessionContractImplementor session) {
 		if ( !registered ) {
-			session.getTransactionCompletionCallbacks().registerCallback( this );
+			registerCallbacks( session );
 			registered = true;
 		}
 		// Only store the first snapshot; subsequent flushes are ignored,
@@ -171,12 +171,24 @@ public class AuditWorkQueue implements TransactionCompletionCallbacks.BeforeComp
 			populateModifiedEntityNames( session );
 		}
 		finally {
-			changeSet.clear();
-			trackingListener = null;
-			changelog = null;
-			changesetSession = null;
-			registered = false;
+			clear();
 		}
+	}
+
+	private void registerCallbacks(SharedSessionContractImplementor session) {
+		final var callbacks = session.getTransactionCompletionCallbacks();
+		callbacks.registerCallback( this );
+		// Rollback never invokes the before-completion writer. Release its pending
+		// work and registration so the next transaction can register a fresh writer.
+		callbacks.registerCallback( (success, completingSession) -> clear() );
+	}
+
+	private void clear() {
+		changeSet.clear();
+		trackingListener = null;
+		changelog = null;
+		changesetSession = null;
+		registered = false;
 	}
 
 	private void populateModifiedEntityNames(SharedSessionContractImplementor session) {

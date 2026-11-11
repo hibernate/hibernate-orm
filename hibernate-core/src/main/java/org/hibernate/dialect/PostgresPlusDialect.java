@@ -119,6 +119,15 @@ public class PostgresPlusDialect extends PostgreSQLDialect implements CurrentTem
 
 	@Override
 	@SPI({ USE, IMPLEMENT })
+	public boolean isCurrentTimestampStable() {
+		// EDB may evaluate current_timestamp differently in separate statements of
+		// one transaction. History and audit mutations must share the timestamp
+		// obtained by the existing changeset supplier and cached by the session.
+		return false;
+	}
+
+	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTimestamp() {
 		return "current_timestamp";
 	}

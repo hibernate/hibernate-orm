@@ -593,6 +593,6 @@ public abstract class AbstractPreservationTests<T> {
 	private void inventory(PreservationEnvironment env, Mapping<T> mapping, Handling handling, boolean metadata, String disposition, String descriptor, String sql) {
 		System.out.println( "TP_CASE\t" + env.platform() + "\t" + domain.getSimpleName() + "\t" + mapping.id() + "\t" + handling
 				+ "\tprecision=" + (domain == LocalDate.class ? "n/a" : mapping.precision()) + "\tadjustment=" + mapping.adjustment() + "\tmetadata=" + metadata + "\t" + env.profile()
-				+ "\t" + disposition + "\t" + descriptor + "\t" + sql );
+				+ "\t" + disposition + "\t" + descriptor + "\t" + sql + "\tprovider=" + env.providerDialect() );
 	}
 }

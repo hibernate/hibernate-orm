@@ -21,6 +21,13 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.type.internal.OracleTimestampUtcAsJdbcTimestampJdbcType;
+import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.java.InstantJavaType;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsOffsetDateTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsPlainJdbcTimestampJdbcType;
 import org.hibernate.mapping.AuxiliaryTableHolder;
 import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.BasicValue;
@@ -678,6 +685,27 @@ public final class AuditHelper {
 		setColumnName( columnName, column, database,
 				context.getBuildingOptions().getPhysicalNamingStrategy() );
 		setTemporalColumnType( column, database, javaType );
+		if ( javaType == Instant.class && database.getDialect() instanceof OracleDialect
+				&& ChangelogSupplier.resolve( context.getBootstrapContext().getServiceRegistry() ) == null ) {
+			basicValue.setExplicitJdbcTypeAccess( typeConfiguration -> {
+				final var javaTypeDescriptor = typeConfiguration.getJavaTypeRegistry().getDescriptor( Instant.class );
+				if ( javaTypeDescriptor.getClass() != InstantJavaType.class ) {
+					return null; // Let a contributed JavaType retain its own JDBC recommendation.
+				}
+				final var jdbcType = javaTypeDescriptor.getRecommendedJdbcType( basicValue );
+				// An audit identifier participates in a primary key. Oracle forbids
+				// WITH TIME ZONE keys, so use UTC fields consistently for the built-in
+				// UTC mapping, including compatibility mode. Do not replace custom
+				// descriptors or an explicitly different preferred JDBC type.
+				if ( basicValue.getPreferredSqlTypeCodeForInstant() == SqlTypes.TIMESTAMP_UTC
+						&& (jdbcType.getClass() == TimestampUtcAsOffsetDateTimeJdbcType.class
+						|| jdbcType.getClass() == TimestampUtcAsJdbcTimestampJdbcType.class
+						|| jdbcType.getClass() == OracleTimestampUtcAsJdbcTimestampJdbcType.class) ) {
+					return TimestampUtcAsPlainJdbcTimestampJdbcType.INSTANCE;
+				}
+				return jdbcType;
+			} );
+		}
 
 		return column;
 	}

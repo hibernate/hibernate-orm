@@ -78,3 +78,21 @@ Precision expectations follow the selected driver's execution behavior rather th
 pre-binding canonicalization. COLUMN stores the original/adjusted auxiliary offset;
 regional read adjustment resolves the final extracted instant. Finite SQL/carrier
 ranges are required; date/timestamp infinity sentinels are excluded. H2/PostgreSQL/Oracle live support is explicit; SQL Server live verification remains deferred.
+
+== EDB range characterization
+
+`EdbTemporalCharacterizationTests` runs only against EDB. It records timestamp
+expressions across statements/transactions, the actual type of natural `date` and
+`pg_catalog.date`, session-local `edb_redwood_date` modes, and typed LocalDate
+binding/extraction for candidate bounds, neighboring dates, BCE/CE controls and
+infinity sentinels. Run it separately with the EDB driver and pgJDBC against the
+same server. Its observations are evidence for reviewing the finite-range contract;
+a successful test does not certify every candidate as supported. Unsupported modes
+and rejected values are recorded explicitly. Connections, temporary tables and
+compatibility setting changes are confined to the test transactions.
+
+EDB shares PostgreSQL session SQL, but `providerDialect` retains its separate
+identity in `TP_CASE` output and child-process environments. Existing production
+bounds and positive range samples remain unchanged until live typed JDBC evidence
+establishes the EDB finite domain. Do not substitute a PostgreSQL or H2 pass for
+that evidence or skip the existing failing EDB endpoint to claim closure.

@@ -310,3 +310,27 @@ The Persistence TCK remains unchanged and runs with preservation enabled, normal
 and strict OffsetTime. Its datetime test compares entity identities, so its success does not replace
 these dedicated preservation assertions. Do not run separate Gradle builds against shared class/jar
 outputs while either test JVM is active.
+
+== Cached database history timestamps
+
+`TemporalServerCoordinationTests` distinguishes offline EDB route/bootstrap checks
+from live lifecycle checks. EDB and Oracle use the existing database timestamp
+supplier and transaction cache; the H2 test dialect selects that same route for
+local regression coverage. H2 is not an emulation of EDB date ranges or drivers.
+The tests retain both preservation modes, metadata modes and queues, repeated
+flushes, rollback/commit and later transactions in the same session, plus built-in
+`@Audited` entity/collection checks (not Envers).
+
+Migration fixtures identify source rows as produced by the current binary with
+preservation disabled. This does not prove that historical binaries produced
+continuous history. `TemporalMalformedHistoryMigrationTests` deliberately breaks
+owned entity or collection intervals and checks refusal before target conversion
+or mutation, with unchanged row counts and endpoints. No automatic data repair or
+production bootstrap scan is performed.
+
+`OracleAuditInstantTests` verifies plain UTC timestamp audit keys in both
+preservation modes, metadata modes and audit strategies. It checks exact historical
+boundaries and changeset extraction with different session timezones, reads seeded
+UTC source rows, and retains custom descriptor precedence. The ordinary application
+Instant mapping is independent of this audit-key representation. Use
+`-PtemporalTestJvmTimeZone=America/Denver` to repeat with a non-UTC JVM.

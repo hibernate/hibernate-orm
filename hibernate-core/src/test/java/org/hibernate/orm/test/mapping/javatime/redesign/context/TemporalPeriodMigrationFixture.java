@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -95,12 +96,16 @@ final class TemporalPeriodMigrationFixture {
 			evidence.setProperty( "source.ddl", column.getSqlType( f.scope.metadata ) );
 			evidence.setProperty( "source.producer", "server=" + server + " inline=" + f.scope.factory.getChangesetCoordinator().useServerTimestamp( f.scope.factory.getJdbcServices().getDialect() ) );
 			evidence.setProperty( "source.columns", f.entityTable + "," + f.collectionTable + " valid_from/valid_to precision=6, nullability=false/true (catalog checked)" );
-			evidence.setProperty( "source.protocol", "runtime temporal_preservation=false; baseline=321b4ff81f217149f612878129a31cca599e6ab8" );
+			evidence.setProperty( "source.protocol", "current test binary with temporal_preservation=false; repaired coordination, not historical-binary evidence" );
 		}
 		return evidence;
 	}
 
 	void read(Properties evidence) throws Exception {
+		// Validate with the source interpretation before any conversion or target mutation.
+		try ( var source = fixture( false, false ) ) {
+			validateSourceHistory( sourceIntervals( source, false ), sourceIntervals( source, true ) );
+		}
 		Instant a = Instant.parse( evidence.getProperty( "a" ) ), b = Instant.parse( evidence.getProperty( "b" ) );
 		if ( profile.equals( "M04" ) ) {
 			try ( var negative = fixture( true, true ) ) {
@@ -141,6 +146,31 @@ final class TemporalPeriodMigrationFixture {
 			assertThat( f.intervals( true, 1 ) ).allSatisfy( interval -> {
 				assertThat( interval.end() ).isEqualTo( d ); assertThat( interval.start() ).isIn( a, b, c );
 			} );
+		}
+	}
+
+	static void validateSourceHistory(List<TemporalPeriodFixture.Interval> entity,
+			List<TemporalPeriodFixture.Interval> collection) {
+		assertThat( entity ).as( "source entity history" ).isNotEmpty();
+		var boundaries = new HashSet<Instant>();
+		for ( int i = 0; i < entity.size(); i++ ) {
+			var interval = entity.get( i );
+			boundaries.add( interval.start() );
+			if ( interval.end() != null ) {
+				assertThat( interval.end() ).as( "source entity interval %s", interval ).isAfter( interval.start() );
+				boundaries.add( interval.end() );
+			}
+			if ( i + 1 < entity.size() ) {
+				assertThat( interval.end() ).as( "source entity continuity between %s and %s", interval, entity.get( i + 1 ) )
+						.isEqualTo( entity.get( i + 1 ).start() );
+			}
+		}
+		for ( var interval : collection ) {
+			assertThat( interval.start() ).as( "source collection interval %s", interval ).isIn( boundaries );
+			if ( interval.end() != null ) {
+				assertThat( interval.end() ).as( "source collection interval %s", interval )
+						.isAfter( interval.start() ).isIn( boundaries );
+			}
 		}
 	}
 

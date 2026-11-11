@@ -104,10 +104,16 @@ class TimeZoneAwareTemporalPreservationMatrixTests {
 		final var expectedOffset = !time ? irrelevant : expected == TemporalPreservation.Level.UNKNOWN
 				? TemporalPreservation.Level.UNKNOWN : primary instanceof UtcTimeJdbcType
 						? TemporalPreservation.Level.UNSUPPORTED : TemporalPreservation.Level.SUPPORTED;
+		// The established UTC carriers explicitly report normalized clock preservation.
+		// Other pairs retain the report's UNKNOWN default, even when TIME + OFFSET
+		// can independently establish normalized preservation via preserves().
+		final var expectedNormalizedTime = time && expected == TemporalPreservation.Level.SUPPORTED
+				&& primary instanceof UtcTimeJdbcType
+				? TemporalPreservation.Level.SUPPORTED : TemporalPreservation.Level.UNKNOWN;
 		assertThat( dialect.getTemporalPreservation( primaryJava, primary ) ).as( "%s complete primary report",
 						combination )
 				.isEqualTo( new TemporalPreservation( irrelevant, time ? expected : irrelevant,
-						time ? irrelevant : expected, expectedOffset, irrelevant ) );
+						time ? irrelevant : expected, expectedOffset, irrelevant, expectedNormalizedTime ) );
 		assertThat( dialect.getTemporalPreservation( primaryJava, primary ).preserves( part ) )
 				.as( "%s primary report", combination ).isEqualTo( expected );
 		assertThat( dialect.getTemporalPreservation( ZoneOffsetJavaType.INSTANCE, IntegerJdbcType.INSTANCE ).offset() )

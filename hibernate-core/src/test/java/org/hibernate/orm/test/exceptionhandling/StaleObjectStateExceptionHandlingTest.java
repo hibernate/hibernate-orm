@@ -3,14 +3,18 @@ package org.hibernate.orm.test.exceptionhandling;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.Version;
+import org.hibernate.StaleObjectStateException;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.transaction.TransactionUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @JiraKey("HHH-12666")
@@ -90,6 +94,24 @@ public class StaleObjectStateExceptionHandlingTest extends BaseExceptionHandling
 				exceptionExpectations.onStaleObjectMergeAndUpdateFlush( expected );
 			}
 		} );
+	}
+
+	@Test
+	@JiraKey("HHH-15410")
+	void testConversionDoesNotLoadEntity() {
+		sessionFactory().inTransaction( session -> {
+			final var entity = new A();
+			entity.id = 1L;
+			session.persist( entity );
+		} );
+		final var stale = new StaleObjectStateException( A.class.getName(), 1L );
+		final var inspector = new SQLStatementInspector();
+		try ( var session = sessionFactory().withOptions().statementInspector( inspector ).openSession() ) {
+			final var converted = session.getExceptionConverter().convert( stale );
+			assertThat( converted ).hasCause( stale ).isInstanceOfSatisfying( OptimisticLockException.class,
+					e -> assertThat( e.getEntity() ).isNull() );
+			inspector.assertExecutedCount( 0 );
+		}
 	}
 
 	@SuppressWarnings("unused")

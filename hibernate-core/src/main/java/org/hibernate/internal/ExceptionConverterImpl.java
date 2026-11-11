@@ -202,18 +202,14 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 
 	protected PersistenceException wrapStaleStateException(StaleStateException exception) {
 		final String message = exception.getMessage();
-		if ( exception instanceof StaleObjectStateException staleStateException ) {
-			final Object identifier = staleStateException.getIdentifier();
-			final String entityName = staleStateException.getEntityName();
-			if ( identifier != null ) {
-				try {
-					final Object entity = session.internalLoad( entityName, identifier, false, true );
-					if ( entity instanceof Serializable ) { // avoid some user errors regarding boundary crossing
-						return new OptimisticLockException( message, exception, entity );
-					}
-				}
-				catch (EntityNotFoundException entityNotFoundException) {
-					// swallow it;
+		if ( exception instanceof StaleObjectStateException stale && stale.getIdentifier() != null ) {
+			final var persister = session.getFactory().getMappingMetamodel().findEntityDescriptor( stale.getEntityName() );
+			if ( persister != null ) {
+				final var key = session.generateEntityKey( stale.getIdentifier(), persister );
+				// Only attach an instance we already have. A load here can mask the original failure.
+				final var entity = session.getPersistenceContextInternal().getEntity( key );
+				if ( entity instanceof Serializable ) {
+					return new OptimisticLockException( message, exception, entity );
 				}
 			}
 		}

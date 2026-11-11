@@ -54,7 +54,7 @@ public class ExceptionTest {
 			}
 			catch (OptimisticLockException e) {
 				//success
-				assertThat( e.getEntity() ).isEqualTo( music );
+				assertThat( e.getEntity() ).isSameAs( music );
 			}
 			catch (Exception e) {
 				fail( "Should raise an optimistic lock exception" );

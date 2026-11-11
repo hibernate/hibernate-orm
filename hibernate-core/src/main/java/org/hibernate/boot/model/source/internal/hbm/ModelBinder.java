@@ -1655,14 +1655,18 @@ public class ModelBinder {
 		);
 
 		handlePropertyRef( sourceDocument, oneToOneBinding,
-				"<one-to-one name=\"" + oneToOneSource.getName() + "\"/>" );
+				oneToOneSource.getAttributeRole().getFullPath() );
 
 		// Defer the creation of the foreign key as we need the
 		// associated entity persister to be initialized so that
 		// we can observe the properties/columns of a possible
 		// component in the correct order
 		metadataBuildingContext.getMetadataCollector()
-				.addSecondPass( new OneToOneFkSecondPass( oneToOneBinding ) );
+				.addSecondPass( new OneToOneFkSecondPass(
+						oneToOneBinding,
+						oneToOneSource.getAttributeRole(),
+						sourceDocument.getOrigin() )
+				);
 
 		final var property = new Property();
 		property.setValue( oneToOneBinding );
@@ -1673,14 +1677,14 @@ public class ModelBinder {
 	private void handlePropertyRef(
 			MappingDocument sourceDocument,
 			ToOne binding,
-			String synopsis) {
+			String associationRole) {
 		final String propertyRef = binding.getReferencedPropertyName();
 		if ( propertyRef != null ) {
 			handlePropertyReference(
 					sourceDocument,
 					binding.getReferencedEntityName(),
 					propertyRef,
-					synopsis
+					associationRole
 			);
 		}
 	}
@@ -1689,7 +1693,7 @@ public class ModelBinder {
 			MappingDocument mappingDocument,
 			String referencedEntityName,
 			String referencedPropertyName,
-			String sourceElementSynopsis) {
+			String associationRole) {
 		final var collector = mappingDocument.getMetadataCollector();
 		final var entityBinding = collector.getEntityBinding( referencedEntityName );
 		if ( entityBinding == null ) {
@@ -1698,29 +1702,29 @@ public class ModelBinder {
 					mappingDocument,
 					referencedEntityName,
 					referencedPropertyName,
-					sourceElementSynopsis,
+					associationRole,
 					collector
 			);
 		}
 		else {
 			final var propertyBinding =
-					entityBinding.getReferencedProperty( referencedPropertyName );
+					resolvePropertyRef( entityBinding, referencedPropertyName, associationRole, mappingDocument.getOrigin() );
 			if ( propertyBinding == null ) {
 				// attribute may just not have been processed yet - set up a delayed handler
 				registerDelayedPropertyReferenceHandler(
 						mappingDocument,
 						referencedEntityName,
 						referencedPropertyName,
-						sourceElementSynopsis,
+						associationRole,
 						collector
 				);
 			}
 			else {
 				BOOT_LOGGER.tracef(
-						"Property [%s.%s] referenced by property-ref [%s] was available - no need for delayed handling",
+						"Property [%s.%s] referenced by association [%s] was available - no need for delayed handling",
 						referencedEntityName,
 						referencedPropertyName,
-						sourceElementSynopsis
+						associationRole
 				);
 				( (SimpleValue) propertyBinding.getValue() )
 						.setAlternateUniqueKey( true );
@@ -1728,25 +1732,43 @@ public class ModelBinder {
 		}
 	}
 
+	private static Property resolvePropertyRef(PersistentClass entity, String property, String role, Origin origin) {
+		try {
+			return entity.getReferencedProperty( property );
+		}
+		catch (org.hibernate.MappingException e) {
+			throw propertyRefException( role, origin, e );
+		}
+	}
+
+	private static MappingException propertyRefException(String role, Origin origin, org.hibernate.MappingException cause) {
+		return new MappingException( cause.getMessage() + " (referenced by association '" + role + "')", cause, origin );
+	}
+
+	private static MappingException unmappedPropertyRefTarget(String role, String property, String entity, Origin origin) {
+		return new MappingException( "Association '" + role + "' specifies property-ref '" + property
+				+ "' on unmapped entity '" + entity + "'", origin );
+	}
+
 	private void registerDelayedPropertyReferenceHandler(
 			MappingDocument mappingDocument,
 			String referencedEntityName,
 			String referencedPropertyName,
-			String sourceElementSynopsis,
+			String associationRole,
 			InFlightMetadataCollector collector) {
 		final var handler =
 				new DelayedPropertyReferenceHandlerImpl(
 						referencedEntityName,
 						referencedPropertyName,
 						true,
-						sourceElementSynopsis,
+						associationRole,
 						mappingDocument.getOrigin()
 				);
 		BOOT_LOGGER.tracef(
-				"Property [%s.%s] referenced by property-ref [%s] was not yet available - creating delayed handler",
+				"Property [%s.%s] referenced by association [%s] was not yet available - creating delayed handler",
 				handler.referencedEntityName,
 				handler.referencedPropertyName,
-				handler.sourceElementSynopsis
+				handler.associationRole
 		);
 		collector.addDelayedPropertyReferenceHandler( handler );
 	}
@@ -1822,7 +1844,7 @@ public class ModelBinder {
 		bindManyToOneAttribute( sourceDocument, manyToOneSource, manyToOneBinding, referencedEntityName );
 
 		handlePropertyRef( sourceDocument, manyToOneBinding,
-				"<many-to-one name=\"" + manyToOneSource.getName() + "\"/>" );
+				manyToOneSource.getAttributeRole().getFullPath() );
 
 		final var property = new Property();
 		property.setValue( manyToOneBinding );
@@ -1948,7 +1970,7 @@ public class ModelBinder {
 					referencedEntityName
 			);
 			if ( canBindColumnsImmediately && fkSecondPass.canProcessImmediately() ) {
-				fkSecondPass.doSecondPass( null );
+				fkSecondPass.doSecondPass( sourceDocument.getMetadataCollector().getEntityBindingMap() );
 			}
 			else {
 				sourceDocument.getMetadataCollector().addSecondPass( fkSecondPass );
@@ -2798,19 +2820,19 @@ public class ModelBinder {
 		public final String referencedEntityName;
 		public final String referencedPropertyName;
 		public final boolean isUnique;
-		private final String sourceElementSynopsis;
+		private final String associationRole;
 		public final Origin propertyRefOrigin;
 
 		public DelayedPropertyReferenceHandlerImpl(
 				String referencedEntityName,
 				String referencedPropertyName,
 				boolean isUnique,
-				String sourceElementSynopsis,
+				String associationRole,
 				Origin propertyRefOrigin) {
 			this.referencedEntityName = referencedEntityName;
 			this.referencedPropertyName = referencedPropertyName;
 			this.isUnique = isUnique;
-			this.sourceElementSynopsis = sourceElementSynopsis;
+			this.associationRole = associationRole;
 			this.propertyRefOrigin = propertyRefOrigin;
 		}
 
@@ -2819,23 +2841,19 @@ public class ModelBinder {
 					"Performing delayed property-ref handling [%s, %s, %s]",
 					referencedEntityName,
 					referencedPropertyName,
-					sourceElementSynopsis
+					associationRole
 			);
 
 			final var entityBinding = metadataCollector.getEntityBinding( referencedEntityName );
 			if ( entityBinding == null ) {
-				throw new MappingException(
-						"property-ref [%s] referenced an unmapped entity [%s]"
-								.formatted( sourceElementSynopsis, referencedEntityName ),
-						propertyRefOrigin
-				);
+				throw unmappedPropertyRefTarget( associationRole, referencedPropertyName, referencedEntityName, propertyRefOrigin );
 			}
 
-			final var propertyBinding = entityBinding.getReferencedProperty( referencedPropertyName );
+			final var propertyBinding = resolvePropertyRef( entityBinding, referencedPropertyName, associationRole, propertyRefOrigin );
 			if ( propertyBinding == null ) {
 				throw new MappingException(
-						"property-ref [%s] referenced an unknown entity property [%s.%s]"
-								.formatted( sourceElementSynopsis, referencedEntityName, referencedPropertyName ),
+						"Association '%s' references unknown property '%s.%s'"
+								.formatted( associationRole, referencedEntityName, referencedPropertyName ),
 						propertyRefOrigin
 				);
 			}
@@ -3777,6 +3795,11 @@ public class ModelBinder {
 								.getEntityBinding( referencedEntityName );
 
 				if ( referencedEntityBinding == null ) {
+					final String property = manyToOneSource.getReferencedEntityAttributeName();
+					if ( property != null ) {
+						throw unmappedPropertyRefTarget( manyToOneSource.getAttributeRole().getFullPath(),
+								property, referencedEntityName, mappingDocument.getOrigin() );
+					}
 					throw new AssertionFailure(
 							"Unable to locate referenced entity mapping [" + referencedEntityName +
 							"] in order to process many-to-one FK : " + manyToOneSource.getAttributeRole().getFullPath()
@@ -3817,6 +3840,7 @@ public class ModelBinder {
 
 		private final String referencedEntityName;
 		private final String referencedEntityAttributeName;
+		private final AttributeRole role;
 
 		private ManyToOneFkSecondPass(
 				MappingDocument mappingDocument,
@@ -3834,6 +3858,7 @@ public class ModelBinder {
 			this.manyToOneBinding = manyToOneBinding;
 			this.referencedEntityName = referencedEntityName;
 			this.referencedEntityAttributeName = manyToOneSource.getReferencedEntityAttributeName();
+			this.role = manyToOneSource.getAttributeRole();
 		}
 
 		@Override
@@ -3856,10 +3881,17 @@ public class ModelBinder {
 			if ( referencedEntityAttributeName == null ) {
 				manyToOneBinding.createForeignKey();
 			}
+			else if ( !persistentClasses.containsKey( referencedEntityName ) ) {
+				throw unmappedPropertyRefTarget( role.getFullPath(), referencedEntityAttributeName,
+						referencedEntityName, mappingDocument.getOrigin() );
+			}
 			else {
-				manyToOneBinding.createPropertyRefConstraints(
-						mappingDocument.getMetadataCollector()
-								.getEntityBindingMap() );
+				try {
+					manyToOneBinding.createPropertyRefConstraints( persistentClasses );
+				}
+				catch (org.hibernate.MappingException e) {
+					throw propertyRefException( role.getFullPath(), mappingDocument.getOrigin(), e );
+				}
 			}
 		}
 
@@ -3880,9 +3912,13 @@ public class ModelBinder {
 
 	private static class OneToOneFkSecondPass implements FkSecondPass {
 		private final OneToOne oneToOneBinding;
+		private final AttributeRole role;
+		private final Origin origin;
 
-		private OneToOneFkSecondPass(OneToOne oneToOneBinding) {
+		private OneToOneFkSecondPass(OneToOne oneToOneBinding, AttributeRole role, Origin origin) {
 			this.oneToOneBinding = oneToOneBinding;
+			this.role = role;
+			this.origin = origin;
 		}
 
 		@Override
@@ -3902,7 +3938,15 @@ public class ModelBinder {
 
 		@Override
 		public void doSecondPass(Map<String, PersistentClass> persistentClasses) {
-			oneToOneBinding.createForeignKey();
+			try {
+				oneToOneBinding.createForeignKey();
+			}
+			catch (org.hibernate.MappingException e) {
+				if ( oneToOneBinding.getReferencedPropertyName() == null ) {
+					throw e;
+				}
+				throw propertyRefException( role.getFullPath(), origin, e );
+			}
 		}
 	}
 

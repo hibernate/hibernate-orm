@@ -7,7 +7,7 @@ services:
       - "${SPANNER_REST_PORT:-9021}:9020"
   spanner-healthcheck:
     # Sidecar: spanner emulator image has no tools, so we use UBI to run the healthcheck:
-    image: registry.access.redhat.com/ubi9/ubi-minimal:latest@sha256:bba2b4bbf0ed15cfe7dd72a1e17ae7d2015a141f306b304e1a2785c41400e39c
+    image: registry.access.redhat.com/ubi9/ubi-minimal:latest@sha256:baafce2d34783a28b4a472779f304e97e00f9d35c99553bc53b068b14344d9a9
     container_name: ${SPANNER_CONTAINER_NAME:-spanner}_healthcheck
     depends_on:
       spanner:

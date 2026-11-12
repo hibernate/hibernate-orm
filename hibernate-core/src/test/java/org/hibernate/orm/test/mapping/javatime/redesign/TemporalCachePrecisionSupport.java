@@ -7,11 +7,13 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
+import org.hibernate.type.internal.TemporalPrecisionBasicType;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /// Inspects the actual COLUMN primary descriptors, not a generic TIMESTAMP type.
-/// Requires an explicit fractional precision parameter on the same SQL type.
+/// Reports DDL parameterization separately from an installed execution plan.
+/// A fixed physical type can still support a coarser logical grid.
 /// Switching between fixed-precision types (for example Sybase bigdatetime and
 /// datetime) is not evidence that a requested precision of zero is implemented.
 ///
@@ -25,7 +27,8 @@ final class TemporalCachePrecisionSupport {
 		final var registry = metadata.getTypeConfiguration().getDdlTypeRegistry();
 		final var entity = metadata.getEntityBinding( entityClass.getName() );
 		final var descriptions = new ArrayList<String>();
-		boolean supported = true;
+		boolean rendersPrecision = true;
+		boolean executionPlan = true;
 		for ( String property : List.of( "adjusted", "unadjusted" ) ) {
 			final var component = (Component) entity.getProperty( property ).getValue();
 			final var primary = (BasicValue) component.getProperty( "instant" ).getValue();
@@ -38,10 +41,12 @@ final class TemporalCachePrecisionSupport {
 			final var three = descriptor.getTypeName( new Size().setPrecision( 3 )
 					.setLength( actualSize.getLength() ).setScale( actualSize.getScale() ), primary.getType(), registry );
 			assertThat( column.getSqlType( metadata ) ).isEqualTo( zero );
-			supported &= rendersFractionalPrecision( zero, three );
+			rendersPrecision &= rendersFractionalPrecision( zero, three );
+			final var temporal = TemporalPrecisionBasicType.find( type );
+			executionPlan &= temporal != null && !temporal.getPrecisionPlan().getSignature().contains( "bootstrap-only:" );
 			descriptions.add( property + ": " + zero + " (precision 3: " + three + ")" );
 		}
-		final var result = new Precision( supported, List.copyOf( descriptions ) );
+		final var result = new Precision( rendersPrecision, executionPlan, List.copyOf( descriptions ) );
 		System.out.println( "TEMPORAL_CACHE_PRECISION " + dialect.getClass().getSimpleName() + " " + result );
 		return result;
 	}
@@ -52,6 +57,6 @@ final class TemporalCachePrecisionSupport {
 		return zero.contains( "(0)" ) && three.equals( zero.replace( "(0)", "(3)" ) );
 	}
 
-	record Precision(boolean supported, List<String> primaryTypes) {
+	record Precision(boolean rendersFractionalPrecision, boolean hasExecutionPlan, List<String> primaryTypes) {
 	}
 }

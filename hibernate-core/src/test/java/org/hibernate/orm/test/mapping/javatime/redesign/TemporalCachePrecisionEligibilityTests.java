@@ -2,12 +2,17 @@ package org.hibernate.orm.test.mapping.javatime.redesign;
 
 import java.sql.Connection;
 import java.util.stream.Stream;
+import java.util.Set;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.type.descriptor.java.InstantJavaType;
+import org.hibernate.usertype.internal.ZonedDateTimeCompositeUserType.ZonedDateTimeEmbeddable;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsPlainJdbcTimestampJdbcType;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.SpannerDialect;
@@ -22,8 +27,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/// Offline controls distinguish precision-zero COLUMN storage from fixed-precision
-/// Spanner storage without acquiring a JDBC connection or skipping broad cache coverage.
+/// Offline DDL controls distinguish parameterized COLUMN declarations from fixed
+/// storage. Synthetic precision prerequisites do not certify JDBC execution;
+/// TemporalProviderPrecisionContractTests separately checks stock refusal.
 ///
 /// @author Steve Ebersole
 class TemporalCachePrecisionEligibilityTests {
@@ -46,10 +52,18 @@ class TemporalCachePrecisionEligibilityTests {
 
 	@ParameterizedTest
 	@MethodSource("dialects")
-	void resolvedPrimaryPrecision(Class<? extends Dialect> dialect, boolean expected) {
+	void resolvedPrimaryDdlPrecision(Class<? extends Dialect> dialect, boolean expected) throws Exception {
+		final var actual = dialect == HSQLDialect.class
+				? new HSQLDialect( DatabaseVersion.make( 2, 7, 4 ) ) : dialect.getConstructor().newInstance();
+		final var ddlOnly = BootstrapOnlyTemporalPrecision.isolate( actual, ZonedDateTimeEmbeddable.class,
+				context -> context.javaType().getClass() == InstantJavaType.class
+						&& context.jdbcType().getClass() == TimestampUtcAsPlainJdbcTimestampJdbcType.class
+						&& Integer.valueOf( 0 ).equals( context.precision() )
+						&& Set.of( "timestamp(0)", "bigdatetime", "timestamp", "timestamp with time zone" )
+								.contains( context.ddlTypeName() ) );
 		final var guard = new NoConnections();
 		try ( var registry = new StandardServiceRegistryBuilder()
-				.applySetting( "hibernate.dialect", dialect.getName() )
+				.applySetting( "hibernate.dialect", ddlOnly )
 				.applySetting( "hibernate.boot.allow_jdbc_metadata_access", false )
 				.applySetting( MappingSettings.TEMPORAL_PRESERVATION, true )
 				.applySetting( "hibernate.cache.use_second_level_cache", false )
@@ -59,7 +73,7 @@ class TemporalCachePrecisionEligibilityTests {
 					.addAnnotatedClass( TemporalCachePrecisionTests.Event.class )
 					.buildMetadata();
 			assertThat( TemporalCachePrecisionSupport.inspect( metadata, TemporalCachePrecisionTests.Event.class )
-					.supported() ).isEqualTo( expected );
+					.rendersFractionalPrecision() ).isEqualTo( expected );
 		}
 		finally {
 			assertThat( guard.attempts ).as( "offline eligibility connection acquisitions" ).isZero();

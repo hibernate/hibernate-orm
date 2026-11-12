@@ -30,6 +30,9 @@ import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.type.descriptor.java.OffsetDateTimeJavaType;
+import org.hibernate.dialect.type.internal.PostgreSQLOffsetDateTimeJdbcType;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.testing.orm.junit.DialectContext;
@@ -94,9 +97,12 @@ class TemporalEligibilityRejectionTests {
 
 	@Test
 	void specificMissingProducersRejectWithoutJdbc() throws SQLException {
-		reject( new HSQLDialect(), false, LocalVersion.class,
+		reject( new HSQLDialect( DatabaseVersion.make( 2, 7, 4 ) ), false, LocalVersion.class,
 				"LocalVersion.stamp", "LocalDateTimeJdbcType", "no preserving DB producer" );
-		reject( new PostgresPlusDialect(), false, OffsetVersion.class,
+		reject( BootstrapOnlyTemporalPrecision.isolate( new PostgresPlusDialect(), OffsetVersion.class,
+				context -> context.javaType().getClass() == OffsetDateTimeJavaType.class
+						&& context.jdbcType().getClass() == PostgreSQLOffsetDateTimeJdbcType.class
+						&& context.ddlTypeName().equals( "timestamp(6) with time zone" ) ), false, OffsetVersion.class,
 				"OffsetVersion.stamp", "PostgreSQLOffsetDateTimeJdbcType", "no preserving DB producer" );
 	}
 

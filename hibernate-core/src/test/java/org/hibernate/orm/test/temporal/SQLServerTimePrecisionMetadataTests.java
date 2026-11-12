@@ -35,6 +35,11 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.LocalTimeJavaType;
+import org.hibernate.type.descriptor.java.LocalDateTimeJavaType;
+import org.hibernate.type.descriptor.java.InstantJavaType;
+import org.hibernate.type.descriptor.jdbc.LocalDateTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsPlainJdbcTimestampJdbcType;
+import org.hibernate.orm.test.mapping.javatime.redesign.BootstrapOnlyTemporalPrecision;
 import org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.junit.jupiter.api.Test;
@@ -50,6 +55,8 @@ import static org.mockito.Mockito.when;
 
 /// Actual SQL Server contributions must distinguish omitted TIME precision from zero,
 /// without acquiring a JDBC connection or weakening legacy handler validation.
+/// Fixture-only precision prerequisites isolate DDL assertions; they throw on
+/// execution and do not certify SQL Server or synthetic custom_time storage.
 ///
 /// @author Steve Ebersole
 class SQLServerTimePrecisionMetadataTests {
@@ -155,7 +162,16 @@ class SQLServerTimePrecisionMetadataTests {
 		final var guard = mock( ConnectionProvider.class );
 		when( guard.getConnection() ).thenThrow( new AssertionError( "Boot JDBC is disabled" ) );
 		try ( var registry = new StandardServiceRegistryBuilder()
-				.applySetting( JdbcSettings.DIALECT, dialect )
+				.applySetting( JdbcSettings.DIALECT, BootstrapOnlyTemporalPrecision.isolate( dialect, Model.class, context ->
+						context.javaType().getClass() == LocalTimeJavaType.class
+								&& context.jdbcType().getClass() == LocalTimeJdbcType.class
+								&& context.ddlTypeName().matches( "time(?:\\([0-7]\\))?|custom_time" )
+						|| context.javaType().getClass() == LocalDateTimeJavaType.class
+								&& context.jdbcType().getClass() == LocalDateTimeJdbcType.class
+								&& context.ddlTypeName().equals( "datetime2(3)" )
+						|| context.javaType().getClass() == InstantJavaType.class
+								&& context.jdbcType().getClass() == TimestampUtcAsPlainJdbcTimestampJdbcType.class
+								&& context.ddlTypeName().equals( "datetime2(3)" ) ) )
 				.applySetting( JdbcSettings.ALLOW_METADATA_ON_BOOT, false )
 				.applySetting( JdbcSettings.JDBC_TIME_ZONE, "America/Los_Angeles" )
 				.applySetting( MappingSettings.TEMPORAL_PRESERVATION, enabled )

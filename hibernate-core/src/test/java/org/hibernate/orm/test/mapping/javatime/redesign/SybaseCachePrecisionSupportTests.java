@@ -14,6 +14,7 @@ import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.jdbc.spi.SybaseDriverKind;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.type.descriptor.java.InstantJavaType;
+import org.hibernate.usertype.internal.ZonedDateTimeCompositeUserType.ZonedDateTimeEmbeddable;
 import org.hibernate.type.descriptor.java.LocalDateTimeJavaType;
 import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampUtcAsPlainJdbcTimestampJdbcType;
@@ -56,7 +57,12 @@ class SybaseCachePrecisionSupportTests {
 		final var guard = mock( ConnectionProvider.class );
 		when( guard.getConnection() ).thenThrow( new AssertionError( "Metadata inspection attempted JDBC" ) );
 		try ( var registry = new StandardServiceRegistryBuilder()
-				.applySetting( JdbcSettings.DIALECT, dialect( SybaseDriverKind.JCONNECT ) )
+				.applySetting( JdbcSettings.DIALECT, BootstrapOnlyTemporalPrecision.isolate(
+						dialect( SybaseDriverKind.JCONNECT ), ZonedDateTimeEmbeddable.class,
+						context -> context.javaType().getClass() == InstantJavaType.class
+								&& context.jdbcType().getClass() == TimestampUtcAsPlainJdbcTimestampJdbcType.class
+								&& context.ddlTypeName().equals( "bigdatetime" )
+								&& Integer.valueOf( 6 ).equals( context.precision() ) ) )
 				.applySetting( JdbcSettings.ALLOW_METADATA_ON_BOOT, false )
 				.applySetting( MappingSettings.TEMPORAL_PRESERVATION, true )
 				.applySetting( "hibernate.cache.use_second_level_cache", false )

@@ -117,3 +117,35 @@ physical default of seven digits does not constitute a requested seven-digit Jav
 catalog scale, strict prepared round trips, retained default storage, nulls, casts and callable
 parameters. H2 skips these provider tests; offline success is not live SQL Server evidence.
 The original fractional-second tests and legacy explicit-conversion coverage remain active.
+
+== Provider precision contracts
+
+`HSQLTemporalPrecisionTests` runs with `-Pdb=hsqldb` and checks the real typed
+LocalDateTime and UTC-Calendar Instant routes, prepared fixed points, cache/database
+parity, dirty checking and equivalent metadata-disabled plans. Run it with separate
+`-PtemporalTestJvmTimeZone=UTC` and `-PtemporalTestJvmTimeZone=America/Los_Angeles`
+processes; it also varies database session offsets independently of the JDBC timezone.
+The initial HSQL 2.7 profile (verified using 2.7.4) covers timestamp precisions 0..9
+and finite dates 1582-10-15 through 9999-12-31. Earlier proleptic local dates are not
+preserved by the driver's calendar-based extraction. Wider ranges are not certified.
+With boot metadata disabled, supply a known database version of 2.7 or later via
+`jakarta.persistence.database-product-version` or an explicitly versioned HSQLDialect.
+The unversioned Dialect's 2.6.1 assumption is outside this initial profile; resolving
+the precision plan never queries JDBC to discover a newer version.
+
+`TemporalProviderPrecisionContractTests` checks the production contribution boundaries,
+including unsupported providers and operations. `BootstrapOnlyTemporalPrecision`
+serves only fixture-specific metadata prerequisites: its value-processing functions
+throw if executed. SQL Server DDL/custom casts, Sybase metadata and PostgreSQL policy
+assertions using this helper do not establish runtime precision support.
+`TemporalCachePrecisionSupport` reports DDL parameterization and installed execution
+plans separately; a fixed physical type is not automatically ineligible for a coarser
+evidenced logical precision grid.
+
+`PostgreSQLPrecisionEvidenceTests` is an executable provider gate under `-Pdb=postgresql`.
+It binds independent prepared values through PostgreSQLOffsetDateTimeJdbcType, records
+raw server casts separately and verifies UTC extraction with mismatched session zones
+and reused statements. It does not require a supported temporal entity mapping and
+must not be mistaken for completed ORM/cache acceptance. PostgreSQL production precision
+support remains unavailable until that evidence and the remaining integration controls
+are established. SQL Server live verification remains deferred.

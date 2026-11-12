@@ -19,14 +19,15 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.type.descriptor.DateTimeUtils;
+import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics.PrecisionAdjustment;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-/// Precision reduction belongs to the database; each cache entry reconstructs
+/// Mapping precision preparation agrees with storage; each cache entry reconstructs
 /// the target zone using its own instant, including across a DST transition.
 ///
 /// @author Steve Ebersole
@@ -38,14 +39,16 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 @DomainModel(annotatedClasses = TemporalCachePrecisionTests.Event.class)
 @SessionFactory(generateStatistics = true)
 class TemporalCachePrecisionTests {
-	@Test
-	void cacheRetainsItsOwnPrecision(SessionFactoryScope scope) {
+	@ParameterizedTest
+	@ValueSource(strings = { "Europe/Paris", "Asia/Kathmandu" })
+	void cacheRetainsItsOwnPrecision(String zone, SessionFactoryScope scope) {
 		final var metadata = scope.getMetadataImplementor();
 		final var precision = TemporalCachePrecisionSupport.inspect( metadata, Event.class );
-		assumeTrue( precision.supported(), "Primary SQL types do not declare precision zero: " + precision );
-		final var input = Instant.parse( "2026-03-08T06:59:59.600Z" ).atZone( ZoneId.of( "Europe/Paris" ) );
-		final var expected = DateTimeUtils.adjustToPrecision(
-				input.toInstant(), 0, scope.getSessionFactory().getJdbcServices().getDialect() );
+		assumeTrue( precision.hasExecutionPlan(), "Primary mappings lack an established precision execution plan: " + precision );
+		final var input = Instant.parse( "2026-03-08T06:59:59.600Z" ).atZone( ZoneId.of( zone ) );
+		final var expected = Instant.parse( scope.getSessionFactory().getJdbcServices().getDialect().getTemporalValueSemantics()
+				.precisionAdjustment() == PrecisionAdjustment.TRUNCATE
+				? "2026-03-08T06:59:59Z" : "2026-03-08T07:00:00Z" );
 		assertThat( expected ).isNotEqualTo( input.toInstant() );
 		final var event = new Event();
 		event.id = 1L;

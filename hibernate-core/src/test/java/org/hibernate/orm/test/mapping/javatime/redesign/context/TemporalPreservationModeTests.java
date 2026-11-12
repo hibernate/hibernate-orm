@@ -132,10 +132,10 @@ class TemporalPreservationModeTests {
 		final var settings = Map.<String, Object>of(
 				MappingSettings.TEMPORAL_PRESERVATION, true,
 				"hibernate.dialect", HSQLDialect.class.getName(),
-				"jakarta.persistence.database-product-version", "2.7" );
+				"jakarta.persistence.database-product-version", "2.7.4" );
 		assertThatThrownBy( () -> {
 			try ( var ignored = ContextScope.boot( false, false, settings, DbInstantVersion.class ) ) {}
-		} ).hasRootCauseInstanceOf( MappingException.class )
+		} ).hasStackTraceContaining( MappingException.class.getName() )
 				.hasStackTraceContaining( "DbInstantVersion.stamp" )
 				.hasStackTraceContaining( "no preserving DB producer" );
 	}

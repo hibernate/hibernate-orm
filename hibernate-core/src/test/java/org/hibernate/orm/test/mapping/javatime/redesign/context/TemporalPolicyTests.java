@@ -26,6 +26,11 @@ import org.hibernate.annotations.TemporalPreservationPolicy;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.orm.test.mapping.javatime.redesign.BootstrapOnlyTemporalPrecision;
+import org.hibernate.type.descriptor.java.OffsetDateTimeJavaType;
+import org.hibernate.dialect.type.internal.PostgreSQLOffsetDateTimeJdbcType;
+import org.hibernate.dialect.type.internal.PostgreSQLOffsetTimeJdbcType;
 import org.hibernate.dialect.temporaltype.spi.TemporalPreservation;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
@@ -121,12 +126,21 @@ class TemporalPolicyTests {
 
 	@Test
 	void offlinePostgresqlRequirementsAndIsolation() {
+		// Policy-only bootstrap; real PostgreSQL precision remains evidence-gated.
+		// Plain includes OffsetTime as an independent strict-policy control.
 		final Map<String, Object> settings = Map.of(
-				"hibernate.dialect", PostgreSQLDialect.class.getName(),
+				"hibernate.dialect", BootstrapOnlyTemporalPrecision.isolate( new PostgreSQLDialect( DatabaseVersion.make( 18 ) ), Plain.class,
+						context -> context.javaType().getClass() == OffsetDateTimeJavaType.class
+								&& context.jdbcType().getClass() == PostgreSQLOffsetDateTimeJdbcType.class
+								&& context.ddlTypeName().equals( "timestamp(6) with time zone" )
+						|| context.javaType().getClass() == OffsetTimeJavaType.class
+								&& context.jdbcType().getClass() == PostgreSQLOffsetTimeJdbcType.class
+								&& context.ddlTypeName().equals( "time(0) with time zone" ) ),
 				"jakarta.persistence.database-product-version", "18.0",
 				MappingSettings.TEMPORAL_PRESERVATION_POLICY_OFFSET_DATETIME, NORMALIZED );
 		try ( var scope = ContextScope.boot( false, true, settings, Plain.class ) ) {
 			assertPolicy( scope, Plain.class, "stamp", NORMALIZED );
+			assertPolicy( scope, Plain.class, "time", DOMAIN_VALUE );
 		}
 		assertThatThrownBy( () -> {
 			try ( var ignored = ContextScope.boot( false, true, settings, Strict.class ) ) {}

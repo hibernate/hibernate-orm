@@ -1,6 +1,10 @@
 package org.hibernate.dialect.temporaltype.internal;
 
 import java.time.OffsetDateTime;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.Instant;
+
 import java.time.OffsetTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -9,7 +13,10 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 import java.util.function.UnaryOperator;
 
+import org.hibernate.TemporalValueException;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics.PrecisionAdjustment;
 import org.hibernate.dialect.temporaltype.spi.TemporalPrecisionContext;
 import org.hibernate.dialect.temporaltype.spi.TemporalPrecisionSupport;
 import org.hibernate.type.descriptor.java.InstantJavaType;
@@ -39,7 +46,7 @@ import org.hibernate.type.descriptor.jdbc.internal.UtcTimestampJdbcType;
 ///
 /// @author Steve Ebersole
 public final class StandardTemporalPrecision {
-	private static final Pattern H2_FRACTIONAL_TYPE = Pattern.compile(
+	private static final Pattern FRACTIONAL_TYPE = Pattern.compile(
 			"(time|timestamp)(?:\\((\\d+)\\))?( with(?:out)? time zone)?" );
 	private static final Set<Class<?>> JAVA_TYPES = Set.of(
 			LocalDateJavaType.class, LocalTimeJavaType.class, LocalDateTimeJavaType.class,
@@ -62,8 +69,61 @@ public final class StandardTemporalPrecision {
 		if ( context.dialect() instanceof H2Dialect ) {
 			return h2( context );
 		}
+		if ( context.dialect().getClass() == HSQLDialect.class ) {
+			return hsql( context );
+		}
 		return TemporalPrecisionSupport.unsupported( "No established precision execution profile for "
 				+ context.dialect().getClass().getName() );
+	}
+
+	private static TemporalPrecisionSupport hsql(TemporalPrecisionContext context) {
+		// JDBC reports major/minor versions; the regression envelope is HSQLDB 2.7 (tested with 2.7.4).
+		if ( context.dialect().getVersion().isBefore( 2, 7 ) ) {
+			return TemporalPrecisionSupport.unsupported( "HSQL precision profile requires configured version 2.7 or later" );
+		}
+		if ( context.operation() != TemporalPrecisionContext.Operation.ATTRIBUTE
+				&& context.operation() != TemporalPrecisionContext.Operation.VERSION ) {
+			return TemporalPrecisionSupport.unsupported( "Unassessed HSQL precision operation " + context.operation() );
+		}
+		final var java = context.javaType().getClass();
+		final var jdbc = context.jdbcType().getClass();
+		final String encoding;
+		if ( java == LocalDateTimeJavaType.class && jdbc == LocalDateTimeJdbcType.class ) {
+			encoding = "local-fields";
+		}
+		else if ( java == InstantJavaType.class && jdbc == TimestampUtcAsPlainJdbcTimestampJdbcType.class ) {
+			encoding = "utc-calendar";
+		}
+		else {
+			return TemporalPrecisionSupport.unsupported( "Unassessed HSQL Java/JDBC precision pair" );
+		}
+		// HSQLDB 2.7.4: typed local fields and the UTC Calendar timestamp route
+		// retain prepared nanoseconds and truncate to the declared timestamp grid.
+		// VERSION here certifies storage only, not a database timestamp producer.
+		final var definition = FRACTIONAL_TYPE.matcher( context.ddlTypeName().toLowerCase( Locale.ROOT )
+				.trim().replaceAll( "\\s+", " " ) );
+		if ( !definition.matches() || !"timestamp".equals( definition.group( 1 ) )
+				|| " with time zone".equals( definition.group( 3 ) ) ) {
+			return TemporalPrecisionSupport.unsupported( "Unresolved physical HSQL timestamp column definition" );
+		}
+		final int physical = definition.group( 2 ) == null ? 6 : Integer.parseInt( definition.group( 2 ) );
+		final int precision = context.declaredPrecision() == null ? physical : context.declaredPrecision();
+		if ( physical < 0 || physical > 9 || precision < 0 || precision > physical ) {
+			return TemporalPrecisionSupport.unsupported( "HSQL temporal precision must be within 0..9 and not exceed physical column precision " + physical );
+		}
+		final var quantizer = new DecimalTemporalPrecision( precision, 9, PrecisionAdjustment.TRUNCATE, true );
+		return TemporalPrecisionSupport.supported( "hsql-v1:1582-10-15..9999-12-31:" + encoding + ':' + quantizer.signature(),
+				value -> {
+					// HSQL's typed LocalDateTime extraction uses a GregorianCalendar,
+					// losing proleptic fields before its cutover. Certify only the
+					// established finite interval, for both timestamp carriers.
+					final var date = value instanceof LocalDateTime local ? local.toLocalDate()
+							: ((Instant) value).atOffset( ZoneOffset.UTC ).toLocalDate();
+					if ( date.isBefore( LocalDate.of( 1582, 10, 15 ) ) || date.isAfter( LocalDate.of( 9999, 12, 31 ) ) ) {
+						throw new TemporalValueException( "HSQL timestamp precision profile supports finite dates 1582-10-15..9999-12-31" );
+					}
+					return quantizer.apply( value );
+				}, UnaryOperator.identity() );
 	}
 
 	private static TemporalPrecisionSupport h2(TemporalPrecisionContext context) {
@@ -120,7 +180,7 @@ public final class StandardTemporalPrecision {
 			precision = 9;
 		}
 		else {
-			final var definition = H2_FRACTIONAL_TYPE.matcher( context.ddlTypeName().toLowerCase( Locale.ROOT )
+			final var definition = FRACTIONAL_TYPE.matcher( context.ddlTypeName().toLowerCase( Locale.ROOT )
 					.trim().replaceAll( "\\s+", " " ) );
 			if ( !definition.matches() ) {
 				return TemporalPrecisionSupport.unsupported( "Unresolved physical H2 temporal column definition" );

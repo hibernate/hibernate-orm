@@ -15,7 +15,6 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -201,10 +200,10 @@ public class StaticClassListsTest {
 			var classes = StaticClassLists.typesNeedingAllConstructorsAccessible();
 			for ( var c : classes ) {
 				var declaredConstructors = c.getDeclaredConstructors();
-				Assert.assertTrue( declaredConstructors.length > 0 );
+				assertThat( declaredConstructors ).isNotEmpty();
 				if ( declaredConstructors.length == 1 ) {
 					//If there's only one, let's check that this class wasn't placed in the wrong cathegory:
-					Assert.assertTrue( declaredConstructors[0].getParameterCount() > 0 );
+					assertThat( declaredConstructors[0].getParameterCount() ).isPositive();
 				}
 			}
 		}
@@ -214,7 +213,7 @@ public class StaticClassListsTest {
 			var classes = StaticClassLists.typesNeedingDefaultConstructorAccessible();
 			for ( var c : classes ) {
 				var constructor = ReflectHelper.getDefaultConstructor( c );
-				Assert.assertNotNull( "Failed for class: " + c.getName(), constructor );
+				assertThat( constructor ).as( "Failed for class: %s", c.getName() ).isNotNull();
 			}
 		}
 
@@ -222,9 +221,9 @@ public class StaticClassListsTest {
 		public void checkArraysAreArrays() {
 			var classes = StaticClassLists.typesNeedingArrayCopy();
 			for ( var c : classes ) {
-				Assert.assertTrue( "Wrong category for type: " + c.getName(), c.isArray() );
+				assertThat( c.isArray() ).as( "Wrong category for type: %s", c.getName() ).isTrue();
 				var constructors = c.getConstructors();
-				Assert.assertEquals( 0, constructors.length );
+				assertThat( constructors ).isEmpty();
 			}
 		}
 

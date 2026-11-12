@@ -12,9 +12,4 @@ dependencies {
 
     testImplementation project( ':hibernate-core' )
     testImplementation libs.jandex
-
-    // todo : to get rid of these
-    testImplementation libs.test.junit4
-    testImplementation libs.test.junit4Engine
-
 }

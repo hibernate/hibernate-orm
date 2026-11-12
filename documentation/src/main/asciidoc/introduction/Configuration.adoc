@@ -76,7 +76,7 @@ driver for your database.
 | DB2                       | `com.ibm.db2:jcc:{version}`
 | SQL Server                | `com.microsoft.sqlserver:mssql-jdbc:{version}`
 | Oracle                    | `com.oracle.database.jdbc:ojdbc17:{version}`
-| Informix                  | `com.informix.jdbc.IfxDriver:{version}`
+| Informix                  | `com.ibm.informix:jdbc:{version}`
 | H2                        | `com.h2database:h2:{version}`
 | HSQLDB                    | `org.hsqldb:hsqldb:{version}`
 | MongoDB                   | The JDBC driver is bundled with the dialect mentioned in <<optional-dependencies>>
@@ -339,7 +339,7 @@ hibernate.highlight_sql=true
 === Basic configuration settings
 
 The inner interfaces of the `Persistence` class -- which, for convenience, are inherited by `PersistenceConfiguration` -- declare `static final` constants holding the names of all configuration properties defined by the specification itself.
-For example, `Persistence.ConnectionProperties.JDBC_URL` holds the property name `"jakarta.persistence.jdbc.driver"`.
+For example, `Persistence.ConnectionProperties.JDBC_URL` holds the property name `"jakarta.persistence.jdbc.url"`.
 
 Similarly, the class link:{doc-javadoc-url}org/hibernate/cfg/AvailableSettings.html[`AvailableSettings`] enumerates all the configuration properties understood by Hibernate.
 

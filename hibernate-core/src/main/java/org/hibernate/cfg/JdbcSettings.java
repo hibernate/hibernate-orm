@@ -276,9 +276,21 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 * setting, including every built-in implementation except for
 	 * {@link org.hibernate.engine.jdbc.connections.internal.DataSourceConnectionProvider}.
 	 * <p>
-	 * Possible values are enumerated by {@link java.sql.Connection}:
-	 * {@code READ_UNCOMMITTED}, {@code READ_COMMITTED},
-	 * {@code REPEATABLE_READ}, {@code SERIALIZABLE}.
+	 * Possible values are enumerated by {@link java.sql.Connection}:<ol>
+	 *     <li>{@linkplain java.sql.Connection#TRANSACTION_NONE} - {@value java.sql.Connection#TRANSACTION_NONE}</li>
+	 *     <li>{@linkplain java.sql.Connection#TRANSACTION_READ_UNCOMMITTED} - {@value java.sql.Connection#TRANSACTION_READ_UNCOMMITTED}</li>
+	 *     <li>{@linkplain java.sql.Connection#TRANSACTION_READ_COMMITTED} - {@value java.sql.Connection#TRANSACTION_READ_COMMITTED}</li>
+	 *     <li>{@linkplain java.sql.Connection#TRANSACTION_REPEATABLE_READ} - {@value java.sql.Connection#TRANSACTION_REPEATABLE_READ}</li>
+	 *     <li>{@linkplain java.sql.Connection#TRANSACTION_SERIALIZABLE} - {@value java.sql.Connection#TRANSACTION_SERIALIZABLE}</li>
+	 * </ol>
+	 * <p>
+	 * In addition, the textual forms of the above are also recognized:<ol>
+	 *     <li>{@code TRANSACTION_NONE}, {@code NONE}</li>
+	 *     <li>{@code TRANSACTION_READ_UNCOMMITTED}, {@code READ_UNCOMMITTED}</li>
+	 *     <li>{@code TRANSACTION_READ_COMMITTED}, {@code READ_COMMITTED}</li>
+	 *     <li>{@code TRANSACTION_REPEATABLE_READ}, {@code REPEATABLE_READ}</li>
+	 *     <li>{@code TRANSACTION_SERIALIZABLE}, {@code SERIALIZABLE}</li>
+	 * </ol>
 	 * <p>
 	 * If this setting is not explicitly specified, Hibernate does not modify
 	 * the transaction isolation level of the JDBC connection.

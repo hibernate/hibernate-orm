@@ -633,7 +633,7 @@ Instances of `FetchOption` influence how a node of a graph is fetched.
 ----
 var graph = entityManager.createEntityGraph(Book.class);
 graph.addAttributeNode(Book_.publisher)
-     .addOption(FetchMethod.BULK_SELECT)
+     .addOption(FetchMethod.BY_SUBQUERY)
      .addOption(CacheStoreMode.BYPASS);
 Book book = entityManager.find(graph, bookId);
 ----
@@ -993,8 +993,10 @@ If we use `fetch()` in a stateless session, we can very easily obtain two object
 
 Lifecycle callbacks allow the application program to respond to events occurring deep within Hibernate.
 
-- The annotations `@PrePersist`, `@PreRemove`, `@PreMerge`, `@PostPersist`, `@PostRemove`, `@PostMerge`, and `@PostLoad` allow an entity to respond to persistence lifecycle operations and maintain its transient internal state.
+- The annotations `@PrePersist`, `@PreRemove`, `@PreMerge`, `@PostPersist`, `@PostRemove`, and `@PostMerge` allow an entity to respond to persistence lifecycle operations and maintain its transient internal state.
   These events only occur in a stateful session.
+
+- The `@PostLoad` callback runs after an entity is loaded or refreshed in either a stateful or a stateless session.
 
 - The annotations `@PreInsert`, `@PreUpdate`, `@PreUpsert`, `@PreDelete`, `@PostInsert`,`@PostUpdate`, `@PostUpsert`, and `@PostDelete` allow the application program to be notified of operations executed against the database.
   These events occur in both stateful and stateless sessions.

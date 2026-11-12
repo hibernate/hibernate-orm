@@ -1,0 +1,5 @@
+<entity class="XmlEntity" access="FIELD" metadata-complete="true">
+    <attributes>
+        <id name="id"/>
+    </attributes>
+</entity>

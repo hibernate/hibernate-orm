@@ -155,14 +155,20 @@ public final class JakartaDataRestriction {
 		requireNonNull( query, "missing query" );
 		requireNonNull( root, "missing root" );
 		requireNonNull( builder, "missing builder" );
+		final var sortExpression = sort.expression();
+		final var criteriaExpression =
+				sortExpression == null
+						? path( root, requireNonNull( sort.property(), "missing sort property" ) )
+						: expression( sortExpression, root, builder );
 		final var expression =
 				sort.ignoreCase()
-						? builder.lower( path( root, sort.property() ).as( String.class ) )
-						: path( root, sort.property() );
+						? builder.lower( criteriaExpression.as( String.class ) )
+						: criteriaExpression;
 		appendOrder( query, sort.isDescending() ? builder.desc( expression ) : builder.asc( expression ) );
 	}
 
-	private static jakarta.persistence.criteria.Path<?> path(Root<?> root, String path) {
+	@Nonnull
+	private static jakarta.persistence.criteria.Path<?> path(@Nonnull Root<?> root, @Nonnull String path) {
 		requireNonNull( path, "missing path" );
 		final var tokens = new StringTokenizer( path, "." );
 		if ( !tokens.hasMoreTokens() ) {
@@ -175,7 +181,7 @@ public final class JakartaDataRestriction {
 		return criteriaPath;
 	}
 
-	private static void appendOrder(CriteriaQuery<?> query, jakarta.persistence.criteria.Order order) {
+	private static void appendOrder(@Nonnull CriteriaQuery<?> query, @Nonnull jakarta.persistence.criteria.Order order) {
 		final List<jakarta.persistence.criteria.Order> orders = new ArrayList<>( query.getOrderList() );
 		orders.add( order );
 		query.orderBy( orders );
@@ -185,10 +191,11 @@ public final class JakartaDataRestriction {
 	 * Obtain a {@linkplain Predicate JPA criteria predicate} representing the given
 	 * {@linkplain jakarta.data.restrict.Restriction Jakarta Data restriction}.
 	 */
+	@Nonnull
 	private static Predicate restriction(
-			jakarta.data.restrict.Restriction<?> restriction,
-			Root<?> root,
-			CriteriaBuilder builder) {
+			@Nonnull jakarta.data.restrict.Restriction<?> restriction,
+			@Nonnull Root<?> root,
+			@Nonnull CriteriaBuilder builder) {
 		if ( restriction instanceof BasicRestriction<?, ?> basicRestriction ) {
 			return basicRestriction( basicRestriction, root, builder );
 		}
@@ -205,10 +212,11 @@ public final class JakartaDataRestriction {
 	 * Obtain a {@linkplain Predicate JPA criteria predicate} representing the given
 	 * {@linkplain CompositeRestriction composite Jakarta Data restriction}.
 	 */
+	@Nonnull
 	private static Predicate compositeRestriction(
-			CompositeRestriction<?> compositeRestriction,
-			Root<?> root,
-			CriteriaBuilder builder) {
+			@Nonnull CompositeRestriction<?> compositeRestriction,
+			@Nonnull Root<?> root,
+			@Nonnull CriteriaBuilder builder) {
 		var restrictions = compositeRestriction.restrictions();
 		final List<Predicate> list = new ArrayList<>( restrictions.size() );
 		for ( var restriction : restrictions ) {
@@ -227,10 +235,11 @@ public final class JakartaDataRestriction {
 	 * Obtain a {@linkplain Predicate JPA criteria predicate} representing the given
 	 * {@linkplain BasicRestriction basic Jakarta Data restriction}.
 	 */
+	@Nonnull
 	private static Predicate basicRestriction(
-			BasicRestriction<?, ?> restriction,
-			Root<?> root,
-			CriteriaBuilder builder) {
+			@Nonnull BasicRestriction<?, ?> restriction,
+			@Nonnull Root<?> root,
+			@Nonnull CriteriaBuilder builder) {
 		final var expression = expression( restriction.expression(), root, builder );
 		return constraintPredicate( expression, restriction.constraint(), root, builder );
 	}
@@ -258,11 +267,12 @@ public final class JakartaDataRestriction {
 	 * {@linkplain Constraint Jakarta Data constraint} applied to the given
 	 * {@linkplain Expression JPA expression}.
 	 */
+	@Nonnull
 	private static Predicate constraintPredicate(
-			Expression<?> expression,
-			Constraint<?> constraint,
-			Root<?> root,
-			CriteriaBuilder builder) {
+			@Nonnull Expression<?> expression,
+			@Nonnull Constraint<?> constraint,
+			@Nonnull Root<?> root,
+			@Nonnull CriteriaBuilder builder) {
 		if ( constraint instanceof EqualTo<?> equalTo ) {
 			return builder.equal( expression, expression( equalTo.expression(), root, builder ) );
 		}
@@ -351,11 +361,12 @@ public final class JakartaDataRestriction {
 		}
 	}
 
+	@Nonnull
 	private static Predicate in(
-			Expression<?> expression,
-			List<? extends jakarta.data.expression.Expression<?, ?>> expressions,
-			Root<?> root,
-			CriteriaBuilder builder) {
+			@Nonnull Expression<?> expression,
+			@Nonnull List<? extends jakarta.data.expression.Expression<?, ?>> expressions,
+			@Nonnull Root<?> root,
+			@Nonnull CriteriaBuilder builder) {
 		final ArrayList<Expression<?>> values = new ArrayList<>( expressions.size() );
 		for ( var value : expressions ) {
 			if ( value instanceof Literal<?> literal ) {
@@ -375,12 +386,13 @@ public final class JakartaDataRestriction {
 	 * Adapt the given {@linkplain jakarta.data.expression.Expression Jakarta Data expression}
 	 * to a {@linkplain Expression JPA criteria expression}.
 	 */
+	@Nonnull
 	private static Expression<?> expression(
-			jakarta.data.expression.Expression<?, ?> expression,
-			Root<?> root,
-			CriteriaBuilder builder) {
+			@Nonnull jakarta.data.expression.Expression<?, ?> expression,
+			@Nonnull Root<?> root,
+			@Nonnull CriteriaBuilder builder) {
 		if ( expression instanceof Attribute<?> attribute ) {
-			return root.get( attribute.name() );
+			return path( root, attribute.name() );
 		}
 		else if ( expression instanceof Path<?, ?> path ) {
 			return path( path.expression(), root ).get( path.attribute().name() );
@@ -422,7 +434,9 @@ public final class JakartaDataRestriction {
 	 * Adapt the given {@linkplain jakarta.data.expression.NavigableExpression Jakarta Data path}
 	 * to a {@linkplain jakarta.persistence.criteria.Path JPA criteria path}.
 	 */
-	private static jakarta.persistence.criteria.Path<?> path(NavigableExpression<?, ?> expression, Root<?> root) {
+	@Nonnull
+	private static jakarta.persistence.criteria.Path<?> path(
+			@Nonnull NavigableExpression<?, ?> expression, @Nonnull Root<?> root) {
 		if ( expression instanceof Attribute<?> attribute ) {
 			return root.get( attribute.name() );
 		}
@@ -439,10 +453,11 @@ public final class JakartaDataRestriction {
 	 * Adapt the given {@linkplain TextFunctionExpression Jakarta Data text function}
 	 * to a {@linkplain Expression JPA criteria expression}.
 	 */
+	@Nonnull
 	private static Expression<?> textFunction(
-			TextFunctionExpression<?> function,
-			Root<?> root,
-			CriteriaBuilder builder) {
+			@Nonnull TextFunctionExpression<?> function,
+			@Nonnull Root<?> root,
+			@Nonnull CriteriaBuilder builder) {
 		final var arguments = function.arguments();
 		return switch ( function.name() ) {
 			case TextFunctionExpression.LOWER ->
@@ -475,10 +490,11 @@ public final class JakartaDataRestriction {
 	 * Adapt the given {@linkplain NumericFunctionExpression Jakarta Data numeric function}
 	 * to a {@linkplain Expression JPA criteria expression}.
 	 */
+	@Nonnull
 	private static Expression<?> numericFunction(
-			NumericFunctionExpression<?, ?> function,
-			Root<?> root,
-			CriteriaBuilder builder) {
+			@Nonnull NumericFunctionExpression<?, ?> function,
+			@Nonnull Root<?> root,
+			@Nonnull CriteriaBuilder builder) {
 		final var arguments = function.arguments();
 		return switch ( function.name() ) {
 			case NumericFunctionExpression.ABS ->
@@ -495,10 +511,11 @@ public final class JakartaDataRestriction {
 	 * Adapt the given {@linkplain NumericCast Jakarta Data numeric cast} to a
 	 * {@linkplain Expression JPA criteria expression}.
 	 */
+	@Nonnull
 	private static Expression<?> numericCast(
-			NumericCast<?, ?> cast,
-			Root<?> root,
-			CriteriaBuilder builder) {
+			@Nonnull NumericCast<?, ?> cast,
+			@Nonnull Root<?> root,
+			@Nonnull CriteriaBuilder builder) {
 		final var expression = numberExpression( cast.expression(), root, builder );
 		final var type = wrapperType( cast.type() );
 		if ( type == Long.class ) {
@@ -522,10 +539,11 @@ public final class JakartaDataRestriction {
 	 * Adapt the given {@linkplain NumericOperatorExpression Jakarta Data operator expression}
 	 * to a {@linkplain Expression JPA criteria expression}.
 	 */
+	@Nonnull
 	private static Expression<?> numericOperation(
-			NumericOperatorExpression<?, ?> operation,
-			Root<?> root,
-			CriteriaBuilder builder) {
+			@Nonnull NumericOperatorExpression<?, ?> operation,
+			@Nonnull Root<?> root,
+			@Nonnull CriteriaBuilder builder) {
 		final var left = numberExpression( operation.left(), root, builder );
 		final var right = numberExpression( operation.right(), root, builder );
 		return switch ( operation.operator() ) {
@@ -536,32 +554,35 @@ public final class JakartaDataRestriction {
 		};
 	}
 
+	@Nonnull
 	private static Predicate comparison(
-			Expression<?> expression,
-			ComparisonOperator operator,
-			Expression<?> bound,
-			CriteriaBuilder builder) {
+			@Nonnull Expression<?> expression,
+			@Nonnull ComparisonOperator operator,
+			@Nonnull Expression<?> bound,
+			@Nonnull CriteriaBuilder builder) {
 		verifyExpressionType( expression, Comparable.class );
 		verifyExpressionType( bound, Comparable.class );
 		return nodeBuilder( builder ).comparison( expression, operator, bound );
 	}
 
+	@Nonnull
 	private static Predicate between(
-			Expression<?> expression,
-			Expression<?> lowerBound,
-			Expression<?> upperBound,
+			@Nonnull Expression<?> expression,
+			@Nonnull Expression<?> lowerBound,
+			@Nonnull Expression<?> upperBound,
 			boolean negated,
-			CriteriaBuilder builder) {
+			@Nonnull CriteriaBuilder builder) {
 		verifyExpressionType( expression, Comparable.class );
 		verifyExpressionType( lowerBound, Comparable.class );
 		verifyExpressionType( upperBound, Comparable.class );
 		return nodeBuilder( builder ).between( expression, lowerBound, upperBound, negated );
 	}
 
+	@Nonnull
 	private static Expression<?> function(
-			FunctionExpression<?, ?> function,
-			Root<?> root,
-			CriteriaBuilder builder) {
+			@Nonnull FunctionExpression<?, ?> function,
+			@Nonnull Root<?> root,
+			@Nonnull CriteriaBuilder builder) {
 		final var arguments = function.arguments();
 		final List<Expression<?>> list = new ArrayList<>( arguments.size() );
 		for ( var argument : arguments ) {
@@ -571,22 +592,25 @@ public final class JakartaDataRestriction {
 				list.toArray( Expression<?>[]::new ) );
 	}
 
+	@Nonnull
 	private static Expression<String> stringExpression(
-			jakarta.data.expression.Expression<?, ?> expression,
-			Root<?> root,
-			CriteriaBuilder builder) {
+			@Nonnull jakarta.data.expression.Expression<?, ?> expression,
+			@Nonnull Root<?> root,
+			@Nonnull CriteriaBuilder builder) {
 		return stringExpression( expression( expression, root, builder ) );
 	}
 
-	private static Expression<String> stringExpression(Expression<?> expression) {
+	@Nonnull
+	private static Expression<String> stringExpression(@Nonnull Expression<?> expression) {
 		verifyExpressionType( expression, String.class );
 		return expression.as( String.class );
 	}
 
+	@Nonnull
 	private static Expression<? extends Number> numberExpression(
-			jakarta.data.expression.Expression<?, ?> expression,
-			Root<?> root,
-			CriteriaBuilder builder) {
+			@Nonnull jakarta.data.expression.Expression<?, ?> expression,
+			@Nonnull Root<?> root,
+			@Nonnull CriteriaBuilder builder) {
 		final var expressionType = wrapperType( expression.type() );
 		if ( !Number.class.isAssignableFrom( expressionType ) ) {
 			throw new IllegalArgumentException(
@@ -596,17 +620,19 @@ public final class JakartaDataRestriction {
 				expressionType.asSubclass( Number.class ) );
 	}
 
+	@Nonnull
 	private static <N extends Number> Expression<N> numberExpression(
-			Expression<?> expression,
-			Class<N> expectedType) {
+			@Nonnull Expression<?> expression,
+			@Nonnull Class<N> expectedType) {
 		verifyExpressionType( expression, expectedType );
 		return expression.as( expectedType );
 	}
 
+	@Nonnull
 	private static Expression<?> literal(
-			Object value,
-			Expression<?> expression,
-			CriteriaBuilder builder) {
+			@Nullable Object value,
+			@Nonnull Expression<?> expression,
+			@Nonnull CriteriaBuilder builder) {
 		if ( value != null ) {
 			return builder.literal( value );
 		}
@@ -618,7 +644,8 @@ public final class JakartaDataRestriction {
 		}
 	}
 
-	private static NodeBuilder nodeBuilder(CriteriaBuilder builder) {
+	@Nonnull
+	private static NodeBuilder nodeBuilder(@Nonnull CriteriaBuilder builder) {
 		if ( builder instanceof NodeBuilder nodeBuilder ) {
 			return nodeBuilder;
 		}
@@ -628,8 +655,8 @@ public final class JakartaDataRestriction {
 	}
 
 	private static void verifyExpressionType(
-			Expression<?> expression,
-			Class<?> expectedType) {
+			@Nonnull Expression<?> expression,
+			@Nonnull Class<?> expectedType) {
 		final var expressionType = javaTypeIfKnown( expression );
 		if ( expressionType != null ) {
 			final var javaType = wrapperType( expressionType );
@@ -641,8 +668,8 @@ public final class JakartaDataRestriction {
 	}
 
 	private static void verifyAssignableExpressionType(
-			Expression<?> expression,
-			Expression<?> valueExpression) {
+			@Nonnull Expression<?> expression,
+			@Nonnull Expression<?> valueExpression) {
 		final var expressionType = javaTypeIfKnown( expression );
 		final var valueType = javaTypeIfKnown( valueExpression );
 		if ( expressionType != null && valueType != null && !expressionType.isAssignableFrom( valueType ) ) {
@@ -651,7 +678,7 @@ public final class JakartaDataRestriction {
 		}
 	}
 
-	private static void verifyValueType(Expression<?> expression, Object value) {
+	private static void verifyValueType(@Nonnull Expression<?> expression, @Nullable Object value) {
 		final var expressionType = javaTypeIfKnown( expression );
 		if ( value != null && expressionType != null && !expressionType.isInstance( value ) ) {
 			throw new IllegalArgumentException(
@@ -660,14 +687,15 @@ public final class JakartaDataRestriction {
 	}
 
 	@Nullable
-	private static Class<?> javaTypeIfKnown(Expression<?> expression) {
+	private static Class<?> javaTypeIfKnown(@Nonnull Expression<?> expression) {
 		final var javaType = expression instanceof JpaTupleElement<?> tupleElement
 				? tupleElement.getJavaTypeIfKnown()
 				: expression.getJavaType();
 		return javaType == null ? null : wrapperType( javaType );
 	}
 
-	private static Class<?> wrapperType(Class<?> javaType) {
+	@Nonnull
+	private static Class<?> wrapperType(@Nonnull Class<?> javaType) {
 		if ( !javaType.isPrimitive() ) {
 			return javaType;
 		}
@@ -700,7 +728,7 @@ public final class JakartaDataRestriction {
 		}
 	}
 
-	private static int integerLiteral(jakarta.data.expression.Expression<?, ?> expression) {
+	private static int integerLiteral(@Nonnull jakarta.data.expression.Expression<?, ?> expression) {
 		if ( expression instanceof Literal<?> literal && literal.value() instanceof Integer integer ) {
 			return integer;
 		}

@@ -24,6 +24,7 @@ import org.hibernate.StatementObserver;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.context.spi.TenantCredentialsMapper;
+import org.hibernate.context.spi.TenantDataSourceMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheLayout;
@@ -53,6 +54,7 @@ import jakarta.persistence.criteria.Nulls;
  * The legacy SPI accessor {@link org.hibernate.SessionFactory#getSessionFactoryOptions()}
  * is deprecated and marked for removal; the accessor on {@code SessionFactoryImplementor}
  * remains supported.
+ * This interface is not intended for implementation by application code.
  *
  * @since 5.0
  *
@@ -279,7 +281,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	boolean isOrderInsertsEnabled();
 
 	/**
-	 * Is there a
+	 * Is there a {@linkplain TenantDataSourceMapper tenant data source mapper} or
 	 * {@linkplain org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider
 	 * multi-tenant connection provider} configured?
 	 *
@@ -309,6 +311,16 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 */
 	@Nullable
 	TenantSchemaMapper<Object> getTenantSchemaMapper();
+
+	/**
+	 * Obtain the {@link TenantDataSourceMapper} used to select the data source
+	 * belonging to the current tenant.
+	 *
+	 * @see org.hibernate.cfg.MultiTenancySettings#MULTI_TENANT_DATASOURCE_MAPPER
+	 * @since 8.0
+	 */
+	@Nullable
+	TenantDataSourceMapper<Object> getTenantDataSourceMapper();
 
 	/**
 	 * Obtain a reference to the current {@linkplain TenantCredentialsMapper tenant credentials mapper},

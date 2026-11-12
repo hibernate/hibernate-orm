@@ -2,6 +2,7 @@ package org.hibernate.processor.annotation;
 
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.annotations.processing.GenericDialect;
 import org.hibernate.dialect.Dialect;
@@ -16,6 +17,8 @@ import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import java.util.List;
 
@@ -135,7 +138,7 @@ public abstract class AnnotationMeta implements Metamodel {
 						final var annotationValue = getAnnotationValue( mirror, "resultClass" );
 						final var resultType = annotationValue != null
 								? annotationValue.getValue().toString()
-								: resultType( selectStatement );
+								: inferredResultType( selectStatement );
 						putMember( name,
 								new NamedQueryMethod(
 										this,
@@ -150,7 +153,7 @@ public abstract class AnnotationMeta implements Metamodel {
 						);
 					}
 					if ( getAnnotationValue( mirror, "resultClass" ) == null ) {
-						final var resultType = resultType( selectStatement );
+						final var resultType = inferredResultType( selectStatement );
 						if ( resultType != null ) {
 							putMember( "QUERY_" + name,
 									new TypedMetaAttribute( this, name, "QUERY_", resultType,
@@ -160,6 +163,33 @@ public abstract class AnnotationMeta implements Metamodel {
 				}
 			}
 		}
+	}
+
+	private @Nullable String inferredResultType(SqmSelectStatement<?> statement) {
+		final var name = resultType( statement );
+		if ( name != null ) {
+			for ( Element type = getContext().getElementUtils()
+					.getTypeElement( name.replace( "[]", "" ) );
+				type instanceof TypeElement;
+				type = type.getEnclosingElement() ) {
+				if ( isInaccessible( type ) ) {
+					return JAVA_OBJECT;
+				}
+			}
+		}
+		return name;
+	}
+
+	private boolean isInaccessible(@Nonnull Element type) {
+		final var modifiers = type.getModifiers();
+		return modifiers.contains( Modifier.PRIVATE )
+			|| !modifiers.contains( Modifier.PUBLIC ) && !inPackage( type );
+	}
+
+	private boolean inPackage(@Nonnull Element type) {
+		return getContext().getElementUtils()
+				.getPackageOf( type ).getQualifiedName()
+				.contentEquals( getPackageName() );
 	}
 
 	private static boolean isQueryMethodName(String name) {

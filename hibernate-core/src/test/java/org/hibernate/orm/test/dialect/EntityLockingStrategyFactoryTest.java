@@ -13,8 +13,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Version;
+import jakarta.persistence.Timeout;
 
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.SPI;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DatabaseVersion;
@@ -38,6 +40,11 @@ import org.hibernate.dialect.lock.spi.EntityLockingStrategyRequest;
 import org.hibernate.dialect.lock.spi.LockingStrategy;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.Status;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.loader.ast.internal.LoaderHelper;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -46,13 +53,19 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SettingProvider;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.hibernate.SPI.Role.IMPLEMENT;
 import static org.hibernate.SPI.Role.SUPPLY;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /// Verifies the stock entity-locking factories and Hibernate-owned request
@@ -307,6 +320,55 @@ public class EntityLockingStrategyFactoryTest {
 			assertThatNullPointerException()
 					.isThrownBy( () -> locker( first, LockMode.OPTIMISTIC_FORCE_INCREMENT, PessimisticLockScope.NORMAL ) )
 					.withMessageContaining( "returned null" );
+		}
+		finally {
+			suppliedFactory = RECORDING_FACTORY;
+		}
+	}
+
+	@ParameterizedTest
+	@ValueSource(booleans = { false, true })
+	void extendedAcquisitionUsesCustomFactoryAndEffectiveMode(boolean modeUpgrade, SessionFactoryScope scope) {
+		final var persister = spy( scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( VersionedEntity.class ) );
+		final var entry = mock( EntityEntry.class );
+		final var session = mock( SharedSessionContractImplementor.class );
+		final var entity = new VersionedEntity();
+		when( entry.getLockMode() ).thenReturn( modeUpgrade ? LockMode.READ : LockMode.PESSIMISTIC_FORCE_INCREMENT );
+		when( entry.getPersister() ).thenReturn( persister );
+		when( entry.getStatus() ).thenReturn( Status.MANAGED );
+		when( entry.getId() ).thenReturn( 1L );
+		when( entry.getVersion() ).thenReturn( 1L );
+		when( entry.isExistsInDatabase() ).thenReturn( true );
+		when( session.getEventMonitor() ).thenReturn( mock( EventMonitor.class ) );
+		final List<LockMode> requestedModes = new ArrayList<>();
+		final List<Timeout> timeouts = new ArrayList<>();
+		doAnswer( invocation -> {
+			assertThat( requestedModes ).containsExactly( LockMode.PESSIMISTIC_READ, LockMode.PESSIMISTIC_WRITE );
+			assertThat( timeouts ).hasSize( 2 );
+			return 2L;
+		} ).when( persister ).forceVersionIncrement( 1L, 1L, session );
+		try {
+			suppliedFactory = request -> {
+				requestedModes.add( request.lockMode() );
+				assertThat( request.lockScope() ).isEqualTo( PessimisticLockScope.EXTENDED );
+				assertThat( request.target().entityName() ).isEqualTo( persister.getEntityName() );
+				return (id, version, object, timeout, source) -> {
+					assertThat( id ).isEqualTo( 1L );
+					assertThat( version ).isEqualTo( 1L );
+					assertThat( object ).isSameAs( entity );
+					assertThat( source ).isSameAs( session );
+					timeouts.add( timeout );
+				};
+			};
+			for ( LockMode requested : List.of( LockMode.PESSIMISTIC_READ, LockMode.PESSIMISTIC_FORCE_INCREMENT ) ) {
+				final var options = new LockOptions( requested ).setLockScope( PessimisticLockScope.EXTENDED )
+						.setTimeout( Timeout.milliseconds( 750 ) );
+				LoaderHelper.upgradeLock( entity, entry, options, session );
+				assertThat( options.getLockMode() ).isEqualTo( requested );
+			}
+			assertThat( requestedModes ).containsExactly( LockMode.PESSIMISTIC_READ, LockMode.PESSIMISTIC_WRITE );
+			assertThat( timeouts ).containsExactly( Timeout.milliseconds( 750 ), Timeout.milliseconds( 750 ) );
+			verify( persister, times( modeUpgrade ? 1 : 0 ) ).forceVersionIncrement( 1L, 1L, session );
 		}
 		finally {
 			suppliedFactory = RECORDING_FACTORY;

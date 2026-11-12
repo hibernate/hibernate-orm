@@ -17,6 +17,11 @@ public class ArgumentDomainResult<A> implements DomainResult<A> {
 		this.realDomainResult = realDomainResult;
 	}
 
+	/// The result wrapped as a constructor/container argument.
+	public DomainResult<A> getDomainResult() {
+		return realDomainResult;
+	}
+
 	@Override
 	public String getResultVariable() {
 		return realDomainResult.getResultVariable();

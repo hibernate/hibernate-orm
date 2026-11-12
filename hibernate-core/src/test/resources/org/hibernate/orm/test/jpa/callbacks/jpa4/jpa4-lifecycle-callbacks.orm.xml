@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entity-mappings xmlns="https://www.hibernate.org/xsd/orm/mapping"
+				 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				 version="8.0">
+	<access>FIELD</access>
+
+	<mapped-superclass class="org.hibernate.orm.test.jpa.callbacks.jpa4.Jpa4LifecycleCallbackXmlTests$LifecycleSuperclass"
+					   metadata-complete="true">
+		<pre-merge method-name="preMerge"/>
+		<pre-persist method-name="prePersist"/>
+		<post-persist method-name="postPersist"/>
+		<pre-remove method-name="preRemove"/>
+		<post-remove method-name="postRemove"/>
+		<pre-upsert method-name="preUpsert"/>
+		<post-upsert method-name="postUpsert"/>
+		<pre-insert method-name="preInsert"/>
+		<post-insert method-name="postInsert"/>
+		<pre-delete method-name="preDelete"/>
+		<post-delete method-name="postDelete"/>
+		<attributes>
+			<id name="id"/>
+			<basic name="name"/>
+		</attributes>
+	</mapped-superclass>
+
+	<entity class="org.hibernate.orm.test.jpa.callbacks.jpa4.Jpa4LifecycleCallbackXmlTests$LifecycleEntity"
+			name="Jpa4LifecycleEntity" metadata-complete="true">
+		<pre-merge method-name="preMerge"/>
+		<pre-persist method-name="prePersist"/>
+		<post-persist method-name="postPersist"/>
+		<pre-remove method-name="preRemove"/>
+		<post-remove method-name="postRemove"/>
+		<pre-upsert method-name="preUpsert"/>
+		<post-upsert method-name="postUpsert"/>
+		<pre-insert method-name="preInsert"/>
+		<post-insert method-name="postInsert"/>
+		<pre-delete method-name="preDelete"/>
+		<post-delete method-name="postDelete"/>
+		<attributes>
+			<id name="id"/>
+			<basic name="name"/>
+		</attributes>
+	</entity>
+
+	<entity class="org.hibernate.orm.test.jpa.callbacks.jpa4.Jpa4LifecycleCallbackXmlTests$MutatingEntity"
+			name="Jpa4LifecycleMutatingEntity" metadata-complete="true">
+		<pre-upsert method-name="preUpsert"/>
+		<pre-insert method-name="preInsert"/>
+		<attributes>
+			<id name="id"/>
+			<basic name="name"/>
+		</attributes>
+	</entity>
+
+	<entity class="org.hibernate.orm.test.jpa.callbacks.jpa4.Jpa4LifecycleCallbackXmlTests$PlainEntity"
+			name="Jpa4LifecyclePlainEntity" metadata-complete="true">
+		<attributes>
+			<id name="id"/>
+			<basic name="name"/>
+		</attributes>
+	</entity>
+
+	<entity class="org.hibernate.orm.test.jpa.callbacks.jpa4.Jpa4LifecycleCallbackXmlTests$ListenedEntity"
+			name="Jpa4LifecycleListenedEntity" metadata-complete="true">
+		<entity-listeners>
+			<entity-listener class="org.hibernate.orm.test.jpa.callbacks.jpa4.Jpa4LifecycleCallbackXmlTests$LifecycleListener">
+				<pre-merge method-name="preMerge"/>
+				<pre-persist method-name="prePersist"/>
+				<post-persist method-name="postPersist"/>
+				<pre-remove method-name="preRemove"/>
+				<post-remove method-name="postRemove"/>
+				<pre-upsert method-name="preUpsert"/>
+				<post-upsert method-name="postUpsert"/>
+				<pre-insert method-name="preInsert"/>
+				<post-insert method-name="postInsert"/>
+				<pre-delete method-name="preDelete"/>
+				<post-delete method-name="postDelete"/>
+			</entity-listener>
+		</entity-listeners>
+		<attributes>
+			<id name="id"/>
+			<basic name="name"/>
+		</attributes>
+	</entity>
+
+	<entity class="org.hibernate.orm.test.jpa.callbacks.jpa4.Jpa4LifecycleCallbackXmlTests$SuperclassEntity"
+			name="Jpa4LifecycleSuperclassEntity" metadata-complete="true">
+	</entity>
+</entity-mappings>

@@ -2,6 +2,7 @@ package org.hibernate.community.dialect.lock.internal;
 
 import jakarta.persistence.Timeout;
 
+import org.hibernate.LockMode;
 import org.hibernate.Timeouts;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
@@ -19,6 +20,12 @@ public final class FirebirdLockingSupport implements LockingSupport, LockingSupp
 
 	public FirebirdLockingSupport(DatabaseVersion version) {
 		supportsSkipLocked = version.isSameOrAfter( 5 );
+	}
+
+	@Override
+	public boolean canUsePlainReadForRefresh(LockMode currentLockMode, LockMode requestedLockMode) {
+		// WITH LOCK rejects a version incompatible with snapshot isolation.
+		return true;
 	}
 
 	@Override

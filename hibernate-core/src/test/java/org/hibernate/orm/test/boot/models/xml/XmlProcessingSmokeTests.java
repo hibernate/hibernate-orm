@@ -11,6 +11,7 @@ import org.hibernate.boot.models.internal.GlobalRegistrationsImpl;
 import org.hibernate.boot.models.spi.FilterDefRegistration;
 import org.hibernate.boot.models.spi.NamedNativeQueryRegistration;
 import org.hibernate.boot.models.spi.NamedQueryRegistration;
+import org.hibernate.boot.models.xml.internal.ResourceStreamLocatorImpl;
 import org.hibernate.boot.models.xml.internal.XmlDocumentContextImpl;
 import org.hibernate.boot.models.xml.internal.XmlDocumentImpl;
 import org.hibernate.boot.models.xml.internal.XmlPreProcessingResultImpl;
@@ -39,6 +40,12 @@ import static org.hibernate.models.internal.SimpleClassLoading.SIMPLE_CLASS_LOAD
  * @author Steve Ebersole
  */
 public class XmlProcessingSmokeTests {
+	@Test
+	void missingMappingResourceReturnsNull() {
+		final var locator = new ResourceStreamLocatorImpl( SIMPLE_CLASS_LOADING );
+		assertThat( locator.locateResourceStream( "mappings/models/missing.xml" ) ).isNull();
+	}
+
 	@Test
 	void testGlobals() {
 		final XmlPreProcessingResultImpl collector = new XmlPreProcessingResultImpl();

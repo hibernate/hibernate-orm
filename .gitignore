@@ -24,6 +24,9 @@ out
 atlassian-ide-plugin.xml
 /.profileconfig.json
 
+# VSCode
+.vscode
+
 # Eclipse specific files/directories
 .classpath
 .project

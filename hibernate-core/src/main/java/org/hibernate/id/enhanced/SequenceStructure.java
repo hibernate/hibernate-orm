@@ -2,6 +2,8 @@ package org.hibernate.id.enhanced;
 
 import java.sql.SQLException;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.InitCommand;
@@ -24,38 +26,38 @@ import static org.hibernate.id.enhanced.ResyncHelper.getMaxPrimaryKey;
  */
 public class SequenceStructure implements DatabaseStructure {
 
-	private final String contributor;
-	private final QualifiedName logicalQualifiedSequenceName;
+	private final @Nonnull String contributor;
+	private final @Nonnull QualifiedName logicalQualifiedSequenceName;
 	private final int initialValue;
 	private final int incrementSize;
-	private final String options;
+	private final @Nullable String options;
 
-	private String sql;
+	private @Nullable String sql;
 	private boolean applyIncrementSizeToSourceValues;
 	private int accessCounter;
-	protected QualifiedName physicalSequenceName;
+	protected @Nullable QualifiedName physicalSequenceName;
 
 	public SequenceStructure(
-			String contributor,
-			QualifiedName qualifiedSequenceName,
+			@Nonnull String contributor,
+			@Nonnull QualifiedName qualifiedSequenceName,
 			int initialValue,
 			int incrementSize,
-			Class<?> numberType) {
+			@Nullable Class<?> numberType) {
 		this.contributor = contributor;
 		this.logicalQualifiedSequenceName = qualifiedSequenceName;
 
 		this.initialValue = initialValue;
 		this.incrementSize = incrementSize;
-			this.options = null;
+		this.options = null;
 	}
 
 	public SequenceStructure(
-			String contributor,
-			QualifiedName qualifiedSequenceName,
+			@Nonnull String contributor,
+			@Nonnull QualifiedName qualifiedSequenceName,
 			int initialValue,
 			int incrementSize,
-			String options,
-			Class<?> numberType) {
+			@Nullable String options,
+			@Nullable Class<?> numberType) {
 		this.contributor = contributor;
 		this.logicalQualifiedSequenceName = qualifiedSequenceName;
 
@@ -65,7 +67,10 @@ public class SequenceStructure implements DatabaseStructure {
 		}
 
 	@Override
-	public QualifiedName getPhysicalName() {
+	public @Nonnull QualifiedName getPhysicalName() {
+		if ( physicalSequenceName == null ) {
+			throw new IllegalStateException( "The physical sequence name is unavailable before registerExportables()" );
+		}
 		return physicalSequenceName;
 	}
 
@@ -85,12 +90,12 @@ public class SequenceStructure implements DatabaseStructure {
 	}
 
 	@Override @Deprecated
-	public String[] getAllSqlForTests() {
+	public @Nonnull String[] getAllSqlForTests() {
 		return new String[] { sql };
 	}
 
 	@Override
-	public AccessCallback buildCallback(final SharedSessionContractImplementor session) {
+	public @Nonnull AccessCallback buildCallback(final @Nonnull SharedSessionContractImplementor session) {
 		if ( sql == null ) {
 			throw new AssertionFailure( "SequenceStyleGenerator's SequenceStructure was not properly initialized" );
 		}
@@ -101,7 +106,8 @@ public class SequenceStructure implements DatabaseStructure {
 					accessCounter++;
 					try {
 					final var jdbcCoordinator = session.getJdbcCoordinator();
-					final var statement = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
+					// a query statement leaves any pending JDBC batch queued
+					final var statement = jdbcCoordinator.getStatementPreparer().prepareQueryStatement( sql );
 					final var resourceRegistry = jdbcCoordinator.getLogicalConnection().getResourceRegistry();
 					try {
 						final var resultSet = jdbcCoordinator.getResultSetReturn().extract( statement, sql );
@@ -138,30 +144,30 @@ public class SequenceStructure implements DatabaseStructure {
 			}
 
 			@Override
-			public String getTenantIdentifier() {
+			public @Nullable String getTenantIdentifier() {
 				return session.getTenantIdentifier();
 			}
 		};
 	}
 
 	@Override
-	public void configure(Optimizer optimizer) {
+	public void configure(@Nonnull Optimizer optimizer) {
 		applyIncrementSizeToSourceValues = optimizer.applyIncrementSizeToSourceValues();
 	}
 
 	@Override
-	public void registerExportables(Database database) {
+	public void registerExportables(@Nonnull Database database) {
 		buildSequence( database );
 	}
 
 	@Override
-	public void initialize(SqlStringGenerationContext context) {
+	public void initialize(@Nonnull SqlStringGenerationContext context) {
 		sql = context.getDialect().getSequenceSupport()
 				.getSequenceNextValString( context.format( physicalSequenceName ) );
 	}
 
 	@Override
-	public void registerExtraExportables(Table table, Optimizer optimizer) {
+	public void registerExtraExportables(@Nonnull Table table, @Nonnull Optimizer optimizer) {
 		table.addResyncCommand( (sqlContext, isolator) -> {
 			final String sequenceName = sqlContext.format( physicalSequenceName );
 			final String tableName = sqlContext.format( table.getQualifiedTableName() );
@@ -191,11 +197,11 @@ public class SequenceStructure implements DatabaseStructure {
 		return applyIncrementSizeToSourceValues ? incrementSize : 1;
 	}
 
-	protected QualifiedName getQualifiedName() {
+	protected @Nonnull QualifiedName getQualifiedName() {
 		return logicalQualifiedSequenceName;
 	}
 
-	protected void buildSequence(Database database) {
+	protected void buildSequence(@Nonnull Database database) {
 		final var sequence =
 				locateOrCreateSequence( database.locateNamespace(
 						logicalQualifiedSequenceName.getCatalogName(),
@@ -204,7 +210,7 @@ public class SequenceStructure implements DatabaseStructure {
 		physicalSequenceName = sequence.getName();
 	}
 
-	private Sequence locateOrCreateSequence(Namespace namespace) {
+	private @Nonnull Sequence locateOrCreateSequence(@Nonnull Namespace namespace) {
 		final int sourceIncrementSize = getSourceIncrementSize();
 		final var objectName = logicalQualifiedSequenceName.getObjectName();
 		final var existingSequence = namespace.locateSequence( objectName );

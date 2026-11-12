@@ -7,7 +7,6 @@ import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.StaleObjectStateException;
-import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.lock.spi.LockingStrategy;
 import org.hibernate.dialect.lock.spi.LockingStrategyException;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -176,12 +175,13 @@ public class SqlAstBasedLockingStrategy implements LockingStrategy {
 
 			if ( lockOptions.getLockScope() == PessimisticLockScope.EXTENDED ) {
 				SqmMutationStrategyHelper.visitCollectionTables( entityToLock, (attribute) -> {
-					final var collectionToLock = (PersistentCollection<?>) attribute.getValue( object );
-					LockingHelper.lockCollectionTable(
+					// The managed field may have been replaced or cleared before flush.
+					final var collectionKey = LockingHelper.resolveCollectionKey( attribute, object, session );
+					LockingHelper.lockCollectionTableByKey(
 							attribute,
 							lockMode,
 							lockOptions.getTimeout(),
-							collectionToLock,
+							collectionKey,
 							lockingExecutionContext
 					);
 				} );
@@ -209,6 +209,7 @@ public class SqlAstBasedLockingStrategy implements LockingStrategy {
 			}
 		}
 	}
+
 
 	private static void handleRestriction(
 			Object value,

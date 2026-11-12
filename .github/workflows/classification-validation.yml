@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  COMMON_GRADLE_ARGS: "-Igradle/init.gradle"
+  COMMON_GRADLE_ARGS: "-Igradle/init.gradle -Dscan.uploadInBackground=false"
   MIRROR_MAVEN_CENTRAL_URL: "https://maven-central.storage-download.googleapis.com/maven2/"
   MIRROR_MAVEN_CENTRAL_FALLBACK: "true"
 

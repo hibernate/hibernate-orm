@@ -106,6 +106,26 @@ public interface HibernateAnnotations {
 			EnumSet.of( Kind.ANNOTATION ),
 			false
 	);
+	CompleteAnnotationDescriptor<Audited, AuditedAnnotation> AUDITED = new CompleteAnnotationDescriptor<>(
+			Audited.class,
+			AuditedAnnotation.class,
+			EnumSet.of( Kind.ANNOTATION, Kind.CLASS, Kind.FIELD, Kind.METHOD, Kind.PACKAGE ),
+			false
+	);
+	CompleteAnnotationDescriptor<Audited.Table,AuditedTableAnnotation> AUDITED_TABLE =
+			new CompleteAnnotationDescriptor<>(
+					Audited.Table.class,
+					AuditedTableAnnotation.class,
+					EnumSet.of( Kind.ANNOTATION, Kind.CLASS, Kind.PACKAGE ),
+					false
+			);
+	CompleteAnnotationDescriptor<Audited.Excluded,AuditedExcludedAnnotation> AUDITED_EXCLUDED =
+			new CompleteAnnotationDescriptor<>(
+					Audited.Excluded.class,
+					AuditedExcludedAnnotation.class,
+					EnumSet.of( Kind.FIELD, Kind.METHOD ),
+					false
+			);
 	CompleteAnnotationDescriptor<Bag, BagAnnotation> BAG = new CompleteAnnotationDescriptor<>(
 			Bag.class,
 			BagAnnotation.class,
@@ -124,6 +144,33 @@ public interface HibernateAnnotations {
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS ),
 			false
 	);
+	CompleteAnnotationDescriptor<Changelog, ChangelogAnnotation> CHANGELOG = new CompleteAnnotationDescriptor<>(
+			Changelog.class,
+			ChangelogAnnotation.class,
+			EnumSet.of( Kind.CLASS ),
+			false
+	);
+	CompleteAnnotationDescriptor<Changelog.ChangesetId,ChangelogChangesetIdAnnotation> CHANGELOG_CHANGESET_ID =
+			new CompleteAnnotationDescriptor<>(
+					Changelog.ChangesetId.class,
+					ChangelogChangesetIdAnnotation.class,
+					EnumSet.of( Kind.FIELD, Kind.METHOD ),
+					false
+			);
+	CompleteAnnotationDescriptor<Changelog.Timestamp,ChangelogTimestampAnnotation> CHANGELOG_TIMESTAMP =
+			new CompleteAnnotationDescriptor<>(
+					Changelog.Timestamp.class,
+					ChangelogTimestampAnnotation.class,
+					EnumSet.of( Kind.FIELD, Kind.METHOD ),
+					false
+			);
+	CompleteAnnotationDescriptor<Changelog.ModifiedEntities,ChangelogModifiedEntitiesAnnotation> CHANGELOG_MODIFIED_ENTITIES =
+			new CompleteAnnotationDescriptor<>(
+					Changelog.ModifiedEntities.class,
+					ChangelogModifiedEntitiesAnnotation.class,
+					EnumSet.of( Kind.FIELD, Kind.METHOD ),
+					false
+			);
 	CompleteAnnotationDescriptor<Checks, ChecksAnnotation> CHECKS = new CompleteAnnotationDescriptor<>(
 			Checks.class,
 			ChecksAnnotation.class,
@@ -561,6 +608,12 @@ public interface HibernateAnnotations {
 			MapKeyCompositeType.class,
 			MapKeyCompositeTypeAnnotation.class,
 			EnumSet.allOf( Kind.class ),
+			false
+	);
+	CompleteAnnotationDescriptor<MapKeyFormula, MapKeyFormulaAnnotation> MAP_KEY_FORMULA = new CompleteAnnotationDescriptor<>(
+			MapKeyFormula.class,
+			MapKeyFormulaAnnotation.class,
+			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
 	CompleteAnnotationDescriptor<MapKeyJavaType, MapKeyJavaTypeAnnotation> MAP_KEY_JAVA_TYPE = new CompleteAnnotationDescriptor<>(

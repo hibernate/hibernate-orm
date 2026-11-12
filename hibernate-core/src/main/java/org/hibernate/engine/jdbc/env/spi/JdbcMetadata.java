@@ -3,6 +3,8 @@ package org.hibernate.engine.jdbc.env.spi;
 import java.util.List;
 import java.util.Set;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.SPI;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
@@ -25,6 +27,7 @@ import static org.hibernate.SPI.Role.USE;
 @SPI(USE)
 public interface JdbcMetadata {
 	/// The JDBC environment owning this effective metadata view.
+	@Nonnull
 	JdbcEnvironment getJdbcEnvironment();
 
 	/// Whether a live JDBC metadata source was available when the underlying
@@ -34,12 +37,15 @@ public interface JdbcMetadata {
 	/// The raw driver and connection observations underlying this view.
 	///
 	/// Do not use a raw support report as an effective runtime decision.
+	@Nonnull
 	ExtractedDatabaseMetaData getExtractedDatabaseMetaData();
 
 	/// The database product name reported by the JDBC driver.
+	@Nullable
 	String getDatabaseProductName();
 
 	/// The database product version reported by the JDBC driver.
+	@Nullable
 	String getDatabaseProductVersion();
 
 	/// Whether the JDBC driver reported that schemas are supported in DML.
@@ -49,22 +55,27 @@ public interface JdbcMetadata {
 	boolean supportsCatalogs();
 
 	/// The catalog in effect for the bootstrap connection.
+	@Nullable
 	String getConnectionCatalogName();
 
 	/// The schema in effect for the bootstrap connection.
 	///
 	/// @see AvailableSettings#DEFAULT_SCHEMA
+	@Nullable
 	String getConnectionSchemaName();
 
 	/// The effective unquoted-identifier case strategy captured from JDBC
 	/// metadata, or the standard fallback when metadata is unavailable.
+	@Nonnull
 	IdentifierCaseStrategy getUnquotedIdentifierCaseStrategy();
 
 	/// The effective quoted-identifier case strategy captured from JDBC
 	/// metadata, or the standard fallback when metadata is unavailable.
+	@Nonnull
 	IdentifierCaseStrategy getQuotedIdentifierCaseStrategy();
 
 	/// The immutable lowercase SQL-keyword set reported by the JDBC driver.
+	@Nonnull
 	Set<String> getSqlKeywords();
 
 	/// Whether named callable parameters are effectively supported.
@@ -103,12 +114,15 @@ public interface JdbcMetadata {
 	boolean doesDataDefinitionCauseTransactionCommit();
 
 	/// The SQL-state coding scheme reported by the JDBC driver.
+	@Nullable
 	SQLStateType getSqlStateType();
 
 	/// The JDBC URL reported by the driver.
+	@Nullable
 	String getUrl();
 
 	/// The JDBC driver name.
+	@Nullable
 	String getDriver();
 
 	/// The bootstrap connection's transaction isolation level.
@@ -121,6 +135,7 @@ public interface JdbcMetadata {
 	int getDefaultFetchSize();
 
 	/// Information describing the database sequences.
+	@Nonnull
 	default List<SequenceInformation> getSequenceInformationList() {
 		return emptyList();
 	}

@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
+import jakarta.annotation.Nonnull;
 import jakarta.transaction.SystemException;
 import jakarta.transaction.Transaction;
 
@@ -117,6 +118,7 @@ public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Confi
 	}
 
 	@Override
+	@Nonnull
 	public Connection getConnection() throws SQLException {
 		Transaction currentTransaction = findCurrentTransaction();
 
@@ -156,7 +158,7 @@ public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Confi
 	}
 
 	@Override
-	public void closeConnection(Connection connection) throws SQLException {
+	public void closeConnection(@Nonnull Connection connection) throws SQLException {
 		if ( connection == null ) {
 			return;
 		}
@@ -178,12 +180,14 @@ public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Confi
 	}
 
 	@Override
-	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+	@Nonnull
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(@Nonnull Dialect dialect) {
 		return delegate.getDatabaseConnectionInfo( dialect );
 	}
 
 	@Override
-	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect, ExtractedDatabaseMetaData metaData) {
+	@Nonnull
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(@Nonnull Dialect dialect, @Nonnull ExtractedDatabaseMetaData metaData) {
 		return delegate.getDatabaseConnectionInfo( dialect, metaData );
 	}
 

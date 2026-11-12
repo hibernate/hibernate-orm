@@ -888,6 +888,8 @@ these statements acquire protection rather than initialize associations, so thei
 
 An agreed <<locking-graph-root,graph-root coordination protocol>> is separate from an entity graph used for loading.
 Choose the required state without assuming that eager loading or follow-on acquisition automatically provides the protocol's read/lock ordering.
+For pessimistic root coordination, acquire root protection before reading protected graph state.
+Already managed state and earlier transaction snapshots must also be considered; acquisition does not make those reads current.
 A lock request does not refresh objects already held in the persistence context; see <<pc-refresh>> for reloading them.
 
 ==== Lazy state and explicit initialization

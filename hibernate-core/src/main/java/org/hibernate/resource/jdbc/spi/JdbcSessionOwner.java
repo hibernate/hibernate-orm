@@ -59,6 +59,15 @@ public interface JdbcSessionOwner {
 	void beforeTransactionCompletion();
 
 	/**
+	 * Validate retained state before completion, including when the owner is inactive/closed.
+	 * Must not access services destroyed by factory closure.
+	 *
+	 * @since 8.0
+	 */
+	default void validateBeforeCompletion() {
+	}
+
+	/**
 	 * An after-completion callback to the owner.
 	 *
 	 * @param successful Was the transaction successful?

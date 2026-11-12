@@ -6,6 +6,8 @@ import org.hibernate.query.TupleTransformer;
 
 import java.util.List;
 
+import static java.util.Arrays.asList;
+
 /**
  * A {@link TupleTransformer} for handling {@link List} results from native queries.
  *
@@ -20,6 +22,6 @@ public class NativeQueryListTransformer implements TupleTransformer<List<Object>
 	@Override
 	@Nonnull
 	public List<Object> transformTuple(@Nonnull Object[] tuple, @Nonnull String[] aliases) {
-		return List.of( tuple );
+		return asList( tuple );
 	}
 }

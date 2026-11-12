@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.resource.transaction.jta;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
 
@@ -84,8 +85,9 @@ public class TransactionCoordinatorOwnerTestingImpl implements TransactionCoordi
 	}
 
 	@Override
+	@Nonnull
 	public JdbcSessionOwner getJdbcSessionOwner() {
-		return null;
+		throw new UnsupportedOperationException( "This test owner has no JDBC session" );
 	}
 
 	@Override

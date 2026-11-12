@@ -527,7 +527,8 @@ package org.hibernate.example;
 
 import jakarta.data.repository.Query;
 import jakarta.data.repository.Repository;
-import jakarta.persistence.EntityAgent;
+import jakarta.data.repository.stateful.Persist;
+import jakarta.persistence.EntityManager;
 
 import java.util.List;
 
@@ -690,9 +691,9 @@ We may specify test data in a SQL script, for example:
 [source,sql]
 ./import.sql
 ----
-insert into Books (isbn, title) values ('9781932394153', 'Hibernate in Action')
-insert into Books (isbn, title) values ('9781932394887', 'Java Persistence with Hibernate')
-insert into Books (isbn, title) values ('9781617290459', 'Java Persistence with Hibernate, Second Edition')
+insert into Book (isbn, title) values ('9781932394153', 'Hibernate in Action')
+insert into Book (isbn, title) values ('9781932394887', 'Java Persistence with Hibernate')
+insert into Book (isbn, title) values ('9781617290459', 'Java Persistence with Hibernate, Second Edition')
 ----
 
 If we name this file `import.sql`, and place it in the root classpath, that's all we need to do.

@@ -7,12 +7,15 @@ import org.hibernate.Incubating;
  * Supplies
  * {@linkplain org.hibernate.cfg.MultiTenancySettings#MULTI_TENANT_CREDENTIALS_MAPPER
  * tenant-specific} credential to use to connect to the database. This feature may be
- * used on its own or in conjunction with schema-based or discriminator-based
- * multitenancy.
+ * used on its own or in conjunction with schema-based, discriminator-based, or
+ * multi-database multitenancy.
  * <p>When a tenant credentials mapper is set,
  * {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider#getConnection(String, String)}
- * is used to acquire JDBC connections. This typically requires that the JDBC {@code DataSource}
- * correctly implements the method {@link javax.sql.DataSource#getConnection(String, String)}.
+ * is used to acquire JDBC connections, or
+ * {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider#getConnection(String, String, String)}
+ * when a tenant data source mapper is also configured. This typically requires that
+ * the JDBC {@code DataSource} correctly implements the method
+ * {@link javax.sql.DataSource#getConnection(String, String)}.
  *
  * @param <T> The type of the tenant id
  *
@@ -21,6 +24,7 @@ import org.hibernate.Incubating;
  * @see org.hibernate.cfg.MultiTenancySettings#MULTI_TENANT_CREDENTIALS_MAPPER
  * @see javax.sql.DataSource#getConnection(String, String)
  * @see org.hibernate.engine.jdbc.connections.spi.ConnectionProvider#getConnection(String, String)
+ * @see org.hibernate.engine.jdbc.connections.spi.ConnectionProvider#getConnection(String, String, String)
  *
  * @author Gavin King
  */

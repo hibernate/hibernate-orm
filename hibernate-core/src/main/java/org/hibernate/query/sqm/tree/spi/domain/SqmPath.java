@@ -1,15 +1,21 @@
 package org.hibernate.query.sqm.tree.spi.domain;
 
 import jakarta.annotation.Nullable;
+import java.time.temporal.Temporal;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
 import jakarta.annotation.Nonnull;
+import jakarta.persistence.metamodel.BooleanAttribute;
+import jakarta.persistence.metamodel.ComparableAttribute;
 import jakarta.persistence.metamodel.MapAttribute;
+import jakarta.persistence.metamodel.NumericAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.TemporalAttribute;
+import jakarta.persistence.metamodel.TextAttribute;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.SemanticException;
@@ -20,6 +26,7 @@ import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.spi.SqmBindableType;
 import org.hibernate.query.sqm.spi.SqmPathSource;
 import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
+import org.hibernate.query.sqm.tree.spi.expression.SqmComparableExpression;
 import org.hibernate.query.sqm.tree.spi.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.spi.from.SqmRoot;
 import org.hibernate.spi.NavigablePath;
@@ -159,6 +166,26 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	@Nonnull
 	@Override
 	<Y> SqmPath<Y> get(@Nonnull SingularAttribute<? super T, Y> attribute);
+
+	@Nonnull
+	@Override
+	<N extends Number & Comparable<N>> SqmNumericPath<N> get(@Nonnull NumericAttribute<? super T, N> attribute);
+
+	@Nonnull
+	@Override
+	SqmTextPath get(@Nonnull TextAttribute<? super T> attribute);
+
+	@Nonnull
+	@Override
+	SqmBooleanPath get(@Nonnull BooleanAttribute<? super T> attribute);
+
+	@Nonnull
+	@Override
+	<T1 extends Temporal & Comparable<? super T1>> SqmTemporalPath<T1> get(@Nonnull TemporalAttribute<? super T, T1> attribute);
+
+	@Nonnull
+	@Override
+	<C extends Comparable<? super C>> SqmComparableExpression<C> get(@Nonnull ComparableAttribute<? super T, C> attribute);
 
 	@Nonnull
 	@Override

@@ -5,6 +5,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 /**
  * Contract for extracting {@link ResultSet}s from {@link Statement}s, executing the statements,
  * managing resources, and logging statement calls.
@@ -25,7 +28,8 @@ public interface ResultSetReturn {
 	 *
 	 * @return The extracted {@link ResultSet}
 	 */
-	ResultSet extract(PreparedStatement statement, String sql);
+	@Nonnull
+	ResultSet extract(@Nonnull PreparedStatement statement, @Nonnull String sql);
 
 	/**
 	 * Performs the given SQL statement, expecting a {@link ResultSet} in return
@@ -35,7 +39,8 @@ public interface ResultSetReturn {
 	 *
 	 * @return The resulting {@link ResultSet}
 	 */
-	ResultSet extract(Statement statement, String sql);
+	@Nonnull
+	ResultSet extract(@Nonnull Statement statement, @Nonnull String sql);
 
 	/**
 	 * Execute the {@link PreparedStatement} return its first {@link ResultSet}, if any.
@@ -46,7 +51,8 @@ public interface ResultSetReturn {
 	 *
 	 * @return The extracted {@link ResultSet}, or {@code null}
 	 */
-	ResultSet execute(PreparedStatement statement, String sql);
+	@Nullable
+	ResultSet execute(@Nonnull PreparedStatement statement, @Nonnull String sql);
 
 	/**
 	 * Performs the given SQL statement, returning its first {@link ResultSet}, if any.
@@ -57,7 +63,8 @@ public interface ResultSetReturn {
 	 *
 	 * @return The extracted {@link ResultSet}, or {@code null}
 	 */
-	ResultSet execute(Statement statement, String sql);
+	@Nullable
+	ResultSet execute(@Nonnull Statement statement, @Nonnull String sql);
 
 	/**
 	 * Execute the {@link PreparedStatement}, returning its "affected row count".
@@ -67,7 +74,7 @@ public interface ResultSetReturn {
 	 *
 	 * @return The {@link PreparedStatement#executeUpdate()} result
 	 */
-	int executeUpdate(PreparedStatement statement, String sql);
+	int executeUpdate(@Nonnull PreparedStatement statement, @Nonnull String sql);
 
 	/**
 	 * Execute the given SQL statement returning its "affected row count".
@@ -77,5 +84,5 @@ public interface ResultSetReturn {
 	 *
 	 * @return The {@link PreparedStatement#executeUpdate(String)} result
 	 */
-	int executeUpdate(Statement statement, String sql);
+	int executeUpdate(@Nonnull Statement statement, @Nonnull String sql);
 }

@@ -10,6 +10,8 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
+import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -40,6 +42,8 @@ import static org.hamcrest.Matchers.is;
 @ServiceRegistry(
 		settings = @Setting(name = AvailableSettings.WRAPPER_ARRAY_HANDLING, value = "LEGACY")
 )
+// Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
+@BootstrapServiceRegistry(integrators = SharedDriverManagerTypeCacheClearingIntegrator.class)
 public class WrapperArrayHandlingLegacyTests {
 
 	@Test

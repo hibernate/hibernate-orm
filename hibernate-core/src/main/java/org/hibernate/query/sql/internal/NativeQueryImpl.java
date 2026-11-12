@@ -1305,8 +1305,9 @@ public class NativeQueryImpl<R>
 	}
 
 	private SelectInterpretationsKey selectInterpretationsKey(ResultSetMapping mapping, int parameterStartPosition) {
+		// The cached plan retains parameter occurrences, so preserve their names and positions in the key.
 		return new SelectInterpretationsKey(
-				getQueryString(),
+				originalSqlString,
 				mapping,
 				getSynchronizedQuerySpaces(),
 				parameterStartPosition

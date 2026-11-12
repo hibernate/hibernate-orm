@@ -1990,19 +1990,21 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	private <T> BasicType<T> resolveInferredType(T value) {
 		final var typeConfiguration = getTypeConfiguration();
-		final var type = ReflectHelper.getClass( value );
+		final Class<?> type = value instanceof Enum<?> enumValue
+				? enumValue.getDeclaringClass()
+				: ReflectHelper.getClass( value );
 		final var result = typeConfiguration.getBasicTypeForJavaType( type );
 		if ( result == null && value instanceof Enum<?> enumValue ) {
 			return (BasicType<T>)
 					resolveEnumType( typeConfiguration, enumValue );
 		}
 		else {
-			return result;
+			return (BasicType<T>) result;
 		}
 	}
 
 	private static <E extends Enum<E>> BasicType<E> resolveEnumType(TypeConfiguration configuration, Enum<E> enumValue) {
-		final var enumJavaType = new EnumJavaType<>( ReflectHelper.getClass( enumValue ) );
+		final var enumJavaType = new EnumJavaType<>( enumValue.getDeclaringClass() );
 		final var jdbcType = enumJavaType.getRecommendedJdbcType( configuration.getCurrentBaseSqlTypeIndicators() );
 		return configuration.getBasicTypeRegistry().resolve( enumJavaType, jdbcType );
 	}
@@ -3019,8 +3021,13 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate between(Expression<?> value, Expression<?> lower, Expression<?> upper, boolean negated) {
+	public SqmPredicate between(
+			@Nonnull Expression<?> value,
+			@Nonnull Expression<?> lower,
+			@Nonnull Expression<?> upper,
+			boolean negated) {
 		return new SqmBetweenPredicate(
 				(SqmExpression<?>) value,
 				(SqmExpression<?>) lower,
@@ -3030,8 +3037,12 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Nonnull
 	@Override
-	public SqmPredicate comparison(Expression<?> x, ComparisonOperator operator, Expression<?> y) {
+	public SqmPredicate comparison(
+			@Nonnull Expression<?> x,
+			@Nonnull ComparisonOperator operator,
+			@Nonnull Expression<?> y) {
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				operator,

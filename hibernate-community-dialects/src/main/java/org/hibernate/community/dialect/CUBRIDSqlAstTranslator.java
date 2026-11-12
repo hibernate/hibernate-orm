@@ -11,6 +11,7 @@ import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.dialect.sql.ast.spi.StandardDerivedTableRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardInsertConflictRenderingSupport;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.spi.Statement;
@@ -75,8 +76,8 @@ public class CUBRIDSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 
 	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
-		if ( isClob( lhs ) || isClob( rhs ) ) {
-			renderClobComparison( lhs, operator, rhs );
+		if ( isClob( lhs ) || isClob( rhs ) || isBlob( lhs ) || isBlob( rhs ) ) {
+			renderLobComparison( lhs, operator, rhs );
 		}
 		else {
 			//CUBRID has the null-safe '<=>' operator, so distinct-from needs no intersect emulation
@@ -84,9 +85,9 @@ public class CUBRIDSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 		}
 	}
 
-	//CUBRID compares a clob by locator, so two clobs holding the same text never compare equal,
-	//and comparing a clob to a character type is rejected outright. Read both sides as characters.
-	private void renderClobComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
+	//CUBRID compares a lob by locator, so two lobs holding the same content never compare equal,
+	//and comparing a lob to a character or bit string is rejected outright. Read both sides by content.
+	private void renderLobComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		final boolean negated = operator == ComparisonOperator.DISTINCT_FROM;
 		final String operatorText = switch ( operator ) {
 			case DISTINCT_FROM, NOT_DISTINCT_FROM -> "<=>";
@@ -95,17 +96,22 @@ public class CUBRIDSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 		if ( negated ) {
 			appendSql( "not(" );
 		}
-		renderAsCharacterData( lhs );
+		renderLobContent( lhs );
 		appendSql( operatorText );
-		renderAsCharacterData( rhs );
+		renderLobContent( rhs );
 		if ( negated ) {
 			appendSql( CLOSE_PARENTHESIS );
 		}
 	}
 
-	private void renderAsCharacterData(Expression expression) {
+	private void renderLobContent(Expression expression) {
 		if ( isClob( expression ) ) {
 			appendSql( "clob_to_char(" );
+			expression.accept( this );
+			appendSql( CLOSE_PARENTHESIS );
+		}
+		else if ( isBlob( expression ) ) {
+			appendSql( "blob_to_bit(" );
 			expression.accept( this );
 			appendSql( CLOSE_PARENTHESIS );
 		}
@@ -128,6 +134,20 @@ public class CUBRIDSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 		};
 	}
 
+	//a varbinary too long for 'bit varying' lands in a 'blob' column as well
+	private static boolean isBlob(Expression expression) {
+		final JdbcMappingContainer expressionType = expression.getExpressionType();
+		if ( expressionType == null || expressionType.getJdbcTypeCount() != 1 ) {
+			return false;
+		}
+		return switch ( expressionType.getSingleJdbcMapping().getJdbcType().getDdlTypeCode() ) {
+			case SqlTypes.BLOB -> true;
+			case SqlTypes.VARBINARY, SqlTypes.LONG32VARBINARY ->
+					expressionType instanceof SqlTypedMapping sqlTypedMapping && sqlTypedMapping.isLob();
+			default -> false;
+		};
+	}
+
 	@Override
 	protected void renderSelectTupleComparison(
 			List<SqlSelection> lhsExpressions,
@@ -141,11 +161,17 @@ public class CUBRIDSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 		if ( expression instanceof Literal ) {
 			appendSql( "'0' || '0'" );
 		}
-		else if ( expression instanceof Summarization ) {
-			// This could theoretically be emulated by rendering all grouping variations of the query and
-			// connect them via union all but that's probably pretty inefficient and would have to happen
-			// on the query spec level
-			throw new UnsupportedOperationException( "Summarization is not supported by DBMS!" );
+		else if ( expression instanceof Summarization summarization ) {
+			if ( summarization.getKind() == Summarization.Kind.ROLLUP ) {
+				renderCommaSeparated( summarization.getGroupings() );
+				appendSql( " with rollup" );
+			}
+			else {
+				// This could theoretically be emulated by rendering all grouping variations of the query and
+				// connect them via union all but that's probably pretty inefficient and would have to happen
+				// on the query spec level
+				throw new UnsupportedOperationException( "Summarization is not supported by DBMS!" );
+			}
 		}
 		else {
 			expression.accept( this );

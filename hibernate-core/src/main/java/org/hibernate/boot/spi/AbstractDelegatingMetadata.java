@@ -1,5 +1,7 @@
 package org.hibernate.boot.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.MappingException;
 import org.hibernate.Remove;
 import org.hibernate.boot.SessionFactoryBuilder;
@@ -69,137 +71,161 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 
 	@Override
 	@Remove
+	@Nonnull
 	public SessionFactoryBuilder getSessionFactoryBuilder() {
 		return delegate.getSessionFactoryBuilder();
 	}
 
 	@Override
 	@Remove
+	@Nonnull
 	public SessionFactoryImplementor buildSessionFactory() {
 		return delegate.buildSessionFactory();
 	}
 
 	@Override
+	@Nullable
 	public UUID getUUID() {
 		return delegate.getUUID();
 	}
 
 	@Override
+	@Nonnull
 	public Database getDatabase() {
 		return delegate.getDatabase();
 	}
 
 	@Override
+	@Nonnull
 	public Collection<PersistentClass> getEntityBindings() {
 		return delegate.getEntityBindings();
 	}
 
 	@Override
-	public PersistentClass getEntityBinding(String entityName) {
+	@Nullable
+	public PersistentClass getEntityBinding(@Nonnull String entityName) {
 		return delegate.getEntityBinding( entityName );
 	}
 
 	@Override
+	@Nonnull
 	public Collection<org.hibernate.mapping.Collection> getCollectionBindings() {
 		return delegate.getCollectionBindings();
 	}
 
 	@Override
-	public org.hibernate.mapping.Collection getCollectionBinding(String role) {
+	@Nullable
+	public org.hibernate.mapping.Collection getCollectionBinding(@Nonnull String role) {
 		return delegate.getCollectionBinding( role );
 	}
 
 	@Override
+	@Nonnull
 	public Map<String, String> getImports() {
 		return delegate.getImports();
 	}
 
 	@Override
-	public NamedHqlQueryDefinition<?> getNamedHqlQueryMapping(String name) {
+	@Nullable
+	public NamedHqlQueryDefinition<?> getNamedHqlQueryMapping(@Nonnull String name) {
 		return delegate.getNamedHqlQueryMapping( name );
 	}
 
 	@Override
-	public void visitNamedHqlQueryDefinitions(Consumer<NamedHqlQueryDefinition<?>> definitionConsumer) {
+	public void visitNamedHqlQueryDefinitions(@Nonnull Consumer<NamedHqlQueryDefinition<?>> definitionConsumer) {
 		delegate.visitNamedHqlQueryDefinitions( definitionConsumer );
 	}
 
 	@Override
-	public NamedNativeQueryDefinition<?> getNamedNativeQueryMapping(String name) {
+	@Nullable
+	public NamedNativeQueryDefinition<?> getNamedNativeQueryMapping(@Nonnull String name) {
 		return delegate.getNamedNativeQueryMapping( name );
 	}
 
 	@Override
-	public void visitNamedNativeQueryDefinitions(Consumer<NamedNativeQueryDefinition<?>> definitionConsumer) {
+	public void visitNamedNativeQueryDefinitions(@Nonnull Consumer<NamedNativeQueryDefinition<?>> definitionConsumer) {
 		delegate.visitNamedNativeQueryDefinitions( definitionConsumer );
 	}
 
 	@Override
-	public NamedProcedureCallDefinition getNamedProcedureCallMapping(String name) {
+	@Nullable
+	public NamedProcedureCallDefinition getNamedProcedureCallMapping(@Nonnull String name) {
 		return delegate.getNamedProcedureCallMapping( name );
 	}
 
 	@Override
-	public void visitNamedProcedureCallDefinition(Consumer<NamedProcedureCallDefinition> definitionConsumer) {
+	public void visitNamedProcedureCallDefinition(@Nonnull Consumer<NamedProcedureCallDefinition> definitionConsumer) {
 		delegate.visitNamedProcedureCallDefinition( definitionConsumer );
 	}
 
 	@Override
-	public NamedResultSetMappingDescriptor getResultSetMapping(String name) {
+	@Nullable
+	public NamedResultSetMappingDescriptor getResultSetMapping(@Nonnull String name) {
 		return delegate.getResultSetMapping( name );
 	}
 
 	@Override
-	public void visitNamedResultSetMappingDefinition(Consumer<NamedResultSetMappingDescriptor> definitionConsumer) {
+	public void visitNamedResultSetMappingDefinition(
+			@Nonnull Consumer<NamedResultSetMappingDescriptor> definitionConsumer) {
 		delegate.visitNamedResultSetMappingDefinition( definitionConsumer );
 	}
 
 	@Override
-	public TypeDefinition getTypeDefinition(String typeName) {
+	@Nullable
+	public TypeDefinition getTypeDefinition(@Nonnull String typeName) {
 		return delegate.getTypeDefinition( typeName );
 	}
 
 	@Override
+	@Nonnull
 	public Map<String, FilterDefinition> getFilterDefinitions() {
 		return delegate.getFilterDefinitions();
 	}
 
 	@Override
-	public FilterDefinition getFilterDefinition(String name) {
+	@Nullable
+	public FilterDefinition getFilterDefinition(@Nonnull String name) {
 		return delegate.getFilterDefinition( name );
 	}
 
 	@Override
-	public FetchProfile getFetchProfile(String name) {
+	@Nullable
+	public FetchProfile getFetchProfile(@Nonnull String name) {
 		return delegate.getFetchProfile( name );
 	}
 
 	@Override
+	@Nonnull
 	public Collection<FetchProfile> getFetchProfiles() {
 		return delegate.getFetchProfiles();
 	}
 
 	@Override
-	public NamedEntityGraphDefinition getNamedEntityGraph(String name) {
+	@Nullable
+	public NamedEntityGraphDefinition getNamedEntityGraph(@Nonnull String name) {
 		return delegate.getNamedEntityGraph( name );
 	}
 
 	@Override
+	@Nonnull
 	public Map<String, NamedEntityGraphDefinition> getNamedEntityGraphs() {
 		return delegate.getNamedEntityGraphs();
 	}
 
 	@Override
-	public IdentifierGeneratorDefinition getIdentifierGenerator(String name) {
+	@Nullable
+	public IdentifierGeneratorDefinition getIdentifierGenerator(@Nonnull String name) {
 		return delegate.getIdentifierGenerator( name );
 	}
 
 	@Override
+	@Nonnull
 	public Collection<Table> collectTableMappings() {
 		return delegate.collectTableMappings();
 	}
 
 	@Override
+	@Nonnull
 	public Map<String, SqmFunctionDescriptor> getSqlFunctionMap() {
 		return delegate.getSqlFunctionMap();
 	}
@@ -263,6 +289,7 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	}
 
 	@Override
+	@Nonnull
 	public Set<String> getContributors() {
 		return delegate.getContributors();
 	}

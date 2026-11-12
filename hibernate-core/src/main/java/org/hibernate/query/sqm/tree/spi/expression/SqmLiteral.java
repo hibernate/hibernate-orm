@@ -36,11 +36,16 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 			|| inherentType.getExpressibleJavaType().isInstance( castNonNull( value ) );
 		setExpressibleType(
 				inherentType,
-				inherentType == null
-						? nodeBuilder().getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( value.getClass() )
-						: null
+				inherentType == null ? resolveJavaType( value ) : null
 		);
 		this.value = value;
+	}
+
+	private JavaType<?> resolveJavaType(T value) {
+		return nodeBuilder().getTypeConfiguration().getJavaTypeRegistry()
+				.resolveDescriptor( value instanceof Enum<?> enumValue
+						? enumValue.getDeclaringClass()
+						: value.getClass() );
 	}
 
 	protected SqmLiteral(@Nullable SqmBindableType<T> inherentType, @Nonnull NodeBuilder nodeBuilder) {

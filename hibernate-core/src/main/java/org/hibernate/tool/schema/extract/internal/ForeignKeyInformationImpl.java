@@ -2,6 +2,7 @@ package org.hibernate.tool.schema.extract.internal;
 
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.ForeignKeyInformation;
@@ -21,24 +22,24 @@ public class ForeignKeyInformationImpl implements ForeignKeyInformation {
 	}
 
 	@Override
-	public Identifier getForeignKeyIdentifier() {
+	public @Nonnull Identifier getForeignKeyIdentifier() {
 		return foreignKeyIdentifier;
 	}
 
 	@Override
-	public Iterable<ColumnReferenceMapping> getColumnReferenceMappings() {
+	public @Nonnull Iterable<ColumnReferenceMapping> getColumnReferenceMappings() {
 		return columnMappingList;
 	}
 
 	public record ColumnReferenceMappingImpl(ColumnInformation referencing, ColumnInformation referenced)
 			implements ColumnReferenceMapping {
 		@Override
-		public ColumnInformation getReferencingColumnMetadata() {
+		public @Nonnull ColumnInformation getReferencingColumnMetadata() {
 			return referencing;
 		}
 
 		@Override
-		public ColumnInformation getReferencedColumnMetadata() {
+		public @Nonnull ColumnInformation getReferencedColumnMetadata() {
 			return referenced;
 		}
 	}

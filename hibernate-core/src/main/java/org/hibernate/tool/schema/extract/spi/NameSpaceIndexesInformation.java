@@ -1,5 +1,6 @@
 package org.hibernate.tool.schema.extract.spi;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.mapping.Table;
@@ -10,19 +11,19 @@ import java.util.List;
 import java.util.Map;
 
 public class NameSpaceIndexesInformation {
-	private final IdentifierHelper identifierHelper;
-	private final Map<String, List<IndexInformation>> indexes = new HashMap<>();
+	private final @Nonnull IdentifierHelper identifierHelper;
+	private final @Nonnull Map<String, List<IndexInformation>> indexes = new HashMap<>();
 
-	public NameSpaceIndexesInformation(IdentifierHelper identifierHelper) {
+	public NameSpaceIndexesInformation(@Nonnull IdentifierHelper identifierHelper) {
 		this.identifierHelper = identifierHelper;
 	}
 
-	public void addIndexInformation(TableInformation tableInformation, IndexInformation indexInformation) {
+	public void addIndexInformation(@Nonnull TableInformation tableInformation, @Nonnull IndexInformation indexInformation) {
 		indexes.computeIfAbsent( tableInformation.getName().getTableName().getText(), k -> new ArrayList<>() )
 				.add( indexInformation );
 	}
 
-	public @Nullable List<IndexInformation> getIndexesInformation(Table table) {
+	public @Nullable List<IndexInformation> getIndexesInformation(@Nonnull Table table) {
 		return indexes.get( identifierHelper.toMetaDataObjectName( table.getQualifiedTableName().getTableName() ) );
 	}
 

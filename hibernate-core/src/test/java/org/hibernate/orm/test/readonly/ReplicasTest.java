@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.readonly;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.Session;
@@ -93,13 +94,14 @@ class ReplicasTest {
 
 	public static class Provider extends DriverManagerConnectionProvider {
 		@Override
+		@Nonnull
 		public Connection getReadOnlyConnection() throws SQLException {
 			readOnlyConnectionsOpened++;
 			return super.getReadOnlyConnection();
 		}
 
 		@Override
-		public void closeReadOnlyConnection(Connection connection) throws SQLException {
+		public void closeReadOnlyConnection(@Nonnull Connection connection) throws SQLException {
 			super.closeReadOnlyConnection( connection );
 			readOnlyConnectionsClosed ++;
 		}

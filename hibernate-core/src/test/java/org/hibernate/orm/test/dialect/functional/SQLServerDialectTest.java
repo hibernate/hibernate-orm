@@ -13,7 +13,6 @@ import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.SQLServerDialect;
@@ -354,12 +353,10 @@ public class SQLServerDialectTest {
 						}
 				);
 
-				LockOptions opt = new LockOptions( LockMode.UPGRADE_NOWAIT );
-				opt.setTimeOut( 0 ); // seems useless
 				long start = System.currentTimeMillis();
 				thread.start();
 				try {
-					s2.lock( kit2, opt );
+					s2.lock( kit2, LockMode.UPGRADE_NOWAIT );
 				}
 				catch ( PessimisticEntityLockException e ) {
 					assertTrue( e.getCause() instanceof LockTimeoutException );

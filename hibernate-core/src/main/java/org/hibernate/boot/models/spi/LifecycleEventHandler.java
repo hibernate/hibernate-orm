@@ -40,6 +40,13 @@ import static org.hibernate.boot.models.JpaAnnotations.POST_UPDATE;
 import static org.hibernate.boot.models.JpaAnnotations.PRE_PERSIST;
 import static org.hibernate.boot.models.JpaAnnotations.PRE_REMOVE;
 import static org.hibernate.boot.models.JpaAnnotations.PRE_UPDATE;
+import static org.hibernate.boot.models.JpaAnnotations.PRE_MERGE;
+import static org.hibernate.boot.models.JpaAnnotations.PRE_INSERT;
+import static org.hibernate.boot.models.JpaAnnotations.POST_INSERT;
+import static org.hibernate.boot.models.JpaAnnotations.PRE_UPSERT;
+import static org.hibernate.boot.models.JpaAnnotations.POST_UPSERT;
+import static org.hibernate.boot.models.JpaAnnotations.PRE_DELETE;
+import static org.hibernate.boot.models.JpaAnnotations.POST_DELETE;
 
 /// Models a JPA-style lifecycle event handler, whether [callback][JpaEventListenerStyle#CALLBACK] or
 /// [listener][JpaEventListenerStyle#LISTENER] style.
@@ -55,6 +62,13 @@ import static org.hibernate.boot.models.JpaAnnotations.PRE_UPDATE;
 /// @see jakarta.persistence.PrePersist
 /// @see jakarta.persistence.PreRemove
 /// @see jakarta.persistence.PreUpdate
+/// @see jakarta.persistence.PreMerge
+/// @see jakarta.persistence.PreInsert
+/// @see jakarta.persistence.PostInsert
+/// @see jakarta.persistence.PreUpsert
+/// @see jakarta.persistence.PostUpsert
+/// @see jakarta.persistence.PreDelete
+/// @see jakarta.persistence.PostDelete
 ///
 /// @author Steve Ebersole
 @Remove
@@ -232,6 +246,90 @@ public class LifecycleEventHandler {
 					modelsContext,
 					callbackMethods
 			);
+			applyXmlCallback(
+					jaxbMapping.getPreMerge(),
+					methodDetails,
+					mutableMethodDetails,
+					consumerType,
+					listenerClassDetails,
+					PreMerge.class,
+					PRE_MERGE,
+					CallbackType.PRE_MERGE,
+					modelsContext,
+					callbackMethods
+			);
+			applyXmlCallback(
+					jaxbMapping.getPreInsert(),
+					methodDetails,
+					mutableMethodDetails,
+					consumerType,
+					listenerClassDetails,
+					PreInsert.class,
+					PRE_INSERT,
+					CallbackType.PRE_INSERT,
+					modelsContext,
+					callbackMethods
+			);
+			applyXmlCallback(
+					jaxbMapping.getPostInsert(),
+					methodDetails,
+					mutableMethodDetails,
+					consumerType,
+					listenerClassDetails,
+					PostInsert.class,
+					POST_INSERT,
+					CallbackType.POST_INSERT,
+					modelsContext,
+					callbackMethods
+			);
+			applyXmlCallback(
+					jaxbMapping.getPreUpsert(),
+					methodDetails,
+					mutableMethodDetails,
+					consumerType,
+					listenerClassDetails,
+					PreUpsert.class,
+					PRE_UPSERT,
+					CallbackType.PRE_UPSERT,
+					modelsContext,
+					callbackMethods
+			);
+			applyXmlCallback(
+					jaxbMapping.getPostUpsert(),
+					methodDetails,
+					mutableMethodDetails,
+					consumerType,
+					listenerClassDetails,
+					PostUpsert.class,
+					POST_UPSERT,
+					CallbackType.POST_UPSERT,
+					modelsContext,
+					callbackMethods
+			);
+			applyXmlCallback(
+					jaxbMapping.getPreDelete(),
+					methodDetails,
+					mutableMethodDetails,
+					consumerType,
+					listenerClassDetails,
+					PreDelete.class,
+					PRE_DELETE,
+					CallbackType.PRE_DELETE,
+					modelsContext,
+					callbackMethods
+			);
+			applyXmlCallback(
+					jaxbMapping.getPostDelete(),
+					methodDetails,
+					mutableMethodDetails,
+					consumerType,
+					listenerClassDetails,
+					PostDelete.class,
+					POST_DELETE,
+					CallbackType.POST_DELETE,
+					modelsContext,
+					callbackMethods
+			);
 		} );
 
 		final var descriptor =
@@ -277,7 +375,14 @@ public class LifecycleEventHandler {
 			&& jaxbMapping.getPostLoad() == null
 			&& jaxbMapping.getPostPersist() == null
 			&& jaxbMapping.getPostUpdate() == null
-			&& jaxbMapping.getPostRemove() == null;
+			&& jaxbMapping.getPostRemove() == null
+			&& jaxbMapping.getPreMerge() == null
+			&& jaxbMapping.getPreInsert() == null
+			&& jaxbMapping.getPostInsert() == null
+			&& jaxbMapping.getPreUpsert() == null
+			&& jaxbMapping.getPostUpsert() == null
+			&& jaxbMapping.getPreDelete() == null
+			&& jaxbMapping.getPostDelete() == null;
 	}
 
 	private static void errorIfEmpty(LifecycleEventHandler descriptor) {

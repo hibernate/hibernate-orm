@@ -4,6 +4,8 @@ import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.aggregate.spi.FunctionalDependencyAnalysisSupport;
 import org.hibernate.dialect.function.spi.WindowFunctionSupport;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.DuplicateMappingException;
@@ -645,7 +647,8 @@ abstract public class DialectFeatureChecks {
 				|| dialect instanceof SQLServerDialect
 				|| dialect instanceof DerbyDialect
 				|| dialect instanceof MySQLDialect && !(dialect instanceof TiDBDialect)
-				|| dialect instanceof MariaDBDialect;
+				|| dialect instanceof MariaDBDialect
+				|| dialect instanceof CUBRIDDialect;
 		}
 	}
 
@@ -996,7 +999,8 @@ abstract public class DialectFeatureChecks {
 				|| dialect instanceof OracleDialect
 				|| dialect instanceof SybaseDialect
 				|| dialect instanceof DerbyDialect
-				|| dialect instanceof HSQLDialect;
+				|| dialect instanceof HSQLDialect
+				|| dialect instanceof CUBRIDDialect;
 		}
 	}
 
@@ -1129,6 +1133,8 @@ abstract public class DialectFeatureChecks {
 				&& !( dialect instanceof CockroachDialect )
 				// Spanner does not support ON ERROR or ON EMPTY clauses
 				&& !( dialect instanceof SpannerDialect )
+				// CUBRID doesn't have a native json_value or json_query function
+				&& !( dialect instanceof CUBRIDDialect )
 				// PostgreSQL added support for native json_value in version 17
 				&& !( dialect instanceof PostgreSQLDialect && dialect.getVersion().isBefore( 17 ) );
 		}
@@ -1137,6 +1143,14 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsJsonArrayAgg implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return definesFunction( dialect, "json_arrayagg" );
+		}
+	}
+
+	public static class SupportsJsonArrayAggOrderBy implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "json_arrayagg" )
+				// CUBRID's group_concat can only be ordered by its own argument
+				&& !( dialect instanceof CUBRIDDialect );
 		}
 	}
 
@@ -1187,6 +1201,14 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsJsonArrayInsert implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return definesFunction( dialect, "json_array_insert" );
+		}
+	}
+
+	public static class SupportsLenientJsonModification implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			// CUBRID raises an error when the path of json_remove, json_array_append or json_array_insert
+			// does not exist, and json_array_insert wraps a target that is not an array
+			return !( dialect instanceof CUBRIDDialect );
 		}
 	}
 
@@ -1804,6 +1826,7 @@ abstract public class DialectFeatureChecks {
 		}
 
 		@Override
+		@Nonnull
 		public Database getDatabase() {
 			return database;
 		}
@@ -2269,136 +2292,162 @@ abstract public class DialectFeatureChecks {
 		}
 
 		@Override
+		@Nonnull
 		public SessionFactoryBuilder getSessionFactoryBuilder() {
-			return null;
+			throw new UnsupportedOperationException();
 		}
 
 		@Override
+		@Nonnull
 		public SessionFactoryImplementor buildSessionFactory() {
-			return null;
+			throw new UnsupportedOperationException();
 		}
 
 		@Override
+		@Nullable
 		public UUID getUUID() {
 			return null;
 		}
 
 		@Override
+		@Nonnull
 		public java.util.Collection<PersistentClass> getEntityBindings() {
 			return List.of();
 		}
 
 		@Override
-		public PersistentClass getEntityBinding(String entityName) {
+		@Nullable
+		public PersistentClass getEntityBinding(@Nonnull String entityName) {
 			return null;
 		}
 
 		@Override
+		@Nonnull
 		public java.util.Collection<Collection> getCollectionBindings() {
 			return List.of();
 		}
 
 		@Override
-		public Collection getCollectionBinding(String role) {
+		@Nullable
+		public Collection getCollectionBinding(@Nonnull String role) {
 			return null;
 		}
 
 		@Override
+		@Nonnull
 		public Map<String, String> getImports() {
 			return Map.of();
 		}
 
 		@Override
-		public NamedHqlQueryDefinition<?> getNamedHqlQueryMapping(String name) {
+		@Nullable
+		public NamedHqlQueryDefinition<?> getNamedHqlQueryMapping(@Nonnull String name) {
 			return null;
 		}
 
 		@Override
-		public void visitNamedHqlQueryDefinitions(Consumer<NamedHqlQueryDefinition<?>> definitionConsumer) {
+		public void visitNamedHqlQueryDefinitions(@Nonnull Consumer<NamedHqlQueryDefinition<?>> definitionConsumer) {
 
 		}
 
 		@Override
-		public NamedNativeQueryDefinition<?> getNamedNativeQueryMapping(String name) {
+		@Nullable
+		public NamedNativeQueryDefinition<?> getNamedNativeQueryMapping(@Nonnull String name) {
 			return null;
 		}
 
 		@Override
-		public void visitNamedNativeQueryDefinitions(Consumer<NamedNativeQueryDefinition<?>> definitionConsumer) {
+		public void visitNamedNativeQueryDefinitions(
+				@Nonnull Consumer<NamedNativeQueryDefinition<?>> definitionConsumer) {
 
 		}
 
 		@Override
-		public NamedProcedureCallDefinition getNamedProcedureCallMapping(String name) {
+		@Nullable
+		public NamedProcedureCallDefinition getNamedProcedureCallMapping(@Nonnull String name) {
 			return null;
 		}
 
 		@Override
-		public void visitNamedProcedureCallDefinition(Consumer<NamedProcedureCallDefinition> definitionConsumer) {
+		public void visitNamedProcedureCallDefinition(
+				@Nonnull Consumer<NamedProcedureCallDefinition> definitionConsumer) {
 
 		}
 
 		@Override
-		public NamedResultSetMappingDescriptor getResultSetMapping(String name) {
+		@Nullable
+		public NamedResultSetMappingDescriptor getResultSetMapping(@Nonnull String name) {
 			return null;
 		}
 
 		@Override
-		public void visitNamedResultSetMappingDefinition(Consumer<NamedResultSetMappingDescriptor> definitionConsumer) {
+		public void visitNamedResultSetMappingDefinition(
+				@Nonnull Consumer<NamedResultSetMappingDescriptor> definitionConsumer) {
 
 		}
 
 		@Override
-		public TypeDefinition getTypeDefinition(String typeName) {
+		@Nullable
+		public TypeDefinition getTypeDefinition(@Nonnull String typeName) {
 			return null;
 		}
 
 		@Override
+		@Nonnull
 		public Map<String, FilterDefinition> getFilterDefinitions() {
 			return Map.of();
 		}
 
 		@Override
-		public FilterDefinition getFilterDefinition(String name) {
+		@Nullable
+		public FilterDefinition getFilterDefinition(@Nonnull String name) {
 			return null;
 		}
 
 		@Override
-		public FetchProfile getFetchProfile(String name) {
+		@Nullable
+		public FetchProfile getFetchProfile(@Nonnull String name) {
 			return null;
 		}
 
 		@Override
+		@Nonnull
 		public java.util.Collection<FetchProfile> getFetchProfiles() {
 			return List.of();
 		}
 
 		@Override
-		public NamedEntityGraphDefinition getNamedEntityGraph(String name) {
+		@Nullable
+		public NamedEntityGraphDefinition getNamedEntityGraph(@Nonnull String name) {
 			return null;
 		}
 
 		@Override
+		@Nonnull
 		public Map<String, NamedEntityGraphDefinition> getNamedEntityGraphs() {
 			return Map.of();
 		}
 
 		@Override
-		public IdentifierGeneratorDefinition getIdentifierGenerator(String name) {
+		@Nullable
+		public IdentifierGeneratorDefinition getIdentifierGenerator(@Nonnull String name) {
 			return null;
 		}
 
 		@Override
+		@Nonnull
 		public java.util.Collection<Table> collectTableMappings() {
 			return List.of();
 		}
 
 		@Override
+		@Nonnull
 		public Map<String, SqmFunctionDescriptor> getSqlFunctionMap() {
 			return Map.of();
 		}
 
 		@Override
+		@Nonnull
 		public Set<String> getContributors() {
 			return Set.of();
 		}

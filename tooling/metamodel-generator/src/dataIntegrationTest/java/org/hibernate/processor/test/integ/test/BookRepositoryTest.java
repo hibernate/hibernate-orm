@@ -6,6 +6,7 @@ import org.hibernate.processor.test.integ.model.Book;
 import org.hibernate.processor.test.integ.repository.BookRepository;
 import org.hibernate.processor.test.integ.repository._BookRepository;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -15,10 +16,12 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -185,6 +188,34 @@ class BookRepositoryTest {
 				Arguments.of( null, null, 2L, List.of( "isbn-3" ), 3L ),
 				Arguments.of( "Missing", null, 1L, List.of(), 0L )
 		);
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-21081")
+	void testEmptyCursoredPageAfterDeletion(SessionFactoryScope scope) {
+		scope.inStatelessTransaction( session -> {
+			var repo = new _BookRepository( session );
+			var first = new Book( "isbn-1", "First", 100 );
+			var second = new Book( "isbn-2", "Second", 200 );
+			repo.insertAll( List.of( first, second ) );
+
+			var firstPage = repo.allBooks( PageRequest.ofSize( 1 ).withoutTotal() );
+			assertEquals( List.of( "isbn-1" ), firstPage.content().stream().map( Book::getIsbn ).toList() );
+			assertTrue( firstPage.hasNext() );
+			var nextRequest = firstPage.nextPageRequest();
+			assertEquals( 2L, nextRequest.pageNumber() );
+
+			// The extra row observed by the first query disappears before the next request.
+			repo.delete( second );
+
+			var emptyPage = repo.allBooks( nextRequest );
+			assertEquals( nextRequest, emptyPage.pageRequest() );
+			assertTrue( emptyPage.content().isEmpty() );
+			assertFalse( emptyPage.hasNext() );
+			assertFalse( emptyPage.hasPrevious() );
+			assertThrows( NoSuchElementException.class, emptyPage::nextPageRequest );
+			assertThrows( NoSuchElementException.class, emptyPage::previousPageRequest );
+		} );
 	}
 
 	@Test

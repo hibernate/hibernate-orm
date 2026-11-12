@@ -7,6 +7,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.modifier.FieldPersistence;
 import net.bytebuddy.description.modifier.ModifierContributor;
 import net.bytebuddy.description.modifier.Visibility;
+import net.bytebuddy.description.modifier.SyntheticState;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.ClassFileLocator;
@@ -72,7 +73,7 @@ public final class EnhancerImplConstants {
 	//Frequently used Modifiers:
 	final int modifierPUBLIC = ModifierContributor.Resolver.of( List.of( Visibility.PUBLIC ) ).resolve();
 	public final int modifierPRIVATE = ModifierContributor.Resolver.of( List.of( Visibility.PRIVATE ) ).resolve();
-	final int modifierPRIVATE_TRANSIENT = ModifierContributor.Resolver.of( List.of( FieldPersistence.TRANSIENT, Visibility.PRIVATE ) ).resolve();
+	final int modifierPRIVATE_TRANSIENT = ModifierContributor.Resolver.of( List.of( FieldPersistence.TRANSIENT, Visibility.PRIVATE, SyntheticState.SYNTHETIC ) ).resolve();
 
 	//Frequently used annotations, declared as collections as otherwise they get wrapped into them over and over again:
 	final Collection<? extends AnnotationDescription> TRANSIENT_ANNOTATION = List.of(

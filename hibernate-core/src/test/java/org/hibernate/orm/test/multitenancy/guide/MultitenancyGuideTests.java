@@ -13,6 +13,7 @@ import java.util.TimeZone;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
@@ -25,6 +26,7 @@ import org.hibernate.context.TenantIdentifierMismatchException;
 import org.hibernate.context.internal.ManagedSessionContext;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.context.spi.TenantCredentialsMapper;
+import org.hibernate.context.spi.TenantDataSourceMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl;
@@ -149,6 +151,22 @@ public class MultitenancyGuideTests {
 		}
 	}
 
+	public static HibernatePersistenceConfiguration dataSourceConfiguration() {
+		// tag::multitenancy-datasource-configuration[]
+		TenantDataSourceMapper<String> dataSources = tenant -> switch ( tenant ) {
+			case "alpha" -> "java:comp/env/jdbc/alpha";
+			case "beta" -> "java:comp/env/jdbc/beta";
+			default -> throw new IllegalArgumentException( "Unknown tenant: " + tenant );
+		};
+		var dataSourceConfiguration = new HibernatePersistenceConfiguration( "tenant-datasources" )
+				.managedClasses( SchemaDocument.class )
+				.property( "hibernate.multi_tenant.datasource.identifier_for_any", "alpha" )
+				.property( "hibernate.multi_tenant.datasource_mapper", dataSources )
+				.property( "hibernate.hbm2ddl.auto", "none" );
+		// end::multitenancy-datasource-configuration[]
+		return dataSourceConfiguration;
+	}
+
 	@Test
 	void schemaMappingAndProvisioning() throws Exception {
 		try ( var connection = DriverManager.getConnection( url(), "sa", "" ) ) {
@@ -212,7 +230,8 @@ public class MultitenancyGuideTests {
 			// tag::multitenancy-credentials[]
 			TenantCredentialsMapper<String> credentials = new TenantCredentialsMapper<>() {
 				@Override
-				public String user(String tenant) {
+				@Nonnull
+				public String user(@Nonnull String tenant) {
 					return switch ( tenant ) {
 						case "alpha" -> "ALPHA_USER";
 						case "beta" -> "BETA_USER";
@@ -221,7 +240,8 @@ public class MultitenancyGuideTests {
 				}
 
 				@Override
-				public String password(String tenant) {
+				@Nonnull
+				public String password(@Nonnull String tenant) {
 					return lookupPassword( user( tenant ) );
 				}
 			};
@@ -471,11 +491,13 @@ public class MultitenancyGuideTests {
 		}
 
 		@Override
+		@Nonnull
 		public Connection getConnection() {
 			return connection;
 		}
 
 		@Override
+		@Nonnull
 		public Connection getConnection(String user, String password) {
 			this.user = user;
 			this.password = password;
@@ -483,7 +505,7 @@ public class MultitenancyGuideTests {
 		}
 
 		@Override
-		public void closeConnection(Connection connection) {}
+		public void closeConnection(@Nonnull Connection connection) {}
 
 		@Override
 		public void stop() {

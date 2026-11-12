@@ -5,6 +5,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.boot.model.naming.Identifier;
@@ -15,43 +16,44 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.service.ServiceRegistry;
 
 /**
- * Defines a context for performing extraction including providing access to information about ongoing extraction as
- * well as to delegates needed in performing extraction.
+ * Defines a context for performing extraction including providing access
+ * to information about ongoing extraction as well as to delegates needed
+ * in performing extraction.
  *
  * @author Steve Ebersole
  * @author Gail Badner
  */
 @Incubating(since = "5.1")
 public interface ExtractionContext {
-	ServiceRegistry getServiceRegistry();
-	JdbcEnvironment getJdbcEnvironment();
-	SqlStringGenerationContext getSqlStringGenerationContext();
-	Connection getJdbcConnection();
-	DatabaseMetaData getJdbcDatabaseMetaData();
+	@Nonnull ServiceRegistry getServiceRegistry();
+	@Nonnull JdbcEnvironment getJdbcEnvironment();
+	@Nonnull SqlStringGenerationContext getSqlStringGenerationContext();
+	@Nonnull Connection getJdbcConnection();
+	@Nonnull DatabaseMetaData getJdbcDatabaseMetaData();
 
 	@Incubating(since = "8.0")
-	default <T> T getQueryResults(
-			String queryString,
-			Object[] positionalParameters,
-			ResultSetProcessor<T> resultSetProcessor) throws SQLException {
+	default <T> @Nullable T getQueryResults(
+			@Nonnull String queryString,
+			@Nullable Object[] positionalParameters,
+			@Nonnull ResultSetProcessor<T> resultSetProcessor) throws SQLException {
 		try ( var statement = getJdbcConnection().prepareStatement( queryString ) ) {
 			if ( positionalParameters != null ) {
 				for ( int i = 0 ; i < positionalParameters.length ; i++ ) {
 					statement.setObject( i + 1, positionalParameters[i] );
 				}
 			}
-			try (ResultSet resultSet = statement.executeQuery()) {
+			try ( var resultSet = statement.executeQuery() ) {
 				return resultSetProcessor.process( resultSet );
 			}
 		}
 	}
 
-	Identifier getDefaultCatalog();
-	Identifier getDefaultSchema();
+	@Nullable Identifier getDefaultCatalog();
+	@Nullable Identifier getDefaultSchema();
 
 	@Incubating(since = "8.0")
 	interface ResultSetProcessor<T> {
-		T process(ResultSet resultSet) throws SQLException;
+		@Nullable T process(@Nonnull ResultSet resultSet) throws SQLException;
 	}
 
 	/**
@@ -60,57 +62,61 @@ public interface ExtractionContext {
 	 */
 	@Incubating(since = "8.0")
 	interface DatabaseObjectAccess {
-		@Nullable TableInformation locateTableInformation(QualifiedTableName tableName);
-		SequenceInformation locateSequenceInformation(QualifiedSequenceName sequenceName);
-		@Nullable PrimaryKeyInformation locatePrimaryKeyInformation(QualifiedTableName tableName);
-		Iterable<ForeignKeyInformation> locateForeignKeyInformation(QualifiedTableName tableName);
-		Iterable<IndexInformation> locateIndexesInformation(QualifiedTableName tableName);
+		@Nullable TableInformation locateTableInformation(@Nonnull QualifiedTableName tableName);
+		@Nullable SequenceInformation locateSequenceInformation(@Nonnull QualifiedSequenceName sequenceName);
+		@Nullable PrimaryKeyInformation locatePrimaryKeyInformation(@Nonnull QualifiedTableName tableName);
+		@Nonnull Iterable<ForeignKeyInformation> locateForeignKeyInformation(@Nonnull QualifiedTableName tableName);
+		@Nonnull Iterable<IndexInformation> locateIndexesInformation(@Nonnull QualifiedTableName tableName);
 		boolean isCaching();
 	}
 
-	DatabaseObjectAccess getDatabaseObjectAccess();
+	@Nonnull DatabaseObjectAccess getDatabaseObjectAccess();
 
 	void cleanup();
 
+	/**
+	 * @deprecated Implement {@link ExtractionContext} directly.
+	 */
+	@Deprecated(since = "8.0", forRemoval = true)
 	abstract class EmptyExtractionContext implements ExtractionContext {
 		@Override
-		public ServiceRegistry getServiceRegistry() {
+		public @Nonnull ServiceRegistry getServiceRegistry() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public @Nonnull JdbcEnvironment getJdbcEnvironment() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public @Nonnull SqlStringGenerationContext getSqlStringGenerationContext() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public @Nonnull Connection getJdbcConnection() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public @Nonnull DatabaseMetaData getJdbcDatabaseMetaData() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public @Nullable Identifier getDefaultCatalog() {
 			return null;
 		}
 
 		@Override
-		public JdbcEnvironment getJdbcEnvironment() {
+		public @Nullable Identifier getDefaultSchema() {
 			return null;
 		}
 
 		@Override
-		public SqlStringGenerationContext getSqlStringGenerationContext() {
-			return null;
-		}
-
-		@Override
-		public Connection getJdbcConnection() {
-			return null;
-		}
-
-		@Override
-		public DatabaseMetaData getJdbcDatabaseMetaData() {
-			return null;
-		}
-
-		@Override
-		public Identifier getDefaultCatalog() {
-			return null;
-		}
-
-		@Override
-		public Identifier getDefaultSchema() {
-			return null;
-		}
-
-		@Override
-		public DatabaseObjectAccess getDatabaseObjectAccess() {
-			return null;
+		public @Nonnull DatabaseObjectAccess getDatabaseObjectAccess() {
+			throw new UnsupportedOperationException();
 		}
 
 		@Override

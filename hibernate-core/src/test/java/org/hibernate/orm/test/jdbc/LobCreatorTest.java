@@ -41,7 +41,9 @@ import org.hibernate.engine.jdbc.env.internal.StandardLobCreator;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 /**
  * @author Steve Ebersole
@@ -49,17 +51,21 @@ import static org.junit.Assert.assertTrue;
 public class LobCreatorTest {
 
 	@Test
+	public void testBuilderWithoutConnection() {
+		final var dialect = new H2Dialect();
+		final var builder = LobCreatorBuilderImpl.makeLobCreatorBuilder( dialect );
+		assertThat( builder.buildLobCreator( mock( LobCreationContext.class ) ) ).isSameAs( NonContextualLobCreator.INSTANCE );
+		assertThatNullPointerException().isThrownBy( () -> LobCreatorBuilderImpl.makeLobCreatorBuilder(
+				dialect, Map.of( Environment.NON_CONTEXTUAL_LOB_CREATION, true ), null ) );
+	}
+
+	@Test
 	public void testConnectedLobCreator() throws SQLException {
 		final Connection connection = createConnectionProxy( 4, new JdbcLobBuilderImpl( LobTypes.BLOB, LobTypes.CLOB, LobTypes.NCLOB ) );
 		final H2Dialect dialect = new H2Dialect();
 
-		final EnumSet<LobTypes> supportedContextualLobTypes = LobCreationHelper.getSupportedContextualLobTypes(
-				dialect,
-				Collections.emptyMap(),
-				connection
-		);
-
-		final LobCreatorBuilderImpl creatorBuilder = new LobCreatorBuilderImpl( dialect.getLobSupport().useConnectionToCreateLob(), supportedContextualLobTypes );
+		final LobCreatorBuilderImpl creatorBuilder =
+				LobCreatorBuilderImpl.makeLobCreatorBuilder( dialect, Collections.emptyMap(), connection );
 		final LobCreationContext lobCreationContext = new LobCreationContextImpl( connection );
 
 		final LobCreator lobCreator = creatorBuilder.buildLobCreator( lobCreationContext );

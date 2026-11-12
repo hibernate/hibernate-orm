@@ -1,6 +1,7 @@
 package org.hibernate.dialect.lock.internal;
 
 
+import org.hibernate.LockMode;
 import org.hibernate.dialect.lock.spi.TransactionConcurrencyResolver;
 
 import jakarta.persistence.Timeout;
@@ -42,6 +43,14 @@ public class MySQLLockingSupport implements LockingSupport, LockingSupport.Metad
 
 	public MySQLLockingSupport(DatabaseVersion version) {
 		laterThanVersion8 = version.isSameOrAfter( 8 );
+	}
+
+	@Override
+	public boolean canUsePlainReadForRefresh(LockMode currentLockMode, LockMode requestedLockMode) {
+		// Even force increment is insufficient proof: a timestamp version can
+		// repeat, and a same-value UPDATE need not create an own-write row version.
+		// An ordinary read may therefore still consult the earlier snapshot.
+		return false;
 	}
 
 	@Override

@@ -1,11 +1,13 @@
 package org.hibernate.tool.schema.extract.internal;
 
+import java.sql.SQLException;
+
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.NameSpaceIndexesInformation;
-
-import java.sql.SQLException;
 
 /**
  * @since 7.2
@@ -27,7 +29,9 @@ public class InformationExtractorPostgreSQLImpl extends InformationExtractorJdbc
 	}
 
 	@Override
-	public NameSpaceIndexesInformation getIndexes(Identifier catalog, Identifier schema) {
+	public @Nonnull NameSpaceIndexesInformation getIndexes(
+			@Nullable Identifier catalog,
+			@Nullable Identifier schema) {
 		final String tableSchema = schema == null ? null : schema.getText();
 		try ( var preparedStatement = getConnection().prepareStatement( getIndexesSql( tableSchema ) ) ) {
 			if ( tableSchema != null ) {

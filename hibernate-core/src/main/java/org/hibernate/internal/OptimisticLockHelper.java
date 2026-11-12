@@ -15,6 +15,9 @@ import static org.hibernate.cache.spi.entry.CacheEntryHelper.buildStructuredCach
 import static org.hibernate.engine.internal.CacheHelper.writingToCache;
 import static org.hibernate.stat.internal.StatsHelper.getRootEntityRole;
 
+/// Performs explicit version increments and coordinates their cache lifecycle.
+///
+/// @author Steve Ebersole
 public final class OptimisticLockHelper {
 
 	private OptimisticLockHelper() {
@@ -35,29 +38,45 @@ public final class OptimisticLockHelper {
 			final var lock = cache.lockItem( session, cacheKey, previousVersion );
 			return new CacheLock( cache, cacheKey, lock );
 		}, null );
-		final Object nextVersion = persister.forceVersionIncrement( entry.getId(), previousVersion, session );
-		entry.forceLocked( object, nextVersion );
-		if ( cacheLock != null ) {
-			final Object cacheEntry = updateCacheItem(
-					object,
-					previousVersion,
-					nextVersion,
-					cacheLock.cacheKey(),
-					entry,
-					persister,
-					cacheLock.cache(),
-					session
-			);
-			session.getTransactionCompletionCallbacks()
-					.registerCallback( new CacheCleanupProcess(
-							cacheLock.cache(),
-							cacheLock.cacheKey(),
-							persister,
-							previousVersion,
-							nextVersion,
-							cacheLock.lock(),
-							cacheEntry
-					) );
+		try {
+			final Object nextVersion = persister.forceVersionIncrement( entry.getId(), previousVersion, session );
+			entry.forceLocked( object, nextVersion );
+			if ( cacheLock != null ) {
+				final Object cacheEntry = updateCacheItem(
+						object,
+						previousVersion,
+						nextVersion,
+						cacheLock.cacheKey(),
+						entry,
+						persister,
+						cacheLock.cache(),
+						session
+				);
+				// Registration is the final step: completion owns the lock after it returns.
+				session.getTransactionCompletionCallbacks()
+						.registerCallback( new CacheCleanupProcess(
+								cacheLock.cache(),
+								cacheLock.cacheKey(),
+								persister,
+								previousVersion,
+								nextVersion,
+								cacheLock.lock(),
+								cacheEntry
+						) );
+			}
+		}
+		catch (RuntimeException | Error failure) {
+			if ( cacheLock != null ) {
+				try {
+					cacheLock.cache().unlockItem( session, cacheLock.cacheKey(), cacheLock.lock() );
+				}
+				catch (RuntimeException | Error cleanupFailure) {
+					if ( cleanupFailure != failure ) {
+						failure.addSuppressed( cleanupFailure );
+					}
+				}
+			}
+			throw failure;
 		}
 	}
 
@@ -156,7 +175,7 @@ public final class OptimisticLockHelper {
 
 		@Override
 		public void doAfterTransactionCompletion(boolean success, SharedSessionContractImplementor session) {
-			if ( cacheUpdateRequired( success, persister, session ) ) {
+			if ( cacheEntry != null && cacheUpdateRequired( success, persister, session ) ) {
 				cacheAfterUpdate( cache, cacheKey, session );
 			}
 			else {

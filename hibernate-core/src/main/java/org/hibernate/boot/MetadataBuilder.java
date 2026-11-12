@@ -1,5 +1,7 @@
 package org.hibernate.boot;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.FetchType;
 import org.hibernate.Remove;
 import org.hibernate.SPI;
@@ -46,7 +48,8 @@ public interface MetadataBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_CATALOG
 	 */
-	MetadataBuilder applyImplicitCatalogName(String implicitCatalogName);
+	@Nonnull
+	MetadataBuilder applyImplicitCatalogName(@Nullable String implicitCatalogName);
 
 	/**
 	 * Specify the implicit schema name to apply to any unqualified database names.
@@ -60,7 +63,8 @@ public interface MetadataBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_SCHEMA
 	 */
-	MetadataBuilder applyImplicitSchemaName(String implicitSchemaName);
+	@Nonnull
+	MetadataBuilder applyImplicitSchemaName(@Nullable String implicitSchemaName);
 
 	/**
 	 * Specify the {@link ImplicitNamingStrategy}.
@@ -74,7 +78,8 @@ public interface MetadataBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#IMPLICIT_NAMING_STRATEGY
 	 */
-	MetadataBuilder applyImplicitNamingStrategy(ImplicitNamingStrategy namingStrategy);
+	@Nonnull
+	MetadataBuilder applyImplicitNamingStrategy(@Nonnull ImplicitNamingStrategy namingStrategy);
 
 	/**
 	 * Specify the {@link PhysicalNamingStrategy}.
@@ -88,7 +93,8 @@ public interface MetadataBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#PHYSICAL_NAMING_STRATEGY
 	 */
-	MetadataBuilder applyPhysicalNamingStrategy(PhysicalNamingStrategy namingStrategy);
+	@Nonnull
+	MetadataBuilder applyPhysicalNamingStrategy(@Nonnull PhysicalNamingStrategy namingStrategy);
 
 	/**
 	 * Specify the {@link ColumnOrderingStrategy}.
@@ -103,7 +109,8 @@ public interface MetadataBuilder {
 	 * @see org.hibernate.cfg.AvailableSettings#IMPLICIT_NAMING_STRATEGY
 	 */
 	@SPI
-	MetadataBuilder applyColumnOrderingStrategy(ColumnOrderingStrategy columnOrderingStrategy);
+	@Nonnull
+	MetadataBuilder applyColumnOrderingStrategy(@Nonnull ColumnOrderingStrategy columnOrderingStrategy);
 
 	/**
 	 * Specify the second-level cache mode.
@@ -117,7 +124,8 @@ public interface MetadataBuilder {
 	 *
 	 * @see #applyAccessType
 	 */
-	MetadataBuilder applySharedCacheMode(SharedCacheMode cacheMode);
+	@Nonnull
+	MetadataBuilder applySharedCacheMode(@Nonnull SharedCacheMode cacheMode);
 
 	/**
 	 * Specify the second-level access-type to be used by default for entities and collections that define second-level
@@ -133,7 +141,8 @@ public interface MetadataBuilder {
 	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_CACHE_CONCURRENCY_STRATEGY
 	 * @see #applySharedCacheMode(jakarta.persistence.SharedCacheMode)
 	 */
-	MetadataBuilder applyAccessType(AccessType accessType);
+	@Nonnull
+	MetadataBuilder applyAccessType(@Nullable AccessType accessType);
 
 	/**
 	 * Allows specifying a specific Jandex index to use for reading annotation information.
@@ -151,7 +160,8 @@ public interface MetadataBuilder {
 	 * @deprecated Set the {@code hibernate-models} setting {@code hibernate.models.jandex.index} instead.  This method has no effect.
 	 */
 	@Deprecated
-	MetadataBuilder applyIndexView(Object jandexView);
+	@Nonnull
+	MetadataBuilder applyIndexView(@Nullable Object jandexView);
 
 	/**
 	 * Specify a particular Scanner instance to use.
@@ -165,7 +175,8 @@ public interface MetadataBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#SCANNER
 	 */
-	MetadataBuilder applyScanning(ScanningProvider scanner);
+	@Nonnull
+	MetadataBuilder applyScanning(@Nullable ScanningProvider scanner);
 
 	/**
 	 * Specify a particular ArchiveDescriptorFactory instance to use in scanning.
@@ -179,7 +190,8 @@ public interface MetadataBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#SCANNER_ARCHIVE_INTERPRETER
 	 */
-	MetadataBuilder applyArchiveDescriptorFactory(ArchiveDescriptorFactory factory);
+	@Nonnull
+	MetadataBuilder applyArchiveDescriptorFactory(@Nullable ArchiveDescriptorFactory factory);
 
 	/**
 	 * Specify the default classification for eligible list attributes.
@@ -191,7 +203,8 @@ public interface MetadataBuilder {
 	 * Scheduled for removal in 9.0.
 	 */
 	@Deprecated(since = "8.0", forRemoval = true)
-	MetadataBuilder applyImplicitListSemantics(CollectionClassification classification);
+	@Nonnull
+	MetadataBuilder applyImplicitListSemantics(@Nullable CollectionClassification classification);
 
 	/**
 	 * Should we process or ignore explicitly defined discriminators in the case
@@ -212,6 +225,7 @@ public interface MetadataBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS
 	 */
+	@Nonnull
 	MetadataBuilder enableExplicitDiscriminatorsForJoinedSubclassSupport(boolean enabled);
 
 	/**
@@ -235,6 +249,7 @@ public interface MetadataBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS
 	 */
+	@Nonnull
 	MetadataBuilder enableImplicitDiscriminatorsForJoinedSubclassSupport(boolean enabled);
 
 	/**
@@ -251,6 +266,7 @@ public interface MetadataBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT
 	 */
+	@Nonnull
 	MetadataBuilder enableImplicitForcingOfDiscriminatorsInSelect(boolean supported);
 
 	/**
@@ -267,12 +283,14 @@ public interface MetadataBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#USE_NATIONALIZED_CHARACTER_DATA
 	 */
+	@Nonnull
 	MetadataBuilder enableGlobalNationalizedCharacterDataSupport(boolean enabled);
 
 	/**
 	 * Defines a default fetch-type for to-one associations.
 	 */
-	MetadataBuilder applyDefaultToOneFetchType(FetchType defaultToOneFetchType);
+	@Nonnull
+	MetadataBuilder applyDefaultToOneFetchType(@Nullable FetchType defaultToOneFetchType);
 
 	/**
 	 * Specify an additional or overridden basic type mapping.
@@ -281,7 +299,8 @@ public interface MetadataBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	MetadataBuilder applyBasicType(BasicType<?> type);
+	@Nonnull
+	MetadataBuilder applyBasicType(@Nonnull BasicType<?> type);
 
 	/**
 	 * Specify an additional or overridden basic type mapping supplying specific
@@ -292,7 +311,8 @@ public interface MetadataBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	MetadataBuilder applyBasicType(BasicType<?> type, String... keys);
+	@Nonnull
+	MetadataBuilder applyBasicType(@Nonnull BasicType<?> type, @Nullable String... keys);
 
 	/**
 	 * Register an additional or overridden custom type mapping.
@@ -302,7 +322,8 @@ public interface MetadataBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	MetadataBuilder applyBasicType(UserType<?> type, String... keys);
+	@Nonnull
+	MetadataBuilder applyBasicType(@Nonnull UserType<?> type, @Nullable String... keys);
 
 	/**
 	 * Apply an explicit {@link TypeContributor}
@@ -314,7 +335,8 @@ public interface MetadataBuilder {
 	 * @see TypeContributor
 	 */
 	@SPI(SPI.Role.SUPPLY)
-	MetadataBuilder applyTypes(TypeContributor typeContributor);
+	@Nonnull
+	MetadataBuilder applyTypes(@Nonnull TypeContributor typeContributor);
 
 	/**
 	 * Apply a {@link CacheRegionDefinition} to be applied to an entity, collection,
@@ -324,7 +346,8 @@ public interface MetadataBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	MetadataBuilder applyCacheRegionDefinition(CacheRegionDefinition cacheRegionDefinition);
+	@Nonnull
+	MetadataBuilder applyCacheRegionDefinition(@Nonnull CacheRegionDefinition cacheRegionDefinition);
 
 	/**
 	 * Apply a {@link ClassLoader} for use while building the {@link Metadata}.
@@ -343,7 +366,8 @@ public interface MetadataBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	MetadataBuilder applyTempClassLoader(ClassLoader tempClassLoader);
+	@Nonnull
+	MetadataBuilder applyTempClassLoader(@Nullable ClassLoader tempClassLoader);
 
 	/// Supply an explicit [FunctionContributor]. Java service loading remains
 	/// active in addition to programmatic contributors.
@@ -352,19 +376,22 @@ public interface MetadataBuilder {
 	/// @return `this` for method chaining
 	/// @see FunctionContributor
 	@SPI(SPI.Role.SUPPLY)
-	MetadataBuilder applyFunctions(FunctionContributor functionContributor);
+	@Nonnull
+	MetadataBuilder applyFunctions(@Nonnull FunctionContributor functionContributor);
 
 	/// Supply a [SqmFunctionDescriptor] under the given HQL registration name.
 	///
 	/// @see SqmFunctionDescriptor
 	/// @see org.hibernate.dialect.function.StandardSQLFunction
 	@SPI(SPI.Role.SUPPLY)
-	MetadataBuilder applySqlFunction(String functionName, SqmFunctionDescriptor function);
+	@Nonnull
+	MetadataBuilder applySqlFunction(@Nonnull String functionName, @Nonnull SqmFunctionDescriptor function);
 
 	/**
 	 * Contribute an {@link AuxiliaryDatabaseObject}.
 	 */
-	MetadataBuilder applyAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject);
+	@Nonnull
+	MetadataBuilder applyAuxiliaryDatabaseObject(@Nonnull AuxiliaryDatabaseObject auxiliaryDatabaseObject);
 
 	/**
 	 * Adds an AttributeConverter by a {@link ConverterDescriptor}
@@ -374,7 +401,8 @@ public interface MetadataBuilder {
 	 * @return {@code this} for method chaining
 	 *
 	 */
-	MetadataBuilder applyAttributeConverter(ConverterDescriptor<?,?> descriptor);
+	@Nonnull
+	MetadataBuilder applyAttributeConverter(@Nonnull ConverterDescriptor<?,?> descriptor);
 
 	/**
 	 * Adds an AttributeConverter by its Class.
@@ -383,7 +411,8 @@ public interface MetadataBuilder {
 	 *
 	 * @return {@code this} for method chaining
 	 */
-	<O,R> MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<O,R>> attributeConverterClass);
+	@Nonnull
+	<O,R> MetadataBuilder applyAttributeConverter(@Nonnull Class<? extends AttributeConverter<O,R>> attributeConverterClass);
 
 	/**
 	 * Adds an {@link AttributeConverter} by {@code Class},
@@ -395,7 +424,8 @@ public interface MetadataBuilder {
 	 *
 	 * @return {@code this} for method chaining
 	 */
-	<O,R> MetadataBuilder applyAttributeConverter(Class<? extends AttributeConverter<O,R>> attributeConverterClass, boolean autoApply);
+	@Nonnull
+	<O,R> MetadataBuilder applyAttributeConverter(@Nonnull Class<? extends AttributeConverter<O,R>> attributeConverterClass, boolean autoApply);
 
 	/**
 	 * Adds an AttributeConverter instance.
@@ -404,7 +434,8 @@ public interface MetadataBuilder {
 	 *
 	 * @return {@code this} for method chaining
 	 */
-	<O,R> MetadataBuilder applyAttributeConverter(AttributeConverter<O,R> attributeConverter);
+	@Nonnull
+	<O,R> MetadataBuilder applyAttributeConverter(@Nonnull AttributeConverter<O,R> attributeConverter);
 
 	/**
 	 * Adds an {@link AttributeConverter} instance,
@@ -416,13 +447,15 @@ public interface MetadataBuilder {
 	 *
 	 * @return {@code this} for method chaining
 	 */
-	MetadataBuilder applyAttributeConverter(AttributeConverter<?,?> attributeConverter, boolean autoApply);
+	@Nonnull
+	MetadataBuilder applyAttributeConverter(@Nonnull AttributeConverter<?,?> attributeConverter, boolean autoApply);
 
 	/**
 	 * Actually build the metamodel
 	 *
 	 * @return The built metadata.
 	 */
+	@Nonnull
 	Metadata build();
 
 }

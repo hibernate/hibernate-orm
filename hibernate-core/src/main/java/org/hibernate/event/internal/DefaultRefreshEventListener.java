@@ -250,10 +250,11 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				// The requested lock mode is no more restrictive than the
 				// exclusive lock already held. Preserve the current mode.
 				lockOptionsToUse = lockOptions.makeCopy();
-				// The current transaction already holds an exclusive lock,
-				// so refreshing with READ is sufficient. Also see HHH-19937;
-				// we want to avoid dupe version checks.
-				lockOptionsToUse.setLockMode( LockMode.READ );
+				// A held lock does not make a plain reload use the locking read's
+				// view (HHH-21010). Avoid replaying version actions (HHH-19937),
+				// but retain a physical locking read unless the profile permits
+				// the substitution. Wider scope still needs acquisition regardless.
+				lockOptionsToUse.setLockMode( refreshLockMode( currentLockMode, lockOptions, source ) );
 				// But prepare to reset the entry lock mode to the previous
 				// lock mode after the refresh completes, except in the case
 				// where the two lock modes belong to the same level, in which
@@ -278,6 +279,18 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			source.setReadOnly( result, isReadOnly( entry, persister, lazyInitializer, source ) );
 		}
 		return result;
+	}
+
+	private static LockMode refreshLockMode(LockMode currentMode, LockOptions requested, EventSource source) {
+		if ( currentMode.isPessimistic()
+				&& (requested.getLockScope() != jakarta.persistence.PessimisticLockScope.NORMAL
+						|| !source.getJdbcServices().getDialect().getLockingSupport()
+								.canUsePlainReadForRefresh( currentMode, requested.getLockMode() )) ) {
+			// Force increment and legacy upgrade modes describe actions already
+			// performed. A refresh only needs their non-incrementing protection.
+			return currentMode == LockMode.PESSIMISTIC_READ ? LockMode.PESSIMISTIC_READ : LockMode.PESSIMISTIC_WRITE;
+		}
+		return LockMode.READ;
 	}
 
 	private static boolean isReadOnly(

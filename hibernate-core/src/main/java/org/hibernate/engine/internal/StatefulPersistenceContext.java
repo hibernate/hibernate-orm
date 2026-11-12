@@ -478,8 +478,8 @@ class StatefulPersistenceContext implements PersistenceContext {
 				listenerGroup.fireEventOnEachListener( postLoadEvent, PostLoadEventListener::onPostLoad );
 			}
 			else if ( listenerGroup != null && getSession().isStateless() ) {
-				// Stateless loads do not fire post-load events, but must still perform forced increments.
 				final var entry = holder.getEntityEntry();
+				getSession().runEntityLifecycleCallback( () -> entry.getPersister().getEntityCallbacks().postLoad( entity ) );
 				if ( entry.getLockMode().requiresVersion() ) {
 					holder.getDescriptor().lock( entry.getId(), entry.getVersion(), entity, entry.getLockMode(), getSession() );
 				}
@@ -662,18 +662,17 @@ class StatefulPersistenceContext implements PersistenceContext {
 			final boolean existsInDatabase,
 			final EntityPersister persister) {
 		assert lockMode != null;
-		final var entityEntry =
-				new EntityEntryImpl(
-						status,
-						loadedState,
-						rowId,
-						id,
-						version,
-						lockMode,
-						existsInDatabase,
-						persister,
-						this
-				);
+		final var entityEntry =	new EntityEntryImpl(
+				status,
+				loadedState,
+				rowId,
+				id,
+				version,
+				lockMode,
+				existsInDatabase,
+				persister,
+				this
+		);
 		entityEntryContext.addEntityEntry( entity, entityEntry );
 		setHasNonReadOnlyEntities( status );
 		return entityEntry;

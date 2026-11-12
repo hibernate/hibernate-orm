@@ -1,5 +1,6 @@
 package org.hibernate.resource.transaction.spi;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 
 /**
@@ -21,6 +22,15 @@ public interface TransactionCoordinatorOwner {
 	 * @return {@code true} indicates the owner is still active; {@code false} indicates it is not.
 	 */
 	boolean isActive();
+
+	/**
+	 * Validate retained state before completion, including when the owner is inactive/closed.
+	 * Must not access services destroyed by factory closure.
+	 *
+	 * @since 8.0
+	 */
+	default void validateBeforeCompletion() {
+	}
 
 	/**
 	 * Callback indicating recognition of entering into a transactional
@@ -50,6 +60,7 @@ public interface TransactionCoordinatorOwner {
 	 */
 	void afterTransactionCompletion(boolean successful, boolean delayed);
 
+	@Nonnull
 	JdbcSessionOwner getJdbcSessionOwner();
 
 	/**

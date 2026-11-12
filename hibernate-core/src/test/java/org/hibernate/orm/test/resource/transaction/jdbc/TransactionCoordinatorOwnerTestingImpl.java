@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.resource.transaction.jdbc;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransaction;
@@ -16,7 +17,7 @@ public class TransactionCoordinatorOwnerTestingImpl
 
 	private static final Logger log = Logger.getLogger( TransactionCoordinatorOwnerTestingImpl.class );
 
-	private LogicalConnectionTestingImpl logicalConnection;
+	private final @Nonnull LogicalConnectionTestingImpl logicalConnection;
 
 	private boolean active;
 
@@ -41,6 +42,7 @@ public class TransactionCoordinatorOwnerTestingImpl
 
 
 	@Override
+	@Nonnull
 	public JdbcResourceTransaction getResourceLocalTransaction() {
 		return logicalConnection;
 	}
@@ -98,8 +100,9 @@ public class TransactionCoordinatorOwnerTestingImpl
 	}
 
 	@Override
+	@Nonnull
 	public JdbcSessionOwner getJdbcSessionOwner() {
-		return null;
+		throw new UnsupportedOperationException( "This test owner has no JDBC session" );
 	}
 
 	@Override

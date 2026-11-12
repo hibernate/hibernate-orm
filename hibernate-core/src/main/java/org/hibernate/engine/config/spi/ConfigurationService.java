@@ -38,7 +38,7 @@ public interface ConfigurationService extends Service {
 	 *         May return {@code null}
 	 *         (see {@link #getSetting(String, Class, Object)})
 	 */
-	<T> @Nullable T getSetting(String name, Converter<T> converter);
+	<T> @Nullable T getSetting(@Nonnull String name, @Nonnull Converter<T> converter);
 
 	/**
 	 * Get the named setting, using the specified converter and default value.
@@ -50,7 +50,10 @@ public interface ConfigurationService extends Service {
 	 *
 	 * @return The converted (typed) setting.  Will be the defaultValue if no such setting was defined.
 	 */
-	<T> @Nonnull T getSetting(String name, Converter<T> converter, @Nonnull T defaultValue);
+	<T> @Nonnull T getSetting(
+			@Nonnull String name,
+			@Nonnull Converter<T> converter,
+			@Nonnull T defaultValue);
 
 	/**
 	 * Get the named setting.  Differs from the form taking a Converter in that here we expect to have a simple
@@ -67,7 +70,10 @@ public interface ConfigurationService extends Service {
 	 *             This method does not report errors correctly.
 	 */
 	@Deprecated(since = "7.2")
-	<T> @Nonnull T getSetting(String name, Class<T> expected, @Nonnull T defaultValue);
+	<T> @Nonnull T getSetting(
+			@Nonnull String name,
+			@Nonnull Class<T> expected,
+			@Nonnull T defaultValue);
 
 	/**
 	 * Simple conversion contract for converting an untyped object to a specified type.

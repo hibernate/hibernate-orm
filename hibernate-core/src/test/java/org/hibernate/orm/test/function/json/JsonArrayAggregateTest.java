@@ -35,6 +35,7 @@ public class JsonArrayAggregateTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonArrayAggOrderBy.class)
 	public void testOrderBy(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-json-arrayagg-order-by-example[]

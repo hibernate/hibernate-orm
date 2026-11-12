@@ -2,6 +2,7 @@ package org.hibernate.tool.schema.extract.spi;
 
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.boot.model.naming.Identifier;
 
 /**
@@ -16,12 +17,12 @@ public interface IndexInformation {
 	 *
 	 * @return The index identifier.
 	 */
-	Identifier getIndexIdentifier();
+	@Nonnull Identifier getIndexIdentifier();
 
 	/**
 	 * Obtain the columns indexed under this index.  Returned in sequential order.
 	 *
 	 * @return The columns
 	 */
-	List<ColumnInformation> getIndexedColumns();
+	@Nonnull List<ColumnInformation> getIndexedColumns();
 }

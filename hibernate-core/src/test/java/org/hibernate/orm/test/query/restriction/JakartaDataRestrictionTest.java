@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.query.restriction;
 
+import jakarta.data.Order;
+import jakarta.data.Sort;
 import jakarta.data.constraint.In;
 import jakarta.data.constraint.Like;
 import jakarta.data.expression.TemporalExpression;
@@ -50,6 +52,105 @@ public class JakartaDataRestrictionTest {
 	private static final NavigableAttribute<Book, Publisher> PUBLISHER =
 			NavigableAttribute.of( Book.class, "publisher", Publisher.class );
 	private static final TextAttribute<Publisher> NAME = TextAttribute.of( Publisher.class, "name" );
+
+	@Test
+	void expressionSorts(SessionFactoryScope scope) {
+		persistBooks( scope );
+
+		assertSortedTitles( scope, TITLE.length().asc(),
+				"Jakarta Data Guide",
+				"Hibernate in Action",
+				"Java Persistence with Hibernate" );
+		assertSortedTitles( scope, TITLE.length().desc(),
+				"Java Persistence with Hibernate",
+				"Hibernate in Action",
+				"Jakarta Data Guide" );
+	}
+
+	@Test
+	void caseInsensitiveSorts(SessionFactoryScope scope) {
+		persistBooks( scope );
+		scope.inTransaction( session ->
+				session.find( Book.class, "9781932394153" ).title = "hibernate in Action" );
+
+		assertSortedTitles( scope, Sort.ascIgnoreCase( TITLE.append( "!" ) ),
+				"hibernate in Action",
+				"Jakarta Data Guide",
+				"Java Persistence with Hibernate" );
+		assertSortedTitles( scope, Sort.descIgnoreCase( TITLE.append( "!" ) ),
+				"Java Persistence with Hibernate",
+				"Jakarta Data Guide",
+				"hibernate in Action" );
+		assertSortedTitles( scope, Sort.ascIgnoreCase( "title" ),
+				"hibernate in Action",
+				"Jakarta Data Guide",
+				"Java Persistence with Hibernate" );
+		assertSortedTitles( scope, Sort.descIgnoreCase( "title" ),
+				"Java Persistence with Hibernate",
+				"Jakarta Data Guide",
+				"hibernate in Action" );
+	}
+
+	@Test
+	void propertyAndAttributeSorts(SessionFactoryScope scope) {
+		persistBooks( scope );
+
+		assertSortedTitles( scope, Sort.asc( "pages" ),
+				"Jakarta Data Guide",
+				"Hibernate in Action",
+				"Java Persistence with Hibernate" );
+		assertSortedTitles( scope, Sort.desc( "pages" ),
+				"Java Persistence with Hibernate",
+				"Hibernate in Action",
+				"Jakarta Data Guide" );
+		assertSortedTitles( scope, PAGES.asc(),
+				"Jakarta Data Guide",
+				"Hibernate in Action",
+				"Java Persistence with Hibernate" );
+	}
+
+	@Test
+	void flattenedAttributeSorts(SessionFactoryScope scope) {
+		persistBooks( scope );
+		final var publisherName = TextAttribute.of( Book.class, "publisher.name" );
+
+		for ( var sort : List.of(
+				publisherName.asc(),
+				publisherName.lower().asc(),
+				Sort.ascIgnoreCase( publisherName ),
+				Sort.<Book>asc( "publisher.name" ) ) ) {
+			final List<String> names = scope.fromSession( session -> {
+				final var builder = session.getCriteriaBuilder();
+				final var query = builder.createQuery( String.class );
+				final var root = query.from( Book.class );
+				query.select( root.get( "publisher" ).get( "name" ) );
+				JakartaDataRestriction.applySort( sort, query, root, builder );
+				return session.createQuery( query ).getResultList();
+			} );
+			assertEquals( List.of( "Eclipse Foundation", "Manning", "Manning" ), names );
+		}
+	}
+
+	@Test
+	void orderWithExpressionSorts(SessionFactoryScope scope) {
+		persistBooks( scope );
+
+		final List<String> titles = scope.fromSession( session -> {
+			final var builder = session.getCriteriaBuilder();
+			final var query = builder.createQuery( String.class );
+			final var root = query.from( Book.class );
+			query.select( root.get( "title" ) );
+			JakartaDataRestriction.applyOrder(
+					Order.by( PUBLISHER.navigate( NAME ).asc(), PAGES.negated().asc() ),
+					query, root, builder );
+			return session.createQuery( query ).getResultList();
+		} );
+		assertEquals( List.of(
+				"Jakarta Data Guide",
+				"Java Persistence with Hibernate",
+				"Hibernate in Action"
+		), titles );
+	}
 
 	@Test
 	void basicAttributeRestrictions(SessionFactoryScope scope) {
@@ -264,6 +365,21 @@ public class JakartaDataRestrictionTest {
 					)
 			);
 		} );
+	}
+
+	private static void assertSortedTitles(
+			SessionFactoryScope scope,
+			Sort<? super Book> sort,
+			String... expectedTitles) {
+		final List<String> titles = scope.fromSession( session -> {
+			final var builder = session.getCriteriaBuilder();
+			final var query = builder.createQuery( String.class );
+			final var root = query.from( Book.class );
+			query.select( root.get( "title" ) );
+			JakartaDataRestriction.applySort( sort, query, root, builder );
+			return session.createQuery( query ).getResultList();
+		} );
+		assertEquals( List.of( expectedTitles ), titles );
 	}
 
 	private static void assertTitles(

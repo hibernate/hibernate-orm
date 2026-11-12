@@ -164,9 +164,10 @@ Then we may execute the query as follows:
 [source,java]
 ----
 var books =
-        entityManager.createNamedQuery(Queries_._findBooksByTitle_)
+        entityManager.createQuery(Book_._findBooksByTitle_)
                 .setParameter("title", titlePattern)
-                .setPage(page)
+                .setFirstResult(page.getFirstResult())
+                .setMaxResults(page.getSize())
                 .getResultList();
 ----
 
@@ -304,7 +305,7 @@ We'll need a place to put this method, and since our `Book` entity isn't an abst
 ----
 interface Queries {
     @HQL("where title like :title and type = :type")
-    List<Book> findBooksByTitleAndType(String title, String type);
+    List<Book> findBooksByTitleAndType(String title, Type type);
 }
 ----
 
@@ -330,7 +331,7 @@ public abstract class Queries_ {
     }
 
     static final String FIND_BOOKS_BY_TITLE_AND_TYPE_String_Type =
-            "where title like :title and type = :type";
+            "from Book where title like :title and type = :type";
 
 }
 
@@ -344,7 +345,7 @@ If we want to explicitly specify the name and type of this parameter, we may dec
 ----
 interface Queries {
     @HQL("where title like :title and type = :type")
-    List<Book> findBooksByTitleAndType(EntityAgent agent, String title, String type);
+    List<Book> findBooksByTitleAndType(EntityAgent agent, String title, Type type);
 }
 ----
 
@@ -392,7 +393,7 @@ interface Queries {
     EntityManager entityManager();
 
     @HQL("where title like :title and type = :type")
-    List<Book> findBooksByTitleAndType(String title, String type);
+    List<Book> findBooksByTitleAndType(String title, Type type);
 }
 ----
 
@@ -429,7 +430,7 @@ public class _Queries implements Queries {
     }
 
     static final String FIND_BOOKS_BY_TITLE_AND_TYPE_String_Type =
-            "where title like :title and type = :type";
+            "from Book where title like :title and type = :type";
 
 }
 ----
@@ -441,7 +442,7 @@ Of course, the protocol for calling the query method has to change:
 [source,java]
 ----
 Queries queries = new _Queries(entityManager);
-List<Book> books = queries.findByTitleAndType(titlePattern, Type.BOOK);
+List<Book> books = queries.findBooksByTitleAndType(titlePattern, Type.BOOK);
 ----
 
 If we ever need to swap out the generated query method with one we write by hand, without impacting clients, all we need to do is replace the abstract method with a `default` method of the `Queries` interface.
@@ -453,8 +454,8 @@ interface Queries {
     EntityManager entityManager();
 
     // handwritten method replacing previous generated implementation
-    default List<Book> findBooksByTitleAndType(String title, String type) {
-        entityManager()
+    default List<Book> findBooksByTitleAndType(String title, Type type) {
+        return entityManager()
                 .createQuery("where title like :title and type = :type", Book.class)
                         .setParameter("title", title)
                         .setParameter("type", type)
@@ -543,7 +544,7 @@ The code generated for this finder method depends on what kind of fields match t
 [cols="45,~"]
 |===
 |`@Id` field | Uses `EntityManager.find()`
-|All `@NaturalId` fields | Uses `Session.byNaturalId()`
+|All `@NaturalId` fields | Uses `EntityManager.find()` with `KeyType.NATURAL`
 |Other persistent fields, or a mix of field types | Uses a criteria query
 |===
 
@@ -559,8 +560,12 @@ With `EntityManager` as the session type, we obtain:
  * @see org.example.Dao#getBook(String)
  **/
 @Override
+@Nonnull
 public Book getBook(@Nonnull String isbn) {
-	return entityManager.find(Book.class, isbn);
+	requireNonNull(isbn, "Null isbn");
+	var _result = entityManager.find(Book.class, isbn);
+	if (_result == null) throw new ObjectNotFoundException((Object) isbn, "org.example.Book");
+	return _result;
 }
 
 /**
@@ -624,7 +629,7 @@ A finder method may specify <<fetch-profiles,fetch profiles>>, for example:
 
 [source,java]
 ----
-@Find(namedFetchProfiles=Book_.FETCH_WITH_AUTHORS)
+@Find(enabledFetchProfiles=Book_.PROFILE_EAGER_BOOK)
 Book getBookWithAuthors(String isbn);
 ----
 
@@ -662,13 +667,10 @@ Optionally, a query method--or a finder method which returns multiple results--m
 | Parameter type | Purpose | Example argument
 
 | `Page` | Specifies a page of query results | Page.first(20)
-| `Order<? super E>` | Specifies an entity attribute to order by, if `R` is the entity type returned by the query | Order.asc(Book_.title)
-| `List<Order? super E>` +
-(or varargs) | Specifies entity attributes to order by, if `R` is the entity type returned by the query | List.of(Order.asc(Book_.title), Order.asc(Book_.isbn))
-| `Order<Object[]>` | Specifies a column to order by, if the query returns a projection list | Order.asc(1)
-| `List<Object[]>` +
-(or varargs) | Specifies columns to order by, if the query returns a projection list | List.of(Order.asc(1), Order.desc(2))
-| `Restriction<? super E>` | Specifies a restriction used to filter query results | Restriction.startsWith("Hibernate")
+| `Order<? super E>` | Specifies an entity attribute to order by, if `E` is the entity type returned by the query | Order.asc(Book_.title)
+| `List<Order<? super E>>` +
+(or varargs) | Specifies entity attributes to order by, if `E` is the entity type returned by the query | List.of(Order.asc(Book_.title), Order.asc(Book_.isbn))
+| `Restriction<? super E>` | Specifies a restriction used to filter query results | Restriction.startsWith(Book_.title, "Hibernate")
 |===
 
 Thus, if we redefine our earlier query method as follows:
@@ -732,7 +734,7 @@ A generated query or finder method can make use of <<key-based-pagination,key-ba
 
 [source,java]
 ----
-@Query("where publicationDate > :minDate")
+@HQL("where publicationDate > :minDate")
 KeyedResultList<Book> booksFromDate(Session session, LocalDate minDate, KeyedPage<Book> page);
 ----
 
@@ -752,11 +754,11 @@ KeyedResultList<Book> first =
 List<Book> firstPage = first.getResultList();
 ...
 
-if (!firstPage.isLastPage()) {
+if (!first.isLastPage()) {
     // obtain the second page of results
     KeyedResultList<Book> second =
             Queries_.booksFromDate(session, minDate,
-                    firstPage.getNextPage());
+                    first.getNextPage());
     List<Book> secondPage = second.getResultList();
     ...
 }

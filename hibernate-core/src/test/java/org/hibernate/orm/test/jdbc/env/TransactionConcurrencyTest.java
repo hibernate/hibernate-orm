@@ -44,6 +44,7 @@ import org.hibernate.sql.SimpleSelect;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.sql.Connection.TRANSACTION_REPEATABLE_READ;
@@ -76,6 +77,17 @@ class TransactionConcurrencyTest {
 		assertThat( snapshot.getReadGuarantees( CURRENT_READ ).holdsRowLockUntilTransactionCompletion() ).isFalse();
 		assertThat( sql( dialect, locking ) ).doesNotContain( "readcommittedlock" );
 		assertThat( sql( dialect, snapshot ) ).contains( "readcommittedlock" );
+	}
+
+	@ParameterizedTest
+	@ValueSource(ints = { TRANSACTION_READ_COMMITTED, 4096 })
+	void sqlServerVersionedReadsDoNotBlockWriters(int isolation) throws Exception {
+		final var concurrency = resolve( new SQLServerDialect(), metadata( isolation ), snapshotConnection( true ), null,
+				JdbcMetadataOnBoot.ALLOW );
+		assertThat( concurrency.getBlockingDuration( READ, WRITE ) ).isEqualTo( NONE );
+		assertThat( concurrency.getBlockingDuration( CURRENT_READ, WRITE ) ).isEqualTo( STATEMENT );
+		assertThat( concurrency.getBlockingDuration( SHARED_LOCK_READ, WRITE ) ).isEqualTo( TRANSACTION );
+		assertThat( concurrency.getBlockingDuration( UPDATE_LOCK_READ, WRITE ) ).isEqualTo( TRANSACTION );
 	}
 
 	@Test

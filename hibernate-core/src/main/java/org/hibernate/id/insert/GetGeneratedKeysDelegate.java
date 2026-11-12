@@ -4,7 +4,6 @@ import jakarta.annotation.Nullable;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
-import org.hibernate.engine.jdbc.spi.StatementPreparer;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
@@ -113,17 +112,16 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 			FlushOperation operation,
 			Object entity,
 			SharedSessionContractImplementor session) {
-		var jdbcOperation = (PreparableMutationOperation) operation.getJdbcOperation();
-		var sql = jdbcOperation.getSqlString();
+		final var jdbcOperation = (PreparableMutationOperation) operation.getJdbcOperation();
+		final var sql = jdbcOperation.getSqlString();
 		session.getJdbcServices().getSqlStatementLogger().logStatement( sql );
 
-		StatementPreparer preparer = session.getJdbcCoordinator().getStatementPreparer();
-		final PreparedStatement preparedStatement = columnNames == null
+		final var preparer = session.getJdbcCoordinator().getStatementPreparer();
+		final var preparedStatement = columnNames == null
 				? preparer.prepareStatement( sql, RETURN_GENERATED_KEYS )
 				: preparer.prepareStatement( sql, columnNames );
 		try {
-
-			var valueBindings = new org.hibernate.action.queue.spi.bind.JdbcValueBindings(
+			final var valueBindings = new org.hibernate.action.queue.spi.bind.JdbcValueBindings(
 					operation.getMutatingTableDescriptor(),
 					jdbcOperation
 			);

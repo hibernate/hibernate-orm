@@ -1,12 +1,10 @@
 package org.hibernate.ucp.internal;
 
 import jakarta.annotation.Nonnull;
-import oracle.ucp.UniversalConnectionPool;
 import oracle.ucp.UniversalConnectionPoolAdapter;
 import oracle.ucp.UniversalConnectionPoolException;
 import oracle.ucp.UniversalConnectionPoolLifeCycleState;
 import oracle.ucp.admin.UniversalConnectionPoolManager;
-import oracle.ucp.admin.UniversalConnectionPoolManagerImpl;
 import oracle.ucp.jdbc.PoolDataSource;
 import oracle.ucp.jdbc.PoolDataSourceFactory;
 import oracle.ucp.jdbc.PoolDataSourceImpl;
@@ -35,6 +33,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
+import static oracle.ucp.admin.UniversalConnectionPoolManagerImpl.getUniversalConnectionPoolManager;
 import static org.hibernate.cfg.UCPSettings.UCP_CONFIG_PREFIX;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getFetchSize;
@@ -73,8 +72,7 @@ public class UCPConnectionProvider implements ConnectionProvider, Configurable, 
 			isolation = ConnectionProviderInitiator.extractIsolation( props );
 			autoCommit = ConfigurationHelper.getBoolean( JdbcSettings.AUTOCOMMIT, props );
 
-			UniversalConnectionPoolManager poolManager = UniversalConnectionPoolManagerImpl.
-					getUniversalConnectionPoolManager();
+			UniversalConnectionPoolManager poolManager = getUniversalConnectionPoolManager();
 			ucpDS = PoolDataSourceFactory.getPoolDataSource();
 			Properties ucpProps = getConfiguration( props );
 			configureDataSource( ucpDS, ucpProps );
@@ -176,42 +174,44 @@ public class UCPConnectionProvider implements ConnectionProvider, Configurable, 
 	// *************************************************************************
 
 	@Override
+	@Nonnull
 	public Connection getConnection() throws SQLException {
-		Connection conn = null;
+		if ( ucpDS == null ) {
+			throw new IllegalStateException( "UCPConnectionProvider is not configured" );
+		}
 
 		try {
-			if ( ucpDS != null ) {
-				UniversalConnectionPoolManager poolManager = UniversalConnectionPoolManagerImpl.
-						getUniversalConnectionPoolManager();
-				UniversalConnectionPool ucp = poolManager.getConnectionPool( ucpDS.getConnectionPoolName() );
-				UniversalConnectionPoolLifeCycleState lifeCycleState = ucp.getLifeCycleState();
+			final var poolManager = getUniversalConnectionPoolManager();
+			final var ucp = poolManager.getConnectionPool( ucpDS.getConnectionPoolName() );
+			final var lifeCycleState = ucp.getLifeCycleState();
 
-				if( lifeCycleState == UniversalConnectionPoolLifeCycleState.LIFE_CYCLE_RUNNING) {
-					conn = ucpDS.getConnection();
-					if ( isolation != null && isolation != conn.getTransactionIsolation() ) {
-						conn.setTransactionIsolation( isolation );
-					}
+			if ( lifeCycleState == UniversalConnectionPoolLifeCycleState.LIFE_CYCLE_RUNNING ) {
+				final var conn = ucpDS.getConnection();
+				if ( isolation != null && isolation != conn.getTransactionIsolation() ) {
+					conn.setTransactionIsolation( isolation );
+				}
 
-					if ( conn.getAutoCommit() != autoCommit ) {
-						conn.setAutoCommit( autoCommit );
-					}
+				if ( conn.getAutoCommit() != autoCommit ) {
+					conn.setAutoCommit( autoCommit );
 				}
-				else if(lifeCycleState == UniversalConnectionPoolLifeCycleState.LIFE_CYCLE_FAILED ||
-						lifeCycleState == UniversalConnectionPoolLifeCycleState.LIFE_CYCLE_STOPPED ||
-						lifeCycleState == UniversalConnectionPoolLifeCycleState.LIFE_CYCLE_STOPPING) {
-					throw new SQLException("UCP connection pool " + this + " has been destroyed.");
-				}
+				return conn;
+			}
+			else if ( lifeCycleState == UniversalConnectionPoolLifeCycleState.LIFE_CYCLE_FAILED ||
+					lifeCycleState == UniversalConnectionPoolLifeCycleState.LIFE_CYCLE_STOPPED ||
+					lifeCycleState == UniversalConnectionPoolLifeCycleState.LIFE_CYCLE_STOPPING ) {
+				throw new SQLException( "UCP connection pool " + this + " has been destroyed." );
+			}
+			else {
+				throw new IllegalStateException( "UCP connection pool is not running: " + lifeCycleState );
 			}
 		}
 		catch (UniversalConnectionPoolException ucpe) {
 			throw new SQLException( ucpe );
 		}
-
-		return conn;
 	}
 
 	@Override
-	public void closeConnection(Connection conn) throws SQLException {
+	public void closeConnection(@Nonnull Connection conn) throws SQLException {
 		conn.close();
 	}
 
@@ -221,7 +221,8 @@ public class UCPConnectionProvider implements ConnectionProvider, Configurable, 
 	}
 
 	@Override
-	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+	@Nonnull
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(@Nonnull Dialect dialect) {
 		try (var connection = ucpDS.getConnection()) {
 			final var info = new DatabaseConnectionInfoImpl(
 					UCPConnectionProvider.class,
@@ -279,8 +280,7 @@ public class UCPConnectionProvider implements ConnectionProvider, Configurable, 
 		if ( this.ucpDS != null && ucpDS.getConnectionPoolName() != null ) {
 			CONNECTION_INFO_LOGGER.cleaningUpConnectionPool( UCP_CONFIG_PREFIX + " [" + ucpDS.getConnectionPoolName() + "]" );
 			try {
-				UniversalConnectionPoolManager poolManager = UniversalConnectionPoolManagerImpl.
-						getUniversalConnectionPoolManager();
+				UniversalConnectionPoolManager poolManager = getUniversalConnectionPoolManager();
 				poolManager.stopConnectionPool( ucpDS.getConnectionPoolName() );
 				poolManager.destroyConnectionPool( ucpDS.getConnectionPoolName() );
 			}

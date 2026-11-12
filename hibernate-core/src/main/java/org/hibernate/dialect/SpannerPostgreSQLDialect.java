@@ -1,6 +1,8 @@
 package org.hibernate.dialect;
 
 import java.time.LocalDate;
+
+import org.hibernate.dialect.sql.ast.spi.OptionalTableUpdateOperationRequest;
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
@@ -23,6 +25,8 @@ import org.hibernate.dialect.jdbc.spi.ParameterLimits;
 import org.hibernate.dialect.schema.internal.SpannerPostgreSQLIndexExporter;
 import org.hibernate.dialect.schema.internal.SpannerPostgreSQLTableExporter;
 import org.hibernate.mapping.Index;
+import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.spi.mutation.jdbc.OptionalTableUpdateWithUpsertOperation;
 import org.hibernate.tool.schema.spi.Exporter;
 
 import org.hibernate.dialect.function.spi.Replacer;
@@ -462,19 +466,19 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect implements Curre
 		return FetchClauseSupport.NONE;
 	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+	@Override
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public MutationOperation createOptionalTableUpdateOperation(
+			OptionalTableUpdateOperationRequest request) {
+		final var optionalTableUpdate = request.update();
+		final var factory = request.sessionFactory();
+		// We now use insert ... on conflict do update for non-optional tables,
+		// which is better than using a separate update statement
+		return !optionalTableUpdate.getMutatingTable().isOptional()
+				? new SpannerPostgreSQLSqlAstTranslator<>( new SqlAstTranslationRequest.ModelMutation<>( factory, optionalTableUpdate ) )
+						.createMergeOperation( optionalTableUpdate )
+				: new OptionalTableUpdateWithUpsertOperation( optionalTableUpdate, request.versionedTarget() );
+	}
 
 	@Override
 	public LockingClauseStrategy getLockingClauseStrategy(

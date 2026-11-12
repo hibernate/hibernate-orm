@@ -1,5 +1,7 @@
 package org.hibernate.engine.jdbc.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
@@ -48,16 +50,16 @@ import static org.hibernate.engine.jdbc.batch.JdbcBatchLogging.BATCH_MESSAGE_LOG
 public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	private static final boolean TRACE_ENABLED = JDBC_LOGGER.isTraceEnabled();
 
-	private transient final LogicalConnectionImplementor logicalConnection;
-	private transient final JdbcSessionOwner owner;
+	private transient final @Nonnull LogicalConnectionImplementor logicalConnection;
+	private transient final @Nonnull JdbcSessionOwner owner;
 
-	private transient final JdbcServices jdbcServices;
+	private transient final @Nonnull JdbcServices jdbcServices;
 
-	private transient Batch currentBatch;
+	private transient @Nullable Batch currentBatch;
 
 	private transient long transactionTimeOutInstant = -1;
 
-	private Statement lastQuery;
+	private @Nullable Statement lastQuery;
 	private final boolean isUserSuppliedConnection;
 
 	/**
@@ -71,9 +73,9 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	 * @param userSuppliedConnection The user supplied connection (may be null)
 	 */
 	public JdbcCoordinatorImpl(
-			Connection userSuppliedConnection,
-			JdbcSessionOwner owner,
-			JdbcServices jdbcServices) {
+			@Nullable Connection userSuppliedConnection,
+			@Nonnull JdbcSessionOwner owner,
+			@Nonnull JdbcServices jdbcServices) {
 		this.owner = owner;
 		this.jdbcServices = jdbcServices;
 		this.isUserSuppliedConnection = userSuppliedConnection != null;
@@ -83,9 +85,10 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		}
 	}
 
+	@Nonnull
 	private static LogicalConnectionImplementor createLogicalConnection(
-			Connection userSuppliedConnection,
-			JdbcSessionOwner owner) {
+			@Nullable Connection userSuppliedConnection,
+			@Nonnull JdbcSessionOwner owner) {
 		final var resourceRegistry =
 				new ResourceRegistryStandardImpl( owner.getJdbcSessionContext().getEventHandler() );
 		return userSuppliedConnection == null
@@ -94,9 +97,9 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	}
 
 	private JdbcCoordinatorImpl(
-			LogicalConnectionImplementor logicalConnection,
+			@Nonnull LogicalConnectionImplementor logicalConnection,
 			boolean isUserSuppliedConnection,
-			JdbcSessionOwner owner) {
+			@Nonnull JdbcSessionOwner owner) {
 		this.logicalConnection = logicalConnection;
 		this.isUserSuppliedConnection = isUserSuppliedConnection;
 		this.owner = owner;
@@ -107,6 +110,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	}
 
 	@Override
+	@Nonnull
 	public LogicalConnectionImplementor getLogicalConnection() {
 		return logicalConnection;
 	}
@@ -116,6 +120,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	 *
 	 * @return The {@code SqlExceptionHelper}
 	 */
+	@Nonnull
 	public SqlExceptionHelper sqlExceptionHelper() {
 		return jdbcServices.getSqlExceptionHelper();
 	}
@@ -144,6 +149,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	}
 
 	@Override
+	@Nullable
 	public Connection close() {
 		if ( TRACE_ENABLED ) {
 			JDBC_LOGGER.closingJdbcCoordinator( hashCode() );
@@ -163,10 +169,11 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	}
 
 	@Override
+	@Nonnull
 	public GroupedBatch getGroupedBatch(
-			BatchKey key,
-			Integer batchSize,
-			Supplier<PreparedStatementGroup> statementGroupSupplier) {
+			@Nonnull BatchKey key,
+			@Nullable Integer batchSize,
+			@Nonnull Supplier<PreparedStatementGroup> statementGroupSupplier) {
 		return getBatch(
 				key,
 				GroupedBatch.class,
@@ -175,10 +182,11 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		);
 	}
 
+	@Nonnull
 	private <B extends Batch> B getBatch(
-			BatchKey key,
-			Class<B> batchType,
-			Supplier<B> batchSupplier) {
+			@Nonnull BatchKey key,
+			@Nonnull Class<B> batchType,
+			@Nonnull Supplier<B> batchSupplier) {
 		if ( currentBatch != null ) {
 			if ( currentBatch.getKey().equals( key ) && batchType.isInstance( currentBatch ) ) {
 				return batchType.cast( currentBatch );
@@ -201,7 +209,11 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	}
 
 	@Override
-	public GroupedBatch getGroupedBatch(BatchKey key, Integer batchSize, PreparableMutationOperation mutationOperation) {
+	@Nonnull
+	public GroupedBatch getGroupedBatch(
+			@Nonnull BatchKey key,
+			@Nullable Integer batchSize,
+			@Nonnull PreparableMutationOperation mutationOperation) {
 		final var session = (SharedSessionContractImplementor) owner;
 		return getGroupedBatch(
 				key,
@@ -211,10 +223,11 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	}
 
 	@Override
+	@Nonnull
 	public SingleStatementBatch getSingleStatementBatch(
-			BatchKey key,
-			Integer batchSize,
-			PreparableMutationOperation mutationOperation) {
+			@Nonnull BatchKey key,
+			@Nullable Integer batchSize,
+			@Nonnull PreparableMutationOperation mutationOperation) {
 		return getBatch(
 				key,
 				SingleStatementBatch.class,
@@ -239,7 +252,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	}
 
 	@Override
-	public void conditionallyExecuteBatch(BatchKey key) {
+	public void conditionallyExecuteBatch(@Nullable BatchKey key) {
 		if ( currentBatch != null && !currentBatch.getKey().equals( key ) ) {
 			if ( BATCH_MESSAGE_LOGGER.isTraceEnabled() ) {
 				BATCH_MESSAGE_LOGGER.conditionallyExecuteBatch(
@@ -269,9 +282,10 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		}
 	}
 
-	private transient StatementPreparer statementPreparer;
+	private transient @Nullable StatementPreparer statementPreparer;
 
 	@Override
+	@Nonnull
 	public StatementPreparer getStatementPreparer() {
 		if ( statementPreparer == null ) {
 			statementPreparer = new StatementPreparerImpl( this, jdbcServices );
@@ -279,9 +293,10 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		return statementPreparer;
 	}
 
-	private transient MutationStatementPreparer mutationStatementPreparer;
+	private transient @Nullable MutationStatementPreparer mutationStatementPreparer;
 
 	@Override
+	@Nonnull
 	public MutationStatementPreparer getMutationStatementPreparer() {
 		if ( mutationStatementPreparer == null ) {
 			mutationStatementPreparer = new MutationStatementPreparerImpl( this, jdbcServices );
@@ -289,9 +304,10 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		return mutationStatementPreparer;
 	}
 
-	private transient ResultSetReturn resultSetExtractor;
+	private transient @Nullable ResultSetReturn resultSetExtractor;
 
 	@Override
+	@Nonnull
 	public ResultSetReturn getResultSetReturn() {
 		if ( resultSetExtractor == null ) {
 			resultSetExtractor = new ResultSetReturnImpl( this, jdbcServices );
@@ -349,7 +365,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	 * transaction to be marked for rollback (PostgreSQL).
 	 */
 	@Override
-	public void afterFailedStatementExecution(SQLException sqlException) {
+	public void afterFailedStatementExecution(@Nonnull SQLException sqlException) {
 		if ( jdbcServices.getDialect().causesRollback( sqlException ) ) {
 			getLogicalConnection().markRollbackOnly();
 		}
@@ -371,7 +387,8 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	}
 
 	@Override
-	public <T> T coordinateWork(WorkExecutorVisitable<T> work) {
+	@Nullable
+	public <T> T coordinateWork(@Nonnull WorkExecutorVisitable<T> work) {
 		final var connection = getLogicalConnection().getPhysicalConnection();
 		try {
 			final T result = work.accept( new WorkExecutor<>(), connection );
@@ -393,7 +410,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void registerLastQuery(Statement statement) {
+	public void registerLastQuery(@Nullable Statement statement) {
 //		if ( TRACE_ENABLED ) {
 //			LOG.tracef( "Registering last query statement [%s] @%s", statement, hashCode() );
 //		}
@@ -421,6 +438,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		}
 	}
 
+	@Nonnull
 	private SqlExceptionHelper safeSqlExceptionHelper() {
 		final var sqlExceptionHelper = sqlExceptionHelper();
 		//Should always be non-null, but to make sure as the implementation is lazy:
@@ -451,6 +469,11 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	}
 
 	@Override
+	public void validateBeforeCompletion() {
+		owner.validateBeforeCompletion();
+	}
+
+	@Override
 	public void beforeTransactionCompletion() {
 		if ( TRACE_ENABLED ) {
 			JDBC_LOGGER.transactionBeforeCompletion( hashCode() );
@@ -471,11 +494,13 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	}
 
 	@Override
+	@Nonnull
 	public JdbcSessionOwner getJdbcSessionOwner() {
 		return owner;
 	}
 
 	@Override
+	@Nonnull
 	public JdbcResourceTransaction getResourceLocalTransaction() {
 		return logicalConnection.getPhysicalJdbcTransaction();
 	}
@@ -488,7 +513,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	 * @throws IOException Trouble accessing the stream
 	 */
 	@Override
-	public void serialize(ObjectOutputStream oos) throws IOException {
+	public void serialize(@Nonnull ObjectOutputStream oos) throws IOException {
 		if ( !isReadyForSerialization() ) {
 			throw new HibernateException( "Cannot serialize Session while connected" );
 		}
@@ -507,7 +532,8 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	 * @throws IOException Trouble accessing the stream
 	 * @throws ClassNotFoundException Trouble reading the stream
 	 */
-	public static JdbcCoordinatorImpl deserialize(ObjectInputStream ois, JdbcSessionOwner owner)
+	@Nonnull
+	public static JdbcCoordinatorImpl deserialize(@Nonnull ObjectInputStream ois, @Nonnull JdbcSessionOwner owner)
 			throws IOException, ClassNotFoundException {
 		final boolean isUserSuppliedConnection = ois.readBoolean();
 		final var logicalConnection =

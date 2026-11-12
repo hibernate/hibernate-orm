@@ -117,11 +117,6 @@ public class ImplicitToOneJoinTableSecondPass implements SecondPass {
 		// move the property from the main table to the new join table
 		owner.removeProperty( property );
 		join.addProperty( property );
-		if ( notFoundAction != null ) {
-			join.disableForeignKeyCreation();
-		}
-		for ( var joinColumn : joinColumns.getJoinColumns() ) {
-			joinColumn.setExplicitTableName( join.getTable().getName() );
-		}
+		ToOneBinder.configureJoinTable( join, joinColumns, inferredData.getAttributeMember(), notFoundAction );
 	}
 }

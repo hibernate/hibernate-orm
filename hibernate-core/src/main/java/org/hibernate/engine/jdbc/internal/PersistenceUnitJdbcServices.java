@@ -1,5 +1,6 @@
 package org.hibernate.engine.jdbc.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreationContext;
@@ -23,65 +24,76 @@ import static java.util.Objects.requireNonNull;
  */
 @Internal
 public final class PersistenceUnitJdbcServices implements JdbcServices {
-	private final JdbcServices delegate;
-	private final JdbcEnvironment jdbcEnvironment;
+	private final @Nonnull JdbcServices delegate;
+	private final @Nonnull JdbcEnvironment jdbcEnvironment;
 
-	public PersistenceUnitJdbcServices(JdbcServices delegate, JdbcEnvironment jdbcEnvironment) {
+	public PersistenceUnitJdbcServices(@Nonnull JdbcServices delegate, @Nonnull JdbcEnvironment jdbcEnvironment) {
 		this.delegate = requireNonNull( delegate );
 		this.jdbcEnvironment = requireNonNull( jdbcEnvironment );
 	}
 
 	@Override
+	@Nonnull
 	public JdbcEnvironment getJdbcEnvironment() {
 		return jdbcEnvironment;
 	}
 
 	@Override
+	@Nonnull
 	public JdbcConnectionAccess getBootstrapJdbcConnectionAccess() {
 		return delegate.getBootstrapJdbcConnectionAccess();
 	}
 
 	@Override
+	@Nonnull
 	public Dialect getDialect() {
 		return delegate.getDialect();
 	}
 
 	@Override
+	@Nonnull
 	public JdbcMetadata getJdbcMetadata() {
 		return jdbcEnvironment.getJdbcMetadata();
 	}
 
 	@Override
+	@Nonnull
 	public SqlStatementLogger getSqlStatementLogger() {
 		return delegate.getSqlStatementLogger();
 	}
 
 	@Override
+	@Nonnull
 	public ParameterMarkerStrategy getParameterMarkerStrategy() {
 		return delegate.getParameterMarkerStrategy();
 	}
 
 	@Override
+	@Nonnull
 	public SqlExceptionHelper getSqlExceptionHelper() {
 		return delegate.getSqlExceptionHelper();
 	}
 
 	@Override
+	@Nonnull
 	public ExtractedDatabaseMetaData getExtractedMetaDataSupport() {
 		return delegate.getExtractedMetaDataSupport();
 	}
 
 	@Override
-	public LobCreator getLobCreator(LobCreationContext lobCreationContext) {
+	@Nonnull
+	public LobCreator getLobCreator(@Nonnull LobCreationContext lobCreationContext) {
 		return delegate.getLobCreator( lobCreationContext );
 	}
 
 	@Override
+	@Nonnull
 	public JdbcSelectExecutor getJdbcSelectExecutor() {
 		return delegate.getJdbcSelectExecutor();
 	}
 
 	@Override
+	@Nonnull
 	public JdbcMutationExecutor getJdbcMutationExecutor() {
 		return delegate.getJdbcMutationExecutor();
 	}

@@ -33,45 +33,53 @@ class MockJdbcServicesInitiator extends JdbcServicesInitiator {
 
 	public abstract static class MockJdbcServices implements JdbcServices, JdbcEnvironment {
 
-		private final Dialect dialect;
+		private final @Nonnull Dialect dialect;
 
-		public MockJdbcServices(Dialect dialect) {
+		public MockJdbcServices(@Nonnull Dialect dialect) {
 			this.dialect = dialect;
 		}
 
 		@Override
+		@Nonnull
 		public Dialect getDialect() {
 			return dialect;
 		}
 
 		@Override
+		@Nonnull
 		public JdbcEnvironment getJdbcEnvironment() {
 			return this;
 		}
 
 		@Override
+		@Nonnull
 		public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 			return new StandardSqlAstTranslatorFactory();
 		}
 
 		@Override
+		@Nullable
 		public Identifier getCurrentCatalog() {
 			return null;
 		}
 
 		@Override
+		@Nullable
 		public Identifier getCurrentSchema() {
 			return null;
 		}
 
 		@Override
+		@Nonnull
 		public QualifiedObjectNameFormatter getQualifiedObjectNameFormatter() {
 			return new QualifiedObjectNameFormatterStandardImpl(getNameQualifierSupport(), ".");
 		}
 
 		@Override
+		@Nonnull
 		public NameQualifierSupport getNameQualifierSupport() {
-			return dialect.getNameQualifierSupport();
+			final var support = dialect.getNameQualifierSupport();
+			return support == null ? NameQualifierSupport.BOTH : support;
 		}
 	}
 

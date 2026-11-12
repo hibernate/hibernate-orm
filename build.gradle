@@ -5,7 +5,6 @@ buildscript {
 
 	dependencies {
 		classpath libs.buildscript.forbiddenapis
-		classpath libs.test.junitJupiterPlatformGradlePlugin
 	}
 }
 

@@ -3,7 +3,7 @@ package org.hibernate.community.dialect.function.json;
 import java.util.List;
 
 import org.hibernate.community.dialect.aggregate.internal.CUBRIDAggregateSupport;
-import org.hibernate.dialect.function.json.MySQLJsonObjectFunction;
+import org.hibernate.dialect.function.json.JsonObjectFunction;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.spi.SqlAstNode;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
@@ -15,10 +15,10 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * CUBRID json_object function.
  */
-public class CUBRIDJsonObjectFunction extends MySQLJsonObjectFunction {
+public class CUBRIDJsonObjectFunction extends JsonObjectFunction {
 
 	public CUBRIDJsonObjectFunction(TypeConfiguration typeConfiguration) {
-		super( typeConfiguration );
+		super( typeConfiguration, false );
 	}
 
 	@Override
@@ -27,10 +27,12 @@ public class CUBRIDJsonObjectFunction extends MySQLJsonObjectFunction {
 			List<? extends SqlAstNode> sqlAstArguments,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
-		if ( sqlAstArguments.isEmpty() || sqlAstArguments.get( sqlAstArguments.size() - 1 ) != JsonNullBehavior.ABSENT ) {
-			super.render( sqlAppender, sqlAstArguments, returnType, walker );
+		if ( sqlAstArguments.isEmpty() ) {
+			sqlAppender.appendSql( "json_object()" );
+			return;
 		}
-		else {
+		final SqlAstNode lastArgument = sqlAstArguments.get( sqlAstArguments.size() - 1 );
+		if ( lastArgument == JsonNullBehavior.ABSENT ) {
 			// Same emulation as MySQL, but json_extract returns SQL null for a JSON null,
 			// so null values are filtered with "is not null" instead of comparing to a JSON null
 			final int argumentsCount = sqlAstArguments.size() - 1;
@@ -47,6 +49,21 @@ public class CUBRIDJsonObjectFunction extends MySQLJsonObjectFunction {
 				sqlAppender.appendSql( "),'$[0]')" );
 			}
 			sqlAppender.appendSql( ") t where t.v is not null)" );
+		}
+		else {
+			final int argumentsCount = lastArgument instanceof JsonNullBehavior
+					? sqlAstArguments.size() - 1
+					: sqlAstArguments.size();
+			sqlAppender.appendSql( "json_object" );
+			char separator = '(';
+			for ( int i = 0; i < argumentsCount; i += 2 ) {
+				sqlAppender.appendSql( separator );
+				sqlAstArguments.get( i ).accept( walker );
+				sqlAppender.appendSql( ',' );
+				renderValue( sqlAppender, sqlAstArguments.get( i + 1 ), walker );
+				separator = ',';
+			}
+			sqlAppender.appendSql( ')' );
 		}
 	}
 

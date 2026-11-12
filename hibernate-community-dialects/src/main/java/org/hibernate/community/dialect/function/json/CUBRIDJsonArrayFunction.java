@@ -3,7 +3,7 @@ package org.hibernate.community.dialect.function.json;
 import java.util.List;
 
 import org.hibernate.community.dialect.aggregate.internal.CUBRIDAggregateSupport;
-import org.hibernate.dialect.function.json.MySQLJsonArrayFunction;
+import org.hibernate.dialect.function.json.JsonArrayFunction;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.spi.SqlAstNode;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
@@ -15,7 +15,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * CUBRID json_array function.
  */
-public class CUBRIDJsonArrayFunction extends MySQLJsonArrayFunction {
+public class CUBRIDJsonArrayFunction extends JsonArrayFunction {
 
 	public CUBRIDJsonArrayFunction(TypeConfiguration typeConfiguration) {
 		super( typeConfiguration );
@@ -27,10 +27,12 @@ public class CUBRIDJsonArrayFunction extends MySQLJsonArrayFunction {
 			List<? extends SqlAstNode> sqlAstArguments,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
-		if ( sqlAstArguments.isEmpty() || sqlAstArguments.get( sqlAstArguments.size() - 1 ) != JsonNullBehavior.ABSENT ) {
-			super.render( sqlAppender, sqlAstArguments, returnType, walker );
+		if ( sqlAstArguments.isEmpty() ) {
+			sqlAppender.appendSql( "json_array()" );
+			return;
 		}
-		else {
+		final SqlAstNode lastArgument = sqlAstArguments.get( sqlAstArguments.size() - 1 );
+		if ( lastArgument == JsonNullBehavior.ABSENT ) {
 			// Same emulation as MySQL, which cannot keep the argument order with json_arrayagg
 			final int argumentsCount = sqlAstArguments.size() - 1;
 			sqlAppender.appendSql( '(' );
@@ -48,6 +50,19 @@ public class CUBRIDJsonArrayFunction extends MySQLJsonArrayFunction {
 			sqlAppender.appendSql( " v) t" );
 			for ( int i = 1; i < argumentsCount; i++ ) {
 				sqlAppender.appendSql( ") x" );
+			}
+			sqlAppender.appendSql( ')' );
+		}
+		else {
+			final int argumentsCount = lastArgument instanceof JsonNullBehavior
+					? sqlAstArguments.size() - 1
+					: sqlAstArguments.size();
+			sqlAppender.appendSql( "json_array" );
+			char separator = '(';
+			for ( int i = 0; i < argumentsCount; i++ ) {
+				sqlAppender.appendSql( separator );
+				renderValue( sqlAppender, sqlAstArguments.get( i ), walker );
+				separator = ',';
 			}
 			sqlAppender.appendSql( ')' );
 		}

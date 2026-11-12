@@ -2653,7 +2653,7 @@ public abstract class AbstractEntityPersister
 				&& previousState != null
 				&& currentState[versionIndex] != LazyPropertyInitializer.UNFETCHED_PROPERTY
 				&& previousState[versionIndex] != LazyPropertyInitializer.UNFETCHED_PROPERTY
-				&& getVersionType().isEqual( previousState[versionIndex], currentState[versionIndex] ) ) {
+				&& !getVersionType().isDirty( previousState[versionIndex], currentState[versionIndex], session ) ) {
 			fields.remove( Integer.valueOf( versionIndex ) );
 		}
 

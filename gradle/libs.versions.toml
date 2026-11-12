@@ -55,7 +55,6 @@ junitJupiterLauncher = "6.0.3"
 junitJupiterPlatformGradlePlugin = "1.0.3"
 assertj = "3.26.3"
 hamcrest = "3.0"
-byteman = "4.0.26"
 jbossJta = "7.3.4.Final"
 jbossTxSpi = "8.0.0.Final"
 log4j = "2.26.1"
@@ -217,7 +216,6 @@ test-log4j2 = { group = "org.apache.logging.log4j", name = "log4j-core", version
 test-log4j2Slf4j = { group = "org.apache.logging.log4j", name = "log4j-slf4j2-impl", version.ref = "log4j" }
 test-shrinkwrap = { group = "org.jboss.shrinkwrap", name = "shrinkwrap-impl-base", version.ref = "shrinkwrap" }
 test-shrinkwrapDescriptors = { group = "org.jboss.shrinkwrap.descriptors", name = "shrinkwrap-descriptors-impl-javaee", version.ref = "shrinkwrapDescriptors" }
-test-bytemanBmunit = { group = "org.jboss.byteman", name = "byteman-bmunit", version.ref = "byteman" }
 test-mockito = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
 test-mockitoJunitJupiter = { group = "org.mockito", name = "mockito-junit-jupiter", version.ref = "mockito" }
 test-jbossJta = { group = "org.jboss.narayana.jta", name = "narayana-jta", version.ref = "jbossJta" }

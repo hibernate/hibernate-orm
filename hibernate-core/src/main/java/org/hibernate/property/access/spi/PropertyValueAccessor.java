@@ -234,10 +234,6 @@ public final class PropertyValueAccessor {
 			throw e;
 		}
 		catch (Throwable t) {
-			if ( t instanceof InterruptedException ie ) {
-				Thread.currentThread().interrupt();
-				throw sneakyThrow( ie );
-			}
 			if ( kind == Kind.CHAINED && t instanceof org.hibernate.PropertyAccessException cause ) {
 				throw cause;
 			}
@@ -261,10 +257,6 @@ public final class PropertyValueAccessor {
 					throw e;
 				}
 				catch (Throwable t) {
-					if ( t instanceof InterruptedException ie ) {
-						Thread.currentThread().interrupt();
-						throw sneakyThrow( ie );
-					}
 					throw accessException( t, target, true );
 				}
 			}

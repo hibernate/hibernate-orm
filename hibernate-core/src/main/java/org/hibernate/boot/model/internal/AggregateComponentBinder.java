@@ -13,6 +13,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Component;
+import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.type.SqlTypes;
@@ -20,6 +21,7 @@ import org.hibernate.type.descriptor.java.spi.EmbeddableAggregateJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.boot.model.internal.BasicValueBinder.Kind.ATTRIBUTE;
+import static org.hibernate.boot.model.internal.DefaultSchemaHelper.defaultSchema;
 
 /**
  * Processes aggregate component annotations from Java classes and produces the Hibernate configuration-time metamodel,
@@ -121,19 +123,22 @@ public final class AggregateComponentBinder {
 		if ( memberDetails != null ) {
 			final var struct = memberDetails.getDirectAnnotationUsage( Struct.class );
 			if ( struct != null ) {
-				return toQualifiedName( struct, context );
+				return toQualifiedName( struct, memberDetails, context );
 			}
 		}
 
 		final var struct = returnedClassOrElement.getDirectAnnotationUsage( Struct.class );
-		return struct == null ? null : toQualifiedName( struct, context );
+		return struct == null ? null : toQualifiedName( struct, returnedClassOrElement, context );
 	}
 
-	private static QualifiedName toQualifiedName(Struct struct, MetadataBuildingContext context) {
+	private static QualifiedName toQualifiedName(
+			Struct struct,
+			AnnotationTarget annotationTarget,
+			MetadataBuildingContext context) {
 		final var database = context.getMetadataCollector().getDatabase();
 		return new QualifiedNameImpl(
 				database.toIdentifier( struct.catalog() ),
-				database.toIdentifier( struct.schema() ),
+				database.toIdentifier( defaultSchema( struct.schema(), annotationTarget, context ) ),
 				database.toIdentifier( struct.name() )
 		);
 	}

@@ -12,17 +12,6 @@ Describes the new features and capabilities added to Hibernate ORM in {version}.
 
 IMPORTANT: If migrating from earlier versions, be sure to also check out the link:{migrationGuide}[Migration Guide] for discussion of impactful changes.
 
-[[to-one-association-restrictions]]
-== Restrictions on to-one associations
-
-`@SQLRestriction` and `@Filter` may now be declared directly on `@ManyToOne` and `@OneToOne`
-associations, including associations mapped using join tables.
-Restrictions apply to the target through that association, consistently across eager and lazy fetching.
-An excluded target is represented as null while its stored reference is preserved during unrelated updates.
-Association filters apply whenever enabled, independently of `@FilterDef.applyToLoadByKey`.
-See the link:{userGuideBase}#pc-to-one-restrictions[user guide] for examples and
-the link:{migrationGuide}#filtered-to-one-associations[migration guide] for the update and merge semantics.
-
 [[jpa4]]
 == Jakarta Persistence 4.0
 
@@ -57,20 +46,6 @@ The new `@PostCreate` and `@PreClose` callbacks observe creation and closing of 
 Declare these methods on a class annotated `@EntityListener` and register the class with the persistence unit.
 Each callback returns `void` and accepts one parameter of the corresponding factory, manager, or agent type.
 
-[[stateless-lock-modes]]
-== Lock modes in stateless sessions
-
-`StatelessSession` and `EntityAgent` now support all `LockModeType` values for entity loading and queries, including streamed results.
-Optimistic modes obtain protection immediately instead of deferring a version check until commit.
-Both `OPTIMISTIC_FORCE_INCREMENT` and `PESSIMISTIC_FORCE_INCREMENT` increment the version immediately.
-See the link:{migrationGuide}#optimistic-lock-mode-version-check[Migration Guide] for database requirements.
-
-[[nullability-annotations]]
-== Nullability annotations
-
-Jakarta `@Nonnull` and `@Nullable` annotations now cover more of the query, Criteria, restriction, and range APIs, along with mapping, loading, and configuration SPIs.
-These annotations make nullability contracts available to IDEs and static analysis tools.
-
 [[data11]]
 == Jakarta Data 1.1
 
@@ -81,56 +56,6 @@ Hibernate Data Repositories now implements Jakarta Data 1.1, including support f
 - `@Select` projections
 - stateful repositories, and
 - asynchronous repositories backed by Jakarta Concurrency or Hibernate Reactive.
-
-
-[[default-list-semantics]]
-== Default list semantics by package or module
-
-The new `@DefaultListSemantics` annotation selects how Hibernate interprets eligible `java.util.List`
-attributes declared in a package or module: `BAG` does not persist element positions, while `LIST`
-uses an implicit order column.
-
-For example, declare the following in `package-info.java`:
-
-[source,java]
-----
-@DefaultListSemantics(LIST)
-package org.example.domain;
-
-import org.hibernate.annotations.DefaultListSemantics;
-import static org.hibernate.annotations.DefaultListSemantics.Classification.LIST;
-----
-
-A package annotation overrides the module annotation and applies only to that exact package, not its subpackages.
-Explicit collection mapping metadata continues to take precedence. Lists ordered by `@OrderBy` or `@SQLOrder`,
-and unowned to-many associations, retain bag semantics unless explicit list-index metadata is present.
-
-See the link:{userGuideBase}#collection-list[User Guide] for the classification rules and
-link:{migrationGuide}#default-list-semantics[Migration Guide] for replacing the deprecated
-`hibernate.mapping.default_list_semantics` setting.
-
-
-[[generator-optimizer]]
-== Generator optimizer annotation
-
-The new `@GeneratorOptimizer` annotation allows specifying a standard optimizer for sequence or table identifier generation.
-Place it on the identifier field or getter alongside `@GeneratedValue`, choosing a strategy from `org.hibernate.id.enhanced.StandardOptimizerDescriptor`.
-
-[source,java]
-.@GeneratorOptimizer example
-----
-@Id
-@GeneratedValue(strategy = GenerationType.SEQUENCE)
-@SequenceGenerator(sequenceName = "book_sequence", allocationSize = 20)
-@GeneratorOptimizer(StandardOptimizerDescriptor.POOLED_LO)
-private Long id;
-----
-
-Here, `POOLED_LO` allocates identifiers in pools of 20, interpreting each database sequence value as the low end of a pool.
-The database sequence increment must match `allocationSize`; Hibernate uses this increment when creating the sequence during schema generation.
-
-Optimizer selection applies to the consuming identifier mapping, including when it references a globally named generator definition.
-See the link:{userGuideBase}#identifiers-generators-optimizer-annotation[User Guide] for examples and details.
 
 
 [[graph-flushing]]
@@ -150,84 +75,45 @@ hibernate.flush.queue.type=legacy
 `org.hibernate.cfg.FlushSettings` defines a number of new settings for controlling the graph-based flush coordination.
 
 
-[[uuid-capable-java-type]]
-== UuidCapableJavaType
+[[subselect-fetching]]
+== Subselect Fetching
 
-`UuidCapableJavaType` is a new capability in the `JavaType` SPI family which makes it easier to hook non-`java.util.UUID` UUID types into id/value generation.  It defines 2 hooks -
+The following major enhancements were made to subselect fetching.
 
-* A value-transformer to transform between the custom UUID values and `java.util.UUID`.
-* Whether the `UuidCapableJavaType` should be applied in `jakarta.persistence.GenerationType#AUTO` cases.
+- To-one associations are now eligible for bulk select fetching. Previously, only many-valued associations could be fetched in bulk.
 
+- `FetchMethod` was introduced as a JPA 4 `FetchOption` enumerating the basic fetching methods `BY_ID`, `JOIN`, and `BY_SUBQUERY`. To request bulk select fetching for an `AttributeNode` of an `EntityGraph`, call `node.addOption(FetchMethod.BY_SUBQUERY)`.
++
+Note that batch fetching may be requested using the standard JPA 4 fetch option `BatchFetch`.
 
+These changes finally make bulk select fetching a first-class citizen.
 
-[[adjustable-settings]]
-== AdjustableSettings
+[[bidir-mgmt]]
+== Flush-Time Bidirectionality Management
 
-`SessionFactory` now exposes the new `org.hibernate.settings.AdjustableSettings` contract as a way to adjust a limited set of settings at runtime.
+Hibernate can now optionally manage bidirectional associations in the managed object graph during flush preparation. When enabled with `hibernate.bidirectionality_management=true`, Hibernate treats the owning side as authoritative and synchronizes inverse-side references and initialized collections for managed entities as if application code had made those inverse-side changes before flushing.
 
-[source,java]
-.AdjustableSettings example
-----
-SessionFactory factory = ...;
-AdjustableSettings adjuster = factory.getAdjustableSettings();
-adjuster.setShowSql(true);
-----
+Uninitialized lazy inverse collections are not initialized solely for bidirectionality management. This is also the important second-level cache boundary: initialized inverse collections participate in normal flush processing and collection cache invalidation, but uninitialized inverse collections are not dirtied or evicted by bidirectionality management alone. If an application changes only the owning side while a cacheable inverse collection remains unloaded, `hibernate.cache.auto_evict_collection_cache=true` is still the setting which evicts that inverse collection cache entry.
 
+NOTE: The deprecated bytecode-enhancement setting `hibernate.enhancer.enableAssociationManagement=true` is also recognized as an alias when the new setting is not specified, making migration to the runtime model straightforward.
 
+[[to-one-association-restrictions]]
+== Restrictions on to-one associations
 
-[[procedure-outputs]]
-== Improvements to ProcedureCall
+`@SQLRestriction` and `@Filter` may now be declared directly on `@ManyToOne` and `@OneToOne`
+associations, including associations mapped using join tables.
+Restrictions apply to the target through that association, consistently across eager and lazy fetching.
+An excluded target is represented as null while its stored reference is preserved during unrelated updates.
+Association filters apply whenever enabled, independently of `@FilterDef.applyToLoadByKey`.
+See the link:{userGuideBase}#pc-to-one-restrictions[user guide] for examples and
+the link:{migrationGuide}#filtered-to-one-associations[migration guide] for the update and merge semantics.
 
-In addition to the <<jpa4>> API enhancements to `StoredProcedureQuery`, a number of improvements and additions have been made to Hibernate's
-`ProcedureCall`, `ProcedureOutputs` and `Output`.
+[[sql-restriction-support]]
+== Expanded SQL restriction support
 
-[[procedure-outputs-casting]]
-=== Output Casting
-
-Previous versions of Hibernate required explicit casting of the `Output` references.  E.g.
-
-[source,java]
-----
-ProcedureCall call = session.createProcedureCall( "getRegionsAndInitiatives", Region.class);
-ProcedureOutputs outputs = call.getOutputs();
-
-List<Region> regions = ( (ResultSetOutput<Region>) outputs.getCurrent() )
-        .getResultList();
-----
-
-8.0 offers method-driven casting -
-
-[source,java]
-----
-ProcedureCall call = session.createProcedureCall( "getRegionsAndInitiatives");
-ProcedureOutputs outputs = call.getOutputs();
-
-List<Region> regions = outputs.getCurrent()
-        .asResultSetOutput( Region.class )
-        .getResultList();
-----
-
-[[procedure-outputs-mapping]]
-=== ResultSet Mapping
-
-Building on top of fixing a https://hibernate.atlassian.net/browse/HHH-9912[long-standing bug] and the improvements to <<procedure-outputs-casting,output casting>>, 8.0 adds the ability to lazily declare ResultSet mapping rather than up front during `ProcedureCall` creation.
-
-[source,java]
-----
-var call = session.createProcedureCall( "getRegionsAndInitiatives");
-var outputs = call.getOutputs();
-
-List<Region> regions =  outputs.getCurrent()
-        .asResultSetOutput(Region.class)
-        .getResultList();
-
-outputs.goToNext();
-
-List<Initiative> initiatives =  outputs.getCurrent()
-        .asResultSetOutput(Initiative.class)
-        .getResultList();
-----
-
+`@SQLRestriction` now supports references to columns outside an entity's primary table, including inherited columns in joined inheritance mappings.
+It also supports `@ManyToOne` associations mapped through a `@JoinTable`.
+These improvements allow static SQL restrictions to be used with a wider range of entity and association mappings.
 
 [[row-level-security]]
 == Discriminator-Based Multi-Tenancy and Row-Level Security
@@ -290,22 +176,6 @@ var entityManager = entityManagerFactory.createEntityManager(
 );
 ----
 
-[[final-field-check]]
-== Boot-time check for final persistent fields
-
-Hibernate now checks on boot for persistent fields declared `final` that will need to be set through reflection.
-Such reflective mutation of final fields is deprecated starting with JDK 26 and will be denied in a future JDK version.
-
-The bytecode enhancer automatically removes the `final` modifier from persistent fields, resolving these warnings.
-Alternatively, remove the `final` modifier from the field declarations.
-For `@IdClass` types, the `@Instantiator` annotation can be used to designate a constructor for instantiation,
-avoiding reflective field mutation entirely (link:https://hibernate.atlassian.net/browse/HHH-20542[HHH-20542]).
-
-The behavior of this check is controlled by the `hibernate.mapping.final_persistent_fields` setting,
-which accepts values `warn` (the default), `error`, and `ignore`.
-
-See the link:{userGuideBase}#entity-pojo-final-fields[User Guide] for details.
-
 === Query Options
 
 Finally, implementations of `TypedQuery.Option` and `Statement.Option` define settings affecting the execution of queries and statements:
@@ -322,21 +192,20 @@ Finally, implementations of `TypedQuery.Option` and `Statement.Option` define se
 * `jakarta.persistence.LockModeType`
 * `jakarta.persistence.PessimisticLockScope`
 
-[[get-ref-option]]
-== getReference() by Natural Id
+[[stateless-lock-modes]]
+== Lock modes in stateless sessions
 
-8.0 adds the ability to get a reference (`Session#getReference`) based on the natural id of an entity.
+`StatelessSession` and `EntityAgent` now support all `LockModeType` values for entity loading and queries, including streamed results.
+Optimistic modes obtain protection immediately instead of deferring a version check until commit.
+Both `OPTIMISTIC_FORCE_INCREMENT` and `PESSIMISTIC_FORCE_INCREMENT` increment the version immediately.
+See the link:{migrationGuide}#optimistic-lock-mode-version-check[Migration Guide] for database requirements.
 
-[source,java]
-----
-var isbn = ...;
-var book = session.getReference(Book.class, isbn, KeyType.NATURAL);
-----
+[[json-xml-functions-incubation]]
+== JSON/XML functions out of incubation
 
-[[StatementObserver]]
-== StatementObserver
-
-8.0 introduces the new `StatementObserver` contract, allowing observation of all JDBC statements Hibernate performs.
+As of 8.0, the JSON and XML functions are out of incubation and hence are available by default.
+The configuration settings `hibernate.query.hql.json_functions_enabled` and `hibernate.query.hql.xml_functions_enabled`
+were removed.
 
 [[safe-mode]]
 == Safe Mode Validator
@@ -362,42 +231,59 @@ hibernate.query.safe_mode_enabled=true
 When safe mode is enabled and an unsafe operation is attempted, Hibernate throws an exception indicating which function or operation is not allowed.
 
 
-[[bidir-mgmt]]
-== Flush-Time Bidirectionality Management
+[[procedure-outputs]]
+== Improvements to ProcedureCall
 
-Hibernate can now optionally manage bidirectional associations in the managed object graph during flush preparation. When enabled with `hibernate.bidirectionality_management=true`, Hibernate treats the owning side as authoritative and synchronizes inverse-side references and initialized collections for managed entities as if application code had made those inverse-side changes before flushing.
+In addition to the <<jpa4>> API enhancements to `StoredProcedureQuery`, a number of improvements and additions have been made to Hibernate's
+`ProcedureCall`, `ProcedureOutputs` and `Output`.
 
-Uninitialized lazy inverse collections are not initialized solely for bidirectionality management. This is also the important second-level cache boundary: initialized inverse collections participate in normal flush processing and collection cache invalidation, but uninitialized inverse collections are not dirtied or evicted by bidirectionality management alone. If an application changes only the owning side while a cacheable inverse collection remains unloaded, `hibernate.cache.auto_evict_collection_cache=true` is still the setting which evicts that inverse collection cache entry.
+[[procedure-outputs-casting]]
+=== Output Casting
 
-NOTE: The deprecated bytecode-enhancement setting `hibernate.enhancer.enableAssociationManagement=true` is also recognized as an alias when the new setting is not specified, making migration to the runtime model straightforward.
+Previous versions of Hibernate required explicit casting of the `Output` references.  E.g.
 
-[[subselect-fetching]]
-== Subselect Fetching
+[source,java]
+----
+ProcedureCall call = session.createProcedureCall( "getRegionsAndInitiatives", Region.class);
+ProcedureOutputs outputs = call.getOutputs();
 
-The following major enhancements were made to subselect fetching.
+List<Region> regions = ( (ResultSetOutput<Region>) outputs.getCurrent() )
+        .getResultList();
+----
 
-- To-one associations are now eligible for bulk select fetching. Previously, only many-valued associations could be fetched in bulk.
+8.0 offers method-driven casting -
 
-- `FetchMethod` was introduced as a JPA 4 `FetchOption` enumerating the basic fetching methods `BY_ID`, `JOIN`, and `BY_SUBQUERY`. To request bulk select fetching for an `AttributeNode` of an `EntityGraph`, call `node.addOption(FetchMethod.BY_SUBQUERY)`.
-+
-Note that batch fetching may be requested using the standard JPA 4 fetch option `BatchFetch`.
+[source,java]
+----
+ProcedureCall call = session.createProcedureCall( "getRegionsAndInitiatives");
+ProcedureOutputs outputs = call.getOutputs();
 
-These changes finally make bulk select fetching a first-class citizen.
+List<Region> regions = outputs.getCurrent()
+        .asResultSetOutput( Region.class )
+        .getResultList();
+----
 
-[[json-xml-functions-incubation]]
-== JSON/XML functions out of incubation
+[[procedure-outputs-mapping]]
+=== ResultSet Mapping
 
-As of 8.0, the JSON and XML functions are out of incubation and hence are available by default.
-The configuration settings `hibernate.query.hql.json_functions_enabled` and `hibernate.query.hql.xml_functions_enabled`
-were removed.
+Building on top of fixing a https://hibernate.atlassian.net/browse/HHH-9912[long-standing bug] and the improvements to <<procedure-outputs-casting,output casting>>, 8.0 adds the ability to lazily declare ResultSet mapping rather than up front during `ProcedureCall` creation.
 
-[[security-annotations]]
-== Security annotations on Jakarta Data repositories
+[source,java]
+----
+var call = session.createProcedureCall( "getRegionsAndInitiatives");
+var outputs = call.getOutputs();
 
-The annotation processor now propagates security annotations from the `jakarta.annotation.security` package (`@DeclareRoles`, `@DenyAll`, `@PermitAll`, `@RolesAllowed`, `@RunAs`) from repository interfaces to generated implementations, allowing Jakarta EE containers to enforce role-based access control on repositories.
-This behavior may be disabled by passing `-AsuppressJakartaDataSecurityAnnotations=true` to the annotation processor.
+List<Region> regions =  outputs.getCurrent()
+        .asResultSetOutput(Region.class)
+        .getResultList();
 
-See https://github.com/jakartaee/data/issues/1293[jakartaee/data#1293].
+outputs.goToNext();
+
+List<Initiative> initiatives =  outputs.getCurrent()
+        .asResultSetOutput(Initiative.class)
+        .getResultList();
+----
+
 
 [[module-level-annotations]]
 == Module-level annotations
@@ -406,11 +292,93 @@ Annotations such as `@NamedQuery`, `@FilterDef`, `@FetchProfile`, and type regis
 
 Modules are registered via `MetadataSources#addModuleDescriptor(Module)`.
 
-[[hbm-xml-transformer]]
-== HBM XML transformation
+[[default-list-semantics]]
+== Default list semantics by package or module
 
-`HbmXmlTransformer` more faithfully preserves legacy `hbm.xml` mappings when converting them to Hibernate's extended `orm.xml` format.
-Improvements cover composite identifiers, inheritance, associations, collections, custom types, constraints, and stored procedure mappings.
+The new `@DefaultListSemantics` annotation selects how Hibernate interprets eligible `java.util.List`
+attributes declared in a package or module: `BAG` does not persist element positions, while `LIST`
+uses an implicit order column.
+
+For example, declare the following in `package-info.java`:
+
+[source,java]
+----
+@DefaultListSemantics(LIST)
+package org.example.domain;
+
+import org.hibernate.annotations.DefaultListSemantics;
+import static org.hibernate.annotations.DefaultListSemantics.Classification.LIST;
+----
+
+A package annotation overrides the module annotation and applies only to that exact package, not its subpackages.
+Explicit collection mapping metadata continues to take precedence. Lists ordered by `@OrderBy` or `@SQLOrder`,
+and unowned to-many associations, retain bag semantics unless explicit list-index metadata is present.
+
+See the link:{userGuideBase}#collection-list[User Guide] for the classification rules and
+link:{migrationGuide}#default-list-semantics[Migration Guide] for replacing the deprecated
+`hibernate.mapping.default_list_semantics` setting.
+
+
+[[generator-optimizer]]
+== Generator optimizer annotation
+
+The new `@GeneratorOptimizer` annotation allows specifying a standard optimizer for sequence or table identifier generation.
+Place it on the identifier field or getter alongside `@GeneratedValue`, choosing a strategy from `org.hibernate.id.enhanced.StandardOptimizerDescriptor`.
+
+[source,java]
+.@GeneratorOptimizer example
+----
+@Id
+@GeneratedValue(strategy = GenerationType.SEQUENCE)
+@SequenceGenerator(sequenceName = "book_sequence", allocationSize = 20)
+@GeneratorOptimizer(StandardOptimizerDescriptor.POOLED_LO)
+private Long id;
+----
+
+Here, `POOLED_LO` allocates identifiers in pools of 20, interpreting each database sequence value as the low end of a pool.
+The database sequence increment must match `allocationSize`; Hibernate uses this increment when creating the sequence during schema generation.
+
+Optimizer selection applies to the consuming identifier mapping, including when it references a globally named generator definition.
+See the link:{userGuideBase}#identifiers-generators-optimizer-annotation[User Guide] for examples and details.
+
+
+[[get-ref-option]]
+== getReference() by Natural Id
+
+8.0 adds the ability to get a reference (`Session#getReference`) based on the natural id of an entity.
+
+[source,java]
+----
+var isbn = ...;
+var book = session.getReference(Book.class, isbn, KeyType.NATURAL);
+----
+
+[[map-key-formula]]
+== Formula-based map keys
+
+The new `@MapKeyFormula` annotation specifies a native SQL expression used to read the key of a
+`java.util.Map`, instead of storing the key in a `@MapKeyColumn`. Since the key is derived from the
+expression, it is never written to the database:
+
+[source,java]
+----
+@OneToMany(mappedBy = "parent")
+@MapKeyFormula("upper(code)")
+Map<String, Child> children;
+----
+
+The `<map-key-formula>` element of mapping XML, which was previously ignored, now has the same effect.
+Mappings which declare it no longer fall back to the default `<attribute>_KEY` column.
+See the link:{userGuideBase}#collections-map-key-formula[user guide] for details and examples.
+[[formula-one-to-one-associations]]
+== Formula-based one-to-one associations
+
+A `@OneToOne` association whose join mixes physical `@JoinColumn`s with `@JoinFormula`s (via
+`@JoinColumnOrFormula`/`@JoinColumnsOrFormulas`, or the equivalent `<one-to-one>` mapping XML) is
+now recognized and bound as a true one-to-one association instead of falling back to a logical
+many-to-one. For each physical join column that is also part of the owner's primary key, Hibernate
+infers `insertable=false, updatable=false`, since the identifier mapping already owns that column's
+value. See the link:{userGuideBase}#associations-one-to-one-formulas[user guide] for details and examples.
 
 [[client-enhancement]]
 == Client enhancement
@@ -421,12 +389,82 @@ The target entity classes must also be enhanced.
 
 See the link:{migrationGuide}#client-enhancement[Migration Guide] for configuration compatibility and container integration details.
 
-[[sql-restriction-support]]
-== Expanded SQL restriction support
+[[final-field-check]]
+== Boot-time check for final persistent fields
 
-`@SQLRestriction` now supports references to columns outside an entity's primary table, including inherited columns in joined inheritance mappings.
-It also supports `@ManyToOne` associations mapped through a `@JoinTable`.
-These improvements allow static SQL restrictions to be used with a wider range of entity and association mappings.
+Hibernate now checks on boot for persistent fields declared `final` that will need to be set through reflection.
+Such reflective mutation of final fields is deprecated starting with JDK 26 and will be denied in a future JDK version.
+
+The bytecode enhancer automatically removes the `final` modifier from persistent fields, resolving these warnings.
+Alternatively, remove the `final` modifier from the field declarations.
+For `@IdClass` types, the `@Instantiator` annotation can be used to designate a constructor for instantiation,
+avoiding reflective field mutation entirely (link:https://hibernate.atlassian.net/browse/HHH-20542[HHH-20542]).
+
+The behavior of this check is controlled by the `hibernate.mapping.final_persistent_fields` setting,
+which accepts values `warn` (the default), `error`, and `ignore`.
+
+See the link:{userGuideBase}#entity-pojo-final-fields[User Guide] for details.
+
+[[security-annotations]]
+== Security annotations on Jakarta Data repositories
+
+The annotation processor now propagates security annotations from the `jakarta.annotation.security` package (`@DeclareRoles`, `@DenyAll`, `@PermitAll`, `@RolesAllowed`, `@RunAs`) from repository interfaces to generated implementations, allowing Jakarta EE containers to enforce role-based access control on repositories.
+This behavior may be disabled by passing `-AsuppressJakartaDataSecurityAnnotations=true` to the annotation processor.
+
+See https://github.com/jakartaee/data/issues/1293[jakartaee/data#1293].
+
+[[cdi-interceptors]]
+== Configured interceptors can now come from CDI
+
+An `Interceptor` configured via `hibernate.session_factory.interceptor` or `hibernate.session_factory.session_scoped_interceptor` as a `Class` is now resolved through the bean container, participating in CDI dependency injection and `@PostConstruct`/`@PreDestroy` lifecycle callbacks when a CDI `BeanManager` is available.
+
+A global interceptor (`hibernate.session_factory.interceptor`) resolves one bean shared by the factory and every session.
+
+A session-scoped interceptor (`hibernate.session_factory.session_scoped_interceptor`) resolves a new bean per session, released when that session closes or, for sessions sharing a parent's interceptor, once every sharing session has closed.
+A session-scoped interceptor may also still be configured as a plain `java.util.function.Supplier<? extends Interceptor>`, obtaining a new non-CDI-managed instance per session exactly as before.
+
+See the link:{migrationGuide}#interceptor-configuration-behavior[migration guide] for a related behavior change if you configure interceptors today.
+
+[[StatementObserver]]
+== StatementObserver
+
+8.0 introduces the new `StatementObserver` contract, allowing observation of all JDBC statements Hibernate performs.
+
+[[adjustable-settings]]
+== AdjustableSettings
+
+`SessionFactory` now exposes the new `org.hibernate.settings.AdjustableSettings` contract as a way to adjust a limited set of settings at runtime.
+
+[source,java]
+.AdjustableSettings example
+----
+SessionFactory factory = ...;
+AdjustableSettings adjuster = factory.getAdjustableSettings();
+adjuster.setShowSql(true);
+----
+
+
+
+[[hibernate-bom]]
+== Skinny BOM (`hibernate-bom`)
+
+A new `org.hibernate.orm:hibernate-bom` artifact is available.
+It manages versions of the published Hibernate ORM modules only, without constraining third-party dependency versions.
+This is useful when your project already manages third-party dependencies through another platform or parent POM.
+
+The existing `org.hibernate.orm:hibernate-platform` continues to manage both Hibernate and third-party dependency versions.
+
+[[hbm-xml-transformer]]
+== HBM XML transformation
+
+`HbmXmlTransformer` more faithfully preserves legacy `hbm.xml` mappings when converting them to Hibernate's extended `orm.xml` format.
+Improvements cover composite identifiers, inheritance, associations, collections, custom types, constraints, and stored procedure mappings.
+
+[[nullability-annotations]]
+== Nullability annotations
+
+Jakarta `@Nonnull` and `@Nullable` annotations now cover more of the query, Criteria, restriction, and range APIs, along with mapping, loading, and configuration SPIs.
+These annotations make nullability contracts available to IDEs and static analysis tools.
 
 [[spi-contracts]]
 == Explicit extension contracts
@@ -455,51 +493,10 @@ The central SQL AST and translator SPIs are now out of incubation, including tra
 Their supported provider roles now carry the normal SPI compatibility expectations within an `X.Y` release family.
 Some specialized contracts remain incubating; see the link:{migrationGuide}#sql-ast-translator-stability[Migration Guide] for details.
 
-[[hibernate-bom]]
-== Skinny BOM (`hibernate-bom`)
+[[uuid-capable-java-type]]
+== UuidCapableJavaType
 
-A new `org.hibernate.orm:hibernate-bom` artifact is available.
-It manages versions of the published Hibernate ORM modules only, without constraining third-party dependency versions.
-This is useful when your project already manages third-party dependencies through another platform or parent POM.
+`UuidCapableJavaType` is a new capability in the `JavaType` SPI family which makes it easier to hook non-`java.util.UUID` UUID types into id/value generation.  It defines 2 hooks -
 
-The existing `org.hibernate.orm:hibernate-platform` continues to manage both Hibernate and third-party dependency versions.
-
-[[cdi-interceptors]]
-== Configured interceptors can now come from CDI
-
-An `Interceptor` configured via `hibernate.session_factory.interceptor` or `hibernate.session_factory.session_scoped_interceptor` as a `Class` is now resolved through the bean container, participating in CDI dependency injection and `@PostConstruct`/`@PreDestroy` lifecycle callbacks when a CDI `BeanManager` is available.
-
-A global interceptor (`hibernate.session_factory.interceptor`) resolves one bean shared by the factory and every session.
-
-A session-scoped interceptor (`hibernate.session_factory.session_scoped_interceptor`) resolves a new bean per session, released when that session closes or, for sessions sharing a parent's interceptor, once every sharing session has closed.
-A session-scoped interceptor may also still be configured as a plain `java.util.function.Supplier<? extends Interceptor>`, obtaining a new non-CDI-managed instance per session exactly as before.
-
-See the link:{migrationGuide}#interceptor-configuration-behavior[migration guide] for a related behavior change if you configure interceptors today.
-
-[[formula-one-to-one-associations]]
-== Formula-based one-to-one associations
-
-A `@OneToOne` association whose join mixes physical `@JoinColumn`s with `@JoinFormula`s (via
-`@JoinColumnOrFormula`/`@JoinColumnsOrFormulas`, or the equivalent `<one-to-one>` mapping XML) is
-now recognized and bound as a true one-to-one association instead of falling back to a logical
-many-to-one. For each physical join column that is also part of the owner's primary key, Hibernate
-infers `insertable=false, updatable=false`, since the identifier mapping already owns that column's
-value. See the link:{userGuideBase}#associations-one-to-one-formulas[user guide] for details and examples.
-
-[[map-key-formula]]
-== Formula-based map keys
-
-The new `@MapKeyFormula` annotation specifies a native SQL expression used to read the key of a
-`java.util.Map`, instead of storing the key in a `@MapKeyColumn`. Since the key is derived from the
-expression, it is never written to the database:
-
-[source,java]
-----
-@OneToMany(mappedBy = "parent")
-@MapKeyFormula("upper(code)")
-Map<String, Child> children;
-----
-
-The `<map-key-formula>` element of mapping XML, which was previously ignored, now has the same effect.
-Mappings which declare it no longer fall back to the default `<attribute>_KEY` column.
-See the link:{userGuideBase}#collections-map-key-formula[user guide] for details and examples.
+* A value-transformer to transform between the custom UUID values and `java.util.UUID`.
+* Whether the `UuidCapableJavaType` should be applied in `jakarta.persistence.GenerationType#AUTO` cases.

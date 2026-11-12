@@ -75,6 +75,51 @@ See the link:{releaseSeriesBase}#whats-new[website] for the list of new features
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#api[API].
 
+[[query-api]]
+=== Query API
+
+One of the biggest changes in Jakarta Persistence 4.0 is the better modeling of "queries" into selections (`TypedQuery`) and mutations (its new `Statement` contract),
+aligning closely with Hibernate's already existing `SelectionQuery` and `MutationQuery` contracts.
+At the same time, it deprecated all "operation methods" from its "raw" `Query` contract.
+
+Hibernate's Query contracts implement the Jakarta Persistence ones, so changes were needed here.
+
+:fn_selectionquery: footnote:[Unfortunately that means `SelectionQuery` now inherits the `executeUpdate()` method from JPA's `Query`, but as mentioned that method is deprecated.]
+:fn_mutationquery: footnote:[Unfortunately that means `MutationQuery` now inherits `getResultList()`, and other such methods from JPA's `Query`, but as mentioned these methods are all deprecated.]
+
+* Hibernate's `Query` interface is still typed, but it now extends from JPA's `Query` rather than `TypedQuery`.
+* Hibernate's `SelectionQuery` now implements `TypedQuery`{fn_selectionquery}.
+* Hibernate's `MutationQuery` now implements the new `Statement` contract{fn_mutationquery}.
+
+Another impact is that `@NamedQuery` and `@NamedNativeQuery` (as well as Hibernate's variants) may no longer be used to define mutation queries -
+
+* `@NamedQuery` - A `SelectionQuery` defined using HQL/JPQL
+* `@NamedStatement` - A `MutationQuery` defined using HQL/JPQL
+* `@NamedNativeQuery` - A `SelectionQuery` defined using native SQL
+* `@NamedNativeStatement` - A `MutationQuery` defined using native SQL
+
+[[stateless]]
+=== StatelessSession
+
+Jakarta Persistence now defines a contract for "stateless" processing, named `EntityAgent`, similar to Hibernate's `StatelessSession`.
+Hibernate's `StatelessSession` now implements `EntityAgent`.
+2 methods on `EntityAgent` clash with methods already defined on `StatelessSession` -
+
+* `insert()` - `EntityAgent` defines a `void` return type, whereas Hibernate has historically returned the identifier of the inserted entity.
+* `fetch()` - `EntityAgent` defines that the fetched value be returned, whereas `StatelessSession` has historically defined a `void` return type.
+
+In both cases, `StatelessSession` has been changed to match the `EntityAgent` signatures.
+
+[[timeout]]
+=== Query and Transaction Timeouts
+
+Historically, both Hibernate and Jakarta Persistence have defined timeouts as integer values.
+Confusingly, Hibernate generally used second precision while Jakarta Persistence used millisecond precision.
+Starting in 3.2, Jakarta Persistence added a new `Timeout` class which helps alleviate this potential confusion.
+Originally this new `Timeout` type was not exposed on any API directly, so there was no impact from an API perspective.
+However, this has changed a bit in 4.0 where `Timeout` *is* now exposed on certain APIs.
+This causes a signature conflict with a few of Hibernate API methods; as part of fixing those conflicts, it was decided to change all exposures of timeout in Hibernate APIs to use `Timeout` as this helps clarify these confusions.
+
 === Managed package and module descriptors
 
 Register package metadata using `MetadataSources.addPackageDescriptor(String)` or
@@ -104,63 +149,6 @@ but cannot enroll resources outside those archives. `jpaScan()` excludes root di
 when `exclude-unlisted-classes` is true or omitted; listed JARs and the root standard
 mapping resource are still considered.
 
-
-=== Filter definition API
-
-`SessionFactory.getFilterDefinition(String)` and `Filter.getFilterDefinition()`
-now return the API interface `org.hibernate.engine.FilterDefinition`.
-Their deprecations have been removed. The interface exposes the filter name,
-parameter names, default condition, automatic enablement, and load-by-key flag.
-The existing SPI class implements this interface, so the returned objects and
-the behavior for unknown filter names are unchanged.
-
-The changed return types are a binary compatibility break: callers compiled
-against the old API declarations must be recompiled. Source code assigning the
-result to `org.hibernate.engine.spi.FilterDefinition` must use the API interface
-or migrate to SPI access if it needs JDBC mappings, parameter resolvers, or
-argument processing. See <<filter-definition-spi>>.
-
-[[session-replicate]]
-=== Removed `Session.replicate()`
-
-The deprecated `Session.replicate()` methods and the associated `ReplicationMode` enum have been removed.
-There is no direct replacement.
-For some import or overwrite workflows, consider `StatelessSession#upsert(Object)`.
-
-[[stateless]]
-=== StatelessSession
-
-Jakarta Persistence now defines a contract for "stateless" processing, named `EntityAgent`, similar to Hibernate's `StatelessSession`.
-Hibernate's `StatelessSession` now implements `EntityAgent`.
-2 methods on `EntityAgent` clash with methods already defined on `StatelessSession` -
-
-* `insert()` - `EntityAgent` defines a `void` return type, whereas Hibernate has historically returned the identifier of the inserted entity.
-* `fetch()` - `EntityAgent` defines that the fetched value be returned, whereas `StatelessSession` has historically defined a `void` return type.
-
-In both cases, `StatelessSession` has been changed to match the `EntityAgent` signatures.
-
-[[query-api]]
-=== Query API
-
-One of the biggest changes in Jakarta Persistence 4.0 is the better modeling of "queries" into selections (`TypedQuery`) and mutations (its new `Statement` contract),
-aligning closely with Hibernate's already existing `SelectionQuery` and `MutationQuery` contracts.
-At the same time, it deprecated all "operation methods" from its "raw" `Query` contract.
-
-Hibernate's Query contracts implement the Jakarta Persistence ones, so changes were needed here.
-
-:fn_selectionquery: footnote:[Unfortunately that means `SelectionQuery` now inherits the `executeUpdate()` method from JPA's `Query`, but as mentioned that method is deprecated.]
-:fn_mutationquery: footnote:[Unfortunately that means `MutationQuery` now inherits `getResultList()`, and other such methods from JPA's `Query`, but as mentioned these methods are all deprecated.]
-
-* Hibernate's `Query` interface is still typed, but it now extends from JPA's `Query` rather than `TypedQuery`.
-* Hibernate's `SelectionQuery` now implements `TypedQuery`{fn_selectionquery}.
-* Hibernate's `MutationQuery` now implements the new `Statement` contract{fn_mutationquery}.
-
-Another impact is that `@NamedQuery` and `@NamedNativeQuery` (as well as Hibernate's variants) may no longer be used to define mutation queries -
-
-* `@NamedQuery` - A `SelectionQuery` defined using HQL/JPQL
-* `@NamedStatement` - A `MutationQuery` defined using HQL/JPQL
-* `@NamedNativeQuery` - A `SelectionQuery` defined using native SQL
-* `@NamedNativeStatement` - A `MutationQuery` defined using native SQL
 
 [[transform-removal]]
 === Removal of `org.hibernate.transform` package
@@ -209,15 +197,56 @@ query.setTupleTransformer( (tuple, aliases) -> {
 } );
 ----
 
-[[timeout]]
-=== Query and Transaction Timeouts
+[[session-replicate]]
+=== Removed `Session.replicate()`
 
-Historically, both Hibernate and Jakarta Persistence have defined timeouts as integer values.
-Confusingly, Hibernate generally used second precision while Jakarta Persistence used millisecond precision.
-Starting in 3.2, Jakarta Persistence added a new `Timeout` class which helps alleviate this potential confusion.
-Originally this new `Timeout` type was not exposed on any API directly, so there was no impact from an API perspective.
-However, this has changed a bit in 4.0 where `Timeout` *is* now exposed on certain APIs.
-This causes a signature conflict with a few of Hibernate API methods; as part of fixing those conflicts, it was decided to change all exposures of timeout in Hibernate APIs to use `Timeout` as this helps clarify these confusions.
+The deprecated `Session.replicate()` methods and the associated `ReplicationMode` enum have been removed.
+There is no direct replacement.
+For some import or overwrite workflows, consider `StatelessSession#upsert(Object)`.
+
+[[procedure-api]]
+=== ProcedureCall and ProcedureOutputs
+
+The API for `ProcedureCall` and `ProcedureOutputs` has been redesigned for a number of reasons, mostly -
+
+* Fix a https://hibernate.atlassian.net/browse/HHH-9912[long-standing bug] where multiple result mappings were not handled properly.
+* Better handling of `ProcedureOutputs` to avoid casts and, even worse, often untyped casts.  This is achieved by the new methods added to `Output`.  See link:{whatsNewBase}#procedure-outputs-casting.
+* Clean up leakage of various SPI contracts into these API contracts.
+* Align with changes in Jakarta Persistence 4.0.
+
+[[generic-generator]]
+=== `@GenericGenerator`
+
+The `@GenericGenerator` annotation was deprecated in Hibernate 6.5.
+Instead of removing it completely, we have modernized it and reversed its deprecation.
+Code still using `@GenericGenerator` must adapt to its reworked definition.
+
+=== Filter definition API
+
+`SessionFactory.getFilterDefinition(String)` and `Filter.getFilterDefinition()`
+now return the API interface `org.hibernate.engine.FilterDefinition`.
+Their deprecations have been removed. The interface exposes the filter name,
+parameter names, default condition, automatic enablement, and load-by-key flag.
+The existing SPI class implements this interface, so the returned objects and
+the behavior for unknown filter names are unchanged.
+
+The changed return types are a binary compatibility break: callers compiled
+against the old API declarations must be recompiled. Source code assigning the
+result to `org.hibernate.engine.spi.FilterDefinition` must use the API interface
+or migrate to SPI access if it needs JDBC mappings, parameter resolvers, or
+argument processing. See <<filter-definition-spi>>.
+
+[[FindMultipleOption]]
+=== FindMultipleOption
+
+The four enums which are implementors of `org.hibernate.FindMultipleOption` have been moved as inner enums of `org.hibernate.FindMultipleOption` itself :
+
+* `org.hibernate.OrderingMode` -> `org.hibernate.FindMultipleOption.OrderingMode`
+* `org.hibernate.SessionCheckMode` -> `org.hibernate.FindMultipleOption.SessionCheckMode`
+* `org.hibernate.RemovalsMode` -> `org.hibernate.FindMultipleOption.RemovalsMode`
+* `org.hibernate.BatchSize` -> `org.hibernate.FindMultipleOption.BatchSize`
+
+These enums were previously incubating, except for `org.hibernate.BatchSize` which is now marked as deprecated.
 
 [[graph-attr-node]]
 === AttributeNode Subgraphs
@@ -232,34 +261,10 @@ Hibernate has therefore needed to do the same in its `org.hibernate.graph.Attrib
 
 Jakarta Persistence has changed/fixed the type signature of methods in the Criteria API which return Join and Fetch based on the String name of attributes.  This can lead to compilation issues if an application uses these methods in certain ways.
 
-[[procedure-api]]
-=== ProcedureCall and ProcedureOutputs
+=== Fixed delimited-identifiers in XML mappings
 
-The API for `ProcedureCall` and `ProcedureOutputs` has been redesigned for a number of reasons, mostly -
-
-* Fix a https://hibernate.atlassian.net/browse/HHH-9912[long-standing bug] where multiple result mappings were not handled properly.
-* Better handling of `ProcedureOutputs` to avoid casts and, even worse, often untyped casts.  This is achieved by the new methods added to `Output`.  See link:{whatsNewBase}#procedure-outputs-casting.
-* Clean up leakage of various SPI contracts into these API contracts.
-* Align with changes in Jakarta Persistence 4.0.
-
-[[FindMultipleOption]]
-=== FindMultipleOption
-
-The four enums which are implementors of `org.hibernate.FindMultipleOption` have been moved as inner enums of `org.hibernate.FindMultipleOption` itself :
-
-* `org.hibernate.OrderingMode` -> `org.hibernate.FindMultipleOption.OrderingMode`
-* `org.hibernate.SessionCheckMode` -> `org.hibernate.FindMultipleOption.SessionCheckMode`
-* `org.hibernate.RemovalsMode` -> `org.hibernate.FindMultipleOption.RemovalsMode`
-* `org.hibernate.BatchSize` -> `org.hibernate.FindMultipleOption.BatchSize`
-
-These enums were previously incubating, except for `org.hibernate.BatchSize` which is now marked as deprecated.
-
-[[generic-generator]]
-=== `@GenericGenerator`
-
-The `@GenericGenerator` annotation was deprecated in Hibernate 6.5.
-Instead of removing it completely, we have modernized it and reversed its deprecation.
-Code still using `@GenericGenerator` must adapt to its reworked definition.
+Previous versions of Hibernate did not respect the `<delimited-identifiers>` element of `orm.xml`.
+This is now fixed.
 
 [[default-list-semantics]]
 === Deprecated default list semantics setting
@@ -297,11 +302,6 @@ See the link:{userGuideBase}#collection-list[User Guide] for the complete decisi
 === Deprecated OptimisticLock Annotation
 
 The venerable `@OptimisticLock` annotation was deprecated in favor of the new JPA-standard `@ExcludedFromVersioning` annotation.
-
-=== Fixed delimited-identifiers in XML mappings
-
-Previous versions of Hibernate did not respect the `<delimited-identifiers>` element of `orm.xml`.
-This is now fixed.
 
 [[hibernate-processor]]
 == Changes to Hibernate Processor
@@ -353,224 +353,6 @@ The annotation processor now propagates security annotations from the `jakarta.a
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#spi[SPI].
 
-[[entity-entry-version]]
-=== Explicit entity-entry version synchronization
-
-`EntityEntry` now requires `setVersion(Object)`. Custom implementations must
-implement this metadata-only assignment, including support for a null version.
-It must not change the entity, loaded snapshot, status, lock mode, or dirty
-tracking, and must not perform SQL, cache operations, or lifecycle callbacks.
-External implementations must implement the new method before using this release.
-
-Follow-on locking uses this operation after successful rereading of newly loaded
-entities, before publishing the final lock mode or forcing a version increment.
-Previously managed entities retain their existing version-checking lock-upgrade
-behavior and are not refreshed by this synchronization.
-
-[[jdbc-secondary-action-execution]]
-=== Invocation-local JDBC secondary actions
-
-Execution code must obtain `JdbcSelect.createActionExecution()` once per invocation
-and use that runner for both pre-actions and post-actions. The existing callback
-methods on `JdbcSelect` remain available but are deprecated. Cached action
-definitions must not retain invocation-specific state.
-
-`SecondaryAction.createExecutionAction()` returns `this` by default for reusable,
-stateless actions. Stateful definitions must return a fresh instance supporting
-their registered pre/post roles. The same definition is paired across phases by
-identity; duplicate registration within one phase is rejected before execution.
-Application-facing locking options and dialect timeout strategies are unchanged.
-
-The runner preserves registration order. On failure, use `cleanupAfterFailure()`
-with the original exception; remaining failure-eligible post-actions are attempted
-once, with cleanup failures suppressed on the original exception. Setup after
-pre-actions is also protected. A failing timeout setter triggers a restoration
-attempt when the original setting is known, but a failing restoration is not
-retried. This does not establish a new connection-disposal policy or extend the
-timeout to the lifetime of a scroll or stream.
-
-Custom `JdbcSelect` implementations have a default adapter for their legacy
-callbacks and remain responsible for avoiding shared mutable state. Stateful
-definitions such as the internal `LockTimeoutHandler` reject direct invocation;
-its `getBaseline()` method has been removed.
-
-`JdbcSelectWithActions` remains subclassable, with `createActionExecution()` as its
-execution extension point. Subclasses overriding the deprecated phase callbacks
-must move that customization to the runner factory; the standard executor no
-longer invokes those overrides. A subclass may call `super.createActionExecution()`
-and wrap the returned runner, keeping all execution state local to that invocation.
-The wrapper must delegate failure cleanup and preserve action order, exception
-precedence, and single-attempt execution. Subclasses without execution customization
-may inherit the factory unchanged.
-
-For asynchronous integrations, including Hibernate Reactive, the protected
-`JdbcSelectWithActions` arrays remain definitions. Use
-`JdbcActionExecution.materializeActions()` to obtain immutable lists of paired,
-invocation-local instances without invoking callbacks. Retain these instances
-across asynchronous completion and preserve phase ordering, single-attempt
-cleanup, and exception precedence. Materialization requires no thread affinity.
-
-[[direct-force-increment-result-completion]]
-=== Direct force-increment result completion
-
-Direct loads using `PESSIMISTIC_FORCE_INCREMENT` with `EXTENDED` scope now complete
-supplemental collection-table acquisition before incrementing versions. Loading
-callbacks and tuple transformers may observe the original versions and provisional
-`PESSIMISTIC_WRITE` mode. Standard result-list transformation runs after successful
-acquisition and increments, before returning the result to the caller.
-
-`ResultsConsumer` adds `supportsDeferredResultFinalization()` and `finishResult()`.
-The opt-in defaults to `false`, preserving custom consumers' existing consumption
-timing. Custom materializing consumers which need final transformation to observe
-completed versions must opt in. For affected executions, `consume()` receives query
-options with the result-list transformer withheld; `finishResult()` receives the
-original execution context and options after successful locking post-actions.
-Complete row processing in `consume()` without retaining its processing state for
-finalization, and apply deferred result-list transformation once in `finishResult()`.
-The finalization hook is not called for ordinary, non-deferred executions.
-Decorators must preserve the wrapped consumer's opt-in and finalization behavior.
-
-Cursor consumers may retain processing state in the returned cursor. Complete
-acquisition and increments for each logical result after all its post-load
-notifications and before exposing it. Closing a cursor must not increment
-unconsumed results. Asynchronous execution integrations must retain the collector's
-invocation-owned completion state until supplemental acquisition and increments
-finish, preserving this ordering and failure cleanup.
-
-Previously scheduled optimistic force increments remain independent of this
-completion state. Completing or failing a pessimistic acquisition must not cancel
-those transaction-completion callbacks.
-
-[[property-access-spi]]
-=== Property value access
-
-Hibernate now integrates Hibernate Accessor for property value access.
-`PropertyAccess` implementations must implement the new `getPropertyValueAccessor()` method, returning a `PropertyValueAccessor` for the mapped attribute.
-There is no default implementation of this method; custom implementations must be updated and recompiled.
-
-Use the appropriate `PropertyValueAccessor` factory for the access pattern, such as `standard()` for a reader/writer pair or `map()` for map-backed properties.
-The existing `getGetter()` and `getSetter()` methods remain part of the contract, but implementing those methods alone is no longer sufficient.
-Integrations must preserve their property's read, write, and insert-time access semantics through the new accessor.
-`PropertyValueAccessor` is currently incubating.
-
-[[dialect-provider-migration]]
-=== Custom dialect providers
-
-Dialect extension contracts have been reorganized and explicitly classified using `@SPI`.
-Custom dialects must update imports and overrides to the current contracts, including the focused `org.hibernate.dialect.lock.spi`, `org.hibernate.dialect.pagination.spi`, and `org.hibernate.dialect.mutation.spi` packages where applicable.
-Use supported strategy contracts and factories instead of implementations in internal packages.
-
-Extend `Dialect` or another type explicitly classified with `SPI.Role.IMPLEMENT`.
-A built-in dialect being available for selection does not by itself make it a supported subclass base.
-The `USE`, `IMPLEMENT`, and `SUPPLY` roles are independent, and compatibility expectations for non-incubating SPIs apply within one `X.Y` release family.
-
-See the link:{versionDocBase}/dialect-provider/index.html[Dialect Provider Guide] for supported extension points, migration examples, and provider validation tooling.
-
-[[custom-cascade-implementations]]
-=== Removal of custom cascade implementations
-
-Custom implementations of `CascadeStyle` and `CascadingAction` are no longer "supported".
-They were never well-supported anyway.
-These contracts, now in `org.hibernate.cascade.spi`, are internal strategies rather than extension points.
-The `CascadeStyles.registerCascadeStyle()` registration method has been removed, and the cascade coordinator rejects custom actions.
-
-Integrations must remove custom cascade registrations and use Hibernate's built-in cascade styles.
-There is no replacement extension contract for custom cascade styles or actions; application-specific propagation of persistence operations must be implemented explicitly.
-
-[[client-enhancement]]
-=== Client enhancement
-
-`Enhancer.enhanceClient(String, byte[])` performs client field-access rewriting separately from managed-class enhancement.
-Its default implementation reports unsupported client enhancement, so existing enhancer implementations continue to work when it is unused.
-`HibernatePersistenceProvider.getClientClassTransformer(PersistenceUnitInfo, Map)` exposes an independent Jakarta transformer for containers.
-Targets must already have compatible managed enhancement from tooling, or the container must arrange it before defining them.
-When both transformations apply to a class, managed enhancement precedes client enhancement.
-A client may reference another class scheduled for later managed enhancement.
-Runtime client enhancement can be used with runtime managed enhancement disabled when tooling has already enhanced the targets.
-Requesting the client transformer does not register either transformer.
-
-Gradle, Maven, and Ant accept `enableClientEnhancement`, defaulting to false.
-`enableExtendedEnhancement` remains a deprecated alias. When both are set, the new name wins, including explicit false.
-Client classes no longer receive a managed-enhancement marker simply because client enhancement was requested.
-Targets must be scheduled for managed enhancement or already carry compatible enhancement; known skipped or incompatible targets fail during enhancement instead of producing unavailable accessor calls.
-XML mapping recognition is unchanged, and reflection and method-handle accesses are outside the client transformation.
-
-[[enhancement-session-spi]]
-=== Enhancement model, options, and environment
-
-`EnhancementContext`, `DefaultEnhancementContext`, and `EnhancementContextWrapper`
-have been replaced by independent `EnhancementModel`, `EnhancementOptions`, and
-`EnhancementEnvironment` contracts. `DefaultEnhancementModel` supplies the existing
-annotation-based interpretation. Discovery and metadata belong to an
-`EnhancementSession`, not to the model or options.
-
-`BytecodeProvider` implementations must replace `getEnhancer(context)` with
-`createEnhancementSession(model, environment)`. There is no compatibility adapter.
-Direct `EnhancerImpl` construction is replaced by session creation as well:
-
-[source,java]
-----
-try (var session = provider.createEnhancementSession(
-        model, EnhancementEnvironment.forClassLoader(loader))) {
-    var enhancer = session.createEnhancer(
-            EnhancementOptions.of(dirtyTracking, lazyInitialization, associationManagement));
-    session.discoverTypes(className, originalBytes);
-    byte[] enhanced = enhancer.enhance(className, originalBytes);
-}
-----
-
-Environments resolve bytecode without defining application classes and may use a
-custom byte source instead of a loader. The Byte Buddy provider also accepts a
-borrowed `EnhancerClassLocator` when creating a session. Sessions do not close
-borrowed environments, locators, or class loaders.
-
-Call `invalidateMetadata()` between passes which replace class resources. This
-clears bytecode and getter caches while retaining discovered persistence
-classifications. Close or invalidate only when no session operations are active.
-Closing a session makes all of its enhancers unusable.
-
-The paired JPA transformer factories share discovery and metadata when called on
-the same `HibernatePersistenceProvider` and `PersistenceUnitInfo` instances, for
-the same defining loader and bytecode-provider instance. Each transformer retains
-its own enhancer and generation options. The `PersistenceUnitInfo.addTransformer`
-bootstrap path remains independent.
-
-
-[[filter-definition-spi]]
-=== Filter definition API/SPI split
-
-`org.hibernate.engine.spi.FilterDefinition` remains SPI and now implements the
-API interface `org.hibernate.engine.FilterDefinition`. Its constructors, JDBC
-parameter mappings, managed parameter resolvers, and argument processing remain
-unchanged. The public API getters no longer return the SPI class.
-
-Integrations requiring the SPI definition should use:
-
-[source,java]
-----
-sessionFactory.unwrap(SessionFactoryImplementor.class)
-        .getFilterDefinition(filterName);
-----
-
-`SessionFactoryImplementor` is in `org.hibernate.engine.spi` and retains its SPI
-return type. Internal `FilterImpl` access also retains its covariant SPI return;
-`FilterImpl` is not a supported provider access path. For an enabled `Filter`,
-use its name to look up the SPI definition through `SessionFactoryImplementor`.
-
-[[sql-ast-translator-stability]]
-=== SQL AST and translator changes
-
-The central SQL AST and translator SPIs are no longer incubating, including
-the translator factories and typed requests, `JdbcParameterFactory`, and the
-`JdbcOperations` builders. Their supported SPI roles now carry the normal
-compatibility expectations within an `X.Y` release family. No signatures or
-provider implementation requirements change as part of this stabilization.
-
-`QueryTransformer`, `SqlAstTranslator.renderNamedSetReturningFunction()`, and
-`SetReturningFunctionType` remain incubating. Separate execution, mapping-model
-mutation, and result-processing contracts retain their existing lifecycle status.
-
-
 [[graph-flushing-spi]]
 === Graph-based Flushing
 
@@ -602,50 +384,6 @@ Main SPI touch points include -
     - `GroupedBatch` (extends `Batch`) supports legacy "grouped statement" execution
     - `SingleStatementBatch`, `StatementBinder`, and `BatchedResultChecker` support single statement batching (graph)
 
-
-
-=== Classmate removal
-
-The dependency on Classmate was removed, which had a minor impact on certain SPIs.
-In particular, `ClassmateContext` was completely removed.
-
-=== Raw types in JPA `Bootstrap`
-
-Raw `Map` types were eliminated from the signatures of methods of the class
-`org.hibernate.jpa.boot.spi.Bootstrap`.
-
-[[query-memento]]
-=== Query Memento
-
-Hibernate uses a number of implementations of its `NamedQueryMemento` contract to
-model "named queries".  Starting in version 3.2, Jakarta Persistence added the
-`TypedQueryReference` contract intended to serve the much the same goal.
-Hibernate's `NamedQueryMemento` implementations were changed to extend from
-`TypedQueryReference`.
-
-In version 4.0, Jakarta Persistence has added some additional methods to
-`TypedQueryReference` which now conflict with some of Hibernate's existing methods
-requiring a rename.  Notably, the addition of `TypedQueryReference#getParameterTypes`
-caused conflict's with Hibernate's `NamedSqmQueryMemento#getParameterTypes`.  To
-address this conflict, we've renamed the `NamedSqmQueryMemento` method to
-`#getAnticipatedParameterTypes`.
-
-
-[[scanning]]
-=== Scanning
-
-Jakarta Persistence clarifies that scanning is the responsibility of the
-container, rather than the provider.  To that effect, the scanning SPI, and
-related ArchiveDescriptor SPI, have been rewritten.  During "EE bootstrap",
-Hibernate no longer performs scanning.  Instead, the `jakarta.persistence.spi.PersistenceUnitInfo`
-has been augmented to make it clear that the container passes in any classes
-discovered during scanning.
-
-Hibernate does still provide this SPI for use by containers - Wild Fly for example takes
-advantage of this.
-
-Hibernate also uses this scanning SPI when applications use `HibernatePersistenceConfiguration`
-bootstrapping and supply the root and/or non-root URLs.
 
 
 [[action-queue-checkpoint-spi]]
@@ -694,14 +432,99 @@ initialized collection has no queued commands while its snapshot still represent
 the persisted comparison baseline.  Wrappers derived from
 `AbstractPersistentCollection` inherit this sequencing automatically.
 
-[[session-lazy-delegator-spi]]
-=== `SessionLazyDelegator` initialization
+[[scanning]]
+=== Scanning
 
-The `SessionLazyDelegator` class has been made abstract, and its constructor that
-accepted a `Supplier<Session>` removed, in order to align it with how the new
-StatelessSessionLazyDelegator` is implemented. Consumers of this class must extend it
-and implement the abstract `delegate()` method, thus providing the required Session to
-it.
+Jakarta Persistence clarifies that scanning is the responsibility of the
+container, rather than the provider.  To that effect, the scanning SPI, and
+related ArchiveDescriptor SPI, have been rewritten.  During "EE bootstrap",
+Hibernate no longer performs scanning.  Instead, the `jakarta.persistence.spi.PersistenceUnitInfo`
+has been augmented to make it clear that the container passes in any classes
+discovered during scanning.
+
+Hibernate does still provide this SPI for use by containers - Wild Fly for example takes
+advantage of this.
+
+Hibernate also uses this scanning SPI when applications use `HibernatePersistenceConfiguration`
+bootstrapping and supply the root and/or non-root URLs.
+
+
+[[enhancement-session-spi]]
+=== Enhancement model, options, and environment
+
+`EnhancementContext`, `DefaultEnhancementContext`, and `EnhancementContextWrapper`
+have been replaced by independent `EnhancementModel`, `EnhancementOptions`, and
+`EnhancementEnvironment` contracts. `DefaultEnhancementModel` supplies the existing
+annotation-based interpretation. Discovery and metadata belong to an
+`EnhancementSession`, not to the model or options.
+
+`BytecodeProvider` implementations must replace `getEnhancer(context)` with
+`createEnhancementSession(model, environment)`. There is no compatibility adapter.
+Direct `EnhancerImpl` construction is replaced by session creation as well:
+
+[source,java]
+----
+try (var session = provider.createEnhancementSession(
+        model, EnhancementEnvironment.forClassLoader(loader))) {
+    var enhancer = session.createEnhancer(
+            EnhancementOptions.of(dirtyTracking, lazyInitialization, associationManagement));
+    session.discoverTypes(className, originalBytes);
+    byte[] enhanced = enhancer.enhance(className, originalBytes);
+}
+----
+
+Environments resolve bytecode without defining application classes and may use a
+custom byte source instead of a loader. The Byte Buddy provider also accepts a
+borrowed `EnhancerClassLocator` when creating a session. Sessions do not close
+borrowed environments, locators, or class loaders.
+
+Call `invalidateMetadata()` between passes which replace class resources. This
+clears bytecode and getter caches while retaining discovered persistence
+classifications. Close or invalidate only when no session operations are active.
+Closing a session makes all of its enhancers unusable.
+
+The paired JPA transformer factories share discovery and metadata when called on
+the same `HibernatePersistenceProvider` and `PersistenceUnitInfo` instances, for
+the same defining loader and bytecode-provider instance. Each transformer retains
+its own enhancer and generation options. The `PersistenceUnitInfo.addTransformer`
+bootstrap path remains independent.
+
+
+[[property-access-spi]]
+=== Property value access
+
+Hibernate now integrates Hibernate Accessor for property value access.
+`PropertyAccess` implementations must implement the new `getPropertyValueAccessor()` method, returning a `PropertyValueAccessor` for the mapped attribute.
+There is no default implementation of this method; custom implementations must be updated and recompiled.
+
+Use the appropriate `PropertyValueAccessor` factory for the access pattern, such as `standard()` for a reader/writer pair or `map()` for map-backed properties.
+The existing `getGetter()` and `getSetter()` methods remain part of the contract, but implementing those methods alone is no longer sufficient.
+Integrations must preserve their property's read, write, and insert-time access semantics through the new accessor.
+`PropertyValueAccessor` is currently incubating.
+
+[[dialect-provider-migration]]
+=== Custom dialect providers
+
+Dialect extension contracts have been reorganized and explicitly classified using `@SPI`.
+Custom dialects must update imports and overrides to the current contracts, including the focused `org.hibernate.dialect.lock.spi`, `org.hibernate.dialect.pagination.spi`, and `org.hibernate.dialect.mutation.spi` packages where applicable.
+Use supported strategy contracts and factories instead of implementations in internal packages.
+
+Extend `Dialect` or another type explicitly classified with `SPI.Role.IMPLEMENT`.
+A built-in dialect being available for selection does not by itself make it a supported subclass base.
+The `USE`, `IMPLEMENT`, and `SUPPLY` roles are independent, and compatibility expectations for non-incubating SPIs apply within one `X.Y` release family.
+
+See the link:{versionDocBase}/dialect-provider/index.html[Dialect Provider Guide] for supported extension points, migration examples, and provider validation tooling.
+
+[[custom-cascade-implementations]]
+=== Removal of custom cascade implementations
+
+Custom implementations of `CascadeStyle` and `CascadingAction` are no longer "supported".
+They were never well-supported anyway.
+These contracts, now in `org.hibernate.cascade.spi`, are internal strategies rather than extension points.
+The `CascadeStyles.registerCascadeStyle()` registration method has been removed, and the cascade coordinator rejects custom actions.
+
+Integrations must remove custom cascade registrations and use Hibernate's built-in cascade styles.
+There is no replacement extension contract for custom cascade styles or actions; application-specific propagation of persistence operations must be implemented explicitly.
 
 [[interceptor-spi]]
 === Interceptor classification
@@ -773,6 +596,141 @@ now also accepts a `boolean useQualifier` parameter immediately before `SqlAstCr
 Custom collection persisters overriding this method must update their signature and forward this argument
 when calling the superclass implementation.
 
+[[jdbc-secondary-action-execution]]
+=== Invocation-local JDBC secondary actions
+
+Execution code must obtain `JdbcSelect.createActionExecution()` once per invocation
+and use that runner for both pre-actions and post-actions. The existing callback
+methods on `JdbcSelect` remain available but are deprecated. Cached action
+definitions must not retain invocation-specific state.
+
+`SecondaryAction.createExecutionAction()` returns `this` by default for reusable,
+stateless actions. Stateful definitions must return a fresh instance supporting
+their registered pre/post roles. The same definition is paired across phases by
+identity; duplicate registration within one phase is rejected before execution.
+Application-facing locking options and dialect timeout strategies are unchanged.
+
+The runner preserves registration order. On failure, use `cleanupAfterFailure()`
+with the original exception; remaining failure-eligible post-actions are attempted
+once, with cleanup failures suppressed on the original exception. Setup after
+pre-actions is also protected. A failing timeout setter triggers a restoration
+attempt when the original setting is known, but a failing restoration is not
+retried. This does not establish a new connection-disposal policy or extend the
+timeout to the lifetime of a scroll or stream.
+
+Custom `JdbcSelect` implementations have a default adapter for their legacy
+callbacks and remain responsible for avoiding shared mutable state. Stateful
+definitions such as the internal `LockTimeoutHandler` reject direct invocation;
+its `getBaseline()` method has been removed.
+
+`JdbcSelectWithActions` remains subclassable, with `createActionExecution()` as its
+execution extension point. Subclasses overriding the deprecated phase callbacks
+must move that customization to the runner factory; the standard executor no
+longer invokes those overrides. A subclass may call `super.createActionExecution()`
+and wrap the returned runner, keeping all execution state local to that invocation.
+The wrapper must delegate failure cleanup and preserve action order, exception
+precedence, and single-attempt execution. Subclasses without execution customization
+may inherit the factory unchanged.
+
+For asynchronous integrations, including Hibernate Reactive, the protected
+`JdbcSelectWithActions` arrays remain definitions. Use
+`JdbcActionExecution.materializeActions()` to obtain immutable lists of paired,
+invocation-local instances without invoking callbacks. Retain these instances
+across asynchronous completion and preserve phase ordering, single-attempt
+cleanup, and exception precedence. Materialization requires no thread affinity.
+
+[[entity-entry-version]]
+=== Explicit entity-entry version synchronization
+
+`EntityEntry` now requires `setVersion(Object)`. Custom implementations must
+implement this metadata-only assignment, including support for a null version.
+It must not change the entity, loaded snapshot, status, lock mode, or dirty
+tracking, and must not perform SQL, cache operations, or lifecycle callbacks.
+External implementations must implement the new method before using this release.
+
+Follow-on locking uses this operation after successful rereading of newly loaded
+entities, before publishing the final lock mode or forcing a version increment.
+Previously managed entities retain their existing version-checking lock-upgrade
+behavior and are not refreshed by this synchronization.
+
+[[direct-force-increment-result-completion]]
+=== Direct force-increment result completion
+
+Direct loads using `PESSIMISTIC_FORCE_INCREMENT` with `EXTENDED` scope now complete
+supplemental collection-table acquisition before incrementing versions. Loading
+callbacks and tuple transformers may observe the original versions and provisional
+`PESSIMISTIC_WRITE` mode. Standard result-list transformation runs after successful
+acquisition and increments, before returning the result to the caller.
+
+`ResultsConsumer` adds `supportsDeferredResultFinalization()` and `finishResult()`.
+The opt-in defaults to `false`, preserving custom consumers' existing consumption
+timing. Custom materializing consumers which need final transformation to observe
+completed versions must opt in. For affected executions, `consume()` receives query
+options with the result-list transformer withheld; `finishResult()` receives the
+original execution context and options after successful locking post-actions.
+Complete row processing in `consume()` without retaining its processing state for
+finalization, and apply deferred result-list transformation once in `finishResult()`.
+The finalization hook is not called for ordinary, non-deferred executions.
+Decorators must preserve the wrapped consumer's opt-in and finalization behavior.
+
+Cursor consumers may retain processing state in the returned cursor. Complete
+acquisition and increments for each logical result after all its post-load
+notifications and before exposing it. Closing a cursor must not increment
+unconsumed results. Asynchronous execution integrations must retain the collector's
+invocation-owned completion state until supplemental acquisition and increments
+finish, preserving this ordering and failure cleanup.
+
+Previously scheduled optimistic force increments remain independent of this
+completion state. Completing or failing a pessimistic acquisition must not cancel
+those transaction-completion callbacks.
+
+[[filter-definition-spi]]
+=== Filter definition API/SPI split
+
+`org.hibernate.engine.spi.FilterDefinition` remains SPI and now implements the
+API interface `org.hibernate.engine.FilterDefinition`. Its constructors, JDBC
+parameter mappings, managed parameter resolvers, and argument processing remain
+unchanged. The public API getters no longer return the SPI class.
+
+Integrations requiring the SPI definition should use:
+
+[source,java]
+----
+sessionFactory.unwrap(SessionFactoryImplementor.class)
+        .getFilterDefinition(filterName);
+----
+
+`SessionFactoryImplementor` is in `org.hibernate.engine.spi` and retains its SPI
+return type. Internal `FilterImpl` access also retains its covariant SPI return;
+`FilterImpl` is not a supported provider access path. For an enabled `Filter`,
+use its name to look up the SPI definition through `SessionFactoryImplementor`.
+
+[[query-memento]]
+=== Query Memento
+
+Hibernate uses a number of implementations of its `NamedQueryMemento` contract to
+model "named queries".  Starting in version 3.2, Jakarta Persistence added the
+`TypedQueryReference` contract intended to serve the much the same goal.
+Hibernate's `NamedQueryMemento` implementations were changed to extend from
+`TypedQueryReference`.
+
+In version 4.0, Jakarta Persistence has added some additional methods to
+`TypedQueryReference` which now conflict with some of Hibernate's existing methods
+requiring a rename.  Notably, the addition of `TypedQueryReference#getParameterTypes`
+caused conflict's with Hibernate's `NamedSqmQueryMemento#getParameterTypes`.  To
+address this conflict, we've renamed the `NamedSqmQueryMemento` method to
+`#getAnticipatedParameterTypes`.
+
+
+[[java-time-direct-jdbc]]
+=== Direct JDBC handling of `java.time` values
+
+The new `Dialect.getDirectJavaTimeJdbcSupport()` SPI reports direct JDBC support for each Java time class,
+with separate capabilities for scalar values, native JDBC `STRUCT` attributes, and `ARRAY` elements.
+SPI implementations selecting JDBC mappings should use `isDirectJavaTimeJdbcAccessEnabled(Class<?>)`
+instead of the deprecated `isPreferJavaTimeJdbcTypesEnabled()` to account for dialect and driver support.
+
+
 [[sqlserver-spatial-type-spi]]
 === SQL Server spatial JDBC types
 
@@ -785,13 +743,55 @@ native serialization. The binders and extractors call them, so each subclass pic
 Custom subclasses must implement both methods. Use `Encoders`/`Decoders` for a `geometry` column and
 `GeographyEncoders`/`GeographyDecoders` for a `geography` column.
 
-[[java-time-direct-jdbc]]
-=== Direct JDBC handling of `java.time` values
+=== Classmate removal
 
-The new `Dialect.getDirectJavaTimeJdbcSupport()` SPI reports direct JDBC support for each Java time class,
-with separate capabilities for scalar values, native JDBC `STRUCT` attributes, and `ARRAY` elements.
-SPI implementations selecting JDBC mappings should use `isDirectJavaTimeJdbcAccessEnabled(Class<?>)`
-instead of the deprecated `isPreferJavaTimeJdbcTypesEnabled()` to account for dialect and driver support.
+The dependency on Classmate was removed, which had a minor impact on certain SPIs.
+In particular, `ClassmateContext` was completely removed.
+
+=== Raw types in JPA `Bootstrap`
+
+Raw `Map` types were eliminated from the signatures of methods of the class
+`org.hibernate.jpa.boot.spi.Bootstrap`.
+
+[[session-lazy-delegator-spi]]
+=== `SessionLazyDelegator` initialization
+
+The `SessionLazyDelegator` class has been made abstract, and its constructor that
+accepted a `Supplier<Session>` removed, in order to align it with how the new
+StatelessSessionLazyDelegator` is implemented. Consumers of this class must extend it
+and implement the abstract `delegate()` method, thus providing the required Session to
+it.
+
+[[client-enhancement]]
+=== Client enhancement
+
+`Enhancer.enhanceClient(String, byte[])` performs client field-access rewriting separately from managed-class enhancement.
+Its default implementation reports unsupported client enhancement, so existing enhancer implementations continue to work when it is unused.
+`HibernatePersistenceProvider.getClientClassTransformer(PersistenceUnitInfo, Map)` exposes an independent Jakarta transformer for containers.
+Targets must already have compatible managed enhancement from tooling, or the container must arrange it before defining them.
+When both transformations apply to a class, managed enhancement precedes client enhancement.
+A client may reference another class scheduled for later managed enhancement.
+Runtime client enhancement can be used with runtime managed enhancement disabled when tooling has already enhanced the targets.
+Requesting the client transformer does not register either transformer.
+
+Gradle, Maven, and Ant accept `enableClientEnhancement`, defaulting to false.
+`enableExtendedEnhancement` remains a deprecated alias. When both are set, the new name wins, including explicit false.
+Client classes no longer receive a managed-enhancement marker simply because client enhancement was requested.
+Targets must be scheduled for managed enhancement or already carry compatible enhancement; known skipped or incompatible targets fail during enhancement instead of producing unavailable accessor calls.
+XML mapping recognition is unchanged, and reflection and method-handle accesses are outside the client transformation.
+
+[[sql-ast-translator-stability]]
+=== SQL AST and translator changes
+
+The central SQL AST and translator SPIs are no longer incubating, including
+the translator factories and typed requests, `JdbcParameterFactory`, and the
+`JdbcOperations` builders. Their supported SPI roles now carry the normal
+compatibility expectations within an `X.Y` release family. No signatures or
+provider implementation requirements change as part of this stabilization.
+
+`QueryTransformer`, `SqlAstTranslator.renderNamedSetReturningFunction()`, and
+`SetReturningFunctionType` remain incubating. Separate execution, mapping-model
+mutation, and result-processing contracts retain their existing lifecycle status.
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -803,222 +803,28 @@ instead of the deprecated `isPreferJavaTimeJdbcTypesEnabled()` to account for di
 
 This section describes changes in behavior that applications should be aware of.
 
-[[enhancement-synthetic-fields]]
-=== Bytecode enhancement fields are synthetic
+[[session-get]]
+=== Session.get
 
-Fields added by Hibernate's bytecode enhancer are now marked synthetic.  `java.lang.reflect.Field#isSynthetic()` now returns `true` for these fields.
-Reflection-based libraries that filter out synthetic fields may no longer expose
-them.
+Jakarta Persistence now defines a series of overloaded `EntityHandler.get()` methods as corollaries to `EntityHandler.find()`.
+These methods are defined to throw an `EntityNotFoundException` rather than return null.
+This operates quite differently from the older Hibernate `Session.get()` methods which
 
+* still returned null if no entity with that is was found
+* force initialized the entity, if there was one and it was previously uninitialized.
 
-[[pessimistic-refresh-visibility]]
-=== Refreshing pessimistically locked entities
+Applications which use(d) `Session.get()` should be aware of this change in behavior.
 
-An equal or weaker refresh request now retains a non-incrementing pessimistic
-reload unless `LockingSupport.canUsePlainReadForRefresh(currentMode, requestedMode)`
-permits an ordinary read. This also applies to `refresh()` without an explicit
-mode. A held database lock does not guarantee that an ordinary read uses the
-locking read's view: on MySQL and MariaDB, it can consult an older snapshot and
-restore stale state or fail to find a row returned by the preceding locking read.
+[[graph-flushing-behavior]]
+=== Graph-based Flushing
 
-The entry retains the appropriate existing lock mode. Refreshing an entity already
-locked with `PESSIMISTIC_FORCE_INCREMENT` does not repeat that increment, and
-optimistic refresh handling continues to avoid duplicate version actions.
-Wider requested scope still requires acquisition independently of the new predicate.
+As described in link:{whatsNewBase}#graph-flushing[What's New] and <<graph-flushing-spi,SPI Changes>>, 8.0 changes how Hibernate coordinates work needed for flushing.  This new coordinator can often lead to different SQL or SQL being performed in different order.  The legacy strategy remains *_temporarily_* available by configuration using
 
-The new default SPI method returns `false`, retaining a locking reload. A custom
-profile may return `true` for mode pairs where a plain reload preserves visibility
-and conflict semantics across its supported configurations. Additional locking SQL
-and normal dialect follow-on/timeout handling may therefore be observable.
+[source,properties]
+----
+hibernate.flush.queue.type=legacy
+----
 
-Standard `LockingSupport` profiles supply explicit policies. MySQL, MariaDB and TiDB
-retain locking reloads for all modes: even force increment may generate the same timestamp
-value, so its UPDATE need not establish own-write visibility. Informix permits a
-plain reload after a pessimistic force increment's transaction-duration write lock.
-Other standard `LockingSupport` profiles generally retain their previous plain reloads; selecting
-a standard simple/parameterized profile selects that policy as well. Independent
-custom implementations continue to inherit the interface's `false` default.
-
-[[follow-on-locking-missing-rows]]
-=== Missing rows during follow-on locking
-
-For non-skipping batched follow-on locking, every required table must return a
-row for each expected entity identifier. If any are missing, acquisition now
-throws `StaleObjectStateException`, including for unversioned entities, and uses
-the existing conversion to `OptimisticLockException`. This replaces both silent
-success for partial results and the assertion failure for entirely missing results.
-The exception identifies the first missing entity in acquisition input order;
-its message lists all missing identifiers from that table acquisition. Optional
-table rows remain exempt.
-
-[[follow-on-skip-locked]]
-=== Skip-locked queries requiring follow-on locking
-
-Pessimistic queries requesting `Timeouts.SKIP_LOCKED` (or the legacy
-`LockMode.UPGRADE_SKIPLOCKED`) now fail when Hibernate selects follow-on entity
-locking. Previously, the primary query could return entities whose rows were
-skipped by the subsequent locking query. List queries retain the existing
-`IllegalStateException` wrapper around
-`IllegalQueryOperationException`; scroll and stream retain the internal exception
-directly. The diagnostic explains the unsupported combination.
-Use direct locking with a query shape supported by the dialect. Direct locking,
-including dialect table hints, remains supported even when the requested follow-on
-strategy is overridden by the dialect.
-
-Rejection occurs before the query's JDBC connection acquisition, secondary-action
-materialization, callbacks, and SQL execution, regardless of contention or result
-contents. Earlier automatic flush work is outside this guarantee, and terminal
-no-execution shortcuts such as a zero result limit need not reject the request.
-Existing `DISALLOW`, `IGNORE`, and native-plan capability decisions remain in effect.
-
-Execution integrations which bypass the standard JDBC executor must apply the same
-guard before their own connection acquisition and callbacks. `LockingHelper` provides
-`isSkipLockedRequest()` and `validateFollowOnLocking()` for the selected follow-on
-strategy. For skip-locked `RAW_SQL` plans, use
-`JdbcSelectSqlFinalizer.finalizeSql(JdbcSelect, JdbcParameterBindings, ExecutionContext)`
-to decide the final disposition before execution. Retain its result only for that
-invocation and pass it to the new `DeferredResultSetAccess` constructor overload,
-avoiding repeated pagination, policy, and SQL decoration callbacks. Other requests
-retain their existing finalization timing. SQL-shaping query options and parameters
-must remain stable during an invocation; pre-actions must not invalidate finalized
-metadata.
-
-[[embeddable-collection-access]]
-=== Access type for embeddables
-
-The fixes for https://hibernate.atlassian.net/browse/HHH-13537[HHH-13537] and
-https://hibernate.atlassian.net/browse/HHH-21017[HHH-21017] correct how embeddables
-inherit their access type.
-
-Embeddable elements of an `@ElementCollection` and embeddable map keys now inherit
-the access type of the class declaring the collection attribute, instead of the
-access type of the owning entity's identifier. An attribute-level `@Access` override
-on the identifier no longer changes the access type inherited by these embeddables.
-This also applies when the collection is declared by a mapped superclass or a
-containing embeddable, and the inherited access type propagates to nested embeddables.
-
-For example, if an entity uses field access but overrides its identifier to use
-property access, its embeddable collection elements now use field access by default.
-Previously, Hibernate incorrectly used property access, potentially causing bootstrap
-failures when the embeddable had no accessor methods.
-
-Additionally, an attribute-level `@Access` override on an `@Embedded`, `@EmbeddedId`,
-or collection attribute now controls only access to that attribute. The embedded
-state inherits the containing class's access type independently of the override.
-This applies to singular embeddables, collection elements, and embeddable map keys
-in both element collections and relationship maps.
-
-For example, a field-accessed entity may use `@Access(AccessType.PROPERTY)` on the
-getter of an embedded attribute or element collection. Hibernate uses that getter
-to access the attribute, but uses field access for the embeddable's state by default.
-Previously, the attribute override also caused the embeddable to use property access.
-
-Applications that relied on the previous behavior should declare the intended
-access type explicitly on the embeddable using `@Access(AccessType.PROPERTY)` or
-`@Access(AccessType.FIELD)`. An explicit access type on the embeddable continues to
-take precedence. If the same embeddable is used in multiple contexts that require
-different access types, review those usages before applying a class-level override.
-
-This change aligns with the expected Jakarta Persistence behavior.
-
-[[bootstrap-info-logging]]
-=== Bootstrap information logging
-
-The following bootstrap messages now use the dedicated `org.hibernate.orm.info` logging category:
-
-* `HHH000001: Hibernate ORM core version ...`, previously logged under `org.hibernate.orm.core`.
-* `HHH10001005: Database info: ...`, previously logged under `org.hibernate.orm.connections.pooling`.
-
-Both messages retain their existing message IDs and `INFO` level.
-Update any logging configuration or filters targeting these messages to use `org.hibernate.orm.info`.
-This category allows applications and containers to suppress bootstrap information independently of other core and connection-pooling messages.
-
-[[unscheduled-deletion-logging]]
-=== Logging for unscheduled deletions
-
-Persisting an entity currently scheduled for deletion unschedules that deletion per the Jakarta Persistence specification.  Hibernate now logs “Unscheduling entity deletion {details}” at DEBUG level under the `org.hibernate.orm.event.unschedule-deletion` category, isolating it to make it easier to enable logging for that single message.
-
-Persistence behavior is unchanged.
-
-
-[[native-bootstrap-disabled-xml]]
-=== Disabling XML mappings during native bootstrap
-
-When `hibernate.xml_mapping_enabled=false`, native bootstrap now skips access to mapping XML resources
-and JAXB binding. Previously, `MetadataSources` and `Configuration` still read and bound mapping XML,
-then excluded the bindings from metamodel building. Missing or malformed mapping XML therefore no longer
-causes bootstrap to fail when XML mapping processing is disabled.
-
-Set this option before registering XML mappings, for example before calling `addResource()` or `addFile()`.
-Native registration uses the setting available at the time of the call. Disabling XML later does not undo
-binding that has already occurred, and mappings skipped while disabled are not replayed if XML is enabled later.
-
-XML mapping resource, file, and jar references in `hibernate.cfg.xml` are also skipped when XML mappings
-are disabled, for both native and JPA bootstrap. The configuration document itself is still read,
-and its class and package mapping references still apply.
-
-
-[[native-bootstrap-legacy-jpa-aliases]]
-=== Legacy JPA connection aliases during settings normalization
-
-Native bootstrap now recognizes legacy `javax.persistence.*` connection settings when normalizing
-settings for the standard service registry. Previously, this normalization supplied Hibernate connection
-settings from `jakarta.persistence.*` aliases only; JPA bootstrap already recognized the legacy aliases.
-
-The newly recognized aliases are:
-
-* `javax.persistence.jdbc.url`
-* `javax.persistence.jdbc.driver`
-* `javax.persistence.jdbc.user`
-* `javax.persistence.jdbc.password`
-* `javax.persistence.nonJtaDataSource`
-* `javax.persistence.jtaDataSource`
-
-An existing Hibernate connection setting takes precedence over its Jakarta alias, which takes precedence
-over its legacy `javax.persistence.*` alias. For the datasource setting, all Jakarta aliases are considered
-before legacy aliases; within each namespace, the non-JTA datasource takes precedence over the JTA datasource.
-Existing JPA bootstrap source precedence is unchanged.
-
-Review native bootstrap configuration for stale legacy connection settings, which may now take effect
-when no corresponding Hibernate or Jakarta setting is present. Prefer the `jakarta.persistence.*` names
-when migrating legacy configuration.
-
-[[query-persistence-correctness]]
-=== Query and persistence correctness fixes
-
-The following fixes change behavior applications may observe after upgrading:
-
-* Concurrent `StatelessSession.upsert()` and `upsertMultiple()` operations now handle insert races instead of potentially leaving one operation's changes unapplied.
-* On H2, Oracle, and SQL Server, HQL `insert ... on conflict (...) do nothing` with explicit conflict columns now uses `MERGE` emulation instead of silently dropping the conflict clause. Applications should no longer expect a unique constraint violation for the specified conflict.
-* With enhanced dirty tracking and `@DynamicUpdate`, changes to scalar attributes are now included in updates when nested embeddables are also dirty. Previously, some scalar changes could be silently omitted depending on attribute ordering.
-
-
-[[lock-cascading]]
-=== Removal of lock cascading
-
-The legacy `lock` cascade style and the `CascadeStyles.LOCK` and `CascadingActions.LOCK` constants have been removed.
-Legacy `hbm.xml` mappings that specify `cascade="lock"`, either alone or in a comma-separated list, now fail with an unsupported cascade style error.
-
-Remove `lock` from these cascade declarations, omitting the declaration if no other cascade styles remain.
-Applications that need to lock associated entities should explicitly request the required lock on each entity instead of relying on lock cascading or use JPA "extended locking".
-
-[[final-field-warning]]
-=== Boot-time warning for final persistent fields
-
-Hibernate now warns on boot when it detects persistent fields declared `final` in entity or embeddable classes that will need to be set through reflection.
-Reflective mutation of final fields is deprecated starting with JDK 26 and will be denied in a future JDK version.
-
-To resolve these warnings:
-
-- Enable bytecode enhancement, which automatically removes the `final` modifier from persistent fields, or
-- remove the `final` modifier from the persistent field declarations, or
-- for `@IdClass` types, annotate a constructor with `@Instantiator` to use constructor-based instantiation (link:https://hibernate.atlassian.net/browse/HHH-20542[HHH-20542]), or
-- for `@IdClass` types, switch to a Java `record`.
-
-The behavior of this check is controlled by the configuration property `hibernate.mapping.final_persistent_fields`,
-which accepts the values `warn` (the default), `error` (fail on boot), and `ignore` (suppress the check).
-
-See the link:{userGuideBase}#entity-pojo-final-fields[User Guide] for details.
 
 [[filtered-to-one-associations]]
 === Filters and SQL restrictions on to-one associations
@@ -1233,117 +1039,59 @@ Consequently, applications may observe additional SQL and fewer second-level ent
 These changes address the inconsistencies described in https://hibernate.atlassian.net/browse/HHH-19568[HHH-19568]
 and its related issues.
 
-[[custom-sql-update-bindings]]
-=== Custom SQL updates with generated values
+[[embeddable-collection-access]]
+=== Access type for embeddables
 
-An `@SQLUpdate` statement retains its fixed parameter layout when an in-memory generated value,
-such as `@UpdateTimestamp`, requires dynamic update processing internally. Hibernate now binds every
-updateable attribute required by the custom statement, including unchanged attributes.
-This corrects missing or misplaced parameter bindings in the graph mutation queue and matches the
-legacy mutation queue. It applies independently of association filtering.
-Combining `@DynamicUpdate` and `@SQLUpdate` on the same entity remains unsupported.
+The fixes for https://hibernate.atlassian.net/browse/HHH-13537[HHH-13537] and
+https://hibernate.atlassian.net/browse/HHH-21017[HHH-21017] correct how embeddables
+inherit their access type.
 
-[[collection-restriction-inherited-columns]]
-=== SQL restrictions on collection elements mapped to multiple tables
+Embeddable elements of an `@ElementCollection` and embeddable map keys now inherit
+the access type of the class declaring the collection attribute, instead of the
+access type of the owning entity's identifier. An attribute-level `@Access` override
+on the identifier no longer changes the access type inherited by these embeddables.
+This also applies when the collection is declared by a mapped superclass or a
+containing embeddable, and the inherited access type propagates to nested embeddables.
 
-When rendering a collection-element `@SQLRestriction`, Hibernate now qualifies an unambiguous mapped column
-using the table which declares it. This fixes restrictions on collections of `JOINED` subclasses which
-refer to a column stored in a superclass table, as described in
-https://hibernate.atlassian.net/browse/HHH-12016[HHH-12016].
-The same qualification applies to mapped columns stored in a `@SecondaryTable`, for both one-to-many
-and many-to-many collections.
-The qualification handles quoted column names and case differences in unquoted names.
-Unmapped or ambiguous column names retain the existing default qualification.
-This does not introduce an explicit alias declaration facility for `@SQLRestriction`.
+For example, if an entity uses field access but overrides its identifier to use
+property access, its embeddable collection elements now use field access by default.
+Previously, Hibernate incorrectly used property access, potentially causing bootstrap
+failures when the embeddable had no accessor methods.
 
-[[collection-remove-create-callback-order]]
-=== Collection remove/create callback order
+Additionally, an attribute-level `@Access` override on an `@Embedded`, `@EmbeddedId`,
+or collection attribute now controls only access to that attribute. The embedded
+state inherits the containing class's access type independently of the override.
+This applies to singular embeddables, collection elements, and embeddable map keys
+in both element collections and relationship maps.
 
-When moving a collection between owners or roles requires both removal of its old
-state and creation of its new state, Hibernate now invokes the collection-remove
-interceptor hook before the legacy collection-recreate hook.  The corresponding
-Hibernate collection events and semantic mutation completion are likewise
-remove-first.  Integrations must not retain the previous assumption that the
-recreate interceptor hook runs before the remove hook.
+For example, a field-accessed entity may use `@Access(AccessType.PROPERTY)` on the
+getter of an embedded attribute or element collection. Hibernate uses that getter
+to access the attribute, but uses field access for the embeddable's state by default.
+Previously, the attribute override also caused the embeddable to use property access.
 
-[[collection-mutation-lifecycle-timing]]
-=== Collection mutation lifecycle timing
+Applications that relied on the previous behavior should declare the intended
+access type explicitly on the embeddable using `@Access(AccessType.PROPERTY)` or
+`@Access(AccessType.FIELD)`. An explicit access type on the embeddable continues to
+take precedence. If the same embeddable is used in multiple contexts that require
+different access types, review those usages before applying a class-level override.
 
-Collection post-events, cache handling, successful statistics, and queued-operation
-finalization are now tied to semantic collection-mutation completion instead of to
-the last row operation produced during decomposition.  This ensures that grouped,
-reordered, and batched row work completes the correct collection lifecycle and that
-failed physical work suppresses successful completion handling.
+This change aligns with the expected Jakarta Persistence behavior.
 
-A collection mutation which produces no SQL now completes directly after its
-semantic work is sealed; Hibernate no longer creates a SQL-shaped no-op solely to
-carry its post-event.  Consequently, applications must not rely on a global order
-between pre/post collection events for unrelated collections.  Each mutation's
-pre-event still precedes its post-event, and a post-event still follows all physical
-work belonging to that mutation.
+=== Final fields of entities
 
-[[collection-owner-update-callback-timing]]
-=== Collection owner update callback timing
+A `final` field of an entity is now treated as if it were annotated `@Immutable`,
+that is, it is excluded from dirty checking and from SQL `UPDATE` statements.
+In order to eliminate the possibility of "silent" changes in behavior, attempts
+to modify the value of a `final` fields using the `merge()` method are rejected.
+If a field of an entity can actually be updated via `merge()`, the field must be
+declared non-`final`.
 
-Jakarta Persistence owner update callbacks are coordinated once per owner and flush.
-When entity and non-inverse collection work both contribute to an applicable owner
-update, one `@PreUpdate` callback is invoked and one `@PostUpdate` callback is delayed
-until all contributing entity and collection post-events have been delivered.
-Collection create or remove work associated with owner insert/delete lifecycle does
-not by itself establish update-callback applicability.
+=== Session Reentrancy
 
-[[jdbc-resource-release-autocommit]]
-=== JDBC resource release in autocommit mode
+It has always been illegal to call the Hibernate session from an `Interceptor` or JPA entity lifecycle callback, but Hibernate has never previously enforced this, opening the door to undefined behavior in programs which did not respect this restriction.
 
-When no transaction is active (autocommit), Hibernate now correctly releases the connection after statement
-execution if the configured `ConnectionReleaseMode` is set to `AFTER_TRANSACTION`.
-Previously, with `DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION` connection handling mode, JDBC resources
-and the physical connection were held until an explicit call to `afterTransaction()` or closing the session,
-even though in autocommit mode each statement is effectively its own transaction.
+Hibernate now throws `IllegalStateException` if the session is accessed in an unsafe way from a callback.
 
-This change ensures that JDBC connections are promptly returned to the pool after each statement when there
-is no active transaction, preventing potential resource leaks.
-
-As a consequence, accessing LOB locators (i.e. `java.sql.Blob` or `java.sql.Clob` typed attributes) outside of
-an active transaction will no longer work and result in an exception on most dialects.
-Previously this appeared to work only because the connection happened to remain open; however, there were no
-transactional isolation guarantees — the data read from the LOB could have already been modified by another
-transaction.
-
-Note that this only affects entity attributes mapped as `java.sql.Blob` or `java.sql.Clob`, since these types
-rely on a JDBC locator that requires a live connection. Attributes mapped as `byte[]` or `String` are always
-eagerly materialized when the result set is read, and are not affected by this change. Similarly, some dialects
-that always use materialized LOB access are also unaffected.
-
-Applications that use `Blob` or `Clob` typed attributes must access them within an active transaction:
-
-[source,java]
-----
-// Before (assuming no active transaction, may have accidentally worked, but with no isolation guarantees):
-session.get(MyEntity.class, id);
-entity.getData().getBinaryStream(); // may now fail — connection already released
-
-// After (correct):
-session.getTransaction().begin();
-session.get(MyEntity.class, id);
-entity.getData().getBinaryStream(); // works — connection held by the transaction
-session.getTransaction().commit();
-----
-
-[[inverse-list-null-elements]]
-=== Null elements of inverse indexed lists
-
-A null element of an inverse `@OneToMany` list mapped with `@OrderColumn` again leaves a gap in the order
-column, so that the element is read back as null and the elements after it keep their list positions.
-
-Since 6.2 the order column was instead written compacted, and a list persisted as `[a, null, b]` was stored
-with the index values `0,1` rather than `0,2` and loaded back as `[a, b]`, silently shifting the elements
-after the null. Applications that came to rely on that compaction — for example by treating the reloaded list
-size as the number of non-null elements — will now see the null elements preserved across a round-trip, as
-they were through 5.x and 6.1.
-
-Element collections are unaffected: a null element of an `@ElementCollection` list has never been persisted,
-and such lists still load back without it.
 
 [[xml-dtd-external-entities]]
 === DTD processing and external entities in XML documents
@@ -1381,6 +1129,19 @@ When the Hibernate Processor (metamodel generator) reads `orm.xml` documents, us
 option `-AallowDtdAndExternalEntities=true` to restore the previous behavior.
 
 
+[[native-generator-default-allocation-size]]
+=== Default allocation size for `@NativeGenerator`
+
+When `@NativeGenerator` was introduced in Hibernate ORM 7.0, it defaulted to an allocation size of `1` for,
+in case the `@SequenceGenerator` or `@TableGenerator` annotations had their allocation size set to their default of `50`.
+Other values were respected, so this behavior was slightly unintuitive, yet the reasoning behind the choice was not
+documented.
+To make the behavior less surprising, it was now changed to respect the allocation size of `50`.
+
+This requires that, if sequences are used, the sequence is altered to change the allocation size from `1` to `50`.
+Alternatively, users can configure the allocation size to match the legacy value `1` by defining
+`@NativeGenerator(sequenceForm = @SequenceGenerator(allocationSize = 1), tableForm = @TableGenerator(allocationSize = 1)`.
+
 [[validation-ddl-influence]]
 === Jakarta Validation DDL influence enabled by default
 
@@ -1405,16 +1166,91 @@ As a result:
   in favor of the new setting.
 
 
-[[graph-flushing-behavior]]
-=== Graph-based Flushing
+[[row-level-security]]
+=== Discriminator-Based Multi-Tenancy and Row-Level Security
 
-As described in link:{whatsNewBase}#graph-flushing[What's New] and <<graph-flushing-spi,SPI Changes>>, 8.0 changes how Hibernate coordinates work needed for flushing.  This new coordinator can often lead to different SQL or SQL being performed in different order.  The legacy strategy remains *_temporarily_* available by configuration using
+On databases with built-in support for row-level security, Hibernate now uses row-level security to enforce the visibility rules implied by discriminator-based multi-tenancy.
+This requires specific DDL which the schema management tooling is responsible for generating.
 
-[source,properties]
-----
-hibernate.flush.queue.type=legacy
-----
+To recover the previous behavior, where discriminator-based multi-tenancy rules were not enforced by the database, set the configuration property `hibernate.multi_tenant.rls_enabled=false`.
 
+
+[[tenant-mutations]]
+=== Discriminator-Based Multi-Tenancy Changes
+
+Hibernate now restricts generated mutation SQL by tenant and checks tenant ownership before changing secondary tables or collections.
+Stateless updates and deletes reject detached entities with a missing or mismatched tenant identifier before executing SQL.
+The root tenant is exempt from these restrictions.
+
+Root tenant read operations now bypass the second-level cache.
+Mutations performed by the root tenant invalidate cache entries belonging to the actual owning tenant.
+
+
+[[lock-cascading]]
+=== Removal of lock cascading
+
+The legacy `lock` cascade style and the `CascadeStyles.LOCK` and `CascadingActions.LOCK` constants have been removed.
+Legacy `hbm.xml` mappings that specify `cascade="lock"`, either alone or in a comma-separated list, now fail with an unsupported cascade style error.
+
+Remove `lock` from these cascade declarations, omitting the declaration if no other cascade styles remain.
+Applications that need to lock associated entities should explicitly request the required lock on each entity instead of relying on lock cascading or use JPA "extended locking".
+
+=== Scanning
+
+As discussed in <<scanning>> above, Hibernate no longer performs scanning during "EE bootstrap".
+It is expected by Jakarta Persistence that the container perform the scanning prior to
+bootstrapping Hibernate.
+
+
+[[interceptor-configuration-behavior]]
+=== Conflicting interceptor settings are now rejected
+
+Configuring both `hibernate.session_factory.interceptor` and `hibernate.session_factory.session_scoped_interceptor` now throws `ConflictingInterceptorSettingsException` when building the `SessionFactory`.
+Previously, one setting silently took precedence over the other with no indication that both had been configured.
+
+Applications that set both must choose one: `hibernate.session_factory.interceptor` for a shared instance or CDI-managed global interceptor, or `hibernate.session_factory.session_scoped_interceptor` for a per-session interceptor obtained from a `Supplier` or a CDI-managed class.
+
+[[native-bootstrap-disabled-xml]]
+=== Disabling XML mappings during native bootstrap
+
+When `hibernate.xml_mapping_enabled=false`, native bootstrap now skips access to mapping XML resources
+and JAXB binding. Previously, `MetadataSources` and `Configuration` still read and bound mapping XML,
+then excluded the bindings from metamodel building. Missing or malformed mapping XML therefore no longer
+causes bootstrap to fail when XML mapping processing is disabled.
+
+Set this option before registering XML mappings, for example before calling `addResource()` or `addFile()`.
+Native registration uses the setting available at the time of the call. Disabling XML later does not undo
+binding that has already occurred, and mappings skipped while disabled are not replayed if XML is enabled later.
+
+XML mapping resource, file, and jar references in `hibernate.cfg.xml` are also skipped when XML mappings
+are disabled, for both native and JPA bootstrap. The configuration document itself is still read,
+and its class and package mapping references still apply.
+
+
+[[native-bootstrap-legacy-jpa-aliases]]
+=== Legacy JPA connection aliases during settings normalization
+
+Native bootstrap now recognizes legacy `javax.persistence.*` connection settings when normalizing
+settings for the standard service registry. Previously, this normalization supplied Hibernate connection
+settings from `jakarta.persistence.*` aliases only; JPA bootstrap already recognized the legacy aliases.
+
+The newly recognized aliases are:
+
+* `javax.persistence.jdbc.url`
+* `javax.persistence.jdbc.driver`
+* `javax.persistence.jdbc.user`
+* `javax.persistence.jdbc.password`
+* `javax.persistence.nonJtaDataSource`
+* `javax.persistence.jtaDataSource`
+
+An existing Hibernate connection setting takes precedence over its Jakarta alias, which takes precedence
+over its legacy `javax.persistence.*` alias. For the datasource setting, all Jakarta aliases are considered
+before legacy aliases; within each namespace, the non-JTA datasource takes precedence over the JTA datasource.
+Existing JPA bootstrap source precedence is unchanged.
+
+Review native bootstrap configuration for stale legacy connection settings, which may now take effect
+when no corresponding Hibernate or Jakarta setting is present. Prefer the `jakarta.persistence.*` names
+when migrating legacy configuration.
 
 [[detached-collection-queries]]
 === Queries Returning Detached Collections
@@ -1465,40 +1301,291 @@ List<Initiative> initiatives =  outputs.getCurrent()
 ----
 
 
-=== Final fields of entities
+[[multiid-session-check-default]]
+=== Multi-ID loading session check default
 
-A `final` field of an entity is now treated as if it were annotated `@Immutable`,
-that is, it is excluded from dirty checking and from SQL `UPDATE` statements.
-In order to eliminate the possibility of "silent" changes in behavior, attempts
-to modify the value of a `final` fields using the `merge()` method are rejected.
-If a field of an entity can actually be updated via `merge()`, the field must be
-declared non-`final`.
+The default value of `FindMultipleOption.SessionCheckMode` has been changed from `DISABLED` to `ENABLED`.
 
-[[session-get]]
-=== Session.get
+This means that `Session#findMultiple()` and `Session#getMultiple()` now check the persistence context by default
+before querying the database. Identifiers for entities already managed in the current session will not be sent to the
+database, and entities marked for removal will be replaced with `null` in the result (see `RemovalsMode`).
 
-Jakarta Persistence now defines a series of overloaded `EntityHandler.get()` methods as corollaries to `EntityHandler.find()`.
-These methods are defined to throw an `EntityNotFoundException` rather than return null.
-This operates quite differently from the older Hibernate `Session.get()` methods which
+To restore the previous behavior, pass `FindMultipleOption.SessionCheckMode.DISABLED` as a find option:
 
-* still returned null if no entity with that is was found
-* force initialized the entity, if there was one and it was previously uninitialized.
+[source,java]
+----
+session.findMultiple(MyEntity.class, ids, SessionCheckMode.DISABLED);
+----
 
-Applications which use(d) `Session.get()` should be aware of this change in behavior.
+Or, for the legacy `byMultipleIds()` API:
 
-=== Scanning
+[source,java]
+----
+session.byMultipleIds(MyEntity.class).enableSessionCheck(false).multiLoad(ids);
+----
 
-As discussed in <<scanning>> above, Hibernate no longer performs scanning during "EE bootstrap".
-It is expected by Jakarta Persistence that the container perform the scanning prior to
-bootstrapping Hibernate.
+[[query-persistence-correctness]]
+=== Query and persistence correctness fixes
+
+The following fixes change behavior applications may observe after upgrading:
+
+* Concurrent `StatelessSession.upsert()` and `upsertMultiple()` operations now handle insert races instead of potentially leaving one operation's changes unapplied.
+* On H2, Oracle, and SQL Server, HQL `insert ... on conflict (...) do nothing` with explicit conflict columns now uses `MERGE` emulation instead of silently dropping the conflict clause. Applications should no longer expect a unique constraint violation for the specified conflict.
+* With enhanced dirty tracking and `@DynamicUpdate`, changes to scalar attributes are now included in updates when nested embeddables are also dirty. Previously, some scalar changes could be silently omitted depending on attribute ordering.
 
 
-[[graph-remove-attribute-node]]
-=== Remove AttributeNode from EntityGraph
+[[optimistic-lock-mode-version-check]]
+=== Version check for `LockModeType.OPTIMISTIC`
 
-Calls to `EntityGraph.removeAttributeNode()` and `EntityGraph.removeAttributeNodes()` now behave in specification compliant way -
-when the graph is used as a "load graph", removing an attribute "suppresses inclusion of an attribute mapped for eager fetching".
+For a managed entity locked with mode `OPTIMISTIC` or `READ`, Hibernate verifies the version before a transaction commits.
+Previously, on databases with snapshot isolation, this verification could read a stale version and miss a concurrent update.
 
+Hibernate now acquires a pessimistic lock when necessary.
+Therefore, optimistic version checks may wait for other transactions or encounter lock timeouts or deadlocks.
+
+[[locking-queries-managed-entities]]
+=== Version checks for locking queries
+
+A query requesting a pessimistic lock now checks the version of an already managed versioned entity even when
+its current lock mode is `NONE`. If another transaction has changed its version, the query throws
+`OptimisticLockException` instead of acquiring the lock on the stale instance. This includes entities
+loaded outside a transaction or retained in the persistence context after an earlier transaction.
+This behavior is consistent with `EntityManager.lock()`. Queries which request no lock are unaffected.
+
+Locking queries now also perform the optimistic checks and forced version increments requested for entities already managed by the session.
+This applies to streamed results and follow-on locking as well as ordinary query results.
+
+
+[[follow-on-skip-locked]]
+=== Skip-locked queries requiring follow-on locking
+
+Pessimistic queries requesting `Timeouts.SKIP_LOCKED` (or the legacy
+`LockMode.UPGRADE_SKIPLOCKED`) now fail when Hibernate selects follow-on entity
+locking. Previously, the primary query could return entities whose rows were
+skipped by the subsequent locking query. List queries retain the existing
+`IllegalStateException` wrapper around
+`IllegalQueryOperationException`; scroll and stream retain the internal exception
+directly. The diagnostic explains the unsupported combination.
+Use direct locking with a query shape supported by the dialect. Direct locking,
+including dialect table hints, remains supported even when the requested follow-on
+strategy is overridden by the dialect.
+
+Rejection occurs before the query's JDBC connection acquisition, secondary-action
+materialization, callbacks, and SQL execution, regardless of contention or result
+contents. Earlier automatic flush work is outside this guarantee, and terminal
+no-execution shortcuts such as a zero result limit need not reject the request.
+Existing `DISALLOW`, `IGNORE`, and native-plan capability decisions remain in effect.
+
+Execution integrations which bypass the standard JDBC executor must apply the same
+guard before their own connection acquisition and callbacks. `LockingHelper` provides
+`isSkipLockedRequest()` and `validateFollowOnLocking()` for the selected follow-on
+strategy. For skip-locked `RAW_SQL` plans, use
+`JdbcSelectSqlFinalizer.finalizeSql(JdbcSelect, JdbcParameterBindings, ExecutionContext)`
+to decide the final disposition before execution. Retain its result only for that
+invocation and pass it to the new `DeferredResultSetAccess` constructor overload,
+avoiding repeated pagination, policy, and SQL decoration callbacks. Other requests
+retain their existing finalization timing. SQL-shaping query options and parameters
+must remain stable during an invocation; pre-actions must not invalidate finalized
+metadata.
+
+[[follow-on-locking-missing-rows]]
+=== Missing rows during follow-on locking
+
+For non-skipping batched follow-on locking, every required table must return a
+row for each expected entity identifier. If any are missing, acquisition now
+throws `StaleObjectStateException`, including for unversioned entities, and uses
+the existing conversion to `OptimisticLockException`. This replaces both silent
+success for partial results and the assertion failure for entirely missing results.
+The exception identifies the first missing entity in acquisition input order;
+its message lists all missing identifiers from that table acquisition. Optional
+table rows remain exempt.
+
+[[pessimistic-refresh-visibility]]
+=== Refreshing pessimistically locked entities
+
+An equal or weaker refresh request now retains a non-incrementing pessimistic
+reload unless `LockingSupport.canUsePlainReadForRefresh(currentMode, requestedMode)`
+permits an ordinary read. This also applies to `refresh()` without an explicit
+mode. A held database lock does not guarantee that an ordinary read uses the
+locking read's view: on MySQL and MariaDB, it can consult an older snapshot and
+restore stale state or fail to find a row returned by the preceding locking read.
+
+The entry retains the appropriate existing lock mode. Refreshing an entity already
+locked with `PESSIMISTIC_FORCE_INCREMENT` does not repeat that increment, and
+optimistic refresh handling continues to avoid duplicate version actions.
+Wider requested scope still requires acquisition independently of the new predicate.
+
+The new default SPI method returns `false`, retaining a locking reload. A custom
+profile may return `true` for mode pairs where a plain reload preserves visibility
+and conflict semantics across its supported configurations. Additional locking SQL
+and normal dialect follow-on/timeout handling may therefore be observable.
+
+Standard `LockingSupport` profiles supply explicit policies. MySQL, MariaDB and TiDB
+retain locking reloads for all modes: even force increment may generate the same timestamp
+value, so its UPDATE need not establish own-write visibility. Informix permits a
+plain reload after a pessimistic force increment's transaction-duration write lock.
+Other standard `LockingSupport` profiles generally retain their previous plain reloads; selecting
+a standard simple/parameterized profile selects that policy as well. Independent
+custom implementations continue to inherit the interface's `false` default.
+
+[[locking-transaction-requirements]]
+=== Transaction requirements for locking APIs
+
+`EntityManager.getLockMode()` now returns `NONE` for a managed entity outside a transaction instead of throwing `TransactionRequiredException`.
+With JPA bootstrap, `lock(entity, LockModeType.NONE)` now requires an active transaction.
+Stateless `refresh()` with a lock mode other than `NONE` also requires a transaction with JPA bootstrap.
+
+[[pessimistic-lock-failure-exceptions]]
+=== Exceptions for pessimistic lock failures
+
+Hibernate now more consistently chooses between `PessimisticLockException` and `LockTimeoutException`
+based on whether the database locking failure aborts the transaction or only the statement.
+
+
+[[jdbc-resource-release-autocommit]]
+=== JDBC resource release in autocommit mode
+
+When no transaction is active (autocommit), Hibernate now correctly releases the connection after statement
+execution if the configured `ConnectionReleaseMode` is set to `AFTER_TRANSACTION`.
+Previously, with `DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION` connection handling mode, JDBC resources
+and the physical connection were held until an explicit call to `afterTransaction()` or closing the session,
+even though in autocommit mode each statement is effectively its own transaction.
+
+This change ensures that JDBC connections are promptly returned to the pool after each statement when there
+is no active transaction, preventing potential resource leaks.
+
+As a consequence, accessing LOB locators (i.e. `java.sql.Blob` or `java.sql.Clob` typed attributes) outside of
+an active transaction will no longer work and result in an exception on most dialects.
+Previously this appeared to work only because the connection happened to remain open; however, there were no
+transactional isolation guarantees — the data read from the LOB could have already been modified by another
+transaction.
+
+Note that this only affects entity attributes mapped as `java.sql.Blob` or `java.sql.Clob`, since these types
+rely on a JDBC locator that requires a live connection. Attributes mapped as `byte[]` or `String` are always
+eagerly materialized when the result set is read, and are not affected by this change. Similarly, some dialects
+that always use materialized LOB access are also unaffected.
+
+Applications that use `Blob` or `Clob` typed attributes must access them within an active transaction:
+
+[source,java]
+----
+// Before (assuming no active transaction, may have accidentally worked, but with no isolation guarantees):
+session.get(MyEntity.class, id);
+entity.getData().getBinaryStream(); // may now fail — connection already released
+
+// After (correct):
+session.getTransaction().begin();
+session.get(MyEntity.class, id);
+entity.getData().getBinaryStream(); // works — connection held by the transaction
+session.getTransaction().commit();
+----
+
+[[collection-mutation-lifecycle-timing]]
+=== Collection mutation lifecycle timing
+
+Collection post-events, cache handling, successful statistics, and queued-operation
+finalization are now tied to semantic collection-mutation completion instead of to
+the last row operation produced during decomposition.  This ensures that grouped,
+reordered, and batched row work completes the correct collection lifecycle and that
+failed physical work suppresses successful completion handling.
+
+A collection mutation which produces no SQL now completes directly after its
+semantic work is sealed; Hibernate no longer creates a SQL-shaped no-op solely to
+carry its post-event.  Consequently, applications must not rely on a global order
+between pre/post collection events for unrelated collections.  Each mutation's
+pre-event still precedes its post-event, and a post-event still follows all physical
+work belonging to that mutation.
+
+[[collection-remove-create-callback-order]]
+=== Collection remove/create callback order
+
+When moving a collection between owners or roles requires both removal of its old
+state and creation of its new state, Hibernate now invokes the collection-remove
+interceptor hook before the legacy collection-recreate hook.  The corresponding
+Hibernate collection events and semantic mutation completion are likewise
+remove-first.  Integrations must not retain the previous assumption that the
+recreate interceptor hook runs before the remove hook.
+
+[[collection-owner-update-callback-timing]]
+=== Collection owner update callback timing
+
+Jakarta Persistence owner update callbacks are coordinated once per owner and flush.
+When entity and non-inverse collection work both contribute to an applicable owner
+update, one `@PreUpdate` callback is invoked and one `@PostUpdate` callback is delayed
+until all contributing entity and collection post-events have been delivered.
+Collection create or remove work associated with owner insert/delete lifecycle does
+not by itself establish update-callback applicability.
+
+[[custom-sql-update-bindings]]
+=== Custom SQL updates with generated values
+
+An `@SQLUpdate` statement retains its fixed parameter layout when an in-memory generated value,
+such as `@UpdateTimestamp`, requires dynamic update processing internally. Hibernate now binds every
+updateable attribute required by the custom statement, including unchanged attributes.
+This corrects missing or misplaced parameter bindings in the graph mutation queue and matches the
+legacy mutation queue. It applies independently of association filtering.
+Combining `@DynamicUpdate` and `@SQLUpdate` on the same entity remains unsupported.
+
+[[inverse-list-null-elements]]
+=== Null elements of inverse indexed lists
+
+A null element of an inverse `@OneToMany` list mapped with `@OrderColumn` again leaves a gap in the order
+column, so that the element is read back as null and the elements after it keep their list positions.
+
+Since 6.2 the order column was instead written compacted, and a list persisted as `[a, null, b]` was stored
+with the index values `0,1` rather than `0,2` and loaded back as `[a, b]`, silently shifting the elements
+after the null. Applications that came to rely on that compaction — for example by treating the reloaded list
+size as the number of non-null elements — will now see the null elements preserved across a round-trip, as
+they were through 5.x and 6.1.
+
+Element collections are unaffected: a null element of an `@ElementCollection` list has never been persisted,
+and such lists still load back without it.
+
+[[collection-restriction-inherited-columns]]
+=== SQL restrictions on collection elements mapped to multiple tables
+
+When rendering a collection-element `@SQLRestriction`, Hibernate now qualifies an unambiguous mapped column
+using the table which declares it. This fixes restrictions on collections of `JOINED` subclasses which
+refer to a column stored in a superclass table, as described in
+https://hibernate.atlassian.net/browse/HHH-12016[HHH-12016].
+The same qualification applies to mapped columns stored in a `@SecondaryTable`, for both one-to-many
+and many-to-many collections.
+The qualification handles quoted column names and case differences in unquoted names.
+Unmapped or ambiguous column names retain the existing default qualification.
+This does not introduce an explicit alias declaration facility for `@SQLRestriction`.
+
+[[enumerated-value-unknown-values]]
+=== Unknown column values for `@EnumeratedValue` enums
+
+When an enum is mapped via `@EnumeratedValue`, a column value which matches none of the
+declared enum values now results in an `IllegalArgumentException` while the row is read,
+consistent with the `EnumType.STRING` mapping (which relies on `Enum.valueOf()`).
+Previously such a value was silently read as `null`, which typically surfaced much later
+as a `NullPointerException` or as a wrong attribute value.  Applications which relied on
+the lenient behavior, e.g. while an enum value is being removed, must clean up the affected
+rows before the enum value is dropped.
+
+
+=== `EntityExistsException` and Exceptions from `StatelessSession`
+
+JPA 4 specifies that `EntityExistsException` should be thrown on any sort of unique key violation that occurs while inserting an entity, which means that Hibernate now throws this exception type in some cases where `ConstraintViolationException` was previously thrown.
+
+After the introduction of `EntityAgent`, the Hibernate `StatelessSession` now throws the exception types mandated by the JPA specification.
+Previously, it threw native exception types.
+
+
+[[query-type-mismatch]]
+=== Query result type mismatches
+
+With JPA bootstrap, a query result type mismatch now produces `IllegalArgumentException` instead of `QueryTypeMismatchException`.
+
+
+[[query-parameter-types]]
+=== Unknown query parameter types
+
+As required by JPA 4.0, `Parameter.getParameterType()` now throws `IllegalStateException` instead of returning `null` when the Java type is unknown.
+This can occur for native SQL parameters before binding, or HQL parameters whose type cannot be inferred.
+Binding a value with an explicit Java type establishes the parameter type, even when the value is null.
 
 [[listener-target]]
 === Entity Listener Callbacks
@@ -1538,39 +1625,11 @@ _Be aware that creating a Cat, with the above model, will result in calls to bot
 that creating a Dog, both `postInsert(Animal)` and `postInsert(Dog)`._
 
 
-[[row-level-security]]
-=== Discriminator-Based Multi-Tenancy and Row-Level Security
+[[graph-remove-attribute-node]]
+=== Remove AttributeNode from EntityGraph
 
-On databases with built-in support for row-level security, Hibernate now uses row-level security to enforce the visibility rules implied by discriminator-based multi-tenancy.
-This requires specific DDL which the schema management tooling is responsible for generating.
-
-To recover the previous behavior, where discriminator-based multi-tenancy rules were not enforced by the database, set the configuration property `hibernate.multi_tenant.rls_enabled=false`.
-
-
-[[tenant-mutations]]
-=== Discriminator-Based Multi-Tenancy Changes
-
-Hibernate now restricts generated mutation SQL by tenant and checks tenant ownership before changing secondary tables or collections.
-Stateless updates and deletes reject detached entities with a missing or mismatched tenant identifier before executing SQL.
-The root tenant is exempt from these restrictions.
-
-Root tenant read operations now bypass the second-level cache.
-Mutations performed by the root tenant invalidate cache entries belonging to the actual owning tenant.
-
-
-=== Session Reentrancy
-
-It has always been illegal to call the Hibernate session from an `Interceptor` or JPA entity lifecycle callback, but Hibernate has never previously enforced this, opening the door to undefined behavior in programs which did not respect this restriction.
-
-Hibernate now throws `IllegalStateException` if the session is accessed in an unsafe way from a callback.
-
-
-=== `EntityExistsException` and Exceptions from `StatelessSession`
-
-JPA 4 specifies that `EntityExistsException` should be thrown on any sort of unique key violation that occurs while inserting an entity, which means that Hibernate now throws this exception type in some cases where `ConstraintViolationException` was previously thrown.
-
-After the introduction of `EntityAgent`, the Hibernate `StatelessSession` now throws the exception types mandated by the JPA specification.
-Previously, it threw native exception types.
+Calls to `EntityGraph.removeAttributeNode()` and `EntityGraph.removeAttributeNodes()` now behave in specification compliant way -
+when the graph is used as a "load graph", removing an attribute "suppresses inclusion of an attribute mapped for eager fetching".
 
 
 [[stateless-excluded-versioning]]
@@ -1578,146 +1637,6 @@ Previously, it threw native exception types.
 
 `StatelessSession.update()` and `EntityAgent.update()` now leave the version invariant when only attributes annotated `@ExcludedFromVersioning` have been modified.
 
-
-[[query-parameter-types]]
-=== Unknown query parameter types
-
-As required by JPA 4.0, `Parameter.getParameterType()` now throws `IllegalStateException` instead of returning `null` when the Java type is unknown.
-This can occur for native SQL parameters before binding, or HQL parameters whose type cannot be inferred.
-Binding a value with an explicit Java type establishes the parameter type, even when the value is null.
-
-[[query-type-mismatch]]
-=== Query result type mismatches
-
-With JPA bootstrap, a query result type mismatch now produces `IllegalArgumentException` instead of `QueryTypeMismatchException`.
-
-
-[[cubrid-dialect]]
-=== CUBRID dialect
-
-`CUBRIDDialect` now requires CUBRID 10.2 or later, the oldest version still supported by the vendor,
-and declares several capability flags explicitly for 10.2. Two of these are visible at runtime.
-
-`getNullOrdering()` is now `SMALLEST`, which matches CUBRID's native ordering (NULL first when
-ascending and last when descending). Queries that relied on the previous inherited default may order
-NULL values differently.
-
-Pessimistic locking now produces a `FOR UPDATE` clause. The dialect previously returned an empty lock
-string, so `PESSIMISTIC_READ` and `PESSIMISTIC_WRITE` had no effect.
-
-
-[[multiid-session-check-default]]
-=== Multi-ID loading session check default
-
-The default value of `FindMultipleOption.SessionCheckMode` has been changed from `DISABLED` to `ENABLED`.
-
-This means that `Session#findMultiple()` and `Session#getMultiple()` now check the persistence context by default
-before querying the database. Identifiers for entities already managed in the current session will not be sent to the
-database, and entities marked for removal will be replaced with `null` in the result (see `RemovalsMode`).
-
-To restore the previous behavior, pass `FindMultipleOption.SessionCheckMode.DISABLED` as a find option:
-
-[source,java]
-----
-session.findMultiple(MyEntity.class, ids, SessionCheckMode.DISABLED);
-----
-
-Or, for the legacy `byMultipleIds()` API:
-
-[source,java]
-----
-session.byMultipleIds(MyEntity.class).enableSessionCheck(false).multiLoad(ids);
-----
-
-[[mysql-current-timestamp]]
-=== `@CurrentTimestamp(source = SourceType.DB)` handling for MySQL-like databases
-
-The `MySQLDialect` was using the `now()` function to implement fetching of the current timestamp,
-which returns no fractional seconds. Since the implementations for other databases all at least
-returned values with millisecond precision, the implementation was changed to include the maximum
-precision 6, by using `now(6)`.
-
-The effect of the change is that newly updated/inserted entities that use `@CurrentTimestamp` will
-now assign a value with the configured precision of the column, instead of always truncating the
-fractional seconds.
-
-To revert back to the old behavior, change the column type of the annotated attribute to `datetime(0)`,
-
-[source,sql]
-----
-alter table TBL
-change column COL COL datetime(0);
-----
-
-
-[[locking-transaction-requirements]]
-=== Transaction requirements for locking APIs
-
-`EntityManager.getLockMode()` now returns `NONE` for a managed entity outside a transaction instead of throwing `TransactionRequiredException`.
-With JPA bootstrap, `lock(entity, LockModeType.NONE)` now requires an active transaction.
-Stateless `refresh()` with a lock mode other than `NONE` also requires a transaction with JPA bootstrap.
-
-[[locking-queries-managed-entities]]
-=== Version checks for locking queries
-
-A query requesting a pessimistic lock now checks the version of an already managed versioned entity even when
-its current lock mode is `NONE`. If another transaction has changed its version, the query throws
-`OptimisticLockException` instead of acquiring the lock on the stale instance. This includes entities
-loaded outside a transaction or retained in the persistence context after an earlier transaction.
-This behavior is consistent with `EntityManager.lock()`. Queries which request no lock are unaffected.
-
-Locking queries now also perform the optimistic checks and forced version increments requested for entities already managed by the session.
-This applies to streamed results and follow-on locking as well as ordinary query results.
-
-
-[[pessimistic-lock-failure-exceptions]]
-=== Exceptions for pessimistic lock failures
-
-Hibernate now more consistently chooses between `PessimisticLockException` and `LockTimeoutException`
-based on whether the database locking failure aborts the transaction or only the statement.
-
-
-[[optimistic-lock-mode-version-check]]
-=== Version check for `LockModeType.OPTIMISTIC`
-
-For a managed entity locked with mode `OPTIMISTIC` or `READ`, Hibernate verifies the version before a transaction commits.
-Previously, on databases with snapshot isolation, this verification could read a stale version and miss a concurrent update.
-
-Hibernate now acquires a pessimistic lock when necessary.
-Therefore, optimistic version checks may wait for other transactions or encounter lock timeouts or deadlocks.
-
-[[native-generator-default-allocation-size]]
-=== Default allocation size for `@NativeGenerator`
-
-When `@NativeGenerator` was introduced in Hibernate ORM 7.0, it defaulted to an allocation size of `1` for,
-in case the `@SequenceGenerator` or `@TableGenerator` annotations had their allocation size set to their default of `50`.
-Other values were respected, so this behavior was slightly unintuitive, yet the reasoning behind the choice was not
-documented.
-To make the behavior less surprising, it was now changed to respect the allocation size of `50`.
-
-This requires that, if sequences are used, the sequence is altered to change the allocation size from `1` to `50`.
-Alternatively, users can configure the allocation size to match the legacy value `1` by defining
-`@NativeGenerator(sequenceForm = @SequenceGenerator(allocationSize = 1), tableForm = @TableGenerator(allocationSize = 1)`.
-
-[[enumerated-value-unknown-values]]
-=== Unknown column values for `@EnumeratedValue` enums
-
-When an enum is mapped via `@EnumeratedValue`, a column value which matches none of the
-declared enum values now results in an `IllegalArgumentException` while the row is read,
-consistent with the `EnumType.STRING` mapping (which relies on `Enum.valueOf()`).
-Previously such a value was silently read as `null`, which typically surfaced much later
-as a `NullPointerException` or as a wrong attribute value.  Applications which relied on
-the lenient behavior, e.g. while an enum value is being removed, must clean up the affected
-rows before the enum value is dropped.
-
-
-[[interceptor-configuration-behavior]]
-=== Conflicting interceptor settings are now rejected
-
-Configuring both `hibernate.session_factory.interceptor` and `hibernate.session_factory.session_scoped_interceptor` now throws `ConflictingInterceptorSettingsException` when building the `SessionFactory`.
-Previously, one setting silently took precedence over the other with no indication that both had been configured.
-
-Applications that set both must choose one: `hibernate.session_factory.interceptor` for a shared instance or CDI-managed global interceptor, or `hibernate.session_factory.session_scoped_interceptor` for a per-session interceptor obtained from a `Supplier` or a CDI-managed class.
 
 [[sqlserver-geography-axis-order]]
 === Axis order of SQL Server `geography` values
@@ -1761,6 +1680,87 @@ Replace `my_table` and `g` with each affected table and `geography` column. Befo
 * Convert only rows that Hibernate wrote. Rows created by SQL Server functions, native SQL, or other tools
   already have the correct axis order and must be excluded with the `WHERE` clause.
 ====
+
+
+[[cubrid-dialect]]
+=== CUBRID dialect
+
+`CUBRIDDialect` now requires CUBRID 10.2 or later, the oldest version still supported by the vendor,
+and declares several capability flags explicitly for 10.2. Two of these are visible at runtime.
+
+`getNullOrdering()` is now `SMALLEST`, which matches CUBRID's native ordering (NULL first when
+ascending and last when descending). Queries that relied on the previous inherited default may order
+NULL values differently.
+
+Pessimistic locking now produces a `FOR UPDATE` clause. The dialect previously returned an empty lock
+string, so `PESSIMISTIC_READ` and `PESSIMISTIC_WRITE` had no effect.
+
+
+[[mysql-current-timestamp]]
+=== `@CurrentTimestamp(source = SourceType.DB)` handling for MySQL-like databases
+
+The `MySQLDialect` was using the `now()` function to implement fetching of the current timestamp,
+which returns no fractional seconds. Since the implementations for other databases all at least
+returned values with millisecond precision, the implementation was changed to include the maximum
+precision 6, by using `now(6)`.
+
+The effect of the change is that newly updated/inserted entities that use `@CurrentTimestamp` will
+now assign a value with the configured precision of the column, instead of always truncating the
+fractional seconds.
+
+To revert back to the old behavior, change the column type of the annotated attribute to `datetime(0)`,
+
+[source,sql]
+----
+alter table TBL
+change column COL COL datetime(0);
+----
+
+
+[[final-field-warning]]
+=== Boot-time warning for final persistent fields
+
+Hibernate now warns on boot when it detects persistent fields declared `final` in entity or embeddable classes that will need to be set through reflection.
+Reflective mutation of final fields is deprecated starting with JDK 26 and will be denied in a future JDK version.
+
+To resolve these warnings:
+
+- Enable bytecode enhancement, which automatically removes the `final` modifier from persistent fields, or
+- remove the `final` modifier from the persistent field declarations, or
+- for `@IdClass` types, annotate a constructor with `@Instantiator` to use constructor-based instantiation (link:https://hibernate.atlassian.net/browse/HHH-20542[HHH-20542]), or
+- for `@IdClass` types, switch to a Java `record`.
+
+The behavior of this check is controlled by the configuration property `hibernate.mapping.final_persistent_fields`,
+which accepts the values `warn` (the default), `error` (fail on boot), and `ignore` (suppress the check).
+
+See the link:{userGuideBase}#entity-pojo-final-fields[User Guide] for details.
+
+[[enhancement-synthetic-fields]]
+=== Bytecode enhancement fields are synthetic
+
+Fields added by Hibernate's bytecode enhancer are now marked synthetic.  `java.lang.reflect.Field#isSynthetic()` now returns `true` for these fields.
+Reflection-based libraries that filter out synthetic fields may no longer expose
+them.
+
+
+[[bootstrap-info-logging]]
+=== Bootstrap information logging
+
+The following bootstrap messages now use the dedicated `org.hibernate.orm.info` logging category:
+
+* `HHH000001: Hibernate ORM core version ...`, previously logged under `org.hibernate.orm.core`.
+* `HHH10001005: Database info: ...`, previously logged under `org.hibernate.orm.connections.pooling`.
+
+Both messages retain their existing message IDs and `INFO` level.
+Update any logging configuration or filters targeting these messages to use `org.hibernate.orm.info`.
+This category allows applications and containers to suppress bootstrap information independently of other core and connection-pooling messages.
+
+[[unscheduled-deletion-logging]]
+=== Logging for unscheduled deletions
+
+Persisting an entity currently scheduled for deletion unschedules that deletion per the Jakarta Persistence specification.  Hibernate now logs “Unscheduling entity deletion {details}” at DEBUG level under the `org.hibernate.orm.event.unschedule-deletion` category, isolating it to make it easier to enable logging for that single message.
+
+Persistence behavior is unchanged.
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1809,23 +1809,6 @@ would need to be changed to
 
 
 
-[[xsd-many-to-many-orphan-removal]]
-=== Removal of `orphan-removal` from `<many-to-many>`
-
-The `orphan-removal` attribute has been removed from the `<many-to-many>` element in the XML mapping XSD.
-
-Although previous versions of the schema allowed specifying `orphan-removal="true"` on a `<many-to-many>` mapping, this attribute was never processed during boot. Orphan removal behavior was silently ignored for many-to-many associations. The attribute has been removed from the XSD to reflect the actual supported behavior.
-
-Any `mapping.xml` documents using this attribute:
-
-[source,xml]
-----
-<many-to-many orphan-removal="true" ... />
-----
-
-should remove the `orphan-removal` attribute, as it had no effect.
-
-
 [[xsd-proxy-polymorphism-removal]]
 === Removal of `proxy` and `polymorphism` from Entity Mappings
 
@@ -1846,6 +1829,23 @@ Any `mapping.xml` documents using these elements:
 ----
 
 should remove them, as they are no longer supported.
+
+
+[[xsd-many-to-many-orphan-removal]]
+=== Removal of `orphan-removal` from `<many-to-many>`
+
+The `orphan-removal` attribute has been removed from the `<many-to-many>` element in the XML mapping XSD.
+
+Although previous versions of the schema allowed specifying `orphan-removal="true"` on a `<many-to-many>` mapping, this attribute was never processed during boot. Orphan removal behavior was silently ignored for many-to-many associations. The attribute has been removed from the XSD to reflect the actual supported behavior.
+
+Any `mapping.xml` documents using this attribute:
+
+[source,xml]
+----
+<many-to-many orphan-removal="true" ... />
+----
+
+should remove the `orphan-removal` attribute, as it had no effect.
 
 
 === Migration of Spanner PostgreSQL Dialect to core
@@ -1971,14 +1971,6 @@ No DDL changes are needed. The default `REV`/`REVTYPE` column names and encoding
 [[artifact-changes]]
 == Changes in published artifacts
 
-[[osgi-metadata]]
-=== Removal of OSGi metadata
-
-Hibernate ORM JARs no longer include OSGi metadata in their manifests, including
-`Bundle-*`, `Import-Package`, `Export-Package`, and `Require-Capability` headers.
-Applications deploying Hibernate ORM in an OSGi environment must supply the required bundle metadata themselves.
-The `Automatic-Module-Name` manifest attribute is retained for use on the Java module path.
-
 [[dependency-changes-relocation]]
 === Relocation POMs from `org.hibernate` are no longer published
 
@@ -1989,6 +1981,14 @@ Starting with this version -- these relocation POMs are no longer published.
 If your build still references Hibernate ORM modules using the old `org.hibernate` group id
 (e.g. `org.hibernate:hibernate-core`), you must update your dependency coordinates
 to use `org.hibernate.orm` (e.g. `org.hibernate.orm:hibernate-core`).
+
+[[osgi-metadata]]
+=== Removal of OSGi metadata
+
+Hibernate ORM JARs no longer include OSGi metadata in their manifests, including
+`Bundle-*`, `Import-Package`, `Export-Package`, and `Require-Capability` headers.
+Applications deploying Hibernate ORM in an OSGi environment must supply the required bundle metadata themselves.
+The `Automatic-Module-Name` manifest attribute is retained for use on the Java module path.
 
 [[dependency-changes]]
 == Changes in Dependencies

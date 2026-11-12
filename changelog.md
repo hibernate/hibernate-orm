@@ -1,5 +1,78 @@
 # Hibernate ORM Changelog
 
+## 8.0.0.CR1 (November 12, 2026)
+
+[Full changelog](https://hibernate.atlassian.net/projects/HHH/versions/40500)
+
+
+### Bug
+* [HHH-21109](https://hibernate.atlassian.net/browse/HHH-21109) - EntityAgent skips @PostLoad on find(), refresh(), and JPQL entity loads
+* [HHH-21096](https://hibernate.atlassian.net/browse/HHH-21096) - Untyped native query plan cache collisions cause parameter binding errors and incorrect results
+* [HHH-21095](https://hibernate.atlassian.net/browse/HHH-21095) - Hibernate Processor infers an inaccessible nested entity as a named query result type
+* [HHH-21093](https://hibernate.atlassian.net/browse/HHH-21093) - Fetching a sequence value executes the pending JDBC batch
+* [HHH-21082](https://hibernate.atlassian.net/browse/HHH-21082) - NullPointerException when applying Jakarta Data expression sorts
+* [HHH-21081](https://hibernate.atlassian.net/browse/HHH-21081) - IndexOutOfBoundsException for an empty CursoredPage beyond page 1
+* [HHH-21072](https://hibernate.atlassian.net/browse/HHH-21072) - NullPointerException in BaseSqmToSqlAstConverter.visitLiteral for CriteriaBuilder.literal() of an enum constant with a class body
+* [HHH-21071](https://hibernate.atlassian.net/browse/HHH-21071) - TABLE_PER_CLASS union generates unaliased derived tables for @Subselect subclasses (fails on MySQL: "Every derived table must have its own alias")
+* [HHH-21066](https://hibernate.atlassian.net/browse/HHH-21066) - Entity join to an audited entity reuses its SQL alias in the point-in-time subquery
+* [HHH-21065](https://hibernate.atlassian.net/browse/HHH-21065) - Index options of orm.xml are ignored
+* [HHH-21058](https://hibernate.atlassian.net/browse/HHH-21058) - SqlServerGeographyType reads and binds SQL Server geography values with latitude and longitude swapped
+* [HHH-21056](https://hibernate.atlassian.net/browse/HHH-21056) - CTE referenced without an alias gets an invalid SQL alias when its name is quoted
+* [HHH-21055](https://hibernate.atlassian.net/browse/HHH-21055) - Array stored as VARBINARY gets its element type's default column length
+* [HHH-21053](https://hibernate.atlassian.net/browse/HHH-21053) - Support @MapKeyFormula and <map-key-formula> for map keys
+* [HHH-21052](https://hibernate.atlassian.net/browse/HHH-21052) - <caching includeLazy="false"/> is ignored in XML mappings
+* [HHH-21047](https://hibernate.atlassian.net/browse/HHH-21047) - Disable DTD processing and external entity resolution by default when parsing XML
+* [HHH-21043](https://hibernate.atlassian.net/browse/HHH-21043) - XML-mapped lifecycle callbacks pre-merge, pre/post-insert, pre/post-upsert and pre/post-delete are ignored 
+* [HHH-21032](https://hibernate.atlassian.net/browse/HHH-21032) - Cached lock-timeout actions retain execution-specific state
+* [HHH-21031](https://hibernate.atlassian.net/browse/HHH-21031) - Managed pessimistic force increment bypasses extended-scope acquisition
+* [HHH-21030](https://hibernate.atlassian.net/browse/HHH-21030) - Wider pessimistic lock scope is ignored when the existing mode is equal or stronger
+* [HHH-21029](https://hibernate.atlassian.net/browse/HHH-21029) - Follow-on rereading leaves entity and persistence-context versions inconsistent
+* [HHH-21028](https://hibernate.atlassian.net/browse/HHH-21028) - Reject skip-locked requests requiring follow-on locking
+* [HHH-21027](https://hibernate.atlassian.net/browse/HHH-21027) - Follow-on acquisition reports missing rows as successfully locked
+* [HHH-21026](https://hibernate.atlassian.net/browse/HHH-21026) - Scalar projections can silently bypass pessimistic locking when follow-on acquisition is used
+* [HHH-21010](https://hibernate.atlassian.net/browse/HHH-21010) - Repeated `refresh(..., PESSIMISTIC_WRITE)` can restore stale state on MySQL/MariaDB
+* [HHH-21005](https://hibernate.atlassian.net/browse/HHH-21005) - Inconsistency in generate_series for H2
+* [HHH-20975](https://hibernate.atlassian.net/browse/HHH-20975) - HbmXmlTransformer does not transfer <list-index base="N"/> to mapping.xml
+* [HHH-20949](https://hibernate.atlassian.net/browse/HHH-20949) - @ConcreteProxy on JOINED hierarchy: filtering by a lazy @ManyToOne renders an empty `case end` in SQL
+* [HHH-20944](https://hibernate.atlassian.net/browse/HHH-20944) - JpaPath interface is not overriding get() methods returning new *Expression interfaces
+* [HHH-20939](https://hibernate.atlassian.net/browse/HHH-20939) - Restriction.greaterThan does not work with java.time.LocalDate
+* [HHH-20926](https://hibernate.atlassian.net/browse/HHH-20926) - Envers MapCollectionMapper compares map keys using owner key type instead of index type
+* [HHH-20910](https://hibernate.atlassian.net/browse/HHH-20910) - NullPointerException ordering collection updates when an uninitialized inverse collection is cleared
+* [HHH-20871](https://hibernate.atlassian.net/browse/HHH-20871) - Nested @Any on treated subclass is not resolved after HHH-20632
+* [HHH-20410](https://hibernate.atlassian.net/browse/HHH-20410) - @EnumeratedValue type resolving failed
+* [HHH-20328](https://hibernate.atlassian.net/browse/HHH-20328) - NullPointerException when querying null values with result type = List.class
+* [HHH-11931](https://hibernate.atlassian.net/browse/HHH-11931) - hibernate-processor generates invalid JPA metamodel classes for Spatial types
+
+### Deprecation
+* [HHH-20902](https://hibernate.atlassian.net/browse/HHH-20902) - Deprecations related to ImplicitNamingStrategy
+
+### Improvement
+* [HHH-21098](https://hibernate.atlassian.net/browse/HHH-21098) - Update to Hibernate Accessor 0.1.0.CR1
+* [HHH-21076](https://hibernate.atlassian.net/browse/HHH-21076) - Managed-only cursor results can bypass locking acquisition callbacks
+* [HHH-21075](https://hibernate.atlassian.net/browse/HHH-21075) - Direct-query pessimistic force increment precedes extended-scope acquisition
+* [HHH-21050](https://hibernate.atlassian.net/browse/HHH-21050) - Drop deprecated Session get()/lock()/refresh() forms
+* [HHH-21049](https://hibernate.atlassian.net/browse/HHH-21049) - Support follow-on locking with composite keys
+* [HHH-21048](https://hibernate.atlassian.net/browse/HHH-21048) - New OuterJoinLockingType.NON_NULL_TARGETS
+* [HHH-21038](https://hibernate.atlassian.net/browse/HHH-21038) - Fail transaction completion when closed SessionFactory prevents flushing (possible) pending changes
+* [HHH-21016](https://hibernate.atlassian.net/browse/HHH-21016) - HbmXmlTransformer, support <timestamp source="db"> in hbm to xml transformation
+* [HHH-21008](https://hibernate.atlassian.net/browse/HHH-21008) - Support @UpdateTimestamp in orm.xml via a new <update-timestamp> element
+* [HHH-10470](https://hibernate.atlassian.net/browse/HHH-10470) - Mark bytecode enhancement fields as synthetic
+
+### New Feature
+* [HHH-21018](https://hibernate.atlassian.net/browse/HHH-21018) - TenantDataSourceMapper
+* [HHH-20905](https://hibernate.atlassian.net/browse/HHH-20905) - Allow @Filter and @SQLRestriction on to-one associations
+* [HHH-20617](https://hibernate.atlassian.net/browse/HHH-20617) - XSD support for @Temporal and @Audited
+* [HHH-2737](https://hibernate.atlassian.net/browse/HHH-2737) - Support @SQLRestriction on ToOne attributes
+
+### Task
+* [HHH-21127](https://hibernate.atlassian.net/browse/HHH-21127) - Revert the default for hibernate.type.java_time_use_direct_jdbc
+* [HHH-21104](https://hibernate.atlassian.net/browse/HHH-21104) - Upgrade to Jakarta Data 1.1 M4
+* [HHH-21103](https://hibernate.atlassian.net/browse/HHH-21103) - Upgrade to Jakarta Persistence 4.0 M8
+* [HHH-21036](https://hibernate.atlassian.net/browse/HHH-21036) - Align locking documentation with observable guarantees
+* [HHH-21035](https://hibernate.atlassian.net/browse/HHH-21035) - Validate concurrency guarantees and optimistic locking lifecycle across database configurations
+* [HHH-21033](https://hibernate.atlassian.net/browse/HHH-21033) - Verify lock-timeout cleanup across failures and early result closure
+* [HHH-21025](https://hibernate.atlassian.net/browse/HHH-21025) - Review and strengthen Hibernate locking contracts
+
 ## 8.0.0.Beta4 (October 28, 2026)
 
 [Full changelog](https://hibernate.atlassian.net/projects/HHH/versions/40489)

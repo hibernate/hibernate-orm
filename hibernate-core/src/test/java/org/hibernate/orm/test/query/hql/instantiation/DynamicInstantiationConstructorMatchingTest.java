@@ -1,6 +1,7 @@
 package org.hibernate.orm.test.query.hql.instantiation;
 
 import org.hibernate.annotations.Imported;
+import org.hibernate.query.SemanticException;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -13,7 +14,9 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DomainModel( annotatedClasses = { DynamicInstantiationConstructorMatchingTest.TestEntity.class } )
 @SessionFactory
@@ -39,6 +42,20 @@ public class DynamicInstantiationConstructorMatchingTest {
 			).getSingleResult();
 			assertEquals( 42, result.getNum() );
 			assertEquals( "test", result.getStr() );
+		} );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17926" )
+	void reportsIncompatibleConstructorArgument(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			final var failure = assertThrows( SemanticException.class, () -> session.createSelectionQuery(
+					"select new ConstructorDto(num, num) from TestEntity", ConstructorDto.class
+			) );
+			assertThat( failure )
+					.hasMessageContaining( ConstructorDto.class.getName() )
+					.hasMessageContaining( "(java.lang.Integer, java.lang.Integer)" )
+					.hasMessageContaining( "argument 2 requires 'java.lang.String'" );
 		} );
 	}
 

@@ -2,6 +2,8 @@ package org.hibernate.sql.spi.mutation.jdbc;
 
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.type.descriptor.ValueBinder;
+import org.hibernate.type.internal.TemporalPrecisionBasicType;
 
 /**
  * Descriptor for JDBC value within an operation.
@@ -31,6 +33,11 @@ public interface JdbcValueDescriptor {
 	 * The JDBC mapping (type, etc.) for the parameter
 	 */
 	JdbcMapping getJdbcMapping();
+
+	/// Selects assignment precision preparation without changing restriction binding.
+	default ValueBinder<Object> getValueBinder() {
+		return TemporalPrecisionBasicType.mutationBinder( getJdbcMapping(), getUsage() );
+	}
 
 	default boolean matches(String columnName, ParameterUsage usage) {
 		return getColumnName().equals( columnName )

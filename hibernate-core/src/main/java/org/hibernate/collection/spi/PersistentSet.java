@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.type.internal.TemporalCollectionState;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -127,8 +128,11 @@ public class PersistentSet<E> extends AbstractPersistentCollection<E> implements
 
 		this.set = (Set<E>) persister.getCollectionSemantics().instantiateRaw( size, persister );
 
+		final var temporal = TemporalCollectionState.get( this, persister );
+		int position = 0;
 		for ( Serializable arrayElement : array ) {
-			final Object assembledArrayElement = persister.getElementType().assemble( arrayElement, getSession(), owner );
+			final Object assembledArrayElement = (temporal == null ? persister.getElementType().assemble( arrayElement, getSession(), owner )
+					: temporal.assemble( position++, arrayElement, persister, getSession(), owner ));
 			if ( assembledArrayElement != null ) {
 				set.add( (E) assembledArrayElement );
 			}
@@ -319,11 +323,19 @@ public class PersistentSet<E> extends AbstractPersistentCollection<E> implements
 
 	@Override
 	public Object disassemble(CollectionPersister persister) throws HibernateException {
+		final var temporal = TemporalCollectionState.get( this, persister );
+		if ( temporal != null ) {
+			temporal.snapshot( this, persister );
+		}
 		final Serializable[] result = new Serializable[ set.size() ];
 		final Iterator<E> itr = set.iterator();
 		int i=0;
 		while ( itr.hasNext() ) {
-			result[i++] = persister.getElementType().disassemble( itr.next(), getSession(), null );
+			final Object element = itr.next();
+			result[i] = temporal == null
+					? persister.getElementType().disassemble( element, getSession(), null )
+					: temporal.disassemble( i, element, persister, getSession() );
+			i++;
 		}
 		return result;
 	}

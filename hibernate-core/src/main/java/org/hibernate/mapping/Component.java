@@ -2,6 +2,7 @@ package org.hibernate.mapping;
 
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.type.internal.TemporalPrecisionBasicType;
 import org.hibernate.Remove;
 import org.hibernate.boot.model.internal.GeneratorBinder;
 import org.hibernate.boot.model.relational.Database;
@@ -456,6 +457,12 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 			}
 			if ( property.getValue() instanceof BasicValue basic ) {
 				final var resolved = basic.resolve();
+				if ( property == first ) {
+					final var precision = TemporalPrecisionBasicType.find( resolved.getJdbcMapping() );
+					if ( precision != null ) {
+						contextualCompositeUserType = temporal.withPrecision( precision.getPrecisionPlan() );
+					}
+				}
 				if ( resolved.getDomainJavaType().getJavaTypeClass() == java.time.ZoneOffset.class ) {
 					final var report = TemporalMappingValidator.assess( dialect, resolved.getDomainJavaType(), resolved.getJdbcType(), temporalRole );
 					if ( report.offset() != TemporalPreservation.Level.SUPPORTED ) {

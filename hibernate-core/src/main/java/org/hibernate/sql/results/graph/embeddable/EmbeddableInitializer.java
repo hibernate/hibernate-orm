@@ -3,6 +3,9 @@ package org.hibernate.sql.results.graph.embeddable;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.internal.FilteredAssociationState;
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.type.internal.TemporalPreparedState;
+import org.hibernate.Internal;
 import org.hibernate.engine.internal.FilteredAssociationMapping;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.sql.results.graph.InitializerData;
@@ -42,6 +45,12 @@ public interface EmbeddableInitializer<Data extends InitializerData> extends Ini
 		return state;
 	}
 
+	/// Retains extracted temporal relational state for cache assembly without
+	/// invoking application converters again.
+	@Internal
+	default void collectTemporalPreparedState(RowProcessingState row, EntityEntry owner) {
+	}
+
 	/**
 	 * Resets the resolved entity registrations by i.e. removing {@link org.hibernate.engine.spi.EntityHolder}.
 	 *
@@ -51,4 +60,7 @@ public interface EmbeddableInitializer<Data extends InitializerData> extends Ini
 	 * is called, which expects all registrations to be fully initialized.
 	 */
 	void resetResolvedEntityRegistrations(RowProcessingState rowProcessingState);
+	default void collectTemporalPreparedState(RowProcessingState row, TemporalPreparedState state) {
+	}
+
 }

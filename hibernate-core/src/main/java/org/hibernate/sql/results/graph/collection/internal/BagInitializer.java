@@ -1,5 +1,8 @@
 package org.hibernate.sql.results.graph.collection.internal;
 
+import org.hibernate.type.internal.TemporalCollectionState;
+import org.hibernate.sql.results.graph.entity.internal.TemporalPrecisionHydration;
+
 import java.util.List;
 import java.util.function.BiConsumer;
 
@@ -86,10 +89,17 @@ public class BagInitializer extends AbstractImmediateCollectionInitializer<Abstr
 			}
 		}
 		else {
+			final var temporal = TemporalCollectionState.get( getCollectionInstance( data ),
+					getCollectionAttributeMapping().getCollectionDescriptor() );
+			final var captured = temporal == null ? null : TemporalPrecisionHydration.capture(
+					getCollectionAttributeMapping().getElementDescriptor(), elementAssembler, rowProcessingState );
 			final Object element = elementAssembler.assemble( rowProcessingState );
 			if ( element != null ) {
 				// If element is null, then NotFoundAction must be IGNORE
 				loadingState.add( element );
+				if ( temporal != null ) {
+					temporal.loading( loadingState.size() - 1, element ).copyFrom( captured );
+				}
 			}
 		}
 	}

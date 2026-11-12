@@ -5,6 +5,8 @@ import jakarta.persistence.criteria.Predicate.BooleanOperator;
 import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import org.hibernate.type.internal.TemporalPrecisionBasicType;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMethod;
 import org.hibernate.HibernateException;
@@ -1024,7 +1026,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					consumeSqmParameter(
 							assignmentValueParameter,
 							assignedPathInterpretation.getExpressionType(),
-							(index, jdbcParameter) -> expressions.add( jdbcParameter )
+							(index, jdbcParameter) -> expressions.add( jdbcParameter ), true
 					);
 					if ( pathSqlExpression instanceof SqlTupleContainer ) {
 						addAssignment(
@@ -1124,7 +1126,28 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				aggregateColumnAssignmentHandler.addAssignment( assignments.size(), targetColumnReference );
 			}
 		}
+		if ( valueExpression instanceof SqlTuple tuple && tuple.getExpressions().size() == targetColumnReferences.size() ) {
+			final List<Expression> prepared = new ArrayList<>( targetColumnReferences.size() );
+			for ( int i = 0; i < targetColumnReferences.size(); i++ ) {
+				prepared.add( prepareAssignmentLiteral( tuple.getExpressions().get( i ), targetColumnReferences.get( i ).getJdbcMapping() ) );
+			}
+			valueExpression = new SqlTuple( prepared, tuple.getExpressionType() );
+		}
+		else if ( targetColumnReferences.size() == 1 ) {
+			valueExpression = prepareAssignmentLiteral( valueExpression, targetColumnReferences.get( 0 ).getJdbcMapping() );
+		}
 		assignments.add( new Assignment( assignable, valueExpression ) );
+	}
+
+	private static Expression prepareAssignmentLiteral(Expression expression, JdbcMapping target) {
+		if ( expression instanceof QueryLiteral<?> literal ) {
+			final var precision = TemporalPrecisionBasicType.find( target );
+			if ( precision != null ) {
+				return new QueryLiteral<>( precision.prepareRelational( literal.getLiteralValue() ),
+						(SqlExpressible) literal.getExpressionType() );
+			}
+		}
+		return expression;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1544,11 +1567,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		for ( int i = 0; i < expressions.size(); i++ ) {
 			// todo: add WriteExpression handling
 			final var sqmExpression = expressions.get( i );
-			valuesExpressions.add(
-					insertionTargetPaths == null
-							? (Expression) visitWithRequiredResult( sqmExpression )
-							: visitWithInferredType( sqmExpression, insertionTargetPaths.get( i ) )
-			);
+			if ( insertionTargetPaths == null ) {
+				valuesExpressions.add( (Expression) visitWithRequiredResult( sqmExpression ) );
+			}
+			else {
+				final var target = determineValueMapping( insertionTargetPaths.get( i ) );
+				final var parameter = getSqmParameter( sqmExpression );
+				if ( parameter != null ) {
+					valuesExpressions.add( consumeSqmParameter( parameter, target, (index, jdbcParameter) -> {}, true ) );
+				}
+				else {
+					final Expression expression = visitWithInferredType( sqmExpression, insertionTargetPaths.get( i ) );
+					valuesExpressions.add( target.getJdbcTypeCount() == 1
+							? prepareAssignmentLiteral( expression, target.getSingleJdbcMapping() ) : expression );
+				}
+			}
 		}
 		return new Values( valuesExpressions );
 	}
@@ -6353,6 +6386,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			SqmParameter<?> sqmParameter,
 			MappingModelExpressible<?> valueMapping,
 			BiConsumer<Integer, JdbcParameter> jdbcParameterConsumer) {
+		return consumeSqmParameter( sqmParameter, valueMapping, jdbcParameterConsumer, false );
+	}
+
+	private Expression consumeSqmParameter(
+			SqmParameter<?> sqmParameter,
+			MappingModelExpressible<?> valueMapping,
+			BiConsumer<Integer, JdbcParameter> jdbcParameterConsumer,
+			boolean assignment) {
 		final var receivingMapping = getInferredValueMapping();
 		if ( receivingMapping != null ) {
 			validateTemporalParameterUse( sqmParameter, receivingMapping );
@@ -6363,6 +6404,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		resolveSqmParameter(
 				sqmParameter,
 				valueMapping,
+				assignment,
 				(index, jdbcParameter) -> {
 					jdbcParameterConsumer.accept( index, jdbcParameter );
 					jdbcParametersForSqm.add( jdbcParameter );
@@ -6724,6 +6766,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private void resolveSqmParameter(
 			SqmParameter<?> expression,
 			MappingModelExpressible<?> valueMapping,
+			boolean assignment,
 			BiConsumer<Integer,JdbcParameter> jdbcParameterConsumer) {
 		sqmParameterMappingModelTypes.put( expression, valueMapping );
 		final var jdbcParams = jdbcParamsBySqmParam.get( expression );
@@ -6735,12 +6778,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			selectableMappings.forEachSelectable(
 					(index, selectableMapping)
 							-> jdbcParameterConsumer.accept( index,
-									new SqlTypedMappingJdbcParameter( selectableMapping, parameterId + index ) )
+									new SqlTypedMappingJdbcParameter( selectableMapping, parameterId + index, assignment ) )
 			);
 		}
 		else if ( bindable instanceof SelectableMapping selectableMapping ) {
 			jdbcParameterConsumer.accept( 0,
-					new SqlTypedMappingJdbcParameter( selectableMapping, parameterId ) );
+					new SqlTypedMappingJdbcParameter( selectableMapping, parameterId, assignment ) );
 		}
 		else {
 			final var sqlTypedMapping = sqlTypedMapping( expression, bindable );
@@ -6752,13 +6795,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				bindable.forEachJdbcType(
 						(index, jdbcMapping) -> jdbcParameterConsumer.accept(
 								index,
-								new JdbcParameterImpl( jdbcMapping, parameterId + index )
+								new JdbcParameterImpl( jdbcMapping, parameterId + index, assignment )
 						)
 				);
 			}
 			else {
 				jdbcParameterConsumer.accept( 0,
-						new SqlTypedMappingJdbcParameter( sqlTypedMapping, parameterId ) );
+						new SqlTypedMappingJdbcParameter( sqlTypedMapping, parameterId, assignment ) );
 			}
 		}
 	}

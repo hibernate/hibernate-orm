@@ -123,13 +123,13 @@ class TemporalContextLifecycleTests {
 	}
 
 	@ParameterizedTest @ValueSource(booleans = {true, false})
-	void cachePrecisionOriginsResolveTheirOwnTransitionInstant(boolean metadata) {
+	void cachePrecisionOriginsResolveTheSameTransitionInstant(boolean metadata) {
 		try ( var scope = ContextScope.open( metadata, Rounded.class ) ) {
 			final var input = Instant.parse( "2026-03-08T06:59:59.600Z" ).atZone( ZoneId.of( "Europe/Paris" ) );
 			final var row = new Rounded(); row.id = 1; row.value = input; row.raw = input;
 			scope.tx( session -> { session.persist( row ); session.flush(); scope.measure(); session.flush(); scope.noMutation(); } );
 			scope.measure();
-			scope.tx( session -> { final var hit = session.find( Rounded.class, 1 ); assertThat( hit.value ).isEqualTo( input.withZoneSameInstant( NY ) ); assertThat( hit.raw.getZone() ).isEqualTo( input.getOffset() ); session.flush(); } );
+			scope.tx( session -> { final var hit = session.find( Rounded.class, 1 ); assertThat( hit.value ).isEqualTo( Instant.parse( "2026-03-08T07:00:00Z" ).atZone( NY ) ); assertThat( hit.raw.toInstant() ).isEqualTo( Instant.parse( "2026-03-08T07:00:00Z" ) ); assertThat( hit.raw.getZone() ).isEqualTo( input.getOffset() ); session.flush(); } );
 			scope.noSelect(); scope.noMutation(); assertThat( scope.factory.getStatistics().getSecondLevelCacheHitCount() ).isEqualTo( 1 );
 			scope.factory.getCache().evictAllRegions();
 			scope.tx( session -> { final var loaded = session.find( Rounded.class, 1 ); assertThat( loaded.value ).isEqualTo( Instant.parse( "2026-03-08T07:00:00Z" ).atZone( NY ) ); scope.measure(); session.flush(); scope.noMutation(); } );

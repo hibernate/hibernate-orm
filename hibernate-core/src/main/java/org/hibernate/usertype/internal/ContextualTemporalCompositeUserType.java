@@ -9,6 +9,8 @@ import org.hibernate.TemporalValueException;
 import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.type.descriptor.converter.internal.TemporalAdjustmentConverter;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.internal.TemporalPrecisionPlan;
+import org.hibernate.MappingException;
 import org.hibernate.usertype.CompositeUserType;
 
 /// Used to model offset and zoned temporal mappings when the offset / zone are stored as a
@@ -21,12 +23,36 @@ public final class ContextualTemporalCompositeUserType<T> implements CompositeUs
 	private final CompositeUserType<T> delegate;
 	private final TemporalAdjustmentConverter<T> adjustment;
 	private final String role;
+	private final TemporalPrecisionPlan precision;
 
 	public ContextualTemporalCompositeUserType(
 			CompositeUserType<T> delegate, JavaType<T> javaType, ZoneId target, String role) {
 		this.delegate = delegate;
 		this.adjustment = target == null ? null : new TemporalAdjustmentConverter<>( javaType, target, false, role );
 		this.role = role;
+		this.precision = null;
+	}
+
+	private ContextualTemporalCompositeUserType(ContextualTemporalCompositeUserType<T> original, TemporalPrecisionPlan precision) {
+		delegate = original.delegate;
+		adjustment = original.adjustment;
+		role = original.role;
+		this.precision = precision;
+	}
+
+	/// Creates a mapping-owned instance after the primary column has resolved its grid.
+	public ContextualTemporalCompositeUserType<T> withPrecision(TemporalPrecisionPlan precision) {
+		return new ContextualTemporalCompositeUserType<>( this, precision );
+	}
+
+	private T canonical(T value) {
+		final T adjusted = adjust( value );
+		if ( adjusted == null || precision == null ) {
+			return adjusted;
+		}
+		final Object primary = precision.prepare( delegate.getPropertyValue( adjusted, 0 ) );
+		final Object offset = delegate.getPropertyValue( adjusted, 1 );
+		return adjust( delegate.instantiate( () -> new Object[] { primary, offset } ) );
 	}
 
 	/// Mapping role retained for bootstrap and execution diagnostics.
@@ -88,11 +114,19 @@ public final class ContextualTemporalCompositeUserType<T> implements CompositeUs
 
 	@Override
 	public Serializable disassemble(T value) {
-		return delegate.disassemble( adjust( value ) );
+		final Serializable payload = delegate.disassemble( canonical( value ) );
+		return precision == null || value == null ? payload : new PrecisionCacheValue( precision.getSignature(), payload );
 	}
 
 	@Override
 	public T assemble(Serializable cached, Object owner) {
+		if ( precision != null && cached != null ) {
+			if ( !(cached instanceof PrecisionCacheValue value) || !precision.getSignature().equals( value.signature() ) ) {
+				throw new MappingException( "Incompatible temporal COLUMN cache payload for '" + role
+						+ "'; evict affected cache regions before changing precision" );
+			}
+			cached = ((PrecisionCacheValue) cached).value();
+		}
 		T value = delegate.assemble( cached, owner );
 		if ( value instanceof ZonedDateTime zoned ) {
 			value = returnedClass().cast( ZonedDateTime.ofInstant( zoned.toInstant(), zoned.getOffset() ) );
@@ -104,4 +138,7 @@ public final class ContextualTemporalCompositeUserType<T> implements CompositeUs
 	public T replace(T detached, T managed, Object owner) {
 		return delegate.replace( detached, managed, owner );
 	}
+	private record PrecisionCacheValue(String signature, Serializable value) implements Serializable {
+	}
+
 }

@@ -13,6 +13,7 @@ import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.internal.TemporalPreparedState;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -56,7 +57,9 @@ public class ForceVersionBindPlan implements BindPlan, OperationResultChecker {
 			JdbcValueBindings jdbcValueBindings,
 			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
-		jdbcValueBindings.bindAssignment( -1, newVersion, persister.getVersionMapping() );
+		jdbcValueBindings.bindAssignment( -1,
+				TemporalPreparedState.prepare( newVersion, persister.getVersionMapping().getJdbcMapping(), entity, session ),
+				persister.getVersionMapping() );
 
 		final var keyDescriptor = tableDescriptor.keyDescriptor();
 		persister.getIdentifierMapping().breakDownJdbcValues(

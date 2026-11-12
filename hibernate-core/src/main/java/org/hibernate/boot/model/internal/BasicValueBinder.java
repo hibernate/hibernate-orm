@@ -21,6 +21,10 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Version;
 import jakarta.annotation.Nullable;
+import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
+import org.hibernate.usertype.internal.OffsetDateTimeCompositeUserType;
+import org.hibernate.usertype.internal.ZonedDateTimeCompositeUserType;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.type.TimeZoneStorageStrategy;
@@ -301,6 +305,16 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 	private static JdbcType getDescriptor(TypeConfiguration typeConfiguration, int code) {
 		return typeConfiguration.getJdbcTypeRegistry().getDescriptor( code );
+	}
+
+	private boolean isCustomCompositeMember() {
+		if ( columns != null && columns.getPropertyHolder() instanceof ComponentPropertyHolder holder ) {
+			final String type = holder.getComponent().getTypeName();
+			return type != null && !type.equals( OffsetTimeCompositeUserType.class.getName() )
+					&& !type.equals( OffsetDateTimeCompositeUserType.class.getName() )
+					&& !type.equals( ZonedDateTimeCompositeUserType.class.getName() );
+		}
+		return false;
 	}
 
 	public void setType(MemberDetails memberDetails, TypeDetails typeDetails) {
@@ -1195,6 +1209,9 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 		if ( temporalFeaturesExcluded ) {
 			basicValue.setTemporalValidationEnabled( false );
 		}
+		if ( isCustomCompositeMember() ) {
+			basicValue.excludeTemporalPrecision();
+		}
 
 		if ( !temporalFeaturesExcluded && buildingContext.isPreferJavaTimeJdbcTypesEnabled() && memberDetails != null ) {
 			final var rawClass = (kind == Kind.COLLECTION_ELEMENT ? memberDetails.getElementType() : memberDetails.getType()).determineRawClass();
@@ -1304,6 +1321,9 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 		if ( temporalFeaturesExcluded ) {
 			basicValue.setTemporalValidationEnabled( false );
+		}
+		if ( isCustomCompositeMember() ) {
+			basicValue.excludeTemporalPrecision();
 		}
 
 		if ( !temporalFeaturesExcluded && buildingContext.isPreferJavaTimeJdbcTypesEnabled() && memberDetails != null ) {

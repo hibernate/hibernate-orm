@@ -1,6 +1,7 @@
 package org.hibernate.engine.internal;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.internal.TemporalPrecisionBasicType;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -42,7 +43,7 @@ public final class Versioning {
 				(WrapperOptions) session
 		);
 		VersionLogger.INSTANCE.seed( seed );
-		return seed;
+		return prepare( seed, versionMapping );
 	}
 
 
@@ -66,12 +67,15 @@ public final class Versioning {
 		final int versionProperty = persister.getVersionPropertyIndex();
 		final Object initialVersion = fields[versionProperty];
 		if ( isNullInitialVersion( initialVersion ) ) {
-			fields[versionProperty] = persister.getVersionGenerator().generate( session, entity, initialVersion, INSERT );
+			fields[versionProperty] = prepare(
+					persister.getVersionGenerator().generate( session, entity, initialVersion, INSERT ), persister.getVersionMapping() );
 			return true;
 		}
 		else {
 			VersionLogger.INSTANCE.initial( initialVersion );
-			return false;
+			final Object prepared = prepare( initialVersion, persister.getVersionMapping() );
+			fields[versionProperty] = prepared;
+			return prepared != initialVersion;
 		}
 	}
 
@@ -107,7 +111,8 @@ public final class Versioning {
 			Object currentVersion,
 			EntityPersister persister,
 			SharedSessionContractImplementor session) {
-		return persister.getVersionGenerator().generate( session, entity, currentVersion, UPDATE );
+		return prepare( persister.getVersionGenerator().generate( session, entity, currentVersion, UPDATE ),
+				persister.getVersionMapping() );
 	}
 
 	/**
@@ -134,7 +139,19 @@ public final class Versioning {
 				session
 		);
 		VersionLogger.INSTANCE.incrementing( version, next );
-		return next;
+		return prepare( next, versionMapping );
+	}
+
+	/// Publishes the representable token without imposing uniqueness or collision
+	/// rejection. Historical restriction values never pass through this method.
+	private static Object prepare(Object candidate, EntityVersionMapping mapping) {
+		final var precision = TemporalPrecisionBasicType.find( mapping.getJdbcMapping() );
+		if ( precision == null || candidate == null ) {
+			return candidate;
+		}
+		final var relational = mapping.getJdbcMapping().convertToRelationalValue( candidate );
+		return mapping.getJdbcMapping().convertToDomainValue( precision.getPrecisionPlan()
+				.reconstructPrepared( precision.prepareRelational( relational ) ) );
 	}
 
 	/**

@@ -3,6 +3,8 @@ package org.hibernate.metamodel.mapping.internal;
 import jakarta.annotation.Nullable;
 
 import jakarta.annotation.Nonnull;
+import org.hibernate.type.internal.TemporalPrecisionBasicType;
+
 import org.hibernate.mapping.Column;
 import org.hibernate.dialect.temporal.spi.TemporalRestrictionRequest;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -86,7 +88,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 		final var endingResolution = endingValue.resolve();
 
 		jdbcMapping = startingResolution.getJdbcMapping();
-		if ( jdbcMapping != endingResolution.getJdbcMapping() ) {
+		if ( !TemporalPrecisionBasicType.sameJdbcContract( jdbcMapping, endingResolution.getJdbcMapping() ) ) {
 			throw new IllegalStateException( "Temporal starting and ending columns must use the same JDBC mapping" );
 		}
 

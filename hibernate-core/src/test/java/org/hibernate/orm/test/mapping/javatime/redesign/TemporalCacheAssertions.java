@@ -11,7 +11,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /// Shared lifecycle assertions for isolated, single-entity temporal cache fixtures.
 /// Each read uses a new persistence context and statistics distinguish cache hits
-/// from database loads. Cleanup is outside the measured phases.
+/// from database loads. All three phases require the same canonical precision.
+/// Cleanup is outside the measured phases.
 ///
 /// @author Steve Ebersole
 final class TemporalCacheAssertions {
@@ -30,7 +31,7 @@ final class TemporalCacheAssertions {
 			scope.inTransaction( session -> session.persist( entity ) );
 			statistics.clear();
 			scope.inTransaction( session -> assertValues(
-					session.find( entityClass, id ), input, input.toInstant(), adjusted, unadjusted ) );
+					session.find( entityClass, id ), input, databaseInstant, adjusted, unadjusted ) );
 			assertThat( statistics.getSecondLevelCacheHitCount() ).as( "write-populated cache hit" ).isEqualTo( 1 );
 			assertThat( statistics.getEntityLoadCount() ).as( "no database load on write-cache hit" ).isZero();
 

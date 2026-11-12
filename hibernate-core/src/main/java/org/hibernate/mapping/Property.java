@@ -249,6 +249,9 @@ public class Property implements Serializable, MetaAttributable {
 
 	public void setValue(Value value) {
 		this.value = value;
+		if ( naturalIdentifier ) {
+			excludeIdentityPrecision( value );
+		}
 	}
 
 	public boolean isUpdatable() {
@@ -477,6 +480,20 @@ public class Property implements Serializable, MetaAttributable {
 
 	public void setNaturalIdentifier(boolean naturalIdentifier) {
 		this.naturalIdentifier = naturalIdentifier;
+		if ( naturalIdentifier ) {
+			excludeIdentityPrecision( value );
+		}
+	}
+
+	private static void excludeIdentityPrecision(Value value) {
+		if ( value instanceof BasicValue basic ) {
+			basic.excludeTemporalPrecision();
+		}
+		else if ( value instanceof Component component ) {
+			for ( Property property : component.getProperties() ) {
+				excludeIdentityPrecision( property.getValue() );
+			}
+		}
 	}
 
 	public boolean isGeneric() {

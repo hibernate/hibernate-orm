@@ -1,5 +1,7 @@
 package org.hibernate.sql.results.graph.entity.internal;
 
+import org.hibernate.type.internal.TemporalPreparedState;
+
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.concurrent.ConcurrentHashMap;
@@ -144,6 +146,7 @@ public class EntityInitializerImpl
 	private final boolean hasLazyInitializingSubAssemblers;
 
 	public static class EntityInitializerData extends InitializerData {
+		private TemporalPreparedState temporalState;
 
 		protected final boolean shallowCached;
 		protected final LockMode lockMode;
@@ -1701,6 +1704,7 @@ public class EntityInitializerImpl
 				&& assembler != null
 				&& !(assembler instanceof UnfetchedResultAssembler<?>)
 				&& !(assembler instanceof UnfetchedCollectionAssembler) ) {
+				recordTemporalRelationalState( data, i, assembler );
 				final var value = assembler.assemble( rowProcessingState );
 				if ( value != UNFETCHED_PROPERTY ) {
 					state[i] = value;
@@ -1722,6 +1726,12 @@ public class EntityInitializerImpl
 				state,
 				entityEntry.getVersion()
 		);
+	}
+
+	private void recordTemporalRelationalState(EntityInitializerData data, int index, DomainResultAssembler<?> assembler) {
+		final var row = data.getRowProcessingState();
+		TemporalPrecisionHydration.record( row.getSession().getPersistenceContextInternal().getEntry( data.entityInstanceForNotify ),
+				data.concreteDescriptor.getAttributeMapping( index ), assembler, row );
 	}
 
 	protected boolean consistentInstance(EntityInitializerData data) {
@@ -1798,6 +1808,8 @@ public class EntityInitializerImpl
 					assemblers[data.concreteDescriptor.getSubclassId()], filteredAssociationIndexes[data.concreteDescriptor.getSubclassId()],
 					resolvedEntityState, rowProcessingState );
 		}
+		TemporalPreparedState.attach( entityEntry, data.temporalState );
+		data.temporalState = null;
 		entityEntry.setMaybeLazySet( maybeLazySets[data.concreteDescriptor.getSubclassId()] );
 		data.entityHolder.setEntityEntry( entityEntry );
 
@@ -2137,11 +2149,19 @@ public class EntityInitializerImpl
 	}
 
 	protected Object[] extractConcreteTypeStateValues(EntityInitializerData data) {
+		data.temporalState = null;
 		final var rowProcessingState = data.getRowProcessingState();
 		final var values = new Object[data.concreteDescriptor.getNumberOfAttributeMappings()];
 		final var concreteAssemblers = assemblers[data.concreteDescriptor.getSubclassId()];
 		for ( int i = 0; i < values.length; i++ ) {
 			final var assembler = concreteAssemblers[i];
+			if ( data.concreteDescriptor.canWriteToCache() ) {
+				final var captured = TemporalPrecisionHydration.capture( data.concreteDescriptor.getAttributeMapping( i ), assembler, rowProcessingState );
+				if ( captured != null ) {
+					if ( data.temporalState == null ) { data.temporalState = new TemporalPreparedState(); }
+					data.temporalState.copyFrom( captured );
+				}
+			}
 			values[i] = assembler == null ? UNFETCHED_PROPERTY : assembler.assemble( rowProcessingState );
 		}
 		return values;

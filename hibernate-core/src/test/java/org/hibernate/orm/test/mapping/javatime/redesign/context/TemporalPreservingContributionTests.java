@@ -1,5 +1,11 @@
 package org.hibernate.orm.test.mapping.javatime.redesign.context;
 
+import java.util.Optional;
+import java.util.function.UnaryOperator;
+import org.hibernate.type.descriptor.jdbc.TemporalPrecisionJdbcType;
+import org.hibernate.dialect.temporaltype.spi.TemporalPrecisionContext;
+import org.hibernate.dialect.temporaltype.spi.TemporalPrecisionSupport;
+
 import java.util.Map;
 
 import jakarta.persistence.Entity;
@@ -58,7 +64,12 @@ class TemporalPreservingContributionTests {
 		} ).hasMessageContaining( "inline system-period producer" );
 	}
 
-	public static class CustomUtc extends TimestampUtcAsJdbcTimestampJdbcType {
+	public static class CustomUtc extends TimestampUtcAsJdbcTimestampJdbcType  implements TemporalPrecisionJdbcType {
+		@Override
+		public Optional<TemporalPrecisionSupport> getTemporalPrecisionSupport(TemporalPrecisionContext context) {
+			return TemporalTestPrecision.decimal( context, UnaryOperator.identity() );
+		}
+
 		@Override public int getDdlTypeCode() { return SqlTypes.TIMESTAMP; }
 	}
 	public static class PreservationOnly extends H2Dialect {

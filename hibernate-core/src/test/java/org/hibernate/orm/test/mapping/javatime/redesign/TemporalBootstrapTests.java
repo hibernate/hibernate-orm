@@ -99,11 +99,10 @@ class TemporalBootstrapTests {
 	}
 
 	@Test
-	void columnDefinitionRemainsApplicationResponsibility() {
-		try ( var registry = registry( true ).build() ) {
-			final var metadata = new MetadataSources( registry ).addAnnotatedClass( DefinitionOverride.class ).buildMetadata();
-			final var value = (BasicValue) metadata.getEntityBinding( DefinitionOverride.class.getName() ).getProperty( "timestamp" ).getValue();
-			assertThat( value.resolve().getJdbcType() ).isInstanceOf( org.hibernate.type.descriptor.jdbc.OffsetDateTimeJdbcType.class );
+	void contradictoryColumnDefinitionCannotClaimPreservation() {
+		assertBootFailure( DefinitionOverride.class, true, "Physical column definition" );
+		try ( var registry = registry( false ).build() ) {
+			new MetadataSources( registry ).addAnnotatedClass( DefinitionOverride.class ).buildMetadata();
 		}
 	}
 

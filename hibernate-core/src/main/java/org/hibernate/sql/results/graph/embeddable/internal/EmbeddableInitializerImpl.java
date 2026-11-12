@@ -1,7 +1,13 @@
 package org.hibernate.sql.results.graph.embeddable.internal;
 
+import org.hibernate.sql.results.graph.collection.CollectionInitializer;
+
 import java.util.Arrays;
 import java.util.function.BiConsumer;
+
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.type.internal.TemporalPreparedState;
+import org.hibernate.sql.results.graph.entity.internal.TemporalPrecisionHydration;
 
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.internal.FilteredAssociationState;
@@ -62,6 +68,7 @@ public class EmbeddableInitializerImpl
 	public static class EmbeddableInitializerData extends InitializerData implements ValueAccess {
 		protected final InitializerData parentData;
 		protected final Object[] rowState;
+		private TemporalPreparedState temporalState;
 		protected EmbeddableMappingType.ConcreteEmbeddableType concreteEmbeddableType;
 
 		public EmbeddableInitializerData(EmbeddableInitializerImpl initializer, RowProcessingState rowProcessingState) {
@@ -493,13 +500,50 @@ public class EmbeddableInitializerImpl
 				assemblers[data.getSubclassId()], filteredAssociationIndexes[data.getSubclassId()], data.rowState, rowProcessingState );
 	}
 
+	@Override
+	public void collectTemporalPreparedState(RowProcessingState row, EntityEntry owner) {
+		final var data = getData( row );
+		if ( data.getState() != State.MISSING ) {
+			TemporalPreparedState.attach( owner, data.temporalState );
+		}
+	}
+
+	@Override
+	public void collectTemporalPreparedState(RowProcessingState row, TemporalPreparedState owner) {
+		final var data = getData( row );
+		if ( data.getState() != State.MISSING ) {
+			owner.copyFrom( data.temporalState );
+		}
+	}
+
+	private boolean hasTemporalCacheConsumer() {
+		for ( var owner = getParent(); owner != null; owner = owner.getParent() ) {
+			if ( owner instanceof CollectionInitializer<?> collection ) {
+				return collection.getInitializedPart().getCollectionDescriptor().hasCache();
+			}
+			if ( owner instanceof EntityInitializer<?> entity ) {
+				return entity.getEntityDescriptor().canWriteToCache();
+			}
+		}
+		return false;
+	}
+
 	protected void extractRowState(EmbeddableInitializerData data) {
+		data.temporalState = null;
+		final boolean retainTemporalState = hasTemporalCacheConsumer();
 		boolean stateAllNull = true;
 		final var subAssemblers = assemblers[data.getSubclassId()];
 		final var rowProcessingState = data.getRowProcessingState();
 		final Object[] rowState = data.rowState;
 		for ( int i = 0; i < subAssemblers.length; i++ ) {
 			final var assembler = subAssemblers[i];
+			if ( retainTemporalState ) {
+				final var captured = TemporalPrecisionHydration.capture( embeddableMappingType.getAttributeMapping( i ), assembler, rowProcessingState );
+				if ( captured != null ) {
+					if ( data.temporalState == null ) { data.temporalState = new TemporalPreparedState(); }
+					data.temporalState.copyFrom( captured );
+				}
+			}
 			final Object contributorValue = assembler == null ? null : assembler.assemble( rowProcessingState );
 			rowState[i] = contributorValue == BATCH_PROPERTY ? null : contributorValue;
 			if ( contributorValue != null ) {

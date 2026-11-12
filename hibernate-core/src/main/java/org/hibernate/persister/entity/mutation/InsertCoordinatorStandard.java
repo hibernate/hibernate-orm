@@ -1,5 +1,7 @@
 package org.hibernate.persister.entity.mutation;
 
+import org.hibernate.type.internal.TemporalPreparedState;
+
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 import jakarta.annotation.Nonnull;
@@ -397,7 +399,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 						if ( selectableMapping.isInsertable()
 								&& shouldBindValue( onExecutionGenerator, columnValues, columnInclusions, bindAllValues, valueIndex ) ) {
 							bindings.bindValue(
-									jdbcValue,
+									TemporalPreparedState.prepare( jdbcValue, selectableMapping.getJdbcMapping(), entity, session ),
 									entityPersister().physicalTableNameForMutation( selectableMapping ),
 									selectableMapping.getSelectionExpression(),
 									ParameterUsage.SET

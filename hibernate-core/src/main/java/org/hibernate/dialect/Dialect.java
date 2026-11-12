@@ -1,6 +1,10 @@
 package org.hibernate.dialect;
 
 import org.hibernate.dialect.temporaltype.internal.TemporalPreservationHelper;
+import org.hibernate.dialect.temporaltype.internal.TemporalPrecisionHelper;
+import org.hibernate.dialect.temporaltype.internal.StandardTemporalPrecision;
+import org.hibernate.dialect.temporaltype.spi.TemporalPrecisionContext;
+import org.hibernate.dialect.temporaltype.spi.TemporalPrecisionSupport;
 import org.hibernate.dialect.temporaltype.spi.StandardTemporalPreservation;
 import org.hibernate.dialect.type.spi.DdlTypeBuilder;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
@@ -2136,6 +2140,19 @@ public abstract class Dialect implements ConversionContext, AlterTableSupport,
 			return contributed;
 		}
 		return StandardTemporalPreservation.assess( javaType, jdbcType, getDirectJavaTimeJdbcSupport() );
+	}
+
+
+	/// Resolves precision for an actual mapping without JDBC metadata access.
+	/// A descriptor contribution is authoritative when present, including an
+	/// unsupported result. Application overrides retain precedence unless they
+	/// delegate here. Temporal component preservation is assessed separately.
+	///
+	/// @since 8.1
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalPrecisionSupport getTemporalPrecisionSupport(TemporalPrecisionContext context) {
+		final var contributed = TemporalPrecisionHelper.assess( context );
+		return contributed != null ? contributed : StandardTemporalPrecision.resolve( context );
 	}
 
 

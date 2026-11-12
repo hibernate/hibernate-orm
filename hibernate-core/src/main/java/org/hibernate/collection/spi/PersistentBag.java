@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 
+import org.hibernate.type.internal.TemporalCollectionState;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -256,11 +257,18 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 
 	@Override
 	public Object disassemble(CollectionPersister persister) {
+		final var temporal = TemporalCollectionState.get( this, persister );
+		if ( temporal != null ) {
+			temporal.snapshot( this, persister );
+		}
 		final int length = collection.size();
 		final Serializable[] result = new Serializable[length];
 		int i = 0;
 		for ( E element : collection ) {
-			result[i++] = persister.getElementType().disassemble( element, getSession(), null );
+			result[i] = temporal == null
+					? persister.getElementType().disassemble( element, getSession(), null )
+					: temporal.disassemble( i, element, persister, getSession() );
+			i++;
 		}
 		return result;
 	}
@@ -276,8 +284,11 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 		//noinspection unchecked
 		setCollection( (Collection<E>) collectionDescriptor.getCollectionSemantics().instantiateRaw( size, collectionDescriptor ) );
 
+		final var temporal = TemporalCollectionState.get( this, collectionDescriptor );
+		int position = 0;
 		for ( Serializable item : array ) {
-			final Object element = collectionDescriptor.getElementType().assemble( item, getSession(), owner );
+			final Object element = (temporal == null ? collectionDescriptor.getElementType().assemble( item, getSession(), owner )
+					: temporal.assemble( position++, item, collectionDescriptor, getSession(), owner ));
 			if ( element != null ) {
 				//noinspection unchecked
 				collection.add( (E) element );

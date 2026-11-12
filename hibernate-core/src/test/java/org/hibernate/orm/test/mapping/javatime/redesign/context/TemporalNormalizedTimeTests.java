@@ -1,5 +1,9 @@
 package org.hibernate.orm.test.mapping.javatime.redesign.context;
 
+import org.hibernate.type.descriptor.jdbc.TemporalPrecisionJdbcType;
+import org.hibernate.dialect.temporaltype.spi.TemporalPrecisionContext;
+import org.hibernate.dialect.temporaltype.spi.TemporalPrecisionSupport;
+
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -59,8 +63,8 @@ class TemporalNormalizedTimeTests {
 			scope.tx( session -> { session.persist( carry ); session.persist( empty ); } );
 			scope.factory.getCache().evictAllRegions();
 			scope.tx( session -> {
-				// H2 caps precision rounding at the last representable TIME value instead of carrying into another day.
-				assertThat( session.find( Normalized.class, 10 ).time ).isEqualTo( OffsetTime.parse( "23:59:59.999999Z" ) );
+				// Preparation carries before binding, so H2 receives the exact midnight fixed point.
+				assertThat( session.find( Normalized.class, 10 ).time ).isEqualTo( OffsetTime.parse( "00:00Z" ) );
 				assertThat( session.find( Normalized.class, 11 ).time ).isNull();
 			} );
 		}
@@ -87,7 +91,12 @@ class TemporalNormalizedTimeTests {
 	/// Test-only execution with a deliberately weaker guarantee than domain-value preservation.
 	///
 	/// @author Steve Ebersole
-	public static class NormalizingJdbcType extends OffsetTimeJdbcType implements TemporalJdbcType {
+	public static class NormalizingJdbcType extends OffsetTimeJdbcType implements TemporalJdbcType, TemporalPrecisionJdbcType {
+		@Override
+		public Optional<TemporalPrecisionSupport> getTemporalPrecisionSupport(TemporalPrecisionContext context) {
+			return TemporalTestPrecision.decimal( context, value -> ((OffsetTime) value).withOffsetSameInstant( ZoneOffset.UTC ) );
+		}
+
 		@Override
 		public Optional<TemporalPreservation> getTemporalPreservation(JavaType<?> javaType, Dialect dialect) {
 			return javaType.getJavaTypeClass() == OffsetTime.class

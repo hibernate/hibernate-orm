@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
+import org.hibernate.type.internal.TemporalCollectionState;
 import org.hibernate.AssertionFailure;
 import org.hibernate.audit.AuditLog;
 import org.hibernate.HibernateException;
@@ -572,8 +573,32 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		this.storedSnapshot = snapshot;
 	}
 
+	private transient TemporalCollectionState temporalPreparedState;
+
+	/// Internal, collection-owned occurrence snapshots. Callers first establish
+	/// that this mapping has a temporal precision plan and a cache consumer.
+	/// Detachment and removal release the carrier; it is never serialized with
+	/// the collection wrapper or substituted for its domain snapshot.
+	public final TemporalCollectionState getTemporalPreparedState() {
+		if ( temporalPreparedState == null ) {
+			temporalPreparedState = new TemporalCollectionState();
+		}
+		return temporalPreparedState;
+	}
+
 	@Override
 	public void postAction() {
+		if ( temporalPreparedState != null ) {
+			final var entry = session == null ? null : session.getPersistenceContextInternal().getCollectionEntry( this );
+			final var persister = entry == null ? null : entry.getLoadedPersister();
+			if ( persister == null ) {
+				temporalPreparedState = null;
+			}
+			else if ( wasInitialized() ) {
+				temporalPreparedState.snapshot( this, persister );
+				temporalPreparedState.afterAction();
+			}
+		}
 		clearOperationQueue();
 		cachedSize = -1;
 		clearDirty();
@@ -704,6 +729,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	public final boolean unsetSession(SharedSessionContractImplementor currentSession) {
 		prepareForPossibleLoadingOutsideTransaction();
 		if ( currentSession == session ) {
+			temporalPreparedState = null;
 			if ( !isTempSession ) {
 				if ( hasQueuedOperations() ) {
 					logDiscardedQueuedOperations();

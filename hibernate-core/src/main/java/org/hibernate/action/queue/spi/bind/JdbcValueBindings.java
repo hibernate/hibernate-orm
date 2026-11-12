@@ -80,7 +80,7 @@ public class JdbcValueBindings {
 			}
 			final BindSlot slot = slots[i];
 			try {
-				slot.jdbcMapping().getJdbcValueBinder().bind(
+				slot.valueDescriptor().getValueBinder().bind(
 						preparedStatement,
 						resolveValue( valuesBySlot[i] ),
 						slot.jdbcPosition(),

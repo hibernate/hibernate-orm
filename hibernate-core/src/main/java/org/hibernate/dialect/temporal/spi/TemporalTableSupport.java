@@ -100,6 +100,8 @@ public interface TemporalTableSupport {
 	/// A fractional precision alone is not a certification of the execution path.
 	/// Legacy mode does not call this method.
 	///
+	/// @see org.hibernate.cfg.MappingSettings#TEMPORAL_PRESERVATION
+	///
 	/// @since 8.1
 	default TemporalPeriodPrecisionSupport getTemporalPeriodPrecisionSupport(TemporalPeriodPrecisionContext context) {
 		return TemporalPeriodPrecisionSupport.unsupported( "No period precision contribution for the actual storage and producer" );

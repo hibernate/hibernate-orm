@@ -10,6 +10,7 @@ import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLaziness
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
+import org.hibernate.type.internal.TemporalPreparedState;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
@@ -365,6 +366,7 @@ public class CacheLoadHelper {
 				true,
 				subclassPersister
 		);
+		TemporalPreparedState.transfer( holder.getEntityEntry(), entityEntry );
 		holder.setEntityEntry( entityEntry );
 		subclassPersister.afterInitialize( entity, source );
 		entityEntry.postLoad( entity );

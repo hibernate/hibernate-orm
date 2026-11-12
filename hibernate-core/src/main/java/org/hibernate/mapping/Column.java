@@ -446,7 +446,9 @@ public sealed class Column
 			type = getTypeForComponentValue( mappingContext, componentType, getTypeIndex() );
 		}
 		if ( type instanceof BasicType<?> basicType ) {
-			if ( isTemporal( basicType.getExpressibleJavaType() ) ) {
+			if ( isTemporal( getValue() instanceof BasicValue basicValue
+					&& basicValue.getBuildingContext().isTemporalPreservationEnabled()
+						? basicType.getJdbcJavaType() : basicType.getExpressibleJavaType() ) ) {
 				precisionToUse = getTemporalPrecision();
 				lengthToUse = null;
 				scaleToUse = null;

@@ -1,5 +1,11 @@
 package org.hibernate.orm.test.mapping.javatime.redesign.context;
 
+import java.util.Optional;
+import java.util.function.UnaryOperator;
+import org.hibernate.type.descriptor.jdbc.TemporalPrecisionJdbcType;
+import org.hibernate.dialect.temporaltype.spi.TemporalPrecisionContext;
+import org.hibernate.dialect.temporaltype.spi.TemporalPrecisionSupport;
+
 import java.time.*;
 import java.util.*;
 
@@ -239,7 +245,12 @@ class TemporalProviderPeriodTests {
 			};
 		}
 	}
-	public static class CustomUtc extends TimestampUtcAsJdbcTimestampJdbcType implements TemporalJdbcType {
+	public static class CustomUtc extends TimestampUtcAsJdbcTimestampJdbcType implements TemporalJdbcType, TemporalPrecisionJdbcType {
+		@Override
+		public Optional<TemporalPrecisionSupport> getTemporalPrecisionSupport(TemporalPrecisionContext context) {
+			return TemporalTestPrecision.decimal( context, UnaryOperator.identity() );
+		}
+
 		@Override public int getDdlTypeCode(){return SqlTypes.TIMESTAMP;}
 		@Override public Optional<TemporalPreservation> getTemporalPreservation(JavaType<?> javaType,Dialect dialect){return Optional.of(StandardTemporalPreservation.instantOnly(javaType));}
 	}

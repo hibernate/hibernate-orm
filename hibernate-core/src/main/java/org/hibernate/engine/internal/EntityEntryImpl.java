@@ -1,5 +1,7 @@
 package org.hibernate.engine.internal;
 
+import org.hibernate.type.internal.TemporalPreparedState;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -240,6 +242,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 
 	@Override
 	public void postInsert(Object version) {
+		TemporalPreparedState.actionCompleted( this );
 		this.version = version;
 	}
 
@@ -272,6 +275,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 
 	@Override
 	public void postUpdate(Object entity, Object[] updatedState, Object nextVersion) {
+		TemporalPreparedState.actionCompleted( this );
 		final var filteredState = getExtraState( FilteredAssociationState.class );
 		if ( filteredState != null ) {
 			filteredState.afterUpdate( updatedState, persister );
@@ -320,6 +324,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 
 	@Override
 	public void postInsert(Object[] insertedState) {
+		TemporalPreparedState.actionCompleted( this );
 		setCompressedValue( EXISTS_IN_DATABASE, true );
 	}
 
@@ -424,6 +429,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 
 	@Override
 	public void forceLocked(Object entity, Object nextVersion) {
+		TemporalPreparedState.actionCompleted( this );
 		version = nextVersion;
 		final int versionProperty = persister.getVersionPropertyIndex();
 		if ( loadedState != null ) {

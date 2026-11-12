@@ -10,6 +10,8 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.type.internal.TemporalCacheAccess;
+import org.hibernate.type.internal.TemporalPreparedState;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
@@ -598,6 +600,14 @@ public class ComponentType extends AbstractType
 	@Override
 	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException {
+		return disassemble( value, session, owner, null );
+	}
+
+	/// Persistent-cache recursion with an explicit relational occurrence. The real
+	/// owner is preserved for custom subtypes and embeddable parent injection.
+	@Internal
+	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner,
+			TemporalPreparedState temporalState) {
 		if ( value == null ) {
 			return null;
 		}
@@ -608,7 +618,7 @@ public class ComponentType extends AbstractType
 			final var propertyValues = getPropertyValues( value );
 			int i = 0;
 			for ( ; i < propertySpan; i++ ) {
-				values[i] = propertyTypes[i].disassemble( propertyValues[i], session, owner );
+				values[i] = TemporalCacheAccess.disassemble( propertyTypes[i], propertyValues[i], session, owner, temporalState );
 			}
 			if ( polymorphic ) {
 				final var discriminatorMapping = mappingType.getDiscriminatorMapping();
@@ -648,6 +658,13 @@ public class ComponentType extends AbstractType
 	@Override
 	public Object assemble(Serializable object, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException {
+		return assemble( object, session, owner, null );
+	}
+
+	/// Restores retained relational state alongside ordinary domain assembly.
+	@Internal
+	public Object assemble(Serializable object, SharedSessionContractImplementor session, Object owner,
+			TemporalPreparedState temporalState) {
 		if ( object == null ) {
 			return null;
 		}
@@ -658,7 +675,7 @@ public class ComponentType extends AbstractType
 			final var assembled = new Object[values.length - ( polymorphic ? 1 : 0 )];
 			int i = 0;
 			for ( ; i < assembled.length; i++ ) {
-				assembled[i] = propertyTypes[i].assemble( (Serializable) values[i], session, owner );
+				assembled[i] = TemporalCacheAccess.assemble( propertyTypes[i], (Serializable) values[i], session, owner, temporalState );
 			}
 
 			final var representation = mappingType.getRepresentationStrategy();

@@ -1,5 +1,10 @@
 package org.hibernate.orm.test.mapping.javatime.redesign.context;
 
+import java.util.function.UnaryOperator;
+import org.hibernate.type.descriptor.jdbc.TemporalPrecisionJdbcType;
+import org.hibernate.dialect.temporaltype.spi.TemporalPrecisionContext;
+import org.hibernate.dialect.temporaltype.spi.TemporalPrecisionSupport;
+
 import java.time.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -464,7 +469,12 @@ public class TemporalDescriptorMappingTests {
 		}
 	}
 
-	public static class DayJdbc extends LocalDateJdbcType implements TemporalJdbcType {
+	public static class DayJdbc extends LocalDateJdbcType implements TemporalJdbcType, TemporalPrecisionJdbcType {
+		@Override
+		public Optional<TemporalPrecisionSupport> getTemporalPrecisionSupport(TemporalPrecisionContext context) {
+			return Optional.of( TemporalPrecisionSupport.supported( "test-day-v1", UnaryOperator.identity(), UnaryOperator.identity() ) );
+		}
+
 		@Override
 		public Optional<TemporalPreservation> getTemporalPreservation(
 				JavaType<?> javaType, Dialect dialect) {
@@ -484,7 +494,12 @@ public class TemporalDescriptorMappingTests {
 	}
 
 	public static class KnownInstantJdbc extends TimestampUtcAsJdbcTimestampJdbcType
-			implements TemporalJdbcType {
+			implements TemporalJdbcType, TemporalPrecisionJdbcType {
+		@Override
+		public Optional<TemporalPrecisionSupport> getTemporalPrecisionSupport(TemporalPrecisionContext context) {
+			return TemporalTestPrecision.decimal( context, UnaryOperator.identity() );
+		}
+
 		@Override
 		public int getDdlTypeCode() {
 			return java.sql.Types.TIMESTAMP;
@@ -530,7 +545,12 @@ public class TemporalDescriptorMappingTests {
 	}
 
 	public static class PrimaryJdbc extends TimestampUtcAsJdbcTimestampJdbcType
-			implements TemporalJdbcType {
+			implements TemporalJdbcType, TemporalPrecisionJdbcType {
+		@Override
+		public Optional<TemporalPrecisionSupport> getTemporalPrecisionSupport(TemporalPrecisionContext context) {
+			return TemporalTestPrecision.decimal( context, UnaryOperator.identity() );
+		}
+
 		private final boolean loss;
 
 		PrimaryJdbc(boolean loss) {

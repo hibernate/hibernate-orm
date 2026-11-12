@@ -1,5 +1,7 @@
 package org.hibernate.persister.collection;
 
+import org.hibernate.type.internal.TemporalCollectionState;
+
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
@@ -440,7 +442,8 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 				jdbcValueBindings,
 				(valueIndex, settable, bindings, jdbcValue, jdbcValueMapping) -> {
 					if ( settable[valueIndex] ) {
-						bindings.bindValue( jdbcValue, jdbcValueMapping, ParameterUsage.SET );
+						bindings.bindValue( TemporalCollectionState.prepare( jdbcValue, jdbcValueMapping.getJdbcMapping(),
+								collection, this, rowPosition, session ), jdbcValueMapping, ParameterUsage.SET );
 					}
 				},
 				session
@@ -521,7 +524,8 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 				null,
 				(valueIndex, bindings, y, jdbcValue, jdbcValueMapping) -> {
 					if ( jdbcValueMapping.isUpdateable() && !jdbcValueMapping.isFormula() ) {
-						bindings.bindValue( jdbcValue, jdbcValueMapping, ParameterUsage.SET );
+						bindings.bindValue( TemporalCollectionState.prepare( jdbcValue, jdbcValueMapping.getJdbcMapping(),
+								collection, this, entryPosition, session ), jdbcValueMapping, ParameterUsage.SET );
 					}
 				},
 				session

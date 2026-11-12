@@ -1,5 +1,7 @@
 package org.hibernate.action.queue.internal.decompose.collection;
 
+import org.hibernate.type.internal.TemporalCollectionState;
+
 import org.hibernate.action.queue.spi.decompose.collection.CollectionDecomposer;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionJdbcOperations;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPlanContributor;
@@ -1542,7 +1544,8 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 				collection.getElement( rowValue ),
 				(valueIndex, value, jdbcValueMapping) -> {
 					if ( persister.getElementColumnIsSettable()[valueIndex] ) {
-						jdbcValueBindings.bindAssignment( valueIndex, value, jdbcValueMapping );
+						jdbcValueBindings.bindAssignment( valueIndex, TemporalCollectionState.prepare( value, jdbcValueMapping.getJdbcMapping(),
+							collection, persister, rowPosition, session ), jdbcValueMapping );
 					}
 				},
 				session
@@ -1699,7 +1702,8 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		// For Maps, rowValue is a Map.Entry - extract the element (value) first
 		elementDescriptor.decompose(
 				collection.getElement( rowValue ),
-				jdbcValueBindings::bindAssignment,
+				(valueIndex, value, mapping) -> jdbcValueBindings.bindAssignment( valueIndex,
+						TemporalCollectionState.prepare( value, mapping.getJdbcMapping(), collection, persister, rowPosition, session ), mapping ),
 				session
 		);
 	}

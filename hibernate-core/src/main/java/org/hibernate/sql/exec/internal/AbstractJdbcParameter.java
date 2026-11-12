@@ -22,6 +22,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.internal.TemporalPrecisionBasicType;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 
 /**
@@ -32,14 +33,20 @@ public abstract class AbstractJdbcParameter
 
 	private final JdbcMapping jdbcMapping;
 	private final @Nullable Integer parameterId;
+	private final TemporalPrecisionBasicType<?> assignmentPrecision;
 
 	public AbstractJdbcParameter(JdbcMapping jdbcMapping) {
 		this( jdbcMapping, null );
 	}
 
 	public AbstractJdbcParameter(JdbcMapping jdbcMapping, @Nullable Integer parameterId) {
+		this( jdbcMapping, parameterId, false );
+	}
+
+	protected AbstractJdbcParameter(JdbcMapping jdbcMapping, @Nullable Integer parameterId, boolean assignment) {
 		this.jdbcMapping = jdbcMapping;
 		this.parameterId = parameterId;
+		assignmentPrecision = assignment ? TemporalPrecisionBasicType.find( jdbcMapping ) : null;
 	}
 
 	@Override
@@ -117,9 +124,15 @@ public abstract class AbstractJdbcParameter
 			int startPosition,
 			ExecutionContext executionContext)
 					throws SQLException {
-		//noinspection unchecked
-		jdbcMapping.getJdbcValueBinder()
-				.bind( statement, bindValue, startPosition, executionContext.getSession() );
+		// Preparation belongs to this assignment occurrence. A shared query parameter
+		// may also occur in a predicate or a differently sized assignment.
+		if ( assignmentPrecision != null ) {
+			this.jdbcMapping.getJdbcValueBinder().bind( statement, assignmentPrecision.prepareRelational( bindValue ),
+					startPosition, executionContext.getSession() );
+		}
+		else {
+			jdbcMapping.getJdbcValueBinder().bind( statement, bindValue, startPosition, executionContext.getSession() );
+		}
 	}
 
 	private JdbcMapping guessBindType(ExecutionContext executionContext, Object bindValue, JdbcMapping jdbcMapping) {

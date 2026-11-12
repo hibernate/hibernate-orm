@@ -1,6 +1,7 @@
 package org.hibernate.persister.entity;
 
 import org.hibernate.type.descriptor.converter.internal.TemporalAdjustmentConverter;
+import org.hibernate.type.internal.TemporalPrecisionBasicType;
 import org.hibernate.type.UserComponentType;
 
 import org.hibernate.ObjectNotFoundException;
@@ -1082,7 +1083,8 @@ public abstract class AbstractEntityPersister
 			return true;
 		}
 		if ( type instanceof BasicType<?> basic
-				&& basic.getValueConverter() instanceof TemporalAdjustmentConverter<?> ) {
+				&& (basic.getValueConverter() instanceof TemporalAdjustmentConverter<?>
+				|| TemporalPrecisionBasicType.find( basic ) != null) ) {
 			return true;
 		}
 		if ( type instanceof CompositeType composite ) {
@@ -2871,6 +2873,13 @@ public abstract class AbstractEntityPersister
 					}
 				}
 			}
+		}
+
+		if ( previousState != null ) {
+			final var types = getPropertyTypes();
+			fields.removeIf( index -> TemporalPrecisionBasicType.contains( types[index] )
+					&& previousState[index] != UNFETCHED_PROPERTY && currentState[index] != UNFETCHED_PROPERTY
+					&& !types[index].isDirty( previousState[index], currentState[index], propertyColumnUpdateable[index], session ) );
 		}
 
 		return toIntArray( fields );

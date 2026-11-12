@@ -1,5 +1,7 @@
 package org.hibernate.action.queue.internal.decompose.entity;
 
+import org.hibernate.type.internal.TemporalPreparedState;
+
 
 import jakarta.annotation.Nullable;
 import org.hibernate.engine.internal.TenantIdHelper;
@@ -39,7 +41,7 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 						&& bindPlan.valuesAnalysis.includesColumn( selectableMapping )
 						&& bindPlan.shouldBindUpdateValue( attribute, valueIndex, bindPlan.bindingSession ) ) {
 					bindPlan.valueBindings.bindValue(
-							jdbcValue,
+							TemporalPreparedState.prepare( jdbcValue, selectableMapping.getJdbcMapping(), bindPlan.entity, bindPlan.bindingSession ),
 							selectableMapping.getSelectionExpression(),
 							ParameterUsage.SET
 					);

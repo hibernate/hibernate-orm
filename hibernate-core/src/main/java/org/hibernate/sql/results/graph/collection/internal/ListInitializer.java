@@ -1,5 +1,8 @@
 package org.hibernate.sql.results.graph.collection.internal;
 
+import org.hibernate.type.internal.TemporalCollectionState;
+import org.hibernate.sql.results.graph.entity.internal.TemporalPrecisionHydration;
+
 import java.util.List;
 import java.util.function.BiConsumer;
 
@@ -84,6 +87,10 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer<Abst
 			throw new HibernateException( "Illegal null value for list index encountered while reading: "
 					+ getCollectionAttributeMapping().getNavigableRole() );
 		}
+		final var temporal = TemporalCollectionState.get( getCollectionInstance( data ),
+				getCollectionAttributeMapping().getCollectionDescriptor() );
+		final var captured = temporal == null ? null : TemporalPrecisionHydration.capture(
+				getCollectionAttributeMapping().getElementDescriptor(), elementAssembler, rowProcessingState );
 		final Object element = elementAssembler.assemble( rowProcessingState );
 		if ( element != null ) {
 			int index = indexValue;
@@ -94,6 +101,9 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer<Abst
 				loadingState.add( i, null );
 			}
 			loadingState.set( index, element );
+			if ( temporal != null ) {
+				temporal.loading( index, element ).copyFrom( captured );
+			}
 		}
 		// else if the element is null, then NotFoundAction must be IGNORE
 	}

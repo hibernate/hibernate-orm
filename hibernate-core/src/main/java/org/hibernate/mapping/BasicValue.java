@@ -2,6 +2,10 @@ package org.hibernate.mapping;
 
 import org.hibernate.type.internal.TemporalMappingValidator;
 import org.hibernate.type.internal.TemporalPolicyBasicType;
+import org.hibernate.type.internal.TemporalPrecisionBasicType;
+import org.hibernate.type.internal.TemporalPrecisionPlan;
+import org.hibernate.dialect.temporaltype.spi.TemporalPrecisionContext;
+import org.hibernate.annotations.TimeZoneRepresentation;
 import org.hibernate.type.internal.TemporalPolicySettings.Selection;
 import org.hibernate.boot.model.internal.TemporalPolicyConfiguration;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -126,6 +130,7 @@ public class BasicValue extends SimpleValue
 	private TimeZoneStorageType timeZoneStorageType;
 	private ZoneId timeZoneAdjustment;
 	private boolean temporalValidationEnabled = true;
+	private boolean temporalPrecisionExcluded;
 	private Selection temporalPolicy;
 	private String temporalRole;
 	private java.util.function.Supplier<String> systemPeriodContext;
@@ -169,6 +174,7 @@ public class BasicValue extends SimpleValue
 		this.timeZoneStorageType = original.timeZoneStorageType;
 		this.timeZoneAdjustment = original.timeZoneAdjustment;
 		this.temporalValidationEnabled = original.temporalValidationEnabled;
+		this.temporalPrecisionExcluded = original.temporalPrecisionExcluded;
 		this.temporalPolicy = original.temporalPolicy;
 		this.temporalRole = original.temporalRole;
 		this.systemPeriodContext = original.systemPeriodContext;
@@ -224,6 +230,16 @@ public class BasicValue extends SimpleValue
 	public void setTemporalValidationEnabled(boolean enabled) {
 		temporalValidationEnabled = enabled;
 	}
+
+	/// Keeps identity-valued attributes on their existing precision path, without
+	/// disabling the existing temporal-component validation contract.
+	public void excludeTemporalPrecision() {
+		if ( resolution != null && TemporalPrecisionBasicType.find( resolution.getJdbcMapping() ) != null ) {
+			throw new MappingException( "Identity precision exclusion arrived after resolving " + temporalRole() );
+		}
+		temporalPrecisionExcluded = true;
+	}
+
 
 	public void setTemporalJdbcOverride(boolean explicit) {
 		temporalJdbcOverride = explicit;
@@ -381,6 +397,7 @@ public class BasicValue extends SimpleValue
 			timeZoneStorageType = basicValue.timeZoneStorageType;
 			timeZoneAdjustment = basicValue.timeZoneAdjustment;
 			temporalValidationEnabled = basicValue.temporalValidationEnabled;
+			temporalPrecisionExcluded = basicValue.temporalPrecisionExcluded;
 			temporalPolicy = basicValue.temporalPolicy;
 			temporalRole = basicValue.temporalRole;
 			systemPeriodContext = basicValue.systemPeriodContext;
@@ -447,6 +464,26 @@ public class BasicValue extends SimpleValue
 				new TemporalPolicyBasicType<>( original.getLegacyResolvedBasicType(), policy ),
 				original.getValueConverter(), original.getMutabilityPlan() );
 	}
+
+	private <T> Resolution<T> precisionResolution(Resolution<T> original, Size size, boolean explicitDefinition) {
+		final var column = getColumn();
+		final var context = new TemporalPrecisionContext(
+				original.getRelationalJavaType(), original.getJdbcType(), getDialect(),
+				original.getJdbcType().getDdlTypeCode(),
+				column instanceof Column physical ? physical.getSqlType( getMetadataCollector() ) : "expression",
+				getColumnPrecision() == NO_COLUMN_PRECISION ? null : getColumnPrecision(),
+				size.getPrecision(), size.getLength(), size.getScale(), explicitDefinition,
+				temporalRole(), isVersion() ? TemporalPrecisionContext.Operation.VERSION
+						: systemPeriodContext != null ? TemporalPrecisionContext.Operation.PERIOD
+						: column instanceof Column ? TemporalPrecisionContext.Operation.ATTRIBUTE
+						: TemporalPrecisionContext.Operation.EXPRESSION,
+				getTemporalPreservationPolicy().policy(), TimeZoneRepresentation.Type.INLINE, timeZoneAdjustment );
+		final var plan = new TemporalPrecisionPlan( context, getDialect().getTemporalPrecisionSupport( context ) );
+		return new NamedBasicTypeResolution<>( original.getDomainJavaType(),
+				new TemporalPrecisionBasicType<>( original.getLegacyResolvedBasicType(), plan ),
+				original.getValueConverter(), original.getMutabilityPlan() );
+	}
+
 
 	public Selection getTemporalPreservationPolicy() {
 		if ( temporalPolicy != null ) {
@@ -572,6 +609,7 @@ public class BasicValue extends SimpleValue
 					validateTemporalPrecision( getColumnPrecision() );
 
 				}
+				final boolean explicitDefinition = getColumn() instanceof Column physical && physical.getSqlType() != null;
 				final Size size;
 				if ( getColumn() instanceof Column column ) {
 					resolveColumn( column, getDialect() );
@@ -586,6 +624,11 @@ public class BasicValue extends SimpleValue
 							getDialect(), temporalPreservationJavaType(), resolution.getJdbcType(), timeZoneAdjustment,
 							temporalRole(), resolution.getValueConverter() instanceof TemporalAdjustmentConverter<?> adjustment
 									&& adjustment.usesUtcTimeCarrier(), policy );
+				}
+				// Period timestamps are prepared once by the factory's shared period contract.
+				if ( temporalHandling && systemPeriodContext == null && !temporalPrecisionExcluded
+						&& TemporalMappingValidator.isTemporal( temporalPreservationJavaType() ) ) {
+					resolution = precisionResolution( resolution, size, explicitDefinition );
 				}
 				if ( temporalHandling && policy != Selection.DEFAULT
 						&& TemporalMappingValidator.isTemporal( temporalPreservationJavaType() ) ) {

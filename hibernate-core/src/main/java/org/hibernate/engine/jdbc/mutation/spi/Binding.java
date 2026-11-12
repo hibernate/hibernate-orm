@@ -47,7 +47,7 @@ public class Binding {
 	 */
 	@SuppressWarnings("unchecked")
 	public <T> ValueBinder<T> getValueBinder() {
-		return getValueDescriptor().getJdbcMapping().getJdbcValueBinder();
+		return (ValueBinder<T>) getValueDescriptor().getValueBinder();
 	}
 
 	/**

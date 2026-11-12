@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
+import org.hibernate.type.internal.TemporalCollectionState;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -120,8 +121,11 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 		assert list == null;
 		list = (List<E>) persister.getCollectionSemantics().instantiateRaw( size, persister );
 
+		final var temporal = TemporalCollectionState.get( this, persister );
+		int position = 0;
 		for ( Serializable arrayElement : array ) {
-			list.add( (E) persister.getElementType().assemble( arrayElement, getSession(), owner ) );
+			list.add( (E) (temporal == null ? persister.getElementType().assemble( arrayElement, getSession(), owner )
+					: temporal.assemble( position++, arrayElement, persister, getSession(), owner )) );
 		}
 	}
 
@@ -395,10 +399,16 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 
 	@Override
 	public Object disassemble(CollectionPersister persister) throws HibernateException {
+		final var temporal = TemporalCollectionState.get( this, persister );
+		if ( temporal != null ) {
+			temporal.snapshot( this, persister );
+		}
 		final int length = list.size();
 		final Serializable[] result = new Serializable[length];
 		for ( int i=0; i<length; i++ ) {
-			result[i] = persister.getElementType().disassemble( list.get( i ), getSession(), null );
+			result[i] = temporal == null
+					? persister.getElementType().disassemble( list.get( i ), getSession(), null )
+					: temporal.disassemble( i, list.get( i ), persister, getSession() );
 		}
 		return result;
 	}

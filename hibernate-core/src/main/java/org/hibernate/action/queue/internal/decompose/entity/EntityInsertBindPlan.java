@@ -1,5 +1,7 @@
 package org.hibernate.action.queue.internal.decompose.entity;
 
+import org.hibernate.type.internal.TemporalPreparedState;
+
 
 import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.queue.internal.cyclebreak.CycleBreakPatcher;
@@ -45,7 +47,7 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 							? bindPlan.generatedIdentifierHandleOrNull( bindPlan.bindingAttributeValue )
 							: jdbcValue;
 					bindPlan.valueBindings.bindValue(
-							valueToBind,
+							TemporalPreparedState.prepare( valueToBind, jdbcValueMapping.getJdbcMapping(), bindPlan.entity, bindPlan.bindingSession ),
 							jdbcValueMapping.getSelectionExpression(),
 							ParameterUsage.SET
 					);

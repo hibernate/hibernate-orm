@@ -1,5 +1,7 @@
 package org.hibernate.persister.entity.mutation;
 
+import org.hibernate.type.internal.TemporalPreparedState;
+
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 import jakarta.annotation.Nonnull;
@@ -614,9 +616,12 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 		final var versionMapping = entityPersister().getVersionMapping();
 
-		// set the new version
+		// Retain the actual version-only assignment just like an ordinary attribute SET.
+		final Object managedEntity = entity == null
+				? session.getPersistenceContextInternal().getEntity( session.generateEntityKey( id, entityPersister() ) )
+				: entity;
 		mutationExecutor.getJdbcValueBindings().bindValue(
-				version,
+				TemporalPreparedState.prepare( version, versionMapping.getJdbcMapping(), managedEntity, session ),
 				mutatingTableDetails.getTableName(),
 				versionMapping.getSelectionExpression(),
 				ParameterUsage.SET
@@ -1152,7 +1157,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 							&& filteredAssociations.includesColumn( jdbcMapping )
 							&& shouldBindValue( onExecutionGenerator, columnValues, columnInclusions, bindAllValues, valueIndex ) ) {
 						bindings.bindValue(
-								jdbcValue,
+								TemporalPreparedState.prepare( jdbcValue, jdbcMapping.getJdbcMapping(), entity, session ),
 								table.getTableName(),
 								jdbcMapping.getSelectionExpression(),
 								ParameterUsage.SET

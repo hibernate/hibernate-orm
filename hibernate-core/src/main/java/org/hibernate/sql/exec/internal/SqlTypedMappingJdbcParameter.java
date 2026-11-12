@@ -25,4 +25,9 @@ public class SqlTypedMappingJdbcParameter extends AbstractJdbcParameter implemen
 	public SqlTypedMapping getSqlTypedMapping() {
 		return sqlTypedMapping;
 	}
+	public SqlTypedMappingJdbcParameter(SqlTypedMapping sqlTypedMapping, @Nullable Integer parameterId, boolean assignment) {
+		super( sqlTypedMapping.getJdbcMapping(), parameterId, assignment );
+		this.sqlTypedMapping = sqlTypedMapping;
+	}
+
 }

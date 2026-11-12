@@ -21,8 +21,6 @@ dependencies {
     api libs.test.mockito
     api libs.test.mockitoJunitJupiter
 
-    api libs.test.bytemanBmunit
-
     api( libs.test.jbossTxSpi ) {
         transitive=false
     }

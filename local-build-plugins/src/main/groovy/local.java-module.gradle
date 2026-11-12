@@ -199,9 +199,6 @@ processTestResources {
 tasks.withType( Test.class ).configureEach { test ->
     test.useJUnitPlatform()
 
-    // Byteman needs this property to be set, https://developer.jboss.org/thread/274997
-    test.jvmArgs += ["-Djdk.attach.allowAttachSelf=true"]
-
     test.jvmArgumentProviders.add(
             new HeapDumpPathProvider( path: project.layout.buildDirectory.dir("OOM-dump") )
     )
@@ -266,14 +263,6 @@ test {
             events = ["passed", "skipped", "failed"]
             exceptionFormat = 'full'
         }
-    }
-}
-
-// Attach tools JAR to the classpath for byteman tests
-final File toolsJar = file("${System.getProperty('java.home')}/../lib/tools.jar")
-if ( toolsJar.exists() ) {
-    dependencies {
-        testImplementation files( toolsJar )
     }
 }
 

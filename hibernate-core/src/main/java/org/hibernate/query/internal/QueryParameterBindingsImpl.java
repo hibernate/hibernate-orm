@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 
 import org.hibernate.QueryParameterException;
+import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.cache.spi.QueryKey;
@@ -230,23 +231,33 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	@Override
 	public QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor session) {
+		return generateQueryKeyMemento( session, null );
+	}
+
+	/// Query execution may supply actual temporal converter output for cache identity.
+	public QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor session,
+			JdbcParameterBindingsImpl jdbcBindings) {
 		final var mutableCacheKey = new MutableCacheKeyImpl( parameterBindingMap.size() );
 		final var tenantIdentifierJavaType = session.getFactory().getTenantIdentifierJavaType();
 		final Object tenantId = session.getTenantIdentifierValue();
 		mutableCacheKey.addValue( tenantIdentifierJavaType.getMutabilityPlan().disassemble( tenantId, session ) );
 		mutableCacheKey.addHashCode( tenantId == null ? 0 : tenantIdentifierJavaType.extractHashCode( tenantId ) );
-		handleQueryParameters( session, mutableCacheKey );
+		handleQueryParameters( session, mutableCacheKey, jdbcBindings );
 		handleFilterParameters( session, mutableCacheKey );
 		// Finally, build the overall cache key
 		return mutableCacheKey.build();
 	}
 
-	private void handleQueryParameters(SharedSessionContractImplementor session, MutableCacheKeyImpl mutableCacheKey) {
+	private void handleQueryParameters(SharedSessionContractImplementor session, MutableCacheKeyImpl mutableCacheKey,
+			JdbcParameterBindingsImpl jdbcBindings) {
 		final var typeConfiguration = session.getFactory().getTypeConfiguration();
 		// We know that parameters are consumed in processing order;
 		// this ensures the consistency of generated cache keys
 		for ( var entry : parameterBindingMap.entrySet() ) {
 			final var queryParameter = entry.getKey();
+			if ( jdbcBindings != null && jdbcBindings.addTemporalParameterToCacheKey( queryParameter, mutableCacheKey, session ) ) {
+				continue;
+			}
 			final var binding = entry.getValue();
 			assert binding.isBound() : "Found unbound query parameter while generating cache key";
 			final var mappingType = determineMappingType( binding, queryParameter, typeConfiguration );

@@ -1,12 +1,18 @@
 package org.hibernate.sql.exec.internal;
 
 import java.util.Collection;
+import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.cache.MutableCacheKeyBuilder;
+import org.hibernate.query.QueryParameter;
+import org.hibernate.type.internal.TemporalPrecisionBasicType;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.type.BindableType;
@@ -31,6 +37,50 @@ import static org.hibernate.query.sql.internal.NativeQueryParameterListHelper.de
  */
 public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 	private Map<JdbcParameter, JdbcParameterBinding> bindingMap;
+	private Map<QueryParameter<?>, List<JdbcParameter>> temporalCacheParameters;
+
+	/// Keep actual converted bindings with this execution, never with the query plan.
+	public void registerTemporalCacheParameters(QueryParameter<?> parameter, List<JdbcParameter> parameters) {
+		if ( parameters.stream().anyMatch( jdbc -> {
+			final var mapping = jdbc.getExpressionType().getSingleJdbcMapping();
+			return mapping.getValueConverter() != null && TemporalPrecisionBasicType.find( mapping ) != null;
+		} ) ) {
+			if ( temporalCacheParameters == null ) {
+				temporalCacheParameters = new IdentityHashMap<>();
+			}
+			temporalCacheParameters.merge( parameter, List.copyOf( parameters ), (previous, next) -> {
+				final List<JdbcParameter> combined = new ArrayList<>( previous.size() + next.size() );
+				combined.addAll( previous );
+				combined.addAll( next );
+				return List.copyOf( combined );
+			} );
+		}
+	}
+
+	/// Contribute the already converted relational values without invoking converters again.
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	public boolean addTemporalParameterToCacheKey(QueryParameter<?> parameter, MutableCacheKeyBuilder key,
+			SharedSessionContractImplementor session) {
+		final var parameters = temporalCacheParameters == null ? null : temporalCacheParameters.get( parameter );
+		if ( parameters == null ) {
+			return false;
+		}
+		key.addValue( "temporal-query-bindings-v1" );
+		key.addHashCode( "temporal-query-bindings-v1".hashCode() );
+		for ( var jdbc : parameters ) {
+			final var binding = getBinding( jdbc );
+			final var temporal = TemporalPrecisionBasicType.find( jdbc.getExpressionType().getSingleJdbcMapping() );
+			final var signature = temporal == null ? binding.getBindType().getJdbcType().getClass().getName()
+					: temporal.getPrecisionPlan().getSignature();
+			key.addValue( signature );
+			key.addHashCode( signature.hashCode() );
+			final JavaType javaType = binding.getBindType().getJdbcJavaType();
+			final var value = binding.getBindValue();
+			key.addValue( value == null ? null : javaType.getMutabilityPlan().disassemble( value, session ) );
+			key.addHashCode( value == null ? 0 : javaType.extractHashCode( value ) );
+		}
+		return true;
+	}
 
 	public JdbcParameterBindingsImpl(int expectedParameterCount) {
 		if ( expectedParameterCount > 0 ) {
@@ -52,6 +102,7 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 					.inExpressionCountLimit();
 
 			for ( var occurrence : parameterOccurrences ) {
+				final int firstBinder = jdbcParameterBinders.size();
 				final var parameter = occurrence.parameter();
 				final var binding = queryParameterBindings.getBinding( parameter );
 
@@ -92,6 +143,14 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 					final var jdbcParameter = new JdbcParameterImpl( jdbcMapping );
 					jdbcParameterBinders.add( jdbcParameter );
 					addBinding( jdbcParameter, new JdbcParameterBindingImpl( jdbcMapping, convertedBindValue ) );
+				}
+				if ( factory.getSessionFactoryOptions().isQueryCacheEnabled() && valueConverter != null
+						&& TemporalPrecisionBasicType.find( jdbcMapping ) != null ) {
+					final List<JdbcParameter> parameters = new ArrayList<>( jdbcParameterBinders.size() - firstBinder );
+					for ( int i = firstBinder; i < jdbcParameterBinders.size(); i++ ) {
+						parameters.add( (JdbcParameter) jdbcParameterBinders.get( i ) );
+					}
+					registerTemporalCacheParameters( parameter, parameters );
 				}
 			}
 		}

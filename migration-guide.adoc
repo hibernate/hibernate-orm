@@ -300,6 +300,19 @@ declaration alone does not establish conversion compatibility. Existing Dialect 
 remain valid; see the link:{userGuideBase}#basic-temporal-custom-descriptors[custom descriptor SPI]
 for precedence, inheritance responsibilities and custom-domain limits.
 
+==== Temporal query precision and cached results
+
+Precision-qualified write equality does not change query comparison semantics. Query parameters
+retain their relational comparison boundary even when two inputs would round to the same stored
+value. Bulk assignments use the target mapping's precision; whole COLUMN values keep their primary
+and offset consistent. Bulk DML still requires refresh or a fresh persistence context to observe
+changes to managed entities.
+
+Converted temporal query parameters reuse their execution's relational values for query-cache keys.
+Applications must not depend on an extra converter invocation for cache-key generation. Evict affected
+query-cache regions, as well as entity/collection regions, when changing mapping contracts or stored
+temporal interpretations. Native SQL requires its usual synchronized query-space declarations.
+
 ==== Shared temporal period precision
 
 Enabled temporal preservation now selects one Dialect period precision/storage contract for

@@ -29,6 +29,11 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 
 	private final JdbcSelect jdbcSelect;
 	private final JdbcParameterBindings jdbcParameterBindings;
+
+	/// Execution-local values are also the source of converted query-cache keys.
+	public JdbcParameterBindings getJdbcParameterBindings() {
+		return jdbcParameterBindings;
+	}
 	private final ExecutionContext executionContext;
 	private final JdbcSelectExecutor.StatementCreator statementCreator;
 	private final SqlStatementLogger sqlStatementLogger;

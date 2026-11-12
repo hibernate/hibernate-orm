@@ -149,3 +149,34 @@ and reused statements. It does not require a supported temporal entity mapping a
 must not be mistaken for completed ORM/cache acceptance. PostgreSQL production precision
 support remains unavailable until that evidence and the remaining integration controls
 are established. SQL Server live verification remains deferred.
+
+== Query and query-cache precision (HHH-21141)
+
+`TemporalPrecisionQueryCacheTests` exercises actual H2 query-cache misses/hits at
+pre-epoch comparison boundaries that share a write quantum. Operators, list and
+null bindings, converted parameter invocation counts, invocation-sensitive outputs,
+rebound queries, converter failure, projections, bulk rollback/invalidation and
+synchronized native mutations have independent expected values. COLUMN assignment
+controls inspect the raw companion offset across a region transition, in addition
+to checking the reconstructed domain value. Parameters cover all three COLUMN types,
+non-hour offsets, midnight carry and both New York transitions.
+
+`TemporalQueryCacheLifecycleTests` uses guarded metadata-disabled bootstrap and
+serializes actual query-cache keys/results. FULL, SHALLOW and AUTO layouts, mutable
+converted projections/parameters, entity-cache-disabled and preservation-disabled
+controls run in independently owned factories. These controls do not authorize
+sharing incompatible payloads between factories; mapping changes still require
+cache eviction. Existing key/FK and converted entity/collection lifecycle tests
+remain compatibility coverage.
+
+Supported database-owned controls include basic insert-select and COLUMN path copy
+with the same mapping contract. Adjusted COLUMN path copies between different
+precision/adjustment contracts fail before mutation because SQL cannot reuse a
+companion offset that may need recomputation. Bind a whole value instead. Same-fixed-offset
+copies across grids remain supported and have positive update/insert-select controls.
+Explicit casts and timestamp expressions retain
+SQL result precision. Existing multi-column typed-literal query limitations remain
+negative controls; bind a whole mapped value using a parameter instead. Native
+SQL controls use explicit synchronization for mutations and do not infer an
+attribute precision from the Java parameter class. This H2 evidence does not
+establish other provider routes, callable or aggregate precision support.

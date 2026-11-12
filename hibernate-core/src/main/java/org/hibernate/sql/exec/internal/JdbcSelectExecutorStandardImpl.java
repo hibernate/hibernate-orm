@@ -6,6 +6,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.hibernate.CacheMode;
 import org.hibernate.cache.spi.QueryKey;
+import org.hibernate.query.internal.QueryParameterBindingsImpl;
+import org.hibernate.query.spi.Limit;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.TupleTransformer;
@@ -318,6 +320,20 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		return result instanceof List<?> list ? list.size() : -1;
 	}
 
+	private static QueryKey queryCacheKey(JdbcSelect select, ExecutionContext context, ResultSetAccess access) {
+		final var session = context.getSession();
+		final var bindings = context.getQueryParameterBindings();
+		final var limit = context.getQueryOptions().getLimit();
+		if ( bindings instanceof QueryParameterBindingsImpl domain
+				&& access instanceof DeferredResultSetAccess deferred
+				&& deferred.getJdbcParameterBindings() instanceof JdbcParameterBindingsImpl jdbc ) {
+			final var effectiveLimit = limit == null ? Limit.NONE : limit;
+			return new QueryKey( select.getSqlString(), domain.generateQueryKeyMemento( session, jdbc ),
+					effectiveLimit.getFirstRow(), effectiveLimit.getMaxRows(), session.getLoadQueryInfluencers().getEnabledFilterNames() );
+		}
+		return QueryKey.from( select.getSqlString(), limit, bindings, session );
+	}
+
 	protected JdbcValues resolveJdbcValuesSource(
 			String queryIdentifier,
 			JdbcSelect jdbcSelect,
@@ -353,12 +369,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 					.getQueryResultsCache( queryOptions.getResultCacheRegionName() );
 			queryCacheRegionName = queryCache.getRegion().getName();
 
-			queryResultsCacheKey = QueryKey.from(
-					jdbcSelect.getSqlString(),
-					queryOptions.getLimit(),
-					executionContext.getQueryParameterBindings(),
-					session
-			);
+			queryResultsCacheKey = queryCacheKey( jdbcSelect, executionContext, resultSetAccess );
 
 			cachedResults = queryCache.get(
 					// todo (6.0) : QueryCache#get takes the `queryResultsCacheKey` see tat discussion above
@@ -384,12 +395,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			cachedResults = null;
 			queryCacheRegionName = null;
 			if ( cacheable && cacheMode.isPutEnabled() ) {
-				queryResultsCacheKey = QueryKey.from(
-						jdbcSelect.getSqlString(),
-						queryOptions.getLimit(),
-						executionContext.getQueryParameterBindings(),
-						session
-				);
+				queryResultsCacheKey = queryCacheKey( jdbcSelect, executionContext, resultSetAccess );
 			}
 			else {
 				queryResultsCacheKey = null;

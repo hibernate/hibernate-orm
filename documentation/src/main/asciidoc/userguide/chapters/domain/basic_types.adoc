@@ -990,6 +990,38 @@ the guarantees. Member-level `AUTO`, `DEFAULT`, and `NORMALIZE` require an expli
 compatibility mode. An explicitly configured global legacy policy may also require narrower declarations;
 setting adjustment to NONE alone does not replace its storage choice.
 
+[[basic-temporal-query-precision]]
+===== Precision in queries and the query cache
+
+On supported precision-preserving mappings, assignments use the target column's fractional-second
+precision. Query comparisons keep the supplied comparison boundary. For example, a timestamp ending
+in `.122900` and one ending in `.123100` might both round to `.123` when written to a millisecond
+column, but `stamp < :boundary` must still distinguish them. Being equivalent for dirty checking
+therefore does not imply being equivalent in a query predicate.
+
+HQL and Criteria assignment parameters use each target mapping independently. Whole-value COLUMN
+assignments prepare the primary timestamp and companion offset together, including when rounding
+crosses a transition in an explicitly configured timezone. Database expressions and explicit casts
+retain their SQL semantics; they are not Java-side assignment conversion. An adjusted COLUMN
+path copy between different precision or adjustment contracts is rejected when its companion offset
+would require recomputation; bind a whole temporal value instead. Copies already using the same
+fixed offset, such as UTC, retain SQL precision conversion without needing offset recomputation.
+Native SQL does not infer
+an attribute's precision from its parameter's Java class.
+
+The query cache preserves the results of the query, including scalar and converted projections.
+It does not round comparison parameters merely to obtain a cache key or reduce a projection to an
+unrelated attribute's precision. For converted temporal parameters, key construction reuses the
+relational values prepared for that execution. A cache hit can still require conversion to identify
+that execution; application converters must not rely on queries bypassing conversion.
+
+Bulk updates and deletes retain their usual persistence-context behavior: invalidate affected cached
+results, but do not refresh already managed objects or invoke entity callbacks. Use a fresh persistence
+context or explicit refresh to inspect the new values. Native mutations must register their affected
+query spaces when cache invalidation is required. Evict affected entity, collection and query-cache
+regions when changing temporal mapping contracts or migrating stored interpretations; cache entries
+are not a migration mechanism.
+
 [[basic-temporal-period-precision]]
 ===== Precision of temporal history periods
 

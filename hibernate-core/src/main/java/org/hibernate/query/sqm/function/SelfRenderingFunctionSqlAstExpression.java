@@ -20,6 +20,7 @@ import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.query.select.SqlSelection;
 import org.hibernate.sql.ast.spi.SqlAstNode;
 import org.hibernate.sql.ast.spi.query.expression.FunctionExpression;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.SelfRenderingExpression;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -29,6 +30,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.annotation.Nullable;
+import org.hibernate.type.internal.TemporalPrecisionBasicType;
 
 /**
  * Representation of a function call in the SQL AST for impls that know how to
@@ -54,9 +56,25 @@ public class SelfRenderingFunctionSqlAstExpression<T>
 		this.functionName = functionName;
 		this.renderer = renderer;
 		this.sqlAstArguments = sqlAstArguments;
-		this.type = type;
+		// An argument's attribute grid constrains stored values, not the result of
+		// a SQL function. Keep its underlying JDBC/converter contract for extraction.
+		this.type = type instanceof TemporalPrecisionBasicType<T> temporal && inheritedPrecision( temporal, sqlAstArguments )
+				? temporal.getDelegate() : type;
 		//might be null due to code in SelfRenderingFunctionSqlAstExpression
-		this.expressible = expressible;
+		this.expressible = expressible != null && expressible.getJdbcTypeCount() == 1
+				&& expressible.getSingleJdbcMapping() instanceof TemporalPrecisionBasicType<?> temporal
+				&& inheritedPrecision( temporal, sqlAstArguments ) ? temporal.getDelegate() : expressible;
+	}
+
+	private static boolean inheritedPrecision(TemporalPrecisionBasicType<?> type, List<? extends SqlAstNode> arguments) {
+		for ( var argument : arguments ) {
+			if ( argument instanceof Expression expression && expression.getExpressionType() != null
+					&& expression.getExpressionType().getJdbcTypeCount() == 1
+					&& expression.getExpressionType().getSingleJdbcMapping() == type ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override

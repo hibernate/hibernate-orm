@@ -6,6 +6,8 @@ import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.type.internal.TemporalPrecisionBasicType;
+import org.hibernate.type.internal.TemporalColumnPrecision;
+import org.hibernate.sql.exec.internal.TemporalColumnJdbcParameter;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMethod;
@@ -1103,6 +1105,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private void checkAssignment(Expression valueExpression, ModelPart assignedPathType) {
+		if ( valueExpression.getExpressionType() instanceof ModelPart source ) {
+			checkTemporalColumnCopy( assignedPathType, source );
+		}
 		final int valueExprJdbcCount = getKeyExpressible( valueExpression.getExpressionType() ).getJdbcTypeCount();
 		final int assignedPathJdbcCount = getKeyExpressible( assignedPathType ).getJdbcTypeCount();
 		// TODO: why is this not an AssertionFailure instead of a DEBUG level log?!
@@ -1113,6 +1118,19 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 		}
 		assert assignedPathJdbcCount == valueExprJdbcCount;
+	}
+
+	private static void checkTemporalColumnCopy(ModelPart target, ModelPart source) {
+		final var targetTemporal = TemporalColumnPrecision.find( target );
+		final var sourceTemporal = TemporalColumnPrecision.find( source );
+		if ( targetTemporal != null && sourceTemporal != null && !targetTemporal.canCopySqlTupleFrom( sourceTemporal ) ) {
+			throw new SemanticException( "COLUMN assignment to '" + targetTemporal.getRole()
+					+ "' (" + targetTemporal.getSqlTupleContractDescription()
+					+ ") cannot copy a database expression with a different precision/adjustment contract from '"
+					+ sourceTemporal.getRole() + "' (" + sourceTemporal.getSqlTupleContractDescription()
+					+ "): the companion offset requires recomputation; "
+					+ "bind a whole temporal value as an assignment parameter instead" );
+		}
 	}
 
 	private void addAssignment(
@@ -2453,6 +2471,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private void visitSelection(int index, SqmSelection<?> sqmSelection) {
 		collectRootPathsForLocking( sqmSelection );
 		inferTargetPath( index );
+		if ( statement instanceof SqmInsertSelectStatement<?> insert && contributesToTopLevelSelectClause()
+				&& sqmSelection.getSelectableNode() instanceof SqmPath<?> sourcePath
+				&& determineValueMapping( insert.getInsertionTargetPaths().get( index ) ) instanceof ModelPart target
+				&& determineValueMapping( sourcePath ) instanceof ModelPart source ) {
+			checkTemporalColumnCopy( target, source );
+		}
 		callResultProducers( resultProducers( sqmSelection ) );
 		if ( statement instanceof SqmInsertSelectStatement<?>
 				&& contributesToTopLevelSelectClause() ) {
@@ -6774,7 +6798,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				? jdbcParameters.getJdbcParameters().size()
 				: castNonNull( jdbcParams.get( 0 ).get( 0 ).getParameterId() );
 		final var bindable = bindable( valueMapping );
-		if ( bindable instanceof SelectableMappings selectableMappings ) {
+		final var temporal = assignment && valueMapping instanceof ModelPart part
+				? TemporalColumnPrecision.find( part ) : null;
+		if ( temporal != null && bindable instanceof SelectableMappings selectableMappings ) {
+			selectableMappings.forEachSelectable( (index, selectable) -> jdbcParameterConsumer.accept( index,
+					new TemporalColumnJdbcParameter( selectable, parameterId + index, temporal ) ) );
+		}
+		else if ( bindable instanceof SelectableMappings selectableMappings ) {
 			selectableMappings.forEachSelectable(
 					(index, selectableMapping)
 							-> jdbcParameterConsumer.accept( index,

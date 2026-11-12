@@ -94,7 +94,10 @@ public class BindingTypeHelper {
 			Object value,
 			JdbcMapping baseType,
 			TypeConfiguration typeConfiguration) {
-		if ( value == null || !isTemporal( baseType.getJdbcJavaType() ) ) {
+		// Decomposition has already applied a converter. Its relational value must
+		// retain the converter's JDBC mapping, not be resolved against its domain type.
+		if ( value == null || !isTemporal( baseType.getJdbcJavaType() )
+				|| baseType.getValueConverter() != null && baseType.getJdbcJavaType().isInstance( value ) ) {
 			return baseType;
 		}
 		else {

@@ -53,6 +53,21 @@ public final class ContextualTemporalCompositeUserType<T> implements CompositeUs
 		return precision != null;
 	}
 
+	/// A database-owned tuple copy cannot recompute a region offset after rounding.
+	/// Identical storage contracts need no such recomputation. Unadjusted tuples
+	/// retain their existing SQL assignment semantics.
+	public boolean canCopySqlTupleFrom(ContextualTemporalCompositeUserType<?> source) {
+		return target == null || source != null && (signature().equals( source.signature() )
+				|| target.equals( source.target ) && target.getRules().isFixedOffset());
+	}
+
+	/// Execution pair and grid for query-assignment diagnostics; contains no values.
+	public String getSqlTupleContractDescription() {
+		final var context = precision.getContext();
+		return context.javaType().getJavaTypeClass().getTypeName() + "/" + context.jdbcType().getClass().getName()
+				+ ", " + context.ddlTypeName() + ", precision=" + context.precision() + ", adjustment=" + target;
+	}
+
 	/// Prepare the primary and companion together. Ordinary property access stays
 	/// unprepared because predicates and identity bindings also use decomposition.
 	@SuppressWarnings("unchecked")

@@ -87,6 +87,7 @@ import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
 import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
+import org.hibernate.sql.exec.internal.TemporalColumnJdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.type.BindableType;
@@ -587,7 +588,7 @@ public class SqmUtil {
 			Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamXref,
 			SqmParameterMappingModelResolutionAccess mappingModelResolutionAccess,
 			SharedSessionContractImplementor session) {
-		final JdbcParameterBindings jdbcParameterBindings =
+		final var jdbcParameterBindings =
 				new JdbcParameterBindingsImpl( domainParameterXref.getSqmParameterCount() );
 		for ( var entry : domainParameterXref.getQueryParameters().entrySet() ) {
 			var queryParameter = entry.getKey();
@@ -602,6 +603,35 @@ public class SqmUtil {
 					sqmParameters,
 					jdbcParameterBindings
 			);
+			if ( !session.getFactory().getSessionFactoryOptions().isQueryCacheEnabled() ) {
+				continue;
+			}
+			final List<JdbcParameter> parameters = new ArrayList<>();
+			final var references = jdbcParamXref.get( queryParameter );
+			for ( var sqmParameter : sqmParameters ) {
+				final var lists = references.get( sqmParameter );
+				if ( lists != null ) {
+					for ( var list : lists ) {
+						for ( int i = 0; i < list.size(); i++ ) {
+							parameters.add( list.get( i ) );
+						}
+					}
+				}
+				final var expansions = domainParameterXref.getExpansions( sqmParameter );
+				if ( expansions != null ) {
+					for ( var expansion : expansions ) {
+						final var expandedLists = references.get( expansion );
+						if ( expandedLists != null ) {
+							for ( var list : expandedLists ) {
+								for ( int i = 0; i < list.size(); i++ ) {
+									parameters.add( list.get( i ) );
+								}
+							}
+						}
+					}
+				}
+			}
+			jdbcParameterBindings.registerTemporalCacheParameters( queryParameter, parameters );
 		}
 		return jdbcParameterBindings;
 	}
@@ -769,6 +799,15 @@ public class SqmUtil {
 			SharedSessionContractImplementor session) {
 		if ( parameterType == null ) {
 			throw new SqlTreeCreationException( "Unable to interpret mapping-model type for Query parameter: " + domainParam );
+		}
+		if ( jdbcParams.size() > 0 && jdbcParams.get( 0 ) instanceof TemporalColumnJdbcParameter temporal ) {
+			final var tuple = temporal.prepareTuple( bindValue );
+			for ( int i = 0; i < tuple.length; i++ ) {
+				final var parameter = jdbcParams.get( i );
+				jdbcParameterBindings.addBinding( parameter,
+						new JdbcParameterBindingImpl( parameter.getExpressionType().getSingleJdbcMapping(), tuple[i] ) );
+			}
+			return;
 		}
 		final Bindable resolvedParameterType;
 		if ( parameterType instanceof NullType ) {

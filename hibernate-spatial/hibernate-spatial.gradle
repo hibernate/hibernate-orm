@@ -18,15 +18,10 @@ dependencies {
 	testImplementation libs.jakarta.validation
 	testImplementation libs.jandex
 	testImplementation libs.test.validator
-    testImplementation(libs.test.dom4j) {
-        transitive = false
-    }
 
 	testImplementation libs.jdbc.postgresql
 	testImplementation libs.jdbc.h2gis
 
-    testRuntimeOnly libs.test.jaxen
-	testRuntimeOnly libs.test.xerces
 	testRuntimeOnly libs.byteBuddy
 }
 

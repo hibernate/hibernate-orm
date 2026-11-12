@@ -398,19 +398,6 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		return name == null ? "<unknown>" : name;
 	}
 
-	public static String extractSetting(Map<String, Object> settings, String... names) {
-		for ( String name : names ) {
-			if ( settings.containsKey( name ) ) {
-				final String value = (String) settings.get( name );
-				if ( value != null && value.isBlank() ) {
-					throw new ConnectionProviderConfigurationException( "Configuration property '" + name + "' is blank" );
-				}
-				return value;
-			}
-		}
-		return null;
-	}
-
 	@FunctionalInterface
 	public interface SettingConsumer {
 		void consumeSetting(String name, String value);

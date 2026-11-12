@@ -9,6 +9,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.OneToMany;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
@@ -94,6 +95,42 @@ public class InheritedAttributeOverridingTest {
 	@Entity(name = "UserGroup")
 	@AssociationOverride(name = "members", joinColumns = @JoinColumn(name = "overridden_id"))
 	static class UserGroup extends GroupMembership {}
+
+	@Test
+	@JiraKey("HHH-13248")
+	public void oneToManyColumnOverrideReplacesDeclaredJoinTable() {
+		final var metadata = new MetadataSources( standardServiceRegistry )
+				.addAnnotatedClass( Team.class )
+				.addAnnotatedClass( Player.class )
+				.buildMetadata();
+		final var players = metadata.getCollectionBinding( Team.class.getName() + ".players" );
+		// the join columns in the override select a foreign key mapping, held by the target entity
+		assertThat( players.isOneToMany() ).isTrue();
+		assertThat( players.getCollectionTable() )
+				.isSameAs( metadata.getEntityBinding( Player.class.getName() ).getTable() )
+				.isNotSameAs( metadata.getEntityBinding( Team.class.getName() ).getTable() );
+		assertThat( players.getKey().getColumns() ).extracting( Column::getName ).containsExactly( "team_id" );
+		assertThat( metadata.collectTableMappings() ).extracting( org.hibernate.mapping.Table::getName )
+				.doesNotContain( "explicit_o2m" );
+	}
+
+	@MappedSuperclass
+	static class Squad {
+		@Id long id;
+
+		@OneToMany
+		@JoinTable(name = "explicit_o2m")
+		Set<Player> players;
+	}
+
+	@Entity(name = "Team")
+	@AssociationOverride(name = "players", joinColumns = @JoinColumn(name = "team_id"))
+	static class Team extends Squad {}
+
+	@Entity(name = "Player")
+	static class Player {
+		@Id long id;
+	}
 
 	@MappedSuperclass
 	public static class A {

@@ -1008,6 +1008,19 @@ public class BinderHelper {
 		return containerFk;
 	}
 
+	static ForeignKey resolveAssociationOverrideForeignKey(ForeignKey overrideFk, JoinColumn[] columns) {
+		if ( isSpecified( overrideFk ) || columns == null ) {
+			return overrideFk;
+		}
+		for ( var column : columns ) {
+			final var columnFk = column.foreignKey();
+			if ( isSpecified( columnFk ) ) {
+				return columnFk;
+			}
+		}
+		return overrideFk;
+	}
+
 	private static boolean isSpecified(ForeignKey foreignKey) {
 		return foreignKey != null
 				&& ( foreignKey.value() == NO_CONSTRAINT

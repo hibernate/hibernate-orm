@@ -48,6 +48,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.getFetchStyle;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
 import static org.hibernate.boot.model.internal.BinderHelper.handleForeignKeyConstraint;
+import static org.hibernate.boot.model.internal.BinderHelper.resolveAssociationOverrideForeignKey;
 import static org.hibernate.boot.model.internal.BinderHelper.resolveContainerForeignKey;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.boot.model.internal.EntityBinder.isEntity;
@@ -626,14 +627,17 @@ public class ToOneBinder {
 		oneToOne.setForeignKeyType( formulaBased
 				? ( constrained ? FROM_PARENT : TO_PARENT )
 				: ( mappedBy == null ? FROM_PARENT : TO_PARENT ) );
-		final var overriddenForeignKey = propertyHolder.getOverriddenForeignKey(
-				qualify( propertyHolder.getPath(), propertyName ) );
+		final String fullPath = qualify( propertyHolder.getPath(), propertyName );
+		final var overriddenJoinColumns = propertyHolder.getOverriddenJoinColumn( fullPath );
+		final var overriddenForeignKey = resolveAssociationOverrideForeignKey(
+				propertyHolder.getOverriddenForeignKey( fullPath ), overriddenJoinColumns );
+		final boolean hasOverride = overriddenJoinColumns != null || overriddenForeignKey != null;
 		final var joinColumnForeignKey = nestedForeignKey( memberDetails );
 		bindForeignKeyNameAndDefinition( oneToOne, memberDetails,
-				overriddenForeignKey != null
+				hasOverride
 						? overriddenForeignKey
 						: memberDetails.getDirectAnnotationUsage( ForeignKey.class ),
-				overriddenForeignKey != null ? null
+				hasOverride ? null
 						: joinColumnForeignKey != null ? joinColumnForeignKey
 						: mappedBy == null ? primaryKeyJoinColumnForeignKey( memberDetails ) : null,
 				context );

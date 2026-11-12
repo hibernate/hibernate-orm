@@ -785,6 +785,15 @@ native serialization. The binders and extractors call them, so each subclass pic
 Custom subclasses must implement both methods. Use `Encoders`/`Decoders` for a `geometry` column and
 `GeographyEncoders`/`GeographyDecoders` for a `geography` column.
 
+[[java-time-direct-jdbc]]
+=== Direct JDBC handling of `java.time` values
+
+The new `Dialect.getDirectJavaTimeJdbcSupport()` SPI reports direct JDBC support for each Java time class,
+with separate capabilities for scalar values, native JDBC `STRUCT` attributes, and `ARRAY` elements.
+SPI implementations selecting JDBC mappings should use `isDirectJavaTimeJdbcAccessEnabled(Class<?>)`
+instead of the deprecated `isPreferJavaTimeJdbcTypesEnabled()` to account for dialect and driver support.
+
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Changes in Behavior
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -983,17 +992,6 @@ The following fixes change behavior applications may observe after upgrading:
 * On H2, Oracle, and SQL Server, HQL `insert ... on conflict (...) do nothing` with explicit conflict columns now uses `MERGE` emulation instead of silently dropping the conflict clause. Applications should no longer expect a unique constraint violation for the specified conflict.
 * With enhanced dirty tracking and `@DynamicUpdate`, changes to scalar attributes are now included in updates when nested embeddables are also dirty. Previously, some scalar changes could be silently omitted depending on attribute ordering.
 
-
-[[java-time-direct-jdbc]]
-=== Direct JDBC handling of `java.time` values
-
-The default value of `hibernate.type.java_time_use_direct_jdbc` is now `true`.
-Previously, Hibernate converted `java.time` values to legacy `java.sql` representations before passing them to JDBC.
-Hibernate now uses `java.time` values directly where the configured dialect reports support for the Java type.
-For unsupported types, Hibernate falls back to the legacy JDBC representation and logs the driver/database limitation.
-
-Applications should verify temporal value handling with their JDBC driver when upgrading, particularly where they rely on the previous conversion behavior.
-Set `hibernate.type.java_time_use_direct_jdbc=false` to retain the legacy behavior.
 
 [[lock-cascading]]
 === Removal of lock cascading

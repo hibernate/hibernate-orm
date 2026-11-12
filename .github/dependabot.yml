@@ -112,7 +112,6 @@ updates:
           - "org.wildfly.transaction:*"
           - "org.jboss:jboss-transaction-spi"
           - "org.jboss.shrinkwrap*"
-          - "org.jboss.byteman*"
           - "ch.qos.logback:logback-classic"
           # Used just in tests:
           - "org.ehcache:ehcache"

@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.bootstrap.binding.annotations.override;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
 import jakarta.persistence.AssociationOverride;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
@@ -13,6 +15,7 @@ import jakarta.persistence.OneToOne;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.mapping.Column;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -30,7 +33,8 @@ class ToOneAssociationOverrideTest {
 	@ValueSource(classes = { BareOverride.class, NamedForeignKey.class, EmbeddedOwner.class })
 	void missingJoinColumns(Class<?> owner, ServiceRegistryScope scope) {
 		var sources = new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( Event.class ).addAnnotatedClass( owner );
+				.addAnnotatedClass( Event.class )
+				.addAnnotatedClass( owner );
 		var failure = assertThrows( AnnotationException.class, sources::buildMetadata );
 		String property = owner == EmbeddedOwner.class ? ".details.event" : ".event";
 		assertThat( failure ).hasMessageContaining( owner.getName() + property ).hasMessageContaining( "joinColumns" );
@@ -42,28 +46,45 @@ class ToOneAssociationOverrideTest {
 	@Test
 	void inheritedAssociationOnImplicitJoinTable(ServiceRegistryScope scope) {
 		var metadata = new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( Event.class ).addAnnotatedClass( TableOverride.class ).buildMetadata();
+				.addAnnotatedClass( Event.class )
+				.addAnnotatedClass( TableOverride.class )
+				.buildMetadata();
 		var owner = metadata.getEntityBinding( TableOverride.class.getName() );
 		var event = owner.getProperty( "event" );
 		assertThat( owner.getJoins() ).singleElement().satisfies( join -> {
 			assertThat( join.getProperties() ).contains( event );
 			assertThat( join.getTable() ).isSameAs( event.getValue().getTable() );
 		} );
-		assertThat( event.getColumns() ).extracting( org.hibernate.mapping.Column::getName )
+		assertThat( event.getColumns() ).extracting( Column::getName )
 				.containsExactly( "target_id" );
 		assertThat( owner.getDeclaredProperties() ).doesNotContain( event );
 	}
 
 	@Test
 	void overridingAnExistingJoinTable(ServiceRegistryScope scope) {
-		var metadata = new MetadataSources( scope.getRegistry() ).addAnnotatedClass( Event.class )
-				.addAnnotatedClass( DefaultTableOverride.class ).addAnnotatedClass( ColumnOverride.class ).buildMetadata();
+		var metadata = new MetadataSources( scope.getRegistry() )
+				.addAnnotatedClass( Event.class )
+				.addAnnotatedClass( DefaultTableOverride.class )
+				.addAnnotatedClass( ColumnOverride.class )
+				.buildMetadata();
 		var tableOwner = metadata.getEntityBinding( DefaultTableOverride.class.getName() );
 		assertThat( tableOwner.getJoins() ).singleElement();
 		var columnOwner = metadata.getEntityBinding( ColumnOverride.class.getName() );
 		assertThat( columnOwner.getJoins() ).isEmpty();
-		assertThat( columnOwner.getProperty( "event" ).getColumns() ).extracting( org.hibernate.mapping.Column::getName )
+		assertThat( columnOwner.getProperty( "event" ).getColumns() ).extracting( Column::getName )
 				.containsExactly( "new_event_id" );
+	}
+
+	@Test
+	void joinTableOverrideWithPropertyAccess(ServiceRegistryScope scope) {
+		var metadata = new MetadataSources( scope.getRegistry() )
+				.addAnnotatedClass( Event.class )
+				.addAnnotatedClass( PropertyAccessOverride.class )
+				.buildMetadata();
+		var owner = metadata.getEntityBinding( PropertyAccessOverride.class.getName() );
+		assertThat( owner.getJoins() ).singleElement()
+				.satisfies( join -> assertThat( join.getTable().getName() ).isEqualTo( "getter_events" ) );
+		assertThat( owner.getProperty( "event" ).getValue().getTable().getName() ).isEqualTo( "getter_events" );
 	}
 
 	@Entity
@@ -113,4 +134,33 @@ class ToOneAssociationOverrideTest {
 		@Id long id;
 		@Embedded @AssociationOverride(name = "event", foreignKey = @ForeignKey(name = "fk_event")) Details details;
 	}
+
+	@MappedSuperclass
+	@Access(AccessType.PROPERTY)
+	static class PropertyAccessBase {
+		private long id;
+		private Event event;
+
+		@Id
+		public long getId() {
+			return id;
+		}
+
+		public void setId(long id) {
+			this.id = id;
+		}
+
+		@OneToOne
+		public Event getEvent() {
+			return event;
+		}
+
+		public void setEvent(Event event) {
+			this.event = event;
+		}
+	}
+
+	@Entity
+	@AssociationOverride(name = "event", joinTable = @JoinTable(name = "getter_events"))
+	static class PropertyAccessOverride extends PropertyAccessBase {}
 }

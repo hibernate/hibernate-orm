@@ -1,6 +1,7 @@
 package org.hibernate.action.queue.internal.decompose.entity;
 
 import org.hibernate.type.internal.TemporalPreparedState;
+import org.hibernate.type.internal.TemporalColumnPrecision;
 
 
 import jakarta.annotation.Nullable;
@@ -216,7 +217,7 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 		this.bindingSession = session;
 		try {
 			attribute.decompose(
-					value,
+					TemporalColumnPrecision.prepare( value, attribute, entity, session, false ),
 					0,
 					this,
 					attribute,

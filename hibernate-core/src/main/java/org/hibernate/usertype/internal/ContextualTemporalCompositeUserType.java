@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.Objects;
 
 import org.hibernate.TemporalValueException;
 import org.hibernate.metamodel.spi.ValueAccess;
@@ -24,10 +25,12 @@ public final class ContextualTemporalCompositeUserType<T> implements CompositeUs
 	private final TemporalAdjustmentConverter<T> adjustment;
 	private final String role;
 	private final TemporalPrecisionPlan precision;
+	private final ZoneId target;
 
 	public ContextualTemporalCompositeUserType(
 			CompositeUserType<T> delegate, JavaType<T> javaType, ZoneId target, String role) {
 		this.delegate = delegate;
+		this.target = target;
 		this.adjustment = target == null ? null : new TemporalAdjustmentConverter<>( javaType, target, false, role );
 		this.role = role;
 		this.precision = null;
@@ -35,6 +38,7 @@ public final class ContextualTemporalCompositeUserType<T> implements CompositeUs
 
 	private ContextualTemporalCompositeUserType(ContextualTemporalCompositeUserType<T> original, TemporalPrecisionPlan precision) {
 		delegate = original.delegate;
+		target = original.target;
 		adjustment = original.adjustment;
 		role = original.role;
 		this.precision = precision;
@@ -45,14 +49,47 @@ public final class ContextualTemporalCompositeUserType<T> implements CompositeUs
 		return new ContextualTemporalCompositeUserType<>( this, precision );
 	}
 
-	private T canonical(T value) {
-		final T adjusted = adjust( value );
-		if ( adjusted == null || precision == null ) {
-			return adjusted;
+	public boolean hasPrecision() {
+		return precision != null;
+	}
+
+	/// Prepare the primary and companion together. Ordinary property access stays
+	/// unprepared because predicates and identity bindings also use decomposition.
+	@SuppressWarnings("unchecked")
+	public Object[] prepareTuple(Object value) {
+		final T adjusted = adjust( (T) value );
+		if ( adjusted == null ) {
+			return new Object[] { null, null };
 		}
 		final Object primary = precision.prepare( delegate.getPropertyValue( adjusted, 0 ) );
 		final Object offset = delegate.getPropertyValue( adjusted, 1 );
-		return adjust( delegate.instantiate( () -> new Object[] { primary, offset } ) );
+		final T reconstructed = adjust( delegate.instantiate( () -> new Object[] { primary, offset } ) );
+		return new Object[] { delegate.getPropertyValue( reconstructed, 0 ), delegate.getPropertyValue( reconstructed, 1 ) };
+	}
+
+	/// Compare precision only. The source offset/zone remain significant even when
+	/// explicit adjustment would store both assignments using the same target.
+	@SuppressWarnings("unchecked")
+	public boolean precisionEqual(Object first, Object second) {
+		if ( first == second ) { return true; }
+		if ( first == null || second == null ) { return false; }
+		final T left = (T) first;
+		final T right = (T) second;
+		return Objects.equals( delegate.getPropertyValue( left, 1 ), delegate.getPropertyValue( right, 1 ) )
+				&& (!(left instanceof ZonedDateTime zoned) || zoned.getZone().equals( ((ZonedDateTime) right).getZone() ))
+				&& precision.precisionEqual( delegate.getPropertyValue( left, 0 ), delegate.getPropertyValue( right, 0 ) );
+	}
+
+	/// Serialize an actual prepared/extracted tuple, without preparing a domain
+	/// value again. The target participates in compatibility independently of the
+	/// primary mapping, whose plan may not itself carry the outer adjustment.
+	public Serializable disassembleTuple(Object[] tuple) {
+		final T reconstructed = instantiate( () -> tuple );
+		return new PrecisionCacheValue( signature(), delegate.disassemble( reconstructed ) );
+	}
+
+	private String signature() {
+		return "column-v2|" + returnedClass().getName() + '|' + target + '|' + precision.getSignature();
 	}
 
 	/// Mapping role retained for bootstrap and execution diagnostics.
@@ -78,6 +115,9 @@ public final class ContextualTemporalCompositeUserType<T> implements CompositeUs
 		}
 		if ( primary == null || offset == null ) {
 			throw new TemporalValueException( "Partially null temporal COLUMN tuple for '" + role + "'" );
+		}
+		if ( precision != null ) {
+			precision.validateExtracted( primary );
 		}
 		return adjust( delegate.instantiate( values ) );
 	}
@@ -114,14 +154,14 @@ public final class ContextualTemporalCompositeUserType<T> implements CompositeUs
 
 	@Override
 	public Serializable disassemble(T value) {
-		final Serializable payload = delegate.disassemble( canonical( value ) );
-		return precision == null || value == null ? payload : new PrecisionCacheValue( precision.getSignature(), payload );
+		return precision == null || value == null ? delegate.disassemble( adjust( value ) )
+				: disassembleTuple( prepareTuple( value ) );
 	}
 
 	@Override
 	public T assemble(Serializable cached, Object owner) {
 		if ( precision != null && cached != null ) {
-			if ( !(cached instanceof PrecisionCacheValue value) || !precision.getSignature().equals( value.signature() ) ) {
+			if ( !(cached instanceof PrecisionCacheValue value) || !signature().equals( value.signature() ) ) {
 				throw new MappingException( "Incompatible temporal COLUMN cache payload for '" + role
 						+ "'; evict affected cache regions before changing precision" );
 			}

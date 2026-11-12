@@ -492,7 +492,7 @@ public abstract class AbstractPreservationTests<T> {
 				try ( var session = factory.withOptions().connection( reader ).openSession() ) {
 					final var tx = session.beginTransaction();
 					final var row = session.get( mapping.entity(), id );
-					assertValue( row.value(), expected ); session.remove( row ); tx.commit();
+					assertValue( row.value(), PreservationSamples.expected( input, mapping, env, false ) ); session.remove( row ); tx.commit();
 				}
 			}
 			inventory( env, mapping, handling, metadata, env.reader() ? "ORM_AND_JDBC:" + data.id() : "WRITTEN:" + data.id(), storage.table(), input.toString() );

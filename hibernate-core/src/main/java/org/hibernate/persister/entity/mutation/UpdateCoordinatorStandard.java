@@ -1,6 +1,7 @@
 package org.hibernate.persister.entity.mutation;
 
 import org.hibernate.type.internal.TemporalPreparedState;
+import org.hibernate.type.internal.TemporalColumnPrecision;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
@@ -1147,7 +1148,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 
 		attributeMapping.decompose(
-				values,
+				TemporalColumnPrecision.prepare( values, attributeMapping, entity, session, false ),
 				0,
 				jdbcValueBindings,
 				tableMapping,

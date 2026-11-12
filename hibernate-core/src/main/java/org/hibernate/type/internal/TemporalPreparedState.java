@@ -17,8 +17,8 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 ///
 /// @author Steve Ebersole
 public final class TemporalPreparedState implements EntityEntryExtraState {
-	private final Map<TemporalPrecisionBasicType<?>, Serializable> values = new IdentityHashMap<>();
-	private final Map<TemporalPrecisionBasicType<?>, Serializable> candidates = new IdentityHashMap<>();
+	private final Map<Object, Serializable> values = new IdentityHashMap<>();
+	private final Map<Object, Serializable> candidates = new IdentityHashMap<>();
 	private long generation;
 	private EntityEntryExtraState next;
 
@@ -105,15 +105,29 @@ public final class TemporalPreparedState implements EntityEntryExtraState {
 		}
 	}
 
+	public static TemporalPreparedState forEntity(Object entity, SharedSessionContractImplementor session) {
+		final var entry = entity == null ? null : session.getPersistenceContextInternal().getEntry( entity );
+		return entry != null && entry.getPersister().canWriteToCache() ? state( entry ) : null;
+	}
+
+	public void recordCacheCandidate(Object mapping, Serializable payload) {
+		candidates.put( mapping, payload );
+	}
+
+	public void recordCacheValue(Object mapping, Serializable payload) {
+		values.put( mapping, payload );
+		candidates.remove( mapping );
+	}
+
 	public boolean isEmpty() {
 		return values.isEmpty();
 	}
 
-	public boolean contains(TemporalPrecisionBasicType<?> mapping) {
+	public boolean contains(Object mapping) {
 		return values.containsKey( mapping );
 	}
 
-	public Serializable get(TemporalPrecisionBasicType<?> mapping) {
+	public Serializable get(Object mapping) {
 		return values.get( mapping );
 	}
 

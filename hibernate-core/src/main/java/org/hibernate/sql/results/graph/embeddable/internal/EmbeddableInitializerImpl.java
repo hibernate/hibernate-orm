@@ -7,6 +7,7 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.type.internal.TemporalPreparedState;
+import org.hibernate.type.internal.TemporalColumnPrecision;
 import org.hibernate.sql.results.graph.entity.internal.TemporalPrecisionHydration;
 
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
@@ -557,6 +558,13 @@ public class EmbeddableInitializerImpl
 		}
 		if ( stateAllNull ) {
 			data.setState( isNull( data ) ? State.MISSING : State.RESOLVED );
+		}
+		if ( retainTemporalState && !stateAllNull ) {
+			final var temporal = TemporalColumnPrecision.find( embedded );
+			if ( temporal != null ) {
+				if ( data.temporalState == null ) { data.temporalState = new TemporalPreparedState(); }
+				data.temporalState.recordCacheValue( temporal, temporal.disassembleTuple( rowState ) );
+			}
 		}
 	}
 

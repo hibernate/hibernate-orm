@@ -132,6 +132,10 @@ final class PreservationSamples {
 	}
 
 	static Object expected(Object input, Mapping<?> mapping, PreservationEnvironment environment) {
+		return expected( input, mapping, environment, true );
+	}
+
+	static Object expected(Object input, Mapping<?> mapping, PreservationEnvironment environment, boolean prepared) {
 		Object adjusted = adjust( input, mapping.adjustment() );
 		if ( adjusted == null || adjusted instanceof LocalDate ) {
 			return adjusted;
@@ -152,13 +156,14 @@ final class PreservationSamples {
 			nano = (int) ((nano + 500L) / 1000 * 1000);
 		}
 		long rounded = ((nano + quantum / 2) / quantum) * quantum;
-		if ( environment.platform().equals( "h2" ) && (adjusted instanceof LocalTime || adjusted instanceof OffsetTime) ) {
-			// Pinned H2 Value.convertToTime[TimeZone] clamps a rounding carry at the last
-			// representable quantum of the day (DateTimeUtils.convertScale with NANOS_PER_DAY).
+		if ( !prepared && environment.platform().equals( "h2" )
+				&& (adjusted instanceof LocalTime || adjusted instanceof OffsetTime) ) {
+			// Raw JDBC receives the original value; H2 clamps a midnight rounding carry.
 			long nanos = temporal.getLong( ChronoField.NANO_OF_DAY ) - nano + rounded;
 			temporal = temporal.with( ChronoField.NANO_OF_DAY, Math.min( nanos, 86400000000000L - quantum ) );
 		}
 		else {
+			// Prepared midnight is a typed JDBC fixed point on H2.
 			temporal = temporal.with( ChronoField.NANO_OF_SECOND, 0 ).plus( rounded, java.time.temporal.ChronoUnit.NANOS );
 		}
 		Object result = temporal;

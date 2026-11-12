@@ -6,6 +6,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
+import org.hibernate.type.UserComponentType;
+import org.hibernate.usertype.internal.ContextualTemporalCompositeUserType;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 
 /// Explicit occurrence context for persistent cache operations. This dispatch is
@@ -31,6 +33,12 @@ public final class TemporalCacheAccess {
 					}
 				}
 			}
+
+			else if ( type instanceof UserComponentType<?> component
+					&& component.getCompositeUserType() instanceof ContextualTemporalCompositeUserType<?> temporal
+					&& temporal.hasPrecision() && state.contains( temporal ) ) {
+				return state.get( temporal );
+			}
 			else if ( type.getClass() == ComponentType.class ) {
 				return ((ComponentType) type).disassemble( value, session, owner, state );
 			}
@@ -46,6 +54,14 @@ public final class TemporalCacheAccess {
 				if ( temporal != null ) {
 					return temporal.assemble( value, session, owner, state );
 				}
+			}
+
+			else if ( type instanceof UserComponentType<?> component
+					&& component.getCompositeUserType() instanceof ContextualTemporalCompositeUserType<?> temporal
+					&& temporal.hasPrecision() ) {
+				final Object assembled = value == null ? null : temporal.assemble( value, owner );
+				state.recordCacheValue( temporal, value );
+				return assembled;
 			}
 			else if ( type.getClass() == ComponentType.class ) {
 				return ((ComponentType) type).assemble( value, session, owner, state );

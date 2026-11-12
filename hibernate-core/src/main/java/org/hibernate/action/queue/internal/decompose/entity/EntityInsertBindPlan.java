@@ -1,6 +1,7 @@
 package org.hibernate.action.queue.internal.decompose.entity;
 
 import org.hibernate.type.internal.TemporalPreparedState;
+import org.hibernate.type.internal.TemporalColumnPrecision;
 
 
 import org.hibernate.action.internal.AbstractEntityInsertAction;
@@ -153,7 +154,7 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 					this.bindingAttributeValue = attributeValue;
 					try {
 						attribute.decompose(
-								attributeValue,
+								TemporalColumnPrecision.prepare( attributeValue, attribute, entity, session, true ),
 								0,
 								this,
 								attribute,

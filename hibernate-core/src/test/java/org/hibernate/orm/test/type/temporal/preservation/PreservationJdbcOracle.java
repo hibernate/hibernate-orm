@@ -33,7 +33,7 @@ final class PreservationJdbcOracle {
 					if ( text.matches( ".*[+-][0-9]{2}" ) ) text += ":00";
 					time = OffsetTime.parse( text );
 				}
-				if ( storage.column ) time = time.withOffsetSameInstant( offset( result, input, mapping ) );
+				if ( storage.column ) time = time.withOffsetSameInstant( offset( result, expected, mapping ) );
 				value = PreservationSamples.adjust( time, mapping.adjustment() );
 			}
 			else if ( storage.domain == ZonedDateTime.class && !storage.column && !mapping.adjusted() ) value = result.getObject( 1, ZonedDateTime.class );
@@ -53,7 +53,7 @@ final class PreservationJdbcOracle {
 				else instant = result.getObject( 1, OffsetDateTime.class ).toInstant();
 				if ( storage.domain == Instant.class ) value = instant;
 				else {
-					final ZoneOffset offset = storage.column ? offset( result, input, mapping ) : ZoneOffset.UTC;
+					final ZoneOffset offset = storage.column ? offset( result, expected, mapping ) : ZoneOffset.UTC;
 					value = storage.domain == ZonedDateTime.class ? instant.atZone( offset ) : instant.atOffset( offset );
 					value = PreservationSamples.adjust( value, mapping.adjustment() );
 				}
@@ -65,8 +65,9 @@ final class PreservationJdbcOracle {
 		final String text = result.getString( 1 );
 		return text.startsWith( "24:00:00" ) ? LocalTime.MIDNIGHT : result.getObject( 1, LocalTime.class );
 	}
-	private static ZoneOffset offset(ResultSet result, Object input, Mapping<?> mapping) throws SQLException {
-		final Object adjusted = PreservationSamples.adjust( input, mapping.adjustment() );
+	private static ZoneOffset offset(ResultSet result, Object canonicalValue, Mapping<?> mapping) throws SQLException {
+		// Assignment carry may cross an explicitly requested region transition.
+		final Object adjusted = PreservationSamples.adjust( canonicalValue, mapping.adjustment() );
 		final ZoneOffset expected = adjusted instanceof OffsetTime t ? t.getOffset() : adjusted instanceof OffsetDateTime t ? t.getOffset() : ((ZonedDateTime) adjusted).getOffset();
 		final int seconds = result.getInt( 2 );
 		assertThat( result.wasNull() ).isFalse();

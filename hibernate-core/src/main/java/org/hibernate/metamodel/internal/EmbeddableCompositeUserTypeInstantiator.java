@@ -15,6 +15,11 @@ public class EmbeddableCompositeUserTypeInstantiator implements EmbeddableInstan
 		this.userType = userType;
 	}
 
+	/** The mapping-owned type, including any contextual precision/adjustment contract. */
+	public CompositeUserType<?> getUserType() {
+		return userType;
+	}
+
 	@Override
 	public Object instantiate(ValueAccess valuesAccess) {
 		return userType.instantiate( valuesAccess );

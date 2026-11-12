@@ -436,7 +436,8 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		}
 
 		attributeMapping.getElementDescriptor().decompose(
-				collection.getElement( rowValue ),
+				TemporalCollectionState.prepareColumn( collection.getElement( rowValue ),
+						getAttributeMapping().getElementDescriptor(), collection, this, rowPosition, true ),
 				0,
 				elementColumnIsSettable,
 				jdbcValueBindings,
@@ -518,7 +519,8 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			@Nonnull SharedSessionContractImplementor session,
 			@Nonnull JdbcValueBindings jdbcValueBindings) {
 		getAttributeMapping().getElementDescriptor().decompose(
-				collection.getElement( entry ),
+				TemporalCollectionState.prepareColumn( collection.getElement( entry ),
+						getAttributeMapping().getElementDescriptor(), collection, this, entryPosition, false ),
 				0,
 				jdbcValueBindings,
 				null,

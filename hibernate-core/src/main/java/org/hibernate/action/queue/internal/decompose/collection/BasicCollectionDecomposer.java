@@ -1541,7 +1541,8 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		}
 
 		attributeMapping.getElementDescriptor().decompose(
-				collection.getElement( rowValue ),
+				TemporalCollectionState.prepareColumn( collection.getElement( rowValue ),
+						persister.getAttributeMapping().getElementDescriptor(), collection, persister, rowPosition, true ),
 				(valueIndex, value, jdbcValueMapping) -> {
 					if ( persister.getElementColumnIsSettable()[valueIndex] ) {
 						jdbcValueBindings.bindAssignment( valueIndex, TemporalCollectionState.prepare( value, jdbcValueMapping.getJdbcMapping(),
@@ -1701,7 +1702,8 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 
 		// For Maps, rowValue is a Map.Entry - extract the element (value) first
 		elementDescriptor.decompose(
-				collection.getElement( rowValue ),
+				TemporalCollectionState.prepareColumn( collection.getElement( rowValue ),
+						persister.getAttributeMapping().getElementDescriptor(), collection, persister, rowPosition, false ),
 				(valueIndex, value, mapping) -> jdbcValueBindings.bindAssignment( valueIndex,
 						TemporalCollectionState.prepare( value, mapping.getJdbcMapping(), collection, persister, rowPosition, session ), mapping ),
 				session

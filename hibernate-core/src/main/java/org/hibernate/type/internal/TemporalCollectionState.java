@@ -13,6 +13,7 @@ import org.hibernate.collection.spi.PersistentSet;
 import org.hibernate.collection.spi.PersistentBag;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /// Relational snapshots owned by one persistent collection. Each materialized or
@@ -48,13 +49,24 @@ public final class TemporalCollectionState {
 		final Object prepared = temporal.prepareRelational( value );
 		final var state = get( collection, persister );
 		if ( state != null ) {
-			if ( !state.mutation ) {
-				state.snapshot( collection, persister );
-				state.mutation = true;
-			}
-			state.occurrences.get( position ).state().recordCandidate( temporal, prepared, session );
+			state.mutationOccurrence( collection, persister, position ).recordCandidate( temporal, prepared, session );
 		}
 		return prepared;
+	}
+
+	private TemporalPreparedState mutationOccurrence(PersistentCollection<?> collection, CollectionPersister persister, int position) {
+		if ( !mutation ) {
+			snapshot( collection, persister );
+			mutation = true;
+		}
+		return occurrences.get( position ).state();
+	}
+
+	public static Object prepareColumn(Object value, ModelPart mapping, PersistentCollection<?> collection,
+			CollectionPersister persister, int position, boolean insert) {
+		final var state = get( collection, persister );
+		return TemporalColumnPrecision.prepare( value, mapping,
+				state == null ? null : state.mutationOccurrence( collection, persister, position ), insert );
 	}
 
 	/// Capture a row before read conversion loses its relational representation.

@@ -555,7 +555,10 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			created.table( column.table() );
 			created.insertable( column.insertable() );
 			created.updatable( column.updatable() );
-			created.columnDefinition( column.columnDefinition() );
+			// The primary temporal SQL type is not the companion offset's SQL type.
+			if ( !context.isPreferJavaTimeJdbcTypesEnabled() ) {
+				created.columnDefinition( column.columnDefinition() );
+			}
 			created.options( column.options() );
 			created.comment( column.comment() );
 		}
@@ -619,7 +622,9 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		created.precision( precision );
 		created.secondPrecision( secondPrecision );
 		if ( annotatedColumn != null && context.isPreferJavaTimeJdbcTypesEnabled() ) {
-			// An implicit primary name does not discard the declared tuple operation flags.
+			// An implicit primary name must retain the declared physical storage and
+			// tuple operation flags, including precision validation against the SQL type.
+			created.columnDefinition( annotatedColumn.columnDefinition() );
 			created.insertable( annotatedColumn.insertable() );
 			created.updatable( annotatedColumn.updatable() );
 		}

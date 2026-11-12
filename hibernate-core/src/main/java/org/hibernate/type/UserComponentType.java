@@ -7,6 +7,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.usertype.CompositeUserType;
+import org.hibernate.usertype.internal.ContextualTemporalCompositeUserType;
+import org.hibernate.type.internal.TemporalPreparedState;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -33,6 +35,29 @@ public class UserComponentType<T> extends ComponentType {
 
 	public CompositeUserType<T> getCompositeUserType() {
 		return compositeUserType;
+	}
+
+	@Override
+	public boolean isDirty(Object old, Object current, SharedSessionContractImplementor session) {
+		return compositeUserType instanceof ContextualTemporalCompositeUserType<?> temporal && temporal.hasPrecision()
+				? !temporal.precisionEqual( old, current ) : super.isDirty( old, current, session );
+	}
+
+	@Override
+	public boolean isDirty(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session) {
+		if ( compositeUserType instanceof ContextualTemporalCompositeUserType<?> temporal && temporal.hasPrecision() ) {
+			for ( boolean included : checkable ) {
+				if ( included ) { return !temporal.precisionEqual( old, current ); }
+			}
+			return false;
+		}
+		return super.isDirty( old, current, checkable, session );
+	}
+
+	@Override
+	public boolean isModified(Object old, Object current, boolean[] checkable, SharedSessionContractImplementor session) {
+		return compositeUserType instanceof ContextualTemporalCompositeUserType<?> temporal && temporal.hasPrecision()
+				? isDirty( old, current, checkable, session ) : super.isModified( old, current, checkable, session );
 	}
 
 	@Override
@@ -80,13 +105,21 @@ public class UserComponentType<T> extends ComponentType {
 	@Override
 	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException {
-		return disassemble( value, session.getFactory() );
+		final var state = compositeUserType instanceof ContextualTemporalCompositeUserType<?> temporal && temporal.hasPrecision()
+				? TemporalPreparedState.forEntity( owner, session ) : null;
+		return state != null && state.contains( compositeUserType )
+				? state.get( compositeUserType ) : disassemble( value, session.getFactory() );
 	}
 
 	@Override
 	public Object assemble(Serializable object, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException {
-		return object == null ? null : compositeUserType.assemble( object, owner );
+		final Object assembled = object == null ? null : compositeUserType.assemble( object, owner );
+		if ( compositeUserType instanceof ContextualTemporalCompositeUserType<?> temporal && temporal.hasPrecision() ) {
+			final var state = TemporalPreparedState.forEntity( owner, session );
+			if ( state != null ) { state.recordCacheValue( temporal, object ); }
+		}
+		return assembled;
 	}
 
 	@Override

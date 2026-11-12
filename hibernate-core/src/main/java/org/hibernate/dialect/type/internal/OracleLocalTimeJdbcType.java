@@ -22,7 +22,7 @@ import org.hibernate.type.descriptor.jdbc.internal.SetObjectBinder;
 /// LocalTime path can shift fields with differing client/session timezones and
 /// discards fractions; TIMESTAMP handling avoids both losses.
 ///
-/// @since 8.0
+/// @since 8.1
 /// @author Steve Ebersole
 public final class OracleLocalTimeJdbcType extends LocalTimeJdbcType {
 	public static final OracleLocalTimeJdbcType INSTANCE = new OracleLocalTimeJdbcType();

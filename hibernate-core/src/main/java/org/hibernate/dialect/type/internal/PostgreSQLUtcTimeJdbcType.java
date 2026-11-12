@@ -24,7 +24,7 @@ import org.hibernate.type.descriptor.jdbc.TimeUtcAsJdbcTimeJdbcType;
 /// descriptor accepts UTC-adjusted inputs only and is contributed only to the
 /// direct-enabled path. Mapping adjustment or COLUMN derivation supplies UTC.
 ///
-/// @since 8.0
+/// @since 8.1
 /// @author Steve Ebersole
 public final class PostgreSQLUtcTimeJdbcType extends TimeUtcAsJdbcTimeJdbcType {
 	public static final PostgreSQLUtcTimeJdbcType INSTANCE = new PostgreSQLUtcTimeJdbcType();

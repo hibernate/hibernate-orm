@@ -10,7 +10,7 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 ///
 /// @see org.hibernate.annotations.TimeZoneAdjustment
 ///
-/// @since 8.0
+/// @since 8.1
 /// @author Steve Ebersole
 public final class TemporalAdjustmentMutabilityPlan<T> implements MutabilityPlan<T> {
 	private final TemporalAdjustmentConverter<T> converter;

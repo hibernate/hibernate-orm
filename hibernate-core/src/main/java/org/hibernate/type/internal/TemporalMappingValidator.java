@@ -43,7 +43,7 @@ import static org.hibernate.dialect.temporaltype.spi.TemporalPreservation.Tempor
 /// Adjustment replaces offset/zone requirements only when the required primary
 /// information survives. No precision canonicalization occurs here.
 ///
-/// @since 8.0
+/// @since 8.1
 /// @author Steve Ebersole
 public final class TemporalMappingValidator {
 	private TemporalMappingValidator() {

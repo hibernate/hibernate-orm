@@ -22,9 +22,9 @@ import org.hibernate.Incubating;
 /// @see org.hibernate.cfg.MappingSettings#TEMPORAL_PRESERVATION_POLICY_OFFSET_DATETIME
 /// @see org.hibernate.cfg.MappingSettings#TEMPORAL_PRESERVATION_POLICY_OFFSET_TIME
 ///
-/// @since 8.0
+/// @since 8.1
 /// @author Steve Ebersole
-@Incubating(since = "8.0")
+@Incubating(since = "8.1")
 @Retention(RUNTIME)
 @Target({ FIELD, METHOD, TYPE, PACKAGE, MODULE })
 @Repeatable(TemporalPreservationPolicies.class)

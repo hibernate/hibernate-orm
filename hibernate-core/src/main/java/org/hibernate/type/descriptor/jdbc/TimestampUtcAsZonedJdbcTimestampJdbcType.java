@@ -16,7 +16,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 /// The legacy UTC-Calendar descriptor remains unchanged.
 ///
 /// @author Steve Ebersole
-/// @since 8.0
+/// @since 8.1
 public class TimestampUtcAsZonedJdbcTimestampJdbcType extends TimestampUtcAsJdbcTimestampJdbcType {
 	public static final TimestampUtcAsZonedJdbcTimestampJdbcType INSTANCE = new TimestampUtcAsZonedJdbcTimestampJdbcType();
 

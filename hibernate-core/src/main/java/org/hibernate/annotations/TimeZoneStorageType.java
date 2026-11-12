@@ -74,7 +74,7 @@ import org.hibernate.type.TimeZoneStorageStrategy;
  * @see TimeZoneStorage
  * @see TimeZoneStorageStrategy
  */
-@Deprecated(since = "8.0")
+@Deprecated(since = "8.1")
 public enum TimeZoneStorageType {
 	/**
 	 * Stores the timezone by using the {@code with time zone}

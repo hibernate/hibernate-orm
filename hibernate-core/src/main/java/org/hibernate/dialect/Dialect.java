@@ -2132,7 +2132,7 @@ public abstract class Dialect implements ConversionContext, AlterTableSupport,
 	/// An application override retains precedence unless it delegates to this method.
 	/// Adjustment and auxiliary storage are assessed by mapping validation.
 	///
-	/// @since 8.0
+	/// @since 8.1
 	@SPI({ IMPLEMENT, SUPPLY })
 	public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
 		final var contributed = TemporalPreservationHelper.assess( javaType, jdbcType, this );

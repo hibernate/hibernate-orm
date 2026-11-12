@@ -11,9 +11,9 @@ import static org.hibernate.dialect.temporaltype.spi.TemporalPreservation.Level.
 /// Conservative facts for exact built-in descriptor implementations. Platform
 /// assessments may supplement these facts without recognizing custom subclasses.
 ///
-/// @since 8.0
+/// @since 8.1
 /// @author Steve Ebersole
-@Incubating(since = "8.0")
+@Incubating(since = "8.1")
 public final class StandardTemporalPreservation {
 	private StandardTemporalPreservation() {
 	}

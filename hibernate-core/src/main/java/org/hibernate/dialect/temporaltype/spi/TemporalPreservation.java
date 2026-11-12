@@ -13,10 +13,10 @@ import static org.hibernate.SPI.Role.USE;
 ///
 /// @see org.hibernate.dialect.Dialect#getTemporalPreservation(JavaType, JdbcType)
 ///
-/// @since 8.0
+/// @since 8.1
 /// @author Steve Ebersole
 @SPI({ USE, SUPPLY })
-@Incubating( since = "8.0" )
+@Incubating( since = "8.1" )
 public record TemporalPreservation(
 		Level date,
 		Level time,

@@ -17,7 +17,7 @@ import org.hibernate.type.descriptor.jdbc.ZonedDateTimeJdbcType;
 /// Reject region identities that Oracle would replace with a fixed offset or alias.
 /// Driver metadata methods belong to this descriptor's classloader context.
 ///
-/// @since 8.0
+/// @since 8.1
 /// @author Steve Ebersole
 public final class OracleZonedDateTimeJdbcType extends ZonedDateTimeJdbcType {
 	private final Method regionId;

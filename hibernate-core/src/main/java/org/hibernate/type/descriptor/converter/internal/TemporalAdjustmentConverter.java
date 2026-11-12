@@ -16,7 +16,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 ///
 /// @see org.hibernate.annotations.TimeZoneAdjustment
 ///
-/// @since 8.0
+/// @since 8.1
 /// @author Steve Ebersole
 public final class TemporalAdjustmentConverter<T> implements BasicValueConverter<T, T> {
 	private final JavaType<T> javaType;

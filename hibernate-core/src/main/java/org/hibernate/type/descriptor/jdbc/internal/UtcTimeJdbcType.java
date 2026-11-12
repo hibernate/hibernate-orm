@@ -23,7 +23,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 /// mapping converter supplies UTC; extraction normalizes the primary clock to UTC
 /// before the converter restores the requested offset. No date is introduced.
 ///
-/// @since 8.0
+/// @since 8.1
 /// @author Steve Ebersole
 public final class UtcTimeJdbcType implements JdbcType {
 	private final JdbcType delegate;

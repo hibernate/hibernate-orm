@@ -11,7 +11,6 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /// Support for binding values directly through \`setObject\` JDBC driver calls.
 ///
-/// @since 8.0
 /// @author Steve Ebersole
 public class SetObjectBinder<T> extends BasicBinder<T> {
 	private final Class<?> baseClass;

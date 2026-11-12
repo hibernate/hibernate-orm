@@ -9,7 +9,7 @@ import org.hibernate.type.descriptor.jdbc.OffsetDateTimeJdbcType;
 
 /// Native Oracle OffsetDateTime handling with an enforced whole-minute offset domain.
 ///
-/// @since 8.0
+/// @since 8.1
 /// @author Steve Ebersole
 public final class OracleOffsetDateTimeJdbcType extends OffsetDateTimeJdbcType {
 	public static final OracleOffsetDateTimeJdbcType INSTANCE = new OracleOffsetDateTimeJdbcType();

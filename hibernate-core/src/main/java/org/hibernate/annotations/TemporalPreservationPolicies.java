@@ -10,9 +10,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /// Repeatable container for [TemporalPreservationPolicy].
 ///
-/// @since 8.0
+/// @since 8.1
 /// @author Steve Ebersole
-@Incubating(since = "8.0")
+@Incubating(since = "8.1")
 @Retention(RUNTIME)
 @Target({ FIELD, METHOD, TYPE, PACKAGE, MODULE })
 public @interface TemporalPreservationPolicies {

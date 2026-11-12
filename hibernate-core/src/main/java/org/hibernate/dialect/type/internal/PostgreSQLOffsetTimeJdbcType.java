@@ -24,7 +24,7 @@ import org.hibernate.type.descriptor.jdbc.OffsetTimeJdbcType;
 /// rather than passing the JDBC TIME_WITH_TIMEZONE target type. Reading the server representation
 /// avoids typed end-of-day corruption and binary getString offset adjustment.
 ///
-/// @since 8.0
+/// @since 8.1
 /// @author Steve Ebersole
 public final class PostgreSQLOffsetTimeJdbcType extends OffsetTimeJdbcType {
 	public static final PostgreSQLOffsetTimeJdbcType INSTANCE = new PostgreSQLOffsetTimeJdbcType();

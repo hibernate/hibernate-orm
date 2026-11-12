@@ -218,10 +218,6 @@ public final class PropertyValueAccessor {
 			throw e;
 		}
 		catch (Throwable t) {
-			if ( t instanceof InterruptedException ie ) {
-				Thread.currentThread().interrupt();
-				throw sneakyThrow( ie );
-			}
 			throw new org.hibernate.PropertyAccessException(
 					t,
 					"Accessing the underlying property resulted in an exception: " + t.getMessage(),
@@ -248,10 +244,6 @@ public final class PropertyValueAccessor {
 					throw e;
 				}
 				catch (Throwable t) {
-					if ( t instanceof InterruptedException ie ) {
-						Thread.currentThread().interrupt();
-						throw sneakyThrow( ie );
-					}
 					throw new org.hibernate.PropertyAccessException(
 							t,
 							"Accessing the underlying property resulted in an exception: " + t.getMessage(),

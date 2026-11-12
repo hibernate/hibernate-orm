@@ -61,7 +61,6 @@ jbossTxSpi = "9.0.0.Final"
 log4j = "2.26.1"
 mockito = "5.24.0"
 shrinkwrap = "2.0.0.Final"
-shrinkwrapDescriptors = "2.0.0"
 weld = "6.0.4.Final"
 weldJunit = "6.0.0.Final"
 wildFlyTxnClient = "3.0.5.Final"
@@ -228,7 +227,6 @@ test-hamcrest = { group = "org.hamcrest", name = "hamcrest", version.ref = "hamc
 test-log4j2 = { group = "org.apache.logging.log4j", name = "log4j-core", version.ref = "log4j" }
 test-log4j2Slf4j = { group = "org.apache.logging.log4j", name = "log4j-slf4j2-impl", version.ref = "log4j" }
 test-shrinkwrap = { group = "org.jboss.shrinkwrap", name = "shrinkwrap-impl-base", version.ref = "shrinkwrap" }
-test-shrinkwrapDescriptors = { group = "org.jboss.shrinkwrap.descriptors", name = "shrinkwrap-descriptors-impl-javaee", version.ref = "shrinkwrapDescriptors" }
 test-mockito = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
 test-mockitoJunitJupiter = { group = "org.mockito", name = "mockito-junit-jupiter", version.ref = "mockito" }
 test-jbossJta = { group = "org.jboss.narayana.jta", name = "narayana-jta", version.ref = "jbossJta" }

@@ -57,7 +57,6 @@ dependencies {
     testImplementation libs.test.junit4Engine
 
     testImplementation libs.test.shrinkwrap
-    testImplementation libs.test.shrinkwrapDescriptors
     testImplementation libs.jakarta.cdi
     testImplementation libs.jakarta.data
     testImplementation libs.jakarta.jacc

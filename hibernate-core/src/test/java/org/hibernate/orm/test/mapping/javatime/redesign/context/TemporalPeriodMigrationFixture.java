@@ -8,6 +8,15 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.HashMap;
+
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.temporal.internal.OracleTemporalTableSupport;
+import org.hibernate.dialect.temporal.spi.TemporalTableSupport;
+import org.hibernate.dialect.temporal.spi.TemporalPeriodPrecisionContext;
+import org.hibernate.dialect.temporal.spi.TemporalPeriodPrecisionSupport;
+import org.hibernate.type.descriptor.DateTimeUtils;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsPlainJdbcTimestampJdbcType;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -31,21 +40,53 @@ final class TemporalPeriodMigrationFixture {
 		this.profile = profile; this.server = server; this.metadata = metadata;
 	}
 	Map<String, Object> settings(boolean target) {
-		return TemporalPeriodFixture.settings( target, "HISTORY_TABLE", server, new TemporalPeriodFixture.Fixed() );
+		var settings = TemporalPeriodFixture.settings( target, "HISTORY_TABLE", server, new TemporalPeriodFixture.Fixed() );
+		settings.putAll( retainedPrecision() );
+		return settings;
 	}
 	void provision() {
 		try ( var scope = ContextScope.boot( true, false, settings( false ), TemporalPeriodFixture.Period.class ) ) {
 			scope.factory.getSchemaManager().create( false );
 		}
 	}
+	// This fixture isolates timezone encoding migration on the established p6 schema.
+	// Oracle's stock p9 adoption is a separate precision migration, not a reason to
+	// silently change the historical fixture or its verified source interpretation.
+	Map<String, Object> retainedPrecision() {
+		return ContextEnvironment.is( OracleDialect.class )
+				? Map.of( "hibernate.dialect", RetainedMicrosOracleDialect.class ) : Map.of();
+	}
+
 	TemporalPeriodFixture fixture(boolean target, boolean negative) throws Exception {
+		var extra = new HashMap<String, Object>( retainedPrecision() );
+		if ( negative ) {
+			extra.put( "hibernate.physical_naming_strategy", new PhysicalNamingStrategyStandardImpl() {
+				@Override public Identifier toPhysicalTableName(Identifier name, JdbcEnvironment environment) {
+					return Identifier.toIdentifier( "neg_" + name.getText() );
+				}
+			} );
+		}
 		return new TemporalPeriodFixture( target ? metadata : true, "HISTORY_TABLE", server,
-				TemporalPeriodFixture.Period.class, target, false, negative ? Map.of(
-						"hibernate.physical_naming_strategy", new PhysicalNamingStrategyStandardImpl() {
-					@Override public Identifier toPhysicalTableName(Identifier name, JdbcEnvironment environment) {
-						return Identifier.toIdentifier( "neg_" + name.getText() );
+				TemporalPeriodFixture.Period.class, target, false, extra );
+	}
+
+	public static class RetainedMicrosOracleDialect extends OracleDialect {
+		@Override public TemporalTableSupport getTemporalTableSupport() {
+			return new OracleTemporalTableSupport( this ) {
+				@Override public int getTemporalColumnPrecision() { return 6; }
+				@Override
+				public TemporalPeriodPrecisionSupport getTemporalPeriodPrecisionSupport(TemporalPeriodPrecisionContext context) {
+					if ( context.precision() == 6 && context.ddlType().equals( "timestamp(6)" )
+							&& context.jdbcType().getClass() == TimestampUtcAsPlainJdbcTimestampJdbcType.class
+							&& (context.source() == TemporalPeriodPrecisionContext.Source.JAVA
+								|| context.source() == TemporalPeriodPrecisionContext.Source.FETCHED) ) {
+						return TemporalPeriodPrecisionSupport.supported( "retained-oracle-utc-micros-" + context.source(),
+								value -> DateTimeUtils.roundToSecondPrecision( value, 6 ), null );
 					}
-				} ) : Map.of() );
+					return TemporalPeriodPrecisionSupport.unsupported( "Unassessed retained Oracle period route" );
+				}
+			};
+		}
 	}
 
 	Properties write() throws Exception {

@@ -119,6 +119,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.settings.AdjustableSettings;
 import org.hibernate.settings.internal.AdjustableSettingsImpl;
 import org.hibernate.temporal.spi.ChangesetCoordinator;
+import org.hibernate.temporal.internal.PeriodPrecision;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
@@ -242,6 +243,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	final transient ParameterMarkerStrategy parameterMarkerStrategy;
 	final transient JdbcValuesMappingProducerProvider jdbcValuesMappingProducerProvider;
 	final transient ChangesetCoordinator changesetCoordinator;
+	private final transient PeriodPrecision temporalPeriodPrecision;
 
 	private final PlanningOptions graphPlanningOptions;
 	private final transient ActionQueueFactory actionQueueFactory;
@@ -317,6 +319,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 			bootMetamodel.orderColumns( false );
 			bootMetamodel.validate();
+			temporalPeriodPrecision = PeriodPrecision.resolve( bootMetamodel, this );
 
 			primeSecondLevelCacheRegions( bootMetamodel );
 
@@ -1502,6 +1505,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return multiTenantConnectionProvider != null
 				? multiTenantConnectionProvider.handlesConnectionSchema()
 				: connectionProvider.handlesConnectionSchema();
+	}
+
+	@Override
+	public PeriodPrecision getTemporalPeriodPrecision() {
+		return temporalPeriodPrecision;
 	}
 
 	@Override

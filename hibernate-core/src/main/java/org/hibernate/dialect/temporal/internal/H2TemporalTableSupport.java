@@ -1,5 +1,8 @@
 package org.hibernate.dialect.temporal.internal;
 
+import org.hibernate.dialect.temporal.spi.TemporalPeriodPrecisionContext;
+import org.hibernate.dialect.temporal.spi.TemporalPeriodPrecisionSupport;
+
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -27,4 +30,9 @@ public class H2TemporalTableSupport extends DefaultTemporalTableSupport {
 				: org.hibernate.dialect.temporaltype.internal.PreservingCurrentTimestamp.expression(
 						dialect, org.hibernate.type.descriptor.java.InstantJavaType.INSTANCE, jdbcType );
 	}
+	@Override
+	public TemporalPeriodPrecisionSupport getTemporalPeriodPrecisionSupport(TemporalPeriodPrecisionContext context) {
+		return StandardPeriodPrecision.resolve( dialect, context );
+	}
+
 }

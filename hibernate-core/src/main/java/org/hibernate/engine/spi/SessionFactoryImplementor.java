@@ -37,6 +37,7 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sql.spi.SqlTranslationEngine;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.temporal.spi.ChangesetCoordinator;
+import org.hibernate.temporal.internal.PeriodPrecision;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.exec.internal.JdbcSelectWithActions;
@@ -271,6 +272,11 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 */
 	@Nonnull
 	ChangesetCoordinator getChangesetCoordinator();
+
+	/// The resolved Instant period contract, or null for legacy/no timestamp periods.
+	default PeriodPrecision getTemporalPeriodPrecision() {
+		return null;
+	}
 
 	/**
 	 * Configuration for graph planning as part of the ActionQueue.

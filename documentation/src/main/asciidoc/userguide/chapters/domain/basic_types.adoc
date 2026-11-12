@@ -990,6 +990,38 @@ the guarantees. Member-level `AUTO`, `DEFAULT`, and `NORMALIZE` require an expli
 compatibility mode. An explicitly configured global legacy policy may also require narrower declarations;
 setting adjustment to NONE alone does not replace its storage choice.
 
+[[basic-temporal-period-precision]]
+===== Precision of temporal history periods
+
+With `hibernate.type.temporal_preservation=true`, timestamp periods declared using
+`org.hibernate.annotations.Temporal` share one Dialect-selected precision and storage contract
+within a `SessionFactory`. This covers both endpoints of temporal entities and collections,
+including collections on non-temporal entities. It does not change ordinary attribute,
+`@Version`, or Envers revision timestamp precision.
+
+Hibernate prepares a Java-generated changeset timestamp once before publishing it and reuses
+that value throughout the transaction. A custom timestamp supplier may therefore see its
+fractional nanoseconds adjusted to the supported period grid. This does not guarantee distinct
+timestamps for different transactions. An application-owned `@Changelog` Instant identifier
+must already be representable: Hibernate rejects an incompatible identifier instead of changing
+its identity. Other identifier types retain their existing behavior.
+
+`@Temporal.secondPrecision` is deprecated. Omit it to use the Dialect contract; a matching
+explicit value remains accepted, while a conflicting value fails bootstrap. The selected
+contract requires matching physical period columns. Resolution uses mapping information and
+does not require JDBC metadata access at boot. Assess retained column precision separately; type-only schema validation does not prove fractional precision.
+
+Supported database-generated timestamps must meet the same storage contract. Native period
+values remain database-owned; support for a Java timestamp route alone does not establish
+support for a server or native route. Custom Dialects may contribute an explicit period contract
+through `TemporalTableSupport.getTemporalPeriodPrecisionSupport()`.
+
+Historical query arguments are comparison boundaries and are not rounded to the period grid.
+A temporal collection on a non-temporal owner supplies collection history only: its owner's
+state is still current. For existing schemas, `temporal_preservation=false` retains legacy
+per-mapping period precision and timestamp handling. This is a broad temporal compatibility
+switch, not a precision-only override; see the migration guide before enabling preservation.
+
 [[basic-temporal-custom-descriptors]]
 ===== Custom temporal descriptors
 

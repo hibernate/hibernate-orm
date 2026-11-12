@@ -2,6 +2,9 @@ package org.hibernate.dialect.temporal.internal;
 
 import java.util.List;
 
+import org.hibernate.dialect.temporal.spi.TemporalPeriodPrecisionContext;
+import org.hibernate.dialect.temporal.spi.TemporalPeriodPrecisionSupport;
+
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.temporal.spi.TemporalRestrictionRequest;
 import org.hibernate.dialect.temporal.spi.TemporalTableAuxiliaryObject;
@@ -122,6 +125,11 @@ public class OracleTemporalTableSupport extends DefaultTemporalTableSupport {
 		final var descriptor = registry.getDescriptor( getTemporalColumnType() );
 		return descriptor.getClass() == org.hibernate.type.descriptor.jdbc.TimestampJdbcType.class
 				? org.hibernate.type.descriptor.jdbc.TimestampUtcAsPlainJdbcTimestampJdbcType.INSTANCE : descriptor;
+	}
+
+	@Override
+	public TemporalPeriodPrecisionSupport getTemporalPeriodPrecisionSupport(TemporalPeriodPrecisionContext context) {
+		return StandardPeriodPrecision.resolve( dialect, context );
 	}
 
 }

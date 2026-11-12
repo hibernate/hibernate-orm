@@ -243,24 +243,24 @@ class TemporalCollectionHistoryRepairTests {
 	}
 
 	@Entity(name = "HistoryRepairOwner") @Table(name = "chr_owner")
-	@Temporal(rowStart = "valid_from", rowEnd = "valid_to", secondPrecision = 6)
+	@Temporal(rowStart = "valid_from", rowEnd = "valid_to")
 	static class Owner {
 		@Id int id;
 		@ElementCollection @CollectionTable(name = "chr_items", joinColumns = @JoinColumn(name = "owner_id"))
 		@OrderColumn(name = "item_position") @Column(name = "entry_value", nullable = false)
-		@Temporal(rowStart = "valid_from", rowEnd = "valid_to", secondPrecision = 6)
+		@Temporal(rowStart = "valid_from", rowEnd = "valid_to")
 		List<String> items = new ArrayList<>();
 		@ElementCollection @CollectionTable(name = "chr_names", joinColumns = @JoinColumn(name = "owner_id"))
 		@Column(name = "entry_value", nullable = false)
-		@Temporal(rowStart = "valid_from", rowEnd = "valid_to", secondPrecision = 6)
+		@Temporal(rowStart = "valid_from", rowEnd = "valid_to")
 		Set<String> names = new HashSet<>();
 		@ElementCollection @CollectionTable(name = "chr_labels", joinColumns = @JoinColumn(name = "owner_id"))
 		@MapKeyColumn(name = "entry_key") @Column(name = "entry_value", nullable = false)
-		@Temporal(rowStart = "valid_from", rowEnd = "valid_to", secondPrecision = 6)
+		@Temporal(rowStart = "valid_from", rowEnd = "valid_to")
 		Map<String, String> labels = new HashMap<>();
 		@ElementCollection @CollectionTable(name = "chr_bag", joinColumns = @JoinColumn(name = "owner_id"))
 		@Column(name = "entry_value", nullable = false)
-		@Temporal(rowStart = "valid_from", rowEnd = "valid_to", secondPrecision = 6)
+		@Temporal(rowStart = "valid_from", rowEnd = "valid_to")
 		List<String> bag = new ArrayList<>();
 	}
 }

@@ -150,8 +150,14 @@ public @interface Temporal {
 	/**
 	 * The fractional seconds precision for both temporal columns.
 	 *
+	 * @deprecated Since 8.1, enabled {@linkplain org.hibernate.cfg.MappingSettings#TEMPORAL_PRESERVATION temporal preservation}
+	 * uses the Dialect-selected precision for all timestamp periods sharing a changeset.
+	 * A matching explicit value is accepted; a conflicting value requires schema migration or deliberate
+	 * legacy mode. With temporal preservation disabled, this member retains its previous per-mapping meaning.
+	 *
 	 * @see jakarta.persistence.Column#secondPrecision()
 	 */
+	@Deprecated(since = "8.1", forRemoval = false)
 	int secondPrecision() default -1;
 
 	/**

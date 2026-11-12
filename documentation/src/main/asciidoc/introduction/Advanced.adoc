@@ -264,6 +264,17 @@ class Document {
 }
 ----
 
+With temporal preservation enabled (the default), the Dialect selects a shared timestamp
+precision for all temporal entities and collections in the session factory. Hibernate prepares
+a Java-generated changeset timestamp once and uses it for all participating period boundaries.
+`@Temporal.secondPrecision` is deprecated: a conflicting explicit precision is rejected.
+Existing schemas must match the selected precision; compatibility mode
+(`hibernate.type.temporal_preservation=false`) retains their previous interpretation and
+per-mapping precision. No JDBC metadata access at boot is required.
+
+The instant passed to a historical query is not rounded. A temporal collection may belong to
+a non-temporal entity, but this supplies history for the collection only, not its owner.
+
 By default, a session or stateless session reads the currently effective version of any temporal entity.
 To read historical versions effective at a given instant, we must specify the instant when creating the session or stateless session.
 

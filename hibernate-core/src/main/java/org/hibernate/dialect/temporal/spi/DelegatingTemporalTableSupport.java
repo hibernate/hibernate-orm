@@ -116,4 +116,9 @@ public abstract class DelegatingTemporalTableSupport implements TemporalTableSup
 		return delegate.getPreservingTemporalCurrentTimestampExpression( strategy, jdbcType );
 	}
 
+	@Override
+	public TemporalPeriodPrecisionSupport getTemporalPeriodPrecisionSupport(TemporalPeriodPrecisionContext context) {
+		return delegate.getTemporalPeriodPrecisionSupport( context );
+	}
+
 }

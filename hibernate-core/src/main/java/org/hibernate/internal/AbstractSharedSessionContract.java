@@ -1255,11 +1255,29 @@ abstract class AbstractSharedSessionContract
 		}
 		if ( changesetIdSupplier instanceof ChangelogSupplier<?> changelogSupplier ) {
 			final var changesetContext = changelogSupplier.generateContext( this );
+			try {
+				preparePeriodChangeset( changesetContext.changesetId(), true );
+			}
+			catch (RuntimeException | Error failure) {
+				// Registration has not transferred ownership of the child session yet.
+				try {
+					changesetContext.changesetSession().close();
+				}
+				catch (RuntimeException | Error cleanup) {
+					failure.addSuppressed( cleanup );
+				}
+				throw failure;
+			}
 			currentChangesetContext = changesetContext;
 			changelogSupplier.registerLegacyContext( this, changesetContext );
 			return changesetContext.changesetId();
 		}
-		return changesetIdSupplier.generateIdentifier( this );
+		return preparePeriodChangeset( changesetIdSupplier.generateIdentifier( this ), false );
+	}
+
+	private Object preparePeriodChangeset(Object identifier, boolean applicationOwned) {
+		final var precision = factory.getTemporalPeriodPrecision();
+		return precision == null ? identifier : precision.prepare( identifier, applicationOwned );
 	}
 
 	@Override

@@ -300,6 +300,35 @@ declaration alone does not establish conversion compatibility. Existing Dialect 
 remain valid; see the link:{userGuideBase}#basic-temporal-custom-descriptors[custom descriptor SPI]
 for precedence, inheritance responsibilities and custom-domain limits.
 
+==== Shared temporal period precision
+
+Enabled temporal preservation now selects one Dialect period precision/storage contract for
+all Instant-based temporal entities and collections in a session factory. The deprecated
+`@Temporal.secondPrecision` accepts matching explicit values but rejects conflicts. Custom
+period descriptors and producers need an explicit compatible period precision contribution.
+Ordinary attributes, versions and Envers revision timestamp mappings are unaffected by this
+period-specific change.
+
+Before enabling it on an existing history schema, inventory both endpoints of entity and
+collection periods, auxiliary history tables, native generated columns, and custom changeset
+suppliers. Align the physical columns before removing conflicting annotation declarations.
+Removing an annotation alone does not migrate the schema. JDBC-metadata-disabled bootstrap
+remains supported; use migration analysis or an explicit catalog precision check. Type-only schema validation does not prove fractional precision.
+
+Temporarily retaining `hibernate.type.temporal_preservation=false` preserves legacy per-mapping
+precision and timestamp interpretation, but also disables the broader preservation guarantees.
+A deployment needing a different uniform grid may supply a custom Dialect period contract
+covering storage, JDBC transport and generation together; overriding only the precision integer
+is not sufficient evidence of that contract.
+
+Widening precision cannot recover lost fractions or repair existing gaps and overlaps. Narrowing
+can collapse boundaries, create zero-length intervals and collide with period-based keys. Do not
+apply a blanket rounding update. Native temporal table changes may require database-specific
+system-versioning procedures. Analyze timezone encoding changes separately from precision changes.
+Coordinate writers using the schema, validate historical queries around affected boundaries,
+and evict affected historical/query caches. The migration-recipes handoff includes these checks
+and reviewable provider-specific migration plans; it is not an automatic safe rewrite guarantee.
+
 ==== Existing schemas and data
 
 Changing the flag does not migrate schema or stored values. A blanket timestamp rewrite is not required:

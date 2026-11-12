@@ -96,4 +96,13 @@ public interface TemporalTableSupport {
 		return null;
 	}
 
+	/// Assess the actual period storage and generation route without boot JDBC access.
+	/// A fractional precision alone is not a certification of the execution path.
+	/// Legacy mode does not call this method.
+	///
+	/// @since 8.1
+	default TemporalPeriodPrecisionSupport getTemporalPeriodPrecisionSupport(TemporalPeriodPrecisionContext context) {
+		return TemporalPeriodPrecisionSupport.unsupported( "No period precision contribution for the actual storage and producer" );
+	}
+
 }

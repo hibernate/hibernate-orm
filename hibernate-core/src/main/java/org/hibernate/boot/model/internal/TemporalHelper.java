@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.MappingException;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
@@ -19,6 +20,7 @@ import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PrimaryKey;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Stateful;
 import org.hibernate.mapping.Table;
@@ -63,22 +65,22 @@ public class TemporalHelper {
 								"history", table, collector )
 						: null;
 
+		final String owner = target instanceof Collection collection
+				? collection.getRole() : ((PersistentClass) target).getEntityName();
 		final int secondPrecision = temporal.secondPrecision();
 		final Integer precision = secondPrecision == -1 ? null : secondPrecision;
 		final var rowStartColumn =
 				createTemporalColumn( temporal.rowStart(),
-						table, false, precision, context );
+						table, false, precision, owner + "." + ROW_START, context );
 		final var rowEndColumn =
 				createTemporalColumn( temporal.rowEnd(),
-						table, true, precision, context );
+						table, true, precision, owner + "." + ROW_END, context );
 		handleTemporalColumnGeneration( rowStartColumn, rowEndColumn, context );
 
 		final var temporalTable =
 				context.getTemporalTableStrategy() == TemporalTableStrategy.HISTORY_TABLE
 						? createHistoryTable( table, historyTable, context )
 						: table;
-		final String owner = target instanceof org.hibernate.mapping.Collection collection
-				? collection.getRole() : ((org.hibernate.mapping.PersistentClass) target).getEntityName();
 		for ( var column : new Column[] { rowStartColumn, rowEndColumn } ) {
 			((BasicValue) column.getValue()).setSystemPeriodContext(
 					() -> owner + "." + (column == rowStartColumn ? ROW_START : ROW_END)
@@ -372,6 +374,7 @@ public class TemporalHelper {
 			Table table,
 			boolean nullable,
 			Integer temporalPrecision,
+			String role,
 			MetadataBuildingContext context) {
 		final var database = context.getMetadataCollector().getDatabase();
 		final var basicValue = new BasicValue( context, table );
@@ -386,7 +389,7 @@ public class TemporalHelper {
 				context.getBuildingOptions().getPhysicalNamingStrategy() );
 		context.getMetadataCollector().addSecondPass( (OptionalDeterminationSecondPass) ignored -> {
 			final var changesetIdJavaType = getChangesetIdType( context );
-			setTemporalColumnType( temporalPrecision, column, database, changesetIdJavaType,
+			setTemporalColumnType( temporalPrecision, column, database, changesetIdJavaType, role, context.getTemporalTableStrategy(),
 					context.isTemporalPreservationEnabled() );
 			if ( Instant.class.equals( changesetIdJavaType ) ) {
 				final int temporalColumnType = database.getDialect().getTemporalTableSupport().getTemporalColumnType();
@@ -434,8 +437,21 @@ public class TemporalHelper {
 			Column column,
 			Database database,
 			Class<?> changesetIdJavaType,
+			String role,
+			TemporalTableStrategy strategy,
 			boolean preservation) {
-		if ( temporalPrecision != null ) {
+		if ( preservation && Instant.class.equals( changesetIdJavaType ) ) {
+			final int selected = database.getDialect().getTemporalTableSupport().getTemporalColumnPrecision();
+			if ( temporalPrecision != null && temporalPrecision != selected ) {
+				throw new MappingException( "Temporal period precision conflict for "
+						+ role + " [strategy=" + strategy + ", column=" + column.getName() + "]"
+						+ ": declared " + temporalPrecision + ", Dialect-selected " + selected
+						+ " (" + database.getDialect().getClass().getSimpleName() + "). Align period schemas and remove"
+						+ " conflicting @Temporal.secondPrecision declarations, or use temporal_preservation=false for legacy interpretation" );
+			}
+			column.setTemporalPrecision( selected );
+		}
+		else if ( temporalPrecision != null ) {
 			column.setTemporalPrecision( temporalPrecision );
 		}
 		else if ( Instant.class.equals( changesetIdJavaType ) ) {

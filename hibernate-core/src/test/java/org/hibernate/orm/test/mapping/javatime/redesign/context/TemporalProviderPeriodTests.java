@@ -8,11 +8,18 @@ import jakarta.persistence.Id;
 import org.hibernate.annotations.JdbcTypeRegistration;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.dialect.*;
+import org.hibernate.dialect.temporal.internal.H2TemporalTableSupport;
+import org.hibernate.dialect.temporal.spi.TemporalTableSupport;
+import org.hibernate.dialect.temporal.spi.TemporalPeriodPrecisionContext;
+import org.hibernate.dialect.temporal.spi.TemporalPeriodPrecisionSupport;
+import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.dialect.temporaltype.spi.StandardTemporalPreservation;
 import org.hibernate.dialect.temporaltype.spi.TemporalPreservation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.mapping.BasicValue;
+import org.hibernate.type.descriptor.java.InstantJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.TemporalJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
@@ -97,6 +104,46 @@ class TemporalProviderPeriodTests {
 		}
 	}
 
+	@ParameterizedTest
+	@ValueSource(booleans = { true, false })
+	void actualPeriodTransportHasTheContributedPrecision(boolean metadata) {
+		try ( var scope = ContextScope.open( metadata, false,
+				TemporalPeriodFixture.settings( true, "HISTORY_TABLE", false, new TemporalPeriodFixture.Fixed() ),
+				List.of(), TemporalPeriodFixture.DefaultPrecision.class ) ) {
+			final var column = scope.metadata.getEntityBinding( TemporalPeriodFixture.DefaultPrecision.class.getName() )
+					.getAuxiliaryColumn( "rowStart" );
+			final var jdbc = ((BasicValue) column.getValue()).resolve().getJdbcType();
+			final var precision = column.getTemporalPrecision();
+			assertThat( precision ).isIn( 6, 9 );
+			final String select = "select cast(? as " + column.getSqlType( scope.metadata ) + "), cast(? as "
+					+ column.getSqlType( scope.metadata ) + ")"
+					+ (scope.factory.getJdbcServices().getDialect() instanceof OracleDialect ? " from dual" : "");
+			scope.tx( session -> session.doWork( connection -> {
+				for ( String[] vector : List.of(
+						new String[] { "2026-01-01T12:00:00.123456499Z", "2026-01-01T12:00:00.123456Z" },
+						new String[] { "2026-01-01T12:00:00.123456500Z", "2026-01-01T12:00:00.123457Z" },
+						new String[] { "2026-01-01T12:00:00.123456501Z", "2026-01-01T12:00:00.123457Z" },
+						new String[] { "1969-12-31T23:59:59.999999500Z", "1970-01-01T00:00:00Z" },
+						new String[] { "2026-12-31T23:59:59.999999500Z", "2027-01-01T00:00:00Z" } ) ) {
+					final var raw = Instant.parse( vector[0] );
+					final var expected = precision == 9 ? raw : Instant.parse( vector[1] );
+					final var prepared = (Instant) scope.factory.getTemporalPeriodPrecision().prepare( raw, false );
+					assertThat( prepared ).isEqualTo( expected );
+					try ( var statement = connection.prepareStatement( select ) ) {
+						final var options = (SharedSessionContractImplementor) session;
+						jdbc.getBinder( InstantJavaType.INSTANCE ).bind( statement, raw, 1, options );
+						jdbc.getBinder( InstantJavaType.INSTANCE ).bind( statement, prepared, 2, options );
+						try ( var rows = statement.executeQuery() ) {
+							assertThat( rows.next() ).isTrue();
+							assertThat( jdbc.getExtractor( InstantJavaType.INSTANCE ).extract( rows, 1, options ) ).isEqualTo( expected );
+							assertThat( jdbc.getExtractor( InstantJavaType.INSTANCE ).extract( rows, 2, options ) ).isEqualTo( expected );
+						}
+					}
+				}
+			} ) );
+		}
+	}
+
 	static List<String> strategies() {
 		return ContextEnvironment.is( OracleDialect.class )
 				?List.of("HISTORY_TABLE"):List.of("SINGLE_TABLE","HISTORY_TABLE");
@@ -117,9 +164,10 @@ class TemporalProviderPeriodTests {
 		}
 	}
 	@ParameterizedTest @ValueSource(booleans={true,false})
-	void explicitAndDefaultPrecision(boolean metadata) throws Exception {
+	void legacyExplicitAndPreservingDefaultPrecision(boolean metadata) throws Exception {
 		for(var type:List.of(TemporalPeriodFixture.Millis.class,TemporalPeriodFixture.DefaultPrecision.class)) {
-			try(var f=new TemporalPeriodFixture(metadata,"HISTORY_TABLE",false,type)) {
+			try(var f=new TemporalPeriodFixture(metadata,"HISTORY_TABLE",false,type,
+					type != TemporalPeriodFixture.Millis.class, true, Map.of())) {
 				assertThat(f.precision).isEqualTo(type==TemporalPeriodFixture.Millis.class?3:f.scope.factory.getJdbcServices().getDialect().getTemporalTableSupport().getTemporalColumnPrecision());
 				var aligned=Arrays.stream(TemporalPeriodFixture.SEASONAL).map(i->i.minusNanos(i.getNano()%f.tick)).toArray(Instant[]::new);
 				f.lifecycle(1,aligned);
@@ -149,6 +197,7 @@ class TemporalProviderPeriodTests {
 		var settings=new HashMap<String,Object>();
 		settings.put("hibernate.type.temporal_preservation",true);settings.put("hibernate.temporal.table_strategy","HISTORY_TABLE");
 		settings.put("hibernate.temporal.changeset_id_supplier",new TemporalPeriodFixture.Fixed());
+		settings.put("hibernate.dialect", CustomPrecisionDialect.class);
 		try(var scope=ContextScope.open(metadata,false,settings,List.of(),CustomPeriod.class)) {
 			scope.tx(s->{var row=new CustomPeriod();row.id=1;s.persist(row);});
 			scope.tx(s->assertThat(s.find(CustomPeriod.class,1)).isNotNull());
@@ -166,12 +215,29 @@ class TemporalProviderPeriodTests {
 						"hibernate.dialect", dialect,
 						"jakarta.persistence.database-product-version", "23.26.1",
 						"hibernate.type.temporal_preservation", true,
-						"hibernate.temporal.table_strategy", strategy ), TemporalPeriodFixture.Period.class ) ) {}
+						"hibernate.temporal.table_strategy", strategy ), TemporalPeriodFixture.DefaultPrecision.class ) ) {}
 			} ).hasMessageContaining( "No preserving system-period profile" ).hasMessageContaining( strategy );
 		}
 	}
 	public static class UnassessedDialect extends Dialect {
 		public UnassessedDialect() { super( org.hibernate.dialect.DatabaseVersion.make( 1 ) ); }
+	}
+	public static class CustomPrecisionDialect extends H2Dialect {
+		@Override
+		public TemporalTableSupport getTemporalTableSupport() {
+			return new H2TemporalTableSupport( this ) {
+				@Override
+				public TemporalPeriodPrecisionSupport getTemporalPeriodPrecisionSupport(TemporalPeriodPrecisionContext context) {
+					if ( context.jdbcType().getClass() == CustomUtc.class
+							&& context.source() == TemporalPeriodPrecisionContext.Source.JAVA
+							&& context.precision() == 6 && context.ddlType().equals( "timestamp(6)" ) ) {
+						return TemporalPeriodPrecisionSupport.supported( "custom-utc-micros-java",
+								value -> DateTimeUtils.roundToSecondPrecision( value, 6 ), null );
+					}
+					return super.getTemporalPeriodPrecisionSupport( context );
+				}
+			};
+		}
 	}
 	public static class CustomUtc extends TimestampUtcAsJdbcTimestampJdbcType implements TemporalJdbcType {
 		@Override public int getDdlTypeCode(){return SqlTypes.TIMESTAMP;}

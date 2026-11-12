@@ -2,6 +2,9 @@ package org.hibernate.dialect.temporal.internal;
 
 import java.util.List;
 
+import org.hibernate.dialect.temporal.spi.TemporalPeriodPrecisionContext;
+import org.hibernate.dialect.temporal.spi.TemporalPeriodPrecisionSupport;
+
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.temporal.spi.TemporalTableAuxiliaryObject;
 import org.hibernate.dialect.temporal.spi.TemporalTableDdlRequest;
@@ -73,6 +76,11 @@ public class PostgreSQLTemporalTableSupport extends DefaultTemporalTableSupport 
 		return strategy == org.hibernate.temporal.TemporalTableStrategy.NATIVE ? null
 				: org.hibernate.dialect.temporaltype.internal.PreservingCurrentTimestamp.expression(
 						dialect, org.hibernate.type.descriptor.java.InstantJavaType.INSTANCE, jdbcType );
+	}
+
+	@Override
+	public TemporalPeriodPrecisionSupport getTemporalPeriodPrecisionSupport(TemporalPeriodPrecisionContext context) {
+		return StandardPeriodPrecision.resolve( dialect, context );
 	}
 
 }

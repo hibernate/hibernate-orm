@@ -9,6 +9,11 @@ import org.hibernate.annotations.JdbcTypeRegistration;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.temporal.internal.H2TemporalTableSupport;
+import org.hibernate.dialect.temporal.spi.TemporalTableSupport;
+import org.hibernate.dialect.temporal.spi.TemporalPeriodPrecisionContext;
+import org.hibernate.dialect.temporal.spi.TemporalPeriodPrecisionSupport;
+import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.dialect.temporaltype.spi.StandardTemporalPreservation;
 import org.hibernate.dialect.temporaltype.spi.TemporalPreservation;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -35,6 +40,11 @@ class TemporalPreservingContributionTests {
 					Map.of( MappingSettings.TEMPORAL_PRESERVATION, true ), CustomPeriod.class ) ) { }
 		} ).hasMessageContaining( "INSTANT" ).hasMessageContaining( "UNKNOWN" );
 
+		assertThatThrownBy( () -> {
+			try ( var ignored = ContextScope.boot( metadata, false,
+					Map.of( MappingSettings.TEMPORAL_PRESERVATION, true, "hibernate.dialect", PreservationOnly.class ), CustomPeriod.class ) ) {}
+		} ).hasMessageContaining( "Unsupported temporal period precision" ).hasMessageContaining( "CustomPeriod.rowStart" );
+
 		try ( var scope = ContextScope.boot( metadata, false,
 				Map.of( MappingSettings.TEMPORAL_PRESERVATION, true, "hibernate.dialect", Contributed.class ), CustomPeriod.class ) ) {
 			final var value = (org.hibernate.mapping.BasicValue) scope.metadata.getEntityBinding( CustomPeriod.class.getName() )
@@ -51,11 +61,28 @@ class TemporalPreservingContributionTests {
 	public static class CustomUtc extends TimestampUtcAsJdbcTimestampJdbcType {
 		@Override public int getDdlTypeCode() { return SqlTypes.TIMESTAMP; }
 	}
-	public static class Contributed extends H2Dialect {
+	public static class PreservationOnly extends H2Dialect {
 		@Override
 		public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
 			return jdbcType.getClass() == CustomUtc.class
 					? StandardTemporalPreservation.instantOnly( javaType ) : super.getTemporalPreservation( javaType, jdbcType );
+		}
+	}
+	public static class Contributed extends PreservationOnly {
+		@Override
+		public TemporalTableSupport getTemporalTableSupport() {
+			return new H2TemporalTableSupport( this ) {
+				@Override
+				public TemporalPeriodPrecisionSupport getTemporalPeriodPrecisionSupport(TemporalPeriodPrecisionContext context) {
+					if ( context.jdbcType().getClass() == CustomUtc.class
+							&& context.source() == TemporalPeriodPrecisionContext.Source.JAVA
+							&& context.precision() == 6 && context.ddlType().equals( "timestamp(6)" ) ) {
+						return TemporalPeriodPrecisionSupport.supported( "custom-utc-micros-java",
+								value -> DateTimeUtils.roundToSecondPrecision( value, 6 ), null );
+					}
+					return super.getTemporalPeriodPrecisionSupport( context );
+				}
+			};
 		}
 	}
 	@Entity(name = "ContributedPreservingPeriod")

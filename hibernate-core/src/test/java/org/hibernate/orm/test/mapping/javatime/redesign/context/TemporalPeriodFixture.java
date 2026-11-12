@@ -86,8 +86,8 @@ final class TemporalPeriodFixture implements AutoCloseable {
 				+" database="+writer.getMetaData().getDatabaseProductVersion()+" driver="+writer.getMetaData().getDriverVersion());
 		for(var table:List.of(entityTable,collectionTable)) {
 			try(var st=reader.createStatement();var rs=st.executeQuery("select valid_from,valid_to from "+table+" where 1=0")) {
-				assertThat(rs.getMetaData().getScale(1)).isEqualTo(table.equals(entityTable)?precision:6);
-				assertThat(rs.getMetaData().getScale(2)).isEqualTo(table.equals(entityTable)?precision:6);
+				assertThat(rs.getMetaData().getScale(1)).isEqualTo(table.equals(entityTable)?precision:scope.factory.getJdbcServices().getDialect().getTemporalTableSupport().getTemporalColumnPrecision());
+				assertThat(rs.getMetaData().getScale(2)).isEqualTo(table.equals(entityTable)?precision:scope.factory.getJdbcServices().getDialect().getTemporalTableSupport().getTemporalColumnPrecision());
 			}
 		}
 		reader.commit();
@@ -222,10 +222,10 @@ final class TemporalPeriodFixture implements AutoCloseable {
 	@MappedSuperclass static abstract class Row {
 		@Id int id;String payload="v1";
 		@ElementCollection @CollectionTable(name="pp_tags",joinColumns=@JoinColumn(name="owner_id")) @Column(name="tag_value")
-		@OrderColumn(name="item_order") @Temporal(rowStart="valid_from",rowEnd="valid_to",secondPrecision=6)
+		@OrderColumn(name="item_order") @Temporal(rowStart="valid_from",rowEnd="valid_to")
 		List<String> tags=new ArrayList<>();
 	}
-	@Entity(name="ProviderPeriod") @Table(name="pp_period") @Temporal(rowStart="valid_from",rowEnd="valid_to",secondPrecision=6)
+	@Entity(name="ProviderPeriod") @Table(name="pp_period") @Temporal(rowStart="valid_from",rowEnd="valid_to")
 	static class Period extends Row {}
 	@Entity(name="ProviderPeriodMillis") @Table(name="pp_period_millis") @Temporal(rowStart="valid_from",rowEnd="valid_to",secondPrecision=3)
 	static class Millis extends Row {}

@@ -92,8 +92,10 @@ public final class ForeignKeys {
 		public void nullifyTransientReferences(final Object[] values) {
 			final String[] propertyNames = persister.getPropertyNames();
 			final Type[] types = persister.getPropertyTypes();
+			// Property index i correctly maps across all property arrays (names, types, onDeleteActions)
+			// because they all include inherited properties in the same order (see BaseEntityPersister)
 			for ( int i = 0; i < types.length; i++ ) {
-				values[i] = nullifyTransientReferences( values[i], propertyNames[i], types[i] );
+				values[i] = nullifyTransientReferences( values[i], propertyNames[i], types[i], i );
 			}
 		}
 
@@ -104,11 +106,12 @@ public final class ForeignKeys {
 		 * @param value An entity attribute value
 		 * @param propertyName An entity attribute name
 		 * @param type An entity attribute type
+		 * @param propertyIndex The index of the property being processed
 		 *
 		 * @return {@code null} if the argument is an unsaved entity; otherwise return the argument.
 		 */
-		private Object nullifyTransientReferences(final Object value, final String propertyName, final Type type) {
-			final Object returnedValue = nullifyTransient( value, propertyName, type );
+		private Object nullifyTransientReferences(final Object value, final String propertyName, final Type type, final int propertyIndex) {
+			final Object returnedValue = nullifyTransient( value, propertyName, type, propertyIndex );
 			// value != returnedValue if either:
 			// 1) returnedValue was nullified (set to null);
 			// or 2) returnedValue was initialized, but not nullified.
@@ -120,15 +123,15 @@ public final class ForeignKeys {
 			return returnedValue;
 		}
 
-		private Object nullifyTransient(Object value, String propertyName, Type type) {
+		private Object nullifyTransient(Object value, String propertyName, Type type, int propertyIndex) {
 			if ( value == null ) {
 				return null;
 			}
 			else if ( type instanceof EntityType entityType ) {
-				return nullifyEntityType( value, propertyName, entityType );
+				return nullifyEntityType( value, propertyName, entityType, propertyIndex );
 			}
 			else if ( type instanceof AnyType ) {
-				return isNullifiable( null, value) ? null : value;
+				return isNullifiable( null, value, -1) ? null : value;
 			}
 			else if ( type instanceof ComponentType componentType ) {
 				return nullifyCompositeType( value, propertyName, componentType );
@@ -147,7 +150,8 @@ public final class ForeignKeys {
 				final Object replacement = nullifyTransientReferences(
 						subvalues[i],
 						qualify( propertyName, subPropertyNames[i] ),
-						subtypes[i]
+						subtypes[i],
+						-1
 				);
 				if ( replacement != subvalues[i] ) {
 					substitute = true;
@@ -161,7 +165,7 @@ public final class ForeignKeys {
 			return value;
 		}
 
-		private Object nullifyEntityType(Object value, String propertyName, EntityType entityType) {
+		private Object nullifyEntityType(Object value, String propertyName, EntityType entityType, int propertyIndex) {
 			if ( entityType.isOneToOne() ) {
 				return value;
 			}
@@ -176,7 +180,7 @@ public final class ForeignKeys {
 				else {
 					// If the value is not nullifiable, make sure that the
 					// possibly initialized value is returned.
-					return isNullifiable( entityType.getAssociatedEntityName(), possiblyInitializedValue )
+					return isNullifiable( entityType.getAssociatedEntityName(), possiblyInitializedValue, propertyIndex )
 							? null
 							: possiblyInitializedValue;
 				}
@@ -222,8 +226,9 @@ public final class ForeignKeys {
 		 *
 		 * @param entityName The name of the entity
 		 * @param object The entity instance
+		 * @param propertyIndex The index of the property being checked, or -1 if unknown
 		 */
-		private boolean isNullifiable(final String entityName, Object object)
+		private boolean isNullifiable(final String entityName, Object object, int propertyIndex)
 				throws HibernateException {
 			if ( object == UNFETCHED_PROPERTY ) {
 				// this is the best we can do
@@ -260,7 +265,7 @@ public final class ForeignKeys {
 			// case we definitely need to nullify
 			if ( object == self ) {
 				return isEarlyInsert
-					|| isDelete && requiresSelfReferentialForeignKeyNullification();
+					|| isDelete && requiresSelfReferentialForeignKeyNullification( propertyIndex );
 			}
 
 			// Check if this entity is being inserted in the current flush
@@ -280,7 +285,37 @@ public final class ForeignKeys {
 					: entityEntry.isNullifiable( isEarlyInsert, session );
 		}
 
-		private boolean requiresSelfReferentialForeignKeyNullification() {
+		/**
+		 * Determine if nullification of a self-referencing foreign key is required.
+		 * <p>
+		 * When a property has {@code @OnDelete(CASCADE)} configured, the database foreign key
+		 * constraint includes {@code ON DELETE CASCADE}, which means the database will
+		 * automatically handle cascade deletion. In this case, Hibernate should not nullify
+		 * the self-reference before deletion, as doing so would trigger a not-null constraint
+		 * violation for properties marked as {@code optional = false}.
+		 * <p>
+		 * Note: This optimization applies only to self-referencing properties defined directly
+		 * on the entity. Self-referencing properties nested within {@code @Embeddable} components
+		 * are not detected and will use the default dialect behavior.
+		 *
+		 * @param propertyIndex the index of the property being checked, or -1 if not available
+		 * @return {@code true} if the self-reference should be nullified, {@code false} otherwise
+		 *
+		 * @see org.hibernate.cascade.internal.Cascade#cascadeDeleteEnabled for similar pattern
+		 */
+		private boolean requiresSelfReferentialForeignKeyNullification(int propertyIndex) {
+			if ( propertyIndex >= 0 ) {
+				// propertyOnDeleteActions is initialized in BaseEntityPersister constructor and never null,
+				// but may contain null elements for properties without @OnDelete annotation
+				final org.hibernate.annotations.OnDeleteAction[] onDeleteActions = persister.getPropertyOnDeleteActions();
+				if ( onDeleteActions != null && propertyIndex < onDeleteActions.length ) {
+					final org.hibernate.annotations.OnDeleteAction onDeleteAction = onDeleteActions[propertyIndex];
+					if ( onDeleteAction == org.hibernate.annotations.OnDeleteAction.CASCADE ) {
+						return false;
+					}
+				}
+			}
+
 			return session.getFactory().getJdbcServices().getDialect()
 					.getForeignKeySupport().requiresSelfReferentialForeignKeyNullification();
 		}
@@ -454,6 +489,7 @@ public final class ForeignKeys {
 					propertyNames[i],
 					types[i],
 					nullability[i],
+					i,
 					session,
 					nonNullableTransientEntities
 			);
@@ -467,6 +503,7 @@ public final class ForeignKeys {
 			String propertyName,
 			Type type,
 			boolean isNullable,
+			int propertyIndex,
 			SharedSessionContractImplementor session,
 			NonNullableTransientDependencies nonNullableTransientEntities) {
 		if ( value == null ) {
@@ -475,12 +512,12 @@ public final class ForeignKeys {
 		else if ( type instanceof EntityType entityType ) {
 			if ( !isNullable
 					&& !entityType.isOneToOne()
-					&& nullifier.isNullifiable( entityType.getAssociatedEntityName(), value ) ) {
+					&& nullifier.isNullifiable( entityType.getAssociatedEntityName(), value, propertyIndex ) ) {
 				nonNullableTransientEntities.add( propertyName, value );
 			}
 		}
 		else if ( type instanceof AnyType ) {
-			if ( !isNullable && nullifier.isNullifiable( null, value ) ) {
+			if ( !isNullable && nullifier.isNullifiable( null, value, -1 ) ) {
 				nonNullableTransientEntities.add( propertyName, value );
 			}
 		}
@@ -497,6 +534,7 @@ public final class ForeignKeys {
 							subPropertyNames[j],
 							subtypes[j],
 							subValueNullability[j],
+							-1,
 							session,
 							nonNullableTransientEntities
 					);

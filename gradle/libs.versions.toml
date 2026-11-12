@@ -53,7 +53,6 @@ junitJupiter = "6.0.3"
 junit4 = "4.13.2"
 test-junit4 = "4.13.2"
 junitJupiterLauncher = "6.0.3"
-junitJupiterPlatformGradlePlugin = "1.0.3"
 assertj = "3.26.3"
 hamcrest = "3.0"
 jbossJta = "7.3.4.Final"
@@ -219,7 +218,6 @@ test-junitJupiterParams = { group = "org.junit.jupiter", name = "junit-jupiter-p
 test-junit4Engine = { group = "org.junit.vintage", name = "junit-vintage-engine", version.ref = "junitJupiter" }
 test-junitJupiterLauncher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junitJupiterLauncher" }
 test-junitJupiterSuiteEngine = { group = "org.junit.platform", name = "junit-platform-suite-engine", version.ref = "junitJupiterLauncher" }
-test-junitJupiterPlatformGradlePlugin = { group = "org.junit.platform", name = "junit-platform-gradle-plugin", version.ref = "junitJupiterPlatformGradlePlugin" }
 test-junit4 = { group = "junit", name = "junit", version.ref = "junit4" }
 test-assertjCore = { group = "org.assertj", name = "assertj-core", version.ref = "assertj" }
 test-assertjApi = { group = "org.assertj", name = "assertj-core-api", version.ref = "assertj" }

@@ -33,7 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 ///
 /// @author Steve Ebersole
 @DomainModel(annotatedClasses = LocalDateTimeDaylightSavingTest.TimeEntry.class)
-@ServiceRegistry(settings = @Setting(name = MappingSettings.JAVA_TIME_USE_DIRECT_JDBC, value = "true"/*the default anyway, but...*/))
+@ServiceRegistry(settings = @Setting(name = MappingSettings.JAVA_TIME_USE_DIRECT_JDBC, value = "true"))
 @SessionFactory
 @RequiresDialectFeature(feature = LocalDateTimeDaylightSavingTest.DirectLocalDateTimeSupport.class)
 @SkipForDialect(dialectClass = AltibaseDialect.class,

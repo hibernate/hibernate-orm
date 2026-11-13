@@ -80,29 +80,6 @@ public class BatchGenerationContext {
 		register( generator, null, propertyIndex, entity, state[propertyIndex], state, persister, eventType );
 	}
 
-	/**
-	 * Register a batch-capable generator for deferred generation.
-	 * <p>
-	 * The caller must install {@link #PLACEHOLDER} in the state array
-	 * and on the entity at the given property index.
-	 *
-	 * @param generator the batch-capable generator
-	 * @param generatedValueConsumer the consumer for the generated value
-	 * @param entity the entity instance
-	 * @param currentValue The current property value
-	 * @param persister the entity persister (used to set values back on the entity)
-	 * @param eventType the event type (INSERT or UPDATE)
-	 */
-	public void register(
-			BeforeExecutionGenerator generator,
-			GeneratedValueConsumer generatedValueConsumer,
-			Object entity,
-			@Nullable Object currentValue,
-			EntityPersister persister,
-			EventType eventType) {
-		register( generator, generatedValueConsumer, -1, entity, currentValue, null, persister, eventType );
-	}
-
 	private void register(
 			BeforeExecutionGenerator generator,
 			@Nullable GeneratedValueConsumer generatedValueConsumer,
@@ -211,6 +188,53 @@ public class BatchGenerationContext {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Returns a reserved slot in the batch generation context that must be filled at a later point in time.
+	 * This is useful for batch id generation to ensure ids are assigned in the same order as without batch
+	 * generation.
+	 *
+	 * @param generator the batch-capable generator
+	 * @param eventType the event type (INSERT or UPDATE)
+	 * @return The reserved batch generation slot for this generator
+	 */
+	public GeneratorSlot reserveGeneratorSlot(BeforeExecutionGenerator generator, EventType eventType) {
+		final List<PendingGeneration> pendingGenerations =
+				pending.computeIfAbsent( new GeneratorKey( generator, eventType ), k -> new ArrayList<>() );
+		pendingGenerations.add( null );
+		return new GeneratorSlotImpl( pendingGenerations, pendingGenerations.size() - 1 );
+	}
+
+	private record GeneratorSlotImpl(List<PendingGeneration> pendingGenerations, int position) implements GeneratorSlot {
+		@Override
+		public void setGenerationTarget(GeneratedValueConsumer generatedValueConsumer, Object entity, @Nullable Object currentValue, EntityPersister persister) {
+			pendingGenerations.set( position, new PendingGeneration( generatedValueConsumer, -1, entity, currentValue, null, persister ) );
+		}
+	}
+
+	/**
+	 * A handle to register an entity for batch generation.
+	 * Similar to {@link #register(BeforeExecutionGenerator, int, Object, Object[], EntityPersister, EventType)},
+	 * except that the slot in the generation queue has already been claimed to ensure a specific order.
+	 */
+	public interface GeneratorSlot {
+		/**
+		 * Set the given generation target for this reserved slot in the batch generation queue.
+		 * <p>
+		 * The caller must install {@link #PLACEHOLDER} in the state array
+		 * and on the entity at the given property index.
+		 *
+		 * @param generatedValueConsumer the consumer for the generated value
+		 * @param entity the entity instance
+		 * @param currentValue The current property value
+		 * @param persister the entity persister (used to set values back on the entity)
+		 */
+		void setGenerationTarget(
+				GeneratedValueConsumer generatedValueConsumer,
+				Object entity,
+				@Nullable Object currentValue,
+				EntityPersister persister);
 	}
 
 	/**

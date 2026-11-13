@@ -16,6 +16,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.event.spi.BatchGenerationContext;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.ManagedOperationContext;
 import org.hibernate.generator.BeforeExecutionGenerator;
@@ -380,7 +381,9 @@ public abstract class AbstractSaveEventListener<C extends ManagedOperationContex
 			}
 			holder.setEntityEntry( original );
 		}
-
+		final var generatorSlot = delayInsert && persister.getGenerator() instanceof BeforeExecutionGenerator generator
+				? context.getBatchGenerationContext().reserveGeneratorSlot( generator, INSERT )
+				: null;
 		cascadeBeforeSave( source, persister, entity, context );
 
 		final var insert = addInsertAction(
@@ -390,6 +393,7 @@ public abstract class AbstractSaveEventListener<C extends ManagedOperationContex
 				persister,
 				delayedIdGeneration,
 				delayInsert,
+				generatorSlot,
 				source,
 				context
 		);
@@ -487,6 +491,7 @@ public abstract class AbstractSaveEventListener<C extends ManagedOperationContex
 			@Nonnull EntityPersister persister,
 			boolean delayedIdGeneration,
 			boolean delayInsert,
+			@Nullable BatchGenerationContext.GeneratorSlot generatorSlot,
 			@Nonnull EventSource source,
 			C context) {
 		if ( delayedIdGeneration ) {
@@ -502,8 +507,8 @@ public abstract class AbstractSaveEventListener<C extends ManagedOperationContex
 			source.getActionQueue().addAction( insert );
 			if ( delayInsert && persister.getGenerator() instanceof BeforeExecutionGenerator generator ) {
 				final Object currentValue = generator.allowAssignedIdentifiers() ? persister.getIdentifier( entity ) : null;
-				context.getBatchGenerationContext()
-						.register( generator, insert, entity, currentValue, persister, INSERT );
+				assert generatorSlot != null;
+				generatorSlot.setGenerationTarget( insert, entity, currentValue, persister );
 			}
 			return insert;
 		}

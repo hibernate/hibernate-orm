@@ -265,7 +265,8 @@ public class InterceptorTest {
 
 		final var statementInspector = new EmptyStatementInspector() {
 			@Override
-			public String inspect(String sql) {
+			@Nonnull
+			public String inspect(@Nonnull String sql) {
 				assertNotNull( sql );
 				String expectedSql = expectedSQLs.poll().toLowerCase( Locale.ROOT );
 				assertTrue(
@@ -313,7 +314,8 @@ public class InterceptorTest {
 	public void testPrepareStatementFaultIntercept(SessionFactoryScope factoryScope) {
 		final var statementInspector = new EmptyStatementInspector() {
 			@Override
-			public String inspect(String sql) {
+			@Nullable
+			public String inspect(@Nonnull String sql) {
 				return null;
 			}
 		};

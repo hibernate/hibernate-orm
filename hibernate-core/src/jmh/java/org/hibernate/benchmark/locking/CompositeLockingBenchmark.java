@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Version;
 import org.hibernate.LockMode;
@@ -153,7 +154,8 @@ public class CompositeLockingBenchmark {
 		private List<String> sql;
 
 		@Override
-		public String inspect(String statement) {
+		@Nonnull
+		public String inspect(@Nonnull String statement) {
 			if ( sql != null ) {
 				sql.add( statement );
 			}

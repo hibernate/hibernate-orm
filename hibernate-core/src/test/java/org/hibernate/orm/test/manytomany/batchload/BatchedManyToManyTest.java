@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.manytomany.batchload;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
@@ -81,7 +83,8 @@ public class BatchedManyToManyTest {
 
 		final StatementInspector statementInspector = new EmptyStatementInspector() {
 			@Override
-			public String inspect(String sql) {
+			@Nonnull
+			public String inspect(@Nonnull String sql) {
 				// ugh, this is the best way I could come up with to assert this.
 				// unfortunately, this is highly dependent on the dialect and its
 				// outer join fragment.  But at least this wil fail on the majority

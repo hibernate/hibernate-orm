@@ -1,10 +1,9 @@
 package org.hibernate.orm.test.interceptor;
 
-import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.transaction.Status;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -22,7 +21,6 @@ import org.hibernate.testing.orm.junit.ServiceRegistryProducer;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedClass;
@@ -36,6 +34,8 @@ import static org.hibernate.cfg.TransactionSettings.TRANSACTION_COORDINATOR_STRA
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @JiraKey( value = "HHH-13326")
@@ -128,6 +128,7 @@ public class InterceptorJtaTransactionTest implements ServiceRegistryProducer {
 				new Options( true, JpaComplianceTransactionSetting.DEFAULT, JtaAllowTransactionAccessSetting.DEFAULT ),
 				new Options( true, JpaComplianceTransactionSetting.TRUE, JtaAllowTransactionAccessSetting.DEFAULT ),
 				new Options( true, JpaComplianceTransactionSetting.TRUE, JtaAllowTransactionAccessSetting.TRUE ),
+				new Options( true, JpaComplianceTransactionSetting.TRUE, JtaAllowTransactionAccessSetting.FALSE ),
 				new Options( true, JpaComplianceTransactionSetting.FALSE, JtaAllowTransactionAccessSetting.TRUE ),
 				new Options( true, JpaComplianceTransactionSetting.FALSE, JtaAllowTransactionAccessSetting.FALSE ),
 				new Options( false, JpaComplianceTransactionSetting.DEFAULT, JtaAllowTransactionAccessSetting.DEFAULT ),
@@ -155,20 +156,13 @@ public class InterceptorJtaTransactionTest implements ServiceRegistryProducer {
 
 		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
 		try (SessionImplementor session = sessionFactory.withOptions().interceptor( interceptor ).openSession()) {
-			try {
-				session.getTransaction().begin();
-				if ( !options.allowJtaTransactionAccess.allowTransactionAccess(
-						sessionFactory,
-						options.jpaTransactionCompliance
-				) ) {
-					Assertions.fail( "IllegalStateException should have been thrown." );
-				}
+			final var transaction = session.beginTransaction();
+			if ( options.allowJtaTransactionAccess.allowTransactionAccess(
+					sessionFactory, options.jpaTransactionCompliance ) ) {
+				assertSame( transaction, session.getTransaction() );
 			}
-			catch (IllegalStateException ex) {
-				if ( TestingJtaPlatformImpl.INSTANCE.getTransactionManager().getStatus() == Status.STATUS_ACTIVE ) {
-					TestingJtaPlatformImpl.INSTANCE.getTransactionManager().setRollbackOnly();
-				}
-				assertEquals( JpaComplianceTransactionSetting.TRUE, options.jpaTransactionCompliance );
+			else {
+				assertThrows( IllegalStateException.class, session::getTransaction );
 			}
 
 			// Interceptor#afterTransactionBegin is never called when using JTA
@@ -182,7 +176,7 @@ public class InterceptorJtaTransactionTest implements ServiceRegistryProducer {
 
 			interceptor.reset();
 
-			session.getTransaction().commit();
+			transaction.commit();
 
 			assertTrue( interceptor.beforeTransactionCompletionMethodCalled );
 			assertTrue( interceptor.afterTransactionCompletionMethodCalled );
@@ -216,17 +210,8 @@ public class InterceptorJtaTransactionTest implements ServiceRegistryProducer {
 
 			assertTrue( interceptor.beforeTransactionCompletionMethodCalled );
 			assertTrue( interceptor.afterTransactionCompletionMethodCalled );
-			if ( options.allowJtaTransactionAccess.allowTransactionAccess(
-					sessionFactory,
-					options.jpaTransactionCompliance
-			) ) {
-				assertEquals( true, interceptor.beforeTransactionCompletionAssertionPassed );
-				assertEquals( true, interceptor.afterTransactionCompletionAssertionPassed );
-			}
-			else {
-				assertNull( interceptor.beforeTransactionCompletionAssertionPassed );
-				assertNull( interceptor.afterTransactionCompletionAssertionPassed );
-			}
+			assertEquals( true, interceptor.beforeTransactionCompletionAssertionPassed );
+			assertEquals( true, interceptor.afterTransactionCompletionAssertionPassed );
 
 			assertNull( interceptor.afterTransactionBeginAssertionPassed );
 		}
@@ -256,17 +241,8 @@ public class InterceptorJtaTransactionTest implements ServiceRegistryProducer {
 
 				assertTrue( interceptor.beforeTransactionCompletionMethodCalled );
 				assertTrue( interceptor.afterTransactionCompletionMethodCalled );
-				if ( options.allowJtaTransactionAccess.allowTransactionAccess(
-						sessionFactory,
-						options.jpaTransactionCompliance
-				) ) {
-					assertEquals( true, interceptor.beforeTransactionCompletionAssertionPassed );
-					assertEquals( true, interceptor.afterTransactionCompletionAssertionPassed );
-				}
-				else {
-					assertNull( interceptor.beforeTransactionCompletionAssertionPassed );
-					assertNull( interceptor.afterTransactionCompletionAssertionPassed );
-				}
+				assertEquals( true, interceptor.beforeTransactionCompletionAssertionPassed );
+				assertEquals( true, interceptor.afterTransactionCompletionAssertionPassed );
 
 				assertNull( interceptor.afterTransactionBeginAssertionPassed );
 			}
@@ -326,31 +302,25 @@ public class InterceptorJtaTransactionTest implements ServiceRegistryProducer {
 		}
 
 		@Override
-		public void afterTransactionBegin(@Nullable org.hibernate.Transaction tx) {
+		public void afterTransactionBegin(@Nonnull org.hibernate.Transaction tx) {
 			afterTransactionBeginMethodCalled = true;
-			if ( tx != null ) {
-				afterTransactionBeginAssertionPassed = false;
-				assertEquals( TransactionStatus.ACTIVE, tx.getStatus() );
-				afterTransactionBeginAssertionPassed = true;
-			}
+			afterTransactionBeginAssertionPassed = false;
+			assertEquals( TransactionStatus.ACTIVE, tx.getStatus() );
+			afterTransactionBeginAssertionPassed = true;
 		}
 		@Override
-		public void beforeTransactionCompletion(@Nullable org.hibernate.Transaction tx) {
+		public void beforeTransactionCompletion(@Nonnull org.hibernate.Transaction tx) {
 			beforeTransactionCompletionMethodCalled = true;
-			if ( tx != null ) {
-				beforeTransactionCompletionAssertionPassed = false;
-				assertEquals( TransactionStatus.ACTIVE, tx.getStatus() );
-				beforeTransactionCompletionAssertionPassed = true;
-			}
+			beforeTransactionCompletionAssertionPassed = false;
+			assertEquals( TransactionStatus.ACTIVE, tx.getStatus() );
+			beforeTransactionCompletionAssertionPassed = true;
 		}
 		@Override
-		public void afterTransactionCompletion(@Nullable org.hibernate.Transaction tx) {
+		public void afterTransactionCompletion(@Nonnull org.hibernate.Transaction tx) {
 			afterTransactionCompletionMethodCalled = true;
-			if ( tx != null ) {
-				afterTransactionCompletionAssertionPassed = false;
-				assertEquals( TransactionStatus.COMMITTED, tx.getStatus() );
-				afterTransactionCompletionAssertionPassed = true;
-			}
+			afterTransactionCompletionAssertionPassed = false;
+			assertEquals( TransactionStatus.COMMITTED, tx.getStatus() );
+			afterTransactionCompletionAssertionPassed = true;
 		}
 	};
 }

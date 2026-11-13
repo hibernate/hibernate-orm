@@ -1,6 +1,6 @@
 package org.hibernate.orm.test.interceptor;
 
-import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 
 import org.hibernate.Interceptor;
 import org.hibernate.Transaction;
@@ -40,17 +40,17 @@ public class InterceptorTransactionEventTest {
 		private boolean beforeTransactionCompletionCalled;
 
 		@Override
-		public void afterTransactionBegin(@Nullable Transaction tx) {
+		public void afterTransactionBegin(@Nonnull Transaction tx) {
 			afterTransactionBeginCalled = true;
 		}
 
 		@Override
-		public void afterTransactionCompletion(@Nullable Transaction tx) {
+		public void afterTransactionCompletion(@Nonnull Transaction tx) {
 			afterTransactionCompletionCalled = true;
 		}
 
 		@Override
-		public void beforeTransactionCompletion(@Nullable Transaction tx) {
+		public void beforeTransactionCompletion(@Nonnull Transaction tx) {
 			beforeTransactionCompletionCalled = true;
 		}
 

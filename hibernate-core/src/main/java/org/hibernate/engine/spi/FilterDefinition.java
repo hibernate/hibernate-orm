@@ -1,16 +1,18 @@
 package org.hibernate.engine.spi;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.resource.beans.spi.ManagedBean;
 
 import jakarta.annotation.Nullable;
+
+import static java.util.Collections.emptyMap;
 
 /**
  * Represents the definition of a {@link org.hibernate.Filter filter}.
@@ -26,10 +28,10 @@ import jakarta.annotation.Nullable;
  * @author Steve Ebersole
  */
 public class FilterDefinition implements org.hibernate.engine.FilterDefinition, Serializable {
-	private final String filterName;
-	private final String defaultFilterCondition;
-	private final Map<String, JdbcMapping> explicitParamJaMappings = new HashMap<>();
-	private final Map<String, ManagedBean<? extends Supplier<?>>> parameterResolverMap = new HashMap<>();
+	private final @Nonnull String filterName;
+	private final @Nonnull String defaultFilterCondition;
+	private final @Nonnull Map<String, JdbcMapping> explicitParamJaMappings = new HashMap<>();
+	private final @Nonnull Map<String, ManagedBean<? extends Supplier<?>>> parameterResolverMap = new HashMap<>();
 	private final boolean autoEnabled;
 	private final boolean applyToLoadByKey;
 
@@ -38,13 +40,16 @@ public class FilterDefinition implements org.hibernate.engine.FilterDefinition, 
 	 *
 	 * @param name The name of the filter for which this configuration is in effect.
 	 */
-	public FilterDefinition(String name, String defaultCondition, @Nullable Map<String, JdbcMapping> explicitParamJaMappings) {
-		this( name, defaultCondition, false, false, explicitParamJaMappings, Collections.emptyMap() );
+	public FilterDefinition(
+			@Nonnull String name,
+			@Nonnull String defaultCondition,
+			@Nullable Map<String, JdbcMapping> explicitParamJaMappings) {
+		this( name, defaultCondition, false, false, explicitParamJaMappings, emptyMap() );
 	}
 
 	public FilterDefinition(
-			String name,
-			String defaultCondition,
+			@Nonnull String name,
+			@Nonnull String defaultCondition,
 			boolean autoEnabled,
 			boolean applyToLoadByKey,
 			@Nullable Map<String, JdbcMapping> explicitParamJaMappings,
@@ -67,6 +72,7 @@ public class FilterDefinition implements org.hibernate.engine.FilterDefinition, 
 	 * @return The filter name for this configuration.
 	 */
 	@Override
+	@Nonnull
 	public String getFilterName() {
 		return filterName;
 	}
@@ -77,10 +83,9 @@ public class FilterDefinition implements org.hibernate.engine.FilterDefinition, 
 	 * @return The parameters named by this configuration.
 	 */
 	@Override
+	@Nonnull
 	public Set<String> getParameterNames() {
-		// Local variable helps static nullness inference.
-		Set<String> keys = explicitParamJaMappings.keySet();
-		return keys;
+		return explicitParamJaMappings.keySet();
 	}
 
 	/**
@@ -100,6 +105,7 @@ public class FilterDefinition implements org.hibernate.engine.FilterDefinition, 
 	}
 
 	@Override
+	@Nonnull
 	public String getDefaultFilterCondition() {
 		return defaultFilterCondition;
 	}

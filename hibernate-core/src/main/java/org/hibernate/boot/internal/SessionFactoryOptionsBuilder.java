@@ -497,6 +497,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		namedQueryStartupCheckingEnabled =
 				configurationService.getSetting( QUERY_STARTUP_CHECKING, BOOLEAN, true );
 
+		if ( settings.get( org.hibernate.cfg.MappingSettings.JAVA_TIME_USE_DIRECT_JDBC ) != null ) {
+			org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+					org.hibernate.cfg.MappingSettings.JAVA_TIME_USE_DIRECT_JDBC,
+					org.hibernate.cfg.MappingSettings.TEMPORAL_PRESERVATION );
+		}
 		preferJavaTimeJdbcTypes = MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( configurationService );
 		preferNativeEnumTypes = MetadataBuildingContext.isPreferNativeEnumTypesEnabled( configurationService );
 		preferLocaleLanguageTagEnabled = MetadataBuildingContext.isPreferNativeEnumTypesEnabled( configurationService );

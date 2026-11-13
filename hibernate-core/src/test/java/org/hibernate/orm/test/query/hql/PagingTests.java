@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.query.hql;
 
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -18,11 +19,12 @@ import static org.hibernate.orm.test.query.sqm.BaseSqmUnitTest.interpretSelect;
 @DomainModel(
 		standardModels = StandardDomainModel.GAMBIT
 )
+// Retain the legacy temporal semantics of this regression fixture.
 @ServiceRegistry(
-		settings = @Setting(
+		settings = { @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"), @Setting(
 				name = AvailableSettings.HBM2DDL_AUTO,
 				value = "create-drop"
-		)
+		) }
 )
 @SessionFactory
 public class PagingTests {

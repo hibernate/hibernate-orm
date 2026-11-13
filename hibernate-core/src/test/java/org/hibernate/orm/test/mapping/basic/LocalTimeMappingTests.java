@@ -63,7 +63,7 @@ public class LocalTimeMappingTests {
 
 		@Column(name = "`localTime`")
 		//tag::basic-localTime-example[]
-		// mapped as TIME
+		// preserves local time; the SQL carrier depends on the dialect
 		private LocalTime localTime;
 		//end::basic-localTime-example[]
 

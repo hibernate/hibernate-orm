@@ -81,7 +81,7 @@ import org.hibernate.type.internal.ParameterizedTypeImpl;
 
 import jakarta.persistence.TemporalType;
 
-import static org.hibernate.cfg.MappingSettings.JAVA_TIME_USE_DIRECT_JDBC_DEFAULT;
+import static org.hibernate.cfg.MappingSettings.TEMPORAL_PRESERVATION_DEFAULT;
 import static org.hibernate.id.uuid.LocalObjectUuidHelper.generateLocalObjectUuid;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getExplicitPreferredSqlTypeCodeForInstant;
@@ -136,7 +136,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	private final transient Set<Class<?>> loggedDirectJavaTimeJdbcFallbacks = ConcurrentHashMap.newKeySet();
 
 	public TypeConfiguration() {
-		this( JAVA_TIME_USE_DIRECT_JDBC_DEFAULT, DirectJavaTimeJdbcSupports.jdbc42() );
+		this( TEMPORAL_PRESERVATION_DEFAULT, DirectJavaTimeJdbcSupports.jdbc42() );
 	}
 
 	public TypeConfiguration(boolean javaTimeUseDirectJdbc) {

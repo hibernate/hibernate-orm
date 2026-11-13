@@ -1,15 +1,5 @@
 package org.hibernate.mapping;
 
-import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.Remove;
@@ -22,6 +12,7 @@ import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.temporaltype.spi.TemporalPreservation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.Generator;
@@ -32,20 +23,32 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
-import org.hibernate.metamodel.mapping.internal.EmbeddableDiscriminatorConverter;
 import org.hibernate.metamodel.mapping.internal.DiscriminatorTypeImpl;
+import org.hibernate.metamodel.mapping.internal.EmbeddableDiscriminatorConverter;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
-import org.hibernate.persister.entity.DiscriminatorHelper;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.persister.entity.DiscriminatorHelper;
 import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EmbeddedComponentType;
-import org.hibernate.type.UserComponentType;
 import org.hibernate.type.MappingContext;
+import org.hibernate.type.UserComponentType;
+import org.hibernate.type.internal.TemporalMappingValidator;
 import org.hibernate.usertype.CompositeUserType;
+
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
@@ -143,6 +146,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		this.subclassToSuperclass = original.subclassToSuperclass;
 		this.customInstantiator = original.customInstantiator;
 		this.type = original.type;
+		this.contextualCompositeUserType = original.contextualCompositeUserType;
 	}
 
 	@Override
@@ -423,7 +427,54 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		}
 	}
 
+	private CompositeUserType<?> contextualCompositeUserType;
+
+	public CompositeUserType<?> getContextualCompositeUserType() {
+		return contextualCompositeUserType;
+	}
+
+	public void setContextualCompositeUserType(CompositeUserType<?> instance) {
+		if ( type != null ) {
+			throw new IllegalStateException( "Composite execution must be configured before type resolution" );
+		}
+		contextualCompositeUserType = instance;
+	}
+
+	private void validateTemporalOffsetHandling() {
+		if ( !(contextualCompositeUserType instanceof org.hibernate.usertype.internal.ContextualTemporalCompositeUserType<?> temporal) ) {
+			return;
+		}
+		final var temporalRole = roleName == null ? temporal.getRole() : roleName;
+		if ( properties.size() != 2 ) {
+			throw new MappingException( "Temporal COLUMN requires exactly two components for " + temporalRole );
+		}
+		final var first = properties.get( 0 );
+		final var dialect = getBuildingContext().getMetadataCollector().getDatabase().getDialect();
+		for ( var property : properties ) {
+			if ( property.isInsertable() != first.isInsertable() || property.isUpdatable() != first.isUpdatable() ) {
+				throw new MappingException( "Temporal COLUMN components require matching insertability and updatability for " + temporalRole );
+			}
+			if ( property.getValue() instanceof BasicValue basic ) {
+				final var resolved = basic.resolve();
+				if ( resolved.getDomainJavaType().getJavaTypeClass() == java.time.ZoneOffset.class ) {
+					final var report = TemporalMappingValidator.assess( dialect, resolved.getDomainJavaType(), resolved.getJdbcType(), temporalRole );
+					if ( report.offset() != TemporalPreservation.Level.SUPPORTED ) {
+						throw new MappingException( String.format( Locale.ENGLISH,
+								"Temporal COLUMN auxiliary offset handling is not established for %s: %s + %s reports OFFSET %s",
+								temporalRole, resolved.getDomainJavaType().getClass().getName(),
+								resolved.getJdbcType().getClass().getName(),
+								report.offset()
+						) );
+					}
+				}
+			}
+		}
+	}
+
 	private CompositeUserType<?> createCompositeUserType(Component component) {
+		if ( contextualCompositeUserType != null ) {
+			return contextualCompositeUserType;
+		}
 		final var buildingContext = getBuildingContext();
 		final var bootstrapContext = buildingContext.getBootstrapContext();
 		final var clazz = classForName( CompositeUserType.class, component.getTypeName(), bootstrapContext );
@@ -460,6 +511,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 								: new ComponentType( this, originalPropertyOrder );
 					}
 					else {
+						validateTemporalOffsetHandling();
 						final CompositeUserType<?> compositeUserType = createCompositeUserType( this );
 						localType = new UserComponentType<>( this, originalPropertyOrder, compositeUserType );
 					}

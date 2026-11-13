@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.mapping.generated;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +38,8 @@ import static org.hibernate.testing.orm.junit.DialectContext.awaitServerTimestam
 } )
 @SessionFactory(useCollectingStatementInspector = true)
 @Jira( "https://hibernate.atlassian.net/browse/HHH-18484" )
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 public class GeneratedNoOpUpdateTest {
 	@Test
 	public void testUpdate(SessionFactoryScope scope) {

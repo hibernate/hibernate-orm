@@ -30,7 +30,7 @@ import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
 import org.hibernate.type.internal.DirectJavaTimeJdbcTypeResolver;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.cfg.MappingSettings.JAVA_TIME_USE_DIRECT_JDBC_DEFAULT;
+import static org.hibernate.cfg.MappingSettings.TEMPORAL_PRESERVATION_DEFAULT;
 
 /**
  * References to common instances of {@link BasicTypeReference}.
@@ -845,7 +845,7 @@ public final class StandardBasicTypes {
 
 
 	public static void prime(TypeConfiguration typeConfiguration) {
-		prime( typeConfiguration, JAVA_TIME_USE_DIRECT_JDBC_DEFAULT, DirectJavaTimeJdbcSupports.jdbc42() );
+		prime( typeConfiguration, TEMPORAL_PRESERVATION_DEFAULT, DirectJavaTimeJdbcSupports.jdbc42() );
 	}
 
 	public static void prime(TypeConfiguration typeConfiguration, boolean javaTimeUseDirectJdbc) {

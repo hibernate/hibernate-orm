@@ -97,7 +97,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 		if ( creationContext.getSessionFactory()
 				.getChangesetCoordinator()
 				.useServerTimestamp( dialect ) ) {
-			currentTimestampFunctionName = dialect.getCurrentTemporalSupport().currentTimestamp();
+			currentTimestampFunctionName = org.hibernate.temporal.internal.PreservingPeriod.currentExpression( creationContext.getSessionFactory(), jdbcMapping );
 			currentTimestampExpression =
 					new SelfRenderingSqlFragmentExpression( currentTimestampFunctionName, jdbcMapping );
 		}

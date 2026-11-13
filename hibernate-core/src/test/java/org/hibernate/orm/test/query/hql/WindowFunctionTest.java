@@ -1,11 +1,13 @@
 package org.hibernate.orm.test.query.hql;
 
+import org.hibernate.cfg.MappingSettings;
 import java.util.Date;
 import java.util.List;
 
 import org.hibernate.internal.util.ExceptionHelper;
 import org.hibernate.query.SyntaxException;
 
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -29,7 +31,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Christian Beikov
  */
-@ServiceRegistry
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel(standardModels = StandardDomainModel.GAMBIT)
 @SessionFactory
 public class WindowFunctionTest {

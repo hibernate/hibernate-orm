@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.query.hql.set;
 
+import org.hibernate.cfg.MappingSettings;
 
 import java.util.List;
 
@@ -7,6 +8,7 @@ import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.SemanticException;
 
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfLists;
@@ -33,7 +35,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * @author Christian Beikov
  */
 @DomainModel( standardModels = StandardDomainModel.GAMBIT )
-@ServiceRegistry
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @SessionFactory
 public class SetOperationTest {
 	@BeforeEach

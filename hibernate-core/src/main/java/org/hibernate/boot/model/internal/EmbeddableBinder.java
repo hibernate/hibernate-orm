@@ -1,5 +1,13 @@
 package org.hibernate.boot.model.internal;
 
+import org.hibernate.usertype.internal.ContextualTemporalCompositeUserType;
+import org.hibernate.usertype.internal.OffsetDateTimeCompositeUserType;
+import org.hibernate.usertype.internal.ZonedDateTimeCompositeUserType;
+import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
+import org.hibernate.annotations.TimeZoneRepresentation;
+import org.hibernate.annotations.TimeZoneAdjustment;
+import org.hibernate.annotations.TimeZoneColumn;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.DiscriminatorColumn;
@@ -442,6 +450,14 @@ public class EmbeddableBinder {
 
 		final String subpath = getPath( propertyHolder, inferredData );
 		BOOT_LOGGER.bindingEmbeddable( subpath );
+		if ( context.isPreferJavaTimeJdbcTypesEnabled()
+				&& (compositeUserTypeClass == OffsetTimeCompositeUserType.class
+				|| compositeUserTypeClass == OffsetDateTimeCompositeUserType.class
+				|| compositeUserTypeClass == ZonedDateTimeCompositeUserType.class) ) {
+			// Whole-value conversion declarations belong to the temporal mapping,
+			// not to the synthetic tuple's component attributes.
+			embeddable.setTypeName( compositeUserTypeClass.getName() );
+		}
 		final var subholder = buildPropertyHolder(
 				embeddable,
 				subpath,
@@ -458,11 +474,31 @@ public class EmbeddableBinder {
 		final CompositeUserType<?> compositeUserType;
 		final ClassDetails returnedClassOrElement;
 		if ( compositeUserTypeClass == null ) {
+			final var member = inferredData.getAttributeMember();
+			if ( member != null && member.hasDirectAnnotationUsage( TimeZoneAdjustment.class )
+					&& (!context.isPreferJavaTimeJdbcTypesEnabled() || member.hasDirectAnnotationUsage( jakarta.persistence.EmbeddedId.class )) ) {
+				throw new MappingException( "TimeZoneAdjustment is not supported on '" + member.getName() + "' in this role/handling mode" );
+			}
+			if ( member != null && (member.hasDirectAnnotationUsage( TimeZoneRepresentation.class )
+					|| member.hasDirectAnnotationUsage( TimeZoneColumn.class )
+					|| member.hasDirectAnnotationUsage( TimeZoneAdjustment.class )
+					&& !TimeZoneAdjustment.NONE.equals(
+							member.getDirectAnnotationUsage( TimeZoneAdjustment.class ).value() )) ) {
+				throw new MappingException( "Temporal declarations must target members of embeddable '" + member.getName() + "'" );
+			}
 			compositeUserType = null;
 			returnedClassOrElement = inferredData.getClassOrElementType().determineRawClass();
 		}
 		else {
-			compositeUserType = compositeUserType( compositeUserTypeClass, context );
+			compositeUserType = contextualTemporalType(
+					compositeUserType( compositeUserTypeClass, context ),
+					inferredData.getAttributeMember(),
+					propertyHolder,
+					context
+			);
+			if ( compositeUserType instanceof org.hibernate.usertype.internal.ContextualTemporalCompositeUserType<?> ) {
+				embeddable.setContextualCompositeUserType( compositeUserType );
+			}
 			embeddable.setTypeName( compositeUserTypeClass.getName() );
 			returnedClassOrElement = context.getBootstrapContext().getModelsContext().getClassDetailsRegistry().resolveClassDetails( compositeUserType.embeddable().getName() );
 		}
@@ -606,6 +642,41 @@ public class EmbeddableBinder {
 			}
 		}
 		return null;
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private static CompositeUserType<?> contextualTemporalType(
+			CompositeUserType<?> composite, MemberDetails member,
+			PropertyHolder propertyHolder, MetadataBuildingContext context) {
+		if ( context.isPreferJavaTimeJdbcTypesEnabled()
+				&& (composite.getClass() == OffsetTimeCompositeUserType.class
+				|| composite.getClass() == OffsetDateTimeCompositeUserType.class
+				|| composite.getClass() == ZonedDateTimeCompositeUserType.class) ) {
+			if ( member == null && propertyHolder instanceof CollectionPropertyHolder collectionHolder ) {
+				member = collectionHolder.getCollectionMember();
+			}
+			final var configuration = TemporalMappingConfiguration.resolve( member, composite.returnedClass(), context );
+			final var converter = propertyHolder instanceof CollectionPropertyHolder collectionHolder
+					? collectionHolder.resolveElementAttributeConverterDescriptor( member, member.getElementType().determineRawClass() )
+					: propertyHolder.resolveAttributeConverterDescriptor( member, true );
+			if ( configuration.adjustment() != null && converter != null ) {
+				throw new MappingException( "User converter and timezone adjustment cannot be combined for '"
+						+ member.getDeclaringType().getName() + "." + member.getName() + "'" );
+			}
+
+			if ( converter != null ) {
+				throw new MappingException( "Whole-value user converter is incompatible with synthetic COLUMN storage for '"
+						+ member.getDeclaringType().getName() + "." + member.getName()
+						+ "'. Use a compatible INLINE conversion mapping or explicitly disable conversion for COLUMN storage." );
+			}
+
+			return new ContextualTemporalCompositeUserType(
+					composite,
+					context.getBootstrapContext().getTypeConfiguration().getJavaTypeRegistry()
+							.resolveDescriptor( composite.returnedClass() ),
+					configuration.adjustment(), member.getDeclaringType().getName() + "." + member.getName() );
+		}
+		return composite;
 	}
 
 	private static CompositeUserType<?> compositeUserType(

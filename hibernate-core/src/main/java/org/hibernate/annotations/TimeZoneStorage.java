@@ -4,7 +4,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.hibernate.Incubating;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
@@ -41,11 +40,20 @@ import static java.lang.annotation.ElementType.METHOD;
  * @see TimeZoneStorageType
  * @see TimeZoneColumn
  *
+ * @deprecated Since 8.0, use {@link TimeZoneRepresentation} to select storage and
+ * {@link TimeZoneAdjustment} to request an explicit timezone adjustment. With
+ * {@code hibernate.type.temporal_preservation=true}, legacy {@code COLUMN}
+ * selects {@code TimeZoneRepresentation.Type.COLUMN}; {@code NORMALIZE_UTC}
+ * contributes INLINE storage and UTC adjustment. Legacy {@code NATIVE} retains
+ * its native-handling constraint. {@code NORMALIZE}, {@code AUTO}, and
+ * {@code DEFAULT} must be replaced with explicit choices. Disabling direct JDBC
+ * handling retains the established legacy behavior.
+ *
  * @since 6.0
  */
-@Incubating(since = "6.0")
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ FIELD, METHOD })
+@Deprecated(since = "8.0")
 public @interface TimeZoneStorage {
 	/**
 	 * The storage strategy for the time zone information.

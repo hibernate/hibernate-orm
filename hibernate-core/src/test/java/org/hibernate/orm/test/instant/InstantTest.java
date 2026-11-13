@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.instant;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -25,6 +28,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = InstantTest.Instants.class)
 @SessionFactory
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 public class InstantTest {
 	@Test
 	public void testStorage(SessionFactoryScope scope) {

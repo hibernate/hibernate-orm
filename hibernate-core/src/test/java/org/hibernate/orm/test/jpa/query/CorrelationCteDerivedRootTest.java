@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.jpa.query;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -14,6 +17,8 @@ import org.junit.jupiter.api.Test;
 @JiraKey("HHH-17522")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsLateralOrSubqueryInOnClause.class)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInCorrelatedSubquery.class)
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 public class CorrelationCteDerivedRootTest {
 
 	@Test

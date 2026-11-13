@@ -3,6 +3,7 @@ package org.hibernate.orm.test.batchfetch;
 import java.time.ZonedDateTime;
 import java.util.List;
 
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -37,8 +38,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 		}
 )
 @SessionFactory
+// Retain the legacy temporal semantics of this regression fixture.
 @ServiceRegistry(
-		settings = {
+		settings = { @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
 				@Setting(name = AvailableSettings.SHOW_SQL, value = "true"),
 				@Setting(name = AvailableSettings.FORMAT_SQL, value = "true"),
 				@Setting(name = AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, value = "64")

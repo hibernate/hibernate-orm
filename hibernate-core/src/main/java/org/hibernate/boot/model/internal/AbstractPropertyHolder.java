@@ -184,6 +184,10 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	 * @param attributeMember The property
 	 */
 	protected void setCurrentProperty(MemberDetails attributeMember) {
+		setCurrentProperty( attributeMember, null );
+	}
+
+	protected void setCurrentProperty(MemberDetails attributeMember, ClassDetails resolvedType) {
 		// todo (jpa32) : some of this (association override handling esp) does the same work multiple times - consolidate
 
 		if ( attributeMember == null ) {
@@ -194,7 +198,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			currentPropertyForeignKeyOverride = null;
 		}
 		else {
-			currentPropertyColumnOverride = buildColumnOverride( attributeMember, getPath(), context );
+			currentPropertyColumnOverride = buildColumnOverride( attributeMember, getPath(), context, resolvedType );
 			if ( currentPropertyColumnOverride.isEmpty() ) {
 				currentPropertyColumnOverride = null;
 			}
@@ -495,6 +499,11 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			AnnotationTarget element,
 			String path,
 			MetadataBuildingContext context) {
+		return buildColumnOverride( element, path, context, null );
+	}
+
+	private static Map<String, Column[]> buildColumnOverride(
+			AnnotationTarget element, String path, MetadataBuildingContext context, ClassDetails resolvedType) {
 		final Map<String,Column[]> result = new HashMap<>();
 		if ( element == null ) {
 			return result;
@@ -513,9 +522,11 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 				columnOverrideMap.get( qualifiedName ).add( depAttr.column() );
 			}
 		}
-		else if ( useColumnForTimeZoneStorage( element, context ) ) {
+		else if ( resolvedType != null && resolvedType.isRealClass() && element instanceof MemberDetails member && context.isPreferJavaTimeJdbcTypesEnabled()
+				? TemporalMappingConfiguration.resolve( member, resolvedType.toJavaClass(), context ).representation() == org.hibernate.annotations.TimeZoneRepresentation.Type.COLUMN
+				: useColumnForTimeZoneStorage( element, context ) ) {
 			final var column = createTemporalColumn( element, path, context );
-			if ( isOffsetTimeClass( element ) ) {
+			if ( resolvedType == null ? isOffsetTimeClass( element ) : java.time.OffsetTime.class.getName().equals( resolvedType.getName() ) ) {
 				columnOverrideMap.put(
 						path + "." + OffsetTimeCompositeUserType.LOCAL_TIME_NAME,
 						List.of( column )
@@ -571,6 +582,11 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			created.comment( column.comment() );
 		}
 
+		if ( context.isPreferJavaTimeJdbcTypesEnabled()
+				&& (created.insertable() != column.insertable() || created.updatable() != column.updatable()) ) {
+			throw new org.hibernate.MappingException( "Temporal COLUMN components must have matching insertability and updatability for "
+					+ (element instanceof MemberDetails member ? member.getDeclaringType().getName() + "." + member.getName() : element) );
+		}
 		return created;
 	}
 
@@ -624,6 +640,11 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		}
 		created.precision( precision );
 		created.secondPrecision( secondPrecision );
+		if ( annotatedColumn != null && context.isPreferJavaTimeJdbcTypesEnabled() ) {
+			// An implicit primary name does not discard the declared tuple operation flags.
+			created.insertable( annotatedColumn.insertable() );
+			created.updatable( annotatedColumn.updatable() );
+		}
 		return created;
 	}
 

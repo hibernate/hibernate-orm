@@ -61,6 +61,11 @@ import jakarta.persistence.criteria.Nulls;
  * @see SessionFactoryImplementor#getSessionFactoryOptions
  */
 public interface SessionFactoryOptions extends QueryEngineOptions {
+	/// Whether Java Time preservation, including versions and periods, is enabled.
+	default boolean isTemporalPreservationEnabled() {
+		return isPreferJavaTimeJdbcTypesEnabled();
+	}
+
 	/**
 	 * Get the UUID unique to this SessionFactoryOptions.  Will be the
 	 * same value available as {@link SessionFactoryImplementor#getUuid()}.

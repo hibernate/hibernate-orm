@@ -1,5 +1,19 @@
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.temporaltype.internal.TemporalPreservationHelper;
+import org.hibernate.dialect.temporaltype.spi.StandardTemporalPreservation;
+import org.hibernate.type.descriptor.java.OffsetTimeJavaType;
+import org.hibernate.type.descriptor.jdbc.OffsetTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsZonedJdbcTimestampJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneJdbcType;
+import org.hibernate.dialect.temporaltype.spi.TemporalPreservation;
+import org.hibernate.type.descriptor.jdbc.OffsetDateTimeJdbcType;
+import org.hibernate.type.descriptor.java.OffsetDateTimeJavaType;
+import org.hibernate.type.descriptor.java.ZonedDateTimeJavaType;
+import org.hibernate.type.descriptor.java.JavaType;
+
+import static org.hibernate.dialect.temporaltype.spi.TemporalPreservation.Level.*;
+
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
@@ -120,6 +134,8 @@ import org.hibernate.type.descriptor.jdbc.OrdinalEnumJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimeUtcAsOffsetTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampUtcAsInstantJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
+import org.hibernate.type.descriptor.jdbc.internal.UtcTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.internal.UtcTimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -344,7 +360,9 @@ public class H2Dialect extends Dialect implements CurrentTemporalSupport, Tempor
 				typeContributions.getTypeConfiguration()
 						.getJdbcTypeRegistry();
 		jdbcTypeRegistry.addDescriptor( TimeUtcAsOffsetTimeJdbcType.INSTANCE );
-		jdbcTypeRegistry.addDescriptor( TimestampUtcAsInstantJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( org.hibernate.boot.spi.MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( serviceRegistry )
+				? org.hibernate.type.descriptor.jdbc.TimestampUtcAsOffsetDateTimeJdbcType.INSTANCE
+				: TimestampUtcAsInstantJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( H2JdbcTypes.durationIntervalSecond() );
 		jdbcTypeRegistry.addDescriptorIfAbsent( H2JdbcTypes.json() );
@@ -752,6 +770,41 @@ public class H2Dialect extends Dialect implements CurrentTemporalSupport, Tempor
 	@SPI({ IMPLEMENT, SUPPLY })
 	public TemporalValueSemantics getTemporalValueSemantics() {
 		return TemporalValueSemantics.OFFSET_LITERALS;
+	}
+
+	@Override
+	public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
+		final var contributed = TemporalPreservationHelper.assess( javaType, jdbcType, this );
+		if ( contributed != null ) {
+			return contributed;
+		}
+		final JdbcType carrier = jdbcType instanceof UtcTimestampJdbcType utc
+				? utc.getDelegate()
+				: jdbcType;
+		if ( carrier.getClass() == TimestampUtcAsZonedJdbcTimestampJdbcType.class ) {
+			return StandardTemporalPreservation.instantOnly( javaType );
+		}
+
+		if ( javaType.getClass() == OffsetTimeJavaType.class
+				&& jdbcType instanceof UtcTimeJdbcType utc
+				&& utc.getDelegate().getClass() == TimeUtcAsOffsetTimeJdbcType.class ) {
+			return new TemporalPreservation( IRRELEVANT, SUPPORTED, IRRELEVANT, UNSUPPORTED, IRRELEVANT );
+		}
+
+		if ( javaType.getClass() == OffsetTimeJavaType.class
+				&& jdbcType.getClass() == OffsetTimeJdbcType.class ) {
+			return new TemporalPreservation( IRRELEVANT, SUPPORTED, IRRELEVANT, SUPPORTED, IRRELEVANT );
+		}
+		if ( jdbcType.getClass() == OffsetDateTimeJdbcType.class
+				|| jdbcType.getClass() == TimestampWithTimeZoneJdbcType.class ) {
+			if ( javaType.getClass() == OffsetDateTimeJavaType.class ) {
+				return new TemporalPreservation( SUPPORTED, SUPPORTED, SUPPORTED, SUPPORTED, IRRELEVANT );
+			}
+			if ( javaType.getClass() == ZonedDateTimeJavaType.class ) {
+				return new TemporalPreservation( SUPPORTED, SUPPORTED, SUPPORTED, SUPPORTED, UNSUPPORTED );
+			}
+		}
+		return super.getTemporalPreservation( javaType, jdbcType );
 	}
 
 	@Override
@@ -1171,6 +1224,20 @@ public class H2Dialect extends Dialect implements CurrentTemporalSupport, Tempor
 	@SPI({ IMPLEMENT, SUPPLY })
 	public NamespaceSupport getNamespaceSupport() {
 		return NamespaceSupports.standard( true, true );
+	}
+
+
+	@Override
+	public org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection getCurrentTimestampSelection(
+			org.hibernate.type.descriptor.java.JavaType<?> javaType,
+			org.hibernate.type.descriptor.jdbc.JdbcType jdbcType) {
+		return org.hibernate.dialect.temporaltype.internal.PreservingCurrentTimestamp.selection( this, javaType, jdbcType );
+	}
+
+
+	@Override
+	public org.hibernate.dialect.temporal.spi.TemporalTableSupport getTemporalTableSupport() {
+		return new org.hibernate.dialect.temporal.internal.H2TemporalTableSupport( this );
 	}
 
 }

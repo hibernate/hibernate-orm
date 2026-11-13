@@ -1,9 +1,11 @@
 package org.hibernate.orm.test.pagination;
 
+import org.hibernate.cfg.MappingSettings;
 import java.util.List;
 
 import org.hibernate.community.dialect.DerbyDialect;
 
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfLists;
 import org.hibernate.testing.orm.domain.gambit.EnumValue;
@@ -27,7 +29,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * @author Christian Beikov
  */
 @DomainModel( standardModels = StandardDomainModel.GAMBIT )
-@ServiceRegistry
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @SessionFactory
 public class FetchClausePaginationTest {
 	@BeforeEach

@@ -1,6 +1,8 @@
 package org.hibernate.type.descriptor.jdbc.spi;
 
 import java.time.temporal.Temporal;
+import java.sql.CallableStatement;
+import java.sql.SQLException;
 
 import org.hibernate.SPI;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -23,8 +25,8 @@ import static org.hibernate.SPI.Role.IMPLEMENT;
 ///
 /// @param <T> the represented Java time type
 ///
-/// @author Steve Ebersole
 /// @since 8.0
+/// @author Steve Ebersole
 @SPI(IMPLEMENT)
 public abstract class AbstractJavaTimeJdbcType<T extends Temporal> implements JavaTimeJdbcType {
 	private final Class<T> javaTimeType;
@@ -45,6 +47,16 @@ public abstract class AbstractJavaTimeJdbcType<T extends Temporal> implements Ja
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
 		return typeConfiguration.getJavaTypeRegistry().resolveDescriptor( javaTimeType );
+	}
+
+	@Override
+	public void registerOutParameter(CallableStatement statement, int index) throws SQLException {
+		statement.registerOutParameter( index, getDdlTypeCode() );
+	}
+
+	@Override
+	public void registerOutParameter(CallableStatement statement, String name) throws SQLException {
+		statement.registerOutParameter( name, getDdlTypeCode() );
 	}
 
 	@Override

@@ -1,11 +1,13 @@
 package org.hibernate.orm.test.sql.exec;
 
+import org.hibernate.cfg.MappingSettings;
 import java.time.Instant;
 import java.util.Date;
 
 import org.hibernate.orm.test.mapping.SecondaryTableTests;
 import org.hibernate.orm.test.mapping.inheritance.joined.JoinedInheritanceTest;
 
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -28,7 +30,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 				JoinedInheritanceTest.ForeignCustomer.class
 		}
 )
-@ServiceRegistry
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @SessionFactory( exportSchema = true )
 public class HqlDeleteExecutionTests {
 	@Test

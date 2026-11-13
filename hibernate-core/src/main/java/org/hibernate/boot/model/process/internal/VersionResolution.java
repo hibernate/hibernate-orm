@@ -111,7 +111,8 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 
 		final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 		final var basicType = basicTypeRegistry.resolve( basicJavaType, recommendedJdbcType );
-		final var legacyType = basicTypeRegistry.getRegisteredType( basicJavaType.getJavaTypeClass() );
+		final var legacyType = context.isTemporalPreservationEnabled()
+				? basicType : basicTypeRegistry.getRegisteredType( basicJavaType.getJavaTypeClass() );
 		assert legacyType.getJdbcType().getDdlTypeCode() == recommendedJdbcType.getDdlTypeCode();
 
 		return new VersionResolution<>( basicJavaType, recommendedJdbcType, basicType, legacyType );

@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.query.hql;
 
+import org.hibernate.cfg.MappingSettings;
 import java.time.LocalDate;
 
 import org.hibernate.query.common.JoinType;
@@ -8,6 +9,7 @@ import org.hibernate.query.criteria.JpaCriteriaUpdate;
 import org.hibernate.query.criteria.JpaEntityJoin;
 import org.hibernate.query.criteria.JpaRoot;
 
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.contacts.Contact;
 import org.hibernate.testing.orm.domain.contacts.Contact.Name;
@@ -23,7 +25,8 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@ServiceRegistry
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel(standardModels = { StandardDomainModel.GAMBIT, StandardDomainModel.CONTACTS })
 @SessionFactory
 @JiraKey("HHH-16138")

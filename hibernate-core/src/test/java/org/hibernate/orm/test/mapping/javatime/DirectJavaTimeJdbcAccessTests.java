@@ -12,7 +12,6 @@ import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.BasicValue;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.DateJdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalDateJdbcType;
@@ -49,24 +48,22 @@ class DirectJavaTimeJdbcAccessTests {
 			),
 			@Setting(name = MappingSettings.JAVA_TIME_USE_DIRECT_JDBC, value = "true")
 	})
-	@DomainModel(annotatedClasses = EntityWithLocalDates.class)
+	@DomainModel
 	@SessionFactory(exportSchema = false)
 	@SuppressWarnings("deprecation")
 	void explicitPreferenceUsesDialectFallbackAndWarnsOnce(
-			DomainModelScope domainModelScope,
 			SessionFactoryScope sessionFactoryScope,
 			MessageKeyWatcher warningWatcher) {
 		final var options = sessionFactoryScope.getSessionFactory().getSessionFactoryOptions();
 		assertThat( options.isPreferJavaTimeJdbcTypesEnabled() ).isTrue();
 		assertThat( options.isDirectJavaTimeJdbcAccessEnabled( LocalDate.class ) ).isFalse();
 
-		final PersistentClass entityBinding = domainModelScope.getEntityBinding( EntityWithLocalDates.class );
-		final BasicValue inferred = (BasicValue) entityBinding.getProperty( "inferred" ).getValue();
-		final BasicValue explicit = (BasicValue) entityBinding.getProperty( "explicit" ).getValue();
-
-		assertThat( inferred.resolve().getJdbcType() ).isInstanceOf( DateJdbcType.class );
-		assertThat( inferred.resolve().getLegacyResolvedBasicType().getName() ).isEqualTo( "LocalDate" );
-		assertThat( explicit.resolve().getJdbcType() ).isInstanceOf( LocalDateJdbcType.class );
+		final var indicators = sessionFactoryScope.getSessionFactory().getTypeConfiguration().getCurrentBaseSqlTypeIndicators();
+		for ( int i = 0; i < 2; i++ ) {
+			assertThat( org.hibernate.type.descriptor.java.LocalDateJavaType.INSTANCE.getRecommendedJdbcType( indicators ) )
+					.isInstanceOf( DateJdbcType.class );
+		}
+		// Recommendation and warning do not establish that this pair is preservable.
 
 		assertThat( warningWatcher.getTriggeredMessages() )
 				.singleElement()
@@ -89,7 +86,13 @@ class DirectJavaTimeJdbcAccessTests {
 	})
 	@DomainModel(annotatedClasses = EntityWithLocalDates.class)
 	@SessionFactory(exportSchema = false)
-	void disabledPreferenceFallsBackSilently(MessageKeyWatcher warningWatcher) {
+	void disabledPreferenceFallsBackSilently(MessageKeyWatcher warningWatcher, DomainModelScope scope) {
+		final var binding = scope.getEntityBinding( EntityWithLocalDates.class );
+		final var inferred = (BasicValue) binding.getProperty( "inferred" ).getValue();
+		final var explicit = (BasicValue) binding.getProperty( "explicit" ).getValue();
+		assertThat( inferred.resolve().getJdbcType() ).isInstanceOf( DateJdbcType.class );
+		assertThat( inferred.resolve().getLegacyResolvedBasicType().getName() ).isEqualTo( "LocalDate" );
+		assertThat( explicit.resolve().getJdbcType() ).isInstanceOf( LocalDateJdbcType.class );
 		assertThat( warningWatcher.wasTriggered() ).isFalse();
 	}
 
@@ -101,9 +104,14 @@ class DirectJavaTimeJdbcAccessTests {
 			),
 			@Setting(name = MappingSettings.JAVA_TIME_USE_DIRECT_JDBC, value = "true")
 	})
-	@DomainModel(annotatedClasses = EntityWithOffsets.class)
+	@DomainModel
 	@SessionFactory(exportSchema = false)
-	void offsetTypesShareOneWarning(MessageKeyWatcher warningWatcher) {
+	void offsetTypesShareOneWarning(MessageKeyWatcher warningWatcher, SessionFactoryScope scope) {
+		final var indicators = scope.getSessionFactory().getTypeConfiguration().getCurrentBaseSqlTypeIndicators();
+		for ( int i = 0; i < 2; i++ ) {
+			org.hibernate.type.descriptor.java.OffsetTimeJavaType.INSTANCE.getRecommendedJdbcType( indicators );
+			org.hibernate.type.descriptor.java.OffsetDateTimeJavaType.INSTANCE.getRecommendedJdbcType( indicators );
+		}
 		assertThat( warningWatcher.getTriggeredMessages() )
 				.singleElement()
 				.asString()
@@ -119,11 +127,14 @@ class DirectJavaTimeJdbcAccessTests {
 					name = JdbcSettings.DIALECT,
 					value = "org.hibernate.orm.test.mapping.javatime.DirectJavaTimeJdbcAccessTests$NoDirectJavaTimeDialect"
 			),
-			@Setting(name = MappingSettings.JAVA_TIME_USE_DIRECT_JDBC, value = "true")
+			@Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false")
 	})
 	@DomainModel(annotatedClasses = EntityWithExplicitLocalDate.class)
 	@SessionFactory(exportSchema = false)
-	void explicitJdbcTypeDoesNotWarn(MessageKeyWatcher warningWatcher) {
+	void explicitJdbcTypeDoesNotWarn(MessageKeyWatcher warningWatcher, DomainModelScope scope) {
+		// Legacy explicit selection remains available; enabled acceptance is tested separately.
+		final var value = (BasicValue) scope.getEntityBinding( EntityWithExplicitLocalDate.class ).getProperty( "explicit" ).getValue();
+		assertThat( value.resolve().getJdbcType() ).isInstanceOf( LocalDateJdbcType.class );
 		assertThat( warningWatcher.wasTriggered() ).isFalse();
 	}
 

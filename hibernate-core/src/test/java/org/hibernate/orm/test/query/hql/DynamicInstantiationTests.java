@@ -3,6 +3,7 @@ package org.hibernate.orm.test.query.hql;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.orm.test.query.sqm.domain.ConstructedLookupListItem;
 import org.hibernate.orm.test.query.sqm.domain.NestedCtorLookupListItem;
@@ -29,6 +30,13 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Steve Ebersole
  */
 public class DynamicInstantiationTests extends BaseSqmUnitTest {
+	@Override
+	protected void applySettings(org.hibernate.boot.registry.StandardServiceRegistryBuilder builder) {
+		super.applySettings( builder );
+		// Retain the legacy temporal semantics of the shared query fixture.
+		builder.applySetting( MappingSettings.TEMPORAL_PRESERVATION, false );
+	}
+
 
 	@Override
 	protected Class[] getAnnotatedClasses() {

@@ -66,6 +66,90 @@ The deprecated `PersistenceContext.reentrantSafeEntityEntries()` method has been
 [[behavior-changes]]
 == Changes in Behavior
 
+[[temporal-preservation]]
+=== Java time preservation
+
+Hibernate now guarantees preservation of each part of Java Time types (according to the following table) using direct JDBC access or a preserving conversion fallback.
+
+[cols="1,3",options="header"]
+|===
+|Java type |Required round-trip value without explicit adjustment
+|`LocalDate`, `LocalTime`, `LocalDateTime` |Their respective local date/time fields
+|`Instant` |The instant
+|`OffsetTime`, `OffsetDateTime` |Local time/date-time and the original offset
+|`ZonedDateTime` |Local date-time, zone ID and resolved offset
+|===
+
+Unsupported mappings fail rather than silently dropping offsets or zone IDs.
+
+The new `hibernate.type.temporal_preservation` setting, defaulting to `true`, opts in or out of these guarantees.
+
+Supported finite SQL ranges and fractional-second precision still apply. Explicit COLUMN representation
+for `ZonedDateTime` is offset-only: it retains local date-time and offset but reconstructs a fixed-offset
+zone. It does not retain a regional zone ID, even with a zoned primary column.
+
+==== Settings and mapping declarations
+
+* Set `hibernate.type.temporal_preservation=false` to retain the existing direct-disabled interpretation,
+including timestamp versions and system periods, while assessing migration.
+* `hibernate.type.java_time_use_direct_jdbc` is deprecated and acts as an alias when the new key is absent.
+An explicit new key wins; with neither key, preservation is enabled.
+* Enabled mode derives `INSTANT` as the application `Instant` preference, falling back to `TIMESTAMP_UTC`
+when direct access is unavailable. Disabled mode derives legacy `TIMESTAMP_UTC`. An explicit
+`hibernate.type.preferred_instant_jdbc_type` wins over this preference but does not waive enabled validation.
+* `hibernate.jdbc.time_zone` remains an applicable legacy JDBC conversion setting. It neither requests
+Java-value adjustment nor changes the database session timezone.
+
+`@TimeZoneRepresentation` separates INLINE/COLUMN storage from `@TimeZoneAdjustment`'s explicit target zone
+or offset. Adjustment applies on write and read. NONE cancels broader adjustment, not preservation.
+Both new annotations require enabled preservation. `@TimeZoneStorage` and `TimeZoneStorageType` are deprecated.
+Replace legacy `AUTO`, `DEFAULT` or `NORMALIZE` member declarations with explicit choices before enabling,
+or retain compatibility mode. Legacy `COLUMN`, `NATIVE` and `NORMALIZE_UTC` have compatibility translations
+in enabled mode, subject to the new guarantees and existing constraints. Explicit global legacy policies
+may require narrower storage declarations; NONE alone does not replace a storage policy.
+
+Active application converters are assessed at their relational Java/JDBC boundary; conversion itself is
+application-owned. Whole-value converters over synthetic COLUMN mappings and active converters combined
+with non-NONE adjustment are rejected.
+
+Custom descriptor integrations may now use `PreservationAwareTemporalJavaType` for temporal
+requirements and `TemporalJdbcType` for pair-specific preservation reports. Existing subclasses
+and explicit `@JdbcType`/`@JdbcTypeCode` selections are not automatically certified. A Java-side
+declaration alone does not establish conversion compatibility. Existing Dialect assessments
+remain valid; see the link:{userGuideBase}#basic-temporal-custom-descriptors[custom descriptor SPI]
+for precedence, inheritance responsibilities and custom-domain limits.
+
+==== Existing schemas and data
+
+Changing the flag does not migrate schema or stored values. A blanket timestamp rewrite is not required:
+compare each actual old/new mapping and its encoding. Unchanged JVM, JDBC and database session timezones
+simplify the analysis but do not prove equivalent interpretation. Identical SQL types can contain differently
+encoded values, while a different preferred DDL type does not by itself prove rows need rewriting.
+
+Before changing modes:
+
+. Inventory effective settings, Java/JDBC mappings, physical columns and precision, timezone history,
+and application/database timestamp producers. Include XML mappings, converters and custom handlers.
+. Classify mappings as compatible, requiring schema/value conversion, or requiring application review.
+Validate existing rows against the target finite range and precision. Schema validation alone cannot
+establish historical encoding or recover a discarded offset or region ID.
+. For timestamp versions, verify loaded tokens, optimistic-lock predicates and detached merges. If token
+representation changes, arrange cache invalidation and reload of detached or externally stored tokens.
+. For system periods, treat both boundaries, current/history tables, constraints and future timestamp
+producers as one migration unit. Test historical queries immediately before, at and after each boundary.
+. Apply a reviewed migration before starting writers with the new interpretation. Validate the actual
+target mapping against the migrated schema/data; do not infer success from source conversion alone.
+
+Temporal schema analysis and application-specific SQL generation are planned for the
+`hibernate-migration-recipes` OpenRewrite project. They are not a prerequisite for using ORM, and are not
+currently implied by selecting its general upgrade recipes or existing `@Temporal` modernization recipe.
+Until that support is available, perform the schema/data assessment and migration explicitly. Bootstrap
+schema validation is an optional structural check, not proof of temporal data interpretation.
+
+See the link:{userGuideBase}#basic-temporal-preservation[User Guide] for the full guarantee matrix and settings,
+and link:{userGuideBase}#basic-timestamp-with-time-zone[representation and adjustment] for mapping choices.
+
+
 This section describes changes in behavior that applications should be aware of.
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

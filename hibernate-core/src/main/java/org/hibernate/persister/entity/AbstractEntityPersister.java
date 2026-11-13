@@ -1,5 +1,8 @@
 package org.hibernate.persister.entity;
 
+import org.hibernate.type.descriptor.converter.internal.TemporalAdjustmentConverter;
+import org.hibernate.type.UserComponentType;
+
 import org.hibernate.ObjectNotFoundException;
 
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
@@ -1073,6 +1076,23 @@ public abstract class AbstractEntityPersister
 				: knownAbstract;
 	}
 
+	private static boolean requiresTemporalAssembly(Type type) {
+		if ( type instanceof UserComponentType<?> component
+				&& component.getCompositeUserType() instanceof org.hibernate.usertype.internal.ContextualTemporalCompositeUserType<?> ) {
+			return true;
+		}
+		if ( type instanceof BasicType<?> basic
+				&& basic.getValueConverter() instanceof TemporalAdjustmentConverter<?> ) {
+			return true;
+		}
+		if ( type instanceof CompositeType composite ) {
+			for ( var part : composite.getSubtypes() ) {
+				if ( requiresTemporalAssembly( part ) ) return true;
+			}
+		}
+		return false;
+	}
+
 	private boolean shouldUseReferenceCacheEntries(@Nonnull SessionFactoryOptions options) {
 		// Check if we can use Reference Cached entities in 2lc
 		// todo : should really validate that the cache access type is read-only
@@ -1088,7 +1108,7 @@ public abstract class AbstractEntityPersister
 			// 2) have no associations.
 			// Eventually we want to be a little more lenient with associations.
 			for ( var type : getSubclassPropertyTypeClosure() ) {
-				if ( type.isAnyType() || type.isCollectionType() || type.isEntityType() ) {
+				if ( requiresTemporalAssembly( type ) || type.isAnyType() || type.isCollectionType() || type.isEntityType() ) {
 					return false;
 				}
 			}

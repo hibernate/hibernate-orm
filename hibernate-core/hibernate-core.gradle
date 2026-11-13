@@ -373,3 +373,78 @@ tasks.sourcesJar.dependsOn ':hibernate-core:generateHqlParser'
 tasks.sourcesJar.dependsOn ':hibernate-core:generateSqlScriptParser'
 tasks.sourcesJar.dependsOn ':hibernate-core:generateOrderingParser'
 tasks.sourcesJar.dependsOn ':hibernate-core:generateSqlFormatterParser'
+
+// Explicit environment axes for temporal preservation verification. Keep the
+// normal UTC test default; these options also become Test task inputs.
+tasks.named('test', Test) {
+    def temporalJvmTimeZone = providers.gradleProperty('temporalTestJvmTimeZone')
+    if (temporalJvmTimeZone.present) {
+        java.time.ZoneId.of(temporalJvmTimeZone.get())
+        systemProperty 'user.timezone', temporalJvmTimeZone.get()
+        systemProperty 'hibernate.test.temporal.jvm_zone', temporalJvmTimeZone.get()
+    }
+    def temporalSessionTimeZone = providers.gradleProperty('temporalTestSessionTimeZone')
+    if (temporalSessionTimeZone.present) {
+        def zone = temporalSessionTimeZone.get()
+        java.time.ZoneId.of(zone)
+        def database = providers.gradleProperty('db').getOrElse('h2')
+        def statement
+        if (database in ['oracle', 'oracle_xe']) {
+            statement = "alter session set time_zone='${zone}'"
+        }
+        else if (database in ['h2', 'postgresql', 'pgsql']) {
+            statement = "set time zone '${zone}'"
+        }
+        else {
+            throw new GradleException("Temporal session-timezone verification is not configured for ${database}")
+        }
+        systemProperty 'hibernate.connection.init_sql', statement
+        systemProperty 'hibernate.test.temporal.session_zone', zone
+    }
+    ['Phase', 'Url'].each { option ->
+        def temporalCrossOption = providers.gradleProperty("temporalTestCross${option}")
+        if (temporalCrossOption.present) {
+            systemProperty "hibernate.test.temporal.cross_${option.toLowerCase()}", temporalCrossOption.get()
+        }
+    }
+    ['Writer', 'Reader'].each { phase ->
+        def temporalPhaseTimeZone = providers.gradleProperty("temporalTest${phase}TimeZone")
+        if (temporalPhaseTimeZone.present) {
+            java.time.ZoneId.of(temporalPhaseTimeZone.get())
+            systemProperty "hibernate.test.temporal.${phase.toLowerCase()}_zone", temporalPhaseTimeZone.get()
+        }
+    }
+    def temporalJdbcTimeZone = providers.gradleProperty('temporalTestJdbcTimeZone')
+    if (temporalJdbcTimeZone.present) {
+        java.time.ZoneId.of(temporalJdbcTimeZone.get())
+        systemProperty 'hibernate.jdbc.time_zone', temporalJdbcTimeZone.get()
+    }
+}
+
+// Separate JVM entry point bypasses the JUnit launcher's schema cleaner so a reader
+// can inspect rows committed by the preceding writer process.
+tasks.register('temporalCrossEnvironment', JavaExec) {
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'org.hibernate.orm.test.mapping.javatime.redesign.TemporalCrossEnvironmentTests'
+    doFirst {
+        systemProperties tasks.test.systemProperties
+    }
+}
+
+// Typed preservation matrix profiles include disconnected bootstrap and cross-process reads.
+tasks.register('temporalPreservationMatrix', JavaExec) {
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'org.hibernate.orm.test.type.temporal.preservation.PreservationMatrixRunner'
+    systemProperty 'log4j2.configurationFile', 'temporal-preservation-log4j2.properties'
+    doFirst {
+        systemProperties tasks.test.systemProperties
+        ['Profile', 'Phase', 'Metadata', 'Url'].each { option ->
+            def value = providers.gradleProperty("temporalMatrix${option}")
+            if (value.present) systemProperty "hibernate.test.temporal.matrix_${option.toLowerCase()}", value.get()
+        }
+        def type = providers.gradleProperty('temporalMatrixType')
+        if (type.present) args type.get()
+    }
+}

@@ -55,6 +55,12 @@ class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 			return new RefCurserJdbcCallFunctionReturnImpl( new JdbcCallRefCursorExtractorImpl( 1 ) );
 		}
 		else {
+			if ( persistenceContext.getFactory().getSessionFactoryOptions().isPreferJavaTimeJdbcTypesEnabled()
+					&& ormType instanceof org.hibernate.type.BasicType<?> basic ) {
+				org.hibernate.type.internal.TemporalMappingValidator.validate(
+						persistenceContext.getFactory().getJdbcServices().getDialect(), basic,
+						procedureCall.getProcedureName() + " function return" );
+			}
 			return new RegularJdbcCallFunctionReturnImpl(
 					ormType,
 					new JdbcCallParameterExtractorImpl<T>(

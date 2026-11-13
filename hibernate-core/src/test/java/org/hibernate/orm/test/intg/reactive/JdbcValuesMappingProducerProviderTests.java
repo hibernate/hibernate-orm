@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.intg.reactive;
 
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.results.spi.ResultSetMapping;
@@ -8,6 +9,7 @@ import org.hibernate.sql.results.jdbc.internal.JdbcValuesMappingProducerProvider
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
 
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -18,7 +20,8 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Steve Ebersole
  */
-@ServiceRegistry( services = @ServiceRegistry.Service(
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),  services = @ServiceRegistry.Service(
 		role = JdbcValuesMappingProducerProvider.class,
 		impl = JdbcValuesMappingProducerProviderTests.CustomJdbcValuesMappingProducerProvider.class
 ) )

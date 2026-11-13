@@ -613,17 +613,53 @@ Alternatively, you can configure SQL Server to use the UTF-8 enabled collation `
 [[datetime-jdbc]]
 === Date and time types and JDBC
 
-Hibernate highly recommends that applications use `java.time` types to represent temporal-related values.
-By default, Hibernate converts `java.time` values to `java.sql` date/time types at the JDBC boundary.
-Set `hibernate.type.java_time_use_direct_jdbc` to `true` to use `java.time` types directly
-where the configured Dialect reports that the exact Java class is supported by the driver.
-JDBC drivers are required to directly support `java.time` types since Java 8 (JDBC 4.2).
+Use `java.time` types for temporal values. With `hibernate.type.temporal_preservation=true`, the default,
+Hibernate requires the following round-trip guarantees, whether it uses direct JDBC access or a preserving
+fallback conversion:
 
-When the Dialect reports that a requested type is unsupported, Hibernate falls back to the corresponding
-legacy JDBC representation and logs the known driver/database limitation.  This capability is resolved
-separately for each Java Time class, with `OffsetTime` and `OffsetDateTime` treated as a matched pair.
+[cols="1,3",options="header"]
+|===
+|Java type |Preserved value
+|`LocalDate` |Calendar date
+|`LocalTime` |Local time of day
+|`LocalDateTime` |Local date and time
+|`Instant` |Instant
+|`OffsetTime` |Local time and offset
+|`OffsetDateTime` |Local date-time and offset
+|`ZonedDateTime` |Local date-time, zone ID and resolved offset
+|===
 
-When `java.sql` date/time types are used (either in the model or with
-`hibernate.type.java_time_use_direct_jdbc=false`, the default) it is important to make sure that
-database server time zone agrees with JVM system time zone.  This is achieved using
-the `hibernate.jdbc.time_zone` setting.
+The guarantees are subject to supported finite SQL ranges and fractional-second precision.
+A lower-precision column may round fractional seconds. Explicit COLUMN representation for `ZonedDateTime`
+is the qualified offset-only alternative: it reconstructs a fixed-offset zone, not the original region ID.
+Unsupported mappings fail instead of silently reducing the guarantee. In particular, a database's
+`WITH TIME ZONE` type does not necessarily retain offsets or named zones.
+
+Storage and adjustment are separate choices. `@TimeZoneRepresentation` selects INLINE (the default) or COLUMN
+storage. `@TimeZoneAdjustment` explicitly requests a target zone or offset on both write and read; it is not
+implied by selecting a representation. `NONE` cancels a broader adjustment declaration.
+
+For applications that need the existing direct-disabled temporal interpretation during migration, set:
+
+[source,properties]
+----
+hibernate.type.temporal_preservation=false
+----
+
+This compatibility choice includes timestamp-based version attributes and system periods. It does not
+convert existing data. Assess the old and new mapping, deployed schema, stored values and timestamp producers
+before enabling preservation. Matching JVM and database timezones alone does not establish compatibility.
+
+The deprecated `hibernate.type.java_time_use_direct_jdbc` is used as an alias only when the new setting is
+absent. An explicit `hibernate.type.temporal_preservation` wins. Enabled mode derives an `INSTANT` preference
+for application `Instant` mappings, with a `TIMESTAMP_UTC` fallback when direct handling is unavailable;
+disabled mode derives the legacy `TIMESTAMP_UTC` preference. An explicit
+`hibernate.type.preferred_instant_jdbc_type` overrides the preference, but not enabled validation.
+
+`hibernate.jdbc.time_zone` controls applicable legacy JDBC conversions. It does not set the database session
+timezone or request adjustment of Java values in preservation mode.
+
+The `hibernate-migration-recipes` OpenRewrite project provides source migration recipes. Temporal schema
+analysis and application-specific data migration script generation are planned work; its existing
+`@Temporal` modernization recipe does not migrate stored values. Bootstrap schema validation also cannot
+prove the interpretation of historical timestamp data.

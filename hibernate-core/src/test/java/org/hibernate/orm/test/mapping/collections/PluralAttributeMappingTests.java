@@ -1,10 +1,12 @@
 package org.hibernate.orm.test.mapping.collections;
 
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.MappingMetamodel;
 
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfArrays;
 import org.hibernate.testing.orm.domain.gambit.EntityOfSets;
@@ -25,7 +27,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * @author Fabio Massimo Ercoli
  */
 @DomainModel( standardModels = StandardDomainModel.GAMBIT )
-@ServiceRegistry
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @SessionFactory
 public class PluralAttributeMappingTests {
 

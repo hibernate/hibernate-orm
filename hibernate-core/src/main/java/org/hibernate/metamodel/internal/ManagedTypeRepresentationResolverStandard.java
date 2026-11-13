@@ -81,6 +81,9 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 
 	private static CompositeUserType<?> getCompositeUserType(
 			Component bootDescriptor, RuntimeModelCreationContext creationContext) {
+		if ( bootDescriptor.getContextualCompositeUserType() != null ) {
+			return bootDescriptor.getContextualCompositeUserType();
+		}
 		if ( bootDescriptor.getTypeName() != null ) {
 			return beanInstance( creationContext,
 					creationContext.getBootstrapContext().getClassLoaderAccess()

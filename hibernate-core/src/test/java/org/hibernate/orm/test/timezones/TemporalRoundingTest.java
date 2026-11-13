@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.Dialect;
@@ -29,7 +30,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DomainModel(annotatedClasses = TemporalRoundingTest.Zoned.class)
 @SessionFactory
-@ServiceRegistry(settings = @Setting(name = AvailableSettings.TIMEZONE_DEFAULT_STORAGE, value = "NORMALIZE"))
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = { @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"), @Setting(name = AvailableSettings.TIMEZONE_DEFAULT_STORAGE, value = "NORMALIZE") })
 @SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Doesn't support second precision 6")
 @SkipForDialect(dialectClass = InformixDialect.class, reason = "Doesn't support second precision 6")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsMicroSecondPrecision.class)

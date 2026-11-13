@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.function.array;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import java.util.Arrays;
 import java.util.List;
 
@@ -59,6 +62,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructuralArrays.class)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayAgg.class)
 @SkipForDialect(dialectClass = SpannerDialect.class, reason = "Doesn't support array_agg ordering yet")
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 public class ArrayAggregateTest {
 
 	public static class UdtContributor implements AdditionalMappingContributor {

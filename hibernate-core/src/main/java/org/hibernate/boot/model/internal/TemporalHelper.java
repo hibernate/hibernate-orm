@@ -77,6 +77,15 @@ public class TemporalHelper {
 				context.getTemporalTableStrategy() == TemporalTableStrategy.HISTORY_TABLE
 						? createHistoryTable( table, historyTable, context )
 						: table;
+		final String owner = target instanceof org.hibernate.mapping.Collection collection
+				? collection.getRole() : ((org.hibernate.mapping.PersistentClass) target).getEntityName();
+		for ( var column : new Column[] { rowStartColumn, rowEndColumn } ) {
+			((BasicValue) column.getValue()).setSystemPeriodContext(
+					() -> owner + "." + (column == rowStartColumn ? ROW_START : ROW_END)
+							+ " [table=" + temporalTable.getName() + ", column=" + column.getName()
+							+ ", strategy=" + context.getTemporalTableStrategy()
+							+ ", generation=" + periodGeneration( context ) + "]" );
+		}
 		temporalTable.addColumn( rowStartColumn );
 		temporalTable.addColumn( rowEndColumn );
 		enableTemporal( target, context.getTemporalTableStrategy(),
@@ -126,6 +135,17 @@ public class TemporalHelper {
 		}
 		model.setPrimaryKeyDisabled( dialect.getTemporalTableSupport()
 				.suppressesTemporalTablePrimaryKeys( partitioned ) );
+	}
+
+	private static String periodGeneration(MetadataBuildingContext context) {
+		if ( context.getTemporalTableStrategy() == NATIVE ) {
+			return "native";
+		}
+		final var coordinator = context.getBootstrapContext().getServiceRegistry()
+				.requireService( ChangesetCoordinator.class );
+		return coordinator.useServerTimestamp( context.getMetadataCollector().getDatabase().getDialect() )
+				? "inline server timestamp"
+				: "bound supplier " + coordinator.getIdentifierSupplier().getClass().getName();
 	}
 
 	private static Class<?> getChangesetIdType(MetadataBuildingContext context) {
@@ -366,11 +386,44 @@ public class TemporalHelper {
 				context.getBuildingOptions().getPhysicalNamingStrategy() );
 		context.getMetadataCollector().addSecondPass( (OptionalDeterminationSecondPass) ignored -> {
 			final var changesetIdJavaType = getChangesetIdType( context );
-			setTemporalColumnType( temporalPrecision, column, database, changesetIdJavaType );
+			setTemporalColumnType( temporalPrecision, column, database, changesetIdJavaType,
+					context.isTemporalPreservationEnabled() );
 			if ( Instant.class.equals( changesetIdJavaType ) ) {
 				final int temporalColumnType = database.getDialect().getTemporalTableSupport().getTemporalColumnType();
-				basicValue.setExplicitJdbcTypeAccess( typeConfiguration ->
-						typeConfiguration.getJdbcTypeRegistry().findDescriptor( temporalColumnType ) );
+				basicValue.setExplicitJdbcTypeAccess( typeConfiguration -> {
+					if ( context.isTemporalPreservationEnabled() ) {
+						final var dialect = database.getDialect();
+						final var support = dialect.getTemporalTableSupport();
+						final var jdbcType = support.getPreservingTemporalJdbcType(
+								context.getTemporalTableStrategy(), typeConfiguration.getJdbcTypeRegistry() );
+						if ( jdbcType == null ) {
+							throw new org.hibernate.MappingException( "No preserving system-period profile for "
+									+ dialect.getClass().getName() + " / " + context.getTemporalTableStrategy()
+									+ "; temporal_preservation=false retains legacy interpretation" );
+						}
+						final var coordinator = context.getBootstrapContext().getServiceRegistry().requireService( ChangesetCoordinator.class );
+						if ( coordinator.useServerTimestamp( dialect )
+								&& support.getPreservingTemporalCurrentTimestampExpression(
+										context.getTemporalTableStrategy(), jdbcType ) == null ) {
+							throw new org.hibernate.MappingException( "No preserving inline system-period producer for " + jdbcType.getClass().getName() );
+						}
+						if ( coordinator.getIdentifierSupplier() instanceof org.hibernate.temporal.internal.CurrentTimestampChangesetIdentifierSupplier
+								&& dialect.getCurrentTemporalSupport().getCurrentTimestampSelection(
+										org.hibernate.type.descriptor.java.InstantJavaType.INSTANCE, jdbcType ) == null ) {
+							throw new org.hibernate.MappingException( "No preserving fetched system-period producer for " + jdbcType.getClass().getName() );
+						}
+						column.setSqlTypeCode( jdbcType.getDdlTypeCode() );
+						return jdbcType;
+					}
+					final var jdbcType = typeConfiguration.getJdbcTypeRegistry().findDescriptor( temporalColumnType );
+					// Application Instant handling now uses plain UTC clock fields. Periods
+					// retain their prior DDL/producer protocol, including zoned PostgreSQL
+					// columns. Do not replace custom descriptors or modify the registry.
+					return jdbcType != null && jdbcType.getClass()
+							== org.hibernate.type.descriptor.jdbc.TimestampUtcAsPlainJdbcTimestampJdbcType.class
+							? org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType.INSTANCE
+							: jdbcType;
+				} );
 			}
 		} );
 		return column;
@@ -380,14 +433,17 @@ public class TemporalHelper {
 			Integer temporalPrecision,
 			Column column,
 			Database database,
-			Class<?> changesetIdJavaType) {
+			Class<?> changesetIdJavaType,
+			boolean preservation) {
 		if ( temporalPrecision != null ) {
 			column.setTemporalPrecision( temporalPrecision );
 		}
 		else if ( Instant.class.equals( changesetIdJavaType ) ) {
 			final var temporalTableSupport = database.getDialect().getTemporalTableSupport();
 			column.setTemporalPrecision( temporalTableSupport.getTemporalColumnPrecision() );
-			column.setSqlTypeCode( temporalTableSupport.getTemporalColumnType() );
+			if ( !preservation ) {
+				column.setSqlTypeCode( temporalTableSupport.getTemporalColumnType() );
+			}
 		}
 	}
 

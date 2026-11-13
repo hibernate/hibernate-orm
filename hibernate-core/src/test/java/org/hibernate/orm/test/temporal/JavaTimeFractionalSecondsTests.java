@@ -3,9 +3,6 @@ package org.hibernate.orm.test.temporal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
-import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 
 import org.hibernate.annotations.FractionalSeconds;
@@ -53,6 +50,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
+// The legacy offset/zoned matrix is retained in LegacyJavaTimeFractionalSecondsTests.
 public class JavaTimeFractionalSecondsTests {
 	@Test
 	@DomainModel(annotatedClasses = {TestEntity.class, TestEntity0.class, TestEntity3.class, TestEntity9.class} )
@@ -66,9 +64,6 @@ public class JavaTimeFractionalSecondsTests {
 		checkPrecision( "theInstant", defaultPrecision, entityBinding, domainModel );
 		checkPrecision( "theLocalDateTime", defaultPrecision, entityBinding, domainModel );
 		checkPrecision( "theLocalTime", 0, entityBinding, domainModel );
-		checkPrecision( "theOffsetDateTime", defaultPrecision, entityBinding, domainModel );
-		checkPrecision( "theOffsetTime", 0, entityBinding, domainModel );
-		checkPrecision( "theZonedDateTime", defaultPrecision, entityBinding, domainModel );
 
 		final PersistentClass entityBinding0 = scope.getEntityBinding( TestEntity0.class );
 		checkPrecision( "theInstant", 0, entityBinding0, domainModel );
@@ -80,9 +75,6 @@ public class JavaTimeFractionalSecondsTests {
 
 		final PersistentClass entityBinding9 = scope.getEntityBinding( TestEntity9.class );
 		checkPrecision( "theInstant", 9, entityBinding9, domainModel );
-		checkPrecision( "theOffsetDateTime", 9, entityBinding9, domainModel );
-		checkPrecision( "theOffsetTime", 9, entityBinding9, domainModel );
-		checkPrecision( "theZonedDateTime", 9, entityBinding9, domainModel );
 	}
 
 	private void checkPrecision(
@@ -180,16 +172,21 @@ public class JavaTimeFractionalSecondsTests {
 			start = Instant.now();
 		}
 
+		final var local = LocalDateTime.of( 2024, 2, 29, 12, 34, 56, 123456789 );
 		scope.inTransaction( (session) -> {
 			final TestEntity3 testEntity = new TestEntity3();
 			testEntity.id = 1;
 			testEntity.theInstant = start;
+			testEntity.theLocalDateTime = local;
+			testEntity.theLocalTime = local.toLocalTime();
 			session.persist( testEntity );
 		} );
 
 		scope.inTransaction( (session) -> {
 			final TestEntity3 testEntity = session.find( TestEntity3.class, 1 );
 			assertThat( testEntity.theInstant ).isEqualTo( DateTimeUtils.adjustToPrecision( start, 3, dialect ) );
+			assertThat( testEntity.theLocalDateTime ).isEqualTo( DateTimeUtils.adjustToPrecision( local, 3, dialect ) );
+			assertThat( testEntity.theLocalTime ).isEqualTo( DateTimeUtils.adjustToPrecision( local.toLocalTime(), 3, dialect ) );
 		} );
 	}
 
@@ -245,12 +242,6 @@ public class JavaTimeFractionalSecondsTests {
 		@JdbcTypeCode(SqlTypes.LOCAL_TIME)
 		private LocalTime theLocalTime;
 
-		private OffsetDateTime theOffsetDateTime;
-
-		private OffsetTime theOffsetTime;
-
-		private ZonedDateTime theZonedDateTime;
-
 	}
 
 	@Entity(name="TestEntity0")
@@ -291,15 +282,6 @@ public class JavaTimeFractionalSecondsTests {
 
 		@FractionalSeconds(9)
 		private Instant theInstant;
-
-		@FractionalSeconds(9)
-		private OffsetDateTime theOffsetDateTime;
-
-		@FractionalSeconds(9)
-		private OffsetTime theOffsetTime;
-
-		@FractionalSeconds(9)
-		private ZonedDateTime theZonedDateTime;
 
 	}
 }

@@ -3,6 +3,7 @@ package org.hibernate.orm.test.query.criteria;
 import java.util.Date;
 import java.util.List;
 
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.InformixDialect;
@@ -38,7 +39,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 /**
  * @author Marco Belladelli
  */
-@ServiceRegistry(settings = @Setting(name = AvailableSettings.CRITERIA_COPY_TREE, value = "true"))
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = { @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"), @Setting(name = AvailableSettings.CRITERIA_COPY_TREE, value = "true") })
 @DomainModel(standardModels = StandardDomainModel.GAMBIT)
 @SessionFactory
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsWindowFunctions.class)

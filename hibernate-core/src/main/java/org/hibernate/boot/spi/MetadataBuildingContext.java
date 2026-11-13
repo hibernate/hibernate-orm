@@ -12,11 +12,10 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
 
-import static org.hibernate.cfg.MappingSettings.JAVA_TIME_USE_DIRECT_JDBC;
-import static org.hibernate.cfg.MappingSettings.JAVA_TIME_USE_DIRECT_JDBC_DEFAULT;
 import static org.hibernate.cfg.MappingSettings.PREFER_LOCALE_LANGUAGE_TAG;
 import static org.hibernate.cfg.MappingSettings.PREFER_NATIVE_ENUM_TYPES;
 import static org.hibernate.audit.AuditStrategy.DEFAULT;
+import static org.hibernate.cfg.MappingSettings.TEMPORAL_PRESERVATION_DEFAULT;
 import static org.hibernate.temporal.TemporalTableStrategy.AUTO;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 
@@ -32,6 +31,11 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
  */
 public interface MetadataBuildingContext {
 	BootstrapContext getBootstrapContext();
+
+	/// Whether Java Time preservation, including versions and periods, is enabled.
+	default boolean isTemporalPreservationEnabled() {
+		return isPreferJavaTimeJdbcTypesEnabled();
+	}
 
 	/**
 	 * Access to the options specified by the {@link org.hibernate.boot.MetadataBuilder}
@@ -149,7 +153,9 @@ public interface MetadataBuildingContext {
 
 	@Remove
 	static boolean isPreferJavaTimeJdbcTypesEnabled(ServiceRegistry serviceRegistry) {
-		return isPreferJavaTimeJdbcTypesEnabled( serviceRegistry.requireService( ConfigurationService.class ) );
+		// Standalone type contributions may have no registry; managed settings always win.
+		return serviceRegistry == null ? TEMPORAL_PRESERVATION_DEFAULT
+				: isPreferJavaTimeJdbcTypesEnabled( serviceRegistry.requireService( ConfigurationService.class ) );
 	}
 
 	@Remove
@@ -164,11 +170,8 @@ public interface MetadataBuildingContext {
 
 	@Remove
 	static boolean isPreferJavaTimeJdbcTypesEnabled(ConfigurationService configurationService) {
-		return getBoolean(
-				JAVA_TIME_USE_DIRECT_JDBC,
-				configurationService.getSettings(),
-				JAVA_TIME_USE_DIRECT_JDBC_DEFAULT
-		);
+		return org.hibernate.type.internal.TemporalPreservationSettings.resolve(
+				configurationService.getSettings() ).enabled();
 	}
 
 	@Remove

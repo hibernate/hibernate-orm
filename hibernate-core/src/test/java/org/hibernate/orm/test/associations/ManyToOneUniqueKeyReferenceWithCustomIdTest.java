@@ -114,12 +114,14 @@ public class ManyToOneUniqueKeyReferenceWithCustomIdTest {
 
 	static class CustomIdType implements EnhancedUserType<CustomId> {
 		@Override
-		public String toSqlLiteral(CustomId value) {
+		@Nonnull
+		public String toSqlLiteral(@Nonnull CustomId value) {
 			return "'" + value.toString() + "'";
 		}
 
 		@Override
-		public String toString(CustomId value) throws HibernateException {
+		@Nullable
+		public String toString(@Nonnull CustomId value) throws HibernateException {
 			return value.toString();
 		}
 
@@ -138,7 +140,8 @@ public class ManyToOneUniqueKeyReferenceWithCustomIdTest {
 		}
 
 		@Override
-		public CustomId fromStringValue(CharSequence sequence) throws HibernateException {
+		@Nonnull
+		public CustomId fromStringValue(@Nonnull CharSequence sequence) throws HibernateException {
 			return new CustomId( sequence.toString() );
 		}
 

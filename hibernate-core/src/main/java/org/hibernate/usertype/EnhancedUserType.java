@@ -1,5 +1,8 @@
 package org.hibernate.usertype;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.SPI;
 
 import static org.hibernate.SPI.Role.IMPLEMENT;
@@ -18,7 +21,8 @@ public interface EnhancedUserType<J> extends UserType<J> {
 	/**
 	 * Return an SQL literal representation of the value
 	 */
-	String toSqlLiteral(J value);
+	@Nonnull
+	String toSqlLiteral(@Nonnull J value);
 
 	/**
 	 * Render the value to the string representation.
@@ -29,7 +33,8 @@ public interface EnhancedUserType<J> extends UserType<J> {
 	 *
 	 * @throws HibernateException Problem rendering
 	 */
-	String toString(J value) throws HibernateException;
+	@Nullable
+	String toString(@Nonnull J value) throws HibernateException;
 
 	/**
 	 * Consume the given string representation back into this types java form.
@@ -40,6 +45,7 @@ public interface EnhancedUserType<J> extends UserType<J> {
 	 *
 	 * @throws HibernateException Problem consuming
 	 */
-	J fromStringValue(CharSequence sequence) throws HibernateException;
+	@Nullable
+	J fromStringValue(@Nonnull CharSequence sequence) throws HibernateException;
 
 }

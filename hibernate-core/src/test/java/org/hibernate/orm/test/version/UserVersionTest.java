@@ -188,17 +188,19 @@ public class UserVersionTest {
 		}
 
 		@Override
-		public CustomVersion seed(SharedSessionContractImplementor session) {
+		@Nonnull
+		public CustomVersion seed(@Nullable SharedSessionContractImplementor session) {
 			return new CustomVersion( ++versionValue );
 		}
 
 		@Override
-		public CustomVersion next(CustomVersion current, SharedSessionContractImplementor session) {
+		@Nonnull
+		public CustomVersion next(@Nonnull CustomVersion current, @Nonnull SharedSessionContractImplementor session) {
 			return seed( session );
 		}
 
 		@Override
-		public int compare(CustomVersion a, CustomVersion b) {
+		public int compare(@Nonnull CustomVersion a, @Nonnull CustomVersion b) {
 			return Long.compare( a.getRev(), b.getRev() );
 		}
 	}

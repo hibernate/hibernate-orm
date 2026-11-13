@@ -1,5 +1,7 @@
 package org.hibernate.usertype;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.SPI;
 
 import static org.hibernate.SPI.Role.IMPLEMENT;
@@ -62,5 +64,5 @@ public interface ParameterizedType {
 	 * specified in the XML mapping file or by
 	 * {@link org.hibernate.annotations.Type#parameters}.
 	 */
-	void setParameterValues(Properties parameters);
+	void setParameterValues(@Nonnull Properties parameters);
 }

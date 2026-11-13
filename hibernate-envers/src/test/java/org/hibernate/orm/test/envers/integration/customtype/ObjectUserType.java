@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.envers.integration.customtype;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 
 import org.hibernate.HibernateException;
@@ -18,7 +21,8 @@ import jakarta.persistence.Lob;
 public class ObjectUserType implements CompositeUserType<Object> {
 
 	@Override
-	public Object getPropertyValue(Object component, int property) throws HibernateException {
+	@Nullable
+	public Object getPropertyValue(@Nonnull Object component, int property) throws HibernateException {
 		return switch ( property ) {
 			case 0 -> component;
 			case 1 -> component.getClass().getName();
@@ -27,22 +31,25 @@ public class ObjectUserType implements CompositeUserType<Object> {
 	}
 
 	@Override
-	public Object instantiate(ValueAccess valueAccess) {
+	@Nullable
+	public Object instantiate(@Nonnull ValueAccess valueAccess) {
 		return valueAccess.getValue( 0, Object.class );
 	}
 
 	@Override
+	@Nonnull
 	public Class<?> embeddable() {
 		return TaggedObject.class;
 	}
 
 	@Override
+	@Nonnull
 	public Class<Object> returnedClass() {
 		return Object.class;
 	}
 
 	@Override
-	public boolean equals(Object x, Object y) throws HibernateException {
+	public boolean equals(@Nullable Object x, @Nullable Object y) throws HibernateException {
 		if ( x == y ) {
 			return true;
 		}
@@ -53,12 +60,13 @@ public class ObjectUserType implements CompositeUserType<Object> {
 	}
 
 	@Override
-	public int hashCode(Object x) throws HibernateException {
+	public int hashCode(@Nonnull Object x) throws HibernateException {
 		return x.hashCode();
 	}
 
 	@Override
-	public Object deepCopy(Object value) throws HibernateException {
+	@Nullable
+	public Object deepCopy(@Nullable Object value) throws HibernateException {
 		return value; // Persisting only immutable types.
 	}
 
@@ -68,17 +76,23 @@ public class ObjectUserType implements CompositeUserType<Object> {
 	}
 
 	@Override
-	public Serializable disassemble(Object value) throws HibernateException {
+	@Nullable
+	public Serializable disassemble(@Nullable Object value) throws HibernateException {
 		return (Serializable) value;
 	}
 
 	@Override
-	public Object assemble(Serializable cached, Object owner) throws HibernateException {
+	@Nullable
+	public Object assemble(@Nullable Serializable cached, @Nullable Object owner) throws HibernateException {
 		return cached;
 	}
 
 	@Override
-	public Object replace(Object original, Object target, Object owner) throws HibernateException {
+	@Nullable
+	public Object replace(
+			@Nullable Object original,
+			@Nullable Object target,
+			@Nullable Object owner) throws HibernateException {
 		return original;
 	}
 

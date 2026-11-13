@@ -184,12 +184,14 @@ public class UserTypeNonComparableIdTest {
 		}
 
 		@Override
-		public String toSqlLiteral(CustomId customId) {
-			return toString( customId );
+		@Nonnull
+		public String toSqlLiteral(@Nonnull CustomId customId) {
+			return String.valueOf( customId.getValue() );
 		}
 
 		@Override
-		public String toString(CustomId customId) throws HibernateException {
+		@Nullable
+		public String toString(@Nullable CustomId customId) throws HibernateException {
 			if ( customId == null ) {
 				return null;
 			}
@@ -203,7 +205,8 @@ public class UserTypeNonComparableIdTest {
 		}
 
 		@Override
-		public CustomId fromStringValue(CharSequence sequence) throws HibernateException {
+		@Nullable
+		public CustomId fromStringValue(@Nullable CharSequence sequence) throws HibernateException {
 			if ( sequence == null ) {
 				return null;
 			}

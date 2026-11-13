@@ -26,7 +26,7 @@ public class MyGenericType implements UserType<Object>, DynamicParameterizedType
 	}
 
 	@Override
-	public void setParameterValues(Properties params) {
+	public void setParameterValues(@Nonnull Properties params) {
 		parameterType = (ParameterType) params.get(PARAMETER_TYPE);
 	}
 

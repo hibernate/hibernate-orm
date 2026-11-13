@@ -260,17 +260,20 @@ public class BatchAndUserTypeIdCollectionTest {
 			}
 
 			@Override
-			public String toSqlLiteral(ParentId parentId) {
+			@Nonnull
+			public String toSqlLiteral(@Nonnull ParentId parentId) {
+				return String.valueOf( parentId.getId() );
+			}
+
+			@Override
+			@Nullable
+			public String toString(@Nonnull ParentId parentId) throws HibernateException {
 				return parentId.getId();
 			}
 
 			@Override
-			public String toString(ParentId parentId) throws HibernateException {
-				return parentId.getId();
-			}
-
-			@Override
-			public ParentId fromStringValue(CharSequence sequence) throws HibernateException {
+			@Nonnull
+			public ParentId fromStringValue(@Nonnull CharSequence sequence) throws HibernateException {
 				return new ParentId(sequence.toString());
 			}
 

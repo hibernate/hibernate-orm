@@ -1,5 +1,8 @@
 package org.hibernate.usertype;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.SPI;
 
 import static org.hibernate.SPI.Role.IMPLEMENT;
@@ -23,13 +26,13 @@ public class UserTypeSupport<T> extends BaseUserTypeSupport<T> implements TypeCo
 	private TypeConfiguration typeConfiguration;
 
 	@SPI(IMPLEMENT)
-	public UserTypeSupport(Class<T> returnedClass, int jdbcTypeCode) {
+	public UserTypeSupport(@Nonnull Class<T> returnedClass, int jdbcTypeCode) {
 		this.returnedClass = returnedClass;
 		this.jdbcTypeCode = jdbcTypeCode;
 	}
 
 	@Override
-	protected void resolve(BiConsumer<BasicJavaType<T>, JdbcType> resolutionConsumer) {
+	protected void resolve(@Nonnull BiConsumer<BasicJavaType<T>, JdbcType> resolutionConsumer) {
 		assert typeConfiguration != null;
 		final var descriptor =
 				typeConfiguration.getJavaTypeRegistry()
@@ -43,12 +46,13 @@ public class UserTypeSupport<T> extends BaseUserTypeSupport<T> implements TypeCo
 	}
 
 	@Override
+	@Nullable
 	public TypeConfiguration getTypeConfiguration() {
 		return typeConfiguration;
 	}
 
 	@Override
-	public void setTypeConfiguration(TypeConfiguration typeConfiguration) {
+	public void setTypeConfiguration(@Nonnull TypeConfiguration typeConfiguration) {
 		this.typeConfiguration = typeConfiguration;
 	}
 }

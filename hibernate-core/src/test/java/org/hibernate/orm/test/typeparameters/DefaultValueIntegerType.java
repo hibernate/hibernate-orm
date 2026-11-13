@@ -101,7 +101,7 @@ public class DefaultValueIntegerType implements UserType<Integer>, Parameterized
 		return original;
 	}
 
-	public void setParameterValues(Properties parameters) {
+	public void setParameterValues(@Nonnull Properties parameters) {
 		this.defaultValue = Integer.valueOf( (String) parameters.get( "default" ) );
 	}
 

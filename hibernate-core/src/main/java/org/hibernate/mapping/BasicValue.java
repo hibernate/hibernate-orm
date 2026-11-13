@@ -1210,21 +1210,25 @@ public class BasicValue extends SimpleValue
 		}
 
 		@Override
+		@Nonnull
 		public MetadataBuildingContext getBuildingContext() {
 			return BasicValue.this.getBuildingContext();
 		}
 
 		@Override
+		@Nonnull
 		public ServiceRegistry getServiceRegistry() {
 			return BasicValue.this.getServiceRegistry();
 		}
 
 		@Override
+		@Nullable
 		public MemberDetails getMemberDetails() {
 			return BasicValue.this.getMemberDetails();
 		}
 
 		@Override
+		@Nonnull
 		public Properties getParameters() {
 			return parameters;
 		}

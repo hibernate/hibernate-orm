@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.mapping.embeddable.strategy.usertype.embedded.merge;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -14,7 +17,8 @@ public class MyCompositeValueType implements CompositeUserType<MyCompositeValue>
 	}
 
 	@Override
-	public Object getPropertyValue(MyCompositeValue component, int property) throws HibernateException {
+	@Nullable
+	public Object getPropertyValue(@Nonnull MyCompositeValue component, int property) throws HibernateException {
 		return switch ( property ) {
 			case 0 -> component.longValue();
 			case 1 -> component.stringValue();
@@ -23,29 +27,32 @@ public class MyCompositeValueType implements CompositeUserType<MyCompositeValue>
 	}
 
 	@Override
-	public MyCompositeValue instantiate(ValueAccess values) {
+	@Nonnull
+	public MyCompositeValue instantiate(@Nonnull ValueAccess values) {
 		final Long id = values.getValue( 0, Long.class );
 		final String hash = values.getValue( 1, String.class );
 		return new MyCompositeValue( id, hash );
 	}
 
 	@Override
+	@Nonnull
 	public Class<?> embeddable() {
 		return EmbeddableMapper.class;
 	}
 
 	@Override
+	@Nonnull
 	public Class<MyCompositeValue> returnedClass() {
 		return MyCompositeValue.class;
 	}
 
 	@Override
-	public boolean equals(MyCompositeValue x, MyCompositeValue y) {
+	public boolean equals(@Nullable MyCompositeValue x, @Nullable MyCompositeValue y) {
 		return Objects.equals( x, y );
 	}
 
 	@Override
-	public int hashCode(MyCompositeValue x) {
+	public int hashCode(@Nonnull MyCompositeValue x) {
 		return Objects.hashCode( x );
 	}
 
@@ -55,7 +62,8 @@ public class MyCompositeValueType implements CompositeUserType<MyCompositeValue>
 	}
 
 	@Override
-	public MyCompositeValue deepCopy(MyCompositeValue value) {
+	@Nullable
+	public MyCompositeValue deepCopy(@Nullable MyCompositeValue value) {
 		if ( value == null ) {
 			return null;
 		}
@@ -63,18 +71,27 @@ public class MyCompositeValueType implements CompositeUserType<MyCompositeValue>
 	}
 
 	@Override
-	public Serializable disassemble(MyCompositeValue value) {
-		return new Object[] { value.longValue(), value.stringValue() };
+	@Nullable
+	public Serializable disassemble(@Nullable MyCompositeValue value) {
+		return value == null ? null : new Object[] { value.longValue(), value.stringValue() };
 	}
 
 	@Override
-	public MyCompositeValue assemble(Serializable cached, Object owner) {
+	@Nullable
+	public MyCompositeValue assemble(@Nullable Serializable cached, @Nullable Object owner) {
+		if ( cached == null ) {
+			return null;
+		}
 		final Object[] parts = (Object[]) cached;
 		return new MyCompositeValue( (Long) parts[0], (String) parts[1] );
 	}
 
 	@Override
-	public MyCompositeValue replace(MyCompositeValue detached, MyCompositeValue managed, Object owner) {
+	@Nullable
+	public MyCompositeValue replace(
+			@Nullable MyCompositeValue detached,
+			@Nullable MyCompositeValue managed,
+			@Nullable Object owner) {
 		return deepCopy( detached );
 	}
 }

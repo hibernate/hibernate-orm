@@ -1,5 +1,8 @@
 package org.hibernate.usertype;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.SPI;
 
 import static org.hibernate.SPI.Role.IMPLEMENT;
@@ -159,31 +162,35 @@ public interface CompositeUserType<J> extends EmbeddableInstantiator {
 	 * @param property the property index
 	 * @return the property value
 	 */
-	Object getPropertyValue(J component, int property) throws HibernateException;
+	@Nullable
+	Object getPropertyValue(@Nonnull J component, int property) throws HibernateException;
 
 	@Override
-	J instantiate(ValueAccess values);
+	@Nullable
+	J instantiate(@Nonnull ValueAccess values);
 
 	/**
 	 * The class that represents the embeddable mapping of the type.
 	 */
+	@Nonnull
 	Class<?> embeddable();
 
 	/**
 	 * The class returned by {@code instantiate()}.
 	 */
+	@Nonnull
 	Class<J> returnedClass();
 
 	/**
 	 * Compare two instances of the class mapped by this type for persistence "equality".
 	 * Equality of the persistent state.
 	 */
-	boolean equals(J x, J y);
+	boolean equals(@Nullable J x, @Nullable J y);
 
 	/**
 	 * Get a hashcode for the instance, consistent with persistence "equality"
 	 */
-	int hashCode(J x);
+	int hashCode(@Nonnull J x);
 
 	/**
 	 * Return a deep copy of the persistent state, stopping at entities and at
@@ -193,7 +200,8 @@ public interface CompositeUserType<J> extends EmbeddableInstantiator {
 	 * @param value the object to be cloned, which may be null
 	 * @return Object a copy
 	 */
-	J deepCopy(J value);
+	@Nullable
+	J deepCopy(@Nullable J value);
 
 	/**
 	 * Are objects of this type mutable?
@@ -211,7 +219,8 @@ public interface CompositeUserType<J> extends EmbeddableInstantiator {
 	 * @param value the object to be cached
 	 * @return a cacheable representation of the object
 	 */
-	Serializable disassemble(J value);
+	@Nullable
+	Serializable disassemble(@Nullable J value);
 
 	/**
 	 * Reconstruct an object from the cacheable representation. At the very least this
@@ -221,7 +230,8 @@ public interface CompositeUserType<J> extends EmbeddableInstantiator {
 	 * @param owner the owner of the cached object
 	 * @return a reconstructed object from the cacheable representation
 	 */
-	J assemble(Serializable cached, Object owner);
+	@Nullable
+	J assemble(@Nullable Serializable cached, @Nullable Object owner);
 
 	/**
 	 * During merge, replace the existing (target) value in the entity we are merging to
@@ -235,15 +245,16 @@ public interface CompositeUserType<J> extends EmbeddableInstantiator {
 	 *
 	 * @return the value to be merged
 	 */
-	J replace(J detached, J managed, Object owner);
+	@Nullable
+	J replace(@Nullable J detached, @Nullable J managed, @Nullable Object owner);
 
 	@Override
-	default boolean isInstance(Object object) {
+	default boolean isInstance(@Nullable Object object) {
 		return returnedClass().isInstance( object );
 	}
 
 	@Override
-	default boolean isSameClass(Object object) {
+	default boolean isSameClass(@Nonnull Object object) {
 		return object.getClass().equals( returnedClass() );
 	}
 }

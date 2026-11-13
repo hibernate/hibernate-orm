@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.sql.hand;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Currency;
@@ -17,7 +20,8 @@ import org.hibernate.usertype.CompositeUserType;
 public class MonetaryAmountUserType implements CompositeUserType<MonetaryAmount> {
 
 	@Override
-	public Object getPropertyValue(MonetaryAmount component, int property) throws HibernateException {
+	@Nullable
+	public Object getPropertyValue(@Nonnull MonetaryAmount component, int property) throws HibernateException {
 		return switch ( property ) {
 			case 0 -> component.getCurrency();
 			case 1 -> component.getValue();
@@ -26,7 +30,8 @@ public class MonetaryAmountUserType implements CompositeUserType<MonetaryAmount>
 	}
 
 	@Override
-	public MonetaryAmount instantiate(ValueAccess valueAccess) {
+	@Nullable
+	public MonetaryAmount instantiate(@Nonnull ValueAccess valueAccess) {
 		final BigDecimal value = valueAccess.getValue(0, BigDecimal.class);
 		final Currency currency = valueAccess.getValue(1, Currency.class);
 
@@ -37,11 +42,13 @@ public class MonetaryAmountUserType implements CompositeUserType<MonetaryAmount>
 	}
 
 	@Override
+	@Nonnull
 	public Class<?> embeddable() {
 		return MonetaryAmountEmbeddable.class;
 	}
 
 	@Override
+	@Nonnull
 	public Class<MonetaryAmount> returnedClass() {
 		return MonetaryAmount.class;
 	}
@@ -52,12 +59,13 @@ public class MonetaryAmountUserType implements CompositeUserType<MonetaryAmount>
 	}
 
 	@Override
-	public MonetaryAmount deepCopy(MonetaryAmount value) {
+	@Nullable
+	public MonetaryAmount deepCopy(@Nullable MonetaryAmount value) {
 		return value; // MonetaryAmount is immutable
 	}
 
 	@Override
-	public boolean equals(MonetaryAmount x, MonetaryAmount y) {
+	public boolean equals(@Nullable MonetaryAmount x, @Nullable MonetaryAmount y) {
 		if ( x == y ) {
 			return true;
 		}
@@ -68,22 +76,28 @@ public class MonetaryAmountUserType implements CompositeUserType<MonetaryAmount>
 	}
 
 	@Override
-	public Serializable disassemble(MonetaryAmount value) throws HibernateException {
+	@Nullable
+	public Serializable disassemble(@Nullable MonetaryAmount value) throws HibernateException {
 		return value;
 	}
 
 	@Override
-	public MonetaryAmount assemble(Serializable cached, Object owner) throws HibernateException {
+	@Nullable
+	public MonetaryAmount assemble(@Nullable Serializable cached, @Nullable Object owner) throws HibernateException {
 		return (MonetaryAmount) cached;
 	}
 
 	@Override
-	public MonetaryAmount replace(MonetaryAmount original, MonetaryAmount target, Object owner) throws HibernateException {
+	@Nullable
+	public MonetaryAmount replace(
+			@Nullable MonetaryAmount original,
+			@Nullable MonetaryAmount target,
+			@Nullable Object owner) throws HibernateException {
 		return original;
 	}
 
 	@Override
-	public int hashCode(MonetaryAmount x) throws HibernateException {
+	public int hashCode(@Nonnull MonetaryAmount x) throws HibernateException {
 		return x.hashCode();
 	}
 

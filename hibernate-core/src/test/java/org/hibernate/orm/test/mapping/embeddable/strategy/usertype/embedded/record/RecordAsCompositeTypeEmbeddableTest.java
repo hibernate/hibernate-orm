@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.mapping.embeddable.strategy.usertype.embedded.record;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
@@ -59,7 +62,8 @@ public class RecordAsCompositeTypeEmbeddableTest {
 		}
 
 		@Override
-		public Object getPropertyValue(MonetaryAmount component, int property) throws HibernateException {
+		@Nullable
+		public Object getPropertyValue(@Nonnull MonetaryAmount component, int property) throws HibernateException {
 			//Alphabetical
 			return switch ( property ) {
 				case 0 -> component.getNumber().numberValueExact( BigDecimal.class );
@@ -69,7 +73,8 @@ public class RecordAsCompositeTypeEmbeddableTest {
 		}
 
 		@Override
-		public MonetaryAmount instantiate(ValueAccess values) {
+		@Nonnull
+		public MonetaryAmount instantiate(@Nonnull ValueAccess values) {
 			//Alphabetical
 			BigDecimal amount = values.getValue( 0, BigDecimal.class );
 			String currency = values.getValue( 1, String.class );
@@ -77,27 +82,30 @@ public class RecordAsCompositeTypeEmbeddableTest {
 		}
 
 		@Override
+		@Nonnull
 		public Class<?> embeddable() {
 			return MonetaryAmountMapper.class;
 		}
 
 		@Override
+		@Nonnull
 		public Class<MonetaryAmount> returnedClass() {
 			return MonetaryAmount.class;
 		}
 
 		@Override
-		public boolean equals(MonetaryAmount x, MonetaryAmount y) {
+		public boolean equals(@Nullable MonetaryAmount x, @Nullable MonetaryAmount y) {
 			return Objects.equals( x, y );
 		}
 
 		@Override
-		public int hashCode(MonetaryAmount x) {
+		public int hashCode(@Nonnull MonetaryAmount x) {
 			return x.hashCode();
 		}
 
 		@Override
-		public MonetaryAmount deepCopy(MonetaryAmount value) {
+		@Nullable
+		public MonetaryAmount deepCopy(@Nullable MonetaryAmount value) {
 			return value;
 		}
 
@@ -107,17 +115,23 @@ public class RecordAsCompositeTypeEmbeddableTest {
 		}
 
 		@Override
-		public Serializable disassemble(MonetaryAmount value) {
+		@Nullable
+		public Serializable disassemble(@Nullable MonetaryAmount value) {
 			return (Serializable) value;
 		}
 
 		@Override
-		public MonetaryAmount assemble(Serializable cached, Object owner) {
+		@Nullable
+		public MonetaryAmount assemble(@Nullable Serializable cached, @Nullable Object owner) {
 			return (MonetaryAmount) cached;
 		}
 
 		@Override
-		public MonetaryAmount replace(MonetaryAmount detached, MonetaryAmount managed, Object owner) {
+		@Nullable
+		public MonetaryAmount replace(
+				@Nullable MonetaryAmount detached,
+				@Nullable MonetaryAmount managed,
+				@Nullable Object owner) {
 			return detached;
 		}
 	}

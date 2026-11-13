@@ -1,5 +1,8 @@
 package org.hibernate.usertype;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.SPI;
 
 import static org.hibernate.SPI.Role.IMPLEMENT;
@@ -30,50 +33,59 @@ public interface UserCollectionType {
 	/**
 	 * The classification mapped by this custom type
 	 */
+	@Nonnull
 	CollectionClassification getClassification();
 
 	/**
 	 * The Java type that this type maps.
 	 */
+	@Nonnull
 	Class<?> getCollectionClass();
 
 	/**
 	 * Instantiate an uninitialized instance of the collection wrapper
 	 */
-	PersistentCollection<?> instantiate(SharedSessionContractImplementor session, CollectionPersister persister)
+	@Nonnull
+	PersistentCollection<?> instantiate(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull CollectionPersister persister)
 			throws HibernateException;
 
 	/**
 	 * Wrap an instance of a collection
 	 */
-	PersistentCollection<?> wrap(SharedSessionContractImplementor session, Object collection);
+	@Nonnull
+	PersistentCollection<?> wrap(@Nonnull SharedSessionContractImplementor session, @Nonnull Object collection);
 
 	/**
 	 * Return an iterator over the elements of this collection - the passed collection
 	 * instance may or may not be a wrapper
 	 */
-	Iterator<?> getElementsIterator(Object collection);
+	@Nonnull
+	Iterator<?> getElementsIterator(@Nonnull Object collection);
 
 	/**
 	 * Optional operation. Does the collection contain the entity instance?
 	 */
-	boolean contains(Object collection, Object entity);
+	boolean contains(@Nonnull Object collection, @Nullable Object entity);
 
 	/**
 	 * Optional operation. Return the index of the entity in the collection.
 	 */
-	Object indexOf(Object collection, Object entity);
+	@Nullable
+	Object indexOf(@Nonnull Object collection, @Nonnull Object entity);
 
 	/**
 	 * Replace the elements of a collection with the elements of another collection
 	 */
+	@Nonnull
 	Object replaceElements(
-			Object original,
-			Object target,
-			CollectionPersister persister,
-			Object owner,
-			Map copyCache,
-			SharedSessionContractImplementor session) throws HibernateException;
+			@Nonnull Object original,
+			@Nonnull Object target,
+			@Nonnull CollectionPersister persister,
+			@Nullable Object owner,
+			@Nonnull Map copyCache,
+			@Nonnull SharedSessionContractImplementor session) throws HibernateException;
 
 	/**
 	 * Instantiate an empty instance of the "underlying" collection (not a wrapper),
@@ -85,6 +97,7 @@ public interface UserCollectionType {
 	 * we not yet know anything about the anticipated size (i.e., when initializing
 	 * from a result set row by row).
 	 */
+	@Nonnull
 	Object instantiate(int anticipatedSize);
 
 }

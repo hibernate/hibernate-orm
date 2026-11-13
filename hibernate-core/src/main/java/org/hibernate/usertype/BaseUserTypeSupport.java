@@ -39,7 +39,7 @@ public abstract class BaseUserTypeSupport<T> implements UserType<T> {
 	private ValueExtractor<T> jdbcValueExtractor;
 	private ValueBinder<T> jdbcValueBinder;
 
-	protected abstract void resolve(BiConsumer<BasicJavaType<T>, JdbcType> resolutionConsumer);
+	protected abstract void resolve(@Nonnull BiConsumer<BasicJavaType<T>, JdbcType> resolutionConsumer);
 
 	private void ensureResolved() {
 		if ( !resolved ) {
@@ -55,11 +55,13 @@ public abstract class BaseUserTypeSupport<T> implements UserType<T> {
 		}
 	}
 
+	@Nonnull
 	protected JdbcType jdbcType() {
 		ensureResolved();
 		return jdbcType;
 	}
 
+	@Nonnull
 	protected BasicJavaType<T> javaType() {
 		ensureResolved();
 		return javaType;

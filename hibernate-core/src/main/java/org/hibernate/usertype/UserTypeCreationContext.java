@@ -1,5 +1,8 @@
 package org.hibernate.usertype;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Incubating;
 import org.hibernate.Remove;
 import org.hibernate.annotations.Type;
@@ -26,6 +29,7 @@ public interface UserTypeCreationContext {
 	 * specific boot-time values should report those requirements.
 	 */
 	@Remove
+	@Nonnull
 	MetadataBuildingContext getBuildingContext();
 
 	/**
@@ -35,11 +39,13 @@ public interface UserTypeCreationContext {
 	 * specific services should report those requirements.
 	 */
 	@Remove
+	@Nonnull
 	ServiceRegistry getServiceRegistry();
 
 	/**
 	 * Access to the {@link MemberDetails}.
 	 */
+	@Nullable
 	MemberDetails getMemberDetails();
 
 	/**
@@ -47,6 +53,7 @@ public interface UserTypeCreationContext {
 	 *
 	 * @see Type#parameters()
 	 */
+	@Nonnull
 	Properties getParameters();
 
 }

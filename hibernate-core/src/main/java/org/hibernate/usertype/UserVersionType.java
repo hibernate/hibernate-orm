@@ -1,5 +1,8 @@
 package org.hibernate.usertype;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.SPI;
 
 import static org.hibernate.SPI.Role.IMPLEMENT;
@@ -27,7 +30,8 @@ public interface UserVersionType<T> extends UserType<T>, Comparator<T> {
 	 * @deprecated Use {@link #seed(WrapperOptions)} instead
 	 */
 	@Deprecated(forRemoval = true, since = "8.0")
-	T seed(SharedSessionContractImplementor session);
+	@Nonnull
+	T seed(@Nullable SharedSessionContractImplementor session);
 
 	/**
 	 * Generate an initial version.
@@ -35,7 +39,8 @@ public interface UserVersionType<T> extends UserType<T>, Comparator<T> {
 	 * @param options The options.
 	 * @return an instance of the type
 	 */
-	default T seed(WrapperOptions options) {
+	@Nonnull
+	default T seed(@Nonnull WrapperOptions options) {
 		return seed( options.getSession() );
 	}
 
@@ -48,7 +53,8 @@ public interface UserVersionType<T> extends UserType<T>, Comparator<T> {
 	 * @deprecated Use {@link #next(Object, WrapperOptions)} instead
 	 */
 	@Deprecated(forRemoval = true, since = "8.0")
-	T next(T current, SharedSessionContractImplementor session);
+	@Nonnull
+	T next(@Nonnull T current, @Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Increment the version.
@@ -57,7 +63,8 @@ public interface UserVersionType<T> extends UserType<T>, Comparator<T> {
 	 * @param options The options.
 	 * @return an instance of the type
 	 */
-	default T next(T current, WrapperOptions options) {
+	@Nonnull
+	default T next(@Nonnull T current, @Nonnull WrapperOptions options) {
 		return next( current, options.getSession() );
 	}
 }

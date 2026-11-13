@@ -31,7 +31,7 @@ public class EnumUserType<T extends Enum<T>> implements UserType<T>, Parameteriz
 		return that;
 	}
 
-	public void setParameterValues(Properties params) {
+	public void setParameterValues(@Nonnull Properties params) {
 		String enumClassName = params.getProperty( "enumClassName" );
 		if ( enumClassName == null ) {
 			throw new MappingException( "enumClassName parameter not specified" );

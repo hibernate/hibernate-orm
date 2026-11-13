@@ -29,7 +29,7 @@ public class MyStringType implements UserType<String>, DynamicParameterizedType 
 	private String value;
 
 	@Override
-	public void setParameterValues(Properties params) {
+	public void setParameterValues(@Nonnull Properties params) {
 		this.value = assertInternallyConsistent( params );
 	}
 

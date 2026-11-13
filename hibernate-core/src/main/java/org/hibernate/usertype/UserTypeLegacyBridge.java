@@ -1,5 +1,8 @@
 package org.hibernate.usertype;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.SPI;
 
 import static org.hibernate.SPI.Role.IMPLEMENT;
@@ -36,22 +39,23 @@ public class UserTypeLegacyBridge
 	}
 
 	@SPI(IMPLEMENT)
-	public UserTypeLegacyBridge(String hbmStyleTypeName) {
+	public UserTypeLegacyBridge(@Nonnull String hbmStyleTypeName) {
 		this.hbmStyleTypeName = hbmStyleTypeName;
 	}
 
 	@Override
+	@Nullable
 	public TypeConfiguration getTypeConfiguration() {
 		return typeConfiguration;
 	}
 
 	@Override
-	public void setTypeConfiguration(TypeConfiguration typeConfiguration) {
+	public void setTypeConfiguration(@Nonnull TypeConfiguration typeConfiguration) {
 		this.typeConfiguration = typeConfiguration;
 	}
 
 	@Override
-	public void setParameterValues(Properties parameters) {
+	public void setParameterValues(@Nonnull Properties parameters) {
 		if ( hbmStyleTypeName == null ) {
 			hbmStyleTypeName = parameters.getProperty( TYPE_NAME_PARAM_KEY );
 			if ( hbmStyleTypeName == null ) {
@@ -62,7 +66,7 @@ public class UserTypeLegacyBridge
 	}
 
 	@Override
-	protected void resolve(BiConsumer<BasicJavaType<Object>, JdbcType> resolutionConsumer) {
+	protected void resolve(@Nonnull BiConsumer<BasicJavaType<Object>, JdbcType> resolutionConsumer) {
 		assert typeConfiguration != null;
 
 		final var registeredType =

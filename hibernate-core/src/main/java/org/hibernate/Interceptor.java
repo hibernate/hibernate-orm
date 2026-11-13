@@ -379,23 +379,23 @@ public interface Interceptor extends EntityManager.CreationOption, EntityAgent.C
 	 * This method is not be called if transactions are being controlled via some
 	 * other mechanism, for example, if transactions are managed by a container.
 	 *
-	 * @param tx The transaction facade, or {@code null} if the session does not allow access to it
+	 * @param tx The Hibernate transaction facade
 	 */
-	default void afterTransactionBegin(@Nullable Transaction tx) {}
+	default void afterTransactionBegin(@Nonnull Transaction tx) {}
 
 	/**
 	 * Called before a transaction is committed (but not before rollback).
 	 *
-	 * @param tx The transaction facade, or {@code null} if the session does not allow access to it
+	 * @param tx The Hibernate transaction facade
 	 */
-	default void beforeTransactionCompletion(@Nullable Transaction tx) {}
+	default void beforeTransactionCompletion(@Nonnull Transaction tx) {}
 
 	/**
 	 * Called after a transaction is committed or rolled back.
 	 *
-	 * @param tx The transaction facade, or {@code null} if the session does not allow access to it
+	 * @param tx The Hibernate transaction facade
 	 */
-	default void afterTransactionCompletion(@Nullable Transaction tx) {}
+	default void afterTransactionCompletion(@Nonnull Transaction tx) {}
 
 	/**
 	 * Called before a record is inserted by a {@link StatelessSession}.

@@ -893,14 +893,14 @@ abstract class AbstractSharedSessionContract
 	}
 
 	void afterTransactionBeginEvents() {
-		final var transaction = getTransactionIfAccessible();
+		final var transaction = accessTransaction();
 		runInterceptorCallback( () -> interceptor.afterTransactionBegin( transaction ) );
 	}
 
 	void beforeTransactionCompletionEvents() {
 		SESSION_LOGGER.beforeTransactionCompletion();
 		try {
-			final var transaction = getTransactionIfAccessible();
+			final var transaction = accessTransaction();
 			runInterceptorCallback( () -> interceptor.beforeTransactionCompletion( transaction ) );
 		}
 		catch (Throwable t) {
@@ -918,20 +918,12 @@ abstract class AbstractSharedSessionContract
 		}
 
 		try {
-			final var transaction = getTransactionIfAccessible();
+			final var transaction = accessTransaction();
 			runInterceptorCallback( () -> interceptor.afterTransactionCompletion( transaction ) );
 		}
 		catch (Throwable t) {
 			SESSION_LOGGER.exceptionInAfterTransactionCompletionInterceptor( t );
 		}
-	}
-
-	@Nullable
-	private Transaction getTransactionIfAccessible() {
-		// We do not want an exception to be thrown if the transaction
-		// is not accessible. If the transaction is not accessible,
-		// then return null.
-		return isTransactionAccessible() ? accessTransaction() : null;
 	}
 
 	protected void addSharedSessionTransactionObserver(@Nonnull TransactionCoordinator transactionCoordinator) {

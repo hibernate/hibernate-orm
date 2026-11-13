@@ -194,7 +194,7 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 			);
 		}
 		else {
-			return new EmbeddableInstantiatorPojoStandard( embeddableClass, runtimeDescriptorAccess );
+			return new EmbeddableInstantiatorPojoStandard( embeddableClass, runtimeDescriptorAccess, accessorService.hibernateAccessorFactory() );
 		}
 	}
 

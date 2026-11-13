@@ -67,13 +67,18 @@ public abstract class DialectReportTask extends AbstractJandexAwareTask {
 
 		final Index index = getIndexManager().getIndex();
 		final Collection<ClassInfo> allDialectClasses = index.getAllKnownSubclasses( DialectClassDelegate.DIALECT_CLASS_NAME );
-		String sourcePackagePrefix = this.sourcePackage.get() + ".";
-		allDialectClasses.removeIf( c -> !c.name().toString().startsWith( sourcePackagePrefix ) );
-		if ( allDialectClasses.isEmpty() ) {
+		final String sourcePackagePrefix = this.sourcePackage.get() + ".";
+		final List<ClassInfo> matchedDialectClasses = new ArrayList<>( allDialectClasses.size() );
+		for ( final ClassInfo c : allDialectClasses ) {
+			if (c.name().toString().startsWith( sourcePackagePrefix )) {
+				matchedDialectClasses.add( c );
+			}
+		}
+		if ( matchedDialectClasses.isEmpty() ) {
 			throw new RuntimeException( "Unable to find Dialects" );
 		}
 
-		final List<DialectDelegate> dialectDelegates = collectDialectInfo( dialectClassDelegate, allDialectClasses );
+		final List<DialectDelegate> dialectDelegates = collectDialectInfo( dialectClassDelegate, matchedDialectClasses );
 		generateReport( dialectDelegates );
 	}
 

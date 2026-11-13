@@ -38,9 +38,10 @@ public class IdClassRepresentationStrategy implements EmbeddableRepresentationSt
 		idClassType = idClassEmbeddable.getMappedJavaType();
 		final var javaTypeClass = idClassType.getJavaTypeClass();
 		if ( javaTypeClass.isRecord() ) {
+			final var accessorFactory = propertyAccessorService.hibernateAccessorFactory();
 			instantiator = simplePropertyOrder
-					? new EmbeddableInstantiatorRecordStandard( javaTypeClass )
-					: EmbeddableInstantiatorRecordIndirecting.of( javaTypeClass, attributeNamesAccess.get() );
+					? new EmbeddableInstantiatorRecordStandard( javaTypeClass, accessorFactory )
+					: EmbeddableInstantiatorRecordIndirecting.of( javaTypeClass, attributeNamesAccess.get(), accessorFactory );
 		}
 		else if ( idClassSource.getInstantiator() != null ) {
 			idClassSource.sortProperties();

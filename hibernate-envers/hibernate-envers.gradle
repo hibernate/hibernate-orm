@@ -8,6 +8,7 @@ description = "Deprecated - Hibernate's entity version (audit/history) support"
 dependencies {
     api project( ':hibernate-core' )
 
+    implementation libs.hibernateAccessor
     implementation libs.hibernateModels
     implementation libs.jakarta.jaxbApi
     implementation libs.jakarta.jaxb

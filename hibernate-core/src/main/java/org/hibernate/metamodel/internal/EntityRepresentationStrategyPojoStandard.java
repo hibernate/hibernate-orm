@@ -25,7 +25,6 @@ import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.accessor.Instantiator;
 import org.hibernate.accessor.MultiValueReader;
 import org.hibernate.accessor.MultiValueWriter;
 import org.hibernate.persister.entity.EntityPersister;
@@ -231,20 +230,8 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 	protected EntityInstantiator determineInstantiator(PersistentClass bootDescriptor, EntityPersister persister) {
 		final var accessorService = persister.getFactory().getServiceRegistry()
 				.requireService( PropertyAccessorService.class );
-		final var mappedClass = mappedJtd.getJavaTypeClass();
-		final Instantiator<?> hibernateInstantiator =
-				PropertyAccessHelper.resolveInstantiator( mappedClass, accessorService );
-		if ( hibernateInstantiator != null ) {
-			return new EntityInstantiatorPojoOptimized(
-					persister,
-					bootDescriptor,
-					mappedJtd,
-					hibernateInstantiator
-			);
-		}
-		else {
-			return new EntityInstantiatorPojoStandard( persister, bootDescriptor, mappedJtd );
-		}
+		return new EntityInstantiatorPojoStandard(
+				persister, bootDescriptor, mappedJtd, accessorService.hibernateAccessorFactory() );
 	}
 
 	private ProxyFactory createProxyFactory(

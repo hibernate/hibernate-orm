@@ -47,7 +47,7 @@ public class StubUserCollectionType implements UserCollectionType {
 	}
 
 	@Override
-	public boolean contains(@Nonnull Object collection, @Nullable Object entity) {
+	public boolean contains(@Nonnull Object collection, @Nonnull Object entity) {
 		throw new UnsupportedOperationException();
 	}
 

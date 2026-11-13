@@ -21,12 +21,12 @@ public class OffsetTimeCompositeUserType extends AbstractTimeZoneStorageComposit
 	public static final String LOCAL_TIME_NAME = "utcTime";
 
 	@Override
-	@Nullable
+	@Nonnull
 	public Object getPropertyValue(@Nonnull OffsetTime component, int property) throws HibernateException {
 		return switch ( property ) {
 			case 0 -> component.withOffsetSameInstant( ZoneOffset.UTC );
 			case 1 -> component.getOffset();
-			default -> null;
+			default -> throw new HibernateException( "Illegal property index: " + property );
 		};
 	}
 

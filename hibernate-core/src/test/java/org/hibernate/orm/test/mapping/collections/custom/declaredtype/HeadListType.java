@@ -49,7 +49,7 @@ public class HeadListType implements UserCollectionType {
 		return ( (IHeadList) collection ).iterator();
 	}
 
-	public boolean contains(@Nonnull Object collection, @Nullable Object entity) {
+	public boolean contains(@Nonnull Object collection, @Nonnull Object entity) {
 		return ( (IHeadList) collection ).contains( entity );
 	}
 

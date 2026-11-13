@@ -18,12 +18,12 @@ import org.hibernate.type.SqlTypes;
 public class ZonedDateTimeCompositeUserType extends AbstractTimeZoneStorageCompositeUserType<ZonedDateTime> {
 
 	@Override
-	@Nullable
+	@Nonnull
 	public Object getPropertyValue(@Nonnull ZonedDateTime component, int property) throws HibernateException {
 		return switch ( property ) {
 			case 0 -> component.toInstant();
 			case 1 -> component.getOffset();
-			default -> null;
+			default -> throw new HibernateException( "Illegal property index: " + property );
 		};
 	}
 

@@ -65,8 +65,8 @@ public class ObjectUserType implements CompositeUserType<Object> {
 	}
 
 	@Override
-	@Nullable
-	public Object deepCopy(@Nullable Object value) throws HibernateException {
+	@Nonnull
+	public Object deepCopy(@Nonnull Object value) throws HibernateException {
 		return value; // Persisting only immutable types.
 	}
 
@@ -76,21 +76,21 @@ public class ObjectUserType implements CompositeUserType<Object> {
 	}
 
 	@Override
-	@Nullable
-	public Serializable disassemble(@Nullable Object value) throws HibernateException {
+	@Nonnull
+	public Serializable disassemble(@Nonnull Object value) throws HibernateException {
 		return (Serializable) value;
 	}
 
 	@Override
-	@Nullable
-	public Object assemble(@Nullable Serializable cached, @Nullable Object owner) throws HibernateException {
+	@Nonnull
+	public Object assemble(@Nonnull Serializable cached, @Nullable Object owner) throws HibernateException {
 		return cached;
 	}
 
 	@Override
-	@Nullable
+	@Nonnull
 	public Object replace(
-			@Nullable Object original,
+			@Nonnull Object original,
 			@Nullable Object target,
 			@Nullable Object owner) throws HibernateException {
 		return original;

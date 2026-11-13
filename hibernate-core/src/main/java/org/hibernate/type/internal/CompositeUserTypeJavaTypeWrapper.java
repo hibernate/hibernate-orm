@@ -3,6 +3,8 @@ package org.hibernate.type.internal;
 import java.io.Serializable;
 import java.util.Comparator;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -126,18 +128,21 @@ public class CompositeUserTypeJavaTypeWrapper<J> implements JavaType<J> {
 		}
 
 		@Override
-		public J deepCopy(J value) {
-			return userType.deepCopy( value );
+		@Nullable
+		public J deepCopy(@Nullable J value) {
+			return value == null ? null : userType.deepCopy( value );
 		}
 
 		@Override
-		public Serializable disassemble(J value, SharedSessionContract session) {
-			return userType.disassemble( value );
+		@Nullable
+		public Serializable disassemble(@Nullable J value, SharedSessionContract session) {
+			return value == null ? null : userType.disassemble( value );
 		}
 
 		@Override
-		public J assemble(Serializable cached, SharedSessionContract session) {
-			return userType.assemble( cached, null );
+		@Nullable
+		public J assemble(@Nullable Serializable cached, SharedSessionContract session) {
+			return cached == null ? null : userType.assemble( cached, null );
 		}
 	}
 }

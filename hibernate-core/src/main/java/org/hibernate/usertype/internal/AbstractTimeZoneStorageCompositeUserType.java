@@ -27,8 +27,8 @@ public abstract class AbstractTimeZoneStorageCompositeUserType<T> implements Com
 	}
 
 	@Override
-	@Nullable
-	public T deepCopy(@Nullable T value) {
+	@Nonnull
+	public T deepCopy(@Nonnull T value) {
 		return value;
 	}
 
@@ -38,21 +38,21 @@ public abstract class AbstractTimeZoneStorageCompositeUserType<T> implements Com
 	}
 
 	@Override
-	@Nullable
-	public Serializable disassemble(@Nullable T value) {
+	@Nonnull
+	public Serializable disassemble(@Nonnull T value) {
 		return (Serializable) value;
 	}
 
 	@Override
-	@Nullable
-	public T assemble(@Nullable Serializable cached, @Nullable Object owner) {
+	@Nonnull
+	public T assemble(@Nonnull Serializable cached, @Nullable Object owner) {
 		//noinspection unchecked
 		return (T) cached;
 	}
 
 	@Override
-	@Nullable
-	public T replace(@Nullable T detached, @Nullable T managed, @Nullable Object owner) {
+	@Nonnull
+	public T replace(@Nonnull T detached, @Nullable T managed, @Nullable Object owner) {
 		return detached;
 	}
 

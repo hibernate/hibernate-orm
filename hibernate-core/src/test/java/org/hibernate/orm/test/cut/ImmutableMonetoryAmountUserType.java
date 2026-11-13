@@ -64,9 +64,9 @@ public class ImmutableMonetoryAmountUserType implements CompositeUserType<Immuta
 
 
 	@Override
-	@Nullable
-	public ImmutableMonetoryAmount deepCopy(@Nullable ImmutableMonetoryAmount value) throws HibernateException {
-		return value == null ? null : new ImmutableMonetoryAmount( value.getAmount(), value.getCurrency() );
+	@Nonnull
+	public ImmutableMonetoryAmount deepCopy(@Nonnull ImmutableMonetoryAmount value) throws HibernateException {
+		return new ImmutableMonetoryAmount( value.getAmount(), value.getCurrency() );
 	}
 
 	@Override
@@ -75,23 +75,23 @@ public class ImmutableMonetoryAmountUserType implements CompositeUserType<Immuta
 	}
 
 	@Override
-	@Nullable
-	public Serializable disassemble(@Nullable ImmutableMonetoryAmount value)
+	@Nonnull
+	public Serializable disassemble(@Nonnull ImmutableMonetoryAmount value)
 			throws HibernateException {
 		return deepCopy( value );
 	}
 
 	@Override
-	@Nullable
-	public ImmutableMonetoryAmount assemble(@Nullable Serializable cached, @Nullable Object owner)
+	@Nonnull
+	public ImmutableMonetoryAmount assemble(@Nonnull Serializable cached, @Nullable Object owner)
 			throws HibernateException {
 		return deepCopy( (ImmutableMonetoryAmount) cached );
 	}
 
 	@Override
-	@Nullable
+	@Nonnull
 	public ImmutableMonetoryAmount replace(
-			@Nullable ImmutableMonetoryAmount original,
+			@Nonnull ImmutableMonetoryAmount original,
 			@Nullable ImmutableMonetoryAmount target,
 			@Nullable Object owner)
 			throws HibernateException {

@@ -10,12 +10,16 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import org.hibernate.HibernateException;
 import org.hibernate.annotations.TimeZoneColumn;
 import org.hibernate.annotations.TimeZoneStorage;
 import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.usertype.internal.OffsetDateTimeCompositeUserType;
+import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
+import org.hibernate.usertype.internal.ZonedDateTimeCompositeUserType;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -37,6 +41,7 @@ import jakarta.persistence.Tuple;
 import org.hamcrest.Matchers;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Christian Beikov
@@ -97,6 +102,16 @@ public class TimeZoneStorageMappingTests {
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class)
 	public void testOffsetRetainedAuto(SessionFactoryScope scope) {
 		testOffsetRetained( scope, "Auto" );
+	}
+
+	@Test
+	void testInvalidPropertyIndex() {
+		assertThrows( HibernateException.class,
+				() -> new OffsetTimeCompositeUserType().getPropertyValue( OFFSET_TIME, 2 ) );
+		assertThrows( HibernateException.class,
+				() -> new OffsetDateTimeCompositeUserType().getPropertyValue( OFFSET_DATE_TIME, 2 ) );
+		assertThrows( HibernateException.class,
+				() -> new ZonedDateTimeCompositeUserType().getPropertyValue( ZONED_DATE_TIME, 2 ) );
 	}
 
 	@Test

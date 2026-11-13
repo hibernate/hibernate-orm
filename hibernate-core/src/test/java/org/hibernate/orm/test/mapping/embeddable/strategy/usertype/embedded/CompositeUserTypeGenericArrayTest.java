@@ -147,9 +147,9 @@ class CompositeUserTypeGenericArrayTest {
 		}
 
 		@Override
-		@Nullable
-		public Matrix deepCopy(@Nullable Matrix value) {
-			return value == null ? null : (Matrix) SerializationHelper.clone( value );
+		@Nonnull
+		public Matrix deepCopy(@Nonnull Matrix value) {
+			return (Matrix) SerializationHelper.clone( value );
 		}
 
 		@Override
@@ -158,20 +158,20 @@ class CompositeUserTypeGenericArrayTest {
 		}
 
 		@Override
-		@Nullable
-		public Serializable disassemble(@Nullable Matrix value) {
-			return value == null ? null : SerializationHelper.serialize( value );
+		@Nonnull
+		public Serializable disassemble(@Nonnull Matrix value) {
+			return SerializationHelper.serialize( value );
 		}
 
 		@Override
-		@Nullable
-		public Matrix assemble(@Nullable Serializable cached, @Nullable Object owner) {
-			return cached == null ? null : (Matrix) SerializationHelper.deserialize( (byte[]) cached );
+		@Nonnull
+		public Matrix assemble(@Nonnull Serializable cached, @Nullable Object owner) {
+			return (Matrix) SerializationHelper.deserialize( (byte[]) cached );
 		}
 
 		@Override
-		@Nullable
-		public Matrix replace(@Nullable Matrix detached, @Nullable Matrix managed, @Nullable Object owner) {
+		@Nonnull
+		public Matrix replace(@Nonnull Matrix detached, @Nullable Matrix managed, @Nullable Object owner) {
 			return deepCopy( detached );
 		}
 	}

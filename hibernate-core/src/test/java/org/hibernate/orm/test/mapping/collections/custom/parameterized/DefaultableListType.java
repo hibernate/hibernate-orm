@@ -65,7 +65,7 @@ public class DefaultableListType implements UserCollectionType, ParameterizedTyp
 	}
 
 	@Override
-	public boolean contains(@Nonnull Object collection, @Nullable Object entity) {
+	public boolean contains(@Nonnull Object collection, @Nonnull Object entity) {
 		return ( ( DefaultableList ) collection ).contains( entity );
 	}
 

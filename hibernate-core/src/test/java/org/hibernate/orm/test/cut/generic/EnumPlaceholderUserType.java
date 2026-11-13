@@ -61,9 +61,9 @@ public class EnumPlaceholderUserType implements CompositeUserType<EnumPlaceholde
 	}
 
 	@Override
-	@Nullable
-	public EnumPlaceholder deepCopy(@Nullable EnumPlaceholder value) {
-		return value == null ? null : new EnumPlaceholder<>( value.getFirstEnum(), value.getSecondEnum() );
+	@Nonnull
+	public EnumPlaceholder deepCopy(@Nonnull EnumPlaceholder value) {
+		return new EnumPlaceholder<>( value.getFirstEnum(), value.getSecondEnum() );
 	}
 
 	@Override
@@ -72,21 +72,21 @@ public class EnumPlaceholderUserType implements CompositeUserType<EnumPlaceholde
 	}
 
 	@Override
-	@Nullable
-	public Serializable disassemble(@Nullable EnumPlaceholder value) {
-		return (Serializable) value;
+	@Nonnull
+	public Serializable disassemble(@Nonnull EnumPlaceholder value) {
+		return value;
 	}
 
 	@Override
-	@Nullable
-	public EnumPlaceholder assemble(@Nullable Serializable cached, @Nullable Object owner) {
+	@Nonnull
+	public EnumPlaceholder assemble(@Nonnull Serializable cached, @Nullable Object owner) {
 		return (EnumPlaceholder) cached;
 	}
 
 	@Override
-	@Nullable
+	@Nonnull
 	public EnumPlaceholder replace(
-			@Nullable EnumPlaceholder detached,
+			@Nonnull EnumPlaceholder detached,
 			@Nullable EnumPlaceholder managed,
 			@Nullable Object owner) {
 		return detached;

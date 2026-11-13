@@ -65,9 +65,9 @@ public class MonetoryAmountUserType implements CompositeUserType<MonetoryAmount>
 
 
 	@Override
-	@Nullable
-	public MonetoryAmount deepCopy(@Nullable MonetoryAmount value) throws HibernateException {
-		return value == null ? null : new MonetoryAmount( value.getAmount(), value.getCurrency() );
+	@Nonnull
+	public MonetoryAmount deepCopy(@Nonnull MonetoryAmount value) throws HibernateException {
+		return new MonetoryAmount( value.getAmount(), value.getCurrency() );
 	}
 
 	@Override
@@ -76,23 +76,23 @@ public class MonetoryAmountUserType implements CompositeUserType<MonetoryAmount>
 	}
 
 	@Override
-	@Nullable
-	public Serializable disassemble(@Nullable MonetoryAmount value)
+	@Nonnull
+	public Serializable disassemble(@Nonnull MonetoryAmount value)
 			throws HibernateException {
 		return deepCopy( value );
 	}
 
 	@Override
-	@Nullable
-	public MonetoryAmount assemble(@Nullable Serializable cached, @Nullable Object owner)
+	@Nonnull
+	public MonetoryAmount assemble(@Nonnull Serializable cached, @Nullable Object owner)
 			throws HibernateException {
 		return deepCopy( (MonetoryAmount) cached );
 	}
 
 	@Override
-	@Nullable
+	@Nonnull
 	public MonetoryAmount replace(
-			@Nullable MonetoryAmount original,
+			@Nonnull MonetoryAmount original,
 			@Nullable MonetoryAmount target,
 			@Nullable Object owner)
 			throws HibernateException {

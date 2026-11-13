@@ -611,7 +611,7 @@ public interface PersistenceContext {
 	 * Doubly internal
 	 */
 	@Internal
-	@Nullable
+	@Nonnull
 	Map<EntityKey,EntityHolder> getEntityHoldersByKey();
 
 	/**

@@ -7,6 +7,7 @@ import java.time.ZoneOffset;
 import jakarta.persistence.ParameterMode;
 
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.temporaltype.spi.TemporalCallablePrecisionContext;
 import org.hibernate.dialect.temporaltype.spi.TemporalCallablePrecisionContext.Access;
 import org.hibernate.dialect.temporaltype.spi.TemporalPrecisionSupport;
@@ -17,7 +18,8 @@ import org.hibernate.type.descriptor.jdbc.internal.UtcTimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalDateTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampUtcAsPlainJdbcTimestampJdbcType;
 
-/// Exact callable routes proved using H2 2.5.252. No attribute precision profile
+/// Exact callable routes proved using H2 2.5.252 and the bounded PostgreSQL profile.
+/// No attribute precision profile
 /// or ORM parameter name substitutes for actual callable transport evidence.
 ///
 /// @author Steve Ebersole
@@ -25,6 +27,9 @@ public final class StandardTemporalCallablePrecision {
 	private StandardTemporalCallablePrecision() {}
 
 	public static TemporalPrecisionSupport resolve(TemporalCallablePrecisionContext context) {
+		if ( context.dialect().getClass() == PostgreSQLDialect.class ) {
+			return PostgreSQLTemporalPrecision.resolveCallable( context );
+		}
 		if ( context.dialect().getClass() != H2Dialect.class || context.dialect().getVersion().isBefore( 2, 5 ) ) {
 			return TemporalPrecisionSupport.unsupported( "No established callable precision profile for the configured Dialect/version" );
 		}

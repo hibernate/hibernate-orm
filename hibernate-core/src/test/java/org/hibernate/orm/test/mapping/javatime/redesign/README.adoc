@@ -146,9 +146,24 @@ evidenced logical precision grid.
 It binds independent prepared values through PostgreSQLOffsetDateTimeJdbcType, records
 raw server casts separately and verifies UTC extraction with mismatched session zones
 and reused statements. It does not require a supported temporal entity mapping and
-must not be mistaken for completed ORM/cache acceptance. PostgreSQL production precision
-support remains unavailable until that evidence and the remaining integration controls
-are established. SQL Server live verification remains deferred.
+must not be mistaken for completed ORM/cache acceptance.
+`PostgreSQLPrecisionTransportTests` independently exercises all admitted carriers with default,
+text, forced-binary and simple-query configurations, reused prepared statements, asymmetric
+session zones and finite boundaries. `PostgreSQLCallablePrecisionEvidenceTests` separately
+records the actual callable setters/extractors; simple-query indexed function OUT remains a
+negative raw-driver probe, distinct from Hibernate's supported scalar ResultSet route.
+
+The stock profile targets exact PostgreSQLDialect major18/PG_JDBC and the tested descriptor
+pairs, with attribute precision 0..6. Verification used PostgreSQL18.6/pgJDBC42.7.14 in UTC and
+America/Los_Angeles JVMs. `PostgreSQLPrecisionContractTests` retains provider/operation/DDL
+negatives and no-connection bootstrap controls. The context-package
+`PostgreSQLPrecisionLifecycleTests` checks serialized cache/database equality, dirty checking,
+omitted/0/3/6 grids and converter invocation counts. `PostgreSQLCallablePrecisionTests` checks
+mapped p3 isolation, microsecond transport, later-argument failure before all setters, authoritative
+infinity-output refusal and routine-owned narrowing. The existing TemporalCallableQueryTests
+retains full fixture and negative/legacy coverage. `AdjustedTemporalDirtyCheckingTests` covers
+ordinary/enhanced comparison, source offset/zone distinctions and target-region transitions on H2.
+SQL Server live verification remains deferred.
 
 == Query and query-cache precision (HHH-21141)
 
@@ -194,6 +209,7 @@ input/output grids, validation without rounding, conversion counts and statement
 `TemporalCallableAssessmentTests` tests context invariants and operation isolation. Its named
 and INOUT contexts are assessment controls, not live certification of those routes.
 
-Existing Oracle/PostgreSQL callable fixtures remain intact. H2 does not certify their precision,
-HSQL callable routes, genuine H2 OUT/INOUT procedures, or actual named JDBC access. These provider
+Existing Oracle/PostgreSQL callable fixtures remain intact. PostgreSQL has the separately evidenced
+bounded routes described above. H2 does not certify Oracle precision, HSQL callable routes,
+genuine H2 OUT/INOUT procedures, or actual named JDBC access. These provider
 acceptance gates remain open; SQL Server live verification stays deferred.

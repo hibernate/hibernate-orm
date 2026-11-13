@@ -16,6 +16,7 @@ import java.util.function.UnaryOperator;
 import org.hibernate.TemporalValueException;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics.PrecisionAdjustment;
 import org.hibernate.dialect.temporaltype.spi.TemporalPrecisionContext;
 import org.hibernate.dialect.temporaltype.spi.TemporalPrecisionSupport;
@@ -65,6 +66,9 @@ public final class StandardTemporalPrecision {
 				&& context.jdbcType().getClass() == LocalDateJdbcType.class
 				&& context.ddlTypeName().equalsIgnoreCase( "date" ) ) {
 			return TemporalPrecisionSupport.supported( "sql-date-v1", UnaryOperator.identity(), UnaryOperator.identity() );
+		}
+		if ( context.dialect().getClass() == PostgreSQLDialect.class ) {
+			return PostgreSQLTemporalPrecision.resolve( context );
 		}
 		if ( context.dialect() instanceof H2Dialect ) {
 			return h2( context );

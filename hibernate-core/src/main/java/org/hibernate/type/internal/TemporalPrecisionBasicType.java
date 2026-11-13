@@ -1,6 +1,10 @@
 package org.hibernate.type.internal;
 
 import java.io.Serializable;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
+import java.time.ZoneOffset;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.PreparedStatement;
@@ -19,6 +23,10 @@ import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
+import org.hibernate.type.descriptor.converter.internal.TemporalAdjustmentConverter;
+import org.hibernate.type.descriptor.java.OffsetDateTimeJavaType;
+import org.hibernate.type.descriptor.java.OffsetTimeJavaType;
+import org.hibernate.type.descriptor.java.ZonedDateTimeJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -123,9 +131,46 @@ public final class TemporalPrecisionBasicType<T> extends AbstractDelegatingBasic
 
 	@Override
 	public boolean isDirty(Object old, Object current, SharedSessionContractImplementor session) {
-		return getValueConverter() instanceof JpaAttributeConverter<?, ?> || delegate.isMutable()
-				? delegate.isDirty( old, current, session )
+		if ( delegate.isMutable() ) {
+			return delegate.isDirty( old, current, session );
+		}
+		if ( getValueConverter() instanceof TemporalAdjustmentConverter<?> adjustment ) {
+			final var descriptor = adjustment.getDomainJavaType().getClass();
+			return descriptor == OffsetTimeJavaType.class || descriptor == OffsetDateTimeJavaType.class
+					|| descriptor == ZonedDateTimeJavaType.class
+					? !adjustedPrecisionEqual( old, current ) : delegate.isDirty( old, current, session );
+		}
+		return getValueConverter() != null ? delegate.isDirty( old, current, session )
 				: !precision.precisionEqual( old, current );
+	}
+
+	/// Domain representation remains significant even when adjustment stores the same
+	/// coordinate. Only the built-in converter is safe to invoke for this comparison;
+	/// application converters retain their own domain dirty-checking semantics.
+	private boolean adjustedPrecisionEqual(Object first, Object second) {
+		if ( first == null || second == null ) {
+			return first == second;
+		}
+		if ( first instanceof OffsetTime left && !left.getOffset().equals( ((OffsetTime) second).getOffset() )
+				|| first instanceof OffsetDateTime timestamp && !timestamp.getOffset().equals( ((OffsetDateTime) second).getOffset() )
+				|| first instanceof ZonedDateTime zoned && (!zoned.getZone().equals( ((ZonedDateTime) second).getZone() )
+						|| !zoned.getOffset().equals( ((ZonedDateTime) second).getOffset() )) ) {
+			return false;
+		}
+		return adjustedCoordinate( first ).equals( adjustedCoordinate( second ) );
+	}
+
+	private Object adjustedCoordinate(Object domainValue) {
+		final Object prepared = precision.prepare( delegate.convertToRelationalValue( domainValue ) );
+		// Do not compare the target's pre-rounding offset: rounding across a target
+		// region transition can produce the same instant from different offsets.
+		if ( prepared instanceof OffsetDateTime timestamp ) {
+			return timestamp.toInstant();
+		}
+		if ( prepared instanceof ZonedDateTime timestamp ) {
+			return timestamp.toInstant();
+		}
+		return ((OffsetTime) prepared).withOffsetSameInstant( ZoneOffset.UTC ).toLocalTime();
 	}
 
 	@Override

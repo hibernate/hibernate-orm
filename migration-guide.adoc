@@ -313,6 +313,20 @@ Applications must not depend on an extra converter invocation for cache-key gene
 query-cache regions, as well as entity/collection regions, when changing mapping contracts or stored
 temporal interpretations. Native SQL requires its usual synchronized query-space declarations.
 
+==== PostgreSQL attribute precision
+
+A bounded stock profile now covers configured PostgreSQL 18 with pgJDBC for the specific native
+offset and UTC-carrier attribute mappings described in the User Guide. Verification used
+PostgreSQL 18.6/pgJDBC 42.7.14. Other PostgreSQL-derived products and configured versions are not
+implicitly admitted. Metadata-disabled bootstrap must supply the supported database version;
+there is no new boot connection or automatic retained-schema precision inspection.
+
+Keep mappings and physical column precision consistent. Omitted precision retains existing Java
+mapping defaults, including zero for OffsetTime; explicit precision beyond six is unsupported
+by this profile. Do not infer period, version-producer, aggregate or callable support from an
+attribute's precision profile. Historical Calendar-based timestamp interpretation and finite
+range guards are unchanged. Evict affected cache regions when changing mapping contracts.
+
 ==== Callable temporal precision
 
 Enabled temporal preservation now assesses scalar callable precision separately from attribute
@@ -321,7 +335,11 @@ function results. Inputs must be representable by the selected JDBC transport wi
 outputs are validated before domain conversion. A routine's own casts and declared precision
 remain authoritative SQL behavior.
 
-The initial stock support is limited to evidenced H2 routes. Other providers, custom descriptors,
+Stock support covers the evidenced H2 routes and a bounded PostgreSQL 18/pgJDBC slice:
+explicitly adjusted OffsetDateTime over the plain UTC timestamp carrier supports indexed input
+and scalar ResultSet returns; native OffsetTime supports indexed input. The PostgreSQL transports
+require microsecond-aligned arguments even when a reused attribute has a coarser column grid.
+Native time OUT/INOUT and actual named JDBC access remain unsupported. Other providers, custom descriptors,
 and modes need an independent `TemporalCallablePrecisionJdbcType` or Dialect contribution;
 an existing attribute precision contribution does not certify them. No routine catalog discovery
 or JDBC metadata access at boot is added. Include routine signatures and actual driver transport

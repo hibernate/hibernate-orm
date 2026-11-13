@@ -990,6 +990,37 @@ the guarantees. Member-level `AUTO`, `DEFAULT`, and `NORMALIZE` require an expli
 compatibility mode. An explicitly configured global legacy policy may also require narrower declarations;
 setting adjustment to NONE alone does not replace its storage choice.
 
+For explicitly adjusted stock temporal attributes, dirty checking prepares the actual JDBC
+carrier while retaining the assigned offset and zone as separate comparison components.
+An unchanged value or a precision-only reassignment within the same storage quantum is clean;
+an offset-only or zone-only reassignment remains dirty even if adjustment would store the same instant.
+Application converters retain their own domain dirty-checking semantics.
+
+[[basic-temporal-postgresql-precision]]
+===== PostgreSQL precision support
+
+The stock precision profile targets configured PostgreSQL 18 with pgJDBC, verified with
+PostgreSQL 18.6 and pgJDBC 42.7.14. It covers attribute precisions 0 through 6 for native
+`OffsetDateTime` timestamp-with-time-zone handling, native `OffsetTime` time-with-time-zone
+handling, explicitly adjusted offset values using the supported UTC carriers, and `Instant`
+using the plain UTC `TIMESTAMP` carrier. This is support for those specific Java/JDBC pairs,
+not every PostgreSQL temporal mapping. Native timestamp handling still requires a policy such
+as `NORMALIZED`; a precision contract does not make it preserve the original offset.
+
+Omitted precision follows the existing mapping defaults, including zero for `OffsetTime`.
+`@Column(secondPrecision)` overrides that default within the supported physical capacity.
+Hibernate prepares values using the established driver and column reduction rules. Timestamp
+ties before PostgreSQL's year-2000 epoch differ from later ties; native offset-time transport
+also has a different sub-microsecond rule from the UTC time carrier. Prepared values, database
+reads and cached values use the same resolved contract. Finite range and offset restrictions
+remain in force; SQL infinities are not supported Java temporal values.
+
+This profile does not certify version producers, periods, aggregates, other PostgreSQL-derived
+products, other drivers or unassessed configured versions. With JDBC metadata access at boot
+disabled, supply the database version, for example `jakarta.persistence.database-product-version=18`.
+Hibernate does not connect at boot to discover precision or verify that a retained schema matches
+its mapping. Review existing column definitions as part of migration analysis.
+
 [[basic-temporal-query-precision]]
 ===== Precision in queries and the query cache
 
@@ -1041,8 +1072,13 @@ Input and output are assessed independently, including for `INOUT`. Support depe
 actual indexed, named, or scalar ResultSet route, not merely whether an ORM parameter has a name.
 The initial stock profile covers evidenced H2 2.5 indexed scalar inputs and function outputs for
 direct `LocalDateTime`, plain UTC `Instant`, and the corresponding explicitly adjusted
-`OffsetDateTime` carrier. Other descriptors, providers, and modes require their own contribution;
-unsupported routes fail before statement preparation. JDBC metadata access at boot is not required.
+`OffsetDateTime` carrier. On configured PostgreSQL 18 with pgJDBC, the supported explicitly
+adjusted `OffsetDateTime`/plain UTC timestamp carrier admits indexed inputs and scalar function
+results through a ResultSet; native `OffsetTime` admits indexed inputs. These transports retain
+microseconds, so finer inputs are rejected rather than rounded. ORM parameter names may still
+use indexed JDBC binding. Native time OUT/INOUT, actual named JDBC access and indexed scalar
+returns are not certified by this profile. Other descriptors, providers, and modes require their
+own contribution; unsupported routes fail before statement preparation. JDBC metadata access at boot is not required.
 
 Custom descriptors may implement `TemporalCallablePrecisionJdbcType`, or a Dialect may override
 `getTemporalCallablePrecisionSupport()`. The contribution describes the actual relational type,

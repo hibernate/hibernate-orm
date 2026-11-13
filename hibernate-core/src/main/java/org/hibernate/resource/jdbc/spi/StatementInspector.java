@@ -1,5 +1,8 @@
 package org.hibernate.resource.jdbc.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 
 import org.hibernate.engine.creation.spi.SessionBuilderImplementor;
 
@@ -42,5 +45,6 @@ public interface StatementInspector extends Serializable {
 	 *
 	 * @return The processed SQL to use; may be {@code null}
 	 */
-	String inspect(String sql);
+	@Nullable
+	String inspect(@Nonnull String sql);
 }

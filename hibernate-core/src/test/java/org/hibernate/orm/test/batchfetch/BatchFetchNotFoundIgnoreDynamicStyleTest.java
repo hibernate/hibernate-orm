@@ -20,6 +20,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
@@ -244,7 +245,8 @@ public class BatchFetchNotFoundIgnoreDynamicStyleTest {
 		public AStatementInspector() {
 		}
 
-		public String inspect(String sql) {
+		@Nonnull
+		public String inspect(@Nonnull String sql) {
 			parameterCounts.add( countParameters( sql ) );
 			return sql;
 		}

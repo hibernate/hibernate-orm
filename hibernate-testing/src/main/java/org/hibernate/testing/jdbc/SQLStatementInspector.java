@@ -1,5 +1,7 @@
 package org.hibernate.testing.jdbc;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -25,7 +27,8 @@ public class SQLStatementInspector implements StatementInspector {
 	}
 
 	@Override
-	public String inspect(String sql) {
+	@Nonnull
+	public String inspect(@Nonnull String sql) {
 		sqlQueries.add( sql );
 		return sql;
 	}

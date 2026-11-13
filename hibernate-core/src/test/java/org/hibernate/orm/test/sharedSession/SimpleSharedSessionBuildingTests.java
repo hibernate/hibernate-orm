@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.sharedSession;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -306,7 +307,8 @@ public class SimpleSharedSessionBuildingTests {
 
 	public record StatementInspectorImpl(String name) implements StatementInspector {
 		@Override
-		public String inspect(String sql) {
+		@Nonnull
+		public String inspect(@Nonnull String sql) {
 			return sql;
 		}
 	}

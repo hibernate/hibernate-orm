@@ -80,7 +80,9 @@ public final class ComponentMetadataGenerator extends AbstractMetadataGenerator 
 			instantiator = EmbeddableInstantiatorPojoIndirecting.of(
 					propComponent.getPropertyNames(),
 					propComponent.getInstantiator(),
-					propComponent.getInstantiatorPropertyNames()
+					propComponent.getInstantiatorPropertyNames(),
+					getMetadataBuildingContext().getServiceRegistry()
+							.requireService( PropertyAccessorService.class ).hibernateAccessorFactory()
 			);
 		}
 		else if ( propComponent.getComponentClass() != null &&

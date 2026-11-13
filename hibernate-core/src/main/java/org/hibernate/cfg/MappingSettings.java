@@ -237,16 +237,61 @@ public interface MappingSettings {
 	 * This setting takes precedence over [#JAVA_TIME_USE_DIRECT_JDBC].
 	 *
 	 * @settingDefault {@value #TEMPORAL_PRESERVATION_DEFAULT}
-	 * @since 8.0
+	 * @since 8.1
 	 */
 	String TEMPORAL_PRESERVATION = "hibernate.type.temporal_preservation";
 
 	/**
 	 * Default for [#TEMPORAL_PRESERVATION].
 	 *
-	 * @since 8.0
+	 * @since 8.1
 	 */
 	boolean TEMPORAL_PRESERVATION_DEFAULT = true;
+
+	/**
+	 * Preservation requirement default. Accepts DOMAIN_VALUE or NORMALIZED, or a
+	 * {@linkplain org.hibernate.annotations.TemporalPreservationPolicy.Type} enum value.
+	 * Requires temporal preservation enabled; does not select storage or adjustment.
+	 *
+	 * @see org.hibernate.annotations.TemporalPreservationPolicy
+	 *
+	 * @since 8.1
+	 */
+	String TEMPORAL_PRESERVATION_POLICY = "hibernate.type.temporal_preservation_policy";
+
+	/**
+	 * Preservation requirement for offset_datetime. Accepts DOMAIN_VALUE or NORMALIZED, or a
+	 * {@linkplain org.hibernate.annotations.TemporalPreservationPolicy.Type} enum value.
+	 * Requires temporal preservation enabled; does not select storage or adjustment.
+	 *
+	 * @see org.hibernate.annotations.TemporalPreservationPolicy
+	 *
+	 * @since 8.1
+	 */
+	String TEMPORAL_PRESERVATION_POLICY_OFFSET_DATETIME = "hibernate.type.temporal_preservation_policy.offset_datetime";
+
+	/**
+	 * Preservation requirement for zoned_datetime. Accepts DOMAIN_VALUE or NORMALIZED, or a
+	 * {@linkplain org.hibernate.annotations.TemporalPreservationPolicy.Type} enum value.
+	 * Requires temporal preservation enabled; does not select storage or adjustment.
+	 *
+	 * @see org.hibernate.annotations.TemporalPreservationPolicy
+	 *
+	 * @since 8.1
+	 */
+	String TEMPORAL_PRESERVATION_POLICY_ZONED_DATETIME = "hibernate.type.temporal_preservation_policy.zoned_datetime";
+
+	/**
+	 * Preservation requirement for offset_time. Accepts DOMAIN_VALUE or NORMALIZED, or a
+	 * {@linkplain org.hibernate.annotations.TemporalPreservationPolicy.Type} enum value.
+	 * Requires temporal preservation enabled; does not select storage or adjustment.
+	 *
+	 * @see org.hibernate.annotations.TemporalPreservationPolicy
+	 *
+	 * @since 8.1
+	 */
+	String TEMPORAL_PRESERVATION_POLICY_OFFSET_TIME = "hibernate.type.temporal_preservation_policy.offset_time";
+
 
 	/**
 	 * Deprecated compatibility alias for {@link #TEMPORAL_PRESERVATION}, used only
@@ -258,7 +303,7 @@ public interface MappingSettings {
 	 * @since 6.5
 	 * @deprecated Use {@link #TEMPORAL_PRESERVATION}.
 	 */
-	@Deprecated(since = "8.0")
+	@Deprecated(since = "8.1")
 	@Incubating(since = "6.5")
 	String JAVA_TIME_USE_DIRECT_JDBC = "hibernate.type.java_time_use_direct_jdbc";
 
@@ -267,7 +312,7 @@ public interface MappingSettings {
 	 *
 	 * @since 8.0
 	 */
-	@Deprecated(since = "8.0")
+	@Deprecated(since = "8.1")
 	boolean JAVA_TIME_USE_DIRECT_JDBC_DEFAULT = TEMPORAL_PRESERVATION_DEFAULT;
 
 	/**

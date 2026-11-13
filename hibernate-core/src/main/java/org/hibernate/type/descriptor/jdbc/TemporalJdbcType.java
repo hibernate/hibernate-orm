@@ -20,9 +20,9 @@ import static org.hibernate.SPI.Role.USE;
 /// Implementations may inherit a deliberately supported family contract, but a
 /// subclass changing execution must update or decline the inherited assessment.
 ///
-/// @since 8.0
+/// @since 8.1
 /// @author Steve Ebersole
-@Incubating(since = "8.0")
+@Incubating(since = "8.1")
 @SPI({ USE, IMPLEMENT })
 public interface TemporalJdbcType extends JdbcType {
 

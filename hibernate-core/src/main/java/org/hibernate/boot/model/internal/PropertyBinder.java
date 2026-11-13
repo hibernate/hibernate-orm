@@ -812,6 +812,10 @@ public class PropertyBinder {
 			// Because it's a value type, there is no bidirectional association, hence second pass
 			// ordering does not matter
 			final var memberDetails = inferredData.getAttributeMember();
+			TemporalPolicyConfiguration.rejectExcludedDeclaration( memberDetails,
+					propertyHolder.isOrWithinEmbeddedId()
+							|| propertyHolder instanceof ComponentPropertyHolder componentHolder
+							&& componentHolder.getAggregateColumn() != null );
 			if ( memberDetails.hasDirectAnnotationUsage( Parent.class ) ) {
 				handleParentProperty( propertyHolder, inferredData, memberDetails );
 			}

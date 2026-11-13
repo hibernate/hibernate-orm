@@ -1,6 +1,8 @@
 package org.hibernate.type.internal;
 
 import org.hibernate.MappingException;
+import org.hibernate.annotations.TemporalPreservationPolicy.Type;
+import org.hibernate.type.internal.TemporalPolicySettings.Selection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.temporaltype.spi.TemporalPreservation;
 import org.hibernate.dialect.type.internal.OracleOffsetDateTimeJdbcType;
@@ -28,6 +30,8 @@ import java.time.ZonedDateTime;
 import java.util.EnumSet;
 import java.util.Locale;
 import java.util.Set;
+import java.util.Map;
+import org.hibernate.type.BasicType;
 
 import static org.hibernate.dialect.temporaltype.spi.TemporalPreservation.TemporalPart.DATE;
 import static org.hibernate.dialect.temporaltype.spi.TemporalPreservation.TemporalPart.INSTANT;
@@ -39,7 +43,7 @@ import static org.hibernate.dialect.temporaltype.spi.TemporalPreservation.Tempor
 /// Adjustment replaces offset/zone requirements only when the required primary
 /// information survives. No precision canonicalization occurs here.
 ///
-/// @since 8.0
+/// @since 8.1
 /// @author Steve Ebersole
 public final class TemporalMappingValidator {
 	private TemporalMappingValidator() {
@@ -49,7 +53,12 @@ public final class TemporalMappingValidator {
 		return type == OffsetTime.class || type == OffsetDateTime.class || type == ZonedDateTime.class;
 	}
 
-	public static void validate(Dialect dialect, org.hibernate.type.BasicType<?> type, String role) {
+	public static void validate(Dialect dialect, BasicType<?> type, String role) {
+		validate( dialect, type, role, Map.of() );
+	}
+
+	public static void validate(Dialect dialect, BasicType<?> type, String role,
+			Map<String, Object> settings) {
 		final var javaType = type.getValueConverter() instanceof JpaAttributeConverter<?,?> application
 				? application.getRelationalJavaType()
 				: type.getJavaTypeDescriptor();
@@ -62,7 +71,9 @@ public final class TemporalMappingValidator {
 				type.getJdbcType(),
 				adjustment == null ? null : adjustment.getTarget(),
 				role,
-				adjustment != null && adjustment.usesUtcTimeCarrier()
+				adjustment != null && adjustment.usesUtcTimeCarrier(),
+				type instanceof TemporalPolicyBasicType<?> mapped ? mapped.getPolicy()
+						: TemporalPolicySettings.resolve( settings, javaType.getJavaTypeClass() )
 		);
 	}
 
@@ -77,6 +88,11 @@ public final class TemporalMappingValidator {
 			ZoneId adjustment,
 			String role,
 			boolean utcTimeCarrier) {
+		validate( dialect, javaType, jdbcType, adjustment, role, utcTimeCarrier, Selection.DEFAULT );
+	}
+
+	public static void validate(Dialect dialect, JavaType<?> javaType, JdbcType jdbcType,
+			ZoneId adjustment, String role, boolean utcTimeCarrier, Selection policy) {
 		final Class<?> type = javaType.getJavaTypeClass();
 		final Set<TemporalPreservation.TemporalPart> declared;
 		try {
@@ -85,10 +101,19 @@ public final class TemporalMappingValidator {
 		catch (RuntimeException failure) {
 			throw assessmentFailure( javaType, jdbcType, role, "Java-side SPI requirements", failure );
 		}
+		final boolean normalizable = type == Instant.class || type == OffsetDateTime.class
+				|| type == ZonedDateTime.class || type == OffsetTime.class;
+		if ( policy.memberDeclaration() && (declared == null
+				|| policy.policy() == Type.NORMALIZED && !normalizable) ) {
+			throw new MappingException( mappingLabel( role ) + " cannot apply " + policy.policy()
+					+ " from " + policy.source() + " to JDBC-boundary Java type " + type.getName() );
+		}
 		if ( declared == null ) {
 			return;
 		}
-		final var required = EnumSet.copyOf( declared );
+		final var required = policy.policy() == Type.NORMALIZED && normalizable
+				? EnumSet.of( type == OffsetTime.class ? TemporalPreservation.TemporalPart.NORMALIZED_TIME : INSTANT )
+				: EnumSet.copyOf( declared );
 		if ( adjustment != null && supportsRepresentation( type ) ) {
 			required.remove( OFFSET );
 			required.remove( ZONE_ID );
@@ -126,7 +151,7 @@ public final class TemporalMappingValidator {
 						"%s requires %s preservation but %s + %s reports %s; select established "
 								+ "handling/representation, supply a TemporalJdbcType assessment for established "
 								+ "custom execution, or declare custom pair guarantees in the Dialect",
-						mappingLabel( role ),
+						mappingLabel( role ) + " (policy=" + policy.policy() + ", source=" + policy.source() + ")",
 						part,
 						javaType.getClass().getName(),
 						jdbcType.getClass().getName(),
@@ -151,6 +176,10 @@ public final class TemporalMappingValidator {
 		}
 
 		return preservation;
+	}
+
+	public static boolean isTemporal(JavaType<?> javaType) {
+		return requirements( javaType ) != null;
 	}
 
 	private static Set<TemporalPreservation.TemporalPart> requirements(JavaType<?> javaType) {

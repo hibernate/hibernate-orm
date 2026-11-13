@@ -7,7 +7,7 @@ import java.sql.Types;
 /// a zoned column for the UTC-Calendar binding inherited here.
 ///
 /// @author Steve Ebersole
-/// @since 8.0
+/// @since 8.1
 public final class TimestampUtcAsPlainJdbcTimestampJdbcType extends TimestampUtcAsJdbcTimestampJdbcType {
 	public static final TimestampUtcAsPlainJdbcTimestampJdbcType INSTANCE = new TimestampUtcAsPlainJdbcTimestampJdbcType();
 

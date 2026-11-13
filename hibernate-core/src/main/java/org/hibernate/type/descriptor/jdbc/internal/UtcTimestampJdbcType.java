@@ -21,7 +21,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 /// the resolved UTC descriptor; literals use the same UTC encoding independently
 /// of the requested output zone and the global JDBC timezone.
 ///
-/// @since 8.0
+/// @since 8.1
 /// @author Steve Ebersole
 public final class UtcTimestampJdbcType implements JdbcType {
 	private final JdbcType delegate;

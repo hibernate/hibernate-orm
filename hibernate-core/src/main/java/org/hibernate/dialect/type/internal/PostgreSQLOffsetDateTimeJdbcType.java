@@ -12,7 +12,7 @@ import org.hibernate.type.descriptor.jdbc.internal.SetObjectBinder;
 /// Native PostgreSQL timestamp handling within its accepted offset range.
 /// The database normalizes to UTC; this descriptor does not retain input offsets.
 ///
-/// @since 8.0
+/// @since 8.1
 /// @author Steve Ebersole
 public final class PostgreSQLOffsetDateTimeJdbcType extends OffsetDateTimeJdbcType {
 	public static final PostgreSQLOffsetDateTimeJdbcType INSTANCE = new PostgreSQLOffsetDateTimeJdbcType();

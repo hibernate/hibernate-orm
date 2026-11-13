@@ -1,5 +1,8 @@
 package org.hibernate.dialect;
 
+import org.hibernate.annotations.TemporalPreservationPolicy.Type;
+import org.hibernate.dialect.temporaltype.internal.PreservingCurrentTimestamp;
+
 import org.hibernate.dialect.temporaltype.internal.TemporalPreservationHelper;
 import org.hibernate.dialect.temporaltype.spi.StandardTemporalPreservation;
 import org.hibernate.type.descriptor.java.OffsetTimeJavaType;
@@ -788,7 +791,7 @@ public class H2Dialect extends Dialect implements CurrentTemporalSupport, Tempor
 		if ( javaType.getClass() == OffsetTimeJavaType.class
 				&& jdbcType instanceof UtcTimeJdbcType utc
 				&& utc.getDelegate().getClass() == TimeUtcAsOffsetTimeJdbcType.class ) {
-			return new TemporalPreservation( IRRELEVANT, SUPPORTED, IRRELEVANT, UNSUPPORTED, IRRELEVANT );
+			return new TemporalPreservation( IRRELEVANT, SUPPORTED, IRRELEVANT, UNSUPPORTED, IRRELEVANT, SUPPORTED );
 		}
 
 		if ( javaType.getClass() == OffsetTimeJavaType.class
@@ -1238,6 +1241,14 @@ public class H2Dialect extends Dialect implements CurrentTemporalSupport, Tempor
 	@Override
 	public org.hibernate.dialect.temporal.spi.TemporalTableSupport getTemporalTableSupport() {
 		return new org.hibernate.dialect.temporal.internal.H2TemporalTableSupport( this );
+	}
+
+	@Override
+	public CurrentTimestampSelection getCurrentTimestampSelection(JavaType<?> javaType, JdbcType jdbcType, Type policy) {
+		final var established = getCurrentTimestampSelection( javaType, jdbcType );
+		// Preserve existing subclass producer decisions; new normalized encodings require an explicit contribution.
+		return established != null || policy == Type.DOMAIN_VALUE || getClass() != H2Dialect.class
+				? established : PreservingCurrentTimestamp.selection( this, javaType, jdbcType, policy );
 	}
 
 }

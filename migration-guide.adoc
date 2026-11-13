@@ -73,7 +73,7 @@ Hibernate now guarantees preservation of each part of Java Time types (according
 
 [cols="1,3",options="header"]
 |===
-|Java type |Required round-trip value without explicit adjustment
+|Java type |Default domain-value requirement without explicit adjustment
 |`LocalDate`, `LocalTime`, `LocalDateTime` |Their respective local date/time fields
 |`Instant` |The instant
 |`OffsetTime`, `OffsetDateTime` |Local time/date-time and the original offset
@@ -87,6 +87,19 @@ The new `hibernate.type.temporal_preservation` setting, defaulting to `true`, op
 Supported finite SQL ranges and fractional-second precision still apply. Explicit COLUMN representation
 for `ZonedDateTime` is offset-only: it retains local date-time and offset but reconstructs a fixed-offset
 zone. It does not retain a regional zone ID, even with a zoned primary column.
+
+Applications that accept loss of original offsets or zone IDs may retain enabled validation and select
+`hibernate.type.temporal_preservation_policy=normalized`. Per-type keys ending in `.offset_datetime`,
+`.zoned_datetime` and `.offset_time` independently override that default. The default remains `domain_value`.
+`@TemporalPreservationPolicy` provides narrower member/class/package/module declarations, with repeatable
+`types` selectors at non-member scopes. Converter selectors refer to the relational Java type.
+
+Normalized date-times retain the instant; normalized OffsetTime retains UTC-equivalent clock time modulo
+24 hours, explicitly losing day displacement. No storage change, UTC-output requirement or data migration
+is implied. Historical schema and timezone interpretation still require migration analysis; migration-recipes
+analysis should record the effective policy alongside representation and adjustment. Cache equality and
+dirty-checking semantics do not change. The Persistence TCK profile keeps preservation enabled and selects
+normalized OffsetDateTime independently of strict OffsetTime.
 
 ==== Settings and mapping declarations
 

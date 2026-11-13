@@ -1,6 +1,10 @@
 package org.hibernate.mapping;
 
 import org.hibernate.type.internal.TemporalMappingValidator;
+import org.hibernate.type.internal.TemporalPolicyBasicType;
+import org.hibernate.type.internal.TemporalPolicySettings.Selection;
+import org.hibernate.boot.model.internal.TemporalPolicyConfiguration;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import java.time.ZoneId;
 
 import java.lang.annotation.Annotation;
@@ -124,6 +128,7 @@ public class BasicValue extends SimpleValue
 	private TimeZoneStorageType timeZoneStorageType;
 	private ZoneId timeZoneAdjustment;
 	private boolean temporalValidationEnabled = true;
+	private Selection temporalPolicy;
 	private String temporalRole;
 	private java.util.function.Supplier<String> systemPeriodContext;
 	private boolean temporalJdbcOverride;
@@ -166,6 +171,7 @@ public class BasicValue extends SimpleValue
 		this.timeZoneStorageType = original.timeZoneStorageType;
 		this.timeZoneAdjustment = original.timeZoneAdjustment;
 		this.temporalValidationEnabled = original.temporalValidationEnabled;
+		this.temporalPolicy = original.temporalPolicy;
 		this.temporalRole = original.temporalRole;
 		this.systemPeriodContext = original.systemPeriodContext;
 		this.temporalJdbcOverride = original.temporalJdbcOverride;
@@ -377,6 +383,7 @@ public class BasicValue extends SimpleValue
 			timeZoneStorageType = basicValue.timeZoneStorageType;
 			timeZoneAdjustment = basicValue.timeZoneAdjustment;
 			temporalValidationEnabled = basicValue.temporalValidationEnabled;
+			temporalPolicy = basicValue.temporalPolicy;
 			temporalRole = basicValue.temporalRole;
 			systemPeriodContext = basicValue.systemPeriodContext;
 			temporalJdbcOverride = basicValue.temporalJdbcOverride;
@@ -435,6 +442,24 @@ public class BasicValue extends SimpleValue
 	public boolean resolve(MetadataBuildingContext buildingContext) {
 		resolve();
 		return true;
+	}
+
+	private static <T> Resolution<T> policyResolution(Resolution<T> original, Selection policy) {
+		return new NamedBasicTypeResolution<>( original.getDomainJavaType(),
+				new TemporalPolicyBasicType<>( original.getLegacyResolvedBasicType(), policy ),
+				original.getValueConverter(), original.getMutabilityPlan() );
+	}
+
+	public Selection getTemporalPreservationPolicy() {
+		if ( temporalPolicy != null ) {
+			return temporalPolicy;
+		}
+		return temporalPolicy = TemporalPolicyConfiguration.resolve(
+				getMemberDetails(), temporalPreservationJavaType().getJavaTypeClass(),
+				getBuildingContext().getBootstrapContext().getServiceRegistry()
+						.requireService( ConfigurationService.class ).getSettings(),
+				getBuildingContext().isTemporalPreservationEnabled(),
+				!temporalValidationEnabled && !isVersion(), temporalRole() );
 	}
 
 	private JavaType<?> temporalPreservationJavaType() {
@@ -530,6 +555,7 @@ public class BasicValue extends SimpleValue
 				throw new IllegalStateException( "Unable to resolve BasicValue: " + this );
 			}
 			else {
+				final var policy = getTemporalPreservationPolicy();
 				final boolean temporalHandling = (temporalValidationEnabled || isVersion())
 						&& getBuildingContext().isTemporalPreservationEnabled();
 				if ( temporalHandling ) {
@@ -561,7 +587,11 @@ public class BasicValue extends SimpleValue
 					TemporalMappingValidator.validate(
 							getDialect(), temporalPreservationJavaType(), resolution.getJdbcType(), timeZoneAdjustment,
 							temporalRole(), resolution.getValueConverter() instanceof TemporalAdjustmentConverter<?> adjustment
-									&& adjustment.usesUtcTimeCarrier() );
+									&& adjustment.usesUtcTimeCarrier(), policy );
+				}
+				if ( temporalHandling && policy != Selection.DEFAULT
+						&& TemporalMappingValidator.isTemporal( temporalPreservationJavaType() ) ) {
+					resolution = policyResolution( resolution, policy );
 				}
 				resolution.getJdbcType().addAuxiliaryDatabaseObjects(
 						resolution.getRelationalJavaType(),

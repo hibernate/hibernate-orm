@@ -25,7 +25,7 @@ import org.hibernate.models.spi.MemberDetails;
 /// mapped member's declaring context, never to a subclass or embedding site.
 ///
 /// @author Steve Ebersole
-/// @since 8.0
+/// @since 8.1
 public record TemporalMappingConfiguration(
 		TimeZoneRepresentation.Type representation,
 		ZoneId adjustment,

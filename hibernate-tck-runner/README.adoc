@@ -106,3 +106,12 @@ public class JakartaPersistenceTckTestRunner {
 
 }
 ----
+
+== Temporal preservation profile
+
+The runner explicitly enables `hibernate.type.temporal_preservation` and retains the
+`domain_value` default, overriding `.offset_datetime` to `normalized` and keeping `.offset_time`
+at `domain_value`. PostgreSQL can retain an OffsetDateTime instant without retaining its original
+offset. This configuration selects that requirement while keeping preservation validation enabled;
+it does not modify TCK entities or assertions, request UTC output, or change ORM's application defaults.
+Dedicated ORM regression tests establish the round-trip guarantees beyond the TCK's assertions.

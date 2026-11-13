@@ -4,7 +4,7 @@ package org.hibernate;
 /// domain, or a stored temporal tuple is invalid.
 ///
 /// @author Steve Ebersole
-/// @since 8.0
+/// @since 8.1
 public class TemporalValueException extends HibernateException {
 	public TemporalValueException(String message) {
 		super( message );

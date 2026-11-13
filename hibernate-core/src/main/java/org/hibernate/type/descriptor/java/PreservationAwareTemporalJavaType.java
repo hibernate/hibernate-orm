@@ -18,9 +18,9 @@ import static org.hibernate.SPI.Role.USE;
 /// implementing this interface; the older [TemporalJavaType] contract is unchanged.
 ///
 /// @param <T> the represented temporal value type
-/// @since 8.0
+/// @since 8.1
 /// @author Steve Ebersole
-@Incubating(since = "8.0")
+@Incubating(since = "8.1")
 @SPI({ USE, IMPLEMENT })
 public interface PreservationAwareTemporalJavaType<T> extends TemporalJavaType<T> {
 

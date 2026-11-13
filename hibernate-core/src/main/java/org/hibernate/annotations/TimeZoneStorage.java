@@ -53,7 +53,7 @@ import static java.lang.annotation.ElementType.METHOD;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ FIELD, METHOD })
-@Deprecated(since = "8.0")
+@Deprecated(since = "8.1")
 public @interface TimeZoneStorage {
 	/**
 	 * The storage strategy for the time zone information.

@@ -21,7 +21,7 @@ import org.hibernate.type.descriptor.jdbc.TimestampUtcAsZonedJdbcTimestampJdbcTy
 /// Driver reflection belongs to the descriptor's bootstrap classloader context;
 /// constructing the descriptor does not obtain a connection or JDBC metadata.
 ///
-/// @since 8.0
+/// @since 8.1
 /// @author Steve Ebersole
 public final class OracleTimestampUtcAsJdbcTimestampJdbcType extends TimestampUtcAsZonedJdbcTimestampJdbcType {
 	private final Constructor<?> constructor;

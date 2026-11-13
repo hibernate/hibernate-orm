@@ -1,5 +1,8 @@
 package org.hibernate.dialect;
 
+import org.hibernate.annotations.TemporalPreservationPolicy.Type;
+import org.hibernate.dialect.temporaltype.internal.PreservingCurrentTimestamp;
+
 import org.hibernate.dialect.temporaltype.internal.TemporalPreservationHelper;
 import org.hibernate.dialect.temporaltype.spi.StandardTemporalPreservation;
 import org.hibernate.dialect.type.internal.PostgreSQLLocalTimeJdbcType;
@@ -1699,6 +1702,14 @@ public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport
 			org.hibernate.type.descriptor.java.JavaType<?> javaType,
 			org.hibernate.type.descriptor.jdbc.JdbcType jdbcType) {
 		return org.hibernate.dialect.temporaltype.internal.PreservingCurrentTimestamp.selection( this, javaType, jdbcType );
+	}
+
+	@Override
+	public CurrentTimestampSelection getCurrentTimestampSelection(JavaType<?> javaType, JdbcType jdbcType, Type policy) {
+		final var established = getCurrentTimestampSelection( javaType, jdbcType );
+		// Preserve existing subclass producer decisions; new normalized encodings require an explicit contribution.
+		return established != null || policy == Type.DOMAIN_VALUE || getClass() != PostgreSQLDialect.class
+				? established : PreservingCurrentTimestamp.selection( this, javaType, jdbcType, policy );
 	}
 
 }

@@ -11,9 +11,9 @@ import static org.hibernate.dialect.temporaltype.spi.TemporalPreservation.Level.
 /// Conservative facts for exact built-in descriptor implementations. Platform
 /// assessments may supplement these facts without recognizing custom subclasses.
 ///
-/// @since 8.0
+/// @since 8.1
 /// @author Steve Ebersole
-@Incubating(since = "8.0")
+@Incubating(since = "8.1")
 public final class StandardTemporalPreservation {
 	private StandardTemporalPreservation() {
 	}
@@ -50,7 +50,7 @@ public final class StandardTemporalPreservation {
 		if ( java == OffsetTimeJavaType.class
 				&& jdbcType instanceof org.hibernate.type.descriptor.jdbc.internal.UtcTimeJdbcType utc
 				&& utc.getDelegate().getClass() == org.hibernate.dialect.type.internal.PostgreSQLUtcTimeJdbcType.class ) {
-			return new TemporalPreservation( IRRELEVANT, SUPPORTED, IRRELEVANT, UNSUPPORTED, IRRELEVANT );
+			return new TemporalPreservation( IRRELEVANT, SUPPORTED, IRRELEVANT, UNSUPPORTED, IRRELEVANT, SUPPORTED );
 		}
 		final Class<?> jdbc = jdbcType.getClass();
 		if ( java == LocalDateJavaType.class && jdbc == LocalDateJdbcType.class && directAccess.supports( LocalDate.class ) ) {

@@ -129,10 +129,11 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 				&& javaClass != OffsetDateTime.class && javaClass != ZonedDateTime.class ) {
 			return;
 		}
-		final var mapping = ((org.hibernate.mapping.BasicValue) context.getProperty().getValue()).resolve();
+		final var value = (BasicValue) context.getProperty().getValue();
+		final var mapping = value.resolve();
 		preservingJdbcType = mapping.getJdbcType();
 		preservingSelection = context.getDatabase().getDialect().getCurrentTemporalSupport()
-				.getCurrentTimestampSelection( propertyType, preservingJdbcType );
+				.getCurrentTimestampSelection( propertyType, preservingJdbcType, value.getTemporalPreservationPolicy().policy() );
 		if ( preservingSelection == null ) {
 			throw new org.hibernate.MappingException( "Version '" + context.getPersistentClass().getEntityName()
 					+ "." + context.getProperty().getName() + "' with temporal_preservation=true has no preserving DB producer for "

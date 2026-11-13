@@ -11,7 +11,6 @@ import org.hibernate.type.descriptor.jdbc.JavaTimeJdbcType;
 
 /// Support for extracting values directly through \`getObject\` JDBC driver calls.
 ///
-/// @since 8.0
 /// @author Steve Ebersole
 public class GetObjectExtractor<T> extends BasicExtractor<T> {
 	private final Class<?> baseClass;

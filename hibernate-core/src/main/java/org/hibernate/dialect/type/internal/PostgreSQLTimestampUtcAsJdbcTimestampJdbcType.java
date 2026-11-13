@@ -12,7 +12,7 @@ import org.hibernate.type.descriptor.jdbc.TimestampUtcAsZonedJdbcTimestampJdbcTy
 /// PostgreSQL accepts UTC-Calendar Timestamp binding for timestamptz, but rejects
 /// setObject(Timestamp, TIMESTAMP_WITH_TIMEZONE). Keep that variation in its JdbcType.
 ///
-/// @since 8.0
+/// @since 8.1
 /// @author Steve Ebersole
 public final class PostgreSQLTimestampUtcAsJdbcTimestampJdbcType extends TimestampUtcAsZonedJdbcTimestampJdbcType {
 	public static final PostgreSQLTimestampUtcAsJdbcTimestampJdbcType INSTANCE = new PostgreSQLTimestampUtcAsJdbcTimestampJdbcType();

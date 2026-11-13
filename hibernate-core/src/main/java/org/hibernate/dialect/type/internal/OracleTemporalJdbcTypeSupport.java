@@ -19,7 +19,7 @@ import org.hibernate.type.descriptor.jdbc.internal.SetObjectBinder;
 /// Shared Oracle offset-temporal support. Oracle's offset representation loses
 /// offset seconds even when the instant survives, so reject them before binding.
 ///
-/// @since 8.0
+/// @since 8.1
 /// @author Steve Ebersole
 final class OracleTemporalJdbcTypeSupport {
 	private OracleTemporalJdbcTypeSupport() {

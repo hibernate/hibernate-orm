@@ -16,7 +16,7 @@ import org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType;
 /// time-only modulo-day semantics. PostgreSQL's maximum stored precision is
 /// microseconds, so a legitimate stored 23:59:59.999999 is not this sentinel.
 ///
-/// @since 8.0
+/// @since 8.1
 /// @author Steve Ebersole
 public final class PostgreSQLLocalTimeJdbcType extends LocalTimeJdbcType {
 	public static final PostgreSQLLocalTimeJdbcType INSTANCE = new PostgreSQLLocalTimeJdbcType();

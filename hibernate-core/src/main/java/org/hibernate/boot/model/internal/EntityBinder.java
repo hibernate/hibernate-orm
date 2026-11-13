@@ -1296,24 +1296,30 @@ public class EntityBinder {
 				// PrimaryKeyJoinColumns must not be empty according to Javadoc
 				throw new AnnotationException( "Empty '@PrimaryKeyJoinColumns' annotation" );
 			}
-			for ( var column : columns ) {
+			for ( int i = 0; i < columns.length; i++ ) {
 				buildInheritanceJoinColumn(
-						column,
+						columns[i],
 						null,
 						superEntity.getIdentifier(),
 						joinColumns,
-						context
+						context,
+						i
 				);
 			}
 		}
 		else {
-			buildInheritanceJoinColumn(
-					null,
-					null,
-					superEntity.getIdentifier(),
-					joinColumns,
-					context
-			);
+			final var identifier = superEntity.getIdentifier();
+			final int columnCount = identifier.getColumns().size();
+			for ( int i = 0; i < columnCount; i++ ) {
+				buildInheritanceJoinColumn(
+						null,
+						null,
+						identifier,
+						joinColumns,
+						context,
+						i
+				);
+			}
 		}
 		return joinColumns;
 	}
@@ -2159,13 +2165,18 @@ public class EntityBinder {
 		joinColumns.setBuildingContext( context );
 		joinColumns.setJoins( secondaryTables );
 		joinColumns.setPropertyHolder( propertyHolder );
-		buildInheritanceJoinColumn(
-				null,
-				null,
-				persistentClass.getIdentifier(),
-				joinColumns,
-				context
-		);
+		final var identifier = persistentClass.getIdentifier();
+		final int columnCount = identifier.getColumns().size();
+		for ( int i = 0; i < columnCount; i++ ) {
+			buildInheritanceJoinColumn(
+					null,
+					null,
+					identifier,
+					joinColumns,
+					context,
+					i
+			);
+		}
 		return joinColumns;
 	}
 
@@ -2195,7 +2206,8 @@ public class EntityBinder {
 								: null,
 						persistentClass.getIdentifier(),
 						columns,
-						context
+						context,
+						colIndex
 				);
 			}
 			return columns;

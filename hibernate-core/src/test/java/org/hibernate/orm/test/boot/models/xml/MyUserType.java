@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.boot.models.xml;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -20,34 +23,41 @@ public class MyUserType implements UserType<UUID> {
 	}
 
 	@Override
+	@Nonnull
 	public Class<UUID> returnedClass() {
-		return null;
+		return UUID.class;
 	}
 
 	@Override
-	public boolean equals(UUID x, UUID y) {
+	public boolean equals(@Nullable UUID x, @Nullable UUID y) {
 		return false;
 	}
 
 	@Override
-	public int hashCode(UUID x) {
+	public int hashCode(@Nonnull UUID x) {
 		return 0;
 	}
 
 	@Override
-	public UUID nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+	@Nullable
+	public UUID nullSafeGet(@Nonnull ResultSet rs, int position, @Nonnull WrapperOptions options)
 			throws SQLException {
 		return null;
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, UUID value, int index, WrapperOptions options)
+	public void nullSafeSet(
+			@Nonnull PreparedStatement st,
+			@Nullable UUID value,
+			int index,
+			@Nonnull WrapperOptions options)
 			throws SQLException {
 
 	}
 
 	@Override
-	public UUID deepCopy(UUID value) {
+	@Nullable
+	public UUID deepCopy(@Nullable UUID value) {
 		return null;
 	}
 
@@ -57,12 +67,14 @@ public class MyUserType implements UserType<UUID> {
 	}
 
 	@Override
-	public Serializable disassemble(UUID value) {
+	@Nullable
+	public Serializable disassemble(@Nullable UUID value) {
 		return null;
 	}
 
 	@Override
-	public UUID assemble(Serializable cached, Object owner) {
+	@Nullable
+	public UUID assemble(@Nullable Serializable cached, @Nullable Object owner) {
 		return null;
 	}
 }

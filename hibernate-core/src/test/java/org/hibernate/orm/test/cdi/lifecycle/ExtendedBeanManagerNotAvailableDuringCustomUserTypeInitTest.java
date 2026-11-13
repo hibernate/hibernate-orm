@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.cdi.lifecycle;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -68,12 +70,13 @@ public class ExtendedBeanManagerNotAvailableDuringCustomUserTypeInitTest {
 		}
 
 		@Override
+		@Nonnull
 		public Class<Object> returnedClass() {
 			return Object.class;
 		}
 
 		@Override
-		public boolean equals(Object x, Object y) throws HibernateException {
+		public boolean equals(@Nullable Object x, @Nullable Object y) throws HibernateException {
 			if (x == null) {
 				return y == null;
 			} else {
@@ -82,19 +85,24 @@ public class ExtendedBeanManagerNotAvailableDuringCustomUserTypeInitTest {
 		}
 
 		@Override
-		public int hashCode(Object x) throws HibernateException {
+		public int hashCode(@Nonnull Object x) throws HibernateException {
 			return x == null ? 0 : x.hashCode();
 		}
 
 		@Override
-		public Object nullSafeGet(ResultSet rs, int i, WrapperOptions options)
+		@Nullable
+		public Object nullSafeGet(@Nonnull ResultSet rs, int i, @Nonnull WrapperOptions options)
 				throws SQLException {
 			String xmldoc = rs.getString(i);
 			return rs.wasNull() ? null : xmldoc;
 		}
 
 		@Override
-		public void nullSafeSet(PreparedStatement st, Object value, int index, WrapperOptions options)
+		public void nullSafeSet(
+				@Nonnull PreparedStatement st,
+				@Nullable Object value,
+				int index,
+				@Nonnull WrapperOptions options)
 				throws SQLException  {
 			if (value == null) {
 				st.setNull(index, Types.OTHER);
@@ -104,7 +112,8 @@ public class ExtendedBeanManagerNotAvailableDuringCustomUserTypeInitTest {
 		}
 
 		@Override
-		public Object deepCopy(Object value) throws HibernateException {
+		@Nullable
+		public Object deepCopy(@Nullable Object value) throws HibernateException {
 			return value;
 		}
 
@@ -114,17 +123,23 @@ public class ExtendedBeanManagerNotAvailableDuringCustomUserTypeInitTest {
 		}
 
 		@Override
-		public Serializable disassemble(Object value) throws HibernateException {
+		@Nullable
+		public Serializable disassemble(@Nullable Object value) throws HibernateException {
 			return (String) value;
 		}
 
 		@Override
-		public Object assemble(Serializable cached, Object owner) throws HibernateException {
+		@Nullable
+		public Object assemble(@Nullable Serializable cached, @Nullable Object owner) throws HibernateException {
 			return cached;
 		}
 
 		@Override
-		public Object replace(Object original, Object target, Object owner) throws HibernateException {
+		@Nullable
+		public Object replace(
+				@Nullable Object original,
+				@Nullable Object target,
+				@Nullable Object owner) throws HibernateException {
 			return original;
 		}
 

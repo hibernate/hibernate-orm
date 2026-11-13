@@ -1,5 +1,8 @@
 package org.foo;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.usertype.UserType;
 
 public class Bar implements UserType<Integer> {
@@ -10,13 +13,15 @@ public class Bar implements UserType<Integer> {
     }
 
     @Override
+    @Nonnull
     public Class<Integer> returnedClass() {
-        return null;
+        return Integer.class;
     }
 
     @Override
-    public Integer deepCopy(Integer integer) {
-        return 0;
+    @Nullable
+    public Integer deepCopy(@Nullable Integer integer) {
+        return integer;
     }
 
     @Override

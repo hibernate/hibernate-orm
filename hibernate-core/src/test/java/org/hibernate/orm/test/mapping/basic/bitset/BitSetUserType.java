@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.mapping.basic.bitset;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -27,23 +30,25 @@ public class BitSetUserType implements UserType<BitSet> {
 	}
 
 	@Override
+	@Nonnull
 	public Class<BitSet> returnedClass() {
 		return BitSet.class;
 	}
 
 	@Override
-	public boolean equals(BitSet x, BitSet y) {
+	public boolean equals(@Nullable BitSet x, @Nullable BitSet y) {
 		return Objects.equals(x, y);
 	}
 
 	@Override
-	public int hashCode(BitSet x) {
+	public int hashCode(@Nonnull BitSet x) {
 		return Objects.hashCode(x);
 	}
 
 	@Override
-	public BitSet nullSafeGet(ResultSet rs, int position,
-							WrapperOptions options)
+	@Nullable
+	public BitSet nullSafeGet(@Nonnull ResultSet rs, int position,
+							@Nonnull WrapperOptions options)
 			throws SQLException {
 		String columnValue = rs.getString(position);
 		if (rs.wasNull()) {
@@ -55,8 +60,8 @@ public class BitSetUserType implements UserType<BitSet> {
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, BitSet value, int index,
-							WrapperOptions options)
+	public void nullSafeSet(@Nonnull PreparedStatement st, @Nullable BitSet value, int index,
+							@Nonnull WrapperOptions options)
 			throws SQLException {
 		if (value == null) {
 			log.debugv("Binding null to parameter {0} ",index);
@@ -70,7 +75,8 @@ public class BitSetUserType implements UserType<BitSet> {
 	}
 
 	@Override
-	public BitSet deepCopy(BitSet bitSet) {
+	@Nullable
+	public BitSet deepCopy(@Nullable BitSet bitSet) {
 		return bitSet == null ? null : (BitSet) bitSet.clone();
 	}
 
@@ -80,12 +86,14 @@ public class BitSetUserType implements UserType<BitSet> {
 	}
 
 	@Override
-	public Serializable disassemble(BitSet value) {
+	@Nullable
+	public Serializable disassemble(@Nullable BitSet value) {
 		return deepCopy(value);
 	}
 
 	@Override
-	public BitSet assemble(Serializable cached, Object owner)  {
+	@Nullable
+	public BitSet assemble(@Nullable Serializable cached, @Nullable Object owner)  {
 		return deepCopy((BitSet) cached);
 	}
 }

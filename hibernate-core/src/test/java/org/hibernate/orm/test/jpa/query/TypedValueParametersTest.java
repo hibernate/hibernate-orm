@@ -24,6 +24,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -134,7 +136,11 @@ public class TypedValueParametersTest {
 		public static final TagUserType INSTANCE = new TagUserType();
 
 		@Override
-		public void nullSafeSet(PreparedStatement statement, List<String> list, int index, WrapperOptions options) throws HibernateException, SQLException {
+		public void nullSafeSet(
+				@Nonnull PreparedStatement statement,
+				@Nullable List<String> list,
+				int index,
+				@Nonnull WrapperOptions options) throws HibernateException, SQLException {
 			if ( list == null ) {
 				statement.setNull( index, SqlTypes.VARCHAR );
 			}
@@ -153,7 +159,8 @@ public class TypedValueParametersTest {
 		}
 
 		@Override
-		public List<String> nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+		@Nullable
+		public List<String> nullSafeGet(@Nonnull ResultSet rs, int position, @Nonnull WrapperOptions options)
 				throws SQLException {
 			String string = rs.getString( position );
 
@@ -184,32 +191,40 @@ public class TypedValueParametersTest {
 
 		@Override
 		@SuppressWarnings({ "unchecked", "rawtypes" })
+		@Nonnull
 		public Class<List<String>> returnedClass() {
 			return (Class) List.class;
 		}
 
 		@Override
-		public List<String> assemble(final Serializable cached, final Object owner) throws HibernateException {
+		@Nullable
+		public List<String> assemble(
+				@Nullable final Serializable cached,
+				@Nullable final Object owner) throws HibernateException {
 			return (List<String>) cached;
 		}
 
 		@Override
-		public List<String> deepCopy(final List<String> o) throws HibernateException {
+		@Nullable
+		public List<String> deepCopy(@Nullable final List<String> o) throws HibernateException {
 			return o == null ? null : new ArrayList<>( o );
 		}
 
 		@Override
-		public Serializable disassemble(final List<String> o) throws HibernateException {
+		@Nullable
+		public Serializable disassemble(@Nullable final List<String> o) throws HibernateException {
 			return (Serializable) o;
 		}
 
 		@Override
-		public boolean equals(final List<String> x, final List<String> y) throws HibernateException {
+		public boolean equals(
+				@Nullable final List<String> x,
+				@Nullable final List<String> y) throws HibernateException {
 			return x == null ? y == null : x.equals(y);
 		}
 
 		@Override
-		public int hashCode(final List<String> o) throws HibernateException {
+		public int hashCode(@Nonnull final List<String> o) throws HibernateException {
 			return o == null ? 0 : o.hashCode();
 		}
 
@@ -219,7 +234,11 @@ public class TypedValueParametersTest {
 		}
 
 		@Override
-		public List<String> replace(final List<String> original, final List<String> target, final Object owner) throws HibernateException {
+		@Nullable
+		public List<String> replace(
+				@Nullable final List<String> original,
+				@Nullable final List<String> target,
+				@Nullable final Object owner) throws HibernateException {
 			return original;
 		}
 

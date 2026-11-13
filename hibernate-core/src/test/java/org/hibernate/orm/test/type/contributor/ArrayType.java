@@ -5,6 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
 import org.hibernate.HibernateException;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -29,33 +31,40 @@ public class ArrayType implements UserType<Array>, AttributeConverter<Array, Str
 	}
 
 	@Override
+	@Nonnull
 	public Class<Array> returnedClass() {
 		return Array.class;
 	}
 
 	@Override
-	public boolean equals(Array x, Array y) throws HibernateException {
+	public boolean equals(@Nullable Array x, @Nullable Array y) throws HibernateException {
 		return javaType.areEqual( x, y );
 	}
 
 	@Override
-	public int hashCode(Array x) throws HibernateException {
+	public int hashCode(@Nonnull Array x) throws HibernateException {
 		return javaType.extractHashCode( x );
 	}
 
 	@Override
-	public Array nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+	@Nullable
+	public Array nullSafeGet(@Nonnull ResultSet rs, int position, @Nonnull WrapperOptions options)
 			throws SQLException {
 		return jdbcType.getExtractor( javaType ).extract( rs, position, options );
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, Array value, int index, WrapperOptions options)
+	public void nullSafeSet(
+			@Nonnull PreparedStatement st,
+			@Nullable Array value,
+			int index,
+			@Nonnull WrapperOptions options)
 			throws SQLException {
 		jdbcType.getBinder( javaType ).bind( st, value, index, options );
 	}
 
 	@Override
+	@Nullable
 	public AttributeConverter<Array, String> getValueConverter() {
 		return this;
 	}
@@ -71,7 +80,8 @@ public class ArrayType implements UserType<Array>, AttributeConverter<Array, Str
 	}
 
 	@Override
-	public Array deepCopy(Array value) throws HibernateException {
+	@Nullable
+	public Array deepCopy(@Nullable Array value) throws HibernateException {
 		return ArrayMutabilityPlan.INSTANCE.deepCopy( value );
 	}
 
@@ -81,17 +91,23 @@ public class ArrayType implements UserType<Array>, AttributeConverter<Array, Str
 	}
 
 	@Override
-	public Serializable disassemble(Array value) throws HibernateException {
+	@Nullable
+	public Serializable disassemble(@Nullable Array value) throws HibernateException {
 		return ArrayMutabilityPlan.INSTANCE.disassemble( value, null );
 	}
 
 	@Override
-	public Array assemble(Serializable cached, Object owner) throws HibernateException {
+	@Nullable
+	public Array assemble(@Nullable Serializable cached, @Nullable Object owner) throws HibernateException {
 		return ArrayMutabilityPlan.INSTANCE.assemble( cached, null );
 	}
 
 	@Override
-	public Array replace(Array original, Array target, Object owner) throws HibernateException {
+	@Nullable
+	public Array replace(
+			@Nullable Array original,
+			@Nullable Array target,
+			@Nullable Object owner) throws HibernateException {
 		return null;
 	}
 }

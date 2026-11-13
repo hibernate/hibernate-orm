@@ -6,6 +6,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -111,7 +113,8 @@ public class UserTypeNonComparableIdTest {
 		}
 
 		@Override
-		public CustomId nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+		@Nullable
+		public CustomId nullSafeGet(@Nonnull ResultSet rs, int position, @Nonnull WrapperOptions options)
 				throws SQLException {
 			Long value = rs.getLong( position );
 
@@ -120,10 +123,10 @@ public class UserTypeNonComparableIdTest {
 
 		@Override
 		public void nullSafeSet(
-				PreparedStatement preparedStatement,
-				CustomId customId,
+				@Nonnull PreparedStatement preparedStatement,
+				@Nullable CustomId customId,
 				int index,
-				WrapperOptions sessionImplementor) throws SQLException {
+				@Nonnull WrapperOptions sessionImplementor) throws SQLException {
 			if ( customId == null ) {
 				preparedStatement.setNull( index, Types.BIGINT );
 			}
@@ -133,22 +136,24 @@ public class UserTypeNonComparableIdTest {
 		}
 
 		@Override
+		@Nonnull
 		public Class<CustomId> returnedClass() {
 			return CustomId.class;
 		}
 
 		@Override
-		public boolean equals(CustomId x, CustomId y) throws HibernateException {
-			return x.equals( y );
+		public boolean equals(@Nullable CustomId x, @Nullable CustomId y) throws HibernateException {
+			return x == null ? y == null : x.equals( y );
 		}
 
 		@Override
-		public int hashCode(CustomId x) throws HibernateException {
+		public int hashCode(@Nonnull CustomId x) throws HibernateException {
 			return x.hashCode();
 		}
 
 		@Override
-		public CustomId deepCopy(CustomId value) throws HibernateException {
+		@Nullable
+		public CustomId deepCopy(@Nullable CustomId value) throws HibernateException {
 			return value;
 		}
 
@@ -158,17 +163,23 @@ public class UserTypeNonComparableIdTest {
 		}
 
 		@Override
-		public Serializable disassemble(CustomId value) throws HibernateException {
+		@Nullable
+		public Serializable disassemble(@Nullable CustomId value) throws HibernateException {
 			return value;
 		}
 
 		@Override
-		public CustomId assemble(Serializable cached, Object owner) throws HibernateException {
+		@Nullable
+		public CustomId assemble(@Nullable Serializable cached, @Nullable Object owner) throws HibernateException {
 			return (CustomId) cached;
 		}
 
 		@Override
-		public CustomId replace(CustomId original, CustomId target, Object owner) throws HibernateException {
+		@Nullable
+		public CustomId replace(
+				@Nullable CustomId original,
+				@Nullable CustomId target,
+				@Nullable Object owner) throws HibernateException {
 			return original;
 		}
 

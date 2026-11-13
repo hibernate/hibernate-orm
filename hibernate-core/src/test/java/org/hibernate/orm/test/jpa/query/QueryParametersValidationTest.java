@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.jpa.query;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -96,37 +98,40 @@ public class QueryParametersValidationTest {
 		}
 
 		@Override
+		@Nonnull
 		public Class returnedClass() {
 			return boolean.class;
 		}
 
 		@Override
-		public boolean equals(Boolean x, Boolean y) throws HibernateException {
+		public boolean equals(@Nullable Boolean x, @Nullable Boolean y) throws HibernateException {
 			return Objects.equals( x, y);
 		}
 
 		@Override
-		public int hashCode(Boolean x) throws HibernateException {
+		public int hashCode(@Nonnull Boolean x) throws HibernateException {
 			return Objects.hashCode(x);
 		}
 
 		@Override
-		public Boolean nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+		@Nullable
+		public Boolean nullSafeGet(@Nonnull ResultSet rs, int position, @Nonnull WrapperOptions options)
 				throws SQLException {
 			return "Y".equals( rs.getString( position ) );
 		}
 
 		@Override
 		public void nullSafeSet(
-				PreparedStatement st,
-				Boolean value,
+				@Nonnull PreparedStatement st,
+				@Nullable Boolean value,
 				int index,
-				WrapperOptions options) throws SQLException {
-			st.setString(index, value ? "Y" : "N");
+				@Nonnull WrapperOptions options) throws SQLException {
+			st.setString(index, value == null ? null : value ? "Y" : "N");
 		}
 
 		@Override
-		public Boolean deepCopy(Boolean value) throws HibernateException {
+		@Nullable
+		public Boolean deepCopy(@Nullable Boolean value) throws HibernateException {
 			return value;
 		}
 
@@ -136,17 +141,23 @@ public class QueryParametersValidationTest {
 		}
 
 		@Override
-		public Serializable disassemble(Boolean value) throws HibernateException {
+		@Nullable
+		public Serializable disassemble(@Nullable Boolean value) throws HibernateException {
 			return null;
 		}
 
 		@Override
-		public Boolean assemble(Serializable cached, Object owner) throws HibernateException {
+		@Nullable
+		public Boolean assemble(@Nullable Serializable cached, @Nullable Object owner) throws HibernateException {
 			return null;
 		}
 
 		@Override
-		public Boolean replace(Boolean original, Boolean target, Object owner) throws HibernateException {
+		@Nullable
+		public Boolean replace(
+				@Nullable Boolean original,
+				@Nullable Boolean target,
+				@Nullable Object owner) throws HibernateException {
 			return null;
 		}
 	}

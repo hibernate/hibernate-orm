@@ -46,6 +46,7 @@ module org.hibernate.orm.integrationtest.java.module.test {
 			org.hibernate.accessor.bytebuddy,
 			org.hibernate.orm.envers;
 
+	requires static jakarta.annotation;
 	requires jakarta.persistence;
 	// IDEA will not find the modules below because it apparently doesn't support automatic module names
 	// for modules in the current project.

@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.version;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -114,39 +116,47 @@ public class UserVersionTest {
 		}
 
 		@Override
+		@Nonnull
 		public Class<CustomVersion> returnedClass() {
 			return CustomVersion.class;
 		}
 
 		@Override
-		public boolean equals(CustomVersion x, CustomVersion y) throws HibernateException {
-			return x.equals( y );
+		public boolean equals(@Nullable CustomVersion x, @Nullable CustomVersion y) throws HibernateException {
+			return x == null ? y == null : x.equals( y );
 		}
 
 		@Override
-		public int hashCode(final CustomVersion x) throws HibernateException {
+		public int hashCode(@Nonnull final CustomVersion x) throws HibernateException {
 			return x.hashCode();
 		}
 
 		@Override
+		@Nullable
 		public CustomVersion nullSafeGet(
-				ResultSet resultSet,
+				@Nonnull ResultSet resultSet,
 				int position,
-				WrapperOptions options) throws SQLException {
+				@Nonnull WrapperOptions options) throws SQLException {
 			return new CustomVersion( resultSet.getLong( position ) );
 		}
 
 		@Override
 		public void nullSafeSet(
-				PreparedStatement statement,
-				CustomVersion value,
+				@Nonnull PreparedStatement statement,
+				@Nullable CustomVersion value,
 				int index,
-				WrapperOptions options) throws SQLException {
-			statement.setLong( index, value.getRev() );
+				@Nonnull WrapperOptions options) throws SQLException {
+			if ( value == null ) {
+				statement.setNull( index, getSqlType() );
+			}
+			else {
+				statement.setLong( index, value.getRev() );
+			}
 		}
 
 		@Override
-		public CustomVersion deepCopy(CustomVersion value) throws HibernateException {
+		@Nullable
+		public CustomVersion deepCopy(@Nullable CustomVersion value) throws HibernateException {
 			return value;
 		}
 
@@ -156,17 +166,23 @@ public class UserVersionTest {
 		}
 
 		@Override
-		public Serializable disassemble(CustomVersion value) {
+		@Nullable
+		public Serializable disassemble(@Nullable CustomVersion value) {
 			return value;
 		}
 
 		@Override
-		public CustomVersion assemble(Serializable cached, Object owner) throws HibernateException {
+		@Nullable
+		public CustomVersion assemble(@Nullable Serializable cached, @Nullable Object owner) throws HibernateException {
 			return (CustomVersion) cached;
 		}
 
 		@Override
-		public CustomVersion replace(CustomVersion original, CustomVersion target, Object owner)
+		@Nullable
+		public CustomVersion replace(
+				@Nullable CustomVersion original,
+				@Nullable CustomVersion target,
+				@Nullable Object owner)
 				throws HibernateException {
 			return original;
 		}

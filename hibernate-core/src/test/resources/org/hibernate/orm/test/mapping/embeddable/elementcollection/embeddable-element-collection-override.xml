@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="https://jakarta.ee/xml/ns/persistence/orm"
+				 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				 xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence/orm https://jakarta.ee/xml/ns/persistence/orm/orm_3_1.xsd"
+				 version="3.1">
+
+	<embeddable class="org.hibernate.orm.test.mapping.embeddable.elementcollection.Revision"
+				access="FIELD">
+		<attributes>
+			<basic name="value"/>
+		</attributes>
+	</embeddable>
+
+	<entity class="org.hibernate.orm.test.mapping.embeddable.elementcollection.Owner"
+			access="FIELD">
+		<table name="owner"/>
+		<attributes>
+			<id name="id"/>
+			<element-collection name="trace">
+				<attribute-override name="value">
+					<column name="status"/>
+				</attribute-override>
+				<collection-table name="owner_status">
+					<join-column name="owner_id"/>
+				</collection-table>
+			</element-collection>
+		</attributes>
+	</entity>
+
+</entity-mappings>

@@ -222,18 +222,26 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	}
 
 	/**
-	 * Get column overriding, property first, then parent, then holder
-	 * replace the placeholder 'collection&amp;&amp;element' with nothing
+	 * Get column overriding, property first, then parent, then holder.
 	 * <p>
-	 * These rules are here to support both JPA 2 and legacy overriding rules.
+	 * For a collection element the lookup path contains the {@code {element}} placeholder. It is
+	 * resolved against the override key first with the JPA {@code value} element prefix and then,
+	 * as a fallback, with no prefix (legacy / non-map collections). These rules are here to support
+	 * both JPA 2 and legacy overriding rules.
 	 */
 	@Override
 	public Column[] getOverriddenColumn(String propertyName) {
 		final var overriddenColumn = getExactOverriddenColumn( propertyName );
-		// support for non-map collections where no prefix is needed
-		return overriddenColumn == null && propertyName.contains( ".{element}." )
-				? getExactOverriddenColumn( propertyName.replace( ".{element}.", "." ) )
-				: overriddenColumn;
+		if ( overriddenColumn != null || !propertyName.contains( ".{element}." ) ) {
+			return overriddenColumn;
+		}
+		// resolve the '{element}' placeholder against the override key convention: the JPA 'value'
+		// element prefix first, then no prefix (legacy / non-map collections without an element prefix)
+		final var withValuePrefix =
+				getExactOverriddenColumn( propertyName.replace( ".{element}.", ".value." ) );
+		return withValuePrefix != null
+				? withValuePrefix
+				: getExactOverriddenColumn( propertyName.replace( ".{element}.", "." ) );
 	}
 
 	@Override

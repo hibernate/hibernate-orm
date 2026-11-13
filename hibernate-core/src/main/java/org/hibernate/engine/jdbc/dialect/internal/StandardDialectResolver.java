@@ -1,5 +1,8 @@
 package org.hibernate.engine.jdbc.dialect.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.dialect.Database;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -15,7 +18,8 @@ public final class StandardDialectResolver implements DialectResolver {
 	}
 
 	@Override
-	public Dialect resolveDialect(DialectResolutionInfo info) {
+	@Nullable
+	public Dialect resolveDialect(@Nonnull DialectResolutionInfo info) {
 
 		for ( Database database : Database.values() ) {
 			if ( database.matchesResolutionInfo( info ) ) {

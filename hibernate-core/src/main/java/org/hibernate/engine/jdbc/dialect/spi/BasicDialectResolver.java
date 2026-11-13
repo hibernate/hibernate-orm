@@ -1,5 +1,8 @@
 package org.hibernate.engine.jdbc.dialect.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 
@@ -57,7 +60,8 @@ public class BasicDialectResolver implements DialectResolver {
 	}
 
 	@Override
-	public final Dialect resolveDialect(DialectResolutionInfo info) {
+	@Nullable
+	public final Dialect resolveDialect(@Nonnull DialectResolutionInfo info) {
 		final String databaseName = info.getDatabaseName();
 		final int databaseMajorVersion = info.getDatabaseMajorVersion();
 		final int databaseMinorVersion = info.getDatabaseMinorVersion();

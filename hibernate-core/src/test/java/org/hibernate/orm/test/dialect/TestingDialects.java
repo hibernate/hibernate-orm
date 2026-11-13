@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.dialect;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.spi.BasicDialectResolver;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -38,7 +41,8 @@ public class TestingDialects {
 
 	public static class MyDialectResolver1 implements DialectResolver {
 		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
+		@Nullable
+		public Dialect resolveDialect(@Nonnull DialectResolutionInfo info) {
 			String databaseName = info.getDatabaseName();
 			int databaseMajorVersion = info.getDatabaseMajorVersion();
 			if ( "MyDatabase1".equals( databaseName ) ) {

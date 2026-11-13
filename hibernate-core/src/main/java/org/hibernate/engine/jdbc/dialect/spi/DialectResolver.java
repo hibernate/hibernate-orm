@@ -1,5 +1,8 @@
 package org.hibernate.engine.jdbc.dialect.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.SPI;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.Dialect;
@@ -35,5 +38,6 @@ public interface DialectResolver extends Service {
 	/// request
 	/// @see Dialect
 	@SPI({ USE, IMPLEMENT, SUPPLY })
-	Dialect resolveDialect(DialectResolutionInfo info);
+	@Nullable
+	Dialect resolveDialect(@Nonnull DialectResolutionInfo info);
 }

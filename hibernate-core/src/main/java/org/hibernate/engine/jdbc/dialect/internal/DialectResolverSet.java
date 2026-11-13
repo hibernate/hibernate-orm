@@ -1,5 +1,8 @@
 package org.hibernate.engine.jdbc.dialect.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,7 +38,8 @@ public class DialectResolverSet implements DialectResolver {
 	}
 
 	@Override
-	public Dialect resolveDialect(DialectResolutionInfo info) {
+	@Nullable
+	public Dialect resolveDialect(@Nonnull DialectResolutionInfo info) {
 		for ( DialectResolver resolver : resolvers ) {
 			try {
 				final Dialect dialect = resolver.resolveDialect( info );

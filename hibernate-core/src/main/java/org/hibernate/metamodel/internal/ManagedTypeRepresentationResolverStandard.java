@@ -127,7 +127,8 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 			return EmbeddableInstantiatorPojoIndirecting.of(
 					bootDescriptor.getPropertyNames(),
 					bootDescriptor.getInstantiator(),
-					bootDescriptor.getInstantiatorPropertyNames()
+					bootDescriptor.getInstantiatorPropertyNames(),
+					creationContext.getServiceRegistry().requireService( PropertyAccessorService.class ).hibernateAccessorFactory()
 			);
 		}
 		else {

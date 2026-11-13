@@ -2,6 +2,9 @@ package org.hibernate;
 
 import java.util.Collection;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.engine.FilterDefinition;
 
@@ -36,6 +39,7 @@ public interface Filter {
 	 *
 	 * @return This filter's name.
 	 */
+	@Nonnull
 	String getName();
 
 	/**
@@ -44,16 +48,18 @@ public interface Filter {
 	 *
 	 * @return The filter definition
 	 */
+	@Nonnull
 	FilterDefinition getFilterDefinition();
 
 	/**
 	 * Set the named parameter's value for this filter.
 	 *
 	 * @param name The parameter's name.
-	 * @param value The value to be applied.
+	 * @param value The value to be applied, which may be null.
 	 * @return This FilterImpl instance (for method chaining).
 	 */
-	Filter setParameter(String name, Object value);
+	@Nonnull
+	Filter setParameter(@Nonnull String name, @Nullable Object value);
 
 	/**
 	 * Set the named parameter's value list for this filter.  Used
@@ -63,7 +69,8 @@ public interface Filter {
 	 * @param values The values to be expanded into an SQL IN list.
 	 * @return This FilterImpl instance (for method chaining).
 	 */
-	Filter setParameterList(String name, Collection<?> values);
+	@Nonnull
+	Filter setParameterList(@Nonnull String name, @Nonnull Collection<?> values);
 
 	/**
 	 * Set the named parameter's value list for this filter.  Used
@@ -73,7 +80,8 @@ public interface Filter {
 	 * @param values The values to be expanded into an SQL IN list.
 	 * @return This FilterImpl instance (for method chaining).
 	 */
-	Filter setParameterList(String name, Object[] values);
+	@Nonnull
+	Filter setParameterList(@Nonnull String name, @Nonnull Object[] values);
 
 	/**
 	 * Perform validation of the filter state.  This is used to verify
@@ -104,10 +112,12 @@ public interface Filter {
 	 * with the given name.
 	 *
 	 * @param name the name of the filter parameter
-	 * @return the value currently set
+	 * @return the bound value, or the value supplied by the parameter resolver
+	 * if the bound value is null. Returns null if neither supplies a value.
 	 *
 	 * @since 7
 	 */
 	@Incubating(since = "7.0")
-	Object getParameterValue(String name);
+	@Nullable
+	Object getParameterValue(@Nonnull String name);
 }

@@ -6,6 +6,8 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.NClob;
 
+import jakarta.annotation.Nonnull;
+
 /**
  * A factory for instances of {@link Blob} and {@link Clob} used for writing LOB data.
  *
@@ -22,7 +24,8 @@ public interface LobHelper {
 	 *
 	 * @return the created Blob
 	 */
-	Blob createBlob(byte[] bytes);
+	@Nonnull
+	Blob createBlob(@Nonnull byte[] bytes);
 
 	/**
 	 * Create a new {@link Blob} from stream data.
@@ -32,7 +35,8 @@ public interface LobHelper {
 
 	 * @return the create Blob
 	 */
-	Blob createBlob(InputStream stream, long length);
+	@Nonnull
+	Blob createBlob(@Nonnull InputStream stream, long length);
 
 	/**
 	 * Create a new {@link Clob} from content.
@@ -41,7 +45,8 @@ public interface LobHelper {
 	 *
 	 * @return The created {@link Clob}
 	 */
-	Clob createClob(String string);
+	@Nonnull
+	Clob createClob(@Nonnull String string);
 
 	/**
 	 * Create a new {@link Clob} from character reader.
@@ -51,7 +56,8 @@ public interface LobHelper {
 	 *
 	 * @return The created {@link Clob}
 	 */
-	Clob createClob(Reader reader, long length);
+	@Nonnull
+	Clob createClob(@Nonnull Reader reader, long length);
 
 	/**
 	 * Create a new {@link NClob} from content.
@@ -60,7 +66,8 @@ public interface LobHelper {
 	 *
 	 * @return The created {@link NClob}
 	 */
-	NClob createNClob(String string);
+	@Nonnull
+	NClob createNClob(@Nonnull String string);
 
 	/**
 	 * Create a new {@link NClob} from character reader.
@@ -70,5 +77,6 @@ public interface LobHelper {
 	 *
 	 * @return The created {@link NClob}
 	 */
-	NClob createNClob(Reader reader, long length);
+	@Nonnull
+	NClob createNClob(@Nonnull Reader reader, long length);
 }

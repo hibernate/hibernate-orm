@@ -58,6 +58,18 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 
 	@ParameterizedTest
 	@MethodSource("transactionKind")
+	public void testNullParameter(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
+		inTransaction.accept( scope, session -> {
+			session.disableFilter( "subDepartmentFilter" );
+			final var filter = session.enableFilter( "filterYesNoConverter" );
+			filter.setParameter( "yesNo", null );
+			assertThat( filter.getParameterValue( "yesNo" ) ).isNull();
+			assertThat( session.createQuery( "from EntityOne", EntityOne.class ).getResultList() ).isEmpty();
+		} );
+	}
+
+	@ParameterizedTest
+	@MethodSource("transactionKind")
 	public void testYesNo(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
 			session.disableFilter( "subDepartmentFilter" );

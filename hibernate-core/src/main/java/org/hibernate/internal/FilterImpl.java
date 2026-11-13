@@ -12,6 +12,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
 import static java.util.Collections.emptyMap;
@@ -35,7 +36,7 @@ public class FilterImpl implements Filter, Serializable {
 	private final boolean applyToLoadByKey;
 	private transient boolean validated;
 
-	void afterDeserialize(SessionFactoryImplementor factory) {
+	void afterDeserialize(@Nonnull SessionFactoryImplementor factory) {
 		definition = factory.getFilterDefinition( filterName );
 		validated = false;
 		validate();
@@ -46,7 +47,7 @@ public class FilterImpl implements Filter, Serializable {
 	 *
 	 * @param configuration The filter's global configuration.
 	 */
-	public FilterImpl(FilterDefinition configuration) {
+	public FilterImpl(@Nonnull FilterDefinition configuration) {
 		this.definition = configuration;
 		filterName = definition.getFilterName();
 		this.autoEnabled = definition.isAutoEnabled();
@@ -54,6 +55,7 @@ public class FilterImpl implements Filter, Serializable {
 	}
 
 	@Override
+	@Nonnull
 	public FilterDefinition getFilterDefinition() {
 		return definition;
 	}
@@ -63,6 +65,8 @@ public class FilterImpl implements Filter, Serializable {
 	 *
 	 * @return This filter's name.
 	 */
+	@Override
+	@Nonnull
 	public String getName() {
 		return definition.getFilterName();
 	}
@@ -87,6 +91,7 @@ public class FilterImpl implements Filter, Serializable {
 		return applyToLoadByKey;
 	}
 
+	@Nonnull
 	public Map<String,?> getParameters() {
 		return parameters == null ? emptyMap() : unmodifiableMap( parameters );
 	}
@@ -100,7 +105,9 @@ public class FilterImpl implements Filter, Serializable {
 	 * @throws IllegalArgumentException Indicates that either the parameter was undefined or that the type
 	 * of the passed value did not match the configured type.
 	 */
-	public Filter setParameter(String name, Object value) throws IllegalArgumentException {
+	@Override
+	@Nonnull
+	public Filter setParameter(@Nonnull String name, @Nullable Object value) throws IllegalArgumentException {
 		final Object argument = definition.processArgument( value );
 
 		// Make sure this is a defined parameter and check the incoming value type
@@ -128,7 +135,9 @@ public class FilterImpl implements Filter, Serializable {
 	 * @param values The values to be expanded into an SQL IN list.
 	 * @return This FilterImpl instance (for method chaining).
 	 */
-	public Filter setParameterList(String name, Collection<?> values) throws HibernateException  {
+	@Override
+	@Nonnull
+	public Filter setParameterList(@Nonnull String name, @Nonnull Collection<?> values) throws HibernateException {
 		// Make sure this is a defined parameter and check the incoming value type
 		if ( values == null ) {
 			throw new IllegalArgumentException( "Collection must be not null" );
@@ -160,7 +169,9 @@ public class FilterImpl implements Filter, Serializable {
 	 * @param values The values to be expanded into an SQL IN list.
 	 * @return This FilterImpl instance (for method chaining).
 	 */
-	public Filter setParameterList(String name, Object[] values) throws IllegalArgumentException {
+	@Override
+	@Nonnull
+	public Filter setParameterList(@Nonnull String name, @Nonnull Object[] values) throws IllegalArgumentException {
 		return setParameterList( name, Arrays.asList( values ) );
 	}
 
@@ -170,11 +181,13 @@ public class FilterImpl implements Filter, Serializable {
 	 * @param name The name of the parameter for which to return the value.
 	 * @return The value of the named parameter.
 	 */
-	public Object getParameter(String name) {
+	@Nullable
+	public Object getParameter(@Nonnull String name) {
 		return parameters == null ? null : parameters.get( name );
 	}
 
-	public Supplier<?> getParameterResolver(String name) {
+	@Nullable
+	public Supplier<?> getParameterResolver(@Nonnull String name) {
 		return definition.getParameterResolver(name);
 	}
 
@@ -199,18 +212,19 @@ public class FilterImpl implements Filter, Serializable {
 		validated = true;
 	}
 
-	private boolean hasResolver(String parameterName) {
+	private boolean hasResolver(@Nonnull String parameterName) {
 		final Supplier<?> resolver = getParameterResolver(parameterName);
 		return resolver != null
 			&& !resolver.getClass().isInterface();
 	}
 
-	private boolean hasArgument(String parameterName) {
+	private boolean hasArgument(@Nonnull String parameterName) {
 		return parameters != null && parameters.containsKey(parameterName);
 	}
 
 	@Override
-	public Object getParameterValue(String paramName) {
+	@Nullable
+	public Object getParameterValue(@Nonnull String paramName) {
 		final Object value = getParameter( paramName );
 		if ( value != null ) {
 			return value;

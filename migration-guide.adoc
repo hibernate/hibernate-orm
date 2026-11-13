@@ -91,31 +91,51 @@ Since batch generation changes the order of operations for persisting/merging fr
 
 1. Generate id
 2. Set id on entity
-3. Extract state
-4. Cascade
+3. Cascade before
 A. Generate id for cascaded entity
-B. ...
+B. Set id on cascaded entity
+C. Cascade before...
+D. Extract state
+E. Cascade after...
+4. Extract state
+5. Cascade after...
 
 to
 
-1. Register entity for batch generation
+1. Cascade before
+A. Cascade before...
+B. Extract cascaded entity state
+C. Register cascaded entity for batch generation
+D. Cascade after...
 2. Extract state
-3. Cascade
-A. Generate id for cascaded entity
-B. ...
-4. Batch generate ids
-5. Set ids on entities
+3. Register entity for batch generation
+4. Cascade after...
+5. Batch generate ids
+6. Set ids on entities
 
-Applications that rely on the old order of operations might run into problems,
-specifically, when an entity with non-identity generated identifier using `@Access(PROPERTY)`,
-explicitly or implicitly by placing the `@Id`/`@EmbeddedId` annotation on the id getter,
-has code that changes the state of cascaded entities in the id setter.
-In such a scenario, since the id setter is called after the state of cascaded
-entities was already extracted, changing the state in the id setter will not
-work when batching is enabled.
+Applications that rely on the old order of operations might run into problems.
 
 Batch generation for id values can be disabled by setting the
 `hibernate.id.batch_generation` configuration to `false`.
+
+Two common scenarios have been identified that might affect users:
+
+==== Id values of parent entities are generated after cascaded child entities
+
+Since cascading happens before registering an entity for batch generation,
+cascades to entity types that share the same generator will observe that cascaded entities
+will receive values from a generator invocation before the parent entity.
+Persisting for example a recursive parent-child relationship through a cascade is a
+prominent example, where the child will receive a sequence value lower than the parent.
+
+==== State of cascaded child entities is extracted before id value is assigned to parent
+
+When a parent entity with non-identity generated identifier using `@Access(PROPERTY)`,
+explicitly or implicitly by placing the `@Id`/`@EmbeddedId` annotation on the id getter,
+has code that changes the state of cascaded child entities in the id setter.
+In such a scenario, since the id setter is called after the state of cascaded
+entities was already extracted, changing the state in the id setter will not
+work when batching is enabled.
 
 If the entity id setter sets the id value on a cascaded entities' id attribute,
 it is possible to alternatively configure a `@MapsId` association.

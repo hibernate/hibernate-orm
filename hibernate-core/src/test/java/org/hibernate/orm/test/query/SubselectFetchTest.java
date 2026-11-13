@@ -63,7 +63,7 @@ public class SubselectFetchTest {
 	@Test
 	void testEagerFetchQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			List<Node> list = session.createSelectionQuery( "from Node order by id", Node.class ).getResultList();
+			List<Node> list = session.createSelectionQuery( "from Node order by string", Node.class ).getResultList();
 			assertThat( list ).hasSize( 2 );
 			assertThat( Hibernate.isInitialized( list.get( 0 ).elements ) ).isTrue();
 			assertThat( list.get( 0 ).elements ).hasSize( 3 );
@@ -71,7 +71,7 @@ public class SubselectFetchTest {
 		} );
 
 		scope.inTransaction( session -> {
-			List<Object[]> list = session.createSelectionQuery( "select distinct n, e from Node n join n.elements e order by n.id", Object[].class ).getResultList();
+			List<Object[]> list = session.createSelectionQuery( "select distinct n, e from Node n join n.elements e order by n.string", Object[].class ).getResultList();
 			assertThat( list ).hasSize( 3 );
 			Object[] tup = list.get( 0 );
 			assertTrue( Hibernate.isInitialized( ( (Node) tup[0] ).elements ) );

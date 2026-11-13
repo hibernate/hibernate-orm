@@ -148,8 +148,11 @@ import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtract
 import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
+import static org.hibernate.type.SqlTypes.CHAR;
 import static org.hibernate.type.SqlTypes.CLOB;
 import static org.hibernate.type.SqlTypes.DECIMAL;
+import static org.hibernate.type.SqlTypes.NCHAR;
+import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.NUMERIC;
 import static org.hibernate.type.SqlTypes.SQLXML;
 import static org.hibernate.type.SqlTypes.TIME;
@@ -1349,5 +1352,18 @@ public class DB2Dialect extends Dialect implements CurrentTemporalSupport, Tempo
 	@SPI({ IMPLEMENT, SUPPLY })
 	public TemporalTableSupport getTemporalTableSupport() {
 		return new DB2TemporalTableSupport( this );
+	}
+
+	@Override
+	@SPI({ USE, IMPLEMENT })
+	public boolean equivalentTypes(int typeCode1, int typeCode2) {
+		// HHH-21137: DB2 itself reports NCHAR columns as CHAR and NCLOB columns as CLOB
+		// in DatabaseMetaData, even though the DDL uses NCHAR/NCLOB. Treat these pairs as
+		// equivalent for schema validation purposes.
+		return typeCode1 == NCHAR && typeCode2 == CHAR
+			|| typeCode1 == CHAR && typeCode2 == NCHAR
+			|| typeCode1 == NCLOB && typeCode2 == CLOB
+			|| typeCode1 == CLOB && typeCode2 == NCLOB
+			|| super.equivalentTypes( typeCode1, typeCode2 );
 	}
 }

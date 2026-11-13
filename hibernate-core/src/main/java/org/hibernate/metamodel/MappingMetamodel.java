@@ -16,6 +16,8 @@ import org.hibernate.query.sqm.spi.SqmExpressible;
 import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.metamodel.Metamodel;
 
 /**
@@ -31,11 +33,13 @@ public interface MappingMetamodel extends Metamodel {
 	/**
 	 * The {@link TypeConfiguration} this metamodel is associated with
 	 */
+	@Nonnull
 	TypeConfiguration getTypeConfiguration();
 
 	/**
 	 * Access to constraint details from the domain model.
 	 */
+	@Nonnull
 	ConstraintModel getConstraintModel();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -44,7 +48,7 @@ public interface MappingMetamodel extends Metamodel {
 	/**
 	 * Visit all entity mapping descriptors defined in the model
 	 */
-	void forEachEntityDescriptor(Consumer<EntityPersister> action);
+	void forEachEntityDescriptor(@Nonnull Consumer<EntityPersister> action);
 
 	/**
 	 * Get an entity mapping descriptor based on its Hibernate entity-name
@@ -53,7 +57,8 @@ public interface MappingMetamodel extends Metamodel {
 	 *
 	 * @see #findEntityDescriptor
 	 */
-	EntityPersister getEntityDescriptor(String entityName);
+	@Nonnull
+	EntityPersister getEntityDescriptor(@Nonnull String entityName);
 
 	/**
 	 * Get an entity mapping descriptor based on its NavigableRole.
@@ -62,7 +67,8 @@ public interface MappingMetamodel extends Metamodel {
 	 *
 	 * @see #findEntityDescriptor
 	 */
-	EntityPersister getEntityDescriptor(NavigableRole name);
+	@Nonnull
+	EntityPersister getEntityDescriptor(@Nonnull NavigableRole name);
 
 	/**
 	 * Get an EmbeddableMappingType based on its NavigableRole.
@@ -72,7 +78,8 @@ public interface MappingMetamodel extends Metamodel {
 	 * @see #findEntityDescriptor
 	 */
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
-	EmbeddableValuedModelPart getEmbeddableValuedModelPart(NavigableRole role);
+	@Nonnull
+	EmbeddableValuedModelPart getEmbeddableValuedModelPart(@Nonnull NavigableRole role);
 
 
 	/**
@@ -82,25 +89,29 @@ public interface MappingMetamodel extends Metamodel {
 	 *
 	 * @see #findEntityDescriptor
 	 */
-	EntityPersister getEntityDescriptor(Class<?> entityJavaType);
+	@Nonnull
+	EntityPersister getEntityDescriptor(@Nonnull Class<?> entityJavaType);
 
 	/**
 	 * Find an entity mapping descriptor based on its Hibernate entity name.
 	 *
 	 * @apiNote Returns {@code null} rather than throwing exception
 	 */
-	EntityPersister findEntityDescriptor(String entityName);
+	@Nullable
+	EntityPersister findEntityDescriptor(@Nonnull String entityName);
 
 	/**
 	 * Find an entity mapping descriptor based on its Class.
 	 *
 	 * @apiNote Returns {@code null} rather than throwing exception
 	 */
-	EntityPersister findEntityDescriptor(Class<?> entityJavaType);
+	@Nullable
+	EntityPersister findEntityDescriptor(@Nonnull Class<?> entityJavaType);
 
-	boolean isEntityClass(Class<?> entityJavaType);
+	boolean isEntityClass(@Nonnull Class<?> entityJavaType);
 
-	String getImportedName(String name);
+	@Nonnull
+	String getImportedName(@Nonnull String name);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -109,7 +120,7 @@ public interface MappingMetamodel extends Metamodel {
 	/**
 	 * Visit the mapping descriptors for all collections defined in the model
 	 */
-	void forEachCollectionDescriptor(Consumer<CollectionPersister> action);
+	void forEachCollectionDescriptor(@Nonnull Consumer<CollectionPersister> action);
 
 	/**
 	 * Get a collection mapping descriptor based on its role
@@ -118,7 +129,8 @@ public interface MappingMetamodel extends Metamodel {
 	 *
 	 * @see #findCollectionDescriptor
 	 */
-	CollectionPersister getCollectionDescriptor(String role);
+	@Nonnull
+	CollectionPersister getCollectionDescriptor(@Nonnull String role);
 
 	/**
 	 * Get a collection mapping descriptor based on its role
@@ -127,7 +139,8 @@ public interface MappingMetamodel extends Metamodel {
 	 *
 	 * @see #findCollectionDescriptor
 	 */
-	CollectionPersister getCollectionDescriptor(NavigableRole role);
+	@Nonnull
+	CollectionPersister getCollectionDescriptor(@Nonnull NavigableRole role);
 
 	/**
 	 * Find a collection mapping descriptor based on its role.  Returns
@@ -135,7 +148,8 @@ public interface MappingMetamodel extends Metamodel {
 	 *
 	 * @see #findCollectionDescriptor
 	 */
-	CollectionPersister findCollectionDescriptor(NavigableRole role);
+	@Nullable
+	CollectionPersister findCollectionDescriptor(@Nonnull NavigableRole role);
 
 	/**
 	 * Find a collection mapping descriptor based on its role.  Returns
@@ -143,7 +157,8 @@ public interface MappingMetamodel extends Metamodel {
 	 *
 	 * @see #findCollectionDescriptor
 	 */
-	CollectionPersister findCollectionDescriptor(String role);
+	@Nullable
+	CollectionPersister findCollectionDescriptor(@Nonnull String role);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SQM model -> Mapping model
@@ -151,7 +166,8 @@ public interface MappingMetamodel extends Metamodel {
 	// TODO Layer breaker used in SQM to SQL translation.
 	//      Consider moving to QueryEngine or collaborators.
 	@Internal
+	@Nullable
 	MappingModelExpressible<?> resolveMappingExpressible(
-			SqmExpressible<?> sqmExpressible,
-			Function<NavigablePath, TableGroup> tableGroupLocator);
+			@Nullable SqmExpressible<?> sqmExpressible,
+			@Nonnull Function<NavigablePath, TableGroup> tableGroupLocator);
 }

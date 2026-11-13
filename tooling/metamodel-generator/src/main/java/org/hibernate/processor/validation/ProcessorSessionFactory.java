@@ -125,10 +125,19 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	@Override
 	MockCollectionPersister createMockCollectionPersister(String role) {
 		final var entityName = extractEntityNameFromRole( role );
-		final var propertyPath = role.substring( entityName.length() + 1 );
+		if (entityName.isEmpty() || role.length() <= entityName.length() + 1) {
+			return null;
+		}
 		final var entityClass = findEntityClass(entityName);
+		if (entityClass == null) {
+			return null;
+		}
+		final var propertyPath = role.substring( entityName.length() + 1 );
 		final var defaultAccessType = getDefaultAccessType(entityClass);
 		final var property = findPropertyByPath(entityClass, propertyPath, defaultAccessType);
+		if (property == null) {
+			return null;
+		}
 		final var collectionType = collectionType(memberType(property), role);
 		if (isToManyAssociation(property)) {
 			return toManyPersister.make(role, collectionType,
@@ -146,7 +155,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 	private String extractEntityNameFromRole(String role) {
 		for ( var entityName : entityNameMappings.values() ) {
-			if ( role.startsWith( entityName ) ) {
+			if ( role.startsWith( entityName + "." ) ) {
 				return entityName;
 			}
 		}

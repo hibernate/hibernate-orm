@@ -320,6 +320,7 @@ public class MappingMetamodelImpl
 
 	@Override
 	@Deprecated(forRemoval = true)
+	@Nonnull
 	public TypeConfiguration getTypeConfiguration() {
 		return jpaMetamodel.getTypeConfiguration();
 	}
@@ -335,14 +336,15 @@ public class MappingMetamodelImpl
 	}
 
 	@Override
-	public void forEachEntityDescriptor(Consumer<EntityPersister> action) {
+	public void forEachEntityDescriptor(@Nonnull Consumer<EntityPersister> action) {
 		for ( var value : entityPersisterMap.values() ) {
 			action.accept( value );
 		}
 	}
 
 	@Override
-	public EntityPersister getEntityDescriptor(String entityName) {
+	@Nonnull
+	public EntityPersister getEntityDescriptor(@Nonnull String entityName) {
 		final var entityPersister = entityPersisterMap.get( entityName );
 		if ( entityPersister == null ) {
 			throw new UnknownEntityTypeException( entityName );
@@ -351,12 +353,14 @@ public class MappingMetamodelImpl
 	}
 
 	@Override
-	public EntityPersister getEntityDescriptor(NavigableRole name) {
+	@Nonnull
+	public EntityPersister getEntityDescriptor(@Nonnull NavigableRole name) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public EmbeddableValuedModelPart getEmbeddableValuedModelPart(NavigableRole role){
+	@Nonnull
+	public EmbeddableValuedModelPart getEmbeddableValuedModelPart(@Nonnull NavigableRole role){
 		final var embeddableMappingType = embeddableValuedModelPart.get( role );
 		if ( embeddableMappingType == null ) {
 			throw new IllegalArgumentException( "Unable to locate EmbeddableValuedModelPart: " + role );
@@ -365,22 +369,25 @@ public class MappingMetamodelImpl
 	}
 
 	@Override
-	public EntityPersister findEntityDescriptor(String entityName) {
+	@Nullable
+	public EntityPersister findEntityDescriptor(@Nonnull String entityName) {
 		return entityPersisterMap.get( entityName );
 	}
 
 	@Override
-	public EntityPersister findEntityDescriptor(Class<?> entityJavaType) {
+	@Nullable
+	public EntityPersister findEntityDescriptor(@Nonnull Class<?> entityJavaType) {
 		return findEntityDescriptor( entityJavaType.getName() );
 	}
 
 	@Override
-	public boolean isEntityClass(Class<?> entityJavaType) {
+	public boolean isEntityClass(@Nonnull Class<?> entityJavaType) {
 		return entityPersisterMap.containsKey( entityJavaType.getName() );
 	}
 
 	@Override
-	public EntityPersister getEntityDescriptor(Class<?> entityJavaType) {
+	@Nonnull
+	public EntityPersister getEntityDescriptor(@Nonnull Class<?> entityJavaType) {
 		return getEntityPersister( entityJavaType );
 	}
 
@@ -497,6 +504,7 @@ public class MappingMetamodelImpl
 		return jpaMetamodel.findEmbeddableType( cls );
 	}
 
+	@Nonnull
 	public ConstraintModel getConstraintModel() {
 		return constraintModel;
 	}
@@ -532,18 +540,20 @@ public class MappingMetamodelImpl
 	}
 
 	@Override
-	public String getImportedName(String name) {
+	@Nonnull
+	public String getImportedName(@Nonnull String name) {
 		final String qualifiedName = jpaMetamodel.qualifyImportableName( name );
 		return qualifiedName == null ? name : qualifiedName;
 	}
 
 	@Override
-	public void forEachCollectionDescriptor(Consumer<CollectionPersister> action) {
+	public void forEachCollectionDescriptor(@Nonnull Consumer<CollectionPersister> action) {
 		collectionPersisterMap.values().forEach( action );
 	}
 
 	@Override
-	public CollectionPersister getCollectionDescriptor(String role) {
+	@Nonnull
+	public CollectionPersister getCollectionDescriptor(@Nonnull String role) {
 		final var collectionPersister = collectionPersisterMap.get( role );
 		if ( collectionPersister == null ) {
 			throw new IllegalArgumentException( "Unable to locate persister: " + role );
@@ -552,24 +562,28 @@ public class MappingMetamodelImpl
 	}
 
 	@Override
-	public CollectionPersister getCollectionDescriptor(NavigableRole role) {
+	@Nonnull
+	public CollectionPersister getCollectionDescriptor(@Nonnull NavigableRole role) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public CollectionPersister findCollectionDescriptor(NavigableRole role) {
+	@Nullable
+	public CollectionPersister findCollectionDescriptor(@Nonnull NavigableRole role) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public CollectionPersister findCollectionDescriptor(String role) {
+	@Nullable
+	public CollectionPersister findCollectionDescriptor(@Nonnull String role) {
 		return collectionPersisterMap.get( role );
 	}
 
 	@Override
+	@Nullable
 	public MappingModelExpressible<?> resolveMappingExpressible(
-			SqmExpressible<?> sqmExpressible,
-			Function<NavigablePath, TableGroup> tableGroupLocator) {
+			@Nullable SqmExpressible<?> sqmExpressible,
+			@Nonnull Function<NavigablePath, TableGroup> tableGroupLocator) {
 		if ( sqmExpressible instanceof SqmPath<?> sqmPath ) {
 			if ( sqmPath.getResolvedModel().getPathType()
 					instanceof MappingModelExpressible<?> mappingExpressible ) {

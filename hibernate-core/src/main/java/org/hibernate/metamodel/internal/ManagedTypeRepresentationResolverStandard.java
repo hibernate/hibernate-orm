@@ -12,6 +12,7 @@ import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.usertype.CompositeUserType;
 
@@ -101,13 +102,16 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 			return new EmbeddableCompositeUserTypeInstantiator( (CompositeUserType) compositeUserType );
 		}
 		else if ( bootDescriptor.isRecord() ) {
+			final var accessorFactory = creationContext.getServiceRegistry()
+					.requireService( PropertyAccessorService.class ).hibernateAccessorFactory();
 			if ( bootDescriptor.sortProperties() == null ) {
-				return new EmbeddableInstantiatorRecordStandard( bootDescriptor.getComponentClass() );
+				return new EmbeddableInstantiatorRecordStandard( bootDescriptor.getComponentClass(), accessorFactory );
 			}
 			else {
 				return EmbeddableInstantiatorRecordIndirecting.of(
 						bootDescriptor.getComponentClass(),
-						bootDescriptor.getPropertyNames()
+						bootDescriptor.getPropertyNames(),
+						accessorFactory
 				);
 			}
 		}

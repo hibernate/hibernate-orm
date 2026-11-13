@@ -28,6 +28,11 @@ public class PostgreSQLSequenceSupport implements SequenceSupport {
 	}
 
 	@Override
+	public String getFromGenerateSeries() {
+		return " from generate_series(1,?)";
+	}
+
+	@Override
 	public boolean sometimesNeedsStartingValue() {
 		return true;
 	}

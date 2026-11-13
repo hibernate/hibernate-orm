@@ -1,15 +1,20 @@
 package org.hibernate.id.enhanced;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import static org.hibernate.id.IdentifierGeneratorHelper.makeIntegralValue;
 import static org.hibernate.id.enhanced.OptimizerLogger.OPTIMIZER_MESSAGE_LOGGER;
+
+import org.hibernate.internal.util.MathHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.QueryLiteral;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
@@ -49,6 +54,36 @@ public class PooledOptimizer extends AbstractOptimizer implements InitialValueAw
 	private static class GenerationState {
 		private Long hiValue;
 		private long value;
+
+		void setLastSourceValue(long lastSourceValue, int incrementSize, long initialValue) {
+			if ( hiValue == null ) {
+				// unfortunately not really safe to normalize this
+				// to 1 as an initial value like we do for the others
+				// because we would not be able to control this if
+				// we are using a sequence...
+				if ( lastSourceValue < 1 ) {
+					OPTIMIZER_MESSAGE_LOGGER.pooledOptimizerReportedInitialValue( lastSourceValue );
+				}
+				// the call to obtain next-value just gave us the initialValue
+				value = determineValue( lastSourceValue, incrementSize, initialValue );
+			}
+			else {
+				value = determineValue( lastSourceValue, incrementSize, initialValue );
+			}
+			hiValue = lastSourceValue;
+		}
+
+		static boolean isValidBucketSourceValue(long lastSourceValue, int incrementSize, long initialValue) {
+			return !(( initialValue == -1
+					&& lastSourceValue < incrementSize )
+				|| lastSourceValue == initialValue );
+		}
+
+		static long determineValue(long lastSourceValue, int incrementSize, long initialValue) {
+			return isValidBucketSourceValue( lastSourceValue, incrementSize, initialValue )
+					? lastSourceValue - incrementSize + 1
+					: lastSourceValue;
+		}
 	}
 
 	private long initialValue = -1;
@@ -72,34 +107,115 @@ public class PooledOptimizer extends AbstractOptimizer implements InitialValueAw
 		lock.lock();
 		try {
 			final var generationState = locateGenerationState( callback.getTenantIdentifier() );
-			if ( generationState.hiValue == null ) {
-				generationState.hiValue = callback.getNextValue();
-				// unfortunately not really safe to normalize this
-				// to 1 as an initial value like we do for the others
-				// because we would not be able to control this if
-				// we are using a sequence...
-				if ( generationState.hiValue < 1 ) {
-					OPTIMIZER_MESSAGE_LOGGER.pooledOptimizerReportedInitialValue( generationState.hiValue );
-				}
-				// the call to obtain next-value just gave us the initialValue
-				if ( ( initialValue == -1
-						&& generationState.hiValue < incrementSize )
-						|| generationState.hiValue == initialValue ) {
-					generationState.value = generationState.hiValue;
-				}
-				else {
-					generationState.value = generationState.hiValue - incrementSize + 1;
-				}
-			}
-			else if ( generationState.value > generationState.hiValue ) {
-				generationState.hiValue = callback.getNextValue();
-				generationState.value = generationState.hiValue - incrementSize + 1;
+			if ( generationState.hiValue == null || generationState.value > generationState.hiValue ) {
+				generationState.setLastSourceValue( callback.getNextValue(), incrementSize, initialValue );
 			}
 			return makeIntegralValue( generationState.value++, returnClass );
 		}
 		finally {
 			lock.unlock();
 		}
+	}
+
+	@Override
+	public Serializable[] generateBatch(int count, AccessCallback callback) {
+		final long[] buckets;
+		final int invalidBuckets;
+		final int availableValues;
+		long baseValue;
+		lock.lock();
+		try {
+			final GenerationState generationState = locateGenerationState( callback.getTenantIdentifier() );
+			if ( generationState.hiValue == null ) {
+				// first call, so initialize ourselves.  we need to read the database
+				// value and set up the 'bucket' boundaries
+				buckets = determineInitialBuckets( count, callback );
+				invalidBuckets = determineInvalidBuckets( buckets, count );
+				generationState.setLastSourceValue( buckets[buckets.length - 1], incrementSize, initialValue );
+				baseValue = generationState.value;
+				generationState.value += determineConsumedValuesFromLastBucket( count, buckets.length, invalidBuckets, incrementSize );
+				availableValues = 0;
+			}
+			else if ( generationState.value + count - 1 > generationState.hiValue ) {
+				availableValues = Math.max( (int) (generationState.hiValue - generationState.value + 1), 0 );
+				baseValue = generationState.value;
+				buckets = callback.getNextValues( MathHelper.ceilDiv( count - availableValues, incrementSize ) );
+				invalidBuckets = 0;
+				generationState.setLastSourceValue( buckets[buckets.length - 1], incrementSize, initialValue );
+				generationState.value += ((count - availableValues - 1) % incrementSize) + 1;
+			}
+			else {
+				availableValues = count;
+				baseValue = generationState.value;
+				generationState.value += count;
+				buckets = ArrayHelper.EMPTY_LONG_ARRAY;
+				invalidBuckets = 0;
+			}
+		}
+		finally {
+			lock.unlock();
+		}
+		final Serializable[] result = new Serializable[count];
+		for ( int i = 0; i < availableValues; i++ ) {
+			result[i] = makeIntegralValue( baseValue + i, returnClass );
+		}
+		for ( int i = 0; i < invalidBuckets; i++ ) {
+			result[i] = makeIntegralValue(buckets[i], returnClass );
+		}
+		final var baseOffset = availableValues + invalidBuckets;
+		for ( int i = invalidBuckets; i < buckets.length; i++ ) {
+			baseValue = GenerationState.determineValue( buckets[i], incrementSize, initialValue );
+			final var offset = baseOffset + (i - invalidBuckets) * incrementSize;
+			for ( int j = 0; j < incrementSize && offset + j < result.length ; j++ ) {
+				result[offset + j] = makeIntegralValue( baseValue++, returnClass );
+			}
+		}
+		return result;
+	}
+
+	private int determineConsumedValuesFromLastBucket(int count, int bucketCount, int invalidBuckets, int incrementSize) {
+		return count - Math.min( invalidBuckets, bucketCount - 1 )
+			- Math.max( bucketCount - 1 - invalidBuckets, 0 ) * incrementSize;
+	}
+
+	private int determineInvalidBuckets(long[] buckets, int count) {
+		int invalidBuckets = 0;
+		for ( long bucketValue : buckets ) {
+			if ( GenerationState.isValidBucketSourceValue( bucketValue, incrementSize, initialValue ) ) {
+				break;
+			}
+			invalidBuckets++;
+		}
+		return invalidBuckets;
+	}
+
+	private @Nonnull long[] determineInitialBuckets(int count, AccessCallback callback) {
+		long[] goodBuckets = null;
+		int neededBuckets = MathHelper.ceilDiv( count, incrementSize );
+		do {
+			final long[] newBuckets = callback.getNextValues( neededBuckets );
+			if ( goodBuckets == null ) {
+				goodBuckets = newBuckets;
+			}
+			else {
+				goodBuckets = Arrays.copyOf(goodBuckets, goodBuckets.length + newBuckets.length);
+				System.arraycopy( newBuckets, 0, goodBuckets, goodBuckets.length - newBuckets.length, newBuckets.length );
+			}
+
+			int invalidBuckets = 0;
+			for ( long bucketValue : goodBuckets ) {
+				if ( GenerationState.isValidBucketSourceValue( bucketValue, incrementSize, initialValue ) ) {
+					break;
+				}
+				invalidBuckets++;
+			}
+			final var valuesPerInvalidBucket = 1;
+			final var availableValues = invalidBuckets * valuesPerInvalidBucket + (goodBuckets.length - invalidBuckets) * incrementSize;
+			neededBuckets = availableValues >= count
+					? 0
+					: MathHelper.ceilDiv( count - availableValues, incrementSize );
+		} while ( neededBuckets != 0 );
+		return goodBuckets;
 	}
 
 	/**

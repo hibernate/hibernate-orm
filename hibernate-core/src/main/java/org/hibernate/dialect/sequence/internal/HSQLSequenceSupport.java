@@ -49,4 +49,9 @@ public final class HSQLSequenceSupport extends ANSISequenceSupport {
 	public String getSequencePreviousValString(String sequenceName) {
 		return "call " + getSelectSequencePreviousValString( sequenceName );
 	}
+
+	@Override
+	public boolean supportsSelectNextValParameterized() {
+		return false;
+	}
 }

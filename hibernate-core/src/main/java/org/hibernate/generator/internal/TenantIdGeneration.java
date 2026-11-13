@@ -2,6 +2,8 @@ package org.hibernate.generator.internal;
 
 import java.util.EnumSet;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.PropertyValueException;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -49,7 +51,11 @@ public class TenantIdGeneration implements BeforeExecutionGenerator {
 	}
 
 	@Override
-	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
+	public @Nonnull Object generate(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nullable Object owner,
+			@Nullable Object currentValue,
+			@Nonnull EventType eventType) {
 		final Object tenantId = session.getTenantIdentifierValue();
 		if ( currentValue != null ) {
 			validateTenantId( session, currentValue );

@@ -3,6 +3,7 @@ package org.hibernate.dialect.sequence.internal;
 import org.hibernate.dialect.sequence.spi.SequenceSupport;
 import org.hibernate.dialect.sequence.spi.ANSISequenceSupport;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.MappingException;
 
 /**
@@ -36,6 +37,12 @@ public final class MariaDBSequenceSupport extends ANSISequenceSupport {
 	@Override
 	public String getSelectSequencePreviousValString(String sequenceName) throws MappingException {
 		return "previous value for " + sequenceName;
+	}
+
+	@Override
+	public @Nullable String getSequenceNextValParameterizedString(String sequenceName) throws MappingException {
+		return "with recursive cte as (select 1 v union all select t.v + 1 from cte t where t.v<?) select "
+			+ getSelectSequenceNextValString( sequenceName ) + " from cte t";
 	}
 
 	@Override

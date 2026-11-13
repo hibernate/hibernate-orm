@@ -198,6 +198,7 @@ class CascadeDiagnosticsTest {
 				"child",
 				null,
 				null,
+				false,
 				false
 		);
 		verify( persistenceContext, never() ).addChildParent( child, root );

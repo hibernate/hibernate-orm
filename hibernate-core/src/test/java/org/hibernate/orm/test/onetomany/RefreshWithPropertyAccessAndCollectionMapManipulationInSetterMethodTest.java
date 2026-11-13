@@ -3,12 +3,15 @@ package org.hibernate.orm.test.onetomany;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Access;
@@ -32,6 +35,9 @@ import jakarta.persistence.Table;
 				RefreshWithPropertyAccessAndCollectionMapManipulationInSetterMethodTest.CarName.class
 		}
 )
+// See RefreshWithPropertyAccessAndListManipulationInSetterMethodTest for an explanation why id batch generation
+// must be disabled in this case
+@ServiceRegistry(settings = @Setting(name = MappingSettings.ID_BATCH_GENERATION, value = "false"))
 @SessionFactory
 @JiraKey(value = "HHH-16272")
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsPrimaryKeyUpdate.class )

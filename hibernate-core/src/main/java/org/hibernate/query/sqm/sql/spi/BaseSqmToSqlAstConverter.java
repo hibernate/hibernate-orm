@@ -1347,7 +1347,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 			for ( var sqmValues : sqmStatement.getValuesList() ) {
 				final var values = visitValues( sqmValues );
-				additionalInsertValues.applyValues( values );
+				additionalInsertValues.applyValues( values, sqmStatement.getValuesList().size() );
 				insertStatement.getValuesList().add( values );
 			}
 

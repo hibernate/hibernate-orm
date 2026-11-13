@@ -26,4 +26,16 @@ public final class MathHelper {
 	public static int divideRoundingUp(int numerator, int denominator) {
 		return ( numerator + denominator - 1 ) / denominator;
 	}
+
+	/**
+	 * Copy of {@link Math#ceilDiv(int, int)} which was only added in JDK 18.
+	 */
+	public static int ceilDiv(int x, int y) {
+		final int q = x / y;
+		// if the signs are the same and modulo not zero, round up
+		if ((x ^ y) >= 0 && (q * y != x)) {
+			return q + 1;
+		}
+		return q;
+	}
 }

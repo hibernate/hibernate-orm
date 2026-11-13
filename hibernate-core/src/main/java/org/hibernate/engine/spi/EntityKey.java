@@ -6,6 +6,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.action.internal.DelayedPostInsertIdentifier;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 
@@ -67,7 +68,10 @@ public sealed class EntityKey implements Serializable permits TemporalEntityKey 
 		final String rootEntityName = persister.getRootEntityName();
 		result = 37 * result + rootEntityName.hashCode();
 		final Type identifierType = persister.getIdentifierType().getTypeForEqualsHashCode();
-		result = 37 * result + ( identifierType == null ? id.hashCode() : identifierType.getHashCode( id, persister.getFactory() ) );
+		result = 37 * result + ( identifierType == null || id instanceof DelayedPostInsertIdentifier
+				? id.hashCode()
+				: identifierType.getHashCode( id, persister.getFactory() )
+		);
 		result = 37 * result + changesetIdHashCode;
 		return result;
 	}

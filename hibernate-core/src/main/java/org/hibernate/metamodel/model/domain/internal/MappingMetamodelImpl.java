@@ -2,6 +2,8 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.Serializable;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -18,6 +20,8 @@ import org.hibernate.action.queue.internal.constraint.ConstraintModel;
 import org.hibernate.action.queue.internal.constraint.ConstraintModelBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cache.spi.CacheImplementor;
+import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.Generator;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MappedSuperclass;
@@ -99,6 +103,7 @@ public class MappingMetamodelImpl
 	private final Map<NavigableRole, EmbeddableValuedModelPart> embeddableValuedModelPart = new ConcurrentHashMap<>();
 
 	private ConstraintModel constraintModel;
+	private IdentityHashMap<Generator, Integer> generatorOrder;
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// DomainMetamodel
@@ -178,6 +183,8 @@ public class MappingMetamodelImpl
 			registerEntityNameResolvers( persister, entityNameResolvers );
 		}
 
+		generatorOrder = buildGeneratorOrder( context );
+
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Build the constraint model AFTER tableMappings exist but BEFORE tableDescriptors are built
 		// (which need the constraint model)
@@ -224,6 +231,61 @@ public class MappingMetamodelImpl
 					embeddableValuedModelPart.put( mappingModelPart.getNavigableRole(), mappingModelPart );
 				}
 		);
+	}
+
+	private IdentityHashMap<Generator, Integer> buildGeneratorOrder(RuntimeModelCreationContext context) {
+		final var depGraph = new IdentityHashMap<BeforeExecutionGenerator, List<BeforeExecutionGenerator>>();
+		final var visited = new HashSet<String>();
+		for ( var persister : entityPersisterMap.values() ) {
+			if ( visited.add( persister.getEntityName() ) ) {
+				final Generator gen = persister.getGenerator();
+				if ( gen instanceof BeforeExecutionGenerator beg ) {
+					final List<BeforeExecutionGenerator> deps = beg.resolveGenerationDependencies( context );
+					if ( !deps.isEmpty() ) {
+						depGraph.put( beg, deps );
+					}
+				}
+			}
+		}
+		if ( depGraph.isEmpty() ) {
+			return null;
+		}
+		final var order = new IdentityHashMap<Generator, Integer>();
+		final var computing = new IdentityHashMap<Generator, Boolean>();
+		for ( var gen : depGraph.keySet() ) {
+			computeDepth( gen, depGraph, order, computing );
+		}
+		return order;
+	}
+
+	private int computeDepth(
+			BeforeExecutionGenerator gen,
+			IdentityHashMap<BeforeExecutionGenerator, List<BeforeExecutionGenerator>> depGraph,
+			IdentityHashMap<Generator, Integer> order,
+			IdentityHashMap<Generator, Boolean> computing) {
+		final Integer existing = order.get( gen );
+		if ( existing != null ) {
+			return existing;
+		}
+		if ( computing.put( gen, Boolean.TRUE ) != null ) {
+			throw new HibernateException( "Circular generator dependency detected" );
+		}
+		final List<BeforeExecutionGenerator> deps = depGraph.get( gen );
+		int maxDep = 0;
+		if ( deps != null ) {
+			for ( var dep : deps ) {
+				maxDep = Math.max( maxDep, computeDepth( dep, depGraph, order, computing ) );
+			}
+		}
+		final int depth = deps != null ? maxDep + 1 : 0;
+		order.put( gen, depth );
+		computing.remove( gen );
+		return depth;
+	}
+
+	@Override
+	public int getGeneratorOrder(Generator generator) {
+		return generatorOrder != null ? generatorOrder.getOrDefault( generator, 0 ) : 0;
 	}
 
 	private void processBootEntities(

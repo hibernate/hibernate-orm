@@ -66,7 +66,7 @@ import jakarta.annotation.Nullable;
  *
  * @author Gail Badner
  */
-public class MergeContext implements Map<Object,Object> {
+public class MergeContext implements Map<Object,Object>, ManagedOperationContext {
 
 	private final EventSource session;
 	private final EntityCopyObserver entityCopyObserver;
@@ -88,6 +88,9 @@ public class MergeContext implements Map<Object,Object> {
 	private final Map<Object,Boolean> mergeEntityToOperatedOnFlagMap = new IdentityHashMap<>( 10 );
 		// key is a merge entity;
 		// value is a flag indicating if the merge entity is currently in the merge process.
+
+
+	private transient @Nullable BatchGenerationContext batchGenerationContext;
 
 	public MergeContext(@Nonnull EventSource session, @Nonnull EntityCopyObserver entityCopyObserver){
 		this.session = session;
@@ -368,5 +371,24 @@ public class MergeContext implements Map<Object,Object> {
 
 	public @Nonnull EventSource getEventSource() {
 		return session;
+	}
+
+	@Override
+	public @Nonnull BatchGenerationContext getBatchGenerationContext() {
+		if ( batchGenerationContext == null ) {
+			batchGenerationContext = new BatchGenerationContext();
+		}
+		return batchGenerationContext;
+	}
+
+	@Override
+	public void resolveBatchGenerators(@Nonnull EventSource session) {
+		if ( batchGenerationContext != null ) {
+			if ( session.getActionQueue().hasUnresolvedEntityInsertActions() ) {
+				// There is no need to run batch generation, since the flush will fail
+				return;
+			}
+			batchGenerationContext.resolve( session );
+		}
 	}
 }

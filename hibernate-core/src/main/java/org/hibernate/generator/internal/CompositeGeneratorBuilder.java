@@ -1,22 +1,32 @@
 package org.hibernate.generator.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
+import org.hibernate.generator.GenerationRequest;
+import org.hibernate.generator.GenerationRequests;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.type.ComponentType;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
 
 import static java.lang.System.arraycopy;
+import static org.hibernate.action.internal.DelayableEntityInsertAction.defaultedPrimitiveIds;
 import static org.hibernate.generator.EventTypeSets.NONE;
 
 /**
@@ -301,13 +311,47 @@ public class CompositeGeneratorBuilder {
 		}
 	}
 
+	private record BeforeExecutionGenerationPlan(
+			BeforeExecutionGenerator generator,
+			int propertyIndex
+	) {
+		public static List<BeforeExecutionGenerationPlan> forGenerators(List<Generator> generators) {
+			final var result = new ArrayList<BeforeExecutionGenerationPlan>( generators.size() );
+			for ( int i = 0; i < generators.size(); i++ ) {
+				final var generator = generators.get( i );
+				if ( generator instanceof BeforeExecutionGenerator beforeExecutionGenerator ) {
+					result.add( new BeforeExecutionGenerationPlan( beforeExecutionGenerator, i ) );
+				}
+			}
+			return result;
+		}
+	}
+
 	private record CompositeBeforeExecutionGenerator(
 			String entityName,
+			List<BeforeExecutionGenerationPlan> generationPlans,
 			List<Generator> generators,
-			Property mappingProperty,
-			List<Property> properties,
+			ComponentType componentType,
+			int propertiesCount,
 			EnumSet<EventType> eventTypes)
 				implements BeforeExecutionGenerator, CompositeGenerator {
+
+		public CompositeBeforeExecutionGenerator(
+				String entityName,
+				List<Generator> generators,
+				Property mappingProperty,
+				List<Property> properties,
+				EnumSet<EventType> eventTypes) {
+			this(
+					entityName,
+					BeforeExecutionGenerationPlan.forGenerators( generators ),
+					generators,
+					(ComponentType) mappingProperty.getType(),
+					properties.size(),
+					eventTypes
+			);
+		}
+
 		@Override
 		public EnumSet<EventType> getEventTypes() {
 			return eventTypes;
@@ -315,38 +359,200 @@ public class CompositeGeneratorBuilder {
 
 		@Override
 		public Class<?> getGeneratedType() {
-			return mappingProperty.getType().getReturnedClass();
+			return componentType.getJavaType();
 		}
 
 		@Override
-		public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
-			final var componentType = (ComponentType) mappingProperty.getType();
+		public @Nonnull Object generate(
+				@Nonnull SharedSessionContractImplementor session,
+				@Nullable Object owner,
+				@Nullable Object currentValue,
+				@Nonnull EventType eventType) {
 			final var descriptor = componentType.getMappingModelPart().getEmbeddableTypeDescriptor();
-			final int size = properties.size();
-			if ( currentValue == null ) {
-				final var generatedValues = new Object[size];
-				for ( int i = 0; i < size; i++ ) {
-					final var generator = generators.get( i );
-					if ( generator instanceof BeforeExecutionGenerator beforeExecutionGenerator
-							&& generator.getEventTypes().contains( eventType )
-							&& generator.generatedBeforeExecution( owner, session ) ) {
-						generatedValues[i] = beforeExecutionGenerator.generate( session, owner, null, eventType );
+			if ( currentValue == null || !componentType.isMutable() ) {
+				final var generatedValues = descriptor.getValues(
+						currentValue == null ? instantiateEmptyComposite( descriptor ) : currentValue
+				);
+				for ( final var generationPlan : generationPlans ) {
+					final var beforeExecutionGenerator = generationPlan.generator;
+					if ( beforeExecutionGenerator.getEventTypes().contains( eventType )
+							&& beforeExecutionGenerator.generatedBeforeExecution( owner, session ) ) {
+						generatedValues[generationPlan.propertyIndex] = beforeExecutionGenerator.generate( session, owner, generatedValues[generationPlan.propertyIndex], eventType );
 					}
 				}
 				return descriptor.getRepresentationStrategy().getInstantiator().instantiate( () -> generatedValues );
 			}
 			else {
-				final Object[] values = componentType.getPropertyValues( currentValue, session );
-				for ( int i = 0; i < size; i++ ) {
-					final var generator = generators.get( i );
-					if ( generator instanceof BeforeExecutionGenerator beforeExecutionGenerator
-							&& generator.getEventTypes().contains( eventType )
-							&& generator.generatedBeforeExecution( owner, session ) ) {
-						values[i] = beforeExecutionGenerator.generate( session, owner, values[i], eventType );
+				for ( final var generationPlan : generationPlans ) {
+					final var beforeExecutionGenerator = generationPlan.generator;
+					if ( beforeExecutionGenerator.getEventTypes().contains( eventType )
+						&& beforeExecutionGenerator.generatedBeforeExecution( owner, session ) ) {
+						final Object value = descriptor.getValue( currentValue, generationPlan.propertyIndex );
+						final Object generatedValue = beforeExecutionGenerator.generate( session, owner, value, eventType );
+						descriptor.setValue( currentValue, generationPlan.propertyIndex, generatedValue );
 					}
 				}
-				return componentType.replacePropertyValues( currentValue, values, session );
+				return currentValue;
 			}
+		}
+
+		@Override
+		public @Nonnull Object[] generateBatch(
+				@Nonnull SharedSessionContractImplementor session,
+				@Nonnull GenerationRequests requests,
+				@Nonnull EventType eventType) {
+			final Object[] results = new Object[requests.size()];
+			final Object[][] propertyValues = new Object[requests.size()][];
+			final ArrayList<Integer>[] generationRequestIndexMapping = new ArrayList[generationPlans.size()];
+			EmbeddableMappingType[] embeddableMappingTypes = null;
+			EmbeddableMappingType singleEmbeddableMappingType = null;
+			// Build result objects, extract property values and build an index mapping for generatedValues <=> results
+			for ( int i = 0; i < results.length; i++ ) {
+				final Object object = requests.get( i ).currentValue();
+				final var descriptor = componentType.getMappingModelPart().getEmbeddableTypeDescriptor();
+				if ( singleEmbeddableMappingType == null ) {
+					singleEmbeddableMappingType = descriptor;
+				}
+				else if ( singleEmbeddableMappingType != descriptor ) {
+					if ( embeddableMappingTypes == null ) {
+						embeddableMappingTypes = new EmbeddableMappingType[requests.size()];
+					}
+					Arrays.fill( embeddableMappingTypes, descriptor );
+				}
+				if ( embeddableMappingTypes != null ) {
+					embeddableMappingTypes[i] = descriptor;
+				}
+				results[i] = object != null ? object : instantiateEmptyComposite( descriptor );
+				propertyValues[i] = descriptor.getValues( results[i] );
+
+				for ( int j = 0; j < generationPlans.size(); j++ ) {
+					final var generationPlan = generationPlans.get( j );
+					final var generator = generationPlan.generator;
+					final var currentValue = propertyValues[i][generationPlan.propertyIndex];
+					// Only add index mappings if the generator shall run for this object
+					if ( generator.getEventTypes().contains( eventType )
+						&& generator.generatedBeforeExecution( currentValue, session ) ) {
+						final ArrayList<Integer> generationRequestMapping;
+						if ( generationRequestIndexMapping[j] == null ) {
+							generationRequestMapping = generationRequestIndexMapping[j] = new ArrayList<>( requests.size() );
+						}
+						else {
+							generationRequestMapping = generationRequestIndexMapping[j];
+						}
+						generationRequestMapping.add( i );
+					}
+				}
+			}
+			for ( int i = 0; i < generationPlans.size(); i++ ) {
+				if ( generationRequestIndexMapping[i] != null ) {
+					final var generationPlan = generationPlans.get( i );
+					// If the generator should be applied to at least one value, will be non-null
+					// If we encounter size equals results size, we run the generator for every result,
+					// so use null as sentinel to indicate this optimized case to avoid index lookups
+					final int[] generatedValueMapping = generationRequestIndexMapping[i].size() == results.length
+							? null
+							: ArrayHelper.toIntArray( generationRequestIndexMapping[i] );
+					// Run the batch generation for once
+					final Object[] generatedValues = generationPlan.generator.generateBatch(
+							session,
+							new CompositeGenerationRequests( results, propertyValues, generatedValueMapping, generationPlan ),
+							eventType
+					);
+					// Apply generated values into the property values arrays
+					final int propertyIndex = generationPlan.propertyIndex();
+					if ( generatedValueMapping == null ) {
+						for ( int j = 0; j < propertyValues.length; j++ ) {
+							propertyValues[j][propertyIndex] = generatedValues[j];
+						}
+					}
+					else {
+						for ( int j = 0; j < generatedValueMapping.length; j++ ) {
+							propertyValues[generatedValueMapping[j]][propertyIndex] = generatedValues[j];
+						}
+					}
+				}
+			}
+			if ( componentType.isMutable() ) {
+				if ( embeddableMappingTypes == null ) {
+					for ( int i = 0; i < results.length; i++ ) {
+						singleEmbeddableMappingType.setValues( results[i], propertyValues[i] );
+					}
+				}
+				else {
+					for ( int i = 0; i < results.length; i++ ) {
+						embeddableMappingTypes[i].setValues( results[i], propertyValues[i] );
+					}
+				}
+			}
+			else {
+				// Build new components with the new property values as result
+				final var valueAccess = new ValueAccess() {
+					int index;
+					@Override
+					public Object[] getValues() {
+						return propertyValues[index];
+					}
+				};
+				if ( embeddableMappingTypes == null ) {
+					final var instantiator = singleEmbeddableMappingType.getRepresentationStrategy().getInstantiator();
+					for ( ; valueAccess.index < results.length; valueAccess.index++ ) {
+						results[valueAccess.index] = instantiator.instantiate( valueAccess );
+					}
+				}
+				else {
+					for ( ; valueAccess.index < results.length; valueAccess.index++ ) {
+						results[valueAccess.index] = embeddableMappingTypes[valueAccess.index].getRepresentationStrategy()
+								.getInstantiator()
+								.instantiate( valueAccess );
+					}
+				}
+			}
+			return results;
+		}
+
+		private Object instantiateEmptyComposite(EmbeddableMappingType embeddable) {
+			return embeddable.getRepresentationStrategy().getInstantiator()
+					.instantiate( () -> defaultedPrimitiveIds( embeddable, embeddable ) );
+		}
+
+		private record CompositeGenerationRequests(
+				Object[] results,
+				Object[][] propertyValues,
+				int[] generationRequestIndexMapping,
+				BeforeExecutionGenerationPlan generationPlan
+		) implements GenerationRequests {
+			@Override
+			public int size() {
+				return generationRequestIndexMapping == null ? results.length : generationRequestIndexMapping.length;
+			}
+
+			@Override
+			public GenerationRequest get(int index) {
+				final int idx = generationRequestIndexMapping == null ? index : generationRequestIndexMapping[index];
+				return GenerationRequest.of(
+						results[idx],
+						propertyValues[idx][generationPlan.propertyIndex]
+				);
+			}
+		}
+
+		@Override
+		public List<BeforeExecutionGenerator> resolveGenerationDependencies(RuntimeModelCreationContext context) {
+			final List<BeforeExecutionGenerator> deps = new ArrayList<>();
+			for ( BeforeExecutionGenerationPlan generationPlan : generationPlans ) {
+				deps.addAll( generationPlan.generator().resolveGenerationDependencies( context ) );
+			}
+			return deps;
+		}
+
+		@Override
+		public boolean supportsBatchGeneration() {
+			for ( BeforeExecutionGenerationPlan generationPlan : generationPlans ) {
+				if ( generationPlan.generator().supportsBatchGeneration() ) {
+					return true;
+				}
+			}
+			return false;
 		}
 	}
 
@@ -368,7 +574,11 @@ public class CompositeGeneratorBuilder {
 		}
 
 		@Override
-		public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
+		public @Nonnull Object generate(
+				@Nonnull SharedSessionContractImplementor session,
+				@Nullable Object owner,
+				@Nullable Object currentValue,
+				@Nonnull EventType eventType) {
 			return beforeExecutionGenerator.generate( session, owner, currentValue, eventType );
 		}
 
@@ -399,6 +609,11 @@ public class CompositeGeneratorBuilder {
 				}
 			}
 			return false;
+		}
+		@Override
+		public boolean requiresGeneration(Object entity, Object currentValue, SharedSessionContractImplementor session) {
+			return onExecutionGenerator.requiresGeneration( entity, currentValue, session )
+					|| beforeExecutionGenerator.requiresGeneration( entity, currentValue, session );
 		}
 
 		@Override
@@ -440,6 +655,11 @@ public class CompositeGeneratorBuilder {
 		public boolean allowMutation() {
 			return onExecutionGenerator.allowMutation();
 		}
+
+		@Override
+		public List<BeforeExecutionGenerator> resolveGenerationDependencies(RuntimeModelCreationContext context) {
+			return beforeExecutionGenerator.resolveGenerationDependencies( context );
+		}
 	}
 
 	private record DummyGenerator() implements Generator {
@@ -452,6 +672,11 @@ public class CompositeGeneratorBuilder {
 
 		@Override
 		public boolean generatedOnExecution() {
+			return false;
+		}
+
+		@Override
+		public boolean generatedBeforeExecution(Object entity, SharedSessionContractImplementor session) {
 			return false;
 		}
 

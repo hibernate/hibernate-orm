@@ -1,7 +1,9 @@
 package org.hibernate.action.queue.spi.decompose;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.action.queue.spi.bind.DelayedValueAccess;
+import org.hibernate.event.spi.BatchGenerationContext;
 
 /// Context for decomposition operations, providing information about entities being
 /// mutated in the current flush.
@@ -44,4 +46,11 @@ public interface DecompositionContext {
 		return null;
 	}
 
+	/// The batch generation context for collecting deferred value generation
+	/// requests, or `null` if batch generation is not active.
+	///
+	/// @since 8.0
+	default @Nullable BatchGenerationContext getBatchGenerationContext() {
+		return null;
+	}
 }

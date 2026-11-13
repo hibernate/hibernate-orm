@@ -11,6 +11,7 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.dialect.sequence.spi.SequenceSupport;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Table;
 
@@ -33,6 +34,7 @@ public class SequenceStructure implements DatabaseStructure {
 	private final @Nullable String options;
 
 	private @Nullable String sql;
+	private String parameterizedSql;
 	private boolean applyIncrementSizeToSourceValues;
 	private int accessCounter;
 	protected @Nullable QualifiedName physicalSequenceName;
@@ -100,30 +102,30 @@ public class SequenceStructure implements DatabaseStructure {
 			throw new AssertionFailure( "SequenceStyleGenerator's SequenceStructure was not properly initialized" );
 		}
 
-			return new AccessCallback() {
-				@Override
-				public long getNextValue() {
-					accessCounter++;
-					try {
+		return new AccessCallback() {
+			@Override
+			public long getNextValue() {
+				accessCounter++;
+				try {
 					final var jdbcCoordinator = session.getJdbcCoordinator();
 					// a query statement leaves any pending JDBC batch queued
 					final var statement = jdbcCoordinator.getStatementPreparer().prepareQueryStatement( sql );
 					final var resourceRegistry = jdbcCoordinator.getLogicalConnection().getResourceRegistry();
 					try {
 						final var resultSet = jdbcCoordinator.getResultSetReturn().extract( statement, sql );
-							try {
-								resultSet.next();
-								final long value = extractLong( resultSet, 1 );
-								if ( JDBC_LOGGER.isTraceEnabled() ) {
-									JDBC_LOGGER.sequenceValueRetrievedFromDatabase( value );
-								}
-								return value;
+						try {
+							resultSet.next();
+							final long value = extractLong( resultSet, 1 );
+							if ( JDBC_LOGGER.isTraceEnabled() ) {
+								JDBC_LOGGER.sequenceValueRetrievedFromDatabase( value );
+							}
+							return value;
 						}
 						finally {
 							try {
 								resourceRegistry.release( resultSet, statement );
 							}
-							catch( Throwable ignore ) {
+							catch (Throwable ignore) {
 								// intentionally empty
 							}
 						}
@@ -134,7 +136,72 @@ public class SequenceStructure implements DatabaseStructure {
 					}
 
 				}
-				catch ( SQLException sqle) {
+				catch (SQLException sqle) {
+					throw session.getJdbcServices().getSqlExceptionHelper().convert(
+							sqle,
+							"could not get next sequence value",
+							sql
+					);
+				}
+			}
+
+			@Override
+			public long[] getNextValues(int count) {
+				accessCounter++;
+				try {
+					final var jdbcCoordinator = session.getJdbcCoordinator();
+					final String sql;
+					if ( parameterizedSql == null ) {
+						final var baseSql = SequenceStructure.this.sql;
+						final var unionSeparator = " union ";
+						final var sb = new StringBuilder( baseSql.length() * count + unionSeparator.length() * ( count - 1 ) );
+						sb.append( baseSql );
+						for ( int i = 1; i < count; i++ ) {
+							sb.append( unionSeparator );
+							sb.append( baseSql );
+						}
+						sql = sb.toString();
+					}
+					else {
+						sql = parameterizedSql;
+					}
+					final var statement = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
+					final var resourceRegistry = jdbcCoordinator.getLogicalConnection().getResourceRegistry();
+					try {
+						if ( parameterizedSql != null ) {
+							statement.setInt( 1, count );
+						}
+						final var resultSet = jdbcCoordinator.getResultSetReturn().extract( statement, sql );
+						final long[] values = new long[count];
+						try {
+							int i = 0;
+							while (resultSet.next()) {
+								final long value = extractLong( resultSet, 1 );
+								if ( JDBC_LOGGER.isTraceEnabled() ) {
+									JDBC_LOGGER.sequenceValueRetrievedFromDatabase( value );
+								}
+								assert i < values.length : "SQL statement returned more sequence values than were requested";
+								values[i++] = value;
+							}
+							assert i == values.length : "SQL statement returned fewer sequence values than were requested";
+							return values;
+						}
+						finally {
+							try {
+								resourceRegistry.release( resultSet, statement );
+							}
+							catch (Throwable ignore) {
+								// intentionally empty
+							}
+						}
+					}
+					finally {
+						resourceRegistry.release( statement );
+						jdbcCoordinator.afterStatementExecution();
+					}
+
+				}
+				catch (SQLException sqle) {
 					throw session.getJdbcServices().getSqlExceptionHelper().convert(
 							sqle,
 							"could not get next sequence value",
@@ -162,8 +229,12 @@ public class SequenceStructure implements DatabaseStructure {
 
 	@Override
 	public void initialize(@Nonnull SqlStringGenerationContext context) {
-		sql = context.getDialect().getSequenceSupport()
-				.getSequenceNextValString( context.format( physicalSequenceName ) );
+		final String sequenceName = context.format( physicalSequenceName );
+		final SequenceSupport sequenceSupport = context.getDialect().getSequenceSupport();
+		sql = sequenceSupport.getSequenceNextValString( sequenceName );
+		parameterizedSql = sequenceSupport.supportsSelectNextValParameterized()
+				? sequenceSupport.getSequenceNextValParameterizedString( sequenceName )
+				: null;
 	}
 
 	@Override

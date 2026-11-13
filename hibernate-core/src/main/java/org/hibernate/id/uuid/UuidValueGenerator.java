@@ -17,4 +17,14 @@ public interface UuidValueGenerator {
 	 * Generate the UUID value
 	 */
 	UUID generateUuid(SharedSessionContractImplementor session);
+	/**
+	 * Generate the UUID values
+	 */
+	default UUID[] generateUuids(int count, SharedSessionContractImplementor session) {
+		UUID[] uuids = new UUID[count];
+		for (int i = 0; i < count; i++) {
+			uuids[i] = generateUuid( session );
+		}
+		return uuids;
+	}
 }

@@ -157,6 +157,7 @@ class CascadeTraversalContextTest {
 				eq( "association" ),
 				eq( List.of( "component" ) ),
 				same( actionContext ),
+				eq( false ),
 				eq( false )
 		);
 
@@ -230,6 +231,7 @@ class CascadeTraversalContextTest {
 				eq( "children" ),
 				isNull(),
 				isNull(),
+				eq( false ),
 				eq( false )
 		);
 

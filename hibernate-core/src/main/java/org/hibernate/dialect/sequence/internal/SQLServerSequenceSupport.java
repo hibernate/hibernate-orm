@@ -3,6 +3,7 @@ package org.hibernate.dialect.sequence.internal;
 import org.hibernate.dialect.sequence.spi.SequenceSupport;
 import org.hibernate.dialect.sequence.spi.ANSISequenceSupport;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.MappingException;
 
 /**
@@ -21,5 +22,10 @@ public class SQLServerSequenceSupport extends ANSISequenceSupport {
 	@Override
 	public String getSequencePreviousValString(String sequenceName) throws MappingException {
 		return "select convert(varchar(200),current_value) from sys.sequences where name='" + sequenceName + "'";
+	}
+
+	@Override
+	public @Nullable String getFromGenerateSeries() {
+		return " from generate_series(1,?)";
 	}
 }

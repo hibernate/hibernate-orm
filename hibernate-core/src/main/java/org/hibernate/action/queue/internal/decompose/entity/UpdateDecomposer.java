@@ -30,6 +30,7 @@ import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.event.spi.BatchGenerationContext;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -305,7 +306,12 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		}
 
 		// apply any pre-update in-memory value generation
-		final int[] preUpdateGeneratedAttributeIndexes = preUpdateInMemoryValueGeneration( entity, state, session );
+		final int[] preUpdateGeneratedAttributeIndexes = preUpdateInMemoryValueGeneration(
+				entity,
+				state,
+				session,
+				decompositionContext != null ? decompositionContext.getBatchGenerationContext() : null
+		);
 		final int[] dirtyAttributeIndexes = combine( action.getDirtyFields(), preUpdateGeneratedAttributeIndexes );
 		state = filteredAssociations.physicalState( state );
 
@@ -666,7 +672,8 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 	private int[] preUpdateInMemoryValueGeneration(
 			Object object,
 			Object[] newValues,
-			SharedSessionContractImplementor session) {
+			SharedSessionContractImplementor session,
+			@Nullable BatchGenerationContext batchContext) {
 		if ( entityPersister.hasPreUpdateGeneratedProperties() ) {
 			final var generators = entityPersister.getGenerators();
 			if ( generators.length != 0 ) {
@@ -677,10 +684,15 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 					if ( generator != null
 							&& generator.generatesOnUpdate()
 							&& generator.generatedBeforeExecution( object, session ) ) {
-						newValues[i] =
-								((BeforeExecutionGenerator) generator)
-										.generate( session, object, newValues[i], UPDATE );
-						entityPersister.setValue( object, i, newValues[i] );
+						final var beforeExecutionGenerator = (BeforeExecutionGenerator) generator;
+						if ( batchContext != null && beforeExecutionGenerator.supportsBatchGeneration() ) {
+							batchContext.register( beforeExecutionGenerator, i, object, newValues, entityPersister, UPDATE );
+							newValues[i] = BatchGenerationContext.PLACEHOLDER;
+						}
+						else {
+							newValues[i] = beforeExecutionGenerator.generate( session, object, newValues[i], UPDATE );
+							entityPersister.setValue( object, i, newValues[i] );
+						}
 						fieldsPreUpdateNeeded[count++] = i;
 					}
 				}

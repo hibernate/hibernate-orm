@@ -9,6 +9,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.UnsupportedLockAttemptException;
+import org.hibernate.action.internal.DelayedPostInsertIdentifier;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.EntityEntry;
@@ -339,7 +340,10 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 		else if ( getStatus() == SAVING ) {
 			// For non-IDENTITY inserts, SAVING status means not yet in DB,
 			// so FK should be nullified to avoid constraint violations.
-			return true;
+			// If the id is a DelayedPostInsertIdentifier, even though it's not an earlyInsert,
+			// it means that the id generator just runs in batched mode,
+			// and we can safely assume that the entity exists in the DB
+			return !(getId() instanceof DelayedPostInsertIdentifier);
 		}
 		else {
 			return session.getPersistenceContextInternal()

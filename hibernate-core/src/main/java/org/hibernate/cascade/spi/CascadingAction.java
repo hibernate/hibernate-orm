@@ -38,7 +38,8 @@ public interface CascadingAction<T> {
 	 * @param attributePath The full path of the attribute of the parent entity being cascaded
 	 * @param anything Some context specific to the kind of {@link CascadingAction}
 	 * @param isCascadeDeleteEnabled Whether the foreign key is declared with
-	 *        {@link org.hibernate.annotations.OnDeleteAction#CASCADE on delete cascade}.
+	 * 	             {@link org.hibernate.annotations.OnDeleteAction#CASCADE on delete cascade}.
+	 * @param isMapsId {@code true} if the cascade originates from a {@link CascadeStyles#MAPS_ID} cascade style
 	 */
 	void cascade(
 			EventSource session,
@@ -48,7 +49,24 @@ public interface CascadingAction<T> {
 			String propertyName,
 			@Nullable List<String> attributePath,
 			T anything,
-			boolean isCascadeDeleteEnabled);
+			boolean isCascadeDeleteEnabled,
+			boolean isMapsId);
+
+	/**
+	 * @deprecated No longer called. Will be removed.
+	 */
+	@Deprecated(since = "7", forRemoval = true)
+	default void cascade(
+			EventSource session,
+			Object child,
+			String childEntityName,
+			String parentEntityName,
+			String propertyName,
+			@Nullable List<String> attributePath,
+			T anything,
+			boolean isCascadeDeleteEnabled) {
+		cascade( session, child, childEntityName, parentEntityName, propertyName, attributePath, anything, isCascadeDeleteEnabled, false );
+	}
 
 	/**
 	 * @deprecated No longer called. Will be removed.
@@ -62,7 +80,7 @@ public interface CascadingAction<T> {
 			boolean isCascadeDeleteEnabled) {
 		cascade( session, child, childEntityName,
 				"", "", null,
-				anything, isCascadeDeleteEnabled );
+				anything, isCascadeDeleteEnabled, false );
 	}
 
 	/**
@@ -121,7 +139,7 @@ public interface CascadingAction<T> {
 	 * {@link org.hibernate.annotations.OnDeleteAction#CASCADE on delete cascade}.
 	 *
 	 * @apiNote This allows us to reuse the long-existing boolean parameter of
-	 *          {@link #cascade(EventSource,Object,String,String,String,List,Object,boolean)}
+	 *          {@link #cascade(EventSource, Object, String, String, String, List, Object, boolean, boolean)}
 	 *          for multiple purposes.
 	 *
 	 * @since 7

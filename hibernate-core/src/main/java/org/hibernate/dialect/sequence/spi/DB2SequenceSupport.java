@@ -1,5 +1,6 @@
 package org.hibernate.dialect.sequence.spi;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.MappingException;
 import org.hibernate.SPI;
 
@@ -35,6 +36,12 @@ public class DB2SequenceSupport extends ANSISequenceSupport {
 	@Override
 	public String getSequencePreviousValString(String sequenceName) {
 		return "values " + getSelectSequencePreviousValString( sequenceName );
+	}
+
+	@Override
+	public @Nullable String getSequenceNextValParameterizedString(String sequenceName) throws MappingException {
+		return "with cte as (select 1 v from sysibm.sysdummy1 t union all select t.v + 1 from cte t where t.v<?) select "
+			+ getSelectSequenceNextValString( sequenceName ) + " from cte t";
 	}
 
 	@Override

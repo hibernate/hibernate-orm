@@ -847,7 +847,8 @@ public final class Cascade {
 						context.currentPropertyName(),
 						context.path(),
 						context.actionContext(),
-						isCascadeDeleteEnabled
+						isCascadeDeleteEnabled,
+						style.containsStyle( CascadeStyles.MAPS_ID )
 				);
 			}
 			finally {

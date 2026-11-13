@@ -166,7 +166,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 		final var entityHolder = persistenceContext.addEntityHolder( key, instance );
 		final var entityEntry = persistenceContext.addEntry(
 				instance,
-				persister.isMutable() ? Status.MANAGED : Status.READ_ONLY,
+				getInitialEntityEntryStatus(),
 				state,
 				getRowId(),
 				key.getIdentifier(),
@@ -179,6 +179,10 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 		if ( isEarlyInsert() ) {
 			addCollectionsByKeyToPersistenceContext( persistenceContext, state );
 		}
+	}
+
+	protected Status getInitialEntityEntryStatus() {
+		return getPersister().isMutable() ? Status.MANAGED : Status.READ_ONLY;
 	}
 
 	public void addCollectionsByKeyToPersistenceContext(

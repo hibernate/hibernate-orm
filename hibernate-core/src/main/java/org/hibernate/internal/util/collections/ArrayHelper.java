@@ -245,6 +245,7 @@ public final class ArrayHelper {
 
 	public static final String[] EMPTY_STRING_ARRAY = {};
 	public static final int[] EMPTY_INT_ARRAY = {};
+	public static final long[] EMPTY_LONG_ARRAY = {};
 	public static final boolean[] EMPTY_BOOLEAN_ARRAY = {};
 	public static final Class<?>[] EMPTY_CLASS_ARRAY = {};
 	public static final Object[] EMPTY_OBJECT_ARRAY = {};

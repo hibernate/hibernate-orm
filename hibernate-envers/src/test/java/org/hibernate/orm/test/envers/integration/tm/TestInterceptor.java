@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.envers.integration.tm;
 
+import jakarta.annotation.Nullable;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,7 +23,7 @@ public class TestInterceptor implements Interceptor {
 	}
 
 	@Override
-	public void beforeTransactionCompletion(Transaction tx) {
+	public void beforeTransactionCompletion(@Nullable Transaction tx) {
 		interceptorInvocations.put( this, interceptorInvocations.get( this ) + 1 );
 		LOGGER.info( "Interceptor beforeTransactionCompletion invoked" );
 	}

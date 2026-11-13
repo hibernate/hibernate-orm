@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.interfaceproxy;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.Calendar;
 
 import org.hibernate.CallbackException;
@@ -12,12 +15,12 @@ import org.hibernate.type.Type;
 public class DocumentInterceptor implements Interceptor {
 
 	public boolean onFlushDirty(
-			Object entity,
-			Object id,
-			Object[] currentState,
-			Object[] previousState,
-			String[] propertyNames,
-			Type[] types) throws CallbackException {
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nonnull Object[] currentState,
+			@Nullable Object[] previousState,
+			@Nonnull String[] propertyNames,
+			@Nonnull Type[] types) throws CallbackException {
 		if ( entity instanceof Document ) {
 			currentState[2] = Calendar.getInstance();
 			return true;
@@ -28,11 +31,11 @@ public class DocumentInterceptor implements Interceptor {
 	}
 
 	public boolean onPersist(
-			Object entity,
-			Object id,
-			Object[] state,
-			String[] propertyNames,
-			Type[] types) throws CallbackException {
+			@Nonnull Object entity,
+			@Nullable Object id,
+			@Nonnull Object[] state,
+			@Nonnull String[] propertyNames,
+			@Nonnull Type[] types) throws CallbackException {
 		if ( entity instanceof Document ) {
 			state[3] = state[2] = Calendar.getInstance();
 			return true;
@@ -43,11 +46,11 @@ public class DocumentInterceptor implements Interceptor {
 	}
 
 	public void onDelete(
-			Object entity,
-			Object id,
-			Object[] state,
-			String[] propertyNames,
-			Type[] types) throws CallbackException {
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nonnull Object[] state,
+			@Nonnull String[] propertyNames,
+			@Nonnull Type[] types) throws CallbackException {
 
 	}
 }

@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.interceptor;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -325,7 +326,7 @@ public class InterceptorJtaTransactionTest implements ServiceRegistryProducer {
 		}
 
 		@Override
-		public void afterTransactionBegin(org.hibernate.Transaction tx) {
+		public void afterTransactionBegin(@Nullable org.hibernate.Transaction tx) {
 			afterTransactionBeginMethodCalled = true;
 			if ( tx != null ) {
 				afterTransactionBeginAssertionPassed = false;
@@ -334,7 +335,7 @@ public class InterceptorJtaTransactionTest implements ServiceRegistryProducer {
 			}
 		}
 		@Override
-		public void beforeTransactionCompletion(org.hibernate.Transaction tx) {
+		public void beforeTransactionCompletion(@Nullable org.hibernate.Transaction tx) {
 			beforeTransactionCompletionMethodCalled = true;
 			if ( tx != null ) {
 				beforeTransactionCompletionAssertionPassed = false;
@@ -343,7 +344,7 @@ public class InterceptorJtaTransactionTest implements ServiceRegistryProducer {
 			}
 		}
 		@Override
-		public void afterTransactionCompletion(org.hibernate.Transaction tx) {
+		public void afterTransactionCompletion(@Nullable org.hibernate.Transaction tx) {
 			afterTransactionCompletionMethodCalled = true;
 			if ( tx != null ) {
 				afterTransactionCompletionAssertionPassed = false;

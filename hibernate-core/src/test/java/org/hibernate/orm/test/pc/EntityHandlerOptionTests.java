@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.pc;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -413,13 +415,23 @@ public class EntityHandlerOptionTests {
 		}
 
 		@Override
-		public boolean onPersist(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
+		public boolean onPersist(
+				@Nonnull Object entity,
+				@Nullable Object id,
+				@Nonnull Object[] state,
+				@Nonnull String[] propertyNames,
+				@Nonnull Type[] types) {
 			counter++;
 			return false;
 		}
 
 		@Override
-		public void onInsert(Object entity, Object id, Object[] state, String[] propertyNames, Type[] propertyTypes) {
+		public void onInsert(
+				@Nonnull Object entity,
+				@Nullable Object id,
+				@Nonnull Object[] state,
+				@Nonnull String[] propertyNames,
+				@Nonnull Type[] propertyTypes) {
 			counter++;
 		}
 	}

@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityAgent;
 import jakarta.persistence.EntityListener;
@@ -326,7 +328,12 @@ public class EventsGuideTests {
 	// tag::events-interceptor-state[]
 	public static class NormalizingInterceptor implements Interceptor {
 		@Override
-		public boolean onPersist(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
+		public boolean onPersist(
+				@Nonnull Object entity,
+				@Nullable Object id,
+				@Nonnull Object[] state,
+				@Nonnull String[] propertyNames,
+				@Nonnull Type[] types) {
 			if ( entity instanceof PlainRecord ) {
 				for ( int i = 0; i < propertyNames.length; i++ ) {
 					if ( "name".equals( propertyNames[i] ) && state[i] instanceof String name ) {
@@ -409,7 +416,12 @@ public class EventsGuideTests {
 		final AtomicInteger persistences = new AtomicInteger();
 
 		@Override
-		public boolean onPersist(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
+		public boolean onPersist(
+				@Nonnull Object entity,
+				@Nullable Object id,
+				@Nonnull Object[] state,
+				@Nonnull String[] propertyNames,
+				@Nonnull Type[] types) {
 			persistences.incrementAndGet();
 			return false;
 		}

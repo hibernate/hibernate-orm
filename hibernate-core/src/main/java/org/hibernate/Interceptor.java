@@ -2,6 +2,8 @@ package org.hibernate;
 
 import java.util.Iterator;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityAgent;
 import jakarta.persistence.EntityManager;
 import org.hibernate.metamodel.RepresentationMode;
@@ -82,7 +84,12 @@ public interface Interceptor extends EntityManager.CreationOption, EntityAgent.C
 	 *
 	 * @return {@code true} if the user modified the {@code state} in any way.
 	 */
-	default boolean onLoad(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
+	default boolean onLoad(
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nonnull Object[] state,
+			@Nonnull String[] propertyNames,
+			@Nonnull Type[] types) {
 		return false;
 	}
 
@@ -103,7 +110,12 @@ public interface Interceptor extends EntityManager.CreationOption, EntityAgent.C
 	 * @see Session#persist(Object)
 	 * @see Session#merge(Object)
 	 */
-	default boolean onPersist(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
+	default boolean onPersist(
+			@Nonnull Object entity,
+			@Nullable Object id,
+			@Nonnull Object[] state,
+			@Nonnull String[] propertyNames,
+			@Nonnull Type[] types) {
 		return onSave(entity, id, state, propertyNames, types);
 	}
 
@@ -120,7 +132,12 @@ public interface Interceptor extends EntityManager.CreationOption, EntityAgent.C
 	 *
 	 * @see Session#remove(Object)
 	 */
-	default void onRemove(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
+	default void onRemove(
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nonnull Object[] state,
+			@Nonnull String[] propertyNames,
+			@Nonnull Type[] types) {
 		onDelete(entity, id, state, propertyNames, types);
 	}
 
@@ -146,12 +163,12 @@ public interface Interceptor extends EntityManager.CreationOption, EntityAgent.C
 	 * @see Session#flush()
 	 */
 	default boolean onFlushDirty(
-			Object entity,
-			Object id,
-			Object[] currentState,
-			Object[] previousState,
-			String[] propertyNames,
-			Type[] types) {
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nonnull Object[] currentState,
+			@Nullable Object[] previousState,
+			@Nonnull String[] propertyNames,
+			@Nonnull Type[] types) {
 		return false;
 	}
 
@@ -175,7 +192,12 @@ public interface Interceptor extends EntityManager.CreationOption, EntityAgent.C
 	 * @deprecated Use {@link #onPersist(Object, Object, Object[], String[], Type[])}
 	 */
 	@Deprecated(since = "6.6")
-	default boolean onSave(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
+	default boolean onSave(
+			@Nonnull Object entity,
+			@Nullable Object id,
+			@Nonnull Object[] state,
+			@Nonnull String[] propertyNames,
+			@Nonnull Type[] types) {
 		return false;
 	}
 
@@ -195,7 +217,12 @@ public interface Interceptor extends EntityManager.CreationOption, EntityAgent.C
 	 * @deprecated Use {@link #onRemove(Object, Object, Object[], String[], Type[])}
 	 */
 	@Deprecated(since = "6.6")
-	default void onDelete(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
+	default void onDelete(
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nonnull Object[] state,
+			@Nonnull String[] propertyNames,
+			@Nonnull Type[] types) {
 	}
 
 	/**
@@ -204,7 +231,7 @@ public interface Interceptor extends EntityManager.CreationOption, EntityAgent.C
 	 * @param collection The collection instance.
 	 * @param key The collection key value.
 	 */
-	default void onCollectionRecreate(Object collection, Object key) {
+	default void onCollectionRecreate(@Nonnull Object collection, @Nullable Object key) {
 	}
 
 	/**
@@ -213,7 +240,7 @@ public interface Interceptor extends EntityManager.CreationOption, EntityAgent.C
 	 * @param collection The collection instance.
 	 * @param key The collection key value.
 	 */
-	default void onCollectionRemove(Object collection, Object key) {
+	default void onCollectionRemove(@Nonnull Object collection, @Nullable Object key) {
 	}
 
 	/**
@@ -222,7 +249,7 @@ public interface Interceptor extends EntityManager.CreationOption, EntityAgent.C
 	 * @param collection The collection instance.
 	 * @param key The collection key value.
 	 */
-	default void onCollectionUpdate(Object collection, Object key) {
+	default void onCollectionUpdate(@Nonnull Object collection, @Nullable Object key) {
 	}
 
 	/**
@@ -230,7 +257,7 @@ public interface Interceptor extends EntityManager.CreationOption, EntityAgent.C
 	 *
 	 * @param entities The entities to be flushed.
 	 */
-	default void preFlush(Iterator<Object> entities) {}
+	default void preFlush(@Nonnull Iterator<Object> entities) {}
 
 	/**
 	 * Called after a flush that actually ends in execution of the SQL statements
@@ -238,7 +265,7 @@ public interface Interceptor extends EntityManager.CreationOption, EntityAgent.C
 	 *
 	 * @param entities The entities that were flushed.
 	 */
-	default void postFlush(Iterator<Object> entities) {}
+	default void postFlush(@Nonnull Iterator<Object> entities) {}
 
 	/**
 	 * Called to distinguish between transient and detached entities. The return
@@ -257,7 +284,8 @@ public interface Interceptor extends EntityManager.CreationOption, EntityAgent.C
 	 * @param entity a transient or detached entity
 	 * @return {@link Boolean} or {@code null} to choose default behaviour
 	 */
-	default Boolean isTransient(Object entity) {
+	@Nullable
+	default Boolean isTransient(@Nonnull Object entity) {
 		return null;
 	}
 
@@ -281,13 +309,14 @@ public interface Interceptor extends EntityManager.CreationOption, EntityAgent.C
 	 * @return array of dirty property indices or {@code null} to indicate Hibernate
 	 *         should perform default behaviour
 	 */
+	@Nullable
 	default int[] findDirty(
-			Object entity,
-			Object id,
-			Object[] currentState,
-			Object[] previousState,
-			String[] propertyNames,
-			Type[] types) {
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nonnull Object[] currentState,
+			@Nullable Object[] previousState,
+			@Nonnull String[] propertyNames,
+			@Nonnull Type[] types) {
 		return null;
 	}
 
@@ -296,10 +325,11 @@ public interface Interceptor extends EntityManager.CreationOption, EntityAgent.C
 	 * use the default constructor of the class. The identifier property of the
 	 * returned instance should be initialized with the given identifier.
 	 */
+	@Nullable
 	default Object instantiate(
-			String entityName,
-			EntityRepresentationStrategy representationStrategy,
-			Object id) {
+			@Nonnull String entityName,
+			@Nonnull EntityRepresentationStrategy representationStrategy,
+			@Nullable Object id) {
 		return instantiate( entityName, representationStrategy.getMode(), id );
 	}
 
@@ -308,10 +338,11 @@ public interface Interceptor extends EntityManager.CreationOption, EntityAgent.C
 	 * use the default constructor of the class. The identifier property of the
 	 * returned instance should be initialized with the given identifier.
 	 */
+	@Nullable
 	default Object instantiate(
-			String entityName,
-			RepresentationMode representationMode,
-			Object id) {
+			@Nonnull String entityName,
+			@Nonnull RepresentationMode representationMode,
+			@Nullable Object id) {
 		return null;
 	}
 
@@ -324,7 +355,8 @@ public interface Interceptor extends EntityManager.CreationOption, EntityAgent.C
 	 *
 	 * @see EntityNameResolver
 	 */
-	default String getEntityName(Object object) {
+	@Nullable
+	default String getEntityName(@Nonnull Object object) {
 		return null;
 	}
 
@@ -336,7 +368,8 @@ public interface Interceptor extends EntityManager.CreationOption, EntityAgent.C
 	 *
 	 * @return a fully initialized entity
 	 */
-	default Object getEntity(String entityName, Object id) {
+	@Nullable
+	default Object getEntity(@Nonnull String entityName, @Nonnull Object id) {
 		return null;
 	}
 
@@ -346,23 +379,23 @@ public interface Interceptor extends EntityManager.CreationOption, EntityAgent.C
 	 * This method is not be called if transactions are being controlled via some
 	 * other mechanism, for example, if transactions are managed by a container.
 	 *
-	 * @param tx The Hibernate transaction facade object
+	 * @param tx The transaction facade, or {@code null} if the session does not allow access to it
 	 */
-	default void afterTransactionBegin(Transaction tx) {}
+	default void afterTransactionBegin(@Nullable Transaction tx) {}
 
 	/**
 	 * Called before a transaction is committed (but not before rollback).
 	 *
-	 * @param tx The Hibernate transaction facade object
+	 * @param tx The transaction facade, or {@code null} if the session does not allow access to it
 	 */
-	default void beforeTransactionCompletion(Transaction tx) {}
+	default void beforeTransactionCompletion(@Nullable Transaction tx) {}
 
 	/**
 	 * Called after a transaction is committed or rolled back.
 	 *
-	 * @param tx The Hibernate transaction facade object
+	 * @param tx The transaction facade, or {@code null} if the session does not allow access to it
 	 */
-	default void afterTransactionCompletion(Transaction tx) {}
+	default void afterTransactionCompletion(@Nullable Transaction tx) {}
 
 	/**
 	 * Called before a record is inserted by a {@link StatelessSession}.
@@ -375,7 +408,12 @@ public interface Interceptor extends EntityManager.CreationOption, EntityAgent.C
 	 *
 	 * @see StatelessSession#insert(Object)
 	 */
-	default void onInsert(Object entity, Object id, Object[] state, String[] propertyNames, Type[] propertyTypes) {}
+	default void onInsert(
+			@Nonnull Object entity,
+			@Nullable Object id,
+			@Nonnull Object[] state,
+			@Nonnull String[] propertyNames,
+			@Nonnull Type[] propertyTypes) {}
 
 	/**
 	 * Called before a record is updated by a {@link StatelessSession}.
@@ -388,7 +426,12 @@ public interface Interceptor extends EntityManager.CreationOption, EntityAgent.C
 	 *
 	 * @see StatelessSession#update(Object)
 	 */
-	default void onUpdate(Object entity, Object id, Object[] state, String[] propertyNames, Type[] propertyTypes) {}
+	default void onUpdate(
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nonnull Object[] state,
+			@Nonnull String[] propertyNames,
+			@Nonnull Type[] propertyTypes) {}
 
 	/**
 	 * Called before a record is upserted by a {@link StatelessSession}.
@@ -401,7 +444,12 @@ public interface Interceptor extends EntityManager.CreationOption, EntityAgent.C
 	 *
 	 * @see StatelessSession#upsert(String, Object)
 	 */
-	default void onUpsert(Object entity, Object id, Object[] state, String[] propertyNames, Type[] propertyTypes) {}
+	default void onUpsert(
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nonnull Object[] state,
+			@Nonnull String[] propertyNames,
+			@Nonnull Type[] propertyTypes) {}
 
 	/**
 	 * Called before a record is deleted by a {@link StatelessSession}.
@@ -413,7 +461,11 @@ public interface Interceptor extends EntityManager.CreationOption, EntityAgent.C
 	 *
 	 * @see StatelessSession#delete(Object)
 	 */
-	default void onDelete(Object entity, Object id, String[] propertyNames, Type[] propertyTypes) {}
+	default void onDelete(
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nonnull String[] propertyNames,
+			@Nonnull Type[] propertyTypes) {}
 
 	/**
 	 * Called before copying the state of a merged entity to a managed entity
@@ -429,7 +481,11 @@ public interface Interceptor extends EntityManager.CreationOption, EntityAgent.C
 	 * @since 7.1
 	 */
 	@Incubating(since = "7.1")
-	default void preMerge(Object entity, Object[] state, String[] propertyNames, Type[] propertyTypes) {}
+	default void preMerge(
+			@Nonnull Object entity,
+			@Nonnull Object[] state,
+			@Nonnull String[] propertyNames,
+			@Nonnull Type[] propertyTypes) {}
 
 	/**
 	 * Called after copying the state of a merged entity to a managed entity
@@ -450,7 +506,7 @@ public interface Interceptor extends EntityManager.CreationOption, EntityAgent.C
 	 */
 	@Incubating(since = "7.1")
 	default void postMerge(
-			Object source, Object target, Object id,
-			Object[] targetState, Object[] originalState,
-			String[] propertyNames, Type[] propertyTypes) {}
+			@Nonnull Object source, @Nonnull Object target, @Nullable Object id,
+			@Nonnull Object[] targetState, @Nullable Object[] originalState,
+			@Nonnull String[] propertyNames, @Nonnull Type[] propertyTypes) {}
 }

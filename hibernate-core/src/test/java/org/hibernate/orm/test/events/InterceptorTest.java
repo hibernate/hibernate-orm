@@ -2,6 +2,8 @@ package org.hibernate.orm.test.events;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.Interceptor;
@@ -86,8 +88,8 @@ public class InterceptorTest {
 		// tag::events-interceptors-example[]
 		@Override
 		public boolean onFlushDirty(
-				Object entity, Object id, Object[] currentState, Object[] previousState,
-				String[] propertyNames, Type[] types) {
+				@Nonnull Object entity, @Nonnull Object id, @Nonnull Object[] currentState, @Nullable Object[] previousState,
+				@Nonnull String[] propertyNames, @Nonnull Type[] types) {
 			LOGGER.debugv( "Dirty entity {0}#{1}", entity.getClass().getSimpleName(), id );
 			// end::events-interceptors-example[]
 			changes.incrementAndGet();

@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.callback;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.Dependent;
@@ -181,7 +183,12 @@ class GlobalInterceptorStrategyCdiTest {
 		}
 
 		@Override
-		public boolean onPersist(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
+		public boolean onPersist(
+				@Nonnull Object entity,
+				@Nullable Object id,
+				@Nonnull Object[] state,
+				@Nonnull String[] propertyNames,
+				@Nonnull Type[] types) {
 			return false;
 		}
 	}

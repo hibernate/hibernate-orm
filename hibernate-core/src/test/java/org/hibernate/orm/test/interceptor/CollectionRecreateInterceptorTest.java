@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.interceptor;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
@@ -57,13 +59,17 @@ public class CollectionRecreateInterceptorTest {
 						.interceptor( new Interceptor() {
 
 							@Override
-							public void onCollectionRecreate(Object collection, Object key) throws CallbackException {
+							public void onCollectionRecreate(
+									@Nonnull Object collection,
+									@Nullable Object key) throws CallbackException {
 								Interceptor.super.onCollectionRecreate( collection, key );
 								assertNotNull( ((PersistentCollection<?>) collection).getRole() );
 							}
 
 							@Override
-							public void onCollectionUpdate(Object collection, Object key) throws CallbackException {
+							public void onCollectionUpdate(
+									@Nonnull Object collection,
+									@Nullable Object key) throws CallbackException {
 								Interceptor.super.onCollectionUpdate( collection, key );
 								assertNotNull( ((PersistentCollection<?>) collection).getRole() );
 							}

@@ -4,6 +4,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -76,7 +78,7 @@ public class CollectionAutoFlushLifecycleTest {
 		private static final AtomicInteger UPDATE_COUNT = new AtomicInteger();
 
 		@Override
-		public void onCollectionUpdate(Object collection, Object key) {
+		public void onCollectionUpdate(@Nonnull Object collection, @Nullable Object key) {
 			UPDATE_COUNT.incrementAndGet();
 		}
 

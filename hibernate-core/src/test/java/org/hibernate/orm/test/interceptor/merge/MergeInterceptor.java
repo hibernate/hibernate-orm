@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.interceptor.merge;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Interceptor;
 import org.hibernate.type.Type;
@@ -12,7 +15,12 @@ import org.hibernate.type.Type;
  */
 public class MergeInterceptor implements Interceptor {
 	@Override
-	public boolean onPersist(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
+	public boolean onPersist(
+			@Nonnull Object entity,
+			@Nullable Object id,
+			@Nonnull Object[] state,
+			@Nonnull String[] propertyNames,
+			@Nonnull Type[] types) {
 		boolean result = false;
 		for ( int i = 0; i < types.length; i++ ) {
 			if ( types[i].isCollectionType() && state[i] == null ) {
@@ -24,7 +32,11 @@ public class MergeInterceptor implements Interceptor {
 	}
 
 	@Override
-	public void preMerge(Object entity, Object[] state, String[] propertyNames, Type[] types) {
+	public void preMerge(
+			@Nonnull Object entity,
+			@Nonnull Object[] state,
+			@Nonnull String[] propertyNames,
+			@Nonnull Type[] types) {
 		for ( int i = 0; i < types.length; i++ ) {
 			if ( types[i].isCollectionType() && state[i] == null ) {
 				state[i] = Hibernate.set().createDetachedInstance();

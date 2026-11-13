@@ -166,7 +166,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 							case TIME:
 								return template.replace(
 										placeholder,
-										"to_timestamp(json_value(" + parentPartExpression + columnExpression + "'),'hh24:mi:ss')"
+										"to_timestamp(json_value(" + parentPartExpression + columnExpression + "'),'hh24:mi:ss.FF')"
 								);
 							case TIMESTAMP:
 								if (supportsOson()) {
@@ -416,6 +416,11 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 			String customWriteExpression,
 			SelectableMapping column,
 			TypeConfiguration typeConfiguration) {
+		if ( column.getTemporalPrecision() != null && column.getTemporalPrecision() > 0
+				&& JavaTimeJdbcType.getPhysicalJdbcTypeCode( column.getJdbcMapping().getJdbcType() ) == TIME ) {
+			return "to_char(cast(" + customWriteExpression + " as timestamp(" + column.getTemporalPrecision()
+					+ ")),'HH24:MI:SS.FF')";
+		}
 		switch ( jsonSupport ) {
 			case OSON:
 			case MERGEPATCH:

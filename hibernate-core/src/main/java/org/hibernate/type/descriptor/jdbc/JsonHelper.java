@@ -3,6 +3,7 @@ package org.hibernate.type.descriptor.jdbc;
 
 import java.lang.reflect.Array;
 import java.sql.SQLException;
+import java.time.LocalTime;
 import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,9 +25,12 @@ import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.JdbcTimeJavaType;
 import org.hibernate.type.format.JsonDocumentItemType;
 import org.hibernate.type.format.JsonDocumentReader;
 
+import static org.hibernate.type.SqlTypes.TIME;
+import static org.hibernate.type.descriptor.DateTimeUtils.adjustToPrecision;
 import static org.hibernate.type.descriptor.jdbc.StructHelper.instantiate;
 import org.hibernate.type.format.JsonValueJDBCTypeAdapter;
 import org.hibernate.type.format.JsonValueJDBCTypeAdapterFactory;
@@ -188,15 +192,16 @@ public class JsonHelper {
 				}
 				case VALUE -> {
 					final JdbcMapping jdbcMapping = currentLevel.determineJdbcMapping( currentSelectableData );
-					currentLevel.addValue(
-							currentSelectableData,
-							adapter.fromValue(
-									jdbcMapping.getJdbcJavaType(),
-									jdbcMapping.getJdbcType(),
-									reader,
-									options
-							)
-					);
+					final Object decoded;
+					if ( currentSelectableData != null && jdbcMapping.getJdbcType().getDefaultSqlTypeCode() == TIME ) {
+						final var time = JdbcTimeJavaType.parseEncodedTime( reader.getStringValue() );
+						final var adjusted = adjustTimeToPrecision( time, currentSelectableData.selectableMapping, options );
+						decoded = jdbcMapping.getJdbcJavaType().wrap( JdbcTimeJavaType.INSTANCE.wrap( adjusted, options ), options );
+					}
+					else {
+						decoded = adapter.fromValue( jdbcMapping.getJdbcJavaType(), jdbcMapping.getJdbcType(), reader, options );
+					}
+					currentLevel.addValue( currentSelectableData, decoded );
 					currentSelectableData = null;
 				}
 			}
@@ -382,6 +387,17 @@ public class JsonHelper {
 			}
 			return null;
 		}
+	}
+
+	public static LocalTime adjustTimeToPrecision(LocalTime time, SelectableMapping selectable, WrapperOptions options) {
+		final var mapping = selectable.getJdbcMapping();
+		final var dialect = options.getDialect();
+		final var precision = selectable.getTemporalPrecision();
+		final int digits = precision == null
+				? mapping.getJdbcJavaType().getDefaultSqlPrecision( dialect, mapping.getJdbcType() )
+				: precision;
+		// JDBC TIME represents at most milliseconds.
+		return adjustToPrecision( time, Math.min( digits, 3 ), dialect );
 	}
 
 	private record SelectableData(String selectableName, int selectableIndex, SelectableMapping selectableMapping){}

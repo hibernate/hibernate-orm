@@ -129,17 +129,29 @@ public class ClassificationType implements EnhancedUserType<Classification>, Val
 	}
 
 	@Override
-	public Classification extract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+	@Nullable
+	public Classification extract(
+			@Nonnull ResultSet rs,
+			int paramIndex,
+			@Nonnull WrapperOptions options) throws SQLException {
 		return Classification.valueOf( rs.getInt( paramIndex ) );
 	}
 
 	@Override
-	public Classification extract(CallableStatement statement, int paramIndex, WrapperOptions options) throws SQLException {
+	@Nullable
+	public Classification extract(
+			@Nonnull CallableStatement statement,
+			int paramIndex,
+			@Nonnull WrapperOptions options) throws SQLException {
 		return Classification.valueOf( statement.getInt( paramIndex ) );
 	}
 
 	@Override
-	public Classification extract(CallableStatement statement, String paramName, WrapperOptions options) throws SQLException {
+	@Nullable
+	public Classification extract(
+			@Nonnull CallableStatement statement,
+			@Nonnull String paramName,
+			@Nonnull WrapperOptions options) throws SQLException {
 		return Classification.valueOf( statement.getInt( paramName ) );
 	}
 }

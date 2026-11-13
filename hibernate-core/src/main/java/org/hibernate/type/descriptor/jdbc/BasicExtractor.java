@@ -1,5 +1,8 @@
 package org.hibernate.type.descriptor.jdbc;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
@@ -42,7 +45,8 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializab
 	}
 
 	@Override
-	public J extract(ResultSet rs, int paramIndex, WrapperOptions options)
+	@Nullable
+	public J extract(@Nonnull ResultSet rs, int paramIndex, @Nonnull WrapperOptions options)
 			throws SQLException {
 		final J value = doExtract( rs, paramIndex, options );
 		if ( value == null || rs.wasNull() ) {
@@ -80,7 +84,8 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializab
 			throws SQLException;
 
 	@Override
-	public J extract(CallableStatement statement, int paramIndex, WrapperOptions options)
+	@Nullable
+	public J extract(@Nonnull CallableStatement statement, int paramIndex, @Nonnull WrapperOptions options)
 			throws SQLException {
 		final J value = doExtract( statement, paramIndex, options );
 		if ( value == null || statement.wasNull() ) {
@@ -120,7 +125,8 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializab
 			throws SQLException;
 
 	@Override
-	public J extract(CallableStatement statement, String paramName, WrapperOptions options)
+	@Nullable
+	public J extract(@Nonnull CallableStatement statement, @Nonnull String paramName, @Nonnull WrapperOptions options)
 			throws SQLException {
 		final J value = doExtract( statement, paramName, options );
 		if ( value == null || statement.wasNull() ) {

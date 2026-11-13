@@ -567,7 +567,8 @@ public class SpannerVectorIntegrationTest {
 	}
 
 	@Test
-	public void testVectorExtractors() throws Exception {
+	public void testVectorExtractors(SessionFactoryScope scope) throws Exception {
+		final var options = scope.getSessionFactory().getWrapperOptions();
 		final TypeConfiguration typeConfiguration = new TypeConfiguration();
 		final JavaType<float[]> floatArrayType = typeConfiguration.getJavaTypeRegistry().resolveDescriptor( float[].class );
 		final JavaType<Float[]> boxedFloatArrayType = typeConfiguration.getJavaTypeRegistry().resolveDescriptor( Float[].class );
@@ -594,34 +595,34 @@ public class SpannerVectorIntegrationTest {
 		final ValueExtractor<Double[]> pgDoubleToBoxedExtractor = pgDoubleVector.getExtractor( boxedDoubleArrayType );
 
 		// 1. Primitive and boxed float[] extractions
-		assertArrayEquals( new float[] { 1.0f, 2.0f }, pgFloatToPrimitiveExtractor.extract( mockResultSet( new float[] { 1.0f, 2.0f } ), 1, null ) );
-		assertArrayEquals( new Float[] { 1.0f, 2.0f }, pgFloatToBoxedExtractor.extract( mockResultSet( new float[] { 1.0f, 2.0f } ), 1, null ) );
-		assertArrayEquals( new float[] { 1.0f, 2.0f }, pgFloatToPrimitiveExtractor.extract( mockResultSet( new Float[] { 1.0f, 2.0f } ), 1, null ) );
-		assertArrayEquals( new Float[] { 1.0f, 2.0f }, pgFloatToBoxedExtractor.extract( mockResultSet( new Float[] { 1.0f, 2.0f } ), 1, null ) );
+		assertArrayEquals( new float[] { 1.0f, 2.0f }, pgFloatToPrimitiveExtractor.extract( mockResultSet( new float[] { 1.0f, 2.0f } ), 1, options ) );
+		assertArrayEquals( new Float[] { 1.0f, 2.0f }, pgFloatToBoxedExtractor.extract( mockResultSet( new float[] { 1.0f, 2.0f } ), 1, options ) );
+		assertArrayEquals( new float[] { 1.0f, 2.0f }, pgFloatToPrimitiveExtractor.extract( mockResultSet( new Float[] { 1.0f, 2.0f } ), 1, options ) );
+		assertArrayEquals( new Float[] { 1.0f, 2.0f }, pgFloatToBoxedExtractor.extract( mockResultSet( new Float[] { 1.0f, 2.0f } ), 1, options ) );
 
 		// 2. String representation extractions (PostgreSQL and GoogleSQL formats)
-		assertArrayEquals( new float[] { 1.0f, 2.0f }, pgFloatToPrimitiveExtractor.extract( mockResultSet( "{1.0, 2.0}" ), 1, null ) );
-		assertArrayEquals( new Float[] { 1.0f, 2.0f }, pgFloatToBoxedExtractor.extract( mockResultSet( "{1.0, 2.0}" ), 1, null ) );
-		assertArrayEquals( new float[] { 1.0f, 2.0f }, pgFloatToPrimitiveExtractor.extract( mockResultSet( "[1.0, 2.0]" ), 1, null ) );
-		assertArrayEquals( new Float[] { 1.0f, 2.0f }, pgFloatToBoxedExtractor.extract( mockResultSet( "[1.0, 2.0]" ), 1, null ) );
+		assertArrayEquals( new float[] { 1.0f, 2.0f }, pgFloatToPrimitiveExtractor.extract( mockResultSet( "{1.0, 2.0}" ), 1, options ) );
+		assertArrayEquals( new Float[] { 1.0f, 2.0f }, pgFloatToBoxedExtractor.extract( mockResultSet( "{1.0, 2.0}" ), 1, options ) );
+		assertArrayEquals( new float[] { 1.0f, 2.0f }, pgFloatToPrimitiveExtractor.extract( mockResultSet( "[1.0, 2.0]" ), 1, options ) );
+		assertArrayEquals( new Float[] { 1.0f, 2.0f }, pgFloatToBoxedExtractor.extract( mockResultSet( "[1.0, 2.0]" ), 1, options ) );
 
 		// 3. Double vector extractions
-		assertArrayEquals( new double[] { 1.0d, 2.0d }, pgDoubleToPrimitiveExtractor.extract( mockResultSet( new double[] { 1.0d, 2.0d } ), 1, null ) );
-		assertArrayEquals( new Double[] { 1.0d, 2.0d }, pgDoubleToBoxedExtractor.extract( mockResultSet( new double[] { 1.0d, 2.0d } ), 1, null ) );
-		assertArrayEquals( new double[] { 1.0d, 2.0d }, pgDoubleToPrimitiveExtractor.extract( mockResultSet( "{1.0, 2.0}" ), 1, null ) );
-		assertArrayEquals( new Double[] { 1.0d, 2.0d }, pgDoubleToBoxedExtractor.extract( mockResultSet( "{1.0, 2.0}" ), 1, null ) );
+		assertArrayEquals( new double[] { 1.0d, 2.0d }, pgDoubleToPrimitiveExtractor.extract( mockResultSet( new double[] { 1.0d, 2.0d } ), 1, options ) );
+		assertArrayEquals( new Double[] { 1.0d, 2.0d }, pgDoubleToBoxedExtractor.extract( mockResultSet( new double[] { 1.0d, 2.0d } ), 1, options ) );
+		assertArrayEquals( new double[] { 1.0d, 2.0d }, pgDoubleToPrimitiveExtractor.extract( mockResultSet( "{1.0, 2.0}" ), 1, options ) );
+		assertArrayEquals( new Double[] { 1.0d, 2.0d }, pgDoubleToBoxedExtractor.extract( mockResultSet( "{1.0, 2.0}" ), 1, options ) );
 
 		// 4. Cross-type primitive bridging (double[] to Float[], float[] to Double[])
-		assertArrayEquals( new Float[] { 1.0f, 2.0f }, pgFloatToBoxedExtractor.extract( mockResultSet( new double[] { 1.0d, 2.0d } ), 1, null ) );
-		assertArrayEquals( new Double[] { 1.0d, 2.0d }, pgDoubleToBoxedExtractor.extract( mockResultSet( new float[] { 1.0f, 2.0f } ), 1, null ) );
+		assertArrayEquals( new Float[] { 1.0f, 2.0f }, pgFloatToBoxedExtractor.extract( mockResultSet( new double[] { 1.0d, 2.0d } ), 1, options ) );
+		assertArrayEquals( new Double[] { 1.0d, 2.0d }, pgDoubleToBoxedExtractor.extract( mockResultSet( new float[] { 1.0f, 2.0f } ), 1, options ) );
 
 		// 5. GoogleSQL vector extractions
 		final ValueExtractor<float[]> gsqlFloatToPrimitiveExtractor = gsqlFloatVector.getExtractor( floatArrayType );
 		final ValueExtractor<Float[]> gsqlFloatToBoxedExtractor = gsqlFloatVector.getExtractor( boxedFloatArrayType );
-		assertArrayEquals( new float[] { 1.0f, 2.0f }, gsqlFloatToPrimitiveExtractor.extract( mockResultSet( new float[] { 1.0f, 2.0f } ), 1, null ) );
-		assertArrayEquals( new Float[] { 1.0f, 2.0f }, gsqlFloatToBoxedExtractor.extract( mockResultSet( new float[] { 1.0f, 2.0f } ), 1, null ) );
-		assertArrayEquals( new float[] { 1.0f, 2.0f }, gsqlFloatToPrimitiveExtractor.extract( mockResultSet( "[1.0, 2.0]" ), 1, null ) );
-		assertArrayEquals( new Float[] { 1.0f, 2.0f }, gsqlFloatToBoxedExtractor.extract( mockResultSet( "[1.0, 2.0]" ), 1, null ) );
+		assertArrayEquals( new float[] { 1.0f, 2.0f }, gsqlFloatToPrimitiveExtractor.extract( mockResultSet( new float[] { 1.0f, 2.0f } ), 1, options ) );
+		assertArrayEquals( new Float[] { 1.0f, 2.0f }, gsqlFloatToBoxedExtractor.extract( mockResultSet( new float[] { 1.0f, 2.0f } ), 1, options ) );
+		assertArrayEquals( new float[] { 1.0f, 2.0f }, gsqlFloatToPrimitiveExtractor.extract( mockResultSet( "[1.0, 2.0]" ), 1, options ) );
+		assertArrayEquals( new Float[] { 1.0f, 2.0f }, gsqlFloatToBoxedExtractor.extract( mockResultSet( "[1.0, 2.0]" ), 1, options ) );
 
 		// 6. java.sql.Array extraction via getArray
 		final boolean[] freed = new boolean[1];
@@ -639,23 +640,23 @@ public class SpannerVectorIntegrationTest {
 					return null;
 				}
 		);
-		assertArrayEquals( new float[] { 1.0f, 2.0f }, pgFloatToPrimitiveExtractor.extract( mockResultSet( mockArray ), 1, null ) );
+		assertArrayEquals( new float[] { 1.0f, 2.0f }, pgFloatToPrimitiveExtractor.extract( mockResultSet( mockArray ), 1, options ) );
 		assertTrue( freed[0] );
 		freed[0] = false;
-		assertArrayEquals( new Float[] { 1.0f, 2.0f }, pgFloatToBoxedExtractor.extract( mockResultSet( mockArray ), 1, null ) );
+		assertArrayEquals( new Float[] { 1.0f, 2.0f }, pgFloatToBoxedExtractor.extract( mockResultSet( mockArray ), 1, options ) );
 		assertTrue( freed[0] );
 		freed[0] = false;
-		assertArrayEquals( new float[] { 1.0f, 2.0f }, gsqlFloatToPrimitiveExtractor.extract( mockResultSet( mockArray ), 1, null ) );
+		assertArrayEquals( new float[] { 1.0f, 2.0f }, gsqlFloatToPrimitiveExtractor.extract( mockResultSet( mockArray ), 1, options ) );
 		assertTrue( freed[0] );
 		freed[0] = false;
-		assertArrayEquals( new Float[] { 1.0f, 2.0f }, gsqlFloatToBoxedExtractor.extract( mockResultSet( mockArray ), 1, null ) );
+		assertArrayEquals( new Float[] { 1.0f, 2.0f }, gsqlFloatToBoxedExtractor.extract( mockResultSet( mockArray ), 1, options ) );
 		assertTrue( freed[0] );
 
 		// 7. Null extractions
-		assertNull( pgFloatToPrimitiveExtractor.extract( mockResultSet( null ), 1, null ) );
-		assertNull( pgFloatToBoxedExtractor.extract( mockResultSet( null ), 1, null ) );
-		assertNull( gsqlFloatToPrimitiveExtractor.extract( mockResultSet( null ), 1, null ) );
-		assertNull( gsqlFloatToBoxedExtractor.extract( mockResultSet( null ), 1, null ) );
+		assertNull( pgFloatToPrimitiveExtractor.extract( mockResultSet( null ), 1, options ) );
+		assertNull( pgFloatToBoxedExtractor.extract( mockResultSet( null ), 1, options ) );
+		assertNull( gsqlFloatToPrimitiveExtractor.extract( mockResultSet( null ), 1, options ) );
+		assertNull( gsqlFloatToBoxedExtractor.extract( mockResultSet( null ), 1, options ) );
 	}
 
 	@Entity(name = "DimensionedVectorEntity")

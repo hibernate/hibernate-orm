@@ -24,6 +24,7 @@ import org.hibernate.internal.util.ImmutableBitSet;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.TypeHelper;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
 import static org.hibernate.LockMode.PESSIMISTIC_FORCE_INCREMENT;
@@ -156,12 +157,13 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	}
 
 	@Override
+	@Nonnull
 	public LockMode getLockMode() {
 		return getCompressedValue( LOCK_MODE );
 	}
 
 	@Override
-	public void setLockMode(LockMode lockMode) {
+	public void setLockMode(@Nonnull LockMode lockMode) {
 		if ( lockMode.greaterThan( LockMode.READ )
 				&& persister!=null && !persister.isMutable() ) {
 			throw new UnsupportedLockAttemptException( "Lock mode " + lockMode
@@ -171,6 +173,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	}
 
 	@Override
+	@Nonnull
 	public Status getStatus() {
 		return getCompressedValue( STATUS );
 	}
@@ -180,7 +183,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	}
 
 	@Override
-	public void setStatus(Status status) {
+	public void setStatus(@Nonnull Status status) {
 		if ( status == READ_ONLY ) {
 			//memory optimization
 			loadedState = null;
@@ -194,23 +197,26 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	}
 
 	@Override
+	@Nullable
 	public Object getId() {
 		return id;
 	}
 
 	@Override
+	@Nullable
 	public Object[] getLoadedState() {
 		return loadedState;
 	}
 
 	@Override
+	@Nullable
 	public Object[] getDeletedState() {
 		final var extra = getExtraState( EntityEntryExtraStateHolder.class );
 		return extra == null ? null : extra.getDeletedState();
 	}
 
 	@Override
-	public void setDeletedState(Object[] deletedState) {
+	public void setDeletedState(@Nullable Object[] deletedState) {
 		final var existingExtra = getExtraState( EntityEntryExtraStateHolder.class );
 		if ( existingExtra != null ) {
 			existingExtra.setDeletedState( deletedState );
@@ -229,6 +235,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	}
 
 	@Override
+	@Nullable
 	public Object getVersion() {
 		return version;
 	}
@@ -239,16 +246,18 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	}
 
 	@Override
-	public void postInsert(Object version) {
+	public void postInsert(@Nullable Object version) {
 		this.version = version;
 	}
 
 	@Override
+	@Nullable
 	public EntityPersister getPersister() {
 		return persister;
 	}
 
 	@Override
+	@Nonnull
 	public EntityKey getEntityKey() {
 		if ( cachedEntityKey == null ) {
 			if ( id == null ) {
@@ -260,18 +269,20 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	}
 
 	@Override
+	@Nullable
 	public String getEntityName() {
 		return persister == null ? null : persister.getEntityName();
 
 	}
 
 	@Override
+	@Nullable
 	public Object getRowId() {
 		return rowId;
 	}
 
 	@Override
-	public void postUpdate(Object entity, Object[] updatedState, Object nextVersion) {
+	public void postUpdate(@Nonnull Object entity, @Nonnull Object[] updatedState, @Nullable Object nextVersion) {
 		final var filteredState = getExtraState( FilteredAssociationState.class );
 		if ( filteredState != null ) {
 			filteredState.afterUpdate( updatedState, persister );
@@ -293,7 +304,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	}
 
 	@Override
-	public void postLoad(Object entity) {
+	public void postLoad(@Nonnull Object entity) {
 		processIfSelfDirtinessTracker( entity, EntityEntryImpl::clearDirtyAttributes );
 		processIfManagedEntity( entity, EntityEntryImpl::useTracker );
 
@@ -319,12 +330,12 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	}
 
 	@Override
-	public void postInsert(Object[] insertedState) {
+	public void postInsert(@Nonnull Object[] insertedState) {
 		setCompressedValue( EXISTS_IN_DATABASE, true );
 	}
 
 	@Override
-	public boolean isNullifiable(boolean earlyInsert, SharedSessionContractImplementor session) {
+	public boolean isNullifiable(boolean earlyInsert, @Nonnull SharedSessionContractImplementor session) {
 		if ( earlyInsert ) {
 			// For IDENTITY inserts, we need to check both conditions:
 			// 1. If entity has SAVING status (cascade in progress), it's nullifiable
@@ -348,7 +359,8 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	}
 
 	@Override
-	public Object getLoadedValue(String propertyName) {
+	@Nullable
+	public Object getLoadedValue(@Nullable String propertyName) {
 		if ( loadedState == null || propertyName == null ) {
 			return null;
 		}
@@ -364,7 +376,9 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	}
 
 	@Override
-	public void overwriteLoadedStateCollectionValue(String propertyName, PersistentCollection<?> collection) {
+	public void overwriteLoadedStateCollectionValue(
+			@Nonnull String propertyName,
+			@Nullable PersistentCollection<?> collection) {
 		// nothing to do if status is READ_ONLY
 		if ( getStatus() != READ_ONLY ) {
 			assert propertyName != null;
@@ -374,7 +388,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	}
 
 	@Override
-	public boolean requiresDirtyCheck(Object entity) {
+	public boolean requiresDirtyCheck(@Nonnull Object entity) {
 		return isModifiableEntity()
 			&& !isUnequivocallyNonDirty( entity );
 	}
@@ -423,7 +437,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	}
 
 	@Override
-	public void forceLocked(Object entity, Object nextVersion) {
+	public void forceLocked(@Nonnull Object entity, @Nonnull Object nextVersion) {
 		version = nextVersion;
 		final int versionProperty = persister.getVersionPropertyIndex();
 		if ( loadedState != null ) {
@@ -443,7 +457,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	}
 
 	@Override
-	public boolean setReadOnly(boolean readOnly, Object entity) {
+	public boolean setReadOnly(boolean readOnly, @Nonnull Object entity) {
 		final boolean changed = readOnly != isReadOnly();
 		if ( changed ) {
 			if ( readOnly ) {
@@ -489,6 +503,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	}
 
 	@Override
+	@Nonnull
 	public String toString() {
 		return "EntityEntry"
 			+ infoString( persister.getEntityName(), id )
@@ -496,7 +511,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	}
 
 	@Override
-	public void serialize(ObjectOutputStream oos) throws IOException {
+	public void serialize(@Nonnull ObjectOutputStream oos) throws IOException {
 		final Status previousStatus = getPreviousStatus();
 		final String entityName = getEntityName();
 		oos.writeUTF( entityName == null ? "" : entityName );
@@ -551,7 +566,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	}
 
 	@Override
-	public void addExtraState(EntityEntryExtraState extraState) {
+	public void addExtraState(@Nonnull EntityEntryExtraState extraState) {
 		if ( next == null ) {
 			next = extraState;
 		}
@@ -561,7 +576,8 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	}
 
 	@Override
-	public <T extends EntityEntryExtraState> T getExtraState(Class<T> extraStateType) {
+	@Nullable
+	public <T extends EntityEntryExtraState> T getExtraState(@Nonnull Class<T> extraStateType) {
 		if ( next == null ) {
 			return null;
 		}

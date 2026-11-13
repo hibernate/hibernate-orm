@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 
 import org.hibernate.Length;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -223,6 +224,8 @@ public class VarbinaryArrayTest {
 			reason = "For some reason, HANA can't intersect VARBINARY values, but funnily can do a union...")
 	@SkipForDialect(dialectClass = InformixDialect.class,
 			reason = "The statement failed because binary large objects are not allowed in the Union, Intersect, or Minus queries")
+	@SkipForDialect(dialectClass = AltibaseDialect.class,
+			reason = "The LONG32 columns are mapped to BLOB, and Altibase cannot compare BLOB values")
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsArrayComparison.class )
 	<T> void queryByData(String propertyName, long id, T value, Function<EntityWithArrays, T> getter,
 			SessionFactoryScope scope) {

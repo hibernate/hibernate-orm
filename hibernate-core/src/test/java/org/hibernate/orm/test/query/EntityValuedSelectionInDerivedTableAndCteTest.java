@@ -2,6 +2,7 @@ package org.hibernate.orm.test.query;
 
 import java.util.List;
 
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaCteCriteria;
@@ -17,6 +18,7 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -316,6 +318,8 @@ public class EntityValuedSelectionInDerivedTableAndCteTest {
 
 	@Test
 	@JiraKey("HHH-20646")
+	@SkipForDialect(dialectClass = AltibaseDialect.class,
+			reason = "Altibase cannot parse a nested join group that starts with a derived table")
 	public void criteriaJoinOtherEntityOnAttributeOfDerivedJoinEntity(SessionFactoryScope scope) {
 		// The derived table selects an entity which is not the one it is joined to
 		scope.inTransaction( session -> {

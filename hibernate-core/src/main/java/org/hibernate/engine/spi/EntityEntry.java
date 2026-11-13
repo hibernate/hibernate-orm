@@ -9,6 +9,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.internal.util.ImmutableBitSet;
 import org.hibernate.persister.entity.EntityPersister;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
 /**
@@ -24,28 +25,37 @@ import jakarta.annotation.Nullable;
  * @author Sanne Grinovero
  */
 public interface EntityEntry {
+	@Nonnull
 	LockMode getLockMode();
 
-	void setLockMode(LockMode lockMode);
+	void setLockMode(@Nonnull LockMode lockMode);
 
+	@Nonnull
 	Status getStatus();
 
-	void setStatus(Status status);
+	void setStatus(@Nonnull Status status);
 
+	@Nullable
 	Object getId();
 
+	@Nullable
 	Object[] getLoadedState();
 
-	Object getLoadedValue(String propertyName);
+	@Nullable
+	Object getLoadedValue(@Nullable String propertyName);
 
-	void overwriteLoadedStateCollectionValue(String propertyName, PersistentCollection<?> collection);
+	void overwriteLoadedStateCollectionValue(
+			@Nonnull String propertyName,
+			@Nullable PersistentCollection<?> collection);
 
+	@Nullable
 	Object[] getDeletedState();
 
-	void setDeletedState(Object[] deletedState);
+	void setDeletedState(@Nullable Object[] deletedState);
 
 	boolean isExistsInDatabase();
 
+	@Nullable
 	Object getVersion();
 
 	/// Replaces only the version held by this entry. Does not change the entity,
@@ -53,8 +63,9 @@ public interface EntityEntry {
 	/// cache operations, or lifecycle callbacks.
 	void setVersion(@Nullable Object version);
 
-	void postInsert(Object version);
+	void postInsert(@Nullable Object version);
 
+	@Nullable
 	EntityPersister getPersister();
 
 	/**
@@ -63,13 +74,16 @@ public interface EntityEntry {
 	 * @return the {@link EntityKey}
 	 * @throws IllegalStateException if {@link #getId()} is null
 	 */
+	@Nonnull
 	EntityKey getEntityKey();
 
+	@Nullable
 	String getEntityName();
 
+	@Nullable
 	Object getRowId();
 
-	void postLoad(Object entity);
+	void postLoad(@Nonnull Object entity);
 
 	/**
 	 * Handle updating the internal state of the entry after actually performing
@@ -81,7 +95,7 @@ public interface EntityEntry {
 	 * new {@link #getLoadedState() loaded state}.
 	 * @param nextVersion The new version.
 	 */
-	void postUpdate(Object entity, Object[] updatedState, Object nextVersion);
+	void postUpdate(@Nonnull Object entity, @Nonnull Object[] updatedState, @Nullable Object nextVersion);
 
 	/**
 	 * After actually deleting a row, record the fact that the instance no longer
@@ -93,9 +107,9 @@ public interface EntityEntry {
 	 * After actually inserting a row, record the fact that the instance exists
 	 * in the database (needed for identity column key generation).
 	 */
-	void postInsert(Object[] insertedState);
+	void postInsert(@Nonnull Object[] insertedState);
 
-	boolean isNullifiable(boolean earlyInsert, SharedSessionContractImplementor session);
+	boolean isNullifiable(boolean earlyInsert, @Nonnull SharedSessionContractImplementor session);
 
 	/**
 	 * Returns {@code true} if the entity can possibly be dirty. This can only
@@ -109,7 +123,7 @@ public interface EntityEntry {
 	 *         and that the dirty-check should happen;
 	 *         {@code false} indicates there is no way the entity can be dirty
 	 */
-	boolean requiresDirtyCheck(Object entity);
+	boolean requiresDirtyCheck(@Nonnull Object entity);
 
 	/**
 	 * Can the entity be modified?
@@ -127,11 +141,11 @@ public interface EntityEntry {
 	 */
 	boolean isModifiableEntity();
 
-	void forceLocked(Object entity, Object nextVersion);
+	void forceLocked(@Nonnull Object entity, @Nonnull Object nextVersion);
 
 	boolean isReadOnly();
 
-	boolean setReadOnly(boolean readOnly, Object entity);
+	boolean setReadOnly(boolean readOnly, @Nonnull Object entity);
 
 	/**
 	 * Has a bit set for every attribute position that is potentially lazy.
@@ -144,6 +158,7 @@ public interface EntityEntry {
 	void setMaybeLazySet(@Nullable ImmutableBitSet maybeLazySet);
 
 	@Override
+	@Nonnull
 	String toString();
 
 	/**
@@ -155,12 +170,13 @@ public interface EntityEntry {
 	 *
 	 * @throws IOException If a stream error occurs
 	 */
-	void serialize(ObjectOutputStream oos) throws IOException;
+	void serialize(@Nonnull ObjectOutputStream oos) throws IOException;
 
 	//the following methods are handling extraState contracts.
 	//they are not shared by a common superclass to avoid alignment padding
 	//we are trading off duplication for padding efficiency
-	void addExtraState(EntityEntryExtraState extraState);
+	void addExtraState(@Nonnull EntityEntryExtraState extraState);
 
-	<T extends EntityEntryExtraState> T getExtraState(Class<T> extraStateType);
+	@Nullable
+	<T extends EntityEntryExtraState> T getExtraState(@Nonnull Class<T> extraStateType);
 }

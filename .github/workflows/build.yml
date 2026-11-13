@@ -104,7 +104,7 @@ jobs:
       - name: Reclaim Disk Space
         run: .github/ci-prerequisites.sh
       - name: Set up Gradle JDK
-        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
           distribution: 'temurin'
           java-version: ${{ env.GRADLE_JAVA_VERSION }}
@@ -223,7 +223,7 @@ jobs:
       # then install the default JDK (GRADLE_JAVA_VERSION) which becomes JAVA_HOME for the Gradle daemon.
       - name: Set up test JDK ${{ matrix.java-test-version }}
         if: ${{ matrix.java-test-version && matrix.java-test-version != env.GRADLE_JAVA_VERSION && matrix.java-test-from != 'jdk.java.net' }}
-        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
           distribution: 'temurin'
           java-version: ${{ matrix.java-test-version }}
@@ -238,7 +238,7 @@ jobs:
         run: echo "TEST_JDK_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
       - name: Set up build JDK ${{ matrix.java-build-version }}
         if: ${{ matrix.java-build-version && matrix.java-build-version != env.GRADLE_JAVA_VERSION }}
-        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
           distribution: 'temurin'
           java-version: ${{ matrix.java-build-version }}
@@ -246,7 +246,7 @@ jobs:
         if: ${{ matrix.java-build-version && matrix.java-build-version != env.GRADLE_JAVA_VERSION }}
         run: echo "BUILD_JDK_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
       - name: Set up Gradle JDK
-        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
           distribution: 'temurin'
           java-version: ${{ env.GRADLE_JAVA_VERSION }}
@@ -512,7 +512,7 @@ jobs:
       - name: Reclaim disk space and sanitize user home
         run: .github/ci-prerequisites-otp.sh
       - name: Set up Gradle JDK
-        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
           distribution: 'temurin'
           java-version: ${{ env.GRADLE_JAVA_VERSION }}
@@ -573,7 +573,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up Gradle JDK
-        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
           java-version: ${{ env.GRADLE_JAVA_VERSION }}
           distribution: 'temurin'

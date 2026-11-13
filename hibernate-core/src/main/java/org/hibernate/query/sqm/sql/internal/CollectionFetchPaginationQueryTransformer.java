@@ -442,7 +442,9 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 		for ( var entry : absorption.entrySet() ) {
 			final var absorbedKey = entry.getKey();
 			final var absorbedColumn = entry.getValue();
-			final String exposedName = absorbedKey.qualifier() + "_" + absorbedKey.columnName();
+			final String exposedName = absorbedColumn.formula
+							? "hib_formula_" + columnNames.size()
+							: absorbedKey.qualifier() + "_" + absorbedKey.columnName();
 			// Expose the absorbed column under a stable derived-table column name and
 			// remember that name so outer ColumnReferences can be rewritten to it.
 			sqlSelections.add(
@@ -451,7 +453,7 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 							new ColumnReference(
 									absorbedKey.qualifier(),
 									absorbedKey.columnName(),
-									false,
+									absorbedColumn.formula,
 									absorbedColumn.readExpression,
 									absorbedColumn.jdbcMapping
 							),
@@ -813,10 +815,12 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 	private static class AbsorbedColumn {
 		final JdbcMapping jdbcMapping;
 		final String readExpression;
+		final boolean formula;
 		String exposedName;
-		private AbsorbedColumn(JdbcMapping jdbcMapping, String readExpression) {
+		private AbsorbedColumn(JdbcMapping jdbcMapping, String readExpression, boolean formula) {
 			this.jdbcMapping = jdbcMapping;
 			this.readExpression = readExpression;
+			this.formula = formula;
 		}
 	}
 
@@ -840,7 +844,11 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 			if ( qualifier != null && !outerAliases.contains( qualifier ) ) {
 				absorption.computeIfAbsent(
 						new AbsorbedKey( qualifier, columnReference.getColumnExpression() ),
-						k -> new AbsorbedColumn( columnReference.getJdbcMapping(), columnReference.getReadExpression() )
+						k -> new AbsorbedColumn(
+								columnReference.getJdbcMapping(),
+								columnReference.getReadExpression(),
+								columnReference.isColumnExpressionFormula()
+						)
 				);
 			}
 		}

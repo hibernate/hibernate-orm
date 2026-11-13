@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.tenantid;
 
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -13,7 +14,9 @@ import static org.hibernate.cfg.StateManagementSettings.TEMPORAL_TABLE_STRATEGY;
 @DomainModel(annotatedClasses = { TenantIdTemporalMutationTest.Item.class, TenantIdTemporalMutationTest.PlainItem.class,
 		TenantIdTemporalMutationTest.CompositeItem.class })
 @SessionFactory(useCollectingStatementInspector = true)
+// Exercise established history/period mutations under legacy timestamp interpretation.
 @ServiceRegistry(settings = {
+		@Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
 		@Setting(name = FLUSH_QUEUE_TYPE, value = "legacy"),
 		@Setting(name = MULTI_TENANT_IDENTIFIER_RESOLVER,
 				value = "org.hibernate.orm.test.tenantid.TenantIdMutationTest$Resolver"),

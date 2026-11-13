@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.query.hql;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.contacts.Contact;
 import org.hibernate.testing.orm.domain.contacts.Contact.Name;
@@ -14,7 +16,8 @@ import java.time.LocalDate;
 /**
  * @author Gavin King
  */
-@ServiceRegistry
+// Retain the shared fixture's legacy temporal interpretation while testing query behavior.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel( standardModels = {StandardDomainModel.HELPDESK, StandardDomainModel.CONTACTS} )
 @SessionFactory
 public class InsertUpdateTests {

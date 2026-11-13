@@ -2,6 +2,9 @@ package org.hibernate.orm.test.query;
 
 import java.time.LocalDate;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.query.IllegalMutationQueryException;
 
 import org.hibernate.query.IllegalSelectQueryException;
@@ -20,6 +23,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Steve Ebersole
  */
+// Retain the shared fixture's legacy temporal interpretation while testing query behavior.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel( standardModels = StandardDomainModel.CONTACTS )
 @SessionFactory
 public class QueryApiTests {

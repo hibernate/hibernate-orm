@@ -1,5 +1,10 @@
 package org.hibernate.orm.test.mapping.javatime.redesign.context;
 
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -15,6 +20,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 /// Explicit native type handles retain each attribute's adjustment independently.
 ///
 /// @author Steve Ebersole
+@RequiresDialect(H2Dialect.class)
+@RequiresDialect(PostgreSQLDialect.class)
+@RequiresDialect(OracleDialect.class)
 class TemporalNativeQueryTests {
 	static final OffsetDateTime INPUT = OffsetDateTime.parse("2026-07-01T12:00:45.123456+02:00:45");
 

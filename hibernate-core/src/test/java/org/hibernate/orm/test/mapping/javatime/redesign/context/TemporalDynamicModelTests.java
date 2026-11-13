@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.mapping.javatime.redesign.context;
 
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
@@ -17,7 +20,7 @@ import static org.assertj.core.api.Assertions.*;
 /// declarations, through guarded bootstrap and fresh JDBC-backed map reads.
 ///
 /// @author Steve Ebersole
-@org.hibernate.testing.orm.junit.RequiresDialect( org.hibernate.dialect.H2Dialect.class )
+@RequiresDialect(H2Dialect.class)
 class TemporalDynamicModelTests {
 	@ParameterizedTest
 	@ValueSource( booleans = { true, false } )

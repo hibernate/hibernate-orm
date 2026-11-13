@@ -5,6 +5,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.BatchSettings;
 import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -29,7 +30,11 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Steve Ebersole
  * @author Andrea Boriero
  */
-@ServiceRegistry(settings = @Setting(name = BatchSettings.STATEMENT_BATCH_SIZE, value = "-1"))
+// Retain Product's legacy generated version while testing the retail model.
+@ServiceRegistry(settings = {
+		@Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
+		@Setting(name = BatchSettings.STATEMENT_BATCH_SIZE, value = "-1")
+})
 public class SimpleStaticInsertTests {
 
 	@Test

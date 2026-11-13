@@ -1,6 +1,9 @@
 package org.hibernate.orm.test.query.sqm;
 
 import java.util.List;
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -29,6 +32,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Steve Ebersole
  */
+// Retain the shared fixture's legacy temporal interpretation while testing query behavior.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel(
 		standardModels = StandardDomainModel.CONTACTS,
 		annotatedClasses = BasicSelectionQueryTests.DummyEntity.class

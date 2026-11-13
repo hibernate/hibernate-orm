@@ -4,6 +4,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -20,6 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey( value = "HHH-10026" )
+// This legacy version smoke test does not assert preservation of the original offset.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel(annotatedClasses = OffsetDateTimeVersionTest.TheEntity.class)
 @SessionFactory
 public class OffsetDateTimeVersionTest {

@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.function.json;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import jakarta.persistence.Tuple;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -14,6 +17,8 @@ import static org.hibernate.orm.test.function.json.JsonTestHelper.assertNoJsonIn
 /**
  * @author Christian Beikov
  */
+// Retain the shared fixture's legacy temporal interpretation while testing query behavior.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel(standardModels = StandardDomainModel.GAMBIT)
 @SessionFactory
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsJsonInsert.class)

@@ -11,6 +11,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
 
+import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.MappingException;
 import org.hibernate.annotations.CurrentTimestamp;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.cfg.MappingSettings;
@@ -65,6 +67,11 @@ class TemporalPreservationModeTests {
 			for ( Class<?> type : types ) {
 				if ( preservation && dialect instanceof org.hibernate.dialect.PostgreSQLDialect
 						&& (type == OffsetVersion.class || type == DbOffsetVersion.class) ) {
+					assertThatThrownBy( () -> {
+						try ( var ignored = ContextScope.boot( metadata, false,
+								Map.of( MappingSettings.TEMPORAL_PRESERVATION, true ), type ) ) {}
+					} ).isInstanceOf( MappingException.class ).hasMessageContaining( "OFFSET" )
+							.hasMessageContaining( type.getSimpleName() );
 					continue;
 				}
 				try ( var scope = ContextScope.open( metadata, !preservation,
@@ -117,6 +124,20 @@ class TemporalPreservationModeTests {
 			scope.tx( s -> s.persist( new ZonedVersion() ) );
 			scope.tx( s -> assertThat( s.find( ZonedVersion.class, 1 ).stamp ).isNotNull() );
 		}
+	}
+
+	@Test
+	void unassessedDatabaseVersionProducerIsRejectedWithoutJdbc() {
+		// Match Product's generated Instant version without importing its unrelated retail associations.
+		final var settings = Map.<String, Object>of(
+				MappingSettings.TEMPORAL_PRESERVATION, true,
+				"hibernate.dialect", HSQLDialect.class.getName(),
+				"jakarta.persistence.database-product-version", "2.7" );
+		assertThatThrownBy( () -> {
+			try ( var ignored = ContextScope.boot( false, false, settings, DbInstantVersion.class ) ) {}
+		} ).hasRootCauseInstanceOf( MappingException.class )
+				.hasStackTraceContaining( "DbInstantVersion.stamp" )
+				.hasStackTraceContaining( "no preserving DB producer" );
 	}
 
 	private static Object instantiate(Class<?> type) {

@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.query.criteria;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.Setting;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Tuple;
@@ -40,7 +42,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Vlad Mihalcea
  */
+// Retain the shared fixture's legacy temporal interpretation while testing query behavior.
 @Jpa(
+		properties = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
 		annotatedClasses = {
 				Person.class,
 				Partner.class,

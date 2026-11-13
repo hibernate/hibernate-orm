@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.hibernate.cfg.MappingSettings;
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -60,8 +61,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 				ManyToOnePropertyAccessByFieldTest.Phone.class
 		}
 )
+// Keep Log.creationDate's legacy offset mapping while checking enhanced dirty tracking.
 @ServiceRegistry(
 		settings = {
+				@Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
 				@Setting( name = AvailableSettings.FORMAT_SQL, value = "false" ),
 				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
 				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),

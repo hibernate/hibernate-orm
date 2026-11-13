@@ -6,6 +6,9 @@ import java.util.Optional;
 import java.util.UUID;
 import javax.money.Monetary;
 
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.NaturalIdMultiLoadAccess;
 import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
@@ -33,6 +36,8 @@ import static org.hamcrest.Matchers.notNullValue;
 /**
  * Tests for simple (single attribute) natural-ids
  */
+// Retain Product's legacy generated version while testing the retail model.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel( standardModels = StandardDomainModel.RETAIL )
 @SessionFactory
 public class SimpleNaturalIdTests {

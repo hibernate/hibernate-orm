@@ -4,6 +4,7 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
@@ -31,7 +32,7 @@ public final class TypedCurrentTimestamp {
 		final var coordinator = session.getJdbcCoordinator();
 		PreparedStatement statement = null;
 		try {
-			statement = coordinator.getStatementPreparer().prepareStatement( selection.command(), selection.callable() );
+			statement = coordinator.getStatementPreparer().prepareQueryStatement( selection.command(), selection.callable() );
 			final var extractor = jdbcType.getExtractor( javaType );
 			if ( selection.callable() ) {
 				final var callable = (CallableStatement) statement;
@@ -41,7 +42,7 @@ public final class TypedCurrentTimestamp {
 			}
 			final var results = coordinator.getResultSetReturn().extract( statement, selection.command() );
 			if ( !results.next() ) {
-				throw new org.hibernate.HibernateException( "Database current timestamp selection returned no row" );
+				throw new HibernateException( "Database current timestamp selection returned no row" );
 			}
 			return extractor.extract( results, 1, session );
 		}

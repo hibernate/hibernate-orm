@@ -1,6 +1,8 @@
 package org.hibernate.orm.test.query.hql;
 
 import java.time.LocalDate;
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.Setting;
 import jakarta.persistence.Tuple;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -22,7 +24,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Jan-Willem Gmelig Meyling
  * @author Sayra Ranjha
  */
-@ServiceRegistry
+// Retain the shared fixture's legacy temporal interpretation while testing query behavior.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel(standardModels = StandardDomainModel.CONTACTS)
 @SessionFactory( useCollectingStatementObserver = true )
 public class GroupByTest {

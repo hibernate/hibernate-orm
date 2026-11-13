@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.batch;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.CacheMode;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
@@ -21,7 +23,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Vlad Mihalcea
  */
+// Retain the shared fixture's legacy temporal interpretation while testing query behavior.
 @Jpa(
+		properties = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
 		annotatedClasses = {
 				Person.class,
 				Phone.class,

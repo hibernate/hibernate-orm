@@ -1,6 +1,9 @@
 package org.hibernate.orm.test.mapping.javatime.redesign.context;
 
 import java.util.*;
+import java.sql.SQLException;
+import org.hibernate.orm.test.mapping.javatime.redesign.TemporalLiveProfile;
+import org.hibernate.orm.test.mapping.javatime.redesign.TemporalSchemaCleanup;
 import java.util.function.Consumer;
 import org.hibernate.Session;
 import org.hibernate.boot.MetadataSources;
@@ -38,9 +41,10 @@ final class ContextScope implements AutoCloseable {
 		return open( metadataAccess, true, settings, List.of(), classes );
 	}
 	static ContextScope open(boolean metadataAccess, boolean direct, Map<String,Object> settings, List<String> mappings, Class<?>... classes) {
+		TemporalLiveProfile.requireSupported();
 		final var schema = new ContextScope( true, direct, settings, mappings, classes );
 		try {
-			schema.factory.getSchemaManager().drop( false );
+			schema.drop();
 			schema.factory.getSchemaManager().create( false );
 			final var runtime = new ContextScope( metadataAccess, direct, settings, mappings, classes );
 			runtime.provision = schema;
@@ -70,7 +74,7 @@ final class ContextScope implements AutoCloseable {
 		final var builder = ServiceRegistryUtil.serviceRegistryBuilder( new org.hibernate.boot.registry.BootstrapServiceRegistryBuilder().applyClassLoaderService( loaders ).build() )
 				.applySetting( "hibernate.type.java_time_use_direct_jdbc", direct )
 				.applySetting( "hibernate.boot.allow_jdbc_metadata_access", metadataAccess )
-				.applySetting( "jakarta.persistence.database-product-version", configuredVersion() )
+				.applySetting( "jakarta.persistence.database-product-version", ContextEnvironment.bootstrapVersion( metadataAccess, settings ) )
 				.applySetting( "hibernate.hbm2ddl.auto", "none" )
 				.applySetting( "hibernate.hbm2ddl.halt_on_error", true )
 				.applySetting( "hibernate.cache.use_second_level_cache", true )
@@ -95,16 +99,12 @@ final class ContextScope implements AutoCloseable {
 		}
 		catch (RuntimeException | Error failure) { if ( !metadataAccess ) assertThat( provider.attempts ).as( "failed guarded bootstrap acquisitions" ).isZero(); StandardServiceRegistryBuilder.destroy( registry ); throw failure; }
 	}
-	private static String configuredVersion() {
-		final var settings=org.hibernate.cfg.Environment.getProperties();
-		final var explicit=settings.getProperty("jakarta.persistence.database-product-version");
-		if(explicit!=null)return explicit;
-		final var dialect=settings.getProperty("hibernate.dialect","");
-		// Pinned local matrix versions are explicit inputs, not boot metadata.
-		if(dialect.contains("PostgreSQL"))return "18.6";
-		if(dialect.contains("Oracle"))return "23.26.1";
-		if(dialect.contains("H2"))return "2.5.252";
-		throw new org.opentest4j.TestAbortedException("Context live matrix supports pinned H2/PostgreSQL/Oracle; SQL Server remains deferred");
+
+	void drop() {
+		try ( var connection = provider.getConnection() ) {
+			TemporalSchemaCleanup.drop( metadata, registry, connection );
+		}
+		catch (SQLException failure) { throw new IllegalStateException( "Could not clean owned fixture", failure ); }
 	}
 
 	void tx(Consumer<Session> action) {
@@ -123,7 +123,7 @@ final class ContextScope implements AutoCloseable {
 	void noSelect() { assertThat( sql.stream().filter( s -> s.matches( "(?is).*\\bselect\\b.*" ) ).toList() ).isEmpty(); }
 	@Override public void close() {
 		try {
-			if ( provision != null ) { provider.blocked = false; factory.getSchemaManager().drop( false ); }
+			if ( provision != null ) { provider.blocked = false; drop(); }
 		}
 		finally {
 			factory.close(); StandardServiceRegistryBuilder.destroy( registry );

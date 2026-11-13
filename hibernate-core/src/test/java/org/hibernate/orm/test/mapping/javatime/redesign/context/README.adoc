@@ -209,3 +209,88 @@ Run these with `--tests '*TemporalDescriptor*Tests' -Pdb=h2`, first with
 -PtemporalTestJdbcTimeZone=Europe/Paris`. These tests supplement the existing adjustment,
 COLUMN, converter and query/callable regressions; they do not replace legacy conversion coverage.
 SQL Server live verification remains deferred.
+
+== Provider periods and migration handoffs
+
+`TemporalProviderPeriodTests` exercises stock enabled period handling on H2 and PostgreSQL
+(SINGLE_TABLE and HISTORY_TABLE) and Oracle (HISTORY_TABLE). It checks both physical bounds,
+NULL open ends, entity values and ordered collection membership immediately before and at each
+boundary. Fixed suppliers cover seasonal values and distinct instants in a DST fold. Server
+boundaries are checked against a separate physical connection's database-clock samples, with
+fresh monitor transactions and at most one storage tick of rounding tolerance.
+
+Writer, monitor and reader connections remain simultaneously open and have distinct database
+session identities. Session initialization is checked on each. Schema provisioning is separate
+from metadata-disabled runtime bootstrap, whose connection provider rejects every attempted
+boot acquisition. These tests do not treat a preservation report as a server-producer capability.
+
+Run the provider-period class with `-Pdb=h2`, `-Pdb=postgresql`, or `-Pdb=oracle`; use
+`-Ptest.threads=1` for the live PostgreSQL/Oracle matrices. The core environmental profiles are:
+
+* `-PtemporalTestJvmTimeZone=UTC -PtemporalTestSessionTimeZone=UTC` (JDBC timezone unset).
+* `-PtemporalTestJvmTimeZone=America/Denver -PtemporalTestSessionTimeZone=Asia/Tokyo
+  -PtemporalTestJdbcTimeZone=Europe/Paris`.
+* HISTORY_TABLE controls additionally use aligned Denver JVM/session, JDBC timezone unset.
+
+`TemporalHandoffProcess` launches a test-only main on the existing test runtime classpath.
+It never invokes a nested build. Enabled period writer/reader phases use separate JVMs:
+Denver/Tokyo/Paris becomes Tokyo/Denver/Paris (JVM/session/JDBC). Each child asserts its actual
+JVM zone before bootstrapping. Parent system properties such as `user.timezone` must not be
+copied over the explicit child JVM configuration. H2 uses a fixture-owned file database.
+Only owned schema objects are created/dropped. Connection configuration is temporary and removed
+in finally; credential-free manifests and clock/profile evidence are included in test output.
+Failed child logs remain in the reported temporary directory.
+
+`TemporalMigrationHandoffTests` uses explicit `temporal_preservation=false` source factories
+and independent enabled targets. The source protocol is pinned to the recorded
+321b4ff81f217149f612878129a31cca599e6ab8 baseline and guarded by raw-field/source-reader checks;
+the executing revision is recorded separately. These tests do not execute an old Hibernate
+release or certify every historical application encoding.
+
+The bounded fixtures cover retained PostgreSQL zoned Instant/version/period storage, retained
+local versions, explicit UTC-to-local version conversion, local-to-UTC period conversion,
+the UTC period control, Oracle normalized-to-native versions, and unsupported target rejection.
+The retained PostgreSQL Instant version explicitly selects TimestampUtcAsOffsetDateTimeJdbcType;
+it does not imply that the default target Instant DDL always matches old schemas. Conversion
+uses reviewed SQL only for owned modern-date fixtures, with an unchanged negative copy.
+Legacy fold ambiguity and ancient-calendar conversion remain outside that SQL domain.
+
+Version checks distinguish Java token identity, old-token SQL predicates, detached merge,
+generated-token reload, stale operations and fresh deletion. An H2 cache cutover populates and
+invalidates source cache entries before the target's JDBC-backed read. Period handoffs compare
+all old bounds and historical reads, then update/delete through the final producer. Explicit
+schema validation is supplemented by actual history-column type/precision/nullability checks;
+a schema-validation pass alone is not data-migration evidence.
+
+Migration children use the profile's unchanged source/target timezones, independently of the
+parent test environment. Most cells close both factories sequentially in one child; designated
+cells separate writer and target JVMs. This keeps timezone changes and migration changes as
+independent axes. Runtime bootstrap covers metadata enabled and disabled. There is no automatic
+migration on boot and no production migration-script generator in these fixtures.
+
+`TemporalCollectionHistoryRepairTests` and `HistoryCollectionDecomposerTest` cover graph history
+removal/value changes, clear/recreate, ordering, snapshot fallback, explicit history dependencies,
+completion timing and rollback. Existing legacy tests remain unchanged.
+`TemporalLegacyHistoryBatchTests` covers the HHH-21102 legacy batching repair with exact current
+and historical list contents, batch sizes 0/1/5, and failure/rollback controls. These legacy
+controls complement the graph regressions; neither substitutes for the other.
+SQL Server live/native-period verification remains deferred.
+
+== CI environment and subprocess ownership
+
+Context fixtures discover the database version during setup, outside the guarded
+runtime bootstrap. Metadata-disabled factories receive that version as an explicit
+input and still assert zero bootstrap connection acquisitions. Explicit synthetic
+version inputs remain available for offline bootstrap controls; they are not live
+provider evidence.
+
+Handoff processes receive connection settings after the parent resolves Gradle's
+worker placeholders. Writer, reader and cleanup therefore retain the same database
+assignment even though the children have different process parents. Keep at least
+two test workers when verifying this isolation on a provider configured with worker
+namespaces; a single-worker pass cannot establish parallel safety. The H2 handoffs
+retain their private file-backed databases.
+
+Provider selection recognizes Dialect subclasses, including PostgreSQL's EDB family.
+Fixture eligibility is evaluated outside expected-mapping-failure assertions. These
+gates describe the fixture matrix and do not declare additional production guarantees.

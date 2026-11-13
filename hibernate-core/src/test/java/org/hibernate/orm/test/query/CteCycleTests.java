@@ -3,6 +3,9 @@ package org.hibernate.orm.test.query;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -27,6 +30,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Christian Beikov
  */
+// Retain the shared fixture's legacy temporal interpretation while testing query behavior.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel(standardModels = StandardDomainModel.CONTACTS)
 @SessionFactory
 public class CteCycleTests {

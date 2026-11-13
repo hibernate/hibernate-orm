@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.query.sqm.exec;
 
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.testing.orm.domain.retail.SalesAssociate;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -11,6 +14,8 @@ import org.junit.jupiter.api.Test;
 /**
  * Tests for order-by clauses
  */
+// Retain Product's legacy generated version while testing the retail model.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel( standardModels = StandardDomainModel.RETAIL )
 @SessionFactory
 public class OrderingTests {

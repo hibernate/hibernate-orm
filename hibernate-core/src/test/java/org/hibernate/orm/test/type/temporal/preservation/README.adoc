@@ -10,6 +10,14 @@ reads. Domain assertions retain offsets and zone identity, with explicit precisi
 expectations and fixed-offset ZonedDateTime COLUMN reconstruction. Unsupported
 mappings/values and corrupt tuples are real rejection assertions.
 
+Live profiles explicitly admit H2, PostgreSQL/PostGIS/EDB, and Oracle; PostgreSQL
+Dialect inheritance alone does not admit Spanner PostgreSQL or unknown subclasses.
+Before runtime bootstrap, a separate provisioning connection discovers the server
+version. Both metadata modes use that version, and a conflicting explicit live
+version fails setup. The metadata-disabled runtime provider remains guarded and
+must record no bootstrap connection attempts. Setup drops only fixture-owned
+objects and creates them separately, including on Oracle versions before 23.
+
 == Running profiles
 
 Ordinary test execution covers E0 under the default UTC Gradle JVM. For named

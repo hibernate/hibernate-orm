@@ -1,5 +1,10 @@
 package org.hibernate.orm.test.mapping.javatime.redesign.context;
 
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+
 import java.time.*;
 import java.util.*;
 import jakarta.persistence.*;
@@ -20,6 +25,9 @@ import static org.assertj.core.api.Assertions.*;
 /// defaults independently from ordinary reuse of the same embeddable declaration.
 ///
 /// @author Steve Ebersole
+@RequiresDialect(H2Dialect.class)
+@RequiresDialect(PostgreSQLDialect.class)
+@RequiresDialect(OracleDialect.class)
 class TemporalAggregateExclusionTests {
 	@ParameterizedTest @ValueSource(booleans={true,false})
 	void jsonMembersRejectExplicitAndSkipDefaults(boolean metadata) { verify(metadata,JsonControl.class,JsonColumn.class,JsonNone.class,JsonInline.class,JsonAux.class,JsonTarget.class,JsonNestedColumn.class); }

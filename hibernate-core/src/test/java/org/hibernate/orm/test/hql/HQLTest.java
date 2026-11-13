@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.hql;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.Query;
 import jakarta.persistence.Tuple;
@@ -64,6 +67,8 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Loïc Lefèvre
  */
 @SuppressWarnings({"unused", "JUnitMalformedDeclaration", "removal", "deprecation"})
+// Retain the shared fixture's legacy temporal interpretation while testing query behavior.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel(annotatedClasses = {
 		Person.class,
 		Phone.class,

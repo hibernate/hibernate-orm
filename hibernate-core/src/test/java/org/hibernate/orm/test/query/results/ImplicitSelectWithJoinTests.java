@@ -3,6 +3,9 @@ package org.hibernate.orm.test.query.results;
 import java.util.List;
 import java.util.UUID;
 
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.ScrollableResults;
 import org.hibernate.query.SelectionQuery;
 
@@ -22,6 +25,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Steve Ebersole
  */
+// Retain Product's legacy generated version while testing the retail model.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel( standardModels = StandardDomainModel.RETAIL )
 @SessionFactory
 @JiraKey( "HHH-15133" )

@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.mapping.javatime.redesign.context;
 
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+
 import java.util.*;
 import org.hibernate.MappingException;
 import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
@@ -13,7 +16,7 @@ import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 /// deprecations, provisioning registries and mapping success or rejection.
 ///
 /// @author Steve Ebersole
-@org.hibernate.testing.orm.junit.RequiresDialect( org.hibernate.dialect.H2Dialect.class )
+@RequiresDialect(H2Dialect.class)
 class TemporalDeclarationLogTests {
 	@RegisterExtension
 	LoggerInspectionExtension logger = LoggerInspectionExtension.builder().setLogger( DEPRECATION_LOGGER ).build();

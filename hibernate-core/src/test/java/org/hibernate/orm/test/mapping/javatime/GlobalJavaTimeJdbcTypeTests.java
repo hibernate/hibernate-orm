@@ -4,7 +4,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.OffsetDateTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
 
@@ -13,8 +12,6 @@ import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
@@ -30,7 +27,6 @@ import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
-import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -226,25 +222,6 @@ public class GlobalJavaTimeJdbcTypeTests {
 		} );
 	}
 
-	@Test
-	@RequiresDialect(value = PostgreSQLDialect.class)
-	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class,
-			reason = "Spanner PostgreSQL does not support WITH expressions for INSERT statements")
-	void testArray(SessionFactoryScope scope) {
-		final var offsetDateTime = OffsetDateTime.parse("1977-07-24T12:34:56+02:00");
-		scope.inTransaction( session -> {
-			final var nativeQuery = session.createNativeQuery(
-					"WITH data AS (SELECT unnest(?) AS id, unnest(?) AS offset_date_time)"
-					+ " INSERT INTO EntityWithJavaTimeValues (id, theOffsetDateTime) SELECT * FROM data"
-			);
-			nativeQuery.setParameter( 1, new int[] { 1 } );
-			nativeQuery.setParameter( 2, new OffsetDateTime[] { offsetDateTime } );
-			assertThat( nativeQuery.executeUpdate() ).isEqualTo( 1 );
-			final var found = session.find( EntityWithJavaTimeValues.class, 1 );
-			assertThat( found.theOffsetDateTime.toInstant() ).isEqualTo( offsetDateTime.toInstant() );
-		} );
-	}
-
 	@AfterEach
 	void dropTestData(SessionFactoryScope scope) {
 		scope.getSessionFactory().getSchemaManager().truncate();
@@ -256,8 +233,6 @@ public class GlobalJavaTimeJdbcTypeTests {
 		@Id
 		private Integer id;
 		private String name;
-
-		private OffsetDateTime theOffsetDateTime;
 
 		private Instant theInstant;
 

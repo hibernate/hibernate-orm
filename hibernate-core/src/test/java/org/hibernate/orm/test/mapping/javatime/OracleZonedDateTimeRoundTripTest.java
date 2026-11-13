@@ -5,6 +5,12 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
+import org.hibernate.MappingException;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.type.descriptor.jdbc.ZonedDateTimeJdbcType;
@@ -19,12 +25,15 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /// Verifies Oracle storage using direct `ZonedDateTime` JDBC binding and extraction.
 ///
 /// @author Steve Ebersole
 @RequiresDialect(OracleDialect.class)
+// The explicit driver descriptor is a legacy compatibility control, not an assessed preserving pair.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel(annotatedClasses = OracleZonedDateTimeRoundTripTest.ZonedValue.class)
 @SessionFactory
 class OracleZonedDateTimeRoundTripTest {
@@ -60,6 +69,20 @@ class OracleZonedDateTimeRoundTripTest {
 		}
 		finally {
 			scope.inTransaction( session -> session.createMutationQuery( "delete from OracleZonedValue" ).execute() );
+		}
+	}
+
+	@Test
+	void enabledModeRejectsUnassessedExplicitDescriptor() {
+		try ( var registry = new StandardServiceRegistryBuilder()
+				.applySetting( MappingSettings.TEMPORAL_PRESERVATION, true )
+				.applySetting( "hibernate.hbm2ddl.auto", "none" ).build() ) {
+			assertThatThrownBy( () -> {
+				try ( var ignored = new MetadataSources( registry ).addAnnotatedClass( ZonedValue.class )
+						.buildMetadata().buildSessionFactory() ) {}
+			} )
+					.isInstanceOf( MappingException.class ).hasMessageContaining( "preservation" )
+					.hasMessageContaining( "ZonedDateTimeJdbcType" );
 		}
 	}
 

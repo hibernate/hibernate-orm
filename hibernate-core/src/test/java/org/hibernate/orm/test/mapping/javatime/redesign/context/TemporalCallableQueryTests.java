@@ -1,5 +1,10 @@
 package org.hibernate.orm.test.mapping.javatime.redesign.context;
 
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.util.Map;
@@ -18,6 +23,9 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 /// Live callable boundaries distinguish ORM names from actual JDBC names.
 ///
 /// @author Steve Ebersole
+@RequiresDialect(H2Dialect.class)
+@RequiresDialect(PostgreSQLDialect.class)
+@RequiresDialect(OracleDialect.class)
 public class TemporalCallableQueryTests {
 	static final Map<String,Object> OBSERVE=Map.of("hibernate.test.temporal.observe_callable",true,"hibernate.test.temporal.reuse_connection",true);
 
@@ -61,7 +69,7 @@ public class TemporalCallableQueryTests {
 	@ParameterizedTest @ValueSource(booleans={true,false})
 	@SuppressWarnings("unchecked")
 	void oracleModesAndObservedNames(boolean metadata) {
-		assumeTrue(org.hibernate.cfg.Environment.getProperties().getProperty("hibernate.dialect","").contains("Oracle"));
+		assumeTrue(ContextEnvironment.is( OracleDialect.class ));
 		for(boolean passNames:new boolean[]{false,true}) {
 			try(var scope=ContextScope.open(metadata,Map.of("hibernate.test.temporal.observe_callable",true,"hibernate.test.temporal.reuse_connection",true,"hibernate.query.pass_procedure_parameter_names",passNames),Event.class)) {
 				var type=(BasicType<OffsetTime>)scope.factory.getMappingMetamodel().getEntityDescriptor(Event.class).getPropertyType("clock");
@@ -124,7 +132,7 @@ public class TemporalCallableQueryTests {
 	@ParameterizedTest @ValueSource(booleans={true,false})
 	@SuppressWarnings("unchecked")
 	void postgresInputAndOutputBoundary(boolean metadata) {
-		assumeTrue(org.hibernate.cfg.Environment.getProperties().getProperty("hibernate.dialect","").contains("PostgreSQL"));
+		assumeTrue(ContextEnvironment.is( PostgreSQLDialect.class ));
 		try(var scope=ContextScope.open(metadata,OBSERVE,PgEvent.class)) {
 			var type=(BasicType<OffsetTime>)scope.factory.getMappingMetamodel().getEntityDescriptor(PgEvent.class).getPropertyType("clock");
 			scope.tx(s->s.doWork(c->{try(var st=c.createStatement()){st.execute("create procedure temporal_qcc_pg(p_value timetz) language sql as 'insert into PgCallableEvent(id,clock) values(1,p_value)'");}}));

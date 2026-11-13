@@ -1,5 +1,6 @@
 package org.hibernate.temporal;
 
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -16,7 +17,8 @@ import org.hibernate.testing.orm.junit.VersionMatchMode;
 @DomainModel(annotatedClasses =
 		{AbstractTemporalEntityHistoryTest.TemporalEntity4.class,
 		AbstractTemporalEntityHistoryTest.TemporalChild4.class})
-@ServiceRegistry(settings = @Setting(name = StateManagementSettings.TEMPORAL_TABLE_STRATEGY, value = "HISTORY_TABLE"))
+// Exercise established history/period mutations under legacy timestamp interpretation.
+@ServiceRegistry(settings = {@Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"), @Setting(name = StateManagementSettings.TEMPORAL_TABLE_STRATEGY, value = "HISTORY_TABLE")})
 @SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 10, minorVersion = 11, versionMatchMode = VersionMatchMode.OLDER, reason = "See https://jira.mariadb.org/browse/MDEV-39230")
 class TemporalEntityHistoryTest extends AbstractTemporalEntityHistoryTest {
 }

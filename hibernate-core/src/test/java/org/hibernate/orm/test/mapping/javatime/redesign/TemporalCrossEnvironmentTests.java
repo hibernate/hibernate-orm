@@ -41,13 +41,14 @@ class TemporalCrossEnvironmentTests {
 	}
 	@Test
 	void preservesAcrossEnvironments() throws Exception {
+		TemporalLiveProfile.requireSupported();
 		final String phase = System.getProperty( "hibernate.test.temporal.cross_phase", "distinct" );
 		assertThat( phase ).isIn( "write", "read", "distinct" );
 		final var builder = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( "hibernate.type.java_time_use_direct_jdbc", true )
 				.applySetting( "hibernate.cache.use_second_level_cache", false )
 				.applySetting( "hibernate.hbm2ddl.halt_on_error", true )
-				.applySetting( "hibernate.hbm2ddl.auto", phase.equals( "read" ) ? "validate" : phase.equals( "write" ) ? "create" : "create-drop" );
+				.applySetting( "hibernate.hbm2ddl.auto", phase.equals( "read" ) ? "validate" : "none" );
 		final String url = System.getProperty( "hibernate.test.temporal.cross_url" );
 		if ( url != null ) {
 			builder.applySetting( "hibernate.connection.url", url );
@@ -55,12 +56,19 @@ class TemporalCrossEnvironmentTests {
 		try ( var registry = builder.build() ) {
 			final var dialect = registry.requireService( JdbcServices.class ).getDialect();
 			final Class<? extends ZonedCarrier> carrier = dialect instanceof PostgreSQLDialect ? PgCarrier.class : dialect instanceof OracleDialect ? OracleCarrier.class : StandardCarrier.class;
-			try ( var factory = new MetadataSources( registry ).addAnnotatedClass( Sample.class )
+			final var metadata = new MetadataSources( registry ).addAnnotatedClass( Sample.class )
 					.addAnnotatedClass( carrier ).getMetadataBuilder()
 					.applyTypes( (contributions, services) -> {
 						if ( dialect instanceof OracleDialect ) contributions.getTypeConfiguration().getJdbcTypeRegistry().addDescriptor( 881203, new org.hibernate.dialect.type.internal.OracleTimestampUtcAsJdbcTimestampJdbcType( services.requireService( org.hibernate.boot.registry.classloading.spi.ClassLoaderService.class ) ) );
-					} ).build().buildSessionFactory() ) {
-				final var provider = registry.requireService( ConnectionProvider.class );
+					} ).build();
+			final var provider = registry.requireService( ConnectionProvider.class );
+			if ( !phase.equals( "read" ) ) {
+				final var connection = provider.getConnection();
+				try { TemporalSchemaCleanup.drop( metadata, registry, connection ); }
+				finally { provider.closeConnection( connection ); }
+			}
+			try ( var factory = metadata.buildSessionFactory() ) {
+				if ( !phase.equals( "read" ) ) factory.getSchemaManager().create( false );
 				final Connection writer = provider.getConnection();
 				final Connection reader = provider.getConnection();
 				try {
@@ -80,8 +88,10 @@ class TemporalCrossEnvironmentTests {
 					provider.closeConnection( reader );
 					provider.closeConnection( writer );
 				}
-				if ( phase.equals( "read" ) ) {
-					factory.getSchemaManager().drop( false );
+				if ( !phase.equals( "write" ) ) {
+					final var connection = provider.getConnection();
+					try { TemporalSchemaCleanup.drop( metadata, registry, connection ); }
+					finally { provider.closeConnection( connection ); }
 				}
 			}
 		}

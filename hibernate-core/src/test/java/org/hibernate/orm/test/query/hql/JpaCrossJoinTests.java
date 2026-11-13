@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.query.hql;
 
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.SybaseASEDialect;
 
@@ -25,8 +26,12 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Steve Ebersole
  */
+// Retain Product's legacy generated version while testing the retail model.
 @ServiceRegistry(
-		settings = @Setting( name = AvailableSettings.JPA_QUERY_COMPLIANCE, value = "true" )
+		settings = {
+				@Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
+				@Setting(name = AvailableSettings.JPA_QUERY_COMPLIANCE, value = "true")
+		}
 )
 @DomainModel( standardModels = StandardDomainModel.RETAIL )
 @SessionFactory( useCollectingStatementObserver = true )

@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.hql;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 
@@ -20,6 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Yoobin Yoon
  */
 @JiraKey("HHH-18040")
+// Retain the shared fixture's legacy temporal interpretation while testing query behavior.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel(standardModels = StandardDomainModel.GAMBIT)
 @RequiresDialect(MySQLDialect.class)
 @RequiresDialect(MariaDBDialect.class)

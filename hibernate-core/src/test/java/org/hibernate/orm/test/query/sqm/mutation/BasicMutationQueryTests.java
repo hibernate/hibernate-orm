@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.query.sqm.mutation;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import jakarta.persistence.NamedNativeStatement;
 import jakarta.persistence.NamedStatement;
 import org.hibernate.query.IllegalMutationQueryException;
@@ -21,6 +24,8 @@ import jakarta.persistence.Table;
 /**
  * @author Steve Ebersole
  */
+// Retain the shared fixture's legacy temporal interpretation while testing query behavior.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel( standardModels = StandardDomainModel.CONTACTS, annotatedClasses = BasicMutationQueryTests.SillyEntity.class )
 @SessionFactory
 public class BasicMutationQueryTests {

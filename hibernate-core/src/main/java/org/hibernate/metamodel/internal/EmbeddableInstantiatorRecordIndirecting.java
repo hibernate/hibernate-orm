@@ -3,6 +3,7 @@ package org.hibernate.metamodel.internal;
 import jakarta.annotation.Nonnull;
 
 import org.hibernate.InstantiationException;
+import org.hibernate.accessor.AccessorFactory;
 import org.hibernate.metamodel.spi.ValueAccess;
 
 import static org.hibernate.internal.util.ReflectHelper.getRecordComponentNames;
@@ -14,24 +15,25 @@ public class EmbeddableInstantiatorRecordIndirecting extends EmbeddableInstantia
 
 	protected final int[] index;
 
-	public EmbeddableInstantiatorRecordIndirecting(@Nonnull Class<?> javaType, @Nonnull int[] index) {
-		super( javaType );
+	public EmbeddableInstantiatorRecordIndirecting(@Nonnull Class<?> javaType, @Nonnull int[] index, @Nonnull AccessorFactory accessorFactory) {
+		super( javaType, accessorFactory );
 		this.index = index;
 	}
 
 	@Nonnull
-	public static EmbeddableInstantiatorRecordIndirecting of(@Nonnull Class<?> javaType, @Nonnull String[] propertyNames) {
+	public static EmbeddableInstantiatorRecordIndirecting of(
+			@Nonnull Class<?> javaType, @Nonnull String[] propertyNames, @Nonnull AccessorFactory accessorFactory) {
 		final var componentNames = getRecordComponentNames( javaType );
 		final var index = new int[componentNames.length];
 		return EmbeddableHelper.resolveIndex( propertyNames, componentNames, index )
-				? new EmbeddableInstantiatorRecordIndirectingWithGap( javaType, index )
-				: new EmbeddableInstantiatorRecordIndirecting( javaType, index );
+				? new EmbeddableInstantiatorRecordIndirectingWithGap( javaType, index, accessorFactory )
+				: new EmbeddableInstantiatorRecordIndirecting( javaType, index, accessorFactory );
 	}
 
 	@Override
 	@Nonnull
 	public Object instantiate(@Nonnull ValueAccess valuesAccess) {
-		if ( constructor == null ) {
+		if ( instantiator == null ) {
 			throw new InstantiationException( "Unable to locate constructor for embeddable", getMappedPojoClass() );
 		}
 
@@ -41,7 +43,7 @@ public class EmbeddableInstantiatorRecordIndirecting extends EmbeddableInstantia
 			for ( int i = 0; i < values.length; i++ ) {
 				values[i] = originalValues[index[i]];
 			}
-			return constructor.newInstance( values );
+			return instantiator.create( values );
 		}
 		catch ( Exception e ) {
 			throw new InstantiationException( "Could not instantiate entity", getMappedPojoClass(), e );
@@ -52,14 +54,15 @@ public class EmbeddableInstantiatorRecordIndirecting extends EmbeddableInstantia
 	private static class EmbeddableInstantiatorRecordIndirectingWithGap
 			extends EmbeddableInstantiatorRecordIndirecting {
 
-		public EmbeddableInstantiatorRecordIndirectingWithGap(@Nonnull Class<?> javaType, @Nonnull int[] index) {
-			super( javaType, index );
+		public EmbeddableInstantiatorRecordIndirectingWithGap(
+				@Nonnull Class<?> javaType, @Nonnull int[] index, @Nonnull AccessorFactory accessorFactory) {
+			super( javaType, index, accessorFactory );
 		}
 
 		@Override
 		@Nonnull
 		public Object instantiate(@Nonnull ValueAccess valuesAccess) {
-			if ( constructor == null ) {
+			if ( instantiator == null ) {
 				throw new InstantiationException( "Unable to locate constructor for embeddable", getMappedPojoClass() );
 			}
 
@@ -72,7 +75,7 @@ public class EmbeddableInstantiatorRecordIndirecting extends EmbeddableInstantia
 						values[i] = originalValues[index];
 					}
 				}
-				return constructor.newInstance( values );
+				return instantiator.create( values );
 			}
 			catch ( Exception e ) {
 				throw new InstantiationException( "Could not instantiate entity", getMappedPojoClass(), e );

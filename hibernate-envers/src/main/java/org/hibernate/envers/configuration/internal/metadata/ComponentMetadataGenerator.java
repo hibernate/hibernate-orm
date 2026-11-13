@@ -17,6 +17,7 @@ import org.hibernate.metamodel.internal.EmbeddableInstantiatorPojoIndirecting;
 import org.hibernate.metamodel.internal.EmbeddableInstantiatorRecordIndirecting;
 import org.hibernate.metamodel.internal.EmbeddableInstantiatorRecordStandard;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.usertype.CompositeUserType;
 
@@ -84,13 +85,16 @@ public final class ComponentMetadataGenerator extends AbstractMetadataGenerator 
 		}
 		else if ( propComponent.getComponentClass() != null &&
 					propComponent.getComponentClass().isRecord() ) {
+			final var accessorFactory = getMetadataBuildingContext().getServiceRegistry()
+					.requireService( PropertyAccessorService.class ).hibernateAccessorFactory();
 			if ( propComponent.sortProperties() == null ) {
-				instantiator = new EmbeddableInstantiatorRecordStandard( propComponent.getComponentClass() );
+				instantiator = new EmbeddableInstantiatorRecordStandard( propComponent.getComponentClass(), accessorFactory );
 			}
 			else {
 				instantiator = EmbeddableInstantiatorRecordIndirecting.of(
 						propComponent.getComponentClass(),
-						propComponent.getPropertyNames()
+						propComponent.getPropertyNames(),
+						accessorFactory
 				);
 			}
 		}

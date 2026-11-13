@@ -33,7 +33,7 @@ public interface LobHelper {
 	 * @param stream a binary stream
 	 * @param length the number of bytes in the stream
 
-	 * @return the create Blob
+	 * @return created {@link Blob}
 	 */
 	@Nonnull
 	Blob createBlob(@Nonnull InputStream stream, long length);

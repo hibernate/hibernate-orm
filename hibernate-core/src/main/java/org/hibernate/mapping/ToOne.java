@@ -70,7 +70,7 @@ public abstract sealed class ToOne
 			filters = new ArrayList<>();
 		}
 		filters.add( new FilterConfiguration( name, condition, autoAliasInjection,
-				aliasTableMap, aliasEntityMap, null ) );
+				aliasTableMap, aliasEntityMap, getReferencedEntity() ) );
 	}
 
 	@Override
@@ -109,6 +109,12 @@ public abstract sealed class ToOne
 	public void setReferencedEntityName(String referencedEntityName) {
 		this.referencedEntityName = referencedEntityName==null ?
 				null : referencedEntityName.intern();
+	}
+
+	private PersistentClass getReferencedEntity() {
+		return referencedEntityName != null
+				? getMetadata().getEntityBinding( referencedEntityName )
+				: null;
 	}
 
 	public String getPropertyName() {

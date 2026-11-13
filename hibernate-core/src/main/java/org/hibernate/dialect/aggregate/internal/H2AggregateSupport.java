@@ -19,6 +19,7 @@ import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.sql.spi.StringBuilderSqlAppender;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.annotation.Nullable;
@@ -57,6 +58,11 @@ public class H2AggregateSupport extends AggregateSupportImpl {
 				final String readExpression = aggregateParentReadExpression.isEmpty() ?
 						columnExpression
 						: "(" + aggregateParentReadExpression + ").\"" + columnExpression + "\"";
+				if ( column.getJdbcMapping().getJdbcType() instanceof TimestampJdbcType ) {
+					// The JDBC timestamp codec stores UTC fields without an offset.
+					return template.replace( placeholder, "cast((" + queryExpression( readExpression )
+							+ " || 'Z') as timestamp(9) with time zone)" );
+				}
 				switch ( column.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() ) {
 					case JSON:
 					case JSON_ARRAY:
@@ -118,6 +124,10 @@ public class H2AggregateSupport extends AggregateSupportImpl {
 	}
 
 	private static String jsonCustomWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping) {
+		if ( jdbcMapping.getJdbcType() instanceof TimestampJdbcType ) {
+			return "formatdatetime(cast(" + customWriteExpression
+					+ " as timestamp(9) with time zone),'yyyy-MM-dd''T''HH:mm:ss.SSSSSSSSS','en','UTC')";
+		}
 		StringBuilderSqlAppender sqlAppender = new StringBuilderSqlAppender();
 		appendJsonWriteExpression( sqlAppender, () -> sqlAppender.appendSql( customWriteExpression ), jdbcMapping );
 		return sqlAppender.toString();

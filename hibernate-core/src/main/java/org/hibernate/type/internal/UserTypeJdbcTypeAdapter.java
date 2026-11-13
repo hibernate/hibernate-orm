@@ -101,14 +101,19 @@ public class UserTypeJdbcTypeAdapter<J> implements JdbcType {
 		}
 
 		@Override
-		public J extract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+		@Nullable
+		public J extract(@Nonnull ResultSet rs, int paramIndex, @Nonnull WrapperOptions options) throws SQLException {
 			final J extracted = userType.nullSafeGet( rs, paramIndex, options );
 			logExtracted( paramIndex, extracted );
 			return extracted;
 		}
 
 		@Override
-		public J extract(CallableStatement statement, int paramIndex, WrapperOptions options) throws SQLException {
+		@Nullable
+		public J extract(
+				@Nonnull CallableStatement statement,
+				int paramIndex,
+				@Nonnull WrapperOptions options) throws SQLException {
 			if ( userType instanceof ProcedureParameterExtractionAware ) {
 				//noinspection unchecked
 				final J extracted = ( (ProcedureParameterExtractionAware<J>) userType )
@@ -121,7 +126,11 @@ public class UserTypeJdbcTypeAdapter<J> implements JdbcType {
 		}
 
 		@Override
-		public J extract(CallableStatement statement, String paramName, WrapperOptions options) throws SQLException {
+		@Nullable
+		public J extract(
+				@Nonnull CallableStatement statement,
+				@Nonnull String paramName,
+				@Nonnull WrapperOptions options) throws SQLException {
 			if ( userType instanceof ProcedureParameterExtractionAware ) {
 				//noinspection unchecked
 				final J extracted = ( (ProcedureParameterExtractionAware<J>) userType )

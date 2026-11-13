@@ -16,6 +16,7 @@ import org.hibernate.dialect.type.spi.DB2JdbcTypes;
 import org.hibernate.dialect.type.spi.EnumRelationalValues;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.InstantJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.junit.jupiter.api.Test;
@@ -56,10 +57,11 @@ public class TypeProviderSupportTest {
 
 	@Test
 	void db2ExtractionTreatsTheDriverNullPointerFailureAsNullOnlyForNullValues() throws Exception {
+		final var options = mock( WrapperOptions.class );
 		final ResultSet resultSet = mock( ResultSet.class );
 		when( resultSet.getObject( 1, Instant.class ) ).thenThrow( new NullPointerException( "driver" ) );
 		when( resultSet.getObject( 1 ) ).thenReturn( null );
-		assertThat( DB2JdbcTypes.instant().getExtractor( InstantJavaType.INSTANCE ).extract( resultSet, 1, null ) )
+		assertThat( DB2JdbcTypes.instant().getExtractor( InstantJavaType.INSTANCE ).extract( resultSet, 1, options ) )
 				.isNull();
 
 		final ResultSet nonNullResultSet = mock( ResultSet.class );
@@ -68,12 +70,13 @@ public class TypeProviderSupportTest {
 		assertThatExceptionOfType( NullPointerException.class )
 				.isThrownBy( () -> DB2JdbcTypes.instant()
 						.getExtractor( InstantJavaType.INSTANCE )
-						.extract( nonNullResultSet, 1, null ) )
+						.extract( nonNullResultSet, 1, options ) )
 				.withMessage( "driver" );
 	}
 
 	@Test
 	void db2CallableExtractionCoversIndexedAndNamedNullValues() throws Exception {
+		final var options = mock( WrapperOptions.class );
 		final CallableStatement statement = mock( CallableStatement.class );
 		when( statement.getObject( 1, Instant.class ) ).thenThrow( new NullPointerException( "indexed" ) );
 		when( statement.getObject( 1 ) ).thenReturn( null );
@@ -81,8 +84,8 @@ public class TypeProviderSupportTest {
 		when( statement.getObject( "value" ) ).thenReturn( null );
 
 		final var extractor = DB2JdbcTypes.instant().getExtractor( InstantJavaType.INSTANCE );
-		assertThat( extractor.extract( statement, 1, null ) ).isNull();
-		assertThat( extractor.extract( statement, "value", null ) ).isNull();
+		assertThat( extractor.extract( statement, 1, options ) ).isNull();
+		assertThat( extractor.extract( statement, "value", options ) ).isNull();
 	}
 
 	@Test

@@ -1,5 +1,8 @@
 package org.hibernate.type.descriptor;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -29,19 +32,28 @@ public interface ValueExtractor<X> {
 	 *
 	 * @throws SQLException Indicates a JDBC error occurred.
 	 */
-	X extract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException;
+	@Nullable
+	X extract(@Nonnull ResultSet rs, int paramIndex, @Nonnull WrapperOptions options) throws SQLException;
 
 	/**
 	 * Extract value from a callable output parameter by index
 	 *
 	 * @throws SQLException Indicates a JDBC error occurred.
 	 */
-	X extract(CallableStatement statement, int paramIndex, WrapperOptions options) throws SQLException;
+	@Nullable
+	X extract(
+			@Nonnull CallableStatement statement,
+			int paramIndex,
+			@Nonnull WrapperOptions options) throws SQLException;
 
 	/**
 	 * Extract value from a callable output parameter by name
 	 *
 	 * @throws SQLException Indicates a JDBC error occurred.
 	 */
-	X extract(CallableStatement statement, String paramName, WrapperOptions options) throws SQLException;
+	@Nullable
+	X extract(
+			@Nonnull CallableStatement statement,
+			@Nonnull String paramName,
+			@Nonnull WrapperOptions options) throws SQLException;
 }

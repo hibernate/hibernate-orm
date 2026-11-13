@@ -73,6 +73,7 @@ public class FormulaFromHbmTests {
 			reason = "The MySQL JDBC driver doesn't support the JDBC escape for the concat function which is used in the mapping", matchSubTypes = true)
 	@SkipForDialect(dialectClass = InformixDialect.class,
 			reason = "The Informix JDBC driver doesn't support the JDBC escape for the concat function which is used in the mapping")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class, comment = "The @Formula mapping uses PG cast(... as varchar(255)) syntax; GaussDB M mode CAST only accepts MySQL type names and rejects varchar, and @Formula is user SQL the dialect does not rewrite; A mode (PG kernel) supports the cast.")
 	public void testBasicHqlUse(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> session.createQuery( "from EntityOfFormulas" ).list()

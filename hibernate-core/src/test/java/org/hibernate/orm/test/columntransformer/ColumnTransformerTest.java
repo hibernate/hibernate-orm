@@ -14,7 +14,9 @@ import org.hibernate.dialect.MySQLDialect;
 
 import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.SpannerDialect;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -39,6 +41,7 @@ import static org.junit.Assert.assertThat;
 @SkipForDialect(dialectClass = MySQLDialect.class, reason = "MySQL doesn't support casting to a VARCHAR(255)")
 @SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB doesn't support casting to a VARCHAR(255)")
 @SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner doesn't support casting to a VARCHAR(255)")
+@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class, comment = "GaussDB M mode (MySQL-compatible) doesn't support casting to a VARCHAR(255), same as MySQLDialect; the Staff entity hardcodes `cast(kooky as VARCHAR(255))`. A mode (PG kernel) supports it.")
 public class ColumnTransformerTest {
 	public static final double ERROR = 0.01d;
 

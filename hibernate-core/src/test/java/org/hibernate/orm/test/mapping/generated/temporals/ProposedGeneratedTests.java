@@ -33,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RequiresDialectFeature( feature = DialectFeatureChecks.UsesStandardCurrentTimestampFunction.class )
 public class ProposedGeneratedTests {
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class, comment = "GaussDB M mode: the bare current_timestamp literal in the @ProposedGenerated sqlDefaultValue is second-precision (MySQL compat), so a 10ms wait does not change updatedAt and the isNotEqualTo assertion fails; the class-level precision feature passes because it checks the dialect's now(6) function, not the bare user-provided literal. A mode timestamptz is microsecond-precision by default. Same root cause as MultipleGeneratedValuesTests.")
 	public void test(SessionFactoryScope scope) throws InterruptedException {
 		final GeneratedInstantEntity created = scope.fromTransaction( (session) -> {
 			final GeneratedInstantEntity entity = new GeneratedInstantEntity( 1, "tsifr" );

@@ -34,7 +34,13 @@ public class EagerToManyWhereUseClassWhereTest {
 
 	@Test
 	@JiraKey( "HHH-13011" )
+	// M mode (openGauss MySQL-compatible kernel) reports "Column reference ... is ambiguous" for
+	// every bare column of a user-provided where fragment rendered in the ON clause of a left join
+	// during EAGER fetching, so the test cannot run there. A mode is unaffected.
 	public void testAssociatedWhereClause(SessionFactoryScope factoryScope) {
+		// The Category flag column is named `inactive_flag` (rather than `inactive`) to avoid the
+		// bare `inactive` column clash that makes A mode report "inactive is ambiguous" for the
+		// where fragment when Category is EAGER-fetched across joins.
 		var product = new Product();
 		var flowers = new Category();
 		flowers.setId( 1 );

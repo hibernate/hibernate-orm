@@ -12,7 +12,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
@@ -171,7 +170,7 @@ public class JoinedInheritanceCriteriaCountTest {
 	@Inheritance( strategy = InheritanceType.JOINED )
 	public abstract static class AbstractUser {
 		@Id
-		@GeneratedValue( strategy = GenerationType.IDENTITY )
+		@GeneratedValue
 		Long id;
 
 		String firstName;

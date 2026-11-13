@@ -250,9 +250,9 @@ class ToOneAssociationVisibilityPlanTest {
 
 	@Entity(name = "VisibilityTarget")
 	@Table(name = "visibility_target")
-	@FilterDef(name = "visibilitySegments", defaultCondition = "segment in (:segments)", parameters = @ParamDef(name = "segments", type = Integer.class))
+	@FilterDef(name = "visibilitySegments", defaultCondition = "`segment` in (:segments)", parameters = @ParamDef(name = "segments", type = Integer.class))
 	@FilterDef(name = "visibilityLimit", defaultCondition = "id <= :upper", parameters = @ParamDef(name = "upper", type = Long.class))
-	@FilterDef(name = "visibilityTarget", defaultCondition = "segment = 0", applyToLoadByKey = true)
+	@FilterDef(name = "visibilityTarget", defaultCondition = "`segment` = 0", applyToLoadByKey = true)
 	@FilterDef(name = "visibilityStamp", defaultCondition = "stamp = :stamp", parameters = @ParamDef(name = "stamp", type = Date.class))
 	@FilterDef(name = "visibilityResolvedLimit", defaultCondition = "id <= :upper",
 			parameters = @ParamDef(name = "upper", type = Long.class, resolver = UpperBound.class))
@@ -263,7 +263,7 @@ class ToOneAssociationVisibilityPlanTest {
 	static class Target {
 		@Id Long id;
 		@Column(unique = true) String code;
-		int segment;
+		@Column(name = "`segment`") int segment;
 		Date stamp;
 		@OneToMany(mappedBy = "target") List<Detail> details = new ArrayList<>();
 	}

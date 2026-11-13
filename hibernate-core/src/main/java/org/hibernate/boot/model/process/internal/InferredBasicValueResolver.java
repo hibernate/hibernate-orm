@@ -2,7 +2,6 @@ package org.hibernate.boot.model.process.internal;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
-import java.lang.reflect.Type;
 import java.util.Locale;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -54,10 +53,9 @@ public class InferredBasicValueResolver {
 	public static <T> BasicValue.Resolution<T> from(
 			BasicJavaType<T> explicitJavaType,
 			JdbcType explicitJdbcType,
-			Type resolvedJavaType,
 			Supplier<JavaType<T>> reflectedJtdResolver,
 			Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess,
-			JdbcTypeIndicators stdIndicators,
+			BasicValue basicValue,
 			Table table,
 			Selectable selectable,
 			String ownerName,
@@ -84,7 +82,7 @@ public class InferredBasicValueResolver {
 						null,
 						explicitJdbcType,
 						explicitMutabilityPlanAccess,
-						stdIndicators
+						basicValue
 				);
 			}
 			else if ( explicitJdbcType != null ) {
@@ -93,7 +91,7 @@ public class InferredBasicValueResolver {
 			}
 			else {
 				// we need to infer the JdbcType and use that to build the value-mapping
-				final var inferredJdbcType = explicitJavaType.getRecommendedJdbcType( stdIndicators );
+				final var inferredJdbcType = explicitJavaType.getRecommendedJdbcType( basicValue );
 				if ( inferredJdbcType instanceof ObjectJdbcType
 						&& ( explicitJavaType instanceof SerializableJavaType
 							|| explicitJavaType.getJavaType() instanceof Serializable ) ) {
@@ -102,7 +100,7 @@ public class InferredBasicValueResolver {
 				}
 				else {
 					jdbcMapping = resolveSqlTypeIndicators(
-							stdIndicators,
+							basicValue,
 							basicTypeRegistry.resolve( explicitJavaType, inferredJdbcType ),
 							explicitJavaType
 					);
@@ -116,7 +114,7 @@ public class InferredBasicValueResolver {
 				return fromEnum(
 						enumJavaType,
 						explicitJdbcType,
-						stdIndicators,
+						basicValue,
 						bootstrapContext
 				);
 			}
@@ -126,7 +124,7 @@ public class InferredBasicValueResolver {
 						null,
 						explicitJdbcType,
 						explicitMutabilityPlanAccess,
-						stdIndicators
+						basicValue
 				);
 			}
 			else if ( explicitJdbcType != null ) {
@@ -140,7 +138,7 @@ public class InferredBasicValueResolver {
 						registeredType(
 								explicitJdbcType,
 								explicitMutabilityPlanAccess,
-								stdIndicators,
+								basicValue,
 								selectable,
 								reflectedJtd,
 								bootstrapContext,
@@ -150,7 +148,7 @@ public class InferredBasicValueResolver {
 				if ( registeredType != null ) {
 					// so here is the legacy resolution
 					jdbcMapping =
-							resolveSqlTypeIndicators( stdIndicators, registeredType,
+							resolveSqlTypeIndicators( basicValue, registeredType,
 									registeredType.getJavaTypeDescriptor() );
 				}
 				else {
@@ -158,10 +156,10 @@ public class InferredBasicValueResolver {
 					// so use `JavaType#getRecommendedJdbcType`, if one,
 					// to create a mapping
 					final var recommendedJdbcType =
-							recommendedJdbcType( resolvedJavaType, stdIndicators, buildingContext, reflectedJtd );
+							recommendedJdbcType( basicValue, buildingContext, reflectedJtd );
 					if ( recommendedJdbcType != null ) {
 						jdbcMapping = resolveSqlTypeIndicators(
-								stdIndicators,
+								basicValue,
 								basicTypeRegistry.resolve( reflectedJtd, recommendedJdbcType ),
 								reflectedJtd
 						);
@@ -186,7 +184,7 @@ public class InferredBasicValueResolver {
 				// TODO: check this type cast
 				final var recommendedJtd = (JavaType<T>) recommendedJavaType;
 				jdbcMapping = resolveSqlTypeIndicators(
-						stdIndicators,
+						basicValue,
 						basicTypeRegistry.resolve( recommendedJtd, explicitJdbcType ),
 						recommendedJtd
 				);
@@ -206,7 +204,7 @@ public class InferredBasicValueResolver {
 		if ( jdbcMapping == null ) {
 			throw new MappingException(
 					"Could not determine JavaType nor JdbcType to use" +
-							" for " + ( (BasicValue) stdIndicators ).getResolvedJavaType() +
+							" for " + basicValue.getResolvedJavaType() +
 							"; table = " + table.getName() +
 							"; column = " + selectable.getText()
 			);
@@ -254,19 +252,21 @@ public class InferredBasicValueResolver {
 	}
 
 	private static <T> JdbcType recommendedJdbcType(
-			Type resolvedJavaType,
-			JdbcTypeIndicators stdIndicators,
+			BasicValue basicValue,
 			MetadataBuildingContext buildingContext,
 			JavaType<T> reflectedJtd) {
 		try {
-			return reflectedJtd.getRecommendedJdbcType( stdIndicators );
+			return reflectedJtd.getRecommendedJdbcType( basicValue );
 		}
 		catch (JdbcTypeRecommendationException jtre) {
+			final var resolvedJavaType = basicValue.getResolvedJavaType();
 			if ( buildingContext.getMetadataCollector()
 					.getEntityBindingMap().values().stream()
 					.anyMatch( pc -> pc.getMappedClass().equals( resolvedJavaType ) ) ) {
-				throw new MappingException( "Incorrect use of entity type '" + resolvedJavaType.getTypeName()
-							+ "' (possibly due to missing association mapping annotation)", jtre );
+				final String attribute = basicValue.getQualifiedAttributeName();
+				throw new MappingException( "Incorrect use of entity type '" + resolvedJavaType.getTypeName() + "'"
+						+ ( attribute == null ? "" : " for attribute '" + attribute + "'" )
+						+ " (possibly due to missing association mapping annotation)", jtre );
 			}
 			else {
 				throw jtre;

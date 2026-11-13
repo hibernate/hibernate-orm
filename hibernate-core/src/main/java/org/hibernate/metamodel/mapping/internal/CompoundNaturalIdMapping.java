@@ -862,6 +862,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 			if ( component != null ) {
 				return PropertyValueAccessor.readonly(
 						hibernateAccessorFactory.valueReader( component.getAccessor() ),
+						naturalIdClass,
 						keyName
 				);
 			}
@@ -872,6 +873,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		if ( getterMethod != null ) {
 			return PropertyValueAccessor.readonly(
 					hibernateAccessorFactory.valueReader( getterMethod ),
+					naturalIdClass,
 					keyName
 			);
 		}
@@ -880,6 +882,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		try {
 			return PropertyValueAccessor.readonly(
 					hibernateAccessorFactory.valueReader( naturalIdClass.getDeclaredField( keyName ) ),
+					naturalIdClass,
 					keyName
 			);
 		}

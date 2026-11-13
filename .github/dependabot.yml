@@ -112,12 +112,9 @@ updates:
           - "org.wildfly.transaction:*"
           - "org.jboss:jboss-transaction-spi"
           - "org.jboss.shrinkwrap*"
-          - "org.jboss.byteman*"
           - "ch.qos.logback:logback-classic"
           # Used just in tests:
           - "org.ehcache:ehcache"
-          - "org.dom4j:dom4j"
-          # - "jaxen:jaxen" -- the update is failing, let's leave it out for now until we fix the issue.
       jackson:
         patterns:
           - "tools.jackson*"

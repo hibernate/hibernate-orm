@@ -2,6 +2,7 @@ package org.hibernate.c3p0.internal;
 
 import com.mchange.v2.c3p0.DataSources;
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.JdbcSettings;
@@ -38,7 +39,6 @@ import static org.hibernate.cfg.C3p0Settings.C3P0_MIN_SIZE;
 import static org.hibernate.cfg.C3p0Settings.C3P0_TIMEOUT;
 import static org.hibernate.cfg.JdbcSettings.LOGIN_TIMEOUT;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.extractIsolation;
-import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.extractSetting;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.getConnectionProperties;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
 import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getCatalog;
@@ -246,7 +246,22 @@ public class C3P0ConnectionProvider
 		}
 	}
 
-	private Map<String, Object> poolSettings(Map<String, Object> hibernateProperties) {
+	@Nullable
+	private static String extractSetting(@Nonnull Map<String, Object> settings, @Nonnull String... names) {
+		for ( String name : names ) {
+			if ( settings.containsKey( name ) ) {
+				final String value = (String) settings.get( name );
+				if ( value != null && value.isBlank() ) {
+					throw new ConnectionProviderConfigurationException( "Configuration property '" + name + "' is blank" );
+				}
+				return value;
+			}
+		}
+		return null;
+	}
+
+	@Nonnull
+	private Map<String, Object> poolSettings(@Nonnull Map<String, Object> hibernateProperties) {
 		//swaldman 2004-02-07: modify to allow null values to signify fall through to c3p0 PoolConfig defaults
 		Integer maxPoolSize = getInteger( C3P0_MAX_SIZE, hibernateProperties );
 		if ( maxPoolSize == null ) {

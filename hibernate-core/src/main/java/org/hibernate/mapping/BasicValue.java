@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Incubating;
@@ -59,6 +60,7 @@ import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.JdbcTypeRecommendationException;
 import org.hibernate.type.descriptor.java.spi.JsonJavaType;
 
 import static org.hibernate.SPI.Role.SUPPLY;
@@ -469,7 +471,27 @@ public class BasicValue extends SimpleValue
 				&& typeParameters.get(DynamicParameterizedType.PARAMETER_TYPE) == null ) {
 			getTypeParameters().put( DynamicParameterizedType.PARAMETER_TYPE, createParameterType() );
 		}
-		return buildResolution( typeParameters );
+		try {
+			return buildResolution( typeParameters );
+		}
+		catch (JdbcTypeRecommendationException e) {
+			final String attribute = getQualifiedAttributeName();
+			if ( attribute != null ) {
+				throw new JdbcTypeRecommendationException( e.getMessage()
+						+ " (attribute '" + attribute + "')", e );
+			}
+			else {
+				throw e;
+			}
+		}
+	}
+
+	@Internal
+	public @Nullable String getQualifiedAttributeName() {
+		final var member = getMemberDetails();
+		final String owner = member == null ? ownerName : member.getDeclaringType().getName();
+		final String property = member == null ? propertyName : member.resolveAttributeName();
+		return owner == null || property == null ? null : owner + "." + property;
 	}
 
 	private Resolution<?> buildResolution(Properties typeParameters) {
@@ -693,7 +715,6 @@ public class BasicValue extends SimpleValue
 		return InferredBasicValueResolver.from(
 				explicitJavaType,
 				jdbcType,
-				resolvedJavaType,
 				this::determineReflectedJavaType,
 				explicitMutabilityPlanAccess,
 				this,

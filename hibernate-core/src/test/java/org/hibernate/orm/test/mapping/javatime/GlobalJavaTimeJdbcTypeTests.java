@@ -47,7 +47,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.adjustToDefaultPrecisi
 import static org.hibernate.type.descriptor.DateTimeUtils.adjustToPrecision;
 
 /**
- * Tests the default, direct JDBC handling of {@linkplain java.time Java Time} types.
+ * Tests the explicitly enabled direct JDBC handling of {@linkplain java.time Java Time} types.
  *
  * @author Steve Ebersole
  */

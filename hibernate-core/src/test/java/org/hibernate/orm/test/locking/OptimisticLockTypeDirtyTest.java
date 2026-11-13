@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -43,6 +44,10 @@ public class OptimisticLockTypeDirtyTest {
 		@Override
 		public String getSetting() {
 			var dialect = DialectContext.getDialect();
+			if ( dialect instanceof AltibaseDialect ) {
+				// Altibase JDBC rejects isolation changes in auto-commit mode; keep its default READ_COMMITTED
+				return "";
+			}
 			return dialect instanceof SpannerDialect || dialect instanceof SpannerPostgreSQLDialect
 					? "SERIALIZABLE"
 					: "READ_COMMITTED";

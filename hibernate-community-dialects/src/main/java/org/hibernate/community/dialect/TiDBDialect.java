@@ -26,7 +26,7 @@ import org.hibernate.dialect.aggregate.spi.FunctionalDependencyAnalysisSupport;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.jdbc.spi.MySQLServerConfiguration;
 import org.hibernate.dialect.aggregate.spi.AggregateSupport;
-import org.hibernate.community.dialect.aggregate.internal.TiDBAggregateSupport;
+import org.hibernate.dialect.aggregate.internal.MySQLAggregateSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.sequence.spi.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -125,7 +125,7 @@ public class TiDBDialect extends MySQLDialect implements TemporalOperationSuppor
 	@Override
 	@SPI({ IMPLEMENT, SUPPLY })
 	public AggregateSupport getAggregateSupport() {
-		return TiDBAggregateSupport.INSTANCE;
+		return MySQLAggregateSupport.forTiDB( this );
 	}
 
 	@Override

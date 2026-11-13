@@ -398,15 +398,6 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		return name == null ? "<unknown>" : name;
 	}
 
-	public static String extractSetting(Map<String, Object> settings, String... names) {
-		for ( String name : names ) {
-			if ( settings.containsKey( name ) ) {
-				return (String) settings.get( name );
-			}
-		}
-		return null;
-	}
-
 	@FunctionalInterface
 	public interface SettingConsumer {
 		void consumeSetting(String name, String value);

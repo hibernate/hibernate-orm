@@ -1,9 +1,11 @@
 package org.hibernate.orm.test.procedure.results;
 
+import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
@@ -15,6 +17,7 @@ import java.sql.Statement;
  */
 @RequiresDialect(value = MySQLDialect.class)
 @RequiresDialect(value = MariaDBDialect.class)
+@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB doesn't support stored procedures")
 public class MySqlMultipleResultMappingTests extends AbstractMultipleResultMappingTests {
 
 	@BeforeAll

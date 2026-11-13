@@ -825,7 +825,7 @@ or by converting it to a `java.sql.Date` for JDBC access and converting the retr
 The <<settings-hibernate.type.java_time_use_direct_jdbc,`hibernate.type.java_time_use_direct_jdbc`>> setting controls
 whether Hibernate prefers to exchange `java.time` values directly with the driver using `PreparedStatement.setObject()`
 and `ResultSet.getObject(..., Class)`.
-It defaults to `true` since Hibernate 8.0; earlier versions defaulted to `false`.
+It defaults to `false`, so Hibernate converts `java.time` values to legacy JDBC representations by default.
 This setting controls the Java representation at the JDBC boundary, independently of the SQL column type and time-zone storage strategy.
 
 JDBC 4.2, included in Java 8, requires support for `LocalDate`, `LocalTime`, `LocalDateTime`, `OffsetTime`, and `OffsetDateTime`.
@@ -835,11 +835,11 @@ Hibernate uses the configured dialect's knowledge of driver support to select di
 When direct access is requested but the dialect reports a type as unsupported, Hibernate uses the corresponding legacy JDBC representation
 and logs the known limitation.
 
-To disable this preference globally, for example when migrating an application that depends on the legacy conversions, set:
+To enable direct JDBC access globally for supported Java time types, set:
 
 [source,properties]
 ----
-hibernate.type.java_time_use_direct_jdbc=false
+hibernate.type.java_time_use_direct_jdbc=true
 ----
 
 The entity attributes may still use `java.time` types; Hibernate performs the conversions needed for JDBC access.

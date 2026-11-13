@@ -27,6 +27,8 @@ import org.hibernate.query.QueryTypeMismatchException;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.SyntaxException;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.LockTimeoutException;
@@ -46,16 +48,18 @@ import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 // Extended by Hibernate Reactive
 public class ExceptionConverterImpl implements ExceptionConverter {
 
+	@Nonnull
 	private final SharedSessionContractImplementor session;
 	private final boolean isJpaBootstrap;
 
-	public ExceptionConverterImpl(SharedSessionContractImplementor session) {
+	public ExceptionConverterImpl(@Nonnull SharedSessionContractImplementor session) {
 		this.session = session;
 		isJpaBootstrap = session.getFactory().getSessionFactoryOptions().isJpaBootstrap();
 	}
 
 	@Override
-	public RuntimeException convertCommitException(RuntimeException exception) {
+	@Nonnull
+	public RuntimeException convertCommitException(@Nonnull RuntimeException exception) {
 		if ( isJpaBootstrap ) {
 			try {
 				//as per the spec we should roll back if commit fails
@@ -75,7 +79,8 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 	}
 
 	@Override
-	public RuntimeException convert(HibernateException exception, LockOptions lockOptions) {
+	@Nonnull
+	public RuntimeException convert(@Nonnull HibernateException exception, @Nullable LockOptions lockOptions) {
 		if ( exception instanceof StaleStateException staleStateException ) {
 			final var converted = wrapStaleStateException( staleStateException );
 			rollbackIfNecessary( converted );
@@ -169,12 +174,14 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 	}
 
 	@Override
-	public RuntimeException convert(HibernateException exception) {
+	@Nonnull
+	public RuntimeException convert(@Nonnull HibernateException exception) {
 		return convert( exception, null );
 	}
 
 	@Override
-	public RuntimeException convert(RuntimeException exception) {
+	@Nonnull
+	public RuntimeException convert(@Nonnull RuntimeException exception) {
 		if ( exception instanceof HibernateException hibernateException ) {
 			return convert( hibernateException );
 		}
@@ -185,7 +192,8 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 	}
 
 	@Override
-	public RuntimeException convert(RuntimeException exception, LockOptions lockOptions) {
+	@Nonnull
+	public RuntimeException convert(@Nonnull RuntimeException exception, @Nullable LockOptions lockOptions) {
 		if ( exception instanceof HibernateException hibernateException ) {
 			return convert( hibernateException, lockOptions );
 		}
@@ -196,31 +204,34 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 	}
 
 	@Override
-	public JDBCException convert(SQLException e, String message) {
+	@Nonnull
+	public JDBCException convert(@Nonnull SQLException e, @Nullable String message) {
 		return session.getJdbcServices().getSqlExceptionHelper().convert( e, message );
 	}
 
-	protected PersistenceException wrapStaleStateException(StaleStateException exception) {
+	@Nonnull
+	protected PersistenceException wrapStaleStateException(@Nonnull StaleStateException exception) {
 		final String message = exception.getMessage();
-		if ( exception instanceof StaleObjectStateException staleStateException ) {
-			final Object identifier = staleStateException.getIdentifier();
-			final String entityName = staleStateException.getEntityName();
-			if ( identifier != null ) {
-				try {
-					final Object entity = session.internalLoad( entityName, identifier, false, true );
-					if ( entity instanceof Serializable ) { // avoid some user errors regarding boundary crossing
-						return new OptimisticLockException( message, exception, entity );
-					}
-				}
-				catch (EntityNotFoundException entityNotFoundException) {
-					// swallow it;
+		if ( exception instanceof StaleObjectStateException stale && stale.getIdentifier() != null ) {
+			final var persister =
+					session.getFactory().getMappingMetamodel()
+							.findEntityDescriptor( stale.getEntityName() );
+			if ( persister != null ) {
+				final var key = session.generateEntityKey( stale.getIdentifier(), persister );
+				// Only attach an instance we already have. A load here can mask the original failure.
+				final var entity = session.getPersistenceContextInternal().getEntity( key );
+				if ( entity instanceof Serializable ) {
+					return new OptimisticLockException( message, exception, entity );
 				}
 			}
 		}
 		return new OptimisticLockException( message, exception );
 	}
 
-	protected PersistenceException wrapLockException(LockingStrategyException exception, LockOptions lockOptions) {
+	@Nonnull
+	protected PersistenceException wrapLockException(
+			@Nonnull LockingStrategyException exception,
+			@Nullable LockOptions lockOptions) {
 		final String message = exception.getMessage();
 		final Object entity = exception.getEntity();
 		if ( exception instanceof OptimisticEntityLockException lockException ) {
@@ -237,18 +248,21 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 		}
 	}
 
-	protected PersistenceException wrapLockException(org.hibernate.PessimisticLockException exception, LockOptions lockOptions) {
+	@Nonnull
+	protected PersistenceException wrapLockException(
+			@Nonnull org.hibernate.PessimisticLockException exception,
+			@Nullable LockOptions lockOptions) {
 		final String message = exception.getMessage();
 		return causesRollback( exception )
 				? new PessimisticLockException( message, exception )
 				: new LockTimeoutException( message, exception );
 	}
 
-	private boolean causesRollback(JDBCException exception) {
+	private boolean causesRollback(@Nonnull JDBCException exception) {
 		return session.getJdbcServices().getDialect().causesRollback( exception.getSQLException() );
 	}
 
-	private void rollbackIfNecessary(PersistenceException persistenceException) {
+	private void rollbackIfNecessary(@Nonnull PersistenceException persistenceException) {
 		if ( !isNonRollbackException( persistenceException ) ) {
 			try {
 				session.markForRollbackOnly();
@@ -264,7 +278,7 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 	 * Is this a special exception type explicitly exempted from
 	 * forced rollbacks by the JPA specification itself?
 	 */
-	private static boolean isNonRollbackException(PersistenceException persistenceException) {
+	private static boolean isNonRollbackException(@Nonnull PersistenceException persistenceException) {
 		return persistenceException instanceof NoResultException
 			|| persistenceException instanceof NonUniqueResultException
 			|| persistenceException instanceof LockTimeoutException

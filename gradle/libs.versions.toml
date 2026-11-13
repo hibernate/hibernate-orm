@@ -53,23 +53,17 @@ junitJupiter = "6.0.3"
 junit4 = "4.13.2"
 test-junit4 = "4.13.2"
 junitJupiterLauncher = "6.0.3"
-junitJupiterPlatformGradlePlugin = "1.0.3"
 assertj = "3.26.3"
 hamcrest = "3.0"
-byteman = "4.0.28.1"
 jbossJta = "7.3.4.Final"
 jbossTxSpi = "9.0.0.Final"
 log4j = "2.26.1"
 mockito = "5.24.0"
 shrinkwrap = "2.0.0.Final"
-shrinkwrapDescriptors = "2.0.0"
 weld = "6.0.4.Final"
 weldJunit = "6.0.0.Final"
 wildFlyTxnClient = "3.0.5.Final"
 hibernateValidator = "9.1.6.Final"
-jaxen = "2.0.6"
-xerces = "2.12.2"
-dom4j = "2.2.0"
 javaxMoney = "1.1"
 moneta = "1.4.5"
 persistenceTck="4.0.0-SNAPSHOT"
@@ -221,7 +215,6 @@ test-junitJupiterParams = { group = "org.junit.jupiter", name = "junit-jupiter-p
 test-junit4Engine = { group = "org.junit.vintage", name = "junit-vintage-engine", version.ref = "junitJupiter" }
 test-junitJupiterLauncher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junitJupiterLauncher" }
 test-junitJupiterSuiteEngine = { group = "org.junit.platform", name = "junit-platform-suite-engine", version.ref = "junitJupiterLauncher" }
-test-junitJupiterPlatformGradlePlugin = { group = "org.junit.platform", name = "junit-platform-gradle-plugin", version.ref = "junitJupiterPlatformGradlePlugin" }
 test-junit4 = { group = "junit", name = "junit", version.ref = "junit4" }
 test-assertjCore = { group = "org.assertj", name = "assertj-core", version.ref = "assertj" }
 test-assertjApi = { group = "org.assertj", name = "assertj-core-api", version.ref = "assertj" }
@@ -229,17 +222,12 @@ test-hamcrest = { group = "org.hamcrest", name = "hamcrest", version.ref = "hamc
 test-log4j2 = { group = "org.apache.logging.log4j", name = "log4j-core", version.ref = "log4j" }
 test-log4j2Slf4j = { group = "org.apache.logging.log4j", name = "log4j-slf4j2-impl", version.ref = "log4j" }
 test-shrinkwrap = { group = "org.jboss.shrinkwrap", name = "shrinkwrap-impl-base", version.ref = "shrinkwrap" }
-test-shrinkwrapDescriptors = { group = "org.jboss.shrinkwrap.descriptors", name = "shrinkwrap-descriptors-impl-javaee", version.ref = "shrinkwrapDescriptors" }
-test-bytemanBmunit = { group = "org.jboss.byteman", name = "byteman-bmunit", version.ref = "byteman" }
 test-mockito = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
 test-mockitoJunitJupiter = { group = "org.mockito", name = "mockito-junit-jupiter", version.ref = "mockito" }
 test-jbossJta = { group = "org.jboss.narayana.jta", name = "narayana-jta", version.ref = "jbossJta" }
 test-jbossTxSpi = { group = "org.jboss", name = "jboss-transaction-spi", version.ref = "jbossTxSpi" }
 test-wildFlyTxnClient = { group = "org.wildfly.transaction", name = "wildfly-transaction-client", version.ref = "wildFlyTxnClient" }
 test-weld = { group = "org.jboss.weld.se", name = "weld-se-shaded", version.ref = "weld" }
-test-jaxen = { group = "jaxen", name = "jaxen", version.ref = "jaxen" }
-test-xerces = { group = "xerces", name = "xercesImpl", version.ref = "xerces" }
-test-dom4j = { group = "org.dom4j", name = "dom4j", version.ref = "dom4j" }
 test-javaxMoney = { group = "javax.money", name = "money-api", version.ref = "javaxMoney" }
 test-moneta = { group = "org.javamoney.moneta", name = "moneta-core", version.ref = "moneta" }
 test-jakartaPersistenceTckTests = { group = "jakarta.persistence", name = "persistence-tck-spec-tests", version.ref = "persistenceTck" }

@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.query.hql.instantiation;
 
+import org.hibernate.query.SemanticException;
+
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -12,6 +14,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Marco Belladelli
@@ -53,6 +56,19 @@ public class InstantiationWithMultipleWrapperConstructorsTest {
 	@Test
 	public void testIntegerAndInteger(SessionFactoryScope scope) {
 		dynamicInstatiation( scope, "id", "id", 1, "1" );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17926" )
+	void reportsSignatureWhenNoOverloadMatches(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			final var failure = assertThrows( SemanticException.class, () -> session.createSelectionQuery(
+					"select new " + KeyValue.class.getName() + "(p.id, true) from Product p", KeyValue.class
+			) );
+			assertThat( failure )
+					.hasMessageContaining( "(java.lang.Integer, java.lang.Boolean)" )
+					.hasMessageNotContaining( "(argument " );
+		} );
 	}
 
 	private void dynamicInstatiation(SessionFactoryScope scope, String prop1, String prop2, Integer key, String value) {

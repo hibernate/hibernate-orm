@@ -9,7 +9,6 @@ import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -92,7 +91,7 @@ class ElementCollectionInferredAccessTest {
 	@Entity( name = "InferredFieldAccessOwner" )
 	public static class FieldOwner {
 		@Id
-		@GeneratedValue( strategy = GenerationType.IDENTITY )
+		@GeneratedValue
 		private Long id;
 		private String name;
 		@ElementCollection
@@ -115,7 +114,7 @@ class ElementCollectionInferredAccessTest {
 		private Set<PropertyDetail> details = new HashSet<>();
 
 		@Id
-		@GeneratedValue( strategy = GenerationType.IDENTITY )
+		@GeneratedValue
 		public Long getId() {
 			return id;
 		}

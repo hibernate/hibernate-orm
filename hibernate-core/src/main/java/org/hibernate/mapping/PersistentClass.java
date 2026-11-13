@@ -295,8 +295,12 @@ public abstract sealed class PersistentClass
 		assert joins.contains( join );
 		assert property.getPersistentClass() == this;
 		properties.remove( property );
-		declaredProperties.remove( property );
-		join.addProperty( property );
+		if ( declaredProperties.remove( property ) ) {
+			join.addProperty( property );
+		}
+		else {
+			join.addMappedSuperclassProperty( property );
+		}
 	}
 
 	@Internal
@@ -692,19 +696,30 @@ public abstract sealed class PersistentClass
 	public void validate(Metadata mapping) throws MappingException {
 		for ( var prop : getProperties() ) {
 			if ( !prop.isValid( mapping ) ) {
-				final var type = prop.getType();
-				final int actualColumns = prop.getColumnSpan();
-				final int requiredColumns = type.getColumnSpan( mapping );
-				throw new MappingException(
-						"Property '" + qualify( getEntityName(), prop.getName() )
-								+ "' maps to " + actualColumns + " columns but " + requiredColumns
-								+ " columns are required (type '" + type.getName()
-								+ "' spans " + requiredColumns + " columns)"
-				);
+				throw columnSpanMismatch( prop, qualify( getEntityName(), prop.getName() ), mapping );
 			}
 		}
 		checkPropertyDuplication();
 		checkColumnDuplication();
+	}
+
+	private static MappingException columnSpanMismatch(Property property, String path, Metadata mapping) {
+		if ( property.getValue() instanceof Component component ) {
+			for ( var nested : component.getProperties() ) {
+				if ( nested.getColumnSpan() != nested.getType().getColumnSpan( mapping ) ) {
+					return columnSpanMismatch( nested, qualify( path, nested.getName() ), mapping );
+				}
+			}
+		}
+		final var type = property.getType();
+		final int actualColumns = property.getColumnSpan();
+		final int requiredColumns = type.getColumnSpan( mapping );
+		return new MappingException(
+				"Property '" + path
+						+ "' maps to " + actualColumns + " columns but " + requiredColumns
+						+ " columns are required (type '" + type.getName()
+						+ "' spans " + requiredColumns + " columns)"
+		);
 	}
 
 	private void checkPropertyDuplication() throws MappingException {

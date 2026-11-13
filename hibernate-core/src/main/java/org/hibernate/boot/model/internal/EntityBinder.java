@@ -1458,7 +1458,7 @@ public class EntityBinder {
 		if ( isNotBlank( where ) ) {
 			throw new AnnotationException( "Entity class '" + annotatedClass.getName()
 					+ "' specifies an '@SQLRestriction' but it is a subclass in an entity inheritance hierarchy"
-					+ " (only a root class may be specify a restriction)" );
+					+ " (only a root class may specify a restriction)" );
 		}
 	}
 

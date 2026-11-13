@@ -2,15 +2,11 @@ package org.hibernate.spatial.testing.datareader;
 
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
+import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.dom4j.Document;
-import org.dom4j.Element;
-import org.dom4j.io.SAXReader;
+import org.w3c.dom.Element;
 
 public class TestDataReader {
 
@@ -18,41 +14,43 @@ public class TestDataReader {
 		if ( fileName == null ) {
 			throw new RuntimeException( "Null testsuite-suite data file specified." );
 		}
-		List<TestDataElement> testDataElements = new ArrayList<TestDataElement>();
-		SAXReader reader = new SAXReader();
-		// Make sure we use the "right" implementation as the Oracle XDB driver comes with a JAXP implementation as well
-		SAXParserFactory factory = SAXParserFactory.newInstance( "org.apache.xerces.jaxp.SAXParserFactoryImpl", null );
-		factory.setValidating(false);
-		factory.setNamespaceAware(true);
-		try {
+		// Use the JDK parser even when Oracle XDB supplies a JAXP provider.
+		var factory = DocumentBuilderFactory.newDefaultNSInstance();
+		try ( var input = getInputStream( fileName ) ) {
 			factory.setFeature( "http://apache.org/xml/features/nonvalidating/load-external-dtd", false );
 			factory.setFeature( "http://xml.org/sax/features/external-general-entities", false );
 			factory.setFeature( "http://xml.org/sax/features/external-parameter-entities", false );
-			SAXParser parser = factory.newSAXParser();
-			reader.setXMLReader( parser.getXMLReader() );
-			Document document = reader.read( getInputStream( fileName ) );
-			addDataElements( document, testDataElements );
+			var root = factory.newDocumentBuilder().parse( input ).getDocumentElement();
+			var testDataElements = new ArrayList<TestDataElement>();
+			for ( var child = root.getFirstChild(); child != null; child = child.getNextSibling() ) {
+				if ( child instanceof Element element ) {
+					testDataElements.add( readElement( element ) );
+				}
+			}
+			return testDataElements;
 		}
 		catch (Exception e) {
 			throw new RuntimeException( e );
 		}
-		return testDataElements;
 	}
 
-	protected void addDataElements(Document document, List<TestDataElement> testDataElements) {
-		Element root = document.getRootElement();
-		for ( Iterator it = root.elementIterator(); it.hasNext(); ) {
-			Element element = (Element) it.next();
-			addDataElement( element, testDataElements );
+	protected TestDataElement readElement(Element element) {
+		return new TestDataElement(
+				Integer.parseInt( childText( element, "id" ) ),
+				childText( element, "type" ),
+				childText( element, "wkt" )
+		);
+	}
+
+	protected static String childText(Element parent, String name) {
+		for ( var child = parent.getFirstChild(); child != null; child = child.getNextSibling() ) {
+			if ( child instanceof Element element
+					&& element.getNamespaceURI() == null
+					&& name.equals( element.getTagName() ) ) {
+				return element.getTextContent();
+			}
 		}
-	}
-
-	protected void addDataElement(Element element, List<TestDataElement> testDataElements) {
-		int id = Integer.parseInt( element.selectSingleNode( "id" ).getText() );
-		String type = element.selectSingleNode( "type" ).getText();
-		String wkt = element.selectSingleNode( "wkt" ).getText();
-		TestDataElement testDataElement = new TestDataElement( id, type, wkt );
-		testDataElements.add( testDataElement );
+		throw new IllegalArgumentException( "Missing <" + name + "> in <" + parent.getTagName() + ">" );
 	}
 
 	protected InputStream getInputStream(String fileName) {

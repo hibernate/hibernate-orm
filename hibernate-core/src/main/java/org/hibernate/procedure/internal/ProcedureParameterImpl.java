@@ -1,6 +1,8 @@
 package org.hibernate.procedure.internal;
 
 import org.hibernate.type.internal.TemporalMappingValidator;
+import org.hibernate.type.internal.TemporalCallableType;
+import org.hibernate.dialect.temporaltype.spi.TemporalCallablePrecisionContext.Access;
 
 import java.util.Locale;
 import java.util.Objects;
@@ -115,19 +117,28 @@ class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> implements Pro
 						&& name != null;
 		final var session = procedureCall.getSession();
 
-		final var typeToUse = (OutputableType<T>)
+		var typeToUse = (OutputableType<T>)
 				resolveTemporalPrecision(
 						binding == null ? null : binding.getExplicitTemporalPrecision(),
 						getBindableType( binding ),
 						session.getFactory().getQueryEngine().getCriteriaBuilder()
 				);
 
-		if ( mode != ParameterMode.REF_CURSOR && typeToUse instanceof org.hibernate.type.BasicType<?> basic
+		if ( mode != ParameterMode.REF_CURSOR && typeToUse instanceof BasicType<?> basic
 				&& session.getFactory().getSessionFactoryOptions().isPreferJavaTimeJdbcTypesEnabled() ) {
 			TemporalMappingValidator.validate(
 					session.getFactory().getJdbcServices().getDialect(), basic,
 					procedureCall.getProcedureName() + " parameter " + (name == null ? startIndex : name),
 					session.getFactory().getProperties() );
+		}
+
+		// Preserve naming eligibility from the declared type. The precision view does
+		// not change routing; these binders, registrations and extractors use indexes.
+		final var declaredType = typeToUse;
+		if ( mode != ParameterMode.REF_CURSOR ) {
+			typeToUse = TemporalCallableType.resolve( typeToUse, session,
+					procedureCall.getProcedureName() + " parameter " + (name == null ? startIndex : name),
+					mode, false, Access.INDEXED );
 		}
 
 		final String jdbcParamName;
@@ -151,21 +162,21 @@ class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> implements Pro
 				parameterExtractor = null;
 				break;
 			case IN:
-				jdbcParamName = getJdbcParamName( procedureCall, isNamed, passProcedureParameterNames, typeToUse, jdbcMetadata );
+				jdbcParamName = getJdbcParamName( procedureCall, isNamed, passProcedureParameterNames, declaredType, jdbcMetadata );
 				validateBindableType( typeToUse, startIndex );
 				parameterBinder = getParameterBinder( typeToUse, jdbcParamName );
 				parameterExtractor = null;
 				refCursorExtractor = null;
 				break;
 			case INOUT:
-				jdbcParamName = getJdbcParamName( procedureCall, isNamed, passProcedureParameterNames, typeToUse, jdbcMetadata );
+				jdbcParamName = getJdbcParamName( procedureCall, isNamed, passProcedureParameterNames, declaredType, jdbcMetadata );
 				validateBindableType( typeToUse, startIndex );
 				parameterBinder = getParameterBinder( typeToUse, jdbcParamName );
 				parameterExtractor = new JdbcCallParameterExtractorImpl<>( procedureCall.getProcedureName(), jdbcParamName, startIndex, typeToUse );
 				refCursorExtractor = null;
 				break;
 			default:
-				jdbcParamName = getJdbcParamName( procedureCall, isNamed, passProcedureParameterNames, typeToUse, jdbcMetadata );
+				jdbcParamName = getJdbcParamName( procedureCall, isNamed, passProcedureParameterNames, declaredType, jdbcMetadata );
 				validateBindableType( typeToUse, startIndex );
 				parameterBinder = null;
 				parameterExtractor = new JdbcCallParameterExtractorImpl<>( procedureCall.getProcedureName(), jdbcParamName, startIndex, typeToUse );

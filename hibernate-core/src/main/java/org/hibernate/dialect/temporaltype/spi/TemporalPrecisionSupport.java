@@ -9,6 +9,9 @@ import org.hibernate.Incubating;
 /// declaration certifies that prepared values are fixed points of the JDBC/storage
 /// route and that its read representation is deterministic. It is not a declaration
 /// that a retained schema matches the mapping.
+/// For a callable contribution, the route is the selected JDBC transport boundary,
+/// not an unknown routine signature or body. Its quantizer tests representability;
+/// callable execution does not substitute rounded inputs or repair outputs.
 ///
 /// Custom quantizers may model nondecimal grids; they must preserve null, be
 /// idempotent, never mutate their input and retain required temporal components.

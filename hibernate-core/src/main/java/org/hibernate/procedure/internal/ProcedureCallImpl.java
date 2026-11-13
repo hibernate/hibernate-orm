@@ -43,7 +43,6 @@ import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.AbstractQuery;
-import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderBasicStandard;
 import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.query.spi.MutationQueryImplementor;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
@@ -123,6 +122,8 @@ public class ProcedureCallImpl<R>
 	private final ProcedureParamBindings parameterBindings;
 
 	private final List<ResultSetMapping> resultSetMappings;
+	// Keep declared mappings separate from the per-call resolved transport view.
+	private List<ResultSetMapping> executionResultSetMappings;
 
 	private Set<String> synchronizedQuerySpaces;
 
@@ -409,7 +410,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	public List<ResultSetMapping> getResultSetMappings() {
-		return resultSetMappings;
+		return executionResultSetMappings == null ? resultSetMappings : executionResultSetMappings;
 	}
 
 	@Override
@@ -686,7 +687,7 @@ public class ProcedureCallImpl<R>
 							&& ( Temporal.class.isAssignableFrom( basic.getJdbcJavaType().getJavaTypeClass() )
 								|| basic.getJdbcJavaType() instanceof PreservationAwareTemporalJavaType<?> )
 						|| basic.getValueConverter() instanceof TemporalAdjustmentConverter<?> ) ) {
-				firstResultSetMapping.addResultBuilder( new DynamicResultBuilderBasicStandard( 1, basic ) );
+				firstResultSetMapping.addResultBuilder( new TemporalFunctionResultBuilder( basic ) );
 			}
 			else {
 				firstResultSetMapping.addResultBuilder( new ScalarDomainResultBuilder<>( expressible.getExpressibleJavaType() ) );
@@ -1095,6 +1096,10 @@ public class ProcedureCallImpl<R>
 
 		final var call = callableStatementSupport.interpretCall( this );
 
+		if ( functionReturn != null && call.getFunctionReturn() == null ) {
+			resolveTemporalFunctionResult();
+		}
+
 		final var parameterRegistrations = collectParameterRegistrations( call );
 		final var refCursorExtractors = collectRefCursorExtractors( call );
 
@@ -1140,6 +1145,15 @@ public class ProcedureCallImpl<R>
 			);
 		}
 
+		catch (RuntimeException | Error failure) {
+			try {
+				jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( statement );
+				jdbcCoordinator.afterStatementExecution();
+			}
+			catch (RuntimeException cleanup) { failure.addSuppressed( cleanup ); }
+			throw failure;
+		}
+
 		return new OutputsImpl(
 				this,
 				parameterRegistrations,
@@ -1148,6 +1162,26 @@ public class ProcedureCallImpl<R>
 				sqlString
 		);
 
+	}
+
+	private void resolveTemporalFunctionResult() {
+		final var mapping = resultSetMappings.get( 0 );
+		if ( mapping.getNumberOfResultBuilders() == 0
+				&& functionReturn.getHibernateType() instanceof BasicType<?> basic
+				&& getSessionFactory().getSessionFactoryOptions().isPreferJavaTimeJdbcTypesEnabled()
+				&& TemporalMappingValidator.isTemporal( basic.getJdbcJavaType() ) ) {
+			mapping.addResultBuilder( new TemporalFunctionResultBuilder( basic ) );
+		}
+		final var builders = mapping.getResultBuilders();
+		if ( builders != null && builders.stream().anyMatch( builder -> builder instanceof TemporalFunctionResultBuilder ) ) {
+			final var resolved = ResultSetMapping.resolveResultSetMapping( mapping.getMappingIdentifier(), true, getSessionFactory() );
+			mapping.visitResultBuilders( (index, builder) -> resolved.addResultBuilder(
+					builder instanceof TemporalFunctionResultBuilder temporal
+							? temporal.resolve( getSession(), procedureName + " function return" ) : builder ) );
+			mapping.visitLegacyFetchBuilders( resolved::addLegacyFetchBuilder );
+			executionResultSetMappings = new ArrayList<>( resultSetMappings );
+			executionResultSetMappings.set( 0, resolved );
+		}
 	}
 
 	private Map<ProcedureParameter<?>, JdbcCallParameterRegistration> collectParameterRegistrations(JdbcOperationQueryCall call) {

@@ -180,3 +180,20 @@ negative controls; bind a whole mapped value using a parameter instead. Native
 SQL controls use explicit synchronization for mutations and do not infer an
 attribute precision from the Java parameter class. This H2 evidence does not
 establish other provider routes, callable or aggregate precision support.
+
+== Callable precision (HHH-21141)
+
+`TemporalCallablePrecisionTests` separates raw H2 indexed OUT from scalar function ResultSet
+extraction. Independent nine-digit, pre-epoch, carry and null vectors characterize the actual
+LocalDateTime, plain UTC Instant and adjusted OffsetDateTime carriers. A timestamp(3) server
+cast is an intentional narrowing control. Mapped p3 writes remain p3 while callable boundaries
+retain their finer fractions. Both metadata-enabled and guarded metadata-disabled boot run.
+
+`TemporalCallableContractTests` checks descriptor refusal/decline/failure/recursion, separate
+input/output grids, validation without rounding, conversion counts and statement cleanup.
+`TemporalCallableAssessmentTests` tests context invariants and operation isolation. Its named
+and INOUT contexts are assessment controls, not live certification of those routes.
+
+Existing Oracle/PostgreSQL callable fixtures remain intact. H2 does not certify their precision,
+HSQL callable routes, genuine H2 OUT/INOUT procedures, or actual named JDBC access. These provider
+acceptance gates remain open; SQL Server live verification stays deferred.

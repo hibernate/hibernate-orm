@@ -313,6 +313,22 @@ Applications must not depend on an extra converter invocation for cache-key gene
 query-cache regions, as well as entity/collection regions, when changing mapping contracts or stored
 temporal interpretations. Native SQL requires its usual synchronized query-space declarations.
 
+==== Callable temporal precision
+
+Enabled temporal preservation now assesses scalar callable precision separately from attribute
+precision. Reusing a mapped type no longer applies its column grid to procedure arguments or
+function results. Inputs must be representable by the selected JDBC transport without rounding;
+outputs are validated before domain conversion. A routine's own casts and declared precision
+remain authoritative SQL behavior.
+
+The initial stock support is limited to evidenced H2 routes. Other providers, custom descriptors,
+and modes need an independent `TemporalCallablePrecisionJdbcType` or Dialect contribution;
+an existing attribute precision contribution does not certify them. No routine catalog discovery
+or JDBC metadata access at boot is added. Include routine signatures and actual driver transport
+in migration analysis; the broader migration-recipes handoff does not imply those have been
+validated automatically. `temporal_preservation=false` retains legacy callable behavior as part
+of the broader compatibility mode.
+
 ==== Shared temporal period precision
 
 Enabled temporal preservation now selects one Dialect period precision/storage contract for

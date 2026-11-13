@@ -95,6 +95,9 @@ final class ContextConnectionProvider implements ConnectionProvider, Configurabl
 		if ( Boolean.TRUE.equals( settings.get( "hibernate.test.temporal.observe_callable" ) ) ) {
 			return (Connection) Proxy.newProxyInstance( Connection.class.getClassLoader(),
 					new Class<?>[] { Connection.class }, (proxy, method, args) -> {
+						if ( method.getName().equals( "prepareCall" ) ) {
+							callableMethods.add( "prepareCall" );
+						}
 						final var result = invoke( connection, method, args );
 						return method.getName().equals( "prepareCall" ) ? observe( (CallableStatement) result ) : result;
 					} );

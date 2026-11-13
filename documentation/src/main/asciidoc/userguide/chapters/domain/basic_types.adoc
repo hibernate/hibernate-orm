@@ -1022,6 +1022,34 @@ query spaces when cache invalidation is required. Evict affected entity, collect
 regions when changing temporal mapping contracts or migrating stored interpretations; cache entries
 are not a migration mechanism.
 
+[[basic-temporal-callable-precision]]
+===== Callable temporal precision
+
+With temporal preservation enabled, a scalar temporal procedure parameter or function return
+requires a precision contract for its actual JDBC transport. An attribute's
+`@Column(secondPrecision)` does not describe a procedure signature. Passing that attribute's
+`BasicType` retains its converter, policy, and JDBC handler, but does not impose its column grid
+on callable inputs or outputs.
+
+Hibernate validates the converted input and binds that same value without rounding it.
+This matters when a routine uses the argument as a comparison boundary. Extracted outputs are
+validated before domain conversion; an invalid result is rejected instead of rounded into compliance.
+An explicit narrower routine parameter or cast may still change the value on the server.
+The transport contract does not validate an unknown routine declaration or undo its SQL semantics.
+
+Input and output are assessed independently, including for `INOUT`. Support depends on the
+actual indexed, named, or scalar ResultSet route, not merely whether an ORM parameter has a name.
+The initial stock profile covers evidenced H2 2.5 indexed scalar inputs and function outputs for
+direct `LocalDateTime`, plain UTC `Instant`, and the corresponding explicitly adjusted
+`OffsetDateTime` carrier. Other descriptors, providers, and modes require their own contribution;
+unsupported routes fail before statement preparation. JDBC metadata access at boot is not required.
+
+Custom descriptors may implement `TemporalCallablePrecisionJdbcType`, or a Dialect may override
+`getTemporalCallablePrecisionSupport()`. The contribution describes the actual relational type,
+direction, and transport route. Attribute precision support alone is insufficient. A custom callable
+extraction implementation that cannot expose the relational validation boundary is rejected rather
+than bypassed. With `temporal_preservation=false`, existing callable handling is retained.
+
 [[basic-temporal-period-precision]]
 ===== Precision of temporal history periods
 

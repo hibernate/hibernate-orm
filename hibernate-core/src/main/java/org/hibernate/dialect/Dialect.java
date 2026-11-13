@@ -1,5 +1,8 @@
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.temporaltype.spi.TemporalCallablePrecisionContext;
+import org.hibernate.dialect.temporaltype.internal.TemporalCallablePrecisionHelper;
+import org.hibernate.dialect.temporaltype.internal.StandardTemporalCallablePrecision;
 import org.hibernate.dialect.temporaltype.internal.TemporalPreservationHelper;
 import org.hibernate.dialect.temporaltype.internal.TemporalPrecisionHelper;
 import org.hibernate.dialect.temporaltype.internal.StandardTemporalPrecision;
@@ -2153,6 +2156,18 @@ public abstract class Dialect implements ConversionContext, AlterTableSupport,
 	public TemporalPrecisionSupport getTemporalPrecisionSupport(TemporalPrecisionContext context) {
 		final var contributed = TemporalPrecisionHelper.assess( context );
 		return contributed != null ? contributed : StandardTemporalPrecision.resolve( context );
+	}
+
+
+	/// Assesses one actual callable boundary. A column precision contribution is
+	/// not a fallback for this operation. No routine catalog lookup is performed.
+	///
+	/// @since 8.1
+	@Incubating(since = "8.1")
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalPrecisionSupport getTemporalCallablePrecisionSupport(TemporalCallablePrecisionContext context) {
+		final var contributed = TemporalCallablePrecisionHelper.assess( context );
+		return contributed != null ? contributed : StandardTemporalCallablePrecision.resolve( context );
 	}
 
 

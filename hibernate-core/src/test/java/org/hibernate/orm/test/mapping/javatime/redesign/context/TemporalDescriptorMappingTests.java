@@ -3,6 +3,9 @@ package org.hibernate.orm.test.mapping.javatime.redesign.context;
 import java.util.function.UnaryOperator;
 import org.hibernate.type.descriptor.jdbc.TemporalPrecisionJdbcType;
 import org.hibernate.dialect.temporaltype.spi.TemporalPrecisionContext;
+import org.hibernate.dialect.temporaltype.spi.TemporalCallablePrecisionContext;
+import org.hibernate.dialect.temporaltype.spi.TemporalCallablePrecisionContext.Access;
+import org.hibernate.dialect.temporaltype.spi.TemporalCallablePrecisionContext.Boundary;
 import org.hibernate.dialect.temporaltype.spi.TemporalPrecisionSupport;
 
 import java.time.*;
@@ -469,7 +472,21 @@ public class TemporalDescriptorMappingTests {
 		}
 	}
 
-	public static class DayJdbc extends LocalDateJdbcType implements TemporalJdbcType, TemporalPrecisionJdbcType {
+	public static class DayJdbc extends LocalDateJdbcType implements TemporalJdbcType, TemporalPrecisionJdbcType, TemporalCallablePrecisionJdbcType {
+		@Override
+		public Optional<TemporalPrecisionSupport> getTemporalCallablePrecisionSupport(TemporalCallablePrecisionContext context) {
+			// Independently exercised by TemporalCallablePrecisionTests.customDayRawTransport.
+			boolean route = context.mode() == ParameterMode.IN && context.boundary() == Boundary.INPUT
+					&& context.valueAccess() == Access.INDEXED
+					|| context.functionReturn() && context.boundary() == Boundary.OUTPUT
+							&& context.valueAccess() == Access.RESULT_SET;
+			return context.dialect().getClass() == H2Dialect.class
+					&& context.type().getJdbcJavaType().getClass() == DayJavaType.class
+					&& context.registrationAccess() == Access.NONE && route
+					? Optional.of( TemporalPrecisionSupport.supported( "test-day-callable-v1:" + context.boundary(),
+							UnaryOperator.identity(), UnaryOperator.identity() ) ) : Optional.empty();
+		}
+
 		@Override
 		public Optional<TemporalPrecisionSupport> getTemporalPrecisionSupport(TemporalPrecisionContext context) {
 			return Optional.of( TemporalPrecisionSupport.supported( "test-day-v1", UnaryOperator.identity(), UnaryOperator.identity() ) );

@@ -137,6 +137,7 @@ public class OutputsImpl implements ProcedureOutputs {
 			}
 		}
 		catch (Exception e) {
+			releaseAfterFailure( e );
 			throw new ExecutionException(
 					"Error extracting procedure output parameter value [" + parameter + "]",
 					e
@@ -188,6 +189,15 @@ public class OutputsImpl implements ProcedureOutputs {
 		jdbcCoordinator.afterStatementExecution();
 	}
 
+	private void releaseAfterFailure(Throwable failure) {
+		try {
+			release();
+		}
+		catch (RuntimeException cleanup) {
+			failure.addSuppressed( cleanup );
+		}
+	}
+
 	protected JDBCException convert(SQLException e, String message) {
 		return procedureCall.getSession()
 				.getJdbcServices()
@@ -201,6 +211,10 @@ public class OutputsImpl implements ProcedureOutputs {
 		}
 		catch (SQLException e) {
 			throw convert( e, "Error calling CallableStatement.getResultSet" );
+		}
+		catch (RuntimeException | Error failure) {
+			releaseAfterFailure( failure );
+			throw failure;
 		}
 	}
 

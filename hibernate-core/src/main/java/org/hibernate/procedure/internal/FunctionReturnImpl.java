@@ -1,6 +1,8 @@
 package org.hibernate.procedure.internal;
 
 import org.hibernate.type.internal.TemporalMappingValidator;
+import org.hibernate.type.internal.TemporalCallableType;
+import org.hibernate.dialect.temporaltype.spi.TemporalCallablePrecisionContext.Access;
 
 import java.sql.Types;
 
@@ -10,6 +12,7 @@ import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.type.BindableType;
 import org.hibernate.type.OutputableType;
+import org.hibernate.type.BasicType;
 import org.hibernate.sql.exec.internal.JdbcCallFunctionReturnImpl.RefCurserJdbcCallFunctionReturnImpl;
 import org.hibernate.sql.exec.internal.JdbcCallFunctionReturnImpl.RegularJdbcCallFunctionReturnImpl;
 import org.hibernate.sql.exec.internal.JdbcCallParameterExtractorImpl;
@@ -58,18 +61,20 @@ class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 		}
 		else {
 			if ( persistenceContext.getFactory().getSessionFactoryOptions().isPreferJavaTimeJdbcTypesEnabled()
-					&& ormType instanceof org.hibernate.type.BasicType<?> basic ) {
+					&& ormType instanceof BasicType<?> basic ) {
 				TemporalMappingValidator.validate(
 						persistenceContext.getFactory().getJdbcServices().getDialect(), basic,
 						procedureCall.getProcedureName() + " function return", persistenceContext.getFactory().getProperties() );
 			}
+			final var callableType = TemporalCallableType.resolve( ormType, persistenceContext,
+					procedureCall.getProcedureName() + " function return", ParameterMode.OUT, true, Access.INDEXED );
 			return new RegularJdbcCallFunctionReturnImpl(
-					ormType,
+					callableType,
 					new JdbcCallParameterExtractorImpl<T>(
 							procedureCall.getProcedureName(),
 							null,
 							1,
-							ormType
+							callableType
 					)
 			);
 		}

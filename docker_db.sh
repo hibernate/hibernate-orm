@@ -270,7 +270,7 @@ postgresql_setup() {
     for i in "${!databases[@]}";do
       create_cmd+="psql -U hibernate_orm_test -d postgres -c \"create database ${databases[i]};\";"
     done
-    $CONTAINER_CLI exec postgres bash -c "until pg_isready -U hibernate_orm_test; do sleep 1; done"
+    $CONTAINER_CLI exec postgres bash -c 'until psql -U hibernate_orm_test -d hibernate_orm_test -c "select 1" 2>/dev/null; do sleep 1; done'
     $CONTAINER_CLI exec postgres bash -c "${create_cmd}"
     $CONTAINER_CLI exec postgres bash -c 'psql -U hibernate_orm_test -d hibernate_orm_test -c "create extension vector;"'
     for i in "${!databases[@]}";do
@@ -325,10 +325,7 @@ edb_setup() {
   for i in "${!databases[@]}";do
     create_cmd+="psql -U hibernate_orm_test -d postgres -c \"create database ${databases[i]};\";"
   done
-  $CONTAINER_CLI exec edb bash -c "until pg_isready -U hibernate_orm_test; do sleep 1; done"
-  # Database seems to restart after it was ready once, so give it some time
-  sleep 1
-  $CONTAINER_CLI exec edb bash -c "until pg_isready -U hibernate_orm_test; do sleep 1; done"
+  $CONTAINER_CLI exec edb bash -c 'until psql -U hibernate_orm_test -d hibernate_orm_test -c "select 1" 2>/dev/null; do sleep 1; done'
   $CONTAINER_CLI exec edb bash -c "${create_cmd}"
   $CONTAINER_CLI exec edb bash -c 'psql -U hibernate_orm_test -d hibernate_orm_test -c "create extension vector;"'
   for i in "${!databases[@]}";do

@@ -1,5 +1,8 @@
 package org.example.orm.dialect;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
@@ -11,7 +14,8 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 // tag::dialect-resolver[]
 public final class ExampleDialectResolver implements DialectResolver {
 	@Override
-	public Dialect resolveDialect(DialectResolutionInfo info) {
+	@Nullable
+	public Dialect resolveDialect(@Nonnull DialectResolutionInfo info) {
 		return "ExampleDB".equals( info.getDatabaseName() ) ? new ExampleDialect() : null;
 	}
 }

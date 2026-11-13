@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.dialect.resolver;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
@@ -50,7 +53,8 @@ public class DiscoveredDialectResolverTests {
 		}
 
 		@Override
-		public Dialect resolveDialect(DialectResolutionInfo info) {
+		@Nullable
+		public Dialect resolveDialect(@Nonnull DialectResolutionInfo info) {
 			return new CustomDialect();
 		}
 	}

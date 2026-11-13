@@ -1,5 +1,8 @@
 package org.hibernate.type.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -161,7 +164,11 @@ public class UserTypeJdbcTypeAdapter<J> implements JdbcType {
 		}
 
 		@Override
-		public void bind(PreparedStatement st, J value, int index, WrapperOptions options) throws SQLException {
+		public void bind(
+				@Nonnull PreparedStatement st,
+				@Nullable J value,
+				int index,
+				@Nonnull WrapperOptions options) throws SQLException {
 			if ( JdbcBindingLogging.LOGGER.isTraceEnabled() ) {
 				if ( value == null ) {
 					JdbcBindingLogging.logNullBinding( index, userType.getSqlType() );
@@ -174,7 +181,11 @@ public class UserTypeJdbcTypeAdapter<J> implements JdbcType {
 		}
 
 		@Override
-		public void bind(CallableStatement st, J value, String name, WrapperOptions options) {
+		public void bind(
+				@Nonnull CallableStatement st,
+				@Nullable J value,
+				@Nonnull String name,
+				@Nonnull WrapperOptions options) {
 			throw new UnsupportedOperationException( "Using UserType for CallableStatement parameter binding not supported" );
 		}
 	}

@@ -1,5 +1,8 @@
 package org.hibernate.spatial.dialect.oracle;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -37,7 +40,11 @@ class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 	}
 
 	@Override
-	public void bind(PreparedStatement st, J value, int index, WrapperOptions options) throws SQLException {
+	public void bind(
+			@Nonnull PreparedStatement st,
+			@Nullable J value,
+			int index,
+			@Nonnull WrapperOptions options) throws SQLException {
 		if ( value == null ) {
 			st.setNull( index, Types.STRUCT, SQL_TYPE_NAME );
 		}
@@ -50,7 +57,7 @@ class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 
 	@Override
 	public void bind(
-			CallableStatement st, J value, String name, WrapperOptions options) throws SQLException {
+			@Nonnull CallableStatement st, @Nullable J value, @Nonnull String name, @Nonnull WrapperOptions options) throws SQLException {
 		if ( value == null ) {
 			st.setNull( name, Types.STRUCT, SQL_TYPE_NAME );
 		}

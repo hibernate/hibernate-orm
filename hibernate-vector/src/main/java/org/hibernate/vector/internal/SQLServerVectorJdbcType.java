@@ -1,6 +1,7 @@
 package org.hibernate.vector.internal;
 
 import microsoft.sql.Vector;
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
@@ -93,7 +94,11 @@ public class SQLServerVectorJdbcType extends SQLServerCastingVectorJdbcType {
 			}
 
 			@Override
-			public Object getBindValue(X value, WrapperOptions options) {
+			@Nullable
+			public Object getBindValue(@Nullable X value, @Nonnull WrapperOptions options) {
+				if ( value == null ) {
+					return null;
+				}
 				final Float[] floats = getJavaType().unwrap( value, Float[].class, options );
 				return new Vector( floats.length, Vector.VectorDimensionType.FLOAT32, floats );
 			}

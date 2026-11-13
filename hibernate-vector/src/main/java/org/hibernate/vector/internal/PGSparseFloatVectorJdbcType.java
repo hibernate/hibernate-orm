@@ -1,5 +1,6 @@
 package org.hibernate.vector.internal;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
@@ -84,7 +85,11 @@ public class PGSparseFloatVectorJdbcType extends ArrayJdbcType {
 			}
 
 			@Override
-			public Object getBindValue(X value, WrapperOptions options) {
+			@Nullable
+			public Object getBindValue(@Nullable X value, @Nonnull WrapperOptions options) {
+				if ( value == null ) {
+					return null;
+				}
 				return getString( value, options );
 			}
 

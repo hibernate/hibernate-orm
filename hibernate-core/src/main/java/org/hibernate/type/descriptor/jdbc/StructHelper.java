@@ -550,10 +550,12 @@ public class StructHelper {
 			final EmbeddableMappingType embeddableMappingType = embeddableValuedModelPart.getMappedType();
 			if ( embeddableMappingType.getAggregateMapping() != null ) {
 				jdbcValueCount = 1;
-				//noinspection unchecked
-				jdbcValues[jdbcIndex] =
-						embeddableMappingType.getAggregateMapping().getJdbcMapping().getJdbcValueBinder()
-								.getBindValue( attributeValues[attributeIndex], options );
+				final Object value = attributeValues[attributeIndex];
+				if ( value != null ) {
+					//noinspection unchecked
+					jdbcValues[jdbcIndex] = embeddableMappingType.getAggregateMapping()
+							.getJdbcMapping().getJdbcValueBinder().getBindValue( value, options );
+				}
 			}
 			else {
 				jdbcValueCount = injectJdbcValues(

@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import static java.util.Arrays.asList;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -44,6 +45,13 @@ import static org.mockito.Mockito.when;
 /// @author Jeff Yemin
 class ArrayJdbcTypeStructuredElementTest {
 	private final WrapperOptions options = mock( WrapperOptions.class );
+
+	@Test
+	void nullArrayHasNoJdbcBindValue() throws SQLException {
+		final var arrayType = new ArrayJdbcType( new StructJdbcType( structMapping(), "test_struct", null ) );
+		final var javaType = new ArrayJavaType<>( LocalDateTimeJavaType.INSTANCE );
+		assertNull( arrayType.getBinder( javaType ).getBindValue( null, options ) );
+	}
 
 	@Test
 	void convertsStructuredElementsContainingArrays() throws SQLException {

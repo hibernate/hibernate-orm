@@ -1,5 +1,8 @@
 package org.hibernate.vector.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -54,7 +57,11 @@ public abstract class AbstractOracleSparseVectorJdbcType extends AbstractOracleV
 			}
 
 			@Override
-			public Object getBindValue(X value, WrapperOptions options) {
+			@Nullable
+			public Object getBindValue(@Nullable X value, @Nonnull WrapperOptions options) {
+				if ( value == null ) {
+					return null;
+				}
 				return ((AbstractOracleSparseVectorJdbcType) getJdbcType()).getBindValue( getJavaType(), value, options );
 			}
 		};

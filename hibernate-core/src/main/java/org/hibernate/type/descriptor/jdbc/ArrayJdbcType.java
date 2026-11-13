@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.SPI;
 import org.hibernate.engine.jdbc.Size;
@@ -252,7 +253,11 @@ public class ArrayJdbcType implements JdbcType {
 		}
 
 		@Override
-		public Object[] getBindValue(X value, WrapperOptions options) throws SQLException {
+		@Nullable
+		public Object[] getBindValue(@Nullable X value, @Nonnull WrapperOptions options) throws SQLException {
+			if ( value == null ) {
+				return null;
+			}
 			final var elementBinder = getElementJdbcType().getBinder( pluralJavaType.getElementJavaType() );
 			return convertToArray( this, elementBinder, pluralJavaType, value, options );
 		}

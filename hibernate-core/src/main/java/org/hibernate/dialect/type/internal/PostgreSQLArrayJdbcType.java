@@ -1,5 +1,8 @@
 package org.hibernate.dialect.type.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -56,7 +59,11 @@ public class PostgreSQLArrayJdbcType extends ArrayJdbcType {
 		}
 
 		@Override
-		public Object[] getBindValue(X value, WrapperOptions options) throws SQLException {
+		@Nullable
+		public Object[] getBindValue(@Nullable X value, @Nonnull WrapperOptions options) throws SQLException {
+			if ( value == null ) {
+				return null;
+			}
 			final var elementBinder = getElementJdbcType().getBinder( pluralJavaType.getElementJavaType() );
 			return convertToArray( this, elementBinder, pluralJavaType, value, options );
 		}

@@ -1,5 +1,8 @@
 package org.hibernate.type.descriptor;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -31,16 +34,26 @@ public interface ValueBinder<X> {
 	 *
 	 * @throws SQLException Indicates a JDBC error occurred.
 	 */
-	void bind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException;
+	void bind(
+			@Nonnull PreparedStatement st,
+			@Nullable X value,
+			int index,
+			@Nonnull WrapperOptions options) throws SQLException;
 
 	/**
 	 * Bind a value to a callable statement by name
 	 *
 	 * @throws SQLException Indicates a JDBC error occurred.
 	 */
-	void bind(CallableStatement st, X value, String name, WrapperOptions options) throws SQLException;
+	void bind(
+			@Nonnull CallableStatement st,
+			@Nullable X value,
+			@Nonnull String name,
+			@Nonnull WrapperOptions options) throws SQLException;
 
-	default Object getBindValue(X value, WrapperOptions options) throws SQLException {
+	/// Obtain the JDBC representation of a value for use in a native container.
+	@Nullable
+	default Object getBindValue(@Nullable X value, @Nonnull WrapperOptions options) throws SQLException {
 		return value;
 	}
 }

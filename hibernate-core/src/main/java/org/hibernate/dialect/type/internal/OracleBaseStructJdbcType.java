@@ -1,5 +1,8 @@
 package org.hibernate.dialect.type.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -53,7 +56,11 @@ public class OracleBaseStructJdbcType extends StructJdbcType {
 			}
 
 			@Override
-			public Object getBindValue(X value, WrapperOptions options) throws SQLException {
+			@Nullable
+			public Object getBindValue(@Nullable X value, @Nonnull WrapperOptions options) throws SQLException {
+				if ( value == null ) {
+					return null;
+				}
 				return createJdbcValue( value, options );
 			}
 		};

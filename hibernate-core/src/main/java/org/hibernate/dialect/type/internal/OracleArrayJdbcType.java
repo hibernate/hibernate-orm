@@ -1,5 +1,8 @@
 package org.hibernate.dialect.type.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -114,7 +117,11 @@ public class OracleArrayJdbcType extends ArrayJdbcType implements SqlTypedJdbcTy
 		}
 
 		@Override
-		public java.sql.Array getBindValue(X value, WrapperOptions options) throws SQLException {
+		@Nullable
+		public java.sql.Array getBindValue(@Nullable X value, @Nonnull WrapperOptions options) throws SQLException {
+			if ( value == null ) {
+				return null;
+			}
 			final var elementBinder = getElementJdbcType().getBinder( pluralJavaType.getElementJavaType() );
 			final var objects = convertToArray( this, elementBinder, pluralJavaType, value, options );
 			final String arrayTypeName = typeName( options );

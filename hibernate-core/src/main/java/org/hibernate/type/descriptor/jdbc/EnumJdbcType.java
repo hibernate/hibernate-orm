@@ -1,5 +1,8 @@
 package org.hibernate.type.descriptor.jdbc;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -70,7 +73,11 @@ public class EnumJdbcType implements JdbcType {
 			}
 
 			@Override
-			public Object getBindValue(X value, WrapperOptions options) throws SQLException {
+			@Nullable
+			public Object getBindValue(@Nullable X value, @Nonnull WrapperOptions options) throws SQLException {
+				if ( value == null ) {
+					return null;
+				}
 				return getJavaType().unwrap( value, String.class, options );
 			}
 		};

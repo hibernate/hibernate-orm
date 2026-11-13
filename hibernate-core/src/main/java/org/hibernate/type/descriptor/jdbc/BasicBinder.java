@@ -1,5 +1,8 @@
 package org.hibernate.type.descriptor.jdbc;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -42,7 +45,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 	}
 
 	@Override
-	public final void bind(PreparedStatement st, J value, int index, WrapperOptions options)
+	public final void bind(@Nonnull PreparedStatement st, @Nullable J value, int index, @Nonnull WrapperOptions options)
 			throws SQLException {
 		if ( value == null ) {
 			if ( JdbcBindingLogging.LOGGER.isTraceEnabled() ) {
@@ -66,7 +69,11 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 	}
 
 	@Override
-	public final void bind(CallableStatement st, J value, String name, WrapperOptions options)
+	public final void bind(
+			@Nonnull CallableStatement st,
+			@Nullable J value,
+			@Nonnull String name,
+			@Nonnull WrapperOptions options)
 			throws SQLException {
 		if ( value == null ) {
 			if ( JdbcBindingLogging.LOGGER.isTraceEnabled() ) {
@@ -90,7 +97,11 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 	}
 
 	@Override
-	public Object getBindValue(J value, WrapperOptions options) throws SQLException {
+	@Nullable
+	public Object getBindValue(@Nullable J value, @Nonnull WrapperOptions options) throws SQLException {
+		if ( value == null ) {
+			return null;
+		}
 		final var preferredClass = jdbcType.getPreferredJavaTypeClass( options );
 		return preferredClass == null ? value : getJavaType().unwrap( value, preferredClass, options );
 	}

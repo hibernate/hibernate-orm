@@ -1,5 +1,6 @@
 package org.hibernate.vector.internal;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
@@ -124,7 +125,11 @@ public class HANAVectorJdbcType extends ArrayJdbcType {
 			}
 
 			@Override
-			public String getBindValue(X value, WrapperOptions options) {
+			@Nullable
+			public String getBindValue(@Nullable X value, @Nonnull WrapperOptions options) {
+				if ( value == null ) {
+					return null;
+				}
 				return Arrays.toString( getJavaType().unwrap( value, float[].class, options ) );
 			}
 		};

@@ -1,5 +1,8 @@
 package org.hibernate.dialect.type.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.dialect.type.spi.AbstractPostgreSQLStructJdbcType;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -88,7 +91,11 @@ public class PostgreSQLStructPGObjectJdbcType extends AbstractPostgreSQLStructJd
 			}
 
 			@Override
-			public Object getBindValue(X value, WrapperOptions options) throws SQLException {
+			@Nullable
+			public Object getBindValue(@Nullable X value, @Nonnull WrapperOptions options) throws SQLException {
+				if ( value == null ) {
+					return null;
+				}
 				return ( (PostgreSQLStructPGObjectJdbcType) getJdbcType() ).getBindValue( value, options );
 			}
 		};

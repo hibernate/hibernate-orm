@@ -126,6 +126,8 @@ class AggregateJdbcValuesTest {
 		assertEquals( Arrays.asList( Arrays.asList( "A", null ), "B" ),
 				AggregateJdbcValues.toDomainValue( mapping, physical, order, options ) );
 		assertArrayEquals( new Object[] { "B", "native-container" }, physical );
+		assertArrayEquals( new Object[] { "B", null }, AggregateJdbcValues.fromDomainValue(
+				mapping, new Object[] { null, "B" }, order, options ) );
 		assertEquals( Arrays.asList( null, "B" ), AggregateJdbcValues.toDomainValue(
 				mapping, new Object[] { "B", null }, order, options ) );
 	}

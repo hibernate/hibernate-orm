@@ -5,6 +5,7 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
@@ -90,7 +91,11 @@ public class PostgreSQLStructCastingJdbcType extends AbstractPostgreSQLStructJdb
 			}
 
 			@Override
-			public Object getBindValue(X value, WrapperOptions options) throws SQLException {
+			@Nullable
+			public Object getBindValue(@Nullable X value, @Nonnull WrapperOptions options) throws SQLException {
+				if ( value == null ) {
+					return null;
+				}
 				return ( (PostgreSQLStructCastingJdbcType) getJdbcType() ).getBindValue( value, options );
 			}
 		};

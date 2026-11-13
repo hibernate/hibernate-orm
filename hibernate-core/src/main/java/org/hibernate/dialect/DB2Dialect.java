@@ -145,6 +145,7 @@ import static org.hibernate.SPI.Role.IMPLEMENT;
 import static org.hibernate.SPI.Role.SUPPLY;
 import static org.hibernate.SPI.Role.USE;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
@@ -153,6 +154,7 @@ import static org.hibernate.type.SqlTypes.CLOB;
 import static org.hibernate.type.SqlTypes.DECIMAL;
 import static org.hibernate.type.SqlTypes.NCHAR;
 import static org.hibernate.type.SqlTypes.NCLOB;
+import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.NUMERIC;
 import static org.hibernate.type.SqlTypes.SQLXML;
 import static org.hibernate.type.SqlTypes.TIME;
@@ -278,6 +280,9 @@ public class DB2Dialect extends Dialect implements CurrentTemporalSupport, Tempo
 			)
 	);
 
+	private enum NcharMapping { CHARACTER, GRAPHIC, UNSUPPORTED, UNKNOWN }
+
+	private final NcharMapping ncharMapping;
 	private final LockingSupport lockingSupport;
 
 	@SPI( IMPLEMENT )
@@ -287,13 +292,57 @@ public class DB2Dialect extends Dialect implements CurrentTemporalSupport, Tempo
 
 	@SPI( IMPLEMENT )
 	public DB2Dialect(DialectResolutionInfo info) {
-		this( determinFullDatabaseVersion( info ) );
+		this( determinFullDatabaseVersion( info ), determineNcharMapping( info ) );
 	}
 
 	@SPI( IMPLEMENT )
 	public DB2Dialect(DatabaseVersion version) {
+		// Also used by Db2 for i and z/OS, which do not have the LUW configuration.
+		this( version, NcharMapping.UNKNOWN );
+	}
+
+	private DB2Dialect(DatabaseVersion version, NcharMapping ncharMapping) {
 		super( version );
+		this.ncharMapping = ncharMapping;
 		lockingSupport = buildLockingSupport();
+	}
+
+	private static NcharMapping determineNcharMapping(DialectResolutionInfo info) {
+		final var metadata = info.getDatabaseMetadata();
+		if ( metadata == null ) {
+			return NcharMapping.UNKNOWN;
+		}
+		try ( var statement = metadata.getConnection().createStatement();
+				var rows = statement.executeQuery( "select name, trim(value) from table(sysproc.db_get_cfg(-1))"
+						+ " where name in ('codeset', 'nchar_mapping')" ) ) {
+			String codeset = null;
+			String mapping = null;
+			while ( rows.next() ) {
+				switch ( rows.getString( 1 ) ) {
+					case "codeset" -> codeset = rows.getString( 2 );
+					case "nchar_mapping" -> mapping = rows.getString( 2 );
+				}
+			}
+			if ( "NOT APPLICABLE".equalsIgnoreCase( mapping ) ) {
+				return NcharMapping.UNSUPPORTED;
+			}
+			if ( codeset == null || codeset.isEmpty() ) {
+				return NcharMapping.UNKNOWN;
+			}
+			if ( !"UTF-8".equalsIgnoreCase( codeset ) ) {
+				return NcharMapping.UNSUPPORTED;
+			}
+			if ( "CHAR_CU32".equalsIgnoreCase( mapping ) ) {
+				return NcharMapping.CHARACTER;
+			}
+			if ( "GRAPHIC_CU16".equalsIgnoreCase( mapping ) || "GRAPHIC_CU32".equalsIgnoreCase( mapping ) ) {
+				return NcharMapping.GRAPHIC;
+			}
+		}
+		catch (SQLException e) {
+			CORE_LOGGER.debug( "Could not determine the Db2 national character mapping", e );
+		}
+		return NcharMapping.UNKNOWN;
 	}
 
 	@Override
@@ -1357,13 +1406,31 @@ public class DB2Dialect extends Dialect implements CurrentTemporalSupport, Tempo
 	@Override
 	@SPI({ USE, IMPLEMENT })
 	public boolean equivalentTypes(int typeCode1, int typeCode2) {
-		// HHH-21137: DB2 itself reports NCHAR columns as CHAR and NCLOB columns as CLOB
-		// in DatabaseMetaData, even though the DDL uses NCHAR/NCLOB. Treat these pairs as
-		// equivalent for schema validation purposes.
-		return typeCode1 == NCHAR && typeCode2 == CHAR
-			|| typeCode1 == CHAR && typeCode2 == NCHAR
-			|| typeCode1 == NCLOB && typeCode2 == CLOB
-			|| typeCode1 == CLOB && typeCode2 == NCLOB
-			|| super.equivalentTypes( typeCode1, typeCode2 );
+		if ( typeCode1 == NCHAR && typeCode2 == CHAR || typeCode1 == CHAR && typeCode2 == NCHAR
+				|| typeCode1 == NCLOB && typeCode2 == CLOB || typeCode1 == CLOB && typeCode2 == NCLOB
+				|| SqlTypes.isVarcharType( typeCode1 ) && SqlTypes.isVarcharType( typeCode2 )
+						&& JdbcType.isNationalized( typeCode1 ) != JdbcType.isNationalized( typeCode2 ) ) {
+			// Retain the historical behavior when the LUW configuration is unavailable.
+			return ncharMapping == NcharMapping.CHARACTER || ncharMapping == NcharMapping.UNKNOWN;
+		}
+		return super.equivalentTypes( typeCode1, typeCode2 );
+	}
+
+	@Override
+	@SPI({ USE, IMPLEMENT })
+	public boolean equivalentTypes(int typeCode1, int typeCode2, @Nullable String columnTypeName) {
+		if ( ncharMapping != NcharMapping.UNKNOWN ) {
+			// JCC may report ordinary JDBC codes even for GRAPHIC, VARGRAPHIC and DBCLOB.
+			if ( "GRAPHIC".equalsIgnoreCase( columnTypeName ) ) {
+				return ncharMapping == NcharMapping.GRAPHIC && typeCode1 == NCHAR;
+			}
+			if ( "VARGRAPHIC".equalsIgnoreCase( columnTypeName ) ) {
+				return ncharMapping == NcharMapping.GRAPHIC && equivalentTypes( typeCode1, NVARCHAR );
+			}
+			if ( "DBCLOB".equalsIgnoreCase( columnTypeName ) ) {
+				return ncharMapping == NcharMapping.GRAPHIC && equivalentTypes( typeCode1, NCLOB );
+			}
+		}
+		return equivalentTypes( typeCode1, typeCode2 );
 	}
 }

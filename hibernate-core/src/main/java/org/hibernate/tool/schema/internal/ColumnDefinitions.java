@@ -34,8 +34,10 @@ public class ColumnDefinitions {
 			ColumnInformation columnInformation,
 			Metadata metadata,
 			Dialect dialect) {
-		final boolean typesMatch = dialect.equivalentTypes( column.getSqlTypeCode( metadata ), columnInformation.getTypeCode() )
-				|| normalize( stripArgs( column.getSqlType( metadata ) ) ).equals( normalize( columnInformation.getTypeName() ) );
+		final int mappedType = column.getSqlTypeCode( metadata );
+		final String typeName = columnInformation.getTypeName();
+		final boolean typesMatch = dialect.equivalentTypes( mappedType, columnInformation.getTypeCode(), typeName )
+				|| normalize( stripArgs( column.getSqlType( metadata ) ) ).equals( normalize( typeName ) );
 		if ( typesMatch ) {
 			return true;
 		}
@@ -43,13 +45,13 @@ public class ColumnDefinitions {
 			// Try to resolve the JdbcType by type name and check for a match again based on that type code.
 			// This is used to handle SqlTypes type codes like TIMESTAMP_UTC etc.
 			final JdbcType jdbcType = dialect.resolveSqlTypeDescriptor(
-					columnInformation.getTypeName(),
+					typeName,
 					columnInformation.getTypeCode(),
 					columnInformation.getColumnSize(),
 					columnInformation.getDecimalDigits(),
 					metadata.getDatabase().getTypeConfiguration().getJdbcTypeRegistry()
 			);
-			return dialect.equivalentTypes( column.getSqlTypeCode( metadata ), jdbcType.getDefaultSqlTypeCode() );
+			return dialect.equivalentTypes( mappedType, jdbcType.getDefaultSqlTypeCode(), typeName );
 		}
 	}
 

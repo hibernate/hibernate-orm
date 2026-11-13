@@ -1535,6 +1535,19 @@ public abstract class Dialect implements ConversionContext, AlterTableSupport,
 			|| sameColumnType(typeCode1, typeCode2);
 	}
 
+	/// Determine schema compatibility when JDBC also supplies the physical column type name.
+	/// Override this when a driver reports the same JDBC code for different database types.
+	/// Delegate to [#equivalentTypes(int, int)] for types the driver identifies unambiguously.
+	///
+	/// @param typeCode1 the mapped SQL type code
+	/// @param typeCode2 the JDBC or resolved SQL type code of the existing column
+	/// @param columnTypeName the database type name of the existing column, if available
+	/// @since 8.1
+	@SPI({ USE, IMPLEMENT })
+	public boolean equivalentTypes(int typeCode1, int typeCode2, @Nullable String columnTypeName) {
+		return equivalentTypes( typeCode1, typeCode2 );
+	}
+
 	/**
 	 * Tolerate storing {@code short} in {@code INTEGER} or {@code BIGINT}
 	 * or {@code int} in {@code BIGINT} for the purposes of schema validation

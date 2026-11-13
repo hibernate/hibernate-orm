@@ -68,6 +68,15 @@ The deprecated `PersistenceContext.reentrantSafeEntityEntries()` method has been
 
 This section describes changes in behavior that applications should be aware of.
 
+=== National character columns on Db2 LUW
+
+Hibernate reads the database code set and the active `nchar_mapping` setting at startup.
+On Unicode databases, schema validation and migration recognize the physical types of `NCHAR`, `NVARCHAR`, and `NCLOB` as
+`CHAR`, `VARCHAR`, and `CLOB` columns for `CHAR_CU32`, or `GRAPHIC`, `VARGRAPHIC`, and `DBCLOB` columns for either graphic setting.
+On non-Unicode LUW databases, validation rejects ordinary character columns for explicit national character mappings.
+If JDBC metadata or permission to execute `SYSPROC.DB_GET_CFG` is unavailable, Hibernate retains its previous equivalence rules.
+Rebuild the session factory after changing `nchar_mapping`.
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // XSD changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

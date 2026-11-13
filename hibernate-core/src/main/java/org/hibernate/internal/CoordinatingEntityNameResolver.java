@@ -6,6 +6,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.resource.beans.spi.ManagedBean;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
 /**
@@ -45,7 +46,8 @@ class CoordinatingEntityNameResolver implements EntityNameResolver {
 	}
 
 	@Override
-	public String resolveEntityName(Object entity) {
+	@Nonnull
+	public String resolveEntityName(@Nonnull Object entity) {
 		final Interceptor resolved = interceptor();
 		final String interceptorEntityName = session == null
 				? resolved.getEntityName( entity )

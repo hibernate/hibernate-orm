@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.dynamicmap;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.EntityNameResolver;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.SchemaToolingSettings;
@@ -63,7 +66,8 @@ public class CustomEntityNameResolverTest implements SessionFactoryProducer {
 
 	static class HibernateEntityNameResolver implements EntityNameResolver {
 		@Override
-		public String resolveEntityName(Object entity) {
+		@Nullable
+		public String resolveEntityName(@Nonnull Object entity) {
 			if ( entity instanceof Map ) {
 				return "artist";
 			}

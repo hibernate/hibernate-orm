@@ -1,5 +1,8 @@
 package org.hibernate;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 /**
  * An object capable of determining the entity name for a given entity instance.
  * <p>
@@ -34,5 +37,6 @@ public interface EntityNameResolver {
 	 * @return The corresponding entity name, or {@code null} if this implementation
 	 *         does not know how to perform resolution for the given entity instance.
 	 */
-	String resolveEntityName(Object entity);
+	@Nullable
+	String resolveEntityName(@Nonnull Object entity);
 }

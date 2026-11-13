@@ -1,6 +1,8 @@
 package org.hibernate.orm.test.cut.generic;
 
-public class EnumPlaceholder<T extends Enum<T>, R extends Enum<R>> {
+import java.io.Serializable;
+
+public class EnumPlaceholder<T extends Enum<T>, R extends Enum<R>> implements Serializable {
 	private final T firstEnum;
 	private final R secondEnum;
 

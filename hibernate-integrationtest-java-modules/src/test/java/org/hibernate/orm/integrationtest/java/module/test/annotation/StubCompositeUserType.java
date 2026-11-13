@@ -44,8 +44,8 @@ public class StubCompositeUserType implements CompositeUserType<StubCompositeTyp
 	}
 
 	@Override
-	@Nullable
-	public StubCompositeType deepCopy(@Nullable StubCompositeType value) {
+	@Nonnull
+	public StubCompositeType deepCopy(@Nonnull StubCompositeType value) {
 		return value;
 	}
 
@@ -55,21 +55,21 @@ public class StubCompositeUserType implements CompositeUserType<StubCompositeTyp
 	}
 
 	@Override
-	@Nullable
-	public Serializable disassemble(@Nullable StubCompositeType value) {
-		return value == null ? null : value.value;
+	@Nonnull
+	public Serializable disassemble(@Nonnull StubCompositeType value) {
+		return new String[] { value.value };
 	}
 
 	@Override
-	@Nullable
-	public StubCompositeType assemble(@Nullable Serializable cached, @Nullable Object owner) {
-		return cached == null ? null : new StubCompositeType( (String) cached );
+	@Nonnull
+	public StubCompositeType assemble(@Nonnull Serializable cached, @Nullable Object owner) {
+		return new StubCompositeType( ( (String[]) cached )[0] );
 	}
 
 	@Override
-	@Nullable
+	@Nonnull
 	public StubCompositeType replace(
-			@Nullable StubCompositeType detached,
+			@Nonnull StubCompositeType detached,
 			@Nullable StubCompositeType managed,
 			@Nullable Object owner) {
 		return detached;

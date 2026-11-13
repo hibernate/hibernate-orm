@@ -64,8 +64,8 @@ public class NameCompositeUserType implements CompositeUserType<Name> {
 	}
 
 	@Override
-	@Nullable
-	public Name deepCopy(@Nullable Name value) {
+	@Nonnull
+	public Name deepCopy(@Nonnull Name value) {
 		return value; // immutable
 	}
 
@@ -75,24 +75,21 @@ public class NameCompositeUserType implements CompositeUserType<Name> {
 	}
 
 	@Override
-	@Nullable
-	public Serializable disassemble(@Nullable Name value) {
-		return value == null ? null : new String[] { value.firstName(), value.lastName() };
+	@Nonnull
+	public Serializable disassemble(@Nonnull Name value) {
+		return new String[] { value.firstName(), value.lastName() };
 	}
 
 	@Override
-	@Nullable
-	public Name assemble(@Nullable Serializable cached, @Nullable Object owner) {
-		if ( cached == null ) {
-			return null;
-		}
+	@Nonnull
+	public Name assemble(@Nonnull Serializable cached, @Nullable Object owner) {
 		final String[] parts = (String[]) cached;
 		return new Name( parts[0], parts[1] );
 	}
 
 	@Override
-	@Nullable
-	public Name replace(@Nullable Name detached, @Nullable Name managed, @Nullable Object owner) {
+	@Nonnull
+	public Name replace(@Nonnull Name detached, @Nullable Name managed, @Nullable Object owner) {
 		return detached;
 	}
 

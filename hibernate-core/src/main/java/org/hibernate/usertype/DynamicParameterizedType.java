@@ -46,8 +46,10 @@ public interface DynamicParameterizedType extends ParameterizedType {
 		@Nonnull
 		Class<?> getReturnedClass();
 
+		/// The returned Java type, including type arguments when available.
+		/// Defaults to the raw {@linkplain #getReturnedClass() class}.
 		@Incubating(since = "6.5")
-		@Nullable
+		@Nonnull
 		default Type getReturnedJavaType() {
 			return getReturnedClass();
 		}

@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.unidir;
 
+import java.util.Map;
+
 import org.hibernate.Hibernate;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -59,6 +61,23 @@ public class BackrefTest {
 			var p3 = new Parent("Marion", 543216789);
 			p3.getChildren().add( new Child("Gavin") );
 			s.merge(p3);
+		} );
+	}
+
+	@Test
+	public void testMissingDetachedChild(SessionFactoryScope factoryScope) {
+		factoryScope.inSession( session -> {
+			final var parent = new Parent( "Steve", 192837465 );
+			final var detachedChild = new Child( "Joe" );
+			parent.getChildren().add( detachedChild );
+			parent.getChildren().add( null );
+			final var proxy = session.getReference( Parent.class, parent.getName() );
+			final var child = new Child( "Joe" );
+			final var context = session.getPersistenceContextInternal();
+			Assertions.assertNull( context.getOwnerId(
+					Parent.class.getName(), "children", child, Map.of( proxy, parent ) ) );
+			Assertions.assertEquals( parent.getName(), context.getOwnerId(
+					Parent.class.getName(), "children", child, Map.of( proxy, parent, child, detachedChild ) ) );
 		} );
 	}
 

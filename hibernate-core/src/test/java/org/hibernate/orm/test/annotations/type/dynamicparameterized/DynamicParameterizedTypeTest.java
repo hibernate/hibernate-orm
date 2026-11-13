@@ -2,6 +2,8 @@ package org.hibernate.orm.test.annotations.type.dynamicparameterized;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
+import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.metamodel.model.domain.ReturnableType;
@@ -9,8 +11,10 @@ import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.type.CustomType;
@@ -21,6 +25,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import jakarta.annotation.Nullable;
@@ -104,6 +109,19 @@ public class DynamicParameterizedTypeTest {
 		});
 	}
 
+	@Test
+	void testGetReturnedJavaTypeWithoutMember(ServiceRegistryScope scope) {
+		final var context = new MetadataBuildingContextTestingImpl( scope.getRegistry() );
+		final var value = new BasicValue( context, new Table( context.getCurrentContributorName(), "entity3" ) );
+		value.setTypeParameters( Map.of(
+				DynamicParameterizedType.IS_DYNAMIC, "true",
+				DynamicParameterizedType.RETURNED_CLASS, List.class.getName()
+		) );
+		value.setExplicitCustomType( MyGenericType.class );
+		final var type = (CustomType<?>) value.getType();
+		final var userType = (MyGenericType) type.getUserType();
+		assertEquals( List.class, userType.getParameterType().getReturnedJavaType() );
+	}
 
 	public static class FunctionContributorImpl implements FunctionContributor {
 		@Override

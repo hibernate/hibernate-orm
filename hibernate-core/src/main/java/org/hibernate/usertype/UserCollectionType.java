@@ -67,7 +67,7 @@ public interface UserCollectionType {
 	/**
 	 * Optional operation. Does the collection contain the entity instance?
 	 */
-	boolean contains(@Nonnull Object collection, @Nullable Object entity);
+	boolean contains(@Nonnull Object collection, @Nonnull Object entity);
 
 	/**
 	 * Optional operation. Return the index of the entity in the collection.

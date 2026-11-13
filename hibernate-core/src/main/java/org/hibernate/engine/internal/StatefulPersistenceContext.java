@@ -1339,10 +1339,10 @@ class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	@Nullable
+	@Nonnull
 	public Map<EntityKey, EntityHolder> getEntityHoldersByKey() {
 		//noinspection unchecked,rawtypes
-		return (Map) entitiesByKey;
+		return entitiesByKey == null ? emptyMap() : (Map) entitiesByKey;
 	}
 
 	@Override
@@ -1625,9 +1625,10 @@ class StatefulPersistenceContext implements PersistenceContext {
 						PERSISTENCE_CONTEXT_LOGGER.detachedProxyContainsManagedChild(
 								found ? "contains" : "does not contain" );
 						if ( !found ) {
-							found = isFoundInParent(
+							final Object unmergedChild = mergeMap.get( childEntity );
+							found = unmergedChild != null && isFoundInParent(
 									propertyName,
-									mergeMap.get( childEntity ),
+									unmergedChild,
 									persister,
 									collectionPersister,
 									mergeMap.get( proxy )

@@ -69,6 +69,25 @@ public class ContributedUserTypeTest {
 	}
 
 	@Test
+	public void testCompositeMutabilityPlan(SessionFactoryScope scope) {
+		final var plan = scope.getSessionFactory().getTypeConfiguration().getJavaTypeRegistry()
+				.resolveDescriptor( MyCompositeValue.class ).getMutabilityPlan();
+		scope.inSession( session -> {
+			Assertions.assertNull( plan.deepCopy( null ) );
+			Assertions.assertNull( plan.disassemble( null, session ) );
+			Assertions.assertNull( plan.assemble( null, session ) );
+
+			final var value = new MyCompositeValue( null, null );
+			final var cached = plan.disassemble( value, session );
+			Assertions.assertNotNull( cached );
+			final var assembled = plan.assemble( cached, session );
+			Assertions.assertNotNull( assembled );
+			Assertions.assertNull( assembled.longValue() );
+			Assertions.assertNull( assembled.stringValue() );
+		} );
+	}
+
+	@Test
 	@JiraKey( "HHH-17100" )
 	public void testParameter(SessionFactoryScope scope) {
 		scope.inSession(

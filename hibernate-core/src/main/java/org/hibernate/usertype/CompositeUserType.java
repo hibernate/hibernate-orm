@@ -36,6 +36,10 @@ import org.hibernate.metamodel.spi.ValueAccess;
  * Properties of this embeddable class are sorted alphabetically by
  * name, and assigned an index based on this ordering.
  * <p>
+ * Hibernate handles null component values before calling {@link #deepCopy},
+ * {@link #disassemble}, or {@link #assemble}. During merge, it calls
+ * {@link #replace} only for a non-null detached value.
+ * <p>
  * For example, if we were to implement a {@code CompositeUserType}
  * for a {@code MonetaryAmount} class, we would also provide a
  * {@code MonetaryAmountEmbeddable} class with a field for each
@@ -194,14 +198,13 @@ public interface CompositeUserType<J> extends EmbeddableInstantiator {
 
 	/**
 	 * Return a deep copy of the persistent state, stopping at entities and at
-	 * collections. It is not necessary to copy immutable objects, or null
-	 * values, in which case it is safe to simply return the argument.
+	 * collections. For an immutable value, it is safe to return the argument.
 	 *
-	 * @param value the object to be cloned, which may be null
-	 * @return Object a copy
+	 * @param value the object to be cloned
+	 * @return a copy of the value
 	 */
-	@Nullable
-	J deepCopy(@Nullable J value);
+	@Nonnull
+	J deepCopy(@Nonnull J value);
 
 	/**
 	 * Are objects of this type mutable?
@@ -219,24 +222,24 @@ public interface CompositeUserType<J> extends EmbeddableInstantiator {
 	 * @param value the object to be cached
 	 * @return a cacheable representation of the object
 	 */
-	@Nullable
-	Serializable disassemble(@Nullable J value);
+	@Nonnull
+	Serializable disassemble(@Nonnull J value);
 
 	/**
 	 * Reconstruct an object from the cacheable representation. At the very least this
 	 * method should perform a deep copy if the type is mutable. (optional operation)
 	 *
-	 * @param cached the object to be cached
+	 * @param cached the cacheable representation returned by {@link #disassemble}
 	 * @param owner the owner of the cached object
 	 * @return a reconstructed object from the cacheable representation
 	 */
-	@Nullable
-	J assemble(@Nullable Serializable cached, @Nullable Object owner);
+	@Nonnull
+	J assemble(@Nonnull Serializable cached, @Nullable Object owner);
 
 	/**
 	 * During merge, replace the existing (target) value in the entity we are merging to
 	 * with a new (original) value from the detached entity we are merging. For immutable
-	 * objects, or null values, it is safe to simply return the first parameter. For
+	 * objects, it is safe to simply return the first parameter. For
 	 * mutable objects, it is safe to return a copy of the first parameter. For objects
 	 * with component values, it might make sense to recursively replace component values.
 	 *
@@ -246,7 +249,7 @@ public interface CompositeUserType<J> extends EmbeddableInstantiator {
 	 * @return the value to be merged
 	 */
 	@Nullable
-	J replace(@Nullable J detached, @Nullable J managed, @Nullable Object owner);
+	J replace(@Nonnull J detached, @Nullable J managed, @Nullable Object owner);
 
 	@Override
 	default boolean isInstance(@Nullable Object object) {

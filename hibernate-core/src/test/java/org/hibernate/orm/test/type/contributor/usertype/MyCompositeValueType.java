@@ -64,34 +64,28 @@ public class MyCompositeValueType implements CompositeUserType<MyCompositeValue>
 	}
 
 	@Override
-	@Nullable
-	public MyCompositeValue deepCopy(@Nullable MyCompositeValue value) {
-		if ( value == null ) {
-			return null;
-		}
+	@Nonnull
+	public MyCompositeValue deepCopy(@Nonnull MyCompositeValue value) {
 		return new MyCompositeValue( value.longValue(), value.stringValue() );
 	}
 
 	@Override
-	@Nullable
-	public Serializable disassemble(@Nullable MyCompositeValue value) {
-		return value == null ? null : new Object[] { value.longValue(), value.stringValue() };
+	@Nonnull
+	public Serializable disassemble(@Nonnull MyCompositeValue value) {
+		return new Object[] { value.longValue(), value.stringValue() };
 	}
 
 	@Override
-	@Nullable
-	public MyCompositeValue assemble(@Nullable Serializable cached, @Nullable Object owner) {
-		if ( cached == null ) {
-			return null;
-		}
+	@Nonnull
+	public MyCompositeValue assemble(@Nonnull Serializable cached, @Nullable Object owner) {
 		final Object[] parts = (Object[]) cached;
 		return new MyCompositeValue( (Long) parts[0], (String) parts[1] );
 	}
 
 	@Override
-	@Nullable
+	@Nonnull
 	public MyCompositeValue replace(
-			@Nullable MyCompositeValue detached,
+			@Nonnull MyCompositeValue detached,
 			@Nullable MyCompositeValue managed,
 			@Nullable Object owner) {
 		return deepCopy( detached );

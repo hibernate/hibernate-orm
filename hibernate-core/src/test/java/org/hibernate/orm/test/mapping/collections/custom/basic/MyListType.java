@@ -50,7 +50,7 @@ public class MyListType implements UserCollectionType {
 	}
 
 	@Override
-	public boolean contains(@Nonnull Object collection, @Nullable Object entity) {
+	public boolean contains(@Nonnull Object collection, @Nonnull Object entity) {
 		return ( (IMyList) collection ).contains(entity);
 	}
 

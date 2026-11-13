@@ -1014,7 +1014,7 @@ public abstract class SimpleValue implements KeyValue {
 			this.columnLengths = columnLengths;
 
 			if ( returnedTypeDetails == null ) {
-				returnedJavaType = null;
+				returnedJavaType = returnedClass;
 			}
 			else {
 				returnedJavaType =
@@ -1031,7 +1031,7 @@ public abstract class SimpleValue implements KeyValue {
 		}
 
 		@Override
-		@Nullable
+		@Nonnull
 		public java.lang.reflect.Type getReturnedJavaType() {
 			return returnedJavaType;
 		}

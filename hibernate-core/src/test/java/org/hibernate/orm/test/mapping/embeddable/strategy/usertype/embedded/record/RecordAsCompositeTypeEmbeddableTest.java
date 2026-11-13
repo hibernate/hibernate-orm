@@ -104,8 +104,8 @@ public class RecordAsCompositeTypeEmbeddableTest {
 		}
 
 		@Override
-		@Nullable
-		public MonetaryAmount deepCopy(@Nullable MonetaryAmount value) {
+		@Nonnull
+		public MonetaryAmount deepCopy(@Nonnull MonetaryAmount value) {
 			return value;
 		}
 
@@ -115,21 +115,21 @@ public class RecordAsCompositeTypeEmbeddableTest {
 		}
 
 		@Override
-		@Nullable
-		public Serializable disassemble(@Nullable MonetaryAmount value) {
+		@Nonnull
+		public Serializable disassemble(@Nonnull MonetaryAmount value) {
 			return (Serializable) value;
 		}
 
 		@Override
-		@Nullable
-		public MonetaryAmount assemble(@Nullable Serializable cached, @Nullable Object owner) {
+		@Nonnull
+		public MonetaryAmount assemble(@Nonnull Serializable cached, @Nullable Object owner) {
 			return (MonetaryAmount) cached;
 		}
 
 		@Override
-		@Nullable
+		@Nonnull
 		public MonetaryAmount replace(
-				@Nullable MonetaryAmount detached,
+				@Nonnull MonetaryAmount detached,
 				@Nullable MonetaryAmount managed,
 				@Nullable Object owner) {
 			return detached;

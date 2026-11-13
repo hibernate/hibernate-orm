@@ -34,13 +34,10 @@ public class DefaultDirtyCheckEventListener implements DirtyCheckEventListener {
 	public void onDirtyCheck(@Nonnull DirtyCheckEvent event) {
 		final var session = event.getSession();
 		final var persistenceContext = session.getPersistenceContextInternal();
-		final var holdersByKey = persistenceContext.getEntityHoldersByKey();
-		if ( holdersByKey != null ) {
-			for ( var holder : holdersByKey.values() ) {
-				if ( isEntityDirty( holder, session ) ) {
-					event.setDirty( true );
-					return;
-				}
+		for ( var holder : persistenceContext.getEntityHoldersByKey().values() ) {
+			if ( isEntityDirty( holder, session ) ) {
+				event.setDirty( true );
+				return;
 			}
 		}
 		final var entriesByCollection = persistenceContext.getCollectionEntries();

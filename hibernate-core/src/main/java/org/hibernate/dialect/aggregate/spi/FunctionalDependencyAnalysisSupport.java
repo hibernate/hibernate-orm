@@ -16,31 +16,34 @@ import static org.hibernate.SPI.Role.USE;
 /// recognized for a single table reference
 /// @param supportsTableGroups whether it remains valid through joins or unions
 /// @param supportsConstants whether table-group analysis also permits constants
+/// @param supportsGroupByAll whether group by all is supported
 ///
 /// @since 8.0
 /// @author Marco Belladelli
 /// @author Steve Ebersole
+/// @author Loïc Lefèvre
 /// @see org.hibernate.dialect.Dialect#getFunctionalDependencyAnalysisSupport()
 @SPI(USE)
 public record FunctionalDependencyAnalysisSupport(
 		boolean supportsAnalysis,
 		boolean supportsTableGroups,
-		boolean supportsConstants) {
+		boolean supportsConstants,
+		boolean supportsGroupByAll) {
 	/// No support for functional-dependency analysis.
 	public static final FunctionalDependencyAnalysisSupport NONE =
-			new FunctionalDependencyAnalysisSupport( false, false, false );
+			new FunctionalDependencyAnalysisSupport( false, false, false, false );
 
 	/// Analysis of a single table reference, without joins or unions.
 	public static final FunctionalDependencyAnalysisSupport TABLE_REFERENCE =
-			new FunctionalDependencyAnalysisSupport( true, false, false );
+			new FunctionalDependencyAnalysisSupport( true, false, false, false );
 
 	/// Analysis of joined tables and result sets when only table columns are selected.
 	public static final FunctionalDependencyAnalysisSupport TABLE_GROUP =
-			new FunctionalDependencyAnalysisSupport( true, true, false );
+			new FunctionalDependencyAnalysisSupport( true, true, false, false );
 
 	/// Analysis of joined tables and result sets, including constant values.
 	public static final FunctionalDependencyAnalysisSupport TABLE_GROUP_AND_CONSTANTS =
-			new FunctionalDependencyAnalysisSupport( true, true, true );
+			new FunctionalDependencyAnalysisSupport( true, true, true, false );
 
 	/// Reject a profile whose refinements are enabled without their prerequisite.
 	public FunctionalDependencyAnalysisSupport {

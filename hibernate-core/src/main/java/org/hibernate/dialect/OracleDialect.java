@@ -1,5 +1,6 @@
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.aggregate.spi.FunctionalDependencyAnalysisSupport;
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
 
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
@@ -1851,4 +1852,9 @@ public class OracleDialect extends Dialect implements CurrentTemporalSupport, Te
 		return true;
 	}
 
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
+		return new FunctionalDependencyAnalysisSupport(false, false, false, getVersion().isSameOrAfter( 23, 9 ) );
+	}
 }

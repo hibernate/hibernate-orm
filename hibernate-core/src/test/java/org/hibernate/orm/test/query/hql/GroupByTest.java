@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Christian Beikov
  * @author Jan-Willem Gmelig Meyling
  * @author Sayra Ranjha
+ * @author Loïc Lefèvre
  */
 @ServiceRegistry
 @DomainModel(standardModels = StandardDomainModel.CONTACTS)
@@ -98,6 +99,27 @@ public class GroupByTest {
 			assertThat( result ).isNotNull();
 			assertThat( result.get( "id_alias" ) ).isEqualTo( 123 );
 			assertThat( result.get( "gender_alias" ) ).isEqualTo( Contact.Gender.MALE );
+			assertThat( result.get( "occurrences" ) ).isEqualTo( 1L );
+
+			assertThat( sqlStatementInspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( sqlStatementInspector.getSqlQueries().get( 0 ) ).isNotNull();
+		} );
+	}
+
+	@Test
+	public void testGroupByAll(SessionFactoryScope scope) {
+		final CollectingStatementObserver sqlStatementInspector = scope.getCollectingStatementObserver();
+		sqlStatementInspector.clear();
+
+		scope.inSession( (session) -> {
+			// GROUP BY ALL can be emulated for databases not supporting it natively
+			final String qryString = "select c.id as id_alias, count(1) as occurrences"
+									+ " from Contact c"
+									+ " group by all"
+									+ " order by id_alias";
+			final Tuple result = session.createQuery( qryString, Tuple.class ).uniqueResult();
+			assertThat( result ).isNotNull();
+			assertThat( result.get( "id_alias" ) ).isEqualTo( 123 );
 			assertThat( result.get( "occurrences" ) ).isEqualTo( 1L );
 
 			assertThat( sqlStatementInspector.getSqlQueries() ).hasSize( 1 );

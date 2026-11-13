@@ -15,6 +15,7 @@ import java.util.List;
  * mainly in the form of delegation to {@link JpaQueryStructure}
  *
  * @author Steve Ebersole
+ * @author Loïc Lefèvre
  */
 public interface JpaSelectCriteria<T> extends AbstractQuery<T>, JpaCriteriaBase {
 	/**
@@ -127,6 +128,12 @@ public interface JpaSelectCriteria<T> extends AbstractQuery<T>, JpaCriteriaBase 
 	@Nonnull
 	@Override
 	JpaSelectCriteria<T> groupBy(@Nonnull List<Expression<?>> grouping);
+
+	/**
+	 * Set the grouping expressions.
+	 */
+	@Nonnull
+	JpaSelectCriteria<T> groupByAll();
 
 	/**
 	 * Return the group restriction.

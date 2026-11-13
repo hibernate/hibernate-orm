@@ -1,7 +1,6 @@
 package org.hibernate.testing.orm.junit;
 
 import org.hibernate.cfg.JdbcSettings;
-import org.hibernate.dialect.aggregate.spi.FunctionalDependencyAnalysisSupport;
 import org.hibernate.dialect.function.spi.WindowFunctionSupport;
 
 import jakarta.annotation.Nonnull;
@@ -261,7 +260,8 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsFunctionalDependencyAnalysis implements DialectFeatureCheck {
 		@Override
 		public boolean apply(Dialect dialect) {
-			return dialect.getFunctionalDependencyAnalysisSupport() != FunctionalDependencyAnalysisSupport.NONE;
+			final var support = dialect.getFunctionalDependencyAnalysisSupport();
+			return support.supportsAnalysis() || support.supportsTableGroups() || support.supportsConstants();
 		}
 	}
 

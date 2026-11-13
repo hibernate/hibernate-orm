@@ -1,6 +1,7 @@
 package org.hibernate.sql.ast.spi;
 
 import org.hibernate.SPI;
+import org.hibernate.sql.ast.spi.query.expression.All;
 import org.hibernate.sql.ast.spi.query.predicate.SqlFragmentPredicate;
 import org.hibernate.query.sqm.tree.spi.expression.Conversion;
 import org.hibernate.sql.ast.spi.query.cte.CteStatement;
@@ -101,6 +102,7 @@ import org.hibernate.sql.ast.spi.model.TableUpdateStandard;
 /// @since 8.0
 /// @author Steve Ebersole
 /// @author Christian Beikov
+/// @author Loïc Lefèvre
 @SPI({ SPI.Role.USE, SPI.Role.IMPLEMENT })
 public class AbstractSqlAstWalker implements SqlAstWalker {
 	/// Create a walker with no traversal state.
@@ -500,6 +502,10 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 
 	@Override
 	public void visitStar(Star star) {
+	}
+
+	@Override
+	public void visitAll(All all) {
 	}
 
 	@Override

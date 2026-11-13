@@ -13,6 +13,8 @@ import org.hibernate.Locking;
 import org.hibernate.SPI;
 import org.hibernate.Timeouts;
 import org.hibernate.sql.ast.spi.query.SqlAstTreeHelper;
+import org.hibernate.sql.ast.spi.query.expression.All;
+import org.hibernate.sql.spi.SqlComments;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.array.spi.ArraySupport;
@@ -301,6 +303,7 @@ import static org.hibernate.SPI.Role.USE;
 ///
 /// @since 8.0
 /// @author Steve Ebersole
+/// @author Loïc Lefèvre
 @SPI({ USE, IMPLEMENT })
 public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implements SqlAstTranslator<T>, SqlAppender {
 
@@ -422,7 +425,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	///
 	/// Subclass constructors should only initialize immutable dialect-specific
 	/// state. Translation does not begin until
-	/// [org.hibernate.sql.ast.spi.translation.SqlAstTranslator#translate] is
+	/// [SqlAstTranslator#translate] is
 	/// invoked.
 	@SPI(IMPLEMENT)
 	protected AbstractSqlAstTranslator(SqlAstTranslationRequest<? extends Statement, T> request) {
@@ -4512,11 +4515,20 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected final void visitGroupByClause(QuerySpec querySpec, SelectItemReferenceStrategy referenceStrategy) {
 		final List<Expression> partitionExpressions = querySpec.getGroupByClauseExpressions();
+		if ( partitionExpressions.size() == 1 && partitionExpressions.get( 0 ) instanceof All ) {
+			visitGroupByAll( querySpec, partitionExpressions, referenceStrategy );
+		}
+		else
 		if ( !partitionExpressions.isEmpty() ) {
 			try {
 				clauseStack.push( Clause.GROUP );
-				appendSql( " group by " );
-				visitPartitionExpressions( partitionExpressions, referenceStrategy );
+				if(referenceStrategy == SelectItemReferenceStrategy.ALL) {
+					visitGroupByAll( querySpec, partitionExpressions, referenceStrategy );
+				}
+				else {
+					appendSql( " group by " );
+					visitPartitionExpressions( partitionExpressions, referenceStrategy );
+				}
 			}
 			finally {
 				clauseStack.pop();
@@ -4541,6 +4553,48 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
+	protected final void visitGroupByAll(
+			QuerySpec querySpec,
+			List<Expression> partitionExpressions,
+			SelectItemReferenceStrategy referenceStrategy) {
+		if ( dialect.getFunctionalDependencyAnalysisSupport().supportsGroupByAll() ) {
+			try {
+				clauseStack.push( Clause.GROUP );
+				appendSql( " group by all" );
+			}
+			finally {
+				clauseStack.pop();
+			}
+		}
+		else {
+			emulateGroupByAll( querySpec, referenceStrategy );
+		}
+	}
+
+	protected final void emulateGroupByAll( QuerySpec querySpec, SelectItemReferenceStrategy referenceStrategy ) {
+		final List<Expression> groupByExpressions = new ArrayList<>();
+		for ( SqlSelection selection : querySpec.getSelectClause().getSqlSelections() ) {
+			if ( !selection.isVirtual() && !AggregateFunctionChecker.hasAggregateFunctions( selection.getExpression() ) ) {
+				groupByExpressions.add( new SqlSelectionExpression( selection ) );
+			}
+		}
+		if ( !groupByExpressions.isEmpty() ) {
+			try {
+				clauseStack.push( Clause.GROUP );
+				appendSql( " group by " );
+				visitPartitionExpressions(
+						groupByExpressions,
+						referenceStrategy == SelectItemReferenceStrategy.ALL
+								? SelectItemReferenceStrategy.EXPRESSION
+								: referenceStrategy
+				);
+			}
+			finally {
+				clauseStack.pop();
+			}
+		}
+	}
+
 	protected final void visitPartitionExpressions(
 			List<Expression> partitionExpressions,
 			SelectItemReferenceStrategy referenceStrategy) {
@@ -4548,6 +4602,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			case POSITION -> Function.identity();
 			case ALIAS -> this::resolveExpressionToAlias;
 			case EXPRESSION -> this::resolveAliasedExpression;
+			case ALL -> throw new IllegalArgumentException( "GROUP BY ALL expression should be managed by visitGroupByAll()" );
 		};
 		visitPartitionExpressions( partitionExpressions, resolveAliasExpression,
 				referenceStrategy == SelectItemReferenceStrategy.EXPRESSION );
@@ -6221,6 +6276,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final QuerySpec querySpec = (QuerySpec) getQueryPartStack().getCurrent();
 		final List<SqlSelection> sqlSelections = querySpec.getSelectClause().getSqlSelections();
 		final BitSet bitSet = new BitSet( sqlSelections.size() );
+		if ( hasGroupByAll( querySpec ) ) {
+			for ( int i = 0; i < sqlSelections.size(); i++ ) {
+				final SqlSelection selection = sqlSelections.get( i );
+				if ( !selection.isVirtual() && !AggregateFunctionChecker.hasAggregateFunctions( selection.getExpression() ) ) {
+					bitSet.set( i );
+				}
+			}
+			return bitSet;
+		}
 		for ( Expression groupByClauseExpression : querySpec.getGroupByClauseExpressions() ) {
 			final SqlSelectionExpression selectItemReference = getSelectItemReference( groupByClauseExpression );
 			if ( selectItemReference != null ) {
@@ -6232,12 +6296,21 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	private boolean hasSelectAliasInGroupByClause() {
 		final QuerySpec querySpec = (QuerySpec) getQueryPartStack().getCurrent();
+		if ( getGroupBySelectItemReferenceStrategy() == SelectItemReferenceStrategy.ALIAS
+				&& hasGroupByAll( querySpec ) ) {
+			return true;
+		}
 		for ( Expression groupByClauseExpression : querySpec.getGroupByClauseExpressions() ) {
 			if ( getSelectItemReference( groupByClauseExpression ) != null ) {
 				return true;
 			}
 		}
 		return false;
+	}
+
+	private boolean hasGroupByAll(QuerySpec querySpec) {
+		final List<Expression> groupByClauseExpressions = querySpec.getGroupByClauseExpressions();
+		return groupByClauseExpressions.size() == 1 && groupByClauseExpressions.get( 0 ) instanceof All;
 	}
 
 	protected final SqlSelectionExpression getSelectItemReference(Expression expression) {
@@ -8611,6 +8684,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	@Override
+	public void visitAll(All all) {
+		appendSql( "all" );
+	}
+
+	@Override
 	public void visitTrimSpecification(TrimSpecification trimSpecification) {
 		appendSql( WHITESPACE );
 		appendSql( trimSpecification.getSpecification().toSqlText() );
@@ -9498,7 +9576,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						appendSql(separator);
 						emulateTupleComparison(
 								lhsTuple.getExpressions(),
-								SqlTupleContainer.getSqlTuple(expression).getExpressions(),
+								getSqlTuple(expression).getExpressions(),
 								tupleComparisonOperator,
 								true
 						);
@@ -9585,7 +9663,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		for ( Expression expression : listExpressions ) {
 			appendSql( separator );
 			appendSql( OPEN_PARENTHESIS );
-			renderCommaSeparated( SqlTupleContainer.getSqlTuple( expression ).getExpressions() );
+			renderCommaSeparated( getSqlTuple( expression ).getExpressions() );
 			appendSql( CLOSE_PARENTHESIS );
 			separator = ',';
 		}
@@ -10549,7 +10627,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( sessionFactory.getSessionFactoryOptions().isCommentsEnabled() ) {
 			if ( comment != null ) {
 				appendSql( "/* " );
-				appendSql( org.hibernate.sql.spi.SqlComments.escape( comment ) );
+				appendSql( SqlComments.escape( comment ) );
 				appendSql( " */" );
 			}
 		}

@@ -5,6 +5,8 @@ import java.util.function.Supplier;
 
 import org.hibernate.InstantiationException;
 import org.hibernate.PropertyNotFoundException;
+import org.hibernate.accessor.AccessorFactory;
+import org.hibernate.accessor.Instantiator;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.ValueAccess;
 
@@ -19,14 +21,16 @@ public class EmbeddableInstantiatorPojoStandard
 		implements StandardEmbeddableInstantiator {
 
 	private final Supplier<EmbeddableMappingType> embeddableMappingAccess;
-	private final Constructor<?> constructor;
+	private final Instantiator<?> instantiator;
 
 	public EmbeddableInstantiatorPojoStandard(
 			Class<?> embeddableClass,
-			Supplier<EmbeddableMappingType> embeddableMappingAccess) {
+			Supplier<EmbeddableMappingType> embeddableMappingAccess,
+			AccessorFactory accessorFactory) {
 		super( embeddableClass );
 		this.embeddableMappingAccess = embeddableMappingAccess;
-		this.constructor = resolveConstructor( embeddableClass );
+		final var constructor = resolveConstructor( embeddableClass );
+		this.instantiator = constructor == null ? null : accessorFactory.instantiator( constructor );
 	}
 
 	protected static Constructor<?> resolveConstructor(Class<?> mappedPojoClass) {
@@ -47,13 +51,13 @@ public class EmbeddableInstantiatorPojoStandard
 			);
 		}
 
-		if ( constructor == null ) {
+		if ( instantiator == null ) {
 			throw new InstantiationException( "Unable to locate constructor for embeddable", getMappedPojoClass() );
 		}
 
 		try {
 			final var values = valuesAccess == null ? null : valuesAccess.getValues();
-			final Object instance = constructor.newInstance();
+			final Object instance = instantiator.create();
 			if ( values != null ) {
 				// At this point, createEmptyCompositesEnabled is always true.
 				// We can only set the property values on the compositeInstance though if there is at least one non null value.

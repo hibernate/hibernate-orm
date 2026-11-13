@@ -48,13 +48,15 @@ public class IdClassRepresentationStrategy implements EmbeddableRepresentationSt
 			instantiator = EmbeddableInstantiatorPojoIndirecting.of(
 					idClassSource.getPropertyNames(),
 					idClassSource.getInstantiator(),
-					idClassSource.getInstantiatorPropertyNames()
+					idClassSource.getInstantiatorPropertyNames(),
+					propertyAccessorService.hibernateAccessorFactory()
 			);
 		}
 		else {
 			instantiator = new EmbeddableInstantiatorPojoStandard(
 					idClassType.getJavaTypeClass(),
-					() -> idClassEmbeddable
+					() -> idClassEmbeddable,
+					propertyAccessorService.hibernateAccessorFactory()
 			);
 		}
 		this.propertyAccessorService = propertyAccessorService;

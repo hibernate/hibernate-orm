@@ -1,5 +1,8 @@
 package org.hibernate.envers.internal.entities;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -26,12 +29,14 @@ public class RevisionTypeType implements UserType<RevisionType>, Serializable {
 	}
 
 	@Override
+	@Nonnull
 	public Class<RevisionType> returnedClass() {
 		return RevisionType.class;
 	}
 
 	@Override
-	public RevisionType nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+	@Nullable
+	public RevisionType nullSafeGet(@Nonnull ResultSet rs, int position, @Nonnull WrapperOptions options)
 			throws SQLException {
 		byte byteValue = rs.getByte( position );
 		if ( rs.wasNull() ) {
@@ -41,7 +46,11 @@ public class RevisionTypeType implements UserType<RevisionType>, Serializable {
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement preparedStatement, RevisionType value, int index, WrapperOptions options)
+	public void nullSafeSet(
+			@Nonnull PreparedStatement preparedStatement,
+			@Nullable RevisionType value,
+			int index,
+			@Nonnull WrapperOptions options)
 			throws SQLException {
 		if ( value == null ) {
 			preparedStatement.setNull( index, Types.TINYINT );
@@ -52,7 +61,8 @@ public class RevisionTypeType implements UserType<RevisionType>, Serializable {
 	}
 
 	@Override
-	public RevisionType deepCopy(RevisionType value) throws HibernateException {
+	@Nullable
+	public RevisionType deepCopy(@Nullable RevisionType value) throws HibernateException {
 		return value;
 	}
 
@@ -62,27 +72,33 @@ public class RevisionTypeType implements UserType<RevisionType>, Serializable {
 	}
 
 	@Override
-	public RevisionType assemble(Serializable cached, Object owner) throws HibernateException {
+	@Nullable
+	public RevisionType assemble(@Nullable Serializable cached, @Nullable Object owner) throws HibernateException {
 		return (RevisionType) cached;
 	}
 
 	@Override
-	public Serializable disassemble(RevisionType value) throws HibernateException {
+	@Nullable
+	public Serializable disassemble(@Nullable RevisionType value) throws HibernateException {
 		return value;
 	}
 
 	@Override
-	public RevisionType replace(RevisionType original, RevisionType target, Object owner) throws HibernateException {
+	@Nullable
+	public RevisionType replace(
+			@Nullable RevisionType original,
+			@Nullable RevisionType target,
+			@Nullable Object owner) throws HibernateException {
 		return original;
 	}
 
 	@Override
-	public int hashCode(RevisionType x) throws HibernateException {
+	public int hashCode(@Nonnull RevisionType x) throws HibernateException {
 		return x.hashCode();
 	}
 
 	@Override
-	public boolean equals(RevisionType x, RevisionType y) throws HibernateException {
+	public boolean equals(@Nullable RevisionType x, @Nullable RevisionType y) throws HibernateException {
 		return Objects.equals( x, y );
 	}
 }

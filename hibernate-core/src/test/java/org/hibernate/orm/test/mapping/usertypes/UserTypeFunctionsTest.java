@@ -20,6 +20,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
@@ -113,22 +115,24 @@ public class UserTypeFunctionsTest {
 		}
 
 		@Override
+		@Nonnull
 		public Class<YearMonth> returnedClass() {
 			return YearMonth.class;
 		}
 
 		@Override
-		public boolean equals(YearMonth x, YearMonth y) {
+		public boolean equals(@Nullable YearMonth x, @Nullable YearMonth y) {
 			return Objects.equals( x, y );
 		}
 
 		@Override
-		public int hashCode(YearMonth x) {
+		public int hashCode(@Nonnull YearMonth x) {
 			return Objects.hashCode( x );
 		}
 
 		@Override
-		public YearMonth nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+		@Nullable
+		public YearMonth nullSafeGet(@Nonnull ResultSet rs, int position, @Nonnull WrapperOptions options)
 				throws SQLException {
 			int intValue = rs.getInt( position );
 			if ( rs.wasNull() ) {
@@ -139,10 +143,10 @@ public class UserTypeFunctionsTest {
 
 		@Override
 		public void nullSafeSet(
-				PreparedStatement st,
-				YearMonth value,
+				@Nonnull PreparedStatement st,
+				@Nullable YearMonth value,
 				int index,
-				WrapperOptions options) throws SQLException {
+				@Nonnull WrapperOptions options) throws SQLException {
 			if ( value == null ) {
 				st.setNull( index, Types.INTEGER );
 			}
@@ -152,7 +156,8 @@ public class UserTypeFunctionsTest {
 		}
 
 		@Override
-		public YearMonth deepCopy(YearMonth value) {
+		@Nullable
+		public YearMonth deepCopy(@Nullable YearMonth value) {
 			return value;
 		}
 
@@ -162,12 +167,14 @@ public class UserTypeFunctionsTest {
 		}
 
 		@Override
-		public Serializable disassemble(YearMonth value) {
+		@Nullable
+		public Serializable disassemble(@Nullable YearMonth value) {
 			return value;
 		}
 
 		@Override
-		public YearMonth assemble(Serializable cached, Object owner) {
+		@Nullable
+		public YearMonth assemble(@Nullable Serializable cached, @Nullable Object owner) {
 			return cached instanceof YearMonth ? (YearMonth) cached : null;
 		}
 	}

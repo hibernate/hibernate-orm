@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.mapping.basic.bitset;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -241,22 +243,24 @@ public class MetaUserTypeTest {
 		}
 
 		@Override
+		@Nonnull
 		public Class<Period> returnedClass() {
 			return Period.class;
 		}
 
 		@Override
-		public boolean equals(Period x, Period y) {
+		public boolean equals(@Nullable Period x, @Nullable Period y) {
 			return Objects.equals(x, y);
 		}
 
 		@Override
-		public int hashCode(Period x) {
+		public int hashCode(@Nonnull Period x) {
 			return x.hashCode();
 		}
 
 		@Override
-		public Period nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+		@Nullable
+		public Period nullSafeGet(@Nonnull ResultSet rs, int position, @Nonnull WrapperOptions options)
 				throws SQLException {
 			String string = rs.getString(position);
 			if ( rs.wasNull() ) {
@@ -271,7 +275,11 @@ public class MetaUserTypeTest {
 		}
 
 		@Override
-		public void nullSafeSet(PreparedStatement st, Period value, int index, WrapperOptions options)
+		public void nullSafeSet(
+				@Nonnull PreparedStatement st,
+				@Nullable Period value,
+				int index,
+				@Nonnull WrapperOptions options)
 				throws SQLException {
 			if ( value == null ) {
 				st.setNull(index, VARCHAR);
@@ -290,17 +298,20 @@ public class MetaUserTypeTest {
 		}
 
 		@Override
-		public Period deepCopy(Period value) {
+		@Nullable
+		public Period deepCopy(@Nullable Period value) {
 			return value; // Period is immutable
 		}
 
 		@Override
-		public Serializable disassemble(Period period) {
+		@Nullable
+		public Serializable disassemble(@Nullable Period period) {
 			return period; // Period is immutable
 		}
 
 		@Override
-		public Period assemble(Serializable cached, Object owner) {
+		@Nullable
+		public Period assemble(@Nullable Serializable cached, @Nullable Object owner) {
 			return (Period) cached; // Period is immutable
 		}
 	}

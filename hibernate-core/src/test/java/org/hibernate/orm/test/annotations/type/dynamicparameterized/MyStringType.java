@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.annotations.type.dynamicparameterized;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -75,13 +78,18 @@ public class MyStringType implements UserType<String>, DynamicParameterizedType 
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, String value, int index, WrapperOptions options)
+	public void nullSafeSet(
+			@Nonnull PreparedStatement st,
+			@Nullable String value,
+			int index,
+			@Nonnull WrapperOptions options)
 			throws SQLException {
 		st.setString( index, this.value );
 	}
 
 	@Override
-	public String nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+	@Nullable
+	public String nullSafeGet(@Nonnull ResultSet rs, int position, @Nonnull WrapperOptions options)
 			throws SQLException {
 		return rs.getString( position );
 	}
@@ -92,22 +100,24 @@ public class MyStringType implements UserType<String>, DynamicParameterizedType 
 	}
 
 	@Override
+	@Nonnull
 	public Class<String> returnedClass() {
 		return String.class;
 	}
 
 	@Override
-	public boolean equals(String x, String y) {
+	public boolean equals(@Nullable String x, @Nullable String y) {
 		return ( x == null && y == null ) || ( x != null && x.equals( y ) );
 	}
 
 	@Override
-	public int hashCode(String x) {
+	public int hashCode(@Nonnull String x) {
 		return x.hashCode();
 	}
 
 	@Override
-	public String deepCopy(String value) {
+	@Nullable
+	public String deepCopy(@Nullable String value) {
 		return value;
 	}
 
@@ -117,17 +127,20 @@ public class MyStringType implements UserType<String>, DynamicParameterizedType 
 	}
 
 	@Override
-	public Serializable disassemble(String value) {
+	@Nullable
+	public Serializable disassemble(@Nullable String value) {
 		return value;
 	}
 
 	@Override
-	public String assemble(Serializable cached, Object owner) {
+	@Nullable
+	public String assemble(@Nullable Serializable cached, @Nullable Object owner) {
 		return (String) cached;
 	}
 
 	@Override
-	public String replace(String original, String target, Object owner) {
+	@Nullable
+	public String replace(@Nullable String original, @Nullable String target, @Nullable Object owner) {
 		return original;
 	}
 }

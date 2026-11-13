@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.id.usertype;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -86,13 +88,15 @@ public class AddScalarTest {
 		}
 
 		@Override
+		@Nonnull
 		public Class<Uuid> returnedClass() {
 			return Uuid.class;
 		}
 
 		@Override
-		public Uuid deepCopy(Uuid value) {
-			return new Uuid( value.uuid );
+		@Nullable
+		public Uuid deepCopy(@Nullable Uuid value) {
+			return value == null ? null : new Uuid( value.uuid );
 		}
 
 		@Override
@@ -101,13 +105,21 @@ public class AddScalarTest {
 		}
 
 		@Override
-		public Uuid nullSafeGet(ResultSet rs, int position, WrapperOptions options) throws SQLException {
+		@Nullable
+		public Uuid nullSafeGet(
+				@Nonnull ResultSet rs,
+				int position,
+				@Nonnull WrapperOptions options) throws SQLException {
 			final var result = rs.getString( position );
 			return rs.wasNull() ? null : new Uuid( UUID.fromString( result ) );
 		}
 
 		@Override
-		public void nullSafeSet(PreparedStatement st, Uuid value, int position, WrapperOptions options)
+		public void nullSafeSet(
+				@Nonnull PreparedStatement st,
+				@Nullable Uuid value,
+				int position,
+				@Nonnull WrapperOptions options)
 				throws SQLException {
 			if ( value == null ) {
 				st.setNull( position, getSqlType() );

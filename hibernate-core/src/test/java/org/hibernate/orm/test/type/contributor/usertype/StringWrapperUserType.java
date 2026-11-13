@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.type.contributor.usertype;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -28,24 +31,26 @@ public class StringWrapperUserType implements UserType<StringWrapper> {
 	}
 
 	@Override
+	@Nonnull
 	public Class<StringWrapper> returnedClass() {
 		return StringWrapper.class;
 	}
 
 	@Override
-	public boolean equals(StringWrapper x, StringWrapper y)
+	public boolean equals(@Nullable StringWrapper x, @Nullable StringWrapper y)
 			throws HibernateException {
 		return Objects.equals( x, y );
 	}
 
 	@Override
-	public int hashCode(StringWrapper x)
+	public int hashCode(@Nonnull StringWrapper x)
 			throws HibernateException {
 		return Objects.hashCode( x );
 	}
 
 	@Override
-	public StringWrapper nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+	@Nullable
+	public StringWrapper nullSafeGet(@Nonnull ResultSet rs, int position, @Nonnull WrapperOptions options)
 			throws SQLException {
 		String columnValue = (String) rs.getObject( position );
 		log.debugv( "Result set column {0} value is {1}", position, columnValue );
@@ -54,7 +59,7 @@ public class StringWrapperUserType implements UserType<StringWrapper> {
 
 	@Override
 	public void nullSafeSet(
-			PreparedStatement st, StringWrapper value, int index, WrapperOptions options)
+			@Nonnull PreparedStatement st, @Nullable StringWrapper value, int index, @Nonnull WrapperOptions options)
 			throws SQLException {
 		if ( value == null ) {
 			log.debugv("Binding null to parameter {0} ",index);
@@ -78,7 +83,8 @@ public class StringWrapperUserType implements UserType<StringWrapper> {
 	}
 
 	@Override
-	public StringWrapper deepCopy(StringWrapper value)
+	@Nullable
+	public StringWrapper deepCopy(@Nullable StringWrapper value)
 			throws HibernateException {
 		return value;
 	}
@@ -89,19 +95,25 @@ public class StringWrapperUserType implements UserType<StringWrapper> {
 	}
 
 	@Override
-	public Serializable disassemble(StringWrapper value)
+	@Nullable
+	public Serializable disassemble(@Nullable StringWrapper value)
 			throws HibernateException {
 		return value == null ? null : value.getValue().getBytes();
 	}
 
 	@Override
-	public StringWrapper assemble(Serializable cached, Object owner)
+	@Nullable
+	public StringWrapper assemble(@Nullable Serializable cached, @Nullable Object owner)
 			throws HibernateException {
-		return new StringWrapper( new String( (byte[]) cached ) );
+		return cached == null ? null : new StringWrapper( new String( (byte[]) cached ) );
 	}
 
 	@Override
-	public StringWrapper replace(StringWrapper original, StringWrapper target, Object owner)
+	@Nullable
+	public StringWrapper replace(
+			@Nullable StringWrapper original,
+			@Nullable StringWrapper target,
+			@Nullable Object owner)
 			throws HibernateException {
 		return deepCopy( original );
 	}

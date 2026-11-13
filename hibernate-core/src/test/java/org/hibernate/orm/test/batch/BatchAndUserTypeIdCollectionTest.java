@@ -1,6 +1,8 @@
 package org.hibernate.orm.test.batch;
 
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.supportsSqlArrayType;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -199,30 +201,32 @@ public class BatchAndUserTypeIdCollectionTest {
 			}
 
 			@Override
+			@Nonnull
 			public Class<ParentId> returnedClass() {
 				return ParentId.class;
 			}
 
 			@Override
-			public boolean equals(ParentId x, ParentId y) {
+			public boolean equals(@Nullable ParentId x, @Nullable ParentId y) {
 				return Objects.equals(x, y);
 			}
 
 			@Override
-			public int hashCode(ParentId x) {
+			public int hashCode(@Nonnull ParentId x) {
 				return x.hashCode();
 			}
 
 			@Override
-			public ParentId nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+			@Nullable
+			public ParentId nullSafeGet(@Nonnull ResultSet rs, int position, @Nonnull WrapperOptions options)
 					throws SQLException {
 				String string = rs.getString( position );
 				return rs.wasNull() ? null : new ParentId(string);
 			}
 
 			@Override
-			public void nullSafeSet(PreparedStatement st, ParentId value, int index,
-									WrapperOptions options)
+			public void nullSafeSet(@Nonnull PreparedStatement st, @Nullable ParentId value, int index,
+									@Nonnull WrapperOptions options)
 					throws SQLException {
 				if ( value == null ) {
 					st.setNull(index, VARCHAR);
@@ -238,17 +242,20 @@ public class BatchAndUserTypeIdCollectionTest {
 			}
 
 			@Override
-			public ParentId deepCopy(ParentId parentId) {
+			@Nullable
+			public ParentId deepCopy(@Nullable ParentId parentId) {
 				return parentId; //ParentId is immutable
 			}
 
 			@Override
-			public Serializable disassemble(ParentId parentId) {
+			@Nullable
+			public Serializable disassemble(@Nullable ParentId parentId) {
 				return parentId; //ParentId is immutable
 			}
 
 			@Override
-			public ParentId assemble(Serializable cached, Object owner) {
+			@Nullable
+			public ParentId assemble(@Nullable Serializable cached, @Nullable Object owner) {
 				return (ParentId) cached; //ParentId is immutable
 			}
 
@@ -268,6 +275,7 @@ public class BatchAndUserTypeIdCollectionTest {
 			}
 
 			@Override
+			@Nullable
 			public AttributeConverter<ParentId, ?> getValueConverter() {
 				return new AttributeConverter<ParentId, String>() {
 					@Override

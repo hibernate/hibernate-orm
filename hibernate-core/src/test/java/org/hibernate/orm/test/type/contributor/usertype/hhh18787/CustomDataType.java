@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.type.contributor.usertype.hhh18787;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.UserType;
@@ -26,22 +29,24 @@ public class CustomDataType implements UserType<CustomData[]> {
 	}
 
 	@Override
+	@Nonnull
 	public Class<CustomData[]> returnedClass() {
 		return CustomData[].class;
 	}
 
 	@Override
-	public boolean equals(CustomData[] x, CustomData[] y) {
+	public boolean equals(@Nullable CustomData[] x, @Nullable CustomData[] y) {
 		return Arrays.equals(x, y);
 	}
 
 	@Override
-	public int hashCode(CustomData[] x) {
+	public int hashCode(@Nonnull CustomData[] x) {
 		return Arrays.hashCode(x);
 	}
 
 	@Override
-	public CustomData[] nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+	@Nullable
+	public CustomData[] nullSafeGet(@Nonnull ResultSet rs, int position, @Nonnull WrapperOptions options)
 			throws SQLException {
 
 		final var customDataStr = rs.getString(position);
@@ -49,7 +54,11 @@ public class CustomDataType implements UserType<CustomData[]> {
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, CustomData[] value, int index, WrapperOptions options)
+	public void nullSafeSet(
+			@Nonnull PreparedStatement st,
+			@Nullable CustomData[] value,
+			int index,
+			@Nonnull WrapperOptions options)
 			throws SQLException {
 
 		if (value == null || value.length == 0) {
@@ -63,8 +72,9 @@ public class CustomDataType implements UserType<CustomData[]> {
 	}
 
 	@Override
-	public CustomData[] deepCopy(CustomData[] value) {
-		return Arrays.copyOf(value, value.length);
+	@Nullable
+	public CustomData[] deepCopy(@Nullable CustomData[] value) {
+		return value == null ? null : Arrays.copyOf(value, value.length);
 	}
 
 	@Override
@@ -73,12 +83,14 @@ public class CustomDataType implements UserType<CustomData[]> {
 	}
 
 	@Override
-	public Serializable disassemble(CustomData[] value) {
+	@Nullable
+	public Serializable disassemble(@Nullable CustomData[] value) {
 		return deepCopy(value);
 	}
 
 	@Override
-	public CustomData[] assemble(Serializable cached, Object owner) {
+	@Nullable
+	public CustomData[] assemble(@Nullable Serializable cached, @Nullable Object owner) {
 		return deepCopy((CustomData[]) cached);
 	}
 

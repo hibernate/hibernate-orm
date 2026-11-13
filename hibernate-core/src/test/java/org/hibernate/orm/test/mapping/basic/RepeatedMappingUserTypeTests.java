@@ -22,6 +22,8 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -104,35 +106,37 @@ public class RepeatedMappingUserTypeTests {
 		}
 
 		@Override
+		@Nonnull
 		public Class<SortedSet<Integer>> returnedClass() {
 			//noinspection unchecked
 			return (Class) Set.class;
 		}
 
 		@Override
-		public boolean equals(SortedSet<Integer> x, SortedSet<Integer> y) {
+		public boolean equals(@Nullable SortedSet<Integer> x, @Nullable SortedSet<Integer> y) {
 			return Objects.equals( x, y );
 		}
 
 		@Override
-		public int hashCode(SortedSet<Integer> x) {
+		public int hashCode(@Nonnull SortedSet<Integer> x) {
 			return Objects.hashCode( x );
 		}
 
 		@Override
+		@Nullable
 		public SortedSet<Integer> nullSafeGet(
-				ResultSet rs,
+				@Nonnull ResultSet rs,
 				int position,
-				WrapperOptions options) throws SQLException {
+				@Nonnull WrapperOptions options) throws SQLException {
 			return convertToEntityAttribute( rs.getString( position ) );
 		}
 
 		@Override
 		public void nullSafeSet(
-				PreparedStatement st,
-				SortedSet<Integer> values,
+				@Nonnull PreparedStatement st,
+				@Nullable SortedSet<Integer> values,
 				int index,
-				WrapperOptions options) throws SQLException {
+				@Nonnull WrapperOptions options) throws SQLException {
 			if ( values == null || values.isEmpty() ) {
 				st.setNull( index, SqlTypes.VARCHAR );
 				return;
@@ -144,8 +148,9 @@ public class RepeatedMappingUserTypeTests {
 		}
 
 		@Override
-		public SortedSet<Integer> deepCopy(SortedSet<Integer> value) {
-			return new TreeSet<>( value );
+		@Nullable
+		public SortedSet<Integer> deepCopy(@Nullable SortedSet<Integer> value) {
+			return value == null ? null : new TreeSet<>( value );
 		}
 
 		@Override
@@ -154,12 +159,14 @@ public class RepeatedMappingUserTypeTests {
 		}
 
 		@Override
-		public Serializable disassemble(SortedSet<Integer> value) {
+		@Nullable
+		public Serializable disassemble(@Nullable SortedSet<Integer> value) {
 			return (Serializable) value;
 		}
 
 		@Override
-		public SortedSet<Integer> assemble(Serializable cached, Object owner) {
+		@Nullable
+		public SortedSet<Integer> assemble(@Nullable Serializable cached, @Nullable Object owner) {
 			return (SortedSet<Integer>) cached;
 		}
 

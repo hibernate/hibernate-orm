@@ -1,5 +1,8 @@
 package org.hibernate.tool.reveng.hbm2x.Hbm2JavaTest;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.HibernateException;
 import org.hibernate.usertype.UserType;
 
@@ -13,19 +16,21 @@ public class DummyDateType implements UserType<Date> {
 		return new int[]{Types.DATE};
 	}
 
+	@Nonnull
 	public Class<Date> returnedClass() {
 		return Date.class;
 	}
 
-	public boolean equals(Date x, Date y) throws HibernateException {
+	public boolean equals(@Nullable Date x, @Nullable Date y) throws HibernateException {
 		return false;
 	}
 
-	public int hashCode(Date x) throws HibernateException {
+	public int hashCode(@Nonnull Date x) throws HibernateException {
 		return 0;
 	}
 
-	public Date deepCopy(Date value) throws HibernateException {
+	@Nullable
+	public Date deepCopy(@Nullable Date value) throws HibernateException {
 		return null;
 	}
 
@@ -33,19 +38,22 @@ public class DummyDateType implements UserType<Date> {
 		return false;
 	}
 
-	public Serializable disassemble(Date value) throws HibernateException {
+	@Nullable
+	public Serializable disassemble(@Nullable Date value) throws HibernateException {
 		return null;
 	}
 
-	public Date assemble(Serializable cached, Object owner)
+	@Nullable
+	public Date assemble(@Nullable Serializable cached, @Nullable Object owner)
 			throws HibernateException {
 		return null;
 	}
 
+	@Nullable
 	public Date replace(
-			Date original,
-			Date target,
-			Object owner) throws HibernateException {
+			@Nullable Date original,
+			@Nullable Date target,
+			@Nullable Object owner) throws HibernateException {
 		return null;
 	}
 

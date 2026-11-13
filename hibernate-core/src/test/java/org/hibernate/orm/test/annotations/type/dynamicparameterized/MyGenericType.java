@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.annotations.type.dynamicparameterized;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.UserType;
@@ -28,13 +31,18 @@ public class MyGenericType implements UserType<Object>, DynamicParameterizedType
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, Object value, int index, WrapperOptions options)
+	public void nullSafeSet(
+			@Nonnull PreparedStatement st,
+			@Nullable Object value,
+			int index,
+			@Nonnull WrapperOptions options)
 			throws SQLException {
 		st.setString( index, null );
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+	@Nullable
+	public Object nullSafeGet(@Nonnull ResultSet rs, int position, @Nonnull WrapperOptions options)
 			throws SQLException {
 		return null;
 	}
@@ -45,22 +53,24 @@ public class MyGenericType implements UserType<Object>, DynamicParameterizedType
 	}
 
 	@Override
+	@Nonnull
 	public Class<Object> returnedClass() {
 		return Object.class;
 	}
 
 	@Override
-	public boolean equals(Object x, Object y) {
+	public boolean equals(@Nullable Object x, @Nullable Object y) {
 		return ( x == null && y == null ) || ( x != null && x.equals( y ) );
 	}
 
 	@Override
-	public int hashCode(Object x) {
+	public int hashCode(@Nonnull Object x) {
 		return x.hashCode();
 	}
 
 	@Override
-	public Object deepCopy(Object value) {
+	@Nullable
+	public Object deepCopy(@Nullable Object value) {
 		return value;
 	}
 
@@ -70,12 +80,14 @@ public class MyGenericType implements UserType<Object>, DynamicParameterizedType
 	}
 
 	@Override
-	public Serializable disassemble(Object value) {
+	@Nullable
+	public Serializable disassemble(@Nullable Object value) {
 		return null;
 	}
 
 	@Override
-	public String assemble(Serializable cached, Object owner) {
+	@Nullable
+	public String assemble(@Nullable Serializable cached, @Nullable Object owner) {
 		return (String) cached;
 	}
 

@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.envers.entities.customtype;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -27,18 +30,24 @@ public class ParametrizedTestUserType implements UserType<String>, Parameterized
 		param2 = parameters.getProperty( "param2" );
 	}
 
+	@Nonnull
 	public Class<String> returnedClass() {
 		return String.class;
 	}
 
 	@Override
-	public String nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+	@Nullable
+	public String nullSafeGet(@Nonnull ResultSet rs, int position, @Nonnull WrapperOptions options)
 			throws SQLException {
 		final String string = rs.getString( position );
 		return rs.wasNull() ? null : string;
 	}
 
-	public void nullSafeSet(PreparedStatement st, String value, int index, WrapperOptions options)
+	public void nullSafeSet(
+			@Nonnull PreparedStatement st,
+			@Nullable String value,
+			int index,
+			@Nonnull WrapperOptions options)
 			throws SQLException {
 		if ( value != null ) {
 			if ( !value.startsWith( param1 ) ) {
@@ -57,19 +66,22 @@ public class ParametrizedTestUserType implements UserType<String>, Parameterized
 		return Types.VARCHAR;
 	}
 
-	public String assemble(Serializable cached, Object owner) throws HibernateException {
+	@Nullable
+	public String assemble(@Nullable Serializable cached, @Nullable Object owner) throws HibernateException {
 		return (String) cached;
 	}
 
-	public String deepCopy(String value) throws HibernateException {
+	@Nullable
+	public String deepCopy(@Nullable String value) throws HibernateException {
 		return value;
 	}
 
-	public Serializable disassemble(String value) throws HibernateException {
+	@Nullable
+	public Serializable disassemble(@Nullable String value) throws HibernateException {
 		return value;
 	}
 
-	public boolean equals(String x, String y) throws HibernateException {
+	public boolean equals(@Nullable String x, @Nullable String y) throws HibernateException {
 		//noinspection ObjectEquality
 		if ( x == y ) {
 			return true;
@@ -82,7 +94,7 @@ public class ParametrizedTestUserType implements UserType<String>, Parameterized
 		return x.equals( y );
 	}
 
-	public int hashCode(String x) throws HibernateException {
+	public int hashCode(@Nonnull String x) throws HibernateException {
 		return x.hashCode();
 	}
 
@@ -90,7 +102,11 @@ public class ParametrizedTestUserType implements UserType<String>, Parameterized
 		return false;
 	}
 
-	public String replace(String original, String target, Object owner) throws HibernateException {
+	@Nullable
+	public String replace(
+			@Nullable String original,
+			@Nullable String target,
+			@Nullable Object owner) throws HibernateException {
 		return original;
 	}
 }

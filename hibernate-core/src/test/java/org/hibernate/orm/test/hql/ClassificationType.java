@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.hql;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -29,12 +32,13 @@ public class ClassificationType implements EnhancedUserType<Classification>, Val
 	}
 
 	@Override
+	@Nonnull
 	public Class<Classification> returnedClass() {
 		return Classification.class;
 	}
 
 	@Override
-	public boolean equals(Classification x, Classification y) throws HibernateException {
+	public boolean equals(@Nullable Classification x, @Nullable Classification y) throws HibernateException {
 		if ( x == null && y == null ) {
 			return false;
 		}
@@ -47,12 +51,13 @@ public class ClassificationType implements EnhancedUserType<Classification>, Val
 	}
 
 	@Override
-	public int hashCode(Classification x) throws HibernateException {
+	public int hashCode(@Nonnull Classification x) throws HibernateException {
 		return x.hashCode();
 	}
 
 	@Override
-	public Classification nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+	@Nullable
+	public Classification nullSafeGet(@Nonnull ResultSet rs, int position, @Nonnull WrapperOptions options)
 			throws SQLException {
 		final int intValue = rs.getInt( position );
 		if ( rs.wasNull() ) {
@@ -62,7 +67,11 @@ public class ClassificationType implements EnhancedUserType<Classification>, Val
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, Classification value, int index, WrapperOptions options)
+	public void nullSafeSet(
+			@Nonnull PreparedStatement st,
+			@Nullable Classification value,
+			int index,
+			@Nonnull WrapperOptions options)
 			throws SQLException {
 		if ( value == null ) {
 			st.setNull( index, Types.INTEGER );
@@ -73,7 +82,8 @@ public class ClassificationType implements EnhancedUserType<Classification>, Val
 	}
 
 	@Override
-	public Classification deepCopy(Classification value) throws HibernateException {
+	@Nullable
+	public Classification deepCopy(@Nullable Classification value) throws HibernateException {
 		return value;
 	}
 
@@ -83,17 +93,23 @@ public class ClassificationType implements EnhancedUserType<Classification>, Val
 	}
 
 	@Override
-	public Serializable disassemble(Classification value) throws HibernateException {
+	@Nullable
+	public Serializable disassemble(@Nullable Classification value) throws HibernateException {
 		return ( Classification ) value;
 	}
 
 	@Override
-	public Classification assemble(Serializable cached, Object owner) throws HibernateException {
+	@Nullable
+	public Classification assemble(@Nullable Serializable cached, @Nullable Object owner) throws HibernateException {
 		return (Classification) cached;
 	}
 
 	@Override
-	public Classification replace(Classification original, Classification target, Object owner) throws HibernateException {
+	@Nullable
+	public Classification replace(
+			@Nullable Classification original,
+			@Nullable Classification target,
+			@Nullable Object owner) throws HibernateException {
 		return original;
 	}
 

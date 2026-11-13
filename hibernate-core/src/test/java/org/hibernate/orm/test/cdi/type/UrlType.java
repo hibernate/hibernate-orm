@@ -10,6 +10,8 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.UserType;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.inject.Singleton;
 import org.assertj.core.util.Objects;
 
@@ -39,34 +41,41 @@ public class UrlType implements UserType<URL> {
 	}
 
 	@Override
+	@Nonnull
 	public Class<URL> returnedClass() {
 		return URL.class;
 	}
 
 	@Override
-	public boolean equals(URL x, URL y) {
+	public boolean equals(@Nullable URL x, @Nullable URL y) {
 		return Objects.areEqual( x, y );
 	}
 
 	@Override
-	public int hashCode(URL x) {
+	public int hashCode(@Nonnull URL x) {
 		return Objects.hashCodeFor( x );
 	}
 
 	@Override
-	public URL nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+	@Nullable
+	public URL nullSafeGet(@Nonnull ResultSet rs, int position, @Nonnull WrapperOptions options)
 			throws SQLException {
 		throw new UnsupportedOperationException( "Not used" );
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, URL value, int index, WrapperOptions options)
+	public void nullSafeSet(
+			@Nonnull PreparedStatement st,
+			@Nullable URL value,
+			int index,
+			@Nonnull WrapperOptions options)
 			throws SQLException {
 		throw new UnsupportedOperationException( "Not used" );
 	}
 
 	@Override
-	public URL deepCopy(URL value) {
+	@Nullable
+	public URL deepCopy(@Nullable URL value) {
 		throw new UnsupportedOperationException( "Not used" );
 	}
 
@@ -76,12 +85,14 @@ public class UrlType implements UserType<URL> {
 	}
 
 	@Override
-	public Serializable disassemble(URL value) {
+	@Nullable
+	public Serializable disassemble(@Nullable URL value) {
 		throw new UnsupportedOperationException( "Not used" );
 	}
 
 	@Override
-	public URL assemble(Serializable cached, Object owner) {
+	@Nullable
+	public URL assemble(@Nullable Serializable cached, @Nullable Object owner) {
 		throw new UnsupportedOperationException( "Not used" );
 	}
 }

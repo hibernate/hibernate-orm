@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.annotations.embeddables;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -21,38 +24,41 @@ public class DollarValueUserType implements UserType<DollarValue> {
 	}
 
 	@Override
+	@Nonnull
 	public Class<DollarValue> returnedClass() {
 		return DollarValue.class;
 	}
 
 	@Override
-	public boolean equals(DollarValue x, DollarValue y) throws HibernateException {
-		return x.getAmount().equals(y.getAmount());
+	public boolean equals(@Nullable DollarValue x, @Nullable DollarValue y) throws HibernateException {
+		return x == y || x != null && y != null && x.getAmount().equals( y.getAmount() );
 	}
 
 	@Override
-	public int hashCode(DollarValue x) throws HibernateException {
+	public int hashCode(@Nonnull DollarValue x) throws HibernateException {
 		return x.getAmount().hashCode();
 	}
 
 	@Override
-	public DollarValue nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+	@Nullable
+	public DollarValue nullSafeGet(@Nonnull ResultSet rs, int position, @Nonnull WrapperOptions options)
 			throws SQLException {
 		return new DollarValue( rs.getBigDecimal( position ) );
 	}
 
 	@Override
 	public void nullSafeSet(
-			PreparedStatement st,
-			DollarValue value,
+			@Nonnull PreparedStatement st,
+			@Nullable DollarValue value,
 			int index,
-			WrapperOptions options) throws SQLException {
-		st.setBigDecimal(index, value.getAmount());
+			@Nonnull WrapperOptions options) throws SQLException {
+		st.setBigDecimal( index, value == null ? null : value.getAmount() );
 	}
 
 	@Override
-	public DollarValue deepCopy(DollarValue value) throws HibernateException {
-		return new DollarValue();
+	@Nullable
+	public DollarValue deepCopy(@Nullable DollarValue value) throws HibernateException {
+		return value == null ? null : new DollarValue( value.getAmount() );
 	}
 
 	@Override
@@ -61,18 +67,21 @@ public class DollarValueUserType implements UserType<DollarValue> {
 	}
 
 	@Override
-	public Serializable disassemble(DollarValue value) throws HibernateException {
+	@Nullable
+	public Serializable disassemble(@Nullable DollarValue value) throws HibernateException {
 		return null;
 	}
 
 	@Override
-	public DollarValue assemble(Serializable cached, Object owner)
+	@Nullable
+	public DollarValue assemble(@Nullable Serializable cached, @Nullable Object owner)
 			throws HibernateException {
 		return null;
 	}
 
 	@Override
-	public DollarValue replace(DollarValue original, DollarValue target, Object owner)
+	@Nullable
+	public DollarValue replace(@Nullable DollarValue original, @Nullable DollarValue target, @Nullable Object owner)
 			throws HibernateException {
 		return null;
 	}

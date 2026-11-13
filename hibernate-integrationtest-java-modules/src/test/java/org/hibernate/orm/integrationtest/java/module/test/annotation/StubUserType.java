@@ -1,5 +1,8 @@
 package org.hibernate.orm.integrationtest.java.module.test.annotation;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.sql.Types;
 
 import org.hibernate.usertype.UserType;
@@ -11,12 +14,14 @@ public class StubUserType implements UserType<StubBasicType> {
 	}
 
 	@Override
+	@Nonnull
 	public Class<StubBasicType> returnedClass() {
 		return StubBasicType.class;
 	}
 
 	@Override
-	public StubBasicType deepCopy(StubBasicType value) {
+	@Nullable
+	public StubBasicType deepCopy(@Nullable StubBasicType value) {
 		return value;
 	}
 

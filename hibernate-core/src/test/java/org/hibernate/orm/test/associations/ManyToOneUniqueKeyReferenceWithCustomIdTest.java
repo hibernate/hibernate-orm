@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.associations;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -122,13 +124,14 @@ public class ManyToOneUniqueKeyReferenceWithCustomIdTest {
 		}
 
 		@Override
-		public void nullSafeSet(PreparedStatement st, CustomId value, int position,
-								WrapperOptions options) throws SQLException {
-			st.setObject( position, value.toString(), getSqlType() );
+		public void nullSafeSet(@Nonnull PreparedStatement st, @Nullable CustomId value, int position,
+								@Nonnull WrapperOptions options) throws SQLException {
+			st.setObject( position, value == null ? null : value.toString(), getSqlType() );
 		}
 
 		@Override
-		public CustomId nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+		@Nullable
+		public CustomId nullSafeGet(@Nonnull ResultSet rs, int position, @Nonnull WrapperOptions options)
 				throws SQLException {
 			String idValue = rs.getString( position );
 			return idValue != null ? fromStringValue( idValue ) : null;
@@ -145,13 +148,15 @@ public class ManyToOneUniqueKeyReferenceWithCustomIdTest {
 		}
 
 		@Override
+		@Nonnull
 		public Class<CustomId> returnedClass() {
 			return CustomId.class;
 		}
 
 		@Override
-		public CustomId deepCopy(CustomId value) {
-			return new CustomId( value.getId() );
+		@Nullable
+		public CustomId deepCopy(@Nullable CustomId value) {
+			return value == null ? null : new CustomId( value.getId() );
 		}
 
 		@Override
@@ -160,7 +165,7 @@ public class ManyToOneUniqueKeyReferenceWithCustomIdTest {
 		}
 
 		@Override
-		public boolean equals(CustomId x, CustomId y) {
+		public boolean equals(@Nullable CustomId x, @Nullable CustomId y) {
 			return EnhancedUserType.super.equals( x, y );
 		}
 	}

@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.envers.entities.ids;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -20,11 +23,12 @@ public class CustomEnumUserType implements UserType<CustomEnum> {
 		return Types.VARCHAR;
 	}
 
+	@Nonnull
 	public Class<CustomEnum> returnedClass() {
 		return CustomEnum.class;
 	}
 
-	public boolean equals(CustomEnum x, CustomEnum y) throws HibernateException {
+	public boolean equals(@Nullable CustomEnum x, @Nullable CustomEnum y) throws HibernateException {
 		if ( x == y ) {
 			return true;
 		}
@@ -34,12 +38,13 @@ public class CustomEnumUserType implements UserType<CustomEnum> {
 		return x.equals( y );
 	}
 
-	public int hashCode(CustomEnum x) throws HibernateException {
+	public int hashCode(@Nonnull CustomEnum x) throws HibernateException {
 		return (x == null) ? 0 : x.hashCode();
 	}
 
 	@Override
-	public CustomEnum nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+	@Nullable
+	public CustomEnum nullSafeGet(@Nonnull ResultSet rs, int position, @Nonnull WrapperOptions options)
 			throws SQLException {
 		String name = rs.getString( position );
 		if ( rs.wasNull() ) {
@@ -48,7 +53,11 @@ public class CustomEnumUserType implements UserType<CustomEnum> {
 		return CustomEnum.fromYesNo( name );
 	}
 
-	public void nullSafeSet(PreparedStatement st, CustomEnum value, int index, WrapperOptions options)
+	public void nullSafeSet(
+			@Nonnull PreparedStatement st,
+			@Nullable CustomEnum value,
+			int index,
+			@Nonnull WrapperOptions options)
 			throws SQLException {
 		if ( value == null ) {
 			st.setNull( index, Types.VARCHAR );
@@ -58,7 +67,8 @@ public class CustomEnumUserType implements UserType<CustomEnum> {
 		}
 	}
 
-	public CustomEnum deepCopy(CustomEnum value) throws HibernateException {
+	@Nullable
+	public CustomEnum deepCopy(@Nullable CustomEnum value) throws HibernateException {
 		return value;
 	}
 
@@ -66,15 +76,21 @@ public class CustomEnumUserType implements UserType<CustomEnum> {
 		return false;
 	}
 
-	public Serializable disassemble(CustomEnum value) throws HibernateException {
+	@Nullable
+	public Serializable disassemble(@Nullable CustomEnum value) throws HibernateException {
 		return value;
 	}
 
-	public CustomEnum assemble(Serializable cached, Object owner) throws HibernateException {
+	@Nullable
+	public CustomEnum assemble(@Nullable Serializable cached, @Nullable Object owner) throws HibernateException {
 		return (CustomEnum) cached;
 	}
 
-	public CustomEnum replace(CustomEnum original, CustomEnum target, Object owner) throws HibernateException {
+	@Nullable
+	public CustomEnum replace(
+			@Nullable CustomEnum original,
+			@Nullable CustomEnum target,
+			@Nullable Object owner) throws HibernateException {
 		return original;
 	}
 }

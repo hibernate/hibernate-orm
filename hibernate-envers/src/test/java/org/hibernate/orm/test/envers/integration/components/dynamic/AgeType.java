@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.envers.integration.components.dynamic;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -18,35 +21,47 @@ public class AgeType implements UserType<Age> {
 	}
 
 	@Override
+	@Nonnull
 	public Class<Age> returnedClass() {
 		return Age.class;
 	}
 
 	@Override
-	public boolean equals(Age x, Age y) throws HibernateException {
+	public boolean equals(@Nullable Age x, @Nullable Age y) throws HibernateException {
 		return x != null ? x.equals( y ) : y == null;
 	}
 
 	@Override
-	public int hashCode(Age x) throws HibernateException {
+	public int hashCode(@Nonnull Age x) throws HibernateException {
 		return x != null ? x.hashCode() : 1;
 	}
 
 	@Override
-	public Age nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+	@Nullable
+	public Age nullSafeGet(@Nonnull ResultSet rs, int position, @Nonnull WrapperOptions options)
 			throws SQLException {
 		return new Age( rs.getInt( position ) );
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, Age value, int index, WrapperOptions options)
+	public void nullSafeSet(
+			@Nonnull PreparedStatement st,
+			@Nullable Age value,
+			int index,
+			@Nonnull WrapperOptions options)
 			throws SQLException {
-		st.setInt( index, value.getAgeInYears() );
+		if ( value == null ) {
+			st.setNull( index, getSqlType() );
+		}
+		else {
+			st.setInt( index, value.getAgeInYears() );
+		}
 	}
 
 	@Override
-	public Age deepCopy(Age value) throws HibernateException {
-		return new Age( value.getAgeInYears() );
+	@Nullable
+	public Age deepCopy(@Nullable Age value) throws HibernateException {
+		return value == null ? null : new Age( value.getAgeInYears() );
 	}
 
 	@Override
@@ -55,17 +70,20 @@ public class AgeType implements UserType<Age> {
 	}
 
 	@Override
-	public Serializable disassemble(Age value) throws HibernateException {
+	@Nullable
+	public Serializable disassemble(@Nullable Age value) throws HibernateException {
 		return null;
 	}
 
 	@Override
-	public Age assemble(Serializable cached, Object owner) throws HibernateException {
+	@Nullable
+	public Age assemble(@Nullable Serializable cached, @Nullable Object owner) throws HibernateException {
 		return null;
 	}
 
 	@Override
-	public Age replace(Age original, Age target, Object owner) throws HibernateException {
+	@Nullable
+	public Age replace(@Nullable Age original, @Nullable Age target, @Nullable Object owner) throws HibernateException {
 		return null;
 	}
 }

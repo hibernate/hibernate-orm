@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.typeparameters;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -28,11 +31,12 @@ public class DefaultValueIntegerType implements UserType<Integer>, Parameterized
 		return Types.INTEGER;
 	}
 
+	@Nonnull
 	public Class returnedClass() {
 		return int.class;
 	}
 
-	public boolean equals(Integer x, Integer y) throws HibernateException {
+	public boolean equals(@Nullable Integer x, @Nullable Integer y) throws HibernateException {
 		if ( x == y ) {
 			return true;
 		}
@@ -43,14 +47,19 @@ public class DefaultValueIntegerType implements UserType<Integer>, Parameterized
 	}
 
 	@Override
-	public Integer nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+	@Nullable
+	public Integer nullSafeGet(@Nonnull ResultSet rs, int position, @Nonnull WrapperOptions options)
 			throws SQLException {
 		Number result = (Number) rs.getObject( position );
 		return result == null ? defaultValue : Integer.valueOf( result.intValue() );
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, Integer value, int index, WrapperOptions options)
+	public void nullSafeSet(
+			@Nonnull PreparedStatement st,
+			@Nullable Integer value,
+			int index,
+			@Nonnull WrapperOptions options)
 			throws SQLException {
 		if ( value == null || defaultValue.equals( value ) ) {
 			log.trace( "binding null to parameter: " + index );
@@ -62,7 +71,8 @@ public class DefaultValueIntegerType implements UserType<Integer>, Parameterized
 		}
 	}
 
-	public Integer deepCopy(Integer value) throws HibernateException {
+	@Nullable
+	public Integer deepCopy(@Nullable Integer value) throws HibernateException {
 		return value;
 	}
 
@@ -70,20 +80,23 @@ public class DefaultValueIntegerType implements UserType<Integer>, Parameterized
 		return false;
 	}
 
-	public int hashCode(Integer x) throws HibernateException {
+	public int hashCode(@Nonnull Integer x) throws HibernateException {
 		return x.hashCode();
 	}
 
-	public Integer assemble(Serializable cached, Object owner)
+	@Nullable
+	public Integer assemble(@Nullable Serializable cached, @Nullable Object owner)
 			throws HibernateException {
 		return (Integer) cached;
 	}
 
-	public Serializable disassemble(Integer value) throws HibernateException {
+	@Nullable
+	public Serializable disassemble(@Nullable Integer value) throws HibernateException {
 		return value;
 	}
 
-	public Integer replace(Integer original, Integer target, Object owner)
+	@Nullable
+	public Integer replace(@Nullable Integer original, @Nullable Integer target, @Nullable Object owner)
 			throws HibernateException {
 		return original;
 	}

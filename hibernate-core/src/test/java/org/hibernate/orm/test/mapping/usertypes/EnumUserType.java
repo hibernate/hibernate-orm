@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.mapping.usertypes;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -51,12 +54,14 @@ public class EnumUserType<T extends Enum<T>> implements UserType<T>, Parameteriz
 		return Types.CHAR;
 	}
 
+	@Nonnull
 	public Class<T> returnedClass() {
 		return clazz;
 	}
 
 	@Override
-	public T nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+	@Nullable
+	public T nullSafeGet(@Nonnull ResultSet rs, int position, @Nonnull WrapperOptions options)
 			throws SQLException {
 		final String name = rs.getString( position );
 		if ( rs.wasNull() ) {
@@ -71,10 +76,10 @@ public class EnumUserType<T extends Enum<T>> implements UserType<T>, Parameteriz
 
 	@Override
 	public void nullSafeSet(
-			PreparedStatement preparedStatement,
-			T value,
+			@Nonnull PreparedStatement preparedStatement,
+			@Nullable T value,
 			int index,
-			WrapperOptions options) throws SQLException {
+			@Nonnull WrapperOptions options) throws SQLException {
 		if ( null == value ) {
 			preparedStatement.setNull( index, Types.VARCHAR );
 		}
@@ -83,7 +88,8 @@ public class EnumUserType<T extends Enum<T>> implements UserType<T>, Parameteriz
 		}
 	}
 
-	public T deepCopy(T value) throws HibernateException {
+	@Nullable
+	public T deepCopy(@Nullable T value) throws HibernateException {
 		return value;
 	}
 
@@ -91,24 +97,27 @@ public class EnumUserType<T extends Enum<T>> implements UserType<T>, Parameteriz
 		return false;
 	}
 
-	public T assemble(Serializable cached, Object owner) throws HibernateException {
+	@Nullable
+	public T assemble(@Nullable Serializable cached, @Nullable Object owner) throws HibernateException {
 		//noinspection unchecked
 		return (T) cached;
 	}
 
-	public Serializable disassemble(T value) throws HibernateException {
+	@Nullable
+	public Serializable disassemble(@Nullable T value) throws HibernateException {
 		return value;
 	}
 
-	public T replace(T original, T target, Object owner) throws HibernateException {
+	@Nullable
+	public T replace(@Nullable T original, @Nullable T target, @Nullable Object owner) throws HibernateException {
 		return original;
 	}
 
-	public int hashCode(T x) throws HibernateException {
+	public int hashCode(@Nonnull T x) throws HibernateException {
 		return x.hashCode();
 	}
 
-	public boolean equals(T x, T y) throws HibernateException {
+	public boolean equals(@Nullable T x, @Nullable T y) throws HibernateException {
 		if ( x == y ) {
 			return true;
 		}

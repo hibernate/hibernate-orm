@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.annotations.generics;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -20,20 +23,22 @@ public class StateType implements UserType<State> {
 		return Types.INTEGER;
 	}
 
+	@Nonnull
 	public Class<State> returnedClass() {
 		return State.class;
 	}
 
-	public boolean equals(State x, State y) throws HibernateException {
+	public boolean equals(@Nullable State x, @Nullable State y) throws HibernateException {
 		return x == y;
 	}
 
-	public int hashCode(State x) throws HibernateException {
+	public int hashCode(@Nonnull State x) throws HibernateException {
 		return x.hashCode();
 	}
 
 	@Override
-	public State nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+	@Nullable
+	public State nullSafeGet(@Nonnull ResultSet rs, int position, @Nonnull WrapperOptions options)
 			throws SQLException {
 		int result = rs.getInt( position );
 		if ( rs.wasNull() ) return null;
@@ -41,7 +46,11 @@ public class StateType implements UserType<State> {
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, State value, int index, WrapperOptions options)
+	public void nullSafeSet(
+			@Nonnull PreparedStatement st,
+			@Nullable State value,
+			int index,
+			@Nonnull WrapperOptions options)
 			throws HibernateException, SQLException {
 		if (value == null) {
 			st.setNull( index, Types.INTEGER );
@@ -51,7 +60,8 @@ public class StateType implements UserType<State> {
 		}
 	}
 
-	public State deepCopy(State value) throws HibernateException {
+	@Nullable
+	public State deepCopy(@Nullable State value) throws HibernateException {
 		return value;
 	}
 
@@ -59,15 +69,21 @@ public class StateType implements UserType<State> {
 		return false;
 	}
 
-	public Serializable disassemble(State value) throws HibernateException {
+	@Nullable
+	public Serializable disassemble(@Nullable State value) throws HibernateException {
 		return value;
 	}
 
-	public State assemble(Serializable cached, Object owner) throws HibernateException {
+	@Nullable
+	public State assemble(@Nullable Serializable cached, @Nullable Object owner) throws HibernateException {
 		return (State) cached;
 	}
 
-	public State replace(State original, State target, Object owner) throws HibernateException {
+	@Nullable
+	public State replace(
+			@Nullable State original,
+			@Nullable State target,
+			@Nullable Object owner) throws HibernateException {
 		return original;
 	}
 }

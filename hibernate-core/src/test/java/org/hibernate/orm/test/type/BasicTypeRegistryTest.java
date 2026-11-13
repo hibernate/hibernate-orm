@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.type;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -194,31 +197,41 @@ public class BasicTypeRegistryTest {
 		}
 
 		@Override
+		@Nonnull
 		public Class<Object> returnedClass() {
-			return null;
+			return Object.class;
 		}
 
 		@Override
-		public boolean equals(Object x, Object y) throws HibernateException {
+		public boolean equals(@Nullable Object x, @Nullable Object y) throws HibernateException {
 			return false;
 		}
 
 		@Override
-		public int hashCode(Object x) throws HibernateException {
+		public int hashCode(@Nonnull Object x) throws HibernateException {
 			return 0;
 		}
 
 		@Override
-		public Object nullSafeGet(ResultSet rs, int position, WrapperOptions options) throws SQLException {
+		@Nullable
+		public Object nullSafeGet(
+				@Nonnull ResultSet rs,
+				int position,
+				@Nonnull WrapperOptions options) throws SQLException {
 			return null;
 		}
 
 		@Override
-		public void nullSafeSet(PreparedStatement st, Object value, int index, WrapperOptions options) throws HibernateException, SQLException {
+		public void nullSafeSet(
+				@Nonnull PreparedStatement st,
+				@Nullable Object value,
+				int index,
+				@Nonnull WrapperOptions options) throws HibernateException, SQLException {
 		}
 
 		@Override
-		public Object deepCopy(Object value) throws HibernateException {
+		@Nullable
+		public Object deepCopy(@Nullable Object value) throws HibernateException {
 			return null;
 		}
 
@@ -228,17 +241,23 @@ public class BasicTypeRegistryTest {
 		}
 
 		@Override
-		public Serializable disassemble(Object value) throws HibernateException {
+		@Nullable
+		public Serializable disassemble(@Nullable Object value) throws HibernateException {
 			return null;
 		}
 
 		@Override
-		public Object assemble(Serializable cached, Object owner) throws HibernateException {
+		@Nullable
+		public Object assemble(@Nullable Serializable cached, @Nullable Object owner) throws HibernateException {
 			return null;
 		}
 
 		@Override
-		public Object replace(Object original, Object target, Object owner) throws HibernateException {
+		@Nullable
+		public Object replace(
+				@Nullable Object original,
+				@Nullable Object target,
+				@Nullable Object owner) throws HibernateException {
 			return null;
 		}
 	}

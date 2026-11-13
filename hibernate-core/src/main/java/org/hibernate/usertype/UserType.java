@@ -12,6 +12,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Objects;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
 import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
@@ -291,6 +293,7 @@ public interface UserType<J> {
 	 *
 	 * @return Class
 	 */
+	@Nonnull
 	Class<J> returnedClass();
 
 	/**
@@ -300,7 +303,7 @@ public interface UserType<J> {
 	 *
 	 * @implNote The default implementation calls {@link Objects#equals}.
 	 */
-	default boolean equals(J x, J y) {
+	default boolean equals(@Nullable J x, @Nullable J y) {
 		return Objects.equals( x, y );
 	}
 
@@ -312,7 +315,7 @@ public interface UserType<J> {
 	 *
 	 * @implNote The default implementation calls {@link Objects#hashCode}.
 	 */
-	default int hashCode(J x) {
+	default int hashCode(@Nonnull J x) {
 		return Objects.hashCode( x );
 	}
 
@@ -328,7 +331,8 @@ public interface UserType<J> {
 	 *
 	 * @since 7.0
 	 */
-	default J nullSafeGet(ResultSet rs, int position, WrapperOptions options)
+	@Nullable
+	default J nullSafeGet(@Nonnull ResultSet rs, int position, @Nonnull WrapperOptions options)
 			throws SQLException {
 		J result = rs.getObject( position, returnedClass() );
 		return rs.wasNull() ? null : result;
@@ -347,7 +351,11 @@ public interface UserType<J> {
 	 *
 	 * @since 7.0
 	 */
-	default void nullSafeSet(PreparedStatement st, J value, int position, WrapperOptions options)
+	default void nullSafeSet(
+			@Nonnull PreparedStatement st,
+			@Nullable J value,
+			int position,
+			@Nonnull WrapperOptions options)
 			throws SQLException {
 		if ( value == null ) {
 			st.setNull( position, getSqlType() );
@@ -376,7 +384,8 @@ public interface UserType<J> {
 	 * @return a clone if the argument is mutable, or the argument if
 	 *         it's an immutable object
 	 */
-	J deepCopy(J value);
+	@Nullable
+	J deepCopy(@Nullable J value);
 
 	/**
 	 * Are instances of the Java class mapped by this custom type
@@ -411,7 +420,11 @@ public interface UserType<J> {
 	 *
 	 * @see org.hibernate.Cache
 	 */
-	default Serializable disassemble(J value) {
+	@Nullable
+	default Serializable disassemble(@Nullable J value) {
+		if ( value == null ) {
+			return null;
+		}
 		if ( Serializable.class.isAssignableFrom( returnedClass() ) ) {
 			return (Serializable) deepCopy( value );
 		}
@@ -444,7 +457,11 @@ public interface UserType<J> {
 	 *
 	 * @see org.hibernate.Cache
 	 */
-	default J assemble(Serializable cached, Object owner) {
+	@Nullable
+	default J assemble(@Nullable Serializable cached, @Nullable Object owner) {
+		if ( cached == null ) {
+			return null;
+		}
 		final var returnedClass = returnedClass();
 		if ( returnedClass.isInstance( cached ) ) {
 			return deepCopy( returnedClass.cast( cached ) );
@@ -475,7 +492,8 @@ public interface UserType<J> {
 	 *
 	 * @see org.hibernate.Session#merge(Object)
 	 */
-	default J replace(J detached, J managed, Object owner) {
+	@Nullable
+	default J replace(@Nullable J detached, @Nullable J managed, @Nullable Object owner) {
 		return deepCopy( detached );
 	}
 
@@ -514,7 +532,7 @@ public interface UserType<J> {
 	 *             Use {@link #getDefaultSqlLength()}
 	 */
 	@Deprecated(since = "7.0", forRemoval = true)
-	default long getDefaultSqlLength(Dialect dialect, JdbcType jdbcType) {
+	default long getDefaultSqlLength(@Nonnull Dialect dialect, @Nonnull JdbcType jdbcType) {
 		return getDefaultSqlLength();
 	}
 
@@ -526,7 +544,7 @@ public interface UserType<J> {
 	 *             Use {@link #getDefaultSqlPrecision()}
 	 */
 	@Deprecated(since = "7.0", forRemoval = true)
-	default int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
+	default int getDefaultSqlPrecision(@Nonnull Dialect dialect, @Nonnull JdbcType jdbcType) {
 		return getDefaultSqlPrecision();
 	}
 
@@ -538,7 +556,7 @@ public interface UserType<J> {
 	 *             Use {@link #getDefaultSqlScale()}
 	 */
 	@Deprecated(since = "7.0", forRemoval = true)
-	default int getDefaultSqlScale(Dialect dialect, JdbcType jdbcType) {
+	default int getDefaultSqlScale(@Nonnull Dialect dialect, @Nonnull JdbcType jdbcType) {
 		return getDefaultSqlScale();
 	}
 
@@ -557,6 +575,7 @@ public interface UserType<J> {
 	 * @since 7.0
 	 */
 	@Incubating(since = "6.1")
+	@Nullable
 	default AttributeConverter<J, ?> getValueConverter() {
 		return null;
 	}
@@ -572,6 +591,7 @@ public interface UserType<J> {
 	 * @since 7.0
 	 */
 	@Incubating(since = "7.0")
+	@Nullable
 	default Boolean isComparable() {
 		return null;
 	}

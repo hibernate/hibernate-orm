@@ -327,6 +327,19 @@ by this profile. Do not infer period, version-producer, aggregate or callable su
 attribute's precision profile. Historical Calendar-based timestamp interpretation and finite
 range guards are unchanged. Evict affected cache regions when changing mapping contracts.
 
+==== Oracle attribute precision
+
+Configured Oracle 23.26 with JDBC 23.26 has bounded precision support, verified with
+server 23.26.1/driver 23.26.4. It covers the explicitly adjusted plain UTC timestamp
+and UTC time carriers, plus plain UTC Instant, at attribute precisions 0..9. It does
+not certify all native Oracle temporal descriptors, version producers, periods or aggregates.
+The time-only carrier uses physical TIMESTAMP WITH TIME ZONE. Omitted OffsetTime
+precision remains zero; retain agreement between the mapping and the existing column.
+
+Metadata-disabled bootstrap must supply the database version; the existing Oracle
+driver-version lookup requires no connection. Historical Calendar interpretation and
+finite range guards are retained. Evict affected caches when changing mapping contracts.
+
 ==== Callable temporal precision
 
 Enabled temporal preservation now assesses scalar callable precision separately from attribute
@@ -339,7 +352,13 @@ Stock support covers the evidenced H2 routes and a bounded PostgreSQL 18/pgJDBC 
 explicitly adjusted OffsetDateTime over the plain UTC timestamp carrier supports indexed input
 and scalar ResultSet returns; native OffsetTime supports indexed input. The PostgreSQL transports
 require microsecond-aligned arguments even when a reused attribute has a coarser column grid.
-Native time OUT/INOUT and actual named JDBC access remain unsupported. Other providers, custom descriptors,
+PostgreSQL native time OUT/INOUT and actual named JDBC access remain unsupported.
+The bounded Oracle profile supports indexed input/scalar returns for the adjusted plain
+UTC timestamp carrier and indexed IN/OUT/INOUT for the adjusted UTC time carrier.
+Its transport retains nine digits, but Oracle routine declarations may narrow arguments
+or function results to six digits independently of JDBC transport or mapped column precision. Inspect routine
+semantics as part of migration analysis; actual named Oracle JDBC access is not certified.
+Other providers, custom descriptors,
 and modes need an independent `TemporalCallablePrecisionJdbcType` or Dialect contribution;
 an existing attribute precision contribution does not certify them. No routine catalog discovery
 or JDBC metadata access at boot is added. Include routine signatures and actual driver transport

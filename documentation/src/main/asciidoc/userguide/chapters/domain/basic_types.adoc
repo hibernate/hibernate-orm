@@ -1021,6 +1021,30 @@ disabled, supply the database version, for example `jakarta.persistence.database
 Hibernate does not connect at boot to discover precision or verify that a retained schema matches
 its mapping. Review existing column definitions as part of migration analysis.
 
+[[basic-temporal-oracle-precision]]
+===== Oracle precision support
+
+The bounded Oracle profile covers configured Oracle 23.26 with Oracle JDBC 23.26,
+verified with server 23.26.1 and driver 23.26.4. Attribute precisions 0 through 9 are
+supported for explicitly adjusted `OffsetDateTime` using the plain UTC `TIMESTAMP`
+carrier, explicitly adjusted `OffsetTime` using the UTC time carrier, and `Instant`
+using the plain UTC `TIMESTAMP` carrier, including COLUMN primary values. This does
+not certify Oracle's different native timestamp-with-time-zone or region-aware handlers.
+
+Oracle stores the supported time-only carrier in `TIMESTAMP WITH TIME ZONE`; this does
+not add a date to its Java semantics. Omitted precision retains the mapping default,
+including zero for `OffsetTime`. `@Column(secondPrecision)` overrides that default.
+Values round directly to the mapped fractional grid, including second and midnight carry.
+Prepared writes, database reads and cached values share the same contract. Existing
+finite ranges and historical Calendar interpretation remain unchanged.
+
+With metadata access at boot disabled, supply the database version, for example
+`jakarta.persistence.database-product-version=23.26.1`. Oracle's existing connection-free
+driver-version lookup supplies the driver information; no precision metadata query is added.
+Unknown driver versions, derived dialects, replacement descriptors, version producers,
+periods and aggregates do not inherit this attribute admission. Retained columns must
+still agree with their mappings, and affected cache regions must be evicted when a contract changes.
+
 [[basic-temporal-query-precision]]
 ===== Precision in queries and the query cache
 
@@ -1079,6 +1103,15 @@ microseconds, so finer inputs are rejected rather than rounded. ORM parameter na
 use indexed JDBC binding. Native time OUT/INOUT, actual named JDBC access and indexed scalar
 returns are not certified by this profile. Other descriptors, providers, and modes require their
 own contribution; unsupported routes fail before statement preparation. JDBC metadata access at boot is not required.
+
+For the bounded Oracle profile above, the explicitly adjusted plain UTC timestamp carrier
+supports indexed inputs and indexed scalar function returns. The adjusted UTC time carrier
+supports indexed IN, OUT and INOUT. These JDBC transports retain all nine fractional digits,
+independently of an attribute's column precision. Oracle routine declarations or casts can
+still reduce precision: an ordinary timestamp routine parameter or function return may
+reduce a nine-digit value to six digits even though the JDBC transport carries nine. Review the routine's
+semantics separately. ORM parameter names do not imply named JDBC access; actual named
+JDBC access and other Oracle callable pairs remain unassessed.
 
 Custom descriptors may implement `TemporalCallablePrecisionJdbcType`, or a Dialect may override
 `getTemporalCallablePrecisionSupport()`. The contribution describes the actual relational type,

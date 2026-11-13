@@ -7,6 +7,7 @@ import java.time.ZoneOffset;
 import jakarta.persistence.ParameterMode;
 
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.temporaltype.spi.TemporalCallablePrecisionContext;
 import org.hibernate.dialect.temporaltype.spi.TemporalCallablePrecisionContext.Access;
@@ -18,7 +19,7 @@ import org.hibernate.type.descriptor.jdbc.internal.UtcTimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalDateTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampUtcAsPlainJdbcTimestampJdbcType;
 
-/// Exact callable routes proved using H2 2.5.252 and the bounded PostgreSQL profile.
+/// Exact callable routes proved using H2 2.5.252 and bounded PostgreSQL and Oracle profiles.
 /// No attribute precision profile
 /// or ORM parameter name substitutes for actual callable transport evidence.
 ///
@@ -27,6 +28,9 @@ public final class StandardTemporalCallablePrecision {
 	private StandardTemporalCallablePrecision() {}
 
 	public static TemporalPrecisionSupport resolve(TemporalCallablePrecisionContext context) {
+		if ( context.dialect().getClass() == OracleDialect.class ) {
+			return OracleTemporalPrecision.resolveCallable( context );
+		}
 		if ( context.dialect().getClass() == PostgreSQLDialect.class ) {
 			return PostgreSQLTemporalPrecision.resolveCallable( context );
 		}

@@ -211,5 +211,37 @@ and INOUT contexts are assessment controls, not live certification of those rout
 
 Existing Oracle/PostgreSQL callable fixtures remain intact. PostgreSQL has the separately evidenced
 bounded routes described above. H2 does not certify Oracle precision, HSQL callable routes,
-genuine H2 OUT/INOUT procedures, or actual named JDBC access. These provider
+genuine H2 OUT/INOUT procedures, or actual named JDBC access. The remaining provider
 acceptance gates remain open; SQL Server live verification stays deferred.
+
+
+== Oracle precision and callable evidence (HHH-21141)
+
+The bounded stock profile requires exact OracleDialect23.26 and JDBC23.26, tested with
+Oracle23.26.1/driver23.26.4. `OraclePrecisionEvidenceTests` isolates ordinary carrier
+fixed points and raw reduction from entity bootstrap: adjusted OffsetDateTime/plain UTC
+TIMESTAMP, adjusted OffsetTime/UTC time carrier and Instant/plain UTC TIMESTAMP.
+Physical time storage is TIMESTAMP WITH TIME ZONE; extracted Java time has no date.
+UTC and America/Los_Angeles JVM runs use asymmetric Kathmandu/Los_Angeles sessions,
+reused statements and distinct physical connections. Existing Calendar finite endpoints
+are tested without changing historical interpretation.
+
+`OracleCallablePrecisionEvidenceTests` separates routine capture from direct anonymous-block
+transport. Indexed setTimestamp/getTimestamp (code93) and setObject/getObject (code2013)
+retain nine digits; ordinary routine arguments reduce to six. Neither a table's precision
+nor an echo alone proves callable capacity. ORM names still route through indexed JDBC.
+`OraclePrecisionContractTests` checks pure rounding, finite carry, UTC-carrier enforcement,
+exact version/descriptor/operation admission and physical-definition contradictions.
+
+`OraclePrecisionLifecycleTests` checks actual serialized cache publication and reads,
+database parity, p3/p6/p9, omitted clock precision0, dirty checking, converters and rollback.
+`OracleCallablePrecisionTests` checks finer-than-column inputs, independently supplied
+server output, routine narrowing, nulls and invalid later input before any setter.
+Both use metadata-enabled and guarded metadata-disabled bootstrap; external test environment
+discovery is separate from factory bootstrap. Supply the actual configured database version
+when disabling metadata. No runtime precision query or routine-catalog discovery is used.
+
+Only the documented exact attribute and indexed callable routes are admitted. Other native
+Oracle descriptors, actual named JDBC access, producer/period/aggregate precision and other
+configured driver/server versions remain outside this evidence. SQL Server live verification
+remains deferred.

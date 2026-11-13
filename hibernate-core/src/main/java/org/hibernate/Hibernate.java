@@ -18,6 +18,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.Supplier;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.metamodel.Attribute;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
@@ -598,6 +599,7 @@ public final class Hibernate {
 	 *
 	 * @since 7.1
 	 */
+	@Nonnull
 	public static LobHelper getLobHelper() {
 		return lobHelper;
 	}
@@ -608,10 +610,12 @@ public final class Hibernate {
 
 	private static class LobHelperImpl implements LobHelper {
 		@Override
-		public Blob createBlob(byte[] bytes) {
+		@Nonnull
+		public Blob createBlob(@Nonnull byte[] bytes) {
 			return lobCreator().createBlob( bytes );
 		}
 
+		@Nonnull
 		private LobCreator lobCreator() {
 			// Always use NonContextualLobCreator.  If ContextualLobCreator is
 			// used both here and in WrapperOptions,
@@ -619,27 +623,32 @@ public final class Hibernate {
 		}
 
 		@Override
-		public Blob createBlob(InputStream stream, long length) {
+		@Nonnull
+		public Blob createBlob(@Nonnull InputStream stream, long length) {
 			return lobCreator().createBlob( stream, length );
 		}
 
 		@Override
-		public Clob createClob(String string) {
+		@Nonnull
+		public Clob createClob(@Nonnull String string) {
 			return lobCreator().createClob( string );
 		}
 
 		@Override
-		public Clob createClob(Reader reader, long length) {
+		@Nonnull
+		public Clob createClob(@Nonnull Reader reader, long length) {
 			return lobCreator().createClob( reader, length );
 		}
 
 		@Override
-		public NClob createNClob(String string) {
+		@Nonnull
+		public NClob createNClob(@Nonnull String string) {
 			return lobCreator().createNClob( string );
 		}
 
 		@Override
-		public NClob createNClob(Reader reader, long length) {
+		@Nonnull
+		public NClob createNClob(@Nonnull Reader reader, long length) {
 			return lobCreator().createNClob( reader, length );
 		}
 	}

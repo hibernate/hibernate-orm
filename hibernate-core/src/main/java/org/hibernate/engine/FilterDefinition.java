@@ -1,5 +1,7 @@
 package org.hibernate.engine;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.Set;
 
 /// Descriptive metadata for a named [org.hibernate.Filter].
@@ -14,12 +16,15 @@ import java.util.Set;
 public interface FilterDefinition {
 
 	/// The name identifying this filter definition.
+	@Nonnull
 	String getFilterName();
 
 	/// The names of the parameters declared by this filter definition.
+	@Nonnull
 	Set<String> getParameterNames();
 
 	/// The default SQL condition, which individual filter mappings may override.
+	@Nonnull
 	String getDefaultFilterCondition();
 
 	/// Whether this filter is enabled automatically for a session.

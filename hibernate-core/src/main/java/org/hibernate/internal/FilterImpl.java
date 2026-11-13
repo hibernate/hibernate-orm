@@ -27,8 +27,8 @@ import static java.util.Collections.unmodifiableMap;
 public class FilterImpl implements Filter, Serializable {
 	public static final String MARKER = "$FILTER_PLACEHOLDER$";
 
-	private transient FilterDefinition definition;
-	private final String filterName;
+	private transient @Nonnull FilterDefinition definition;
+	private final @Nonnull String filterName;
 	//Lazily initialized!
 	//Note that ordering is important for cache keys
 	private @Nullable TreeMap<String,Object> parameters;
@@ -93,7 +93,9 @@ public class FilterImpl implements Filter, Serializable {
 
 	@Nonnull
 	public Map<String,?> getParameters() {
-		return parameters == null ? emptyMap() : unmodifiableMap( parameters );
+		return parameters == null
+				? emptyMap()
+				: unmodifiableMap( parameters );
 	}
 
 	/**
@@ -107,7 +109,7 @@ public class FilterImpl implements Filter, Serializable {
 	 */
 	@Override
 	@Nonnull
-	public Filter setParameter(@Nonnull String name, @Nullable Object value) throws IllegalArgumentException {
+	public Filter setParameter(@Nonnull String name, @Nullable Object value) {
 		final Object argument = definition.processArgument( value );
 
 		// Make sure this is a defined parameter and check the incoming value type

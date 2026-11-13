@@ -246,9 +246,9 @@ public interface CompositeUserType<J> extends EmbeddableInstantiator {
 	 * @param detached the value from the detached entity being merged
 	 * @param managed the value in the managed entity
 	 *
-	 * @return the value to be merged
+	 * @return the non-null replacement for the managed value
 	 */
-	@Nullable
+	@Nonnull
 	J replace(@Nonnull J detached, @Nullable J managed, @Nullable Object owner);
 
 	@Override

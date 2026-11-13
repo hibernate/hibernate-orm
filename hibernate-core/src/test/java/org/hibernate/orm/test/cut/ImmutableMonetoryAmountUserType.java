@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.cut;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Currency;
@@ -11,12 +14,14 @@ import org.hibernate.usertype.CompositeUserType;
 public class ImmutableMonetoryAmountUserType implements CompositeUserType<ImmutableMonetoryAmount> {
 
 	@Override
-	public Object getPropertyValue(ImmutableMonetoryAmount component, int property) throws HibernateException {
+	@Nullable
+	public Object getPropertyValue(@Nonnull ImmutableMonetoryAmount component, int property) throws HibernateException {
 		return property == 0 ? component.getAmount() : component.getCurrency();
 	}
 
 	@Override
-	public ImmutableMonetoryAmount instantiate(ValueAccess valueAccess) {
+	@Nullable
+	public ImmutableMonetoryAmount instantiate(@Nonnull ValueAccess valueAccess) {
 		final BigDecimal value = valueAccess.getValue( 0, BigDecimal.class );
 		final Currency currency = valueAccess.getValue( 1, Currency.class );
 
@@ -27,17 +32,21 @@ public class ImmutableMonetoryAmountUserType implements CompositeUserType<Immuta
 	}
 
 	@Override
+	@Nonnull
 	public Class<?> embeddable() {
 		return ImmutableMonetoryAmount.class;
 	}
 
 	@Override
+	@Nonnull
 	public Class<ImmutableMonetoryAmount> returnedClass() {
 		return ImmutableMonetoryAmount.class;
 	}
 
 	@Override
-	public boolean equals(ImmutableMonetoryAmount x, ImmutableMonetoryAmount y) throws HibernateException {
+	public boolean equals(
+			@Nullable ImmutableMonetoryAmount x,
+			@Nullable ImmutableMonetoryAmount y) throws HibernateException {
 		if ( x == y ) {
 			return true;
 		}
@@ -49,14 +58,15 @@ public class ImmutableMonetoryAmountUserType implements CompositeUserType<Immuta
 	}
 
 	@Override
-	public int hashCode(ImmutableMonetoryAmount x) throws HibernateException {
+	public int hashCode(@Nonnull ImmutableMonetoryAmount x) throws HibernateException {
 		return x.getAmount().hashCode();
 	}
 
 
 	@Override
-	public ImmutableMonetoryAmount deepCopy(ImmutableMonetoryAmount value) throws HibernateException {
-		return new ImmutableMonetoryAmount( value.getAmount(), value.getCurrency() );
+	@Nullable
+	public ImmutableMonetoryAmount deepCopy(@Nullable ImmutableMonetoryAmount value) throws HibernateException {
+		return value == null ? null : new ImmutableMonetoryAmount( value.getAmount(), value.getCurrency() );
 	}
 
 	@Override
@@ -65,22 +75,25 @@ public class ImmutableMonetoryAmountUserType implements CompositeUserType<Immuta
 	}
 
 	@Override
-	public Serializable disassemble(ImmutableMonetoryAmount value)
+	@Nullable
+	public Serializable disassemble(@Nullable ImmutableMonetoryAmount value)
 			throws HibernateException {
 		return deepCopy( value );
 	}
 
 	@Override
-	public ImmutableMonetoryAmount assemble(Serializable cached, Object owner)
+	@Nullable
+	public ImmutableMonetoryAmount assemble(@Nullable Serializable cached, @Nullable Object owner)
 			throws HibernateException {
 		return deepCopy( (ImmutableMonetoryAmount) cached );
 	}
 
 	@Override
+	@Nullable
 	public ImmutableMonetoryAmount replace(
-			ImmutableMonetoryAmount original,
-			ImmutableMonetoryAmount target,
-			Object owner)
+			@Nullable ImmutableMonetoryAmount original,
+			@Nullable ImmutableMonetoryAmount target,
+			@Nullable Object owner)
 			throws HibernateException {
 		return deepCopy( original ); //TODO: improve
 	}

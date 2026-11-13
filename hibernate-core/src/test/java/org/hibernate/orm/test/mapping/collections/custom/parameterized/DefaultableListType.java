@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.mapping.collections.custom.parameterized;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -23,15 +26,18 @@ public class DefaultableListType implements UserCollectionType, ParameterizedTyp
 	private String defaultValue;
 
 	@Override
+	@Nonnull
 	public CollectionClassification getClassification() {
 		return CollectionClassification.LIST;
 	}
 
 	@Override
+	@Nonnull
 	public Class<?> getCollectionClass() {
 		return DefaultableList.class;
 	}
 
+	@Nonnull
 	public Object instantiate(int anticipatedSize) {
 		DefaultableListImpl list = anticipatedSize < 0 ? new DefaultableListImpl() : new DefaultableListImpl( anticipatedSize );
 		list.setDefaultValue( defaultValue );
@@ -39,41 +45,46 @@ public class DefaultableListType implements UserCollectionType, ParameterizedTyp
 	}
 
 	@Override
+	@Nonnull
 	public PersistentCollection instantiate(
-			SharedSessionContractImplementor session,
-			CollectionPersister persister) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull CollectionPersister persister) {
 		return new PersistentDefaultableList( session );
 	}
 
 	@Override
-	public PersistentCollection wrap(SharedSessionContractImplementor session, Object collection) {
+	@Nonnull
+	public PersistentCollection wrap(@Nonnull SharedSessionContractImplementor session, @Nonnull Object collection) {
 		return new PersistentDefaultableList( session, ( List ) collection );
 	}
 
 	@Override
-	public Iterator getElementsIterator(Object collection) {
+	@Nonnull
+	public Iterator getElementsIterator(@Nonnull Object collection) {
 		return ( ( DefaultableList ) collection ).iterator();
 	}
 
 	@Override
-	public boolean contains(Object collection, Object entity) {
+	public boolean contains(@Nonnull Object collection, @Nullable Object entity) {
 		return ( ( DefaultableList ) collection ).contains( entity );
 	}
 
 	@Override
-	public Object indexOf(Object collection, Object entity) {
+	@Nullable
+	public Object indexOf(@Nonnull Object collection, @Nonnull Object entity) {
 		int index = ( ( DefaultableList ) collection ).indexOf( entity );
 		return index >= 0 ? new Integer( index ) : null;
 	}
 
 	@Override
+	@Nonnull
 	public Object replaceElements(
-			Object original,
-			Object target,
-			CollectionPersister persister,
-			Object owner,
-			Map copyCache,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object original,
+			@Nonnull Object target,
+			@Nonnull CollectionPersister persister,
+			@Nullable Object owner,
+			@Nonnull Map copyCache,
+			@Nonnull SharedSessionContractImplementor session) {
 		DefaultableList result = ( DefaultableList ) target;
 		result.clear();
 		result.addAll( ( DefaultableList ) original );
@@ -81,7 +92,7 @@ public class DefaultableListType implements UserCollectionType, ParameterizedTyp
 	}
 
 	@Override
-	public void setParameterValues(Properties parameters) {
+	public void setParameterValues(@Nonnull Properties parameters) {
 		defaultValue = parameters.getProperty( "default" );
 	}
 }

@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.mapping.collections.custom.declaredtype;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.Iterator;
 import java.util.Map;
 
@@ -16,34 +19,42 @@ import org.hibernate.usertype.UserCollectionType;
 public class HeadListType implements UserCollectionType {
 
 	@Override
+	@Nonnull
 	public CollectionClassification getClassification() {
 		return CollectionClassification.LIST;
 	}
 
 	@Override
+	@Nonnull
 	public Class<?> getCollectionClass() {
 		return IHeadList.class;
 	}
 
 	@Override
-	public PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister) throws HibernateException {
+	@Nonnull
+	public PersistentCollection instantiate(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull CollectionPersister persister) throws HibernateException {
 		return new PersistentHeadList( session );
 	}
 
 	@Override
-	public PersistentCollection wrap(SharedSessionContractImplementor session, Object collection) {
+	@Nonnull
+	public PersistentCollection wrap(@Nonnull SharedSessionContractImplementor session, @Nonnull Object collection) {
 		return new PersistentHeadList( session, (IHeadList) collection );
 	}
 
-	public Iterator getElementsIterator(Object collection) {
+	@Nonnull
+	public Iterator getElementsIterator(@Nonnull Object collection) {
 		return ( (IHeadList) collection ).iterator();
 	}
 
-	public boolean contains(Object collection, Object entity) {
+	public boolean contains(@Nonnull Object collection, @Nullable Object entity) {
 		return ( (IHeadList) collection ).contains( entity );
 	}
 
-	public Object indexOf(Object collection, Object entity) {
+	@Nullable
+	public Object indexOf(@Nonnull Object collection, @Nonnull Object entity) {
 		int l = ( (IHeadList) collection ).indexOf( entity );
 		if ( l < 0 ) {
 			return null;
@@ -54,19 +65,21 @@ public class HeadListType implements UserCollectionType {
 	}
 
 	@Override
+	@Nonnull
 	public Object replaceElements(
-			Object original,
-			Object target,
-			CollectionPersister persister,
-			Object owner,
-			Map copyCache,
-			SharedSessionContractImplementor session) throws HibernateException {
+			@Nonnull Object original,
+			@Nonnull Object target,
+			@Nonnull CollectionPersister persister,
+			@Nullable Object owner,
+			@Nonnull Map copyCache,
+			@Nonnull SharedSessionContractImplementor session) throws HibernateException {
 		IHeadList result = (IHeadList) target;
 		result.clear();
 		result.addAll( (HeadList) original );
 		return result;
 	}
 
+	@Nonnull
 	public Object instantiate(int anticipatedSize) {
 		return new HeadList();
 	}

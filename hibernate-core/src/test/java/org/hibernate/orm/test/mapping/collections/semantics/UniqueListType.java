@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.mapping.collections.semantics;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -17,52 +20,59 @@ import org.hibernate.usertype.UserCollectionType;
 //tag::collections-custom-type-ex[]
 public class UniqueListType implements UserCollectionType {
 	@Override
+	@Nonnull
 	public CollectionClassification getClassification() {
 		return CollectionClassification.LIST;
 	}
 
 	@Override
+	@Nonnull
 	public Class<?> getCollectionClass() {
 		return List.class;
 	}
 
 	@Override
+	@Nonnull
 	public PersistentCollection instantiate(
-			SharedSessionContractImplementor session,
-			CollectionPersister persister) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull CollectionPersister persister) {
 		return new UniqueListWrapper( session );
 	}
 
 	@Override
+	@Nonnull
 	public PersistentCollection wrap(
-			SharedSessionContractImplementor session,
-			Object collection) {
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull Object collection) {
 		return new UniqueListWrapper( session, (List) collection );
 	}
 
 	@Override
-	public Iterator getElementsIterator(Object collection) {
+	@Nonnull
+	public Iterator getElementsIterator(@Nonnull Object collection) {
 		return ( (List) collection ).iterator();
 	}
 
 	@Override
-	public boolean contains(Object collection, Object entity) {
+	public boolean contains(@Nonnull Object collection, @Nullable Object entity) {
 		return ( (List) collection ).contains( entity );
 	}
 
 	@Override
-	public Object indexOf(Object collection, Object entity) {
+	@Nullable
+	public Object indexOf(@Nonnull Object collection, @Nonnull Object entity) {
 		return ( (List) collection ).indexOf( entity );
 	}
 
 	@Override
+	@Nonnull
 	public Object replaceElements(
-			Object original,
-			Object target,
-			CollectionPersister persister,
-			Object owner,
-			Map copyCache,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object original,
+			@Nonnull Object target,
+			@Nonnull CollectionPersister persister,
+			@Nullable Object owner,
+			@Nonnull Map copyCache,
+			@Nonnull SharedSessionContractImplementor session) {
 		List result = (List) target;
 		result.clear();
 		result.addAll( (List) original );
@@ -70,6 +80,7 @@ public class UniqueListType implements UserCollectionType {
 	}
 
 	@Override
+	@Nonnull
 	public Object instantiate(int anticipatedSize) {
 		return new ArrayList<>();
 	}

@@ -114,17 +114,20 @@ public class ClassificationType implements EnhancedUserType<Classification>, Val
 	}
 
 	@Override
-	public String toSqlLiteral(Classification value) {
+	@Nonnull
+	public String toSqlLiteral(@Nonnull Classification value) {
 		return Integer.toString( value.ordinal() );
 	}
 
 	@Override
-	public String toString(Classification value) throws HibernateException {
+	@Nonnull
+	public String toString(@Nonnull Classification value) throws HibernateException {
 		return value.name();
 	}
 
 	@Override
-	public Classification fromStringValue(CharSequence sequence) {
+	@Nullable
+	public Classification fromStringValue(@Nonnull CharSequence sequence) {
 		return Classification.valueOf( sequence.toString() );
 	}
 

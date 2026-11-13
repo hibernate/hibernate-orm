@@ -155,7 +155,7 @@ public class UserTypeComparableIdTest {
 		}
 
 		@Override
-		public int compare(CustomId o1, CustomId o2) {
+		public int compare(@Nonnull CustomId o1, @Nonnull CustomId o2) {
 			return o1.getValue().compareTo( o2.getValue() );
 		}
 
@@ -202,12 +202,14 @@ public class UserTypeComparableIdTest {
 		}
 
 		@Override
-		public String toSqlLiteral(CustomId value) {
-			return toString( value );
+		@Nonnull
+		public String toSqlLiteral(@Nonnull CustomId value) {
+			return String.valueOf( value.getValue() );
 		}
 
 		@Override
-		public String toString(CustomId customId) throws HibernateException {
+		@Nullable
+		public String toString(@Nullable CustomId customId) throws HibernateException {
 			if ( customId == null ) {
 				return null;
 			}
@@ -221,7 +223,8 @@ public class UserTypeComparableIdTest {
 		}
 
 		@Override
-		public CustomId fromStringValue(CharSequence sequence) throws HibernateException {
+		@Nullable
+		public CustomId fromStringValue(@Nullable CharSequence sequence) throws HibernateException {
 			if ( sequence == null ) {
 				return null;
 			}

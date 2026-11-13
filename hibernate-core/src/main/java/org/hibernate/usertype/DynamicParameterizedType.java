@@ -1,5 +1,8 @@
 package org.hibernate.usertype;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.SPI;
 
 import static org.hibernate.SPI.Role.IMPLEMENT;
@@ -40,25 +43,35 @@ public interface DynamicParameterizedType extends ParameterizedType {
 
 	interface ParameterType {
 
+		@Nonnull
 		Class<?> getReturnedClass();
 
 		@Incubating(since = "6.5")
+		@Nullable
 		default Type getReturnedJavaType() {
 			return getReturnedClass();
 		}
 
+		@Nonnull
 		Annotation[] getAnnotationsMethod();
 
+		@Nullable
 		String getCatalog();
 
+		@Nullable
 		String getSchema();
 
+		@Nullable
 		String getTable();
 
 		boolean isPrimaryKey();
 
+		/// Column names in mapping order. A formula has a null entry.
+		@Nonnull
 		String[] getColumns();
 
+		/// Column lengths in mapping order. An entry is null for a formula or an unspecified length.
+		@Nonnull
 		Long[] getColumnLengths();
 	}
 }

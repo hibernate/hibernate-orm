@@ -93,7 +93,7 @@ public class EnumType<T extends Enum<T>>
 	 * </ul>
 	 */
 	@Override
-	public void setParameterValues(Properties parameters) {
+	public void setParameterValues(@Nonnull Properties parameters) {
 		// IMPL NOTE: we handle 2 distinct cases here:
 		// 		1) we are passed a ParameterType instance in the incoming Properties - generally
 		//			speaking this indicates the annotation-binding case, and the passed ParameterType
@@ -258,17 +258,19 @@ public class EnumType<T extends Enum<T>>
 	}
 
 	@Override
+	@Nullable
 	public TypeConfiguration getTypeConfiguration() {
 		return typeConfiguration;
 	}
 
 	@Override
-	public void setTypeConfiguration(TypeConfiguration typeConfiguration) {
+	public void setTypeConfiguration(@Nonnull TypeConfiguration typeConfiguration) {
 		this.typeConfiguration = typeConfiguration;
 	}
 
 	@Override
-	public String toSqlLiteral(T value) {
+	@Nonnull
+	public String toSqlLiteral(@Nonnull T value) {
 		verifyConfigured();
 		return isOrdinal()
 				? Integer.toString( value.ordinal() )
@@ -276,19 +278,22 @@ public class EnumType<T extends Enum<T>>
 	}
 
 	@Override
-	public String toString(T value) {
+	@Nonnull
+	public String toString(@Nonnull T value) {
 		verifyConfigured();
 		return enumJavaType.toName( value );
 	}
 
 	@Override
-	public T fromStringValue(CharSequence sequence) {
+	@Nonnull
+	public T fromStringValue(@Nonnull CharSequence sequence) {
 		verifyConfigured();
 		return enumJavaType.fromName( sequence.toString() );
 	}
 
 	@Override @SuppressWarnings("unchecked")
-	public String toLoggableString(Object value, SessionFactoryImplementor factory) {
+	@Nonnull
+	public String toLoggableString(@Nonnull Object value, @Nonnull SessionFactoryImplementor factory) {
 		verifyConfigured();
 		return enumJavaType.extractLoggableRepresentation( (T) value );
 	}

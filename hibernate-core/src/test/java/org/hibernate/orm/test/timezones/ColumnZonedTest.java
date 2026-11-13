@@ -25,11 +25,23 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DomainModel(annotatedClasses = ColumnZonedTest.Zoned.class)
 @SessionFactory
 @ServiceRegistry(settings = @Setting(name = AvailableSettings.TIMEZONE_DEFAULT_STORAGE, value = "COLUMN"))
 public class ColumnZonedTest {
+
+	@Test
+	void compareNullableOffsetDateTime(SessionFactoryScope scope) {
+		final var type = scope.getSessionFactory().getMappingMetamodel()
+				.getEntityDescriptor( Zoned.class ).getPropertyType( "offsetDateTime" );
+		final var value = Instant.EPOCH.atOffset( ZoneOffset.UTC );
+		assertFalse( type.isEqual( null, value ) );
+		assertFalse( type.isEqual( value, null ) );
+		assertTrue( type.isEqual( null, null ) );
+	}
 
 	@Test void test(SessionFactoryScope scope) {
 		final ZonedDateTime nowZoned;

@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.Properties;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
@@ -1024,31 +1025,37 @@ public abstract class SimpleValue implements KeyValue {
 		}
 
 		@Override
+		@Nonnull
 		public Class<?> getReturnedClass() {
 			return returnedClass;
 		}
 
 		@Override
+		@Nullable
 		public java.lang.reflect.Type getReturnedJavaType() {
 			return returnedJavaType;
 		}
 
 		@Override
+		@Nonnull
 		public Annotation[] getAnnotationsMethod() {
 			return annotationsMethod;
 		}
 
 		@Override
+		@Nullable
 		public String getCatalog() {
 			return catalog;
 		}
 
 		@Override
+		@Nullable
 		public String getSchema() {
 			return schema;
 		}
 
 		@Override
+		@Nullable
 		public String getTable() {
 			return table;
 		}
@@ -1059,11 +1066,13 @@ public abstract class SimpleValue implements KeyValue {
 		}
 
 		@Override
+		@Nonnull
 		public String[] getColumns() {
 			return columns;
 		}
 
 		@Override
+		@Nonnull
 		public Long[] getColumnLengths() {
 			return columnLengths;
 		}

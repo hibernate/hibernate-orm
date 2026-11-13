@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.mapping.embeddable.strategy.usertype.embedded;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
@@ -103,7 +106,8 @@ class CompositeUserTypeGenericArrayTest {
 
 	public static class MatrixType implements CompositeUserType<Matrix> {
 		@Override
-		public Object getPropertyValue(Matrix component, int property) {
+		@Nullable
+		public Object getPropertyValue(@Nonnull Matrix component, int property) {
 			return switch ( property ) {
 				case 0 -> component.name;
 				case 1 -> SerializationHelper.serialize( component );
@@ -112,35 +116,39 @@ class CompositeUserTypeGenericArrayTest {
 		}
 
 		@Override
-		public Matrix instantiate(ValueAccess values) {
+		@Nullable
+		public Matrix instantiate(@Nonnull ValueAccess values) {
 			byte[] payload = values.getValue( 1, byte[].class );
 			return payload == null ? null : (Matrix) SerializationHelper.deserialize( payload );
 		}
 
 		@Override
+		@Nonnull
 		public Class<?> embeddable() {
 			return MatrixProjection.class;
 		}
 
 		@Override
+		@Nonnull
 		public Class<Matrix> returnedClass() {
 			return Matrix.class;
 		}
 
 		@Override
-		public boolean equals(Matrix x, Matrix y) {
+		public boolean equals(@Nullable Matrix x, @Nullable Matrix y) {
 			return x == y || x != null && y != null
 					&& Objects.equals( x.name, y.name ) && Objects.equals( x.dimNames, y.dimNames )
 					&& Objects.deepEquals( x.semantics, y.semantics ) && Objects.deepEquals( x.data, y.data );
 		}
 
 		@Override
-		public int hashCode(Matrix value) {
+		public int hashCode(@Nonnull Matrix value) {
 			return Objects.hash( value.name, value.dimNames );
 		}
 
 		@Override
-		public Matrix deepCopy(Matrix value) {
+		@Nullable
+		public Matrix deepCopy(@Nullable Matrix value) {
 			return value == null ? null : (Matrix) SerializationHelper.clone( value );
 		}
 
@@ -150,17 +158,20 @@ class CompositeUserTypeGenericArrayTest {
 		}
 
 		@Override
-		public Serializable disassemble(Matrix value) {
+		@Nullable
+		public Serializable disassemble(@Nullable Matrix value) {
 			return value == null ? null : SerializationHelper.serialize( value );
 		}
 
 		@Override
-		public Matrix assemble(Serializable cached, Object owner) {
+		@Nullable
+		public Matrix assemble(@Nullable Serializable cached, @Nullable Object owner) {
 			return cached == null ? null : (Matrix) SerializationHelper.deserialize( (byte[]) cached );
 		}
 
 		@Override
-		public Matrix replace(Matrix detached, Matrix managed, Object owner) {
+		@Nullable
+		public Matrix replace(@Nullable Matrix detached, @Nullable Matrix managed, @Nullable Object owner) {
 			return deepCopy( detached );
 		}
 	}

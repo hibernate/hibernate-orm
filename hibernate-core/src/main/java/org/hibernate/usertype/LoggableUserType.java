@@ -1,5 +1,7 @@
 package org.hibernate.usertype;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.SPI;
 
 import static org.hibernate.SPI.Role.IMPLEMENT;
@@ -21,5 +23,6 @@ public interface LoggableUserType {
 	 * @param factory The factory.
 	 * @return The loggable string representation.
 	 */
-	String toLoggableString(Object value, SessionFactoryImplementor factory);
+	@Nonnull
+	String toLoggableString(@Nonnull Object value, @Nonnull SessionFactoryImplementor factory);
 }

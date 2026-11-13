@@ -1,5 +1,8 @@
 package org.hibernate.usertype.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.time.OffsetTime;
 import java.time.ZoneOffset;
 
@@ -18,7 +21,8 @@ public class OffsetTimeCompositeUserType extends AbstractTimeZoneStorageComposit
 	public static final String LOCAL_TIME_NAME = "utcTime";
 
 	@Override
-	public Object getPropertyValue(OffsetTime component, int property) throws HibernateException {
+	@Nullable
+	public Object getPropertyValue(@Nonnull OffsetTime component, int property) throws HibernateException {
 		return switch ( property ) {
 			case 0 -> component.withOffsetSameInstant( ZoneOffset.UTC );
 			case 1 -> component.getOffset();
@@ -27,18 +31,21 @@ public class OffsetTimeCompositeUserType extends AbstractTimeZoneStorageComposit
 	}
 
 	@Override
-	public OffsetTime instantiate(ValueAccess values) {
+	@Nullable
+	public OffsetTime instantiate(@Nonnull ValueAccess values) {
 		final OffsetTime utcTime = values.getValue( 0, OffsetTime.class );
 		final ZoneOffset zoneOffset = values.getValue( 1, ZoneOffset.class );
 		return utcTime == null || zoneOffset == null ? null : utcTime.withOffsetSameInstant( zoneOffset );
 	}
 
 	@Override
+	@Nonnull
 	public Class<?> embeddable() {
 		return OffsetTimeEmbeddable.class;
 	}
 
 	@Override
+	@Nonnull
 	public Class<OffsetTime> returnedClass() {
 		return OffsetTime.class;
 	}

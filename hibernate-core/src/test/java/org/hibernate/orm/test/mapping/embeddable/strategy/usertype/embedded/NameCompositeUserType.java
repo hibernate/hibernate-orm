@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.mapping.embeddable.strategy.usertype.embedded;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -16,17 +19,20 @@ public class NameCompositeUserType implements CompositeUserType<Name> {
 	}
 
 	@Override
+	@Nonnull
 	public Class<?> embeddable() {
 		return NameMapper.class;
 	}
 
 	@Override
+	@Nonnull
 	public Class<Name> returnedClass() {
 		return Name.class;
 	}
 
 	@Override
-	public Name instantiate(ValueAccess valueAccess) {
+	@Nonnull
+	public Name instantiate(@Nonnull ValueAccess valueAccess) {
 		// alphabetical
 		final String first = valueAccess.getValue( 0, String.class );
 		final String last = valueAccess.getValue( 1, String.class );
@@ -34,7 +40,8 @@ public class NameCompositeUserType implements CompositeUserType<Name> {
 	}
 
 	@Override
-	public Object getPropertyValue(Name component, int property) throws HibernateException {
+	@Nullable
+	public Object getPropertyValue(@Nonnull Name component, int property) throws HibernateException {
 		// alphabetical
 		switch ( property ) {
 			case 0:
@@ -46,18 +53,19 @@ public class NameCompositeUserType implements CompositeUserType<Name> {
 	}
 
 	@Override
-	public boolean equals(Name x, Name y) {
-		return x == y || x != null && Objects.equals( x.firstName(), y.firstName() )
+	public boolean equals(@Nullable Name x, @Nullable Name y) {
+		return x == y || x != null && y != null && Objects.equals( x.firstName(), y.firstName() )
 				&& Objects.equals( x.lastName(), y.lastName() );
 	}
 
 	@Override
-	public int hashCode(Name x) {
+	public int hashCode(@Nonnull Name x) {
 		return Objects.hash( x.firstName(), x.lastName() );
 	}
 
 	@Override
-	public Name deepCopy(Name value) {
+	@Nullable
+	public Name deepCopy(@Nullable Name value) {
 		return value; // immutable
 	}
 
@@ -67,18 +75,24 @@ public class NameCompositeUserType implements CompositeUserType<Name> {
 	}
 
 	@Override
-	public Serializable disassemble(Name value) {
-		return new String[] { value.firstName(), value.lastName() };
+	@Nullable
+	public Serializable disassemble(@Nullable Name value) {
+		return value == null ? null : new String[] { value.firstName(), value.lastName() };
 	}
 
 	@Override
-	public Name assemble(Serializable cached, Object owner) {
+	@Nullable
+	public Name assemble(@Nullable Serializable cached, @Nullable Object owner) {
+		if ( cached == null ) {
+			return null;
+		}
 		final String[] parts = (String[]) cached;
 		return new Name( parts[0], parts[1] );
 	}
 
 	@Override
-	public Name replace(Name detached, Name managed, Object owner) {
+	@Nullable
+	public Name replace(@Nullable Name detached, @Nullable Name managed, @Nullable Object owner) {
 		return detached;
 	}
 

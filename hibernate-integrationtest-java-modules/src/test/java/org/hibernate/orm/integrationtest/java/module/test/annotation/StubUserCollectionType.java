@@ -1,5 +1,8 @@
 package org.hibernate.orm.integrationtest.java.module.test.annotation;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
@@ -12,52 +15,62 @@ import org.hibernate.usertype.UserCollectionType;
 
 public class StubUserCollectionType implements UserCollectionType {
 	@Override
+	@Nonnull
 	public CollectionClassification getClassification() {
 		return CollectionClassification.BAG;
 	}
 
 	@Override
+	@Nonnull
 	public Class<?> getCollectionClass() {
 		return ArrayList.class;
 	}
 
 	@Override
-	public PersistentCollection<?> instantiate(SharedSessionContractImplementor session, CollectionPersister persister) {
+	@Nonnull
+	public PersistentCollection<?> instantiate(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull CollectionPersister persister) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public PersistentCollection<?> wrap(SharedSessionContractImplementor session, Object collection) {
+	@Nonnull
+	public PersistentCollection<?> wrap(@Nonnull SharedSessionContractImplementor session, @Nonnull Object collection) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public Iterator<?> getElementsIterator(Object collection) {
+	@Nonnull
+	public Iterator<?> getElementsIterator(@Nonnull Object collection) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public boolean contains(Object collection, Object entity) {
+	public boolean contains(@Nonnull Object collection, @Nullable Object entity) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public Object indexOf(Object collection, Object entity) {
+	@Nullable
+	public Object indexOf(@Nonnull Object collection, @Nonnull Object entity) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
+	@Nonnull
 	public Object replaceElements(
-			Object original,
-			Object target,
-			CollectionPersister persister,
-			Object owner,
-			Map copyCache,
-			SharedSessionContractImplementor session) {
+			@Nonnull Object original,
+			@Nonnull Object target,
+			@Nonnull CollectionPersister persister,
+			@Nullable Object owner,
+			@Nonnull Map copyCache,
+			@Nonnull SharedSessionContractImplementor session) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
+	@Nonnull
 	public Object instantiate(int anticipatedSize) {
 		return new ArrayList<>();
 	}

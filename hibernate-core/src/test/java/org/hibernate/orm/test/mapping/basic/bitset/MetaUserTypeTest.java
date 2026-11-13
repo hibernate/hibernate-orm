@@ -220,7 +220,7 @@ public class MetaUserTypeTest {
 		}
 
 		@Override
-		public void initialize(FourthTimePeriod timePeriod, UserTypeCreationContext context) {
+		public void initialize(@Nonnull FourthTimePeriod timePeriod, @Nonnull UserTypeCreationContext context) {
 			days = timePeriod.days();
 			if ( !timePeriod.equals( ( (Field) context.getMemberDetails().toJavaMember() ).getAnnotation( FourthTimePeriod.class ) )) {
 				// only for validation

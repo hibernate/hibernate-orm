@@ -144,7 +144,7 @@ public class ExtendedBeanManagerNotAvailableDuringCustomUserTypeInitTest {
 		}
 
 		@Override
-		public void setParameterValues(Properties parameters) {
+		public void setParameterValues(@Nonnull Properties parameters) {
 			// nothing
 		}
 	}

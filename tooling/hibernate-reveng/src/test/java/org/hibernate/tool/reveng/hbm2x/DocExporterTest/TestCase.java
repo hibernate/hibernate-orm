@@ -1,5 +1,6 @@
 package org.hibernate.tool.reveng.hbm2x.DocExporterTest;
 
+import jakarta.annotation.Nonnull;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.tool.reveng.api.export.ExporterConstants;
@@ -186,7 +187,7 @@ public class TestCase {
 	public static class DummyDateType extends BaseUserTypeSupport<JdbcDateJavaType> {
 		@SuppressWarnings({"unchecked" })
 		@Override
-		protected void resolve(BiConsumer resolutionConsumer) {
+		protected void resolve(@Nonnull BiConsumer resolutionConsumer) {
 			resolutionConsumer.accept(new JdbcDateJavaType(), new DateJdbcType());
 		}
 	}

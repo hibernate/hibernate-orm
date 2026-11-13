@@ -1,5 +1,7 @@
 package org.hibernate.usertype;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.SPI;
 
 import static org.hibernate.SPI.Role.IMPLEMENT;
@@ -53,5 +55,5 @@ public interface AnnotationBasedUserType<A extends Annotation, J> extends UserTy
 	 * @throws org.hibernate.HibernateException in case an error occurred during initialization, e.g. if
 	 *                                          an implementation can't create a value for the given property type.
 	 */
-	void initialize(A annotation, UserTypeCreationContext context);
+	void initialize(@Nonnull A annotation, @Nonnull UserTypeCreationContext context);
 }

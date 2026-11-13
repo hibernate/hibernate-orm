@@ -1,5 +1,8 @@
 package org.hibernate.orm.integrationtest.java.module.test.annotation;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 
 import org.hibernate.metamodel.spi.ValueAccess;
@@ -7,37 +10,42 @@ import org.hibernate.usertype.CompositeUserType;
 
 public class StubCompositeUserType implements CompositeUserType<StubCompositeType> {
 	@Override
-	public Object getPropertyValue(StubCompositeType component, int property) {
+	@Nullable
+	public Object getPropertyValue(@Nonnull StubCompositeType component, int property) {
 		return component.value;
 	}
 
 	@Override
-	public StubCompositeType instantiate(ValueAccess values) {
+	@Nonnull
+	public StubCompositeType instantiate(@Nonnull ValueAccess values) {
 		return new StubCompositeType( values.getValue( 0, String.class ) );
 	}
 
 	@Override
+	@Nonnull
 	public Class<?> embeddable() {
 		return StubEmbeddable.class;
 	}
 
 	@Override
+	@Nonnull
 	public Class<StubCompositeType> returnedClass() {
 		return StubCompositeType.class;
 	}
 
 	@Override
-	public boolean equals(StubCompositeType x, StubCompositeType y) {
+	public boolean equals(@Nullable StubCompositeType x, @Nullable StubCompositeType y) {
 		return x == y || ( x != null && y != null && x.value.equals( y.value ) );
 	}
 
 	@Override
-	public int hashCode(StubCompositeType x) {
+	public int hashCode(@Nonnull StubCompositeType x) {
 		return x == null ? 0 : x.value.hashCode();
 	}
 
 	@Override
-	public StubCompositeType deepCopy(StubCompositeType value) {
+	@Nullable
+	public StubCompositeType deepCopy(@Nullable StubCompositeType value) {
 		return value;
 	}
 
@@ -47,17 +55,23 @@ public class StubCompositeUserType implements CompositeUserType<StubCompositeTyp
 	}
 
 	@Override
-	public Serializable disassemble(StubCompositeType value) {
+	@Nullable
+	public Serializable disassemble(@Nullable StubCompositeType value) {
 		return value == null ? null : value.value;
 	}
 
 	@Override
-	public StubCompositeType assemble(Serializable cached, Object owner) {
+	@Nullable
+	public StubCompositeType assemble(@Nullable Serializable cached, @Nullable Object owner) {
 		return cached == null ? null : new StubCompositeType( (String) cached );
 	}
 
 	@Override
-	public StubCompositeType replace(StubCompositeType detached, StubCompositeType managed, Object owner) {
+	@Nullable
+	public StubCompositeType replace(
+			@Nullable StubCompositeType detached,
+			@Nullable StubCompositeType managed,
+			@Nullable Object owner) {
 		return detached;
 	}
 }

@@ -15,17 +15,20 @@ import java.sql.SQLException;
 
 class MyType implements EnhancedUserType<MyId> {
 	@Override
-	public String toSqlLiteral(MyId value) {
+	@Nonnull
+	public String toSqlLiteral(@Nonnull MyId value) {
 		return "'" + value.text.replace("'", "''") + "'";
 	}
 
 	@Override
-	public String toString(MyId value) throws HibernateException {
+	@Nullable
+	public String toString(@Nullable MyId value) throws HibernateException {
 		return value == null ? null : value.text;
 	}
 
 	@Override
-	public MyId fromStringValue(CharSequence sequence) throws HibernateException {
+	@Nonnull
+	public MyId fromStringValue(@Nonnull CharSequence sequence) throws HibernateException {
 		return new MyId(sequence.toString());
 	}
 

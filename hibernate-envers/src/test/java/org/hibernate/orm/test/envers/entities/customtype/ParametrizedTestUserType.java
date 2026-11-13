@@ -25,7 +25,7 @@ public class ParametrizedTestUserType implements UserType<String>, Parameterized
 	private String param1;
 	private String param2;
 
-	public void setParameterValues(Properties parameters) {
+	public void setParameterValues(@Nonnull Properties parameters) {
 		param1 = parameters.getProperty( "param1" );
 		param2 = parameters.getProperty( "param2" );
 	}

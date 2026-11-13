@@ -758,7 +758,12 @@ public class QueryCacheTest {
 		private volatile CountDownLatch waitLatch;
 
 		@Override
-		public boolean onLoad(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types){
+		public boolean onLoad(
+				@Nonnull Object entity,
+				@Nonnull Object id,
+				@Nonnull Object[] state,
+				@Nonnull String[] propertyNames,
+				@Nonnull Type[] types){
 			onLoad();
 			return true;
 		}

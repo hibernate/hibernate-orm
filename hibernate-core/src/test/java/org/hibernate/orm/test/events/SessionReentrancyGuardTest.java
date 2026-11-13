@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.events;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -149,7 +151,12 @@ public class SessionReentrancyGuardTest {
 		private Session session;
 
 		@Override
-		public boolean onPersist(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
+		public boolean onPersist(
+				@Nonnull Object entity,
+				@Nullable Object id,
+				@Nonnull Object[] state,
+				@Nonnull String[] propertyNames,
+				@Nonnull Type[] types) {
 			session.find( GuardedEntity.class, id );
 			return false;
 		}
@@ -159,7 +166,12 @@ public class SessionReentrancyGuardTest {
 		private StatelessSession session;
 
 		@Override
-		public void onInsert(Object entity, Object id, Object[] state, String[] propertyNames, Type[] propertyTypes) {
+		public void onInsert(
+				@Nonnull Object entity,
+				@Nullable Object id,
+				@Nonnull Object[] state,
+				@Nonnull String[] propertyNames,
+				@Nonnull Type[] propertyTypes) {
 			session.find( GuardedEntity.class, id );
 		}
 	}

@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.stateless;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.List;
 
 import org.hibernate.Interceptor;
@@ -131,7 +133,12 @@ public class StatelessSessionInterceptorOnLoadTest {
 		boolean onLoadCalled = false;
 
 		@Override
-		public boolean onLoad(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
+		public boolean onLoad(
+				@Nonnull Object entity,
+				@Nonnull Object id,
+				@Nonnull Object[] state,
+				@Nonnull String[] propertyNames,
+				@Nonnull Type[] types) {
 			onLoadCalled = true;
 			return false;
 		}
@@ -144,7 +151,12 @@ public class StatelessSessionInterceptorOnLoadTest {
 		int onLoadCallCount = 0;
 
 		@Override
-		public boolean onLoad(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
+		public boolean onLoad(
+				@Nonnull Object entity,
+				@Nonnull Object id,
+				@Nonnull Object[] state,
+				@Nonnull String[] propertyNames,
+				@Nonnull Type[] types) {
 			onLoadCallCount++;
 			return false;
 		}

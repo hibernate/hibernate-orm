@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.interceptor;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,7 +14,12 @@ public class StatefulInterceptor implements Interceptor {
 	private final List<Log> logs = new ArrayList<>();
 
 	@Override
-	public boolean onPersist(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
+	public boolean onPersist(
+			@Nonnull Object entity,
+			@Nullable Object id,
+			@Nonnull Object[] state,
+			@Nonnull String[] propertyNames,
+			@Nonnull Type[] types) {
 		if ( !(entity instanceof Log) ) {
 			logs.add( new Log( "insert", (String) id, entity.getClass().getName() ) );
 		}
@@ -19,7 +27,13 @@ public class StatefulInterceptor implements Interceptor {
 	}
 
 	@Override
-	public boolean onFlushDirty(Object entity, Object id, Object[] currentState, Object[] previousState, String[] propertyNames, Type[] types) {
+	public boolean onFlushDirty(
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nonnull Object[] currentState,
+			@Nullable Object[] previousState,
+			@Nonnull String[] propertyNames,
+			@Nonnull Type[] types) {
 		if ( !(entity instanceof Log) ) {
 			logs.add( new Log( "update", (String) id, entity.getClass().getName() ) );
 		}

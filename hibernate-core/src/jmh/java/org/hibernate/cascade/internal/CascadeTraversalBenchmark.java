@@ -1,5 +1,8 @@
 package org.hibernate.cascade.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -607,7 +610,8 @@ public class CascadeTraversalBenchmark {
 		}
 
 		@Override
-		public Boolean isTransient(Object entity) {
+		@Nullable
+		public Boolean isTransient(@Nonnull Object entity) {
 			invocationCount++;
 			return false;
 		}

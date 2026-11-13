@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.interceptor;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.Interceptor;
 import org.hibernate.TransactionException;
@@ -94,12 +97,12 @@ public class InterceptorTest {
 						new Interceptor() {
 							@Override
 							public boolean onFlushDirty(
-									Object entity,
-									Object id,
-									Object[] currentState,
-									Object[] previousState,
-									String[] propertyNames,
-									Type[] types) {
+									@Nonnull Object entity,
+									@Nonnull Object id,
+									@Nonnull Object[] currentState,
+									@Nullable Object[] previousState,
+									@Nonnull String[] propertyNames,
+									@Nonnull Type[] types) {
 								for ( int i = 0; i < propertyNames.length; i++ ) {
 									if ( propertyNames[i].equals( "password" ) ) {
 										currentState[i] = "test";
@@ -133,11 +136,11 @@ public class InterceptorTest {
 						new Interceptor() {
 							@Override
 							public boolean onPersist(
-									Object entity,
-									Object id,
-									Object[] state,
-									String[] propertyNames,
-									Type[] types) {
+									@Nonnull Object entity,
+									@Nullable Object id,
+									@Nonnull Object[] state,
+									@Nonnull String[] propertyNames,
+									@Nonnull Type[] types) {
 								if ( state[0] == null ) {
 									var detail = new Image.Details();
 									detail.setPerm1( checkPerm );

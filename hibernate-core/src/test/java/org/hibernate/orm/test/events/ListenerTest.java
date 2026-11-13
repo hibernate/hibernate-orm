@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.events;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -38,7 +40,12 @@ public class ListenerTest {
 		configuration.properties( ServiceRegistryUtil.createBaseSettingsWithExport() );
 		configuration.property( "hibernate.session_factory.interceptor", new Interceptor() {
 			@Override
-			public boolean onLoad(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
+			public boolean onLoad(
+					@Nonnull Object entity,
+					@Nonnull Object id,
+					@Nonnull Object[] state,
+					@Nonnull String[] propertyNames,
+					@Nonnull Type[] types) {
 				observed.add( "interceptor-load" );
 				return false;
 			}

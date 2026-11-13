@@ -1,5 +1,8 @@
 package org.hibernate.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.io.Serializable;
 
 import org.hibernate.Interceptor;
@@ -21,43 +24,60 @@ public final class EmptyInterceptor implements Interceptor, Serializable {
 	}
 
 	@Override
-	public boolean onLoad(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
+	public boolean onLoad(
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nonnull Object[] state,
+			@Nonnull String[] propertyNames,
+			@Nonnull Type[] types) {
 		return false;
 	}
 
 	@Override
 	public boolean onFlushDirty(
-			Object entity,
-			Object id,
-			Object[] currentState,
-			Object[] previousState,
-			String[] propertyNames,
-			Type[] types) {
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nonnull Object[] currentState,
+			@Nullable Object[] previousState,
+			@Nonnull String[] propertyNames,
+			@Nonnull Type[] types) {
 		return false;
 	}
 
 	@Override
-	public boolean onSave(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
+	public boolean onSave(
+			@Nonnull Object entity,
+			@Nullable Object id,
+			@Nonnull Object[] state,
+			@Nonnull String[] propertyNames,
+			@Nonnull Type[] types) {
 		return false;
 	}
 
 	@Override
-	public void onDelete(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
+	public void onDelete(
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nonnull Object[] state,
+			@Nonnull String[] propertyNames,
+			@Nonnull Type[] types) {
 	}
 
 	@Override
+	@Nullable
 	public int[] findDirty(
-			Object entity,
-			Object id,
-			Object[] currentState,
-			Object[] previousState,
-			String[] propertyNames,
-			Type[] types) {
+			@Nonnull Object entity,
+			@Nonnull Object id,
+			@Nonnull Object[] currentState,
+			@Nullable Object[] previousState,
+			@Nonnull String[] propertyNames,
+			@Nonnull Type[] types) {
 		return null;
 	}
 
 	@Override
-	public Object getEntity(String entityName, Object id) {
+	@Nullable
+	public Object getEntity(@Nonnull String entityName, @Nonnull Object id) {
 		return null;
 	}
 

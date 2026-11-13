@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.interceptor;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.CallbackException;
 import org.hibernate.Interceptor;
 import org.hibernate.metamodel.RepresentationMode;
@@ -12,7 +15,11 @@ public class InstantiateInterceptor implements Interceptor {
 	}
 
 	@Override
-	public Object instantiate(String entityName, RepresentationMode entityMode, Object id) throws CallbackException {
+	@Nullable
+	public Object instantiate(
+			@Nonnull String entityName,
+			@Nonnull RepresentationMode entityMode,
+			@Nullable Object id) throws CallbackException {
 		if ( ! "org.hibernate.orm.test.interceptor.User".equals( entityName ) ) {
 			return null;
 		}

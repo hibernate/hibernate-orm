@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.dirtiness;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
@@ -186,12 +189,12 @@ public class CustomDirtinessStrategyTest {
 
 		@Override
 		public boolean onFlushDirty(
-				Object entity,
-				Object id,
-				Object[] currentState,
-				Object[] previousState,
-				String[] propertyNames,
-				Type[] types) {
+				@Nonnull Object entity,
+				@Nonnull Object id,
+				@Nonnull Object[] currentState,
+				@Nullable Object[] previousState,
+				@Nonnull String[] propertyNames,
+				@Nonnull Type[] types) {
 			// Tell Hibernate ORM we did change the entity state, which should trigger another dirty check
 			return true;
 		}

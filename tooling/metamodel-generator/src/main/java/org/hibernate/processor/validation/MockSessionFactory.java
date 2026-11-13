@@ -10,6 +10,7 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.UnknownEntityTypeException;
 import org.hibernate.audit.AuditStrategy;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
@@ -811,17 +812,28 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public EntityPersister getEntityDescriptor(String entityName) {
-			return createEntityPersister(entityName);
+		@Nonnull
+		public EntityPersister getEntityDescriptor(@Nonnull String entityName) {
+			final var persister = findEntityDescriptor(entityName);
+			if (persister == null) {
+				throw new UnknownEntityTypeException(entityName);
+			}
+			return persister;
 		}
 
 		@Override
-		public CollectionPersister getCollectionDescriptor(String role) {
-			return createCollectionPersister(role);
+		@Nonnull
+		public CollectionPersister getCollectionDescriptor(@Nonnull String role) {
+			final var persister = findCollectionDescriptor(role);
+			if (persister == null) {
+				throw new IllegalArgumentException("Unable to locate persister: " + role);
+			}
+			return persister;
 		}
 
 		@Override
-		public CollectionPersister findCollectionDescriptor(String role) {
+		@Nullable
+		public CollectionPersister findCollectionDescriptor(@Nonnull String role) {
 			return createCollectionPersister(role);
 		}
 
@@ -831,7 +843,8 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public EntityPersister findEntityDescriptor(String entityName) {
+		@Nullable
+		public EntityPersister findEntityDescriptor(@Nonnull String entityName) {
 			return createEntityPersister(entityName);
 		}
 

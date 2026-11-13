@@ -231,7 +231,7 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Time> {
 
 	private static LocalTime fromDate(Date value) {
 		return value instanceof Time time
-				? unwrapLocalTime( time )
+				? time.toLocalTime()
 				: LocalTime.ofInstant( value.toInstant(), ZoneOffset.systemDefault() );
 	}
 
@@ -258,8 +258,7 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Time> {
 	public Time fromEncodedString(CharSequence charSequence, int start, int end) {
 		try {
 			final var temporalAccessor = ENCODED_FORMATTER.parse( subSequence( charSequence, start, end ) );
-			final var localTime = LocalTime.from( temporalAccessor );
-			return new Time( Time.valueOf( localTime ).getTime() + localTime.getNano() / 1_000_000 );
+			return Time.valueOf( temporalAccessor.query( LocalTime::from ) );
 		}
 		catch ( DateTimeParseException pe) {
 			throw new HibernateException( "could not parse time string " + subSequence( charSequence, start, end ), pe );

@@ -49,7 +49,6 @@ import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.RowTransformerSingularReturnImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.BiConsumer;
@@ -58,6 +57,7 @@ import java.util.function.Consumer;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.hibernate.engine.internal.NaturalIdLogging.NATURAL_ID_LOGGER;
+import static org.hibernate.pretty.MessageHelper.naturalIdToLoggableString;
 
 /**
  * Base support for {@link NaturalIdLoader} implementations
@@ -202,15 +202,14 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		return sqlExpressionResolver.resolveSqlExpression( tableReference, selectableMapping );
 	}
 
+
 	@Nullable
 	@Override
 	public Object resolveNaturalIdToId(@Nullable Object naturalIdValue, @Nonnull SharedSessionContractImplementor session) {
 		if ( NATURAL_ID_LOGGER.isTraceEnabled() ) {
 			NATURAL_ID_LOGGER.retrievingIdForNaturalId(
 					entityDescriptor.getEntityName(),
-					naturalIdValue instanceof Object[] array
-							? Arrays.toString( array )
-							: naturalIdValue
+					naturalIdToLoggableString( naturalIdValue, entityDescriptor, session.getFactory() )
 			);
 		}
 

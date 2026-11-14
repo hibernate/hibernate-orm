@@ -3,6 +3,8 @@ package org.hibernate.engine.jdbc.internal;
 import jakarta.annotation.Nonnull;
 import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.sql.ast.spi.CteSupport;
+import org.hibernate.dialect.sql.ast.spi.MutationSyntaxSupport;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -54,6 +56,18 @@ public final class PersistenceUnitJdbcServices implements JdbcServices {
 	@Nonnull
 	public JdbcMetadata getJdbcMetadata() {
 		return jdbcEnvironment.getJdbcMetadata();
+	}
+
+	@Override
+	@Nonnull
+	public CteSupport getCteSupport() {
+		return delegate.getCteSupport();
+	}
+
+	@Override
+	@Nonnull
+	public MutationSyntaxSupport getMutationSyntaxSupport() {
+		return delegate.getMutationSyntaxSupport();
 	}
 
 	@Override

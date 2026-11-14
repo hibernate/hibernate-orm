@@ -195,6 +195,8 @@ public class ArraySupportTests {
 		when( sessionFactory.getJdbcServices() ).thenReturn( jdbcServices );
 		when( sessionFactory.getSessionFactoryOptions() ).thenReturn( sessionFactoryOptions );
 		when( jdbcServices.getDialect() ).thenReturn( dialect );
+		when( jdbcServices.getCteSupport() ).thenAnswer( invocation -> dialect.getCteSupport() );
+		when( jdbcServices.getMutationSyntaxSupport() ).thenAnswer( invocation -> dialect.getMutationSyntaxSupport() );
 		return new TestingTranslator( new SqlAstTranslationRequest.Select(
 				sessionFactory,
 				new SelectStatement( new QuerySpec( true ) )

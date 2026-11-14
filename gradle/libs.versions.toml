@@ -303,6 +303,7 @@ errorprone = { id = "net.ltgt.errorprone", version.ref = "errorpronePlugin" }
 nullaway = { id = "net.ltgt.nullaway", version.ref = "nullawayPlugin" }
 pluginPublish = { id = "com.gradle.plugin-publish", version.ref = "pluginPublish" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-jpa = { id = "org.jetbrains.kotlin.plugin.jpa", version.ref = "kotlin" }
 mavenPluginDev = { id = "org.gradlex.maven-plugin-development", version.ref = "mavenPluginDev" }
 versionInjection = { id = "org.hibernate.build.version-injection", version.ref = "hibernateBuild" }
 

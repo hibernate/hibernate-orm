@@ -27,6 +27,7 @@ import org.hibernate.sql.model.internal.MutationGroupSingle;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.persister.entity.mutation.InsertCoordinatorStandard.getPropertiesToInsert;
+import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.auxiliaryOperations;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /**
@@ -132,10 +133,10 @@ public class InsertCoordinatorHistory extends AbstractMutationCoordinator implem
 				new TableInsertBuilderStandard( entityPersister(), historyTableMapping, factory() );
 		applyHistoryInsertDetails( insertBuilder, propertyInclusions, entity, session );
 		final var tableMutation = insertBuilder.buildMutation();
-		return singleOperation(
+		return auxiliaryOperations( singleOperation(
 				new MutationGroupSingle( MutationType.INSERT, entityPersister(), tableMutation ),
 				tableMutation.createMutationOperation( null, factory() )
-		);
+		) );
 	}
 
 	private void applyHistoryInsertDetails(

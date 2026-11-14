@@ -2,6 +2,7 @@ package org.hibernate.sql.model.internal;
 
 import java.util.Locale;
 
+import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.sql.model.EntityMutationOperationGroup;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.sql.spi.mutation.MutationOperation;
@@ -14,6 +15,7 @@ public class EntityMutationOperationGroupStandard implements EntityMutationOpera
 	private final MutationType mutationType;
 	private final EntityMutationTarget mutationTarget;
 	private final MutationOperation[] operations;
+	private final boolean auxiliary;
 
 	/**
 	 * Intentionally package private: use {@link MutationOperationGroupFactory}.
@@ -44,9 +46,23 @@ public class EntityMutationOperationGroupStandard implements EntityMutationOpera
 	 * @param operations
 	 */
 	EntityMutationOperationGroupStandard(MutationType mutationType, EntityMutationTarget mutationTarget, MutationOperation[] operations) {
+		this( mutationType, mutationTarget, operations, false );
+	}
+
+	/**
+	 * Intentionally package private: use {@link MutationOperationGroupFactory}.
+	 * @param auxiliary whether the operations mutate auxiliary tables (audit, history)
+	 * which never return the values generated for the entity table
+	 */
+	EntityMutationOperationGroupStandard(
+			MutationType mutationType,
+			EntityMutationTarget mutationTarget,
+			MutationOperation[] operations,
+			boolean auxiliary) {
 		this.mutationType = mutationType;
 		this.mutationTarget = mutationTarget;
 		this.operations = operations;
+		this.auxiliary = auxiliary;
 	}
 
 	@Override
@@ -57,6 +73,11 @@ public class EntityMutationOperationGroupStandard implements EntityMutationOpera
 	@Override
 	public EntityMutationTarget getMutationTarget() {
 		return mutationTarget;
+	}
+
+	@Override
+	public GeneratedValuesMutationDelegate getMutationDelegate() {
+		return auxiliary ? null : EntityMutationOperationGroup.super.getMutationDelegate();
 	}
 
 	@Override

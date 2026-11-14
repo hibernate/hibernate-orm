@@ -69,8 +69,12 @@ public abstract sealed class ToOne
 		if ( filters.isEmpty() ) {
 			filters = new ArrayList<>();
 		}
+		final PersistentClass referencedEntity =
+				referencedEntityName != null
+						? getMetadata().getEntityBinding( referencedEntityName )
+						: null;
 		filters.add( new FilterConfiguration( name, condition, autoAliasInjection,
-				aliasTableMap, aliasEntityMap, null ) );
+				aliasTableMap, aliasEntityMap, referencedEntity ) );
 	}
 
 	@Override

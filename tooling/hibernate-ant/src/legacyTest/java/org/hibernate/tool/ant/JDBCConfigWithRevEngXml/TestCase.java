@@ -1,7 +1,6 @@
 package org.hibernate.tool.ant.JDBCConfigWithRevEngXml;
 
 import org.hibernate.tool.ant.test.utils.AntUtil;
-import org.hibernate.tool.ant.test.utils.FileUtil;
 import org.hibernate.tool.ant.test.utils.JdbcUtil;
 import org.hibernate.tool.ant.test.utils.ResourceUtil;
 import org.junit.jupiter.api.AfterEach;
@@ -10,7 +9,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -37,7 +39,7 @@ public class TestCase {
 	}
 
 	@Test
-	public void testJDBCConfigWithRevEngXml() {
+	public void testJDBCConfigWithRevEngXml() throws IOException {
 
 		String[] resources = new String[] {"build.xml", "hibernate.reveng.xml"};
 		ResourceUtil.createResources(this, resources, resourcesDir);
@@ -57,12 +59,8 @@ public class TestCase {
 		assertFalse(log.contains("Exception"), log);
 
 		assertTrue(bottomUp.exists());
-		assertTrue( FileUtil
-				.findFirstString("good", bottomUp)
-				.contains("Boolean"));
-		assertTrue(FileUtil
-				.findFirstString("something", bottomUp)
-				.contains("SomeUserType"));
+		assertThat( Files.readString( bottomUp.toPath() ) )
+				.contains( "private Boolean good;", "private Something something;" );
 	}
 
 }

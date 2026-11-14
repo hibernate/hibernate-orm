@@ -974,12 +974,12 @@ public class EntityBinder {
 
 	private static void handleForeignKey(ClassDetails clazzToProcess, MetadataBuildingContext context, DependantValue key) {
 		final var foreignKey = clazzToProcess.getDirectAnnotationUsage( ForeignKey.class );
-		handleForeignKeyConstraint( key, foreignKey, nestedForeignKey( clazzToProcess ), context );
+		handleForeignKeyConstraint( key, foreignKey, primaryKeyJoinColumnForeignKey( clazzToProcess ), context );
 	}
 
-	private static ForeignKey nestedForeignKey(ClassDetails clazzToProcess) {
-		final var pkJoinColumn = clazzToProcess.getDirectAnnotationUsage( PrimaryKeyJoinColumn.class );
-		final var pkJoinColumns = clazzToProcess.getDirectAnnotationUsage( PrimaryKeyJoinColumns.class );
+	static ForeignKey primaryKeyJoinColumnForeignKey(AnnotationTarget annotationTarget) {
+		final var pkJoinColumn = annotationTarget.getDirectAnnotationUsage( PrimaryKeyJoinColumn.class );
+		final var pkJoinColumns = annotationTarget.getDirectAnnotationUsage( PrimaryKeyJoinColumns.class );
 		if ( pkJoinColumn != null ) {
 			return pkJoinColumn.foreignKey();
 		}

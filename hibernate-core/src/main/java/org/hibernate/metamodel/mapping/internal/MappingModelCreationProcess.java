@@ -9,7 +9,6 @@ import java.util.Map;
 
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonTransientException;
-import org.hibernate.metamodel.model.domain.internal.EntityPersisterConcurrentMap;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -27,7 +26,7 @@ public class MappingModelCreationProcess {
 	 * Triggers creation of the mapping model
 	 */
 	public static void process(
-			EntityPersisterConcurrentMap entityPersisterMap,
+			Map<String, EntityPersister> entityPersisterMap,
 			Map<String, CollectionPersister> collectionPersisterMap,
 			RuntimeModelCreationContext creationContext) {
 		final var process = new MappingModelCreationProcess(
@@ -38,7 +37,7 @@ public class MappingModelCreationProcess {
 		process.execute();
 	}
 
-	private final EntityPersisterConcurrentMap entityPersisterMap;
+	private final Map<String, EntityPersister> entityPersisterMap;
 	private final Map<String, CollectionPersister> collectionPersisterMap;
 	private final RuntimeModelCreationContext creationContext;
 
@@ -46,7 +45,7 @@ public class MappingModelCreationProcess {
 	@Nullable private List<PostInitCallbackEntry> postInitCallbacks;
 
 	private MappingModelCreationProcess(
-			EntityPersisterConcurrentMap entityPersisterMap,
+			Map<String, EntityPersister> entityPersisterMap,
 			Map<String, CollectionPersister> collectionPersisterMap,
 			RuntimeModelCreationContext creationContext) {
 		this.entityPersisterMap = entityPersisterMap;

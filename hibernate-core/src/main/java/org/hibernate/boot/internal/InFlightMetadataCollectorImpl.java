@@ -141,6 +141,7 @@ public class InFlightMetadataCollectorImpl
 	private final UUID uuid;
 
 	private final Map<String,PersistentClass> entityBindingMap = new HashMap<>();
+	private final Map<String,PersistentClass> entityBindingMapByJpaName = new HashMap<>();
 	private final List<Component> composites = new ArrayList<>();
 	private final Map<Class<?>, Component> genericComponentsMap = new HashMap<>();
 	private final Map<ClassDetails, List<ClassDetails>> embeddableSubtypes = new HashMap<>();
@@ -392,22 +393,22 @@ public class InFlightMetadataCollectorImpl
 			throw new DuplicateMappingException( DuplicateMappingException.Type.ENTITY, entityName );
 		}
 
-		for ( var existingPersistentClass : entityBindingMap.values() ) {
-			if ( existingPersistentClass.getJpaEntityName().equals( jpaEntityName ) ) {
-				throw new DuplicateMappingException(
-						String.format(
-								"Entity classes [%s] and [%s] share the entity name '%s' (entity names must be distinct)",
-								existingPersistentClass.getClassName(),
-								persistentClass.getClassName(),
-								jpaEntityName
-						),
-						DuplicateMappingException.Type.ENTITY,
-						jpaEntityName
-				);
-			}
+		final var existingPersistentClass = entityBindingMapByJpaName.get( jpaEntityName );
+		if ( existingPersistentClass != null ) {
+			throw new DuplicateMappingException(
+					String.format(
+							"Entity classes [%s] and [%s] share the entity name '%s' (entity names must be distinct)",
+							existingPersistentClass.getClassName(),
+							persistentClass.getClassName(),
+							jpaEntityName
+					),
+					DuplicateMappingException.Type.ENTITY,
+					jpaEntityName
+			);
 		}
 
 		entityBindingMap.put( entityName, persistentClass );
+		entityBindingMapByJpaName.put( jpaEntityName, persistentClass );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

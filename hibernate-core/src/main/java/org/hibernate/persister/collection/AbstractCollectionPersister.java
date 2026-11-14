@@ -29,6 +29,7 @@ import org.hibernate.cache.spi.entry.StructuredMapCacheEntry;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.cascade.spi.CascadingActions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
@@ -48,6 +49,7 @@ import org.hibernate.loader.ast.internal.CollectionLoaderSubSelectFetch;
 import org.hibernate.loader.ast.internal.LoaderSqlAstCreationState;
 import org.hibernate.loader.ast.spi.BatchLoaderFactory;
 import org.hibernate.loader.ast.spi.CollectionLoader;
+import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Array;
 import org.hibernate.mapping.Collection;
@@ -860,6 +862,11 @@ public abstract class AbstractCollectionPersister
 		}
 		else {
 			final var influencers = session.getLoadQueryInfluencers();
+			if ( influencers.getEnabledCascadingFetchProfile() == CascadingFetchProfile.REFRESH
+					&& attributeMapping.getAttributeMetadata().getCascadeStyle().doCascade( CascadingActions.REFRESH ) ) {
+				// A refresh needs its cascading fetch graph and must not reload unrelated collection owners.
+				return createSingleKeyCollectionLoader( influencers );
+			}
 			if ( influencers.effectiveSubselectFetchEnabled( this ) ) {
 				final var subSelectLoader = resolveSubSelectLoader( key, session );
 				if ( subSelectLoader != null ) {

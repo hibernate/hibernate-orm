@@ -1,5 +1,6 @@
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
 import java.util.ArrayList;
@@ -20,7 +21,6 @@ import static org.hibernate.metamodel.mapping.internal.MappingModelCreationLoggi
  * @author Steve Ebersole
  */
 public class MappingModelCreationProcess {
-	private final String EOL = System.lineSeparator();
 
 	/**
 	 * Triggers creation of the mapping model
@@ -77,7 +77,6 @@ public class MappingModelCreationProcess {
 
 		for ( var entityPersister : entityPersisterMap.values() ) {
 			currentlyProcessingRole = entityPersister.getEntityName();
-
 			if ( entityPersister instanceof InFlightEntityMappingType inFlightEntityMappingType ) {
 				inFlightEntityMappingType.prepareMappingModel( this );
 			}
@@ -97,23 +96,17 @@ public class MappingModelCreationProcess {
 	private void executePostInitCallbacks() {
 //		MAPPING_MODEL_CREATION_MESSAGE_LOGGER.tracef( "Starting post-init callbacks" );
 
-		Map<PostInitCallbackEntry, Exception> exceptions = new HashMap<>();
+		final Map<PostInitCallbackEntry, Exception> exceptions = new HashMap<>();
 		while ( postInitCallbacks != null && !postInitCallbacks.isEmpty() ) {
-			// cope the callback list to avoid CCME
-			final var callbacks = new ArrayList<>( postInitCallbacks );
-
-			// NOTE: this is *not* the same as the lengths between `callbacks` and `postInitCallbacks`
-			boolean anyCompleted = false;
-
-			//noinspection ForLoopReplaceableByForEach
-			for ( int i = 0; i < callbacks.size(); i++ ) {
-				final var callbackEntry = callbacks.get( i );
+			// Callbacks registered during this pass must wait until the next pass.
+			final int callbackCount = postInitCallbacks.size();
+			int remaining = 0;
+			for ( int i = 0; i < callbackCount; i++ ) {
+				final var callbackEntry = postInitCallbacks.get( i );
 				try {
-					final boolean completed = callbackEntry.process();
-					if ( completed ) {
-						anyCompleted = true;
-						postInitCallbacks.remove( callbackEntry );
+					if ( callbackEntry.process() ) {
 						exceptions.remove( callbackEntry );
+						continue;
 					}
 				}
 				catch (Exception e) {
@@ -134,26 +127,35 @@ public class MappingModelCreationProcess {
 						MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf( format, e );
 					}
 				}
+				postInitCallbacks.set( remaining++, callbackEntry );
 			}
+			// Compact once, preserving retries ahead of callbacks appended during the pass.
+			postInitCallbacks.subList( remaining, callbackCount ).clear();
 
-			if ( !anyCompleted ) {
+			if ( remaining == callbackCount ) {
 				// none of the remaining callbacks could complete fully, this is an error
-				final var buff = new StringBuilder(
-						"PostInitCallback queue could not be processed..."
-				);
-				postInitCallbacks.forEach(
-						callbackEntry -> buff.append( EOL )
-								.append( "        - " ).append( callbackEntry )
-				);
-				buff.append( EOL );
-
-				final var illegalStateException = new IllegalStateException( buff.toString() );
+				final var illegalStateException =
+						new IllegalStateException( errorMessage( postInitCallbacks ) );
 				for ( var entry : exceptions.entrySet() ) {
 					illegalStateException.addSuppressed( entry.getValue() );
 				}
 				throw illegalStateException;
 			}
 		}
+	}
+
+	@Nonnull
+	private static String errorMessage(List<PostInitCallbackEntry> postInitCallbacks) {
+		final var message
+				= new StringBuilder( "PostInitCallback queue could not be processed..." );
+		final String EOL = System.lineSeparator();
+		for ( var callbackEntry : postInitCallbacks ) {
+			message.append( EOL )
+					.append( "        - " )
+					.append( callbackEntry );
+		}
+		message.append( EOL );
+		return message.toString();
 	}
 
 	public <T extends ModelPart> T processSubPart(
@@ -240,9 +242,9 @@ public class MappingModelCreationProcess {
 			return callback.process();
 		}
 
-			@Override
-			public String toString() {
-				return "PostInitCallbackEntry - " + description;
-			}
+		@Override
+		public String toString() {
+			return "PostInitCallbackEntry - " + description;
 		}
+	}
 }

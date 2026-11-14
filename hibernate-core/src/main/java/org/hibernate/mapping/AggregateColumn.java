@@ -63,7 +63,11 @@ public final class AggregateColumn extends Column {
 		final String simpleAggregateName = aggregateColumn.getQuotedName();
 		return parent == null
 				? new SelectablePath( simpleAggregateName )
-				: getSelectablePath( parent.getComponent() ).append( simpleAggregateName );
+				: getSelectablePath( parent.getComponent() ).append(
+						AggregateColumnDescriptorAdapter.hasPlainMemberNames( parent )
+								? aggregateColumn.getName()
+								: simpleAggregateName
+				);
 	}
 
 	public String getAggregateReadExpressionTemplate(Dialect dialect) {
@@ -84,7 +88,7 @@ public final class AggregateColumn extends Column {
 										"",
 										"",
 										getAggregateReadExpressionTemplate( dialect, parent.getComponent() ),
-										simpleAggregateName,
+										AggregateColumnDescriptorAdapter.memberName( aggregateColumn, dialect ),
 										AggregateColumnDescriptorAdapter.effectiveSqlTypeCode( parent ),
 										AggregateColumnDescriptorAdapter.mapping( aggregateColumn ),
 										aggregateColumn.getComponent().getMetadata().getTypeConfiguration()
@@ -117,7 +121,7 @@ public final class AggregateColumn extends Column {
 						.aggregateComponentAssignmentExpression(
 								new AggregateComponentAssignmentRequest(
 										getAggregateAssignmentExpressionTemplate( dialect, parent.getComponent() ),
-										simpleAggregateName,
+										AggregateColumnDescriptorAdapter.memberName( aggregateColumn, dialect ),
 										AggregateColumnDescriptorAdapter.effectiveSqlTypeCode( parent ),
 										AggregateColumnDescriptorAdapter.mapping( aggregateColumn ),
 										aggregateColumn.getComponent().getMetadata().getTypeConfiguration()

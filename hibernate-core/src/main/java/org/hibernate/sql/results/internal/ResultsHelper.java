@@ -267,7 +267,7 @@ public class ResultsHelper {
 		return true;
 	}
 
-	private static Object getCollectionOwner(
+	public static Object getCollectionOwner(
 			PersistenceContext context,
 			CollectionPersister collectionDescriptor,
 			PersistentCollection<?> collection,

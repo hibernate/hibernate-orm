@@ -752,6 +752,11 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect implements Curre
 	}
 
 	@Override
+	public boolean supportsNestedCollectionFetch() {
+		return false;
+	}
+
+	@Override
 	public RowValueSupport getRowValueSupport() {
 		return RowValueSupport.builder( super.getRowValueSupport() )
 				.feature( RowValueSupport.Feature.ROW_CONSTRUCTOR, false )

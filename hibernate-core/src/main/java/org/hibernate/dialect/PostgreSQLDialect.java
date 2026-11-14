@@ -1594,6 +1594,11 @@ public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport
 	}
 
 	@Override
+	public boolean supportsNestedCollectionFetch() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsFilterClause() {
 		return true;
 	}

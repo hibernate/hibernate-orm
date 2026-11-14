@@ -942,13 +942,19 @@ public class PluralAttributeMappingImpl
 						? new PredicateCollector()
 						: collectionPredicateCollector;
 
-		getCollectionDescriptor().applyBaseRestrictions(
+		getCollectionDescriptor().applyFilterRestrictions(
 				predicateCollector::applyPredicate,
 				tableGroup,
 				true,
 				creationState.getLoadQueryInfluencers().getEnabledFilters(),
 				false,
-				null,
+				creationState
+		);
+
+		getCollectionDescriptor().applyWhereRestrictions(
+				collectionPredicateCollector::applyPredicate,
+				tableGroup,
+				true,
 				creationState
 		);
 
@@ -1221,7 +1227,7 @@ public class PluralAttributeMappingImpl
 					tableGroup,
 					null,
 					sqlAliasBase,
-					nestedJoin ? SqlAstJoinType.INNER : joinType,
+					nestedJoin && joinType != SqlAstJoinType.RIGHT ? SqlAstJoinType.INNER : joinType,
 					fetched,
 					false,
 					creationState

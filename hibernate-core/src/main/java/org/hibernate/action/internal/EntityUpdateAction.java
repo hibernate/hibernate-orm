@@ -201,7 +201,12 @@ public class EntityUpdateAction extends EntityAction {
 			}
 		}
 		int dirtyCount = dirtyFields == null ? 0 : dirtyFields.length;
+		final int versionProperty = persister.getVersionPropertyIndex();
 		for ( int i = 0; i < state.length; i++ ) {
+			// The update state already holds the next version, but the entity still holds the previous one.
+			if ( i == versionProperty ) {
+				continue;
+			}
 			if ( state[i] == UNFETCHED_PROPERTY && callbackState[i] != UNFETCHED_PROPERTY
 					|| state[i] != callbackState[i] && !propertyTypes[i].isEqual( state[i], callbackState[i] ) ) {
 				state[i] = callbackState[i];

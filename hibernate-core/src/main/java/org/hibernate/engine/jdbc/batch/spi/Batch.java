@@ -1,6 +1,10 @@
 package org.hibernate.engine.jdbc.batch.spi;
 
 import org.hibernate.Incubating;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
+
+import java.util.function.Supplier;
 
 /// Represents the lifecycle of a batch of statements to be executed together.
 ///
@@ -55,4 +59,10 @@ public interface Batch {
 	/// clear transient row state, but should not execute pending work that has not
 	/// already been executed by [#execute()].
 	void release();
+
+	/// The maximum number of statements to batch together in this batch.
+	///
+	/// @see org.hibernate.engine.jdbc.batch.spi.BatchBuilder#buildSingleStatementBatch(BatchKey, Integer, PreparableMutationOperation, JdbcCoordinator)
+	/// @see org.hibernate.engine.jdbc.batch.spi.BatchBuilder#buildGroupedBatch(BatchKey, Integer, Supplier, JdbcCoordinator)
+	int getBatchSize();
 }

@@ -34,6 +34,7 @@ import java.io.ObjectOutputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 import static org.hibernate.ConnectionReleaseMode.AFTER_STATEMENT;
@@ -62,6 +63,8 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	private @Nullable Statement lastQuery;
 	private final boolean isUserSuppliedConnection;
 
+	private @Nullable Integer globalBatchSize;
+
 	/**
 	 * If true, manually (and temporarily) circumvent aggressive release processing.
 	 */
@@ -75,10 +78,12 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	public JdbcCoordinatorImpl(
 			@Nullable Connection userSuppliedConnection,
 			@Nonnull JdbcSessionOwner owner,
-			@Nonnull JdbcServices jdbcServices) {
+			@Nonnull JdbcServices jdbcServices,
+			@Nullable Integer globalBatchSize) {
 		this.owner = owner;
 		this.jdbcServices = jdbcServices;
 		this.isUserSuppliedConnection = userSuppliedConnection != null;
+		this.globalBatchSize = globalBatchSize;
 		this.logicalConnection = createLogicalConnection( userSuppliedConnection, owner );
 		if ( TRACE_ENABLED ) {
 			JDBC_LOGGER.createdJdbcCoordinator( hashCode() );
@@ -176,6 +181,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			@Nonnull Supplier<PreparedStatementGroup> statementGroupSupplier) {
 		return getBatch(
 				key,
+				batchSize,
 				GroupedBatch.class,
 				() -> owner.getJdbcSessionContext().getBatchBuilder()
 						.buildGroupedBatch( key, batchSize, statementGroupSupplier, this )
@@ -185,10 +191,12 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Nonnull
 	private <B extends Batch> B getBatch(
 			@Nonnull BatchKey key,
+			@Nullable Integer batchSize,
 			@Nonnull Class<B> batchType,
 			@Nonnull Supplier<B> batchSupplier) {
 		if ( currentBatch != null ) {
-			if ( currentBatch.getKey().equals( key ) && batchType.isInstance( currentBatch ) ) {
+			if ( currentBatch.getKey().equals( key ) && batchType.isInstance( currentBatch )
+				&& currentBatch.getBatchSize() == Objects.requireNonNullElse(batchSize, globalBatchSize) ) {
 				return batchType.cast( currentBatch );
 			}
 			else {
@@ -230,6 +238,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			@Nonnull PreparableMutationOperation mutationOperation) {
 		return getBatch(
 				key,
+				batchSize,
 				SingleStatementBatch.class,
 				() -> owner.getJdbcSessionContext().getBatchBuilder()
 						.buildSingleStatementBatch( key, batchSize, mutationOperation, this )

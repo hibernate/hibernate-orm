@@ -513,6 +513,11 @@ public class BatchImpl implements GroupedBatch {
 		close();
 	}
 
+	@Override
+	public int getBatchSize() {
+		return batchSizeToUse;
+	}
+
 	private void close(){
 		releaseStatements();
 		clearBatchStateUntil( batchSizeToUse );

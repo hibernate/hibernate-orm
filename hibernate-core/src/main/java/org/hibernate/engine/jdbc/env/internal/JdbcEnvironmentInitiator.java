@@ -60,6 +60,7 @@ import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_MINOR_VERSI
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_NAME;
 import static org.hibernate.cfg.AvailableSettings.JTA_TRACK_BY_THREAD;
 import static org.hibernate.cfg.AvailableSettings.PREFER_USER_TRANSACTION;
+import static org.hibernate.cfg.BatchSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.cfg.JdbcSettings.ALLOW_METADATA_ON_BOOT;
 import static org.hibernate.cfg.JdbcSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT;
 import static org.hibernate.cfg.JdbcSettings.DIALECT;
@@ -73,6 +74,7 @@ import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
 
 /**
@@ -341,7 +343,8 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 				new SqlExceptionHelper( false ),
 				registry
 		);
-		final var jdbcCoordinator = new JdbcCoordinatorImpl( null, temporaryJdbcSessionOwner, jdbcServices );
+		final int globalBatchSize = getInt( STATEMENT_BATCH_SIZE, configurationValues, 0 );
+		final var jdbcCoordinator = new JdbcCoordinatorImpl( null, temporaryJdbcSessionOwner, jdbcServices, globalBatchSize );
 
 		try {
 			temporaryJdbcSessionOwner.transactionCoordinator =

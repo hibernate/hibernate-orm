@@ -827,7 +827,7 @@ abstract class AbstractSharedSessionContract
 
 	@Nonnull
 	private JdbcCoordinatorImpl createJdbcCoordinator(SessionCreationOptions options) {
-		return new JdbcCoordinatorImpl( options.getConnection(), this, getJdbcServices() );
+		return new JdbcCoordinatorImpl( options.getConnection(), this, getJdbcServices(), options.getJdbcBatchSize() );
 	}
 
 	@Nonnull

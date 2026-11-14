@@ -178,5 +178,10 @@ public class InsertOrderingTest {
 			wrapped.release();
 			batchPosition = 0;
 		}
+
+		@Override
+		public int getBatchSize() {
+			return batchSize;
+		}
 	}
 }

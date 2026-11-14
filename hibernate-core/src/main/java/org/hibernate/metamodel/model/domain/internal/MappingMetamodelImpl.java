@@ -1,6 +1,7 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
@@ -87,16 +88,19 @@ public class MappingMetamodelImpl
 
 	private final JpaMetamodelImpl jpaMetamodel;
 
-	private final Map<Class<?>, String> entityProxyInterfaceMap = new ConcurrentHashMap<>();
+	private final Map<Class<?>, String> entityProxyInterfaceMap = new HashMap<>();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// RuntimeModel
 
-	private final EntityPersisterConcurrentMap entityPersisterMap = new EntityPersisterConcurrentMap();
-	private final Map<String, CollectionPersister> collectionPersisterMap = new ConcurrentHashMap<>();
-	private final Map<String, Set<String>> collectionRolesByEntityParticipant = new ConcurrentHashMap<>();
+	// Populated during single-threaded bootstrap, then only read after factory publication.
+	private final Map<String, EntityPersister> entityPersisterMap = new HashMap<>();
+	private EntityPersister[] entityPersisters = new EntityPersister[0];
+	private String[] entityNames = new String[0];
+	private final Map<String, CollectionPersister> collectionPersisterMap = new HashMap<>();
+	private final Map<String, Set<String>> collectionRolesByEntityParticipant = new HashMap<>();
 
-	private final Map<NavigableRole, EmbeddableValuedModelPart> embeddableValuedModelPart = new ConcurrentHashMap<>();
+	private final Map<NavigableRole, EmbeddableValuedModelPart> embeddableValuedModelPart = new HashMap<>();
 
 	private ConstraintModel constraintModel;
 
@@ -153,6 +157,8 @@ public class MappingMetamodelImpl
 				persisterFactory,
 				context
 		);
+		entityPersisters = entityPersisterMap.values().toArray( EntityPersister[]::new );
+		entityNames = entityPersisterMap.keySet().toArray( String[]::new );
 		processBootCollections(
 				bootModel.getCollectionBindings(),
 				cache,
@@ -172,7 +178,7 @@ public class MappingMetamodelImpl
 		//      - build table mappings after the mapping model is ready and before the constraint model
 		//		- collecting insert and update generated attributes
 		//		- building insert and update generation delegates
-		for ( var persister : entityPersisterMap.values() ) {
+		for ( var persister : entityPersisters ) {
 			persister.initializeCacheRestrictions( bootModel );
 			persister.postInstantiate( bootModel.getEntityBinding( persister.getEntityName() ) );
 			registerEntityNameResolvers( persister, entityNameResolvers );
@@ -191,12 +197,12 @@ public class MappingMetamodelImpl
 		// Build tableDescriptors for all persisters BEFORE prepareLoaders()
 		// This is necessary because subclass persisters may reference their root persister's
 		// tableDescriptors (e.g., JoinedSubclassEntityPersister.getIdentifierTableDescriptor)
-		for ( var persister : entityPersisterMap.values() ) {
+		for ( var persister : entityPersisters ) {
 			persister.buildTableDescriptorsEarly();
 		}
 
 		// Now that all tableDescriptors exist, we can safely build loaders and decomposers
-		for ( var persister : entityPersisterMap.values() ) {
+		for ( var persister : entityPersisters ) {
 			persister.prepareLoaders();
 		}
 
@@ -337,7 +343,7 @@ public class MappingMetamodelImpl
 
 	@Override
 	public void forEachEntityDescriptor(@Nonnull Consumer<EntityPersister> action) {
-		for ( var value : entityPersisterMap.values() ) {
+		for ( var value : entityPersisters ) {
 			action.accept( value );
 		}
 	}
@@ -667,7 +673,7 @@ public class MappingMetamodelImpl
 
 	@Override
 	public String[] getAllEntityNames() {
-		return entityPersisterMap.keys();
+		return entityNames;
 	}
 
 	@Override

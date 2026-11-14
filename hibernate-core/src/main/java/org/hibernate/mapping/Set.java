@@ -143,6 +143,7 @@ public non-sealed class Set extends Collection {
 				if ( key.getColumnSpan() > getKey().getColumnSpan() ) {
 					if ( useUniqueKey ) {
 						collectionTable.addUniqueKey( (UniqueKey) key );
+						adjustTemporalPrimaryKey( key );
 					}
 					else {
 						collectionTable.setPrimaryKey( (PrimaryKey) key );

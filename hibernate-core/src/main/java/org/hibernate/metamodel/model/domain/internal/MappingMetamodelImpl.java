@@ -88,7 +88,7 @@ public class MappingMetamodelImpl
 
 	private final JpaMetamodelImpl jpaMetamodel;
 
-	private final Map<Class<?>, String> entityProxyInterfaceMap = new ConcurrentHashMap<>();
+	private final Map<Class<?>, String> entityProxyInterfaceMap = new HashMap<>();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// RuntimeModel
@@ -97,10 +97,10 @@ public class MappingMetamodelImpl
 	private final Map<String, EntityPersister> entityPersisterMap = new HashMap<>();
 	private EntityPersister[] entityPersisters = new EntityPersister[0];
 	private String[] entityNames = new String[0];
-	private final Map<String, CollectionPersister> collectionPersisterMap = new ConcurrentHashMap<>();
-	private final Map<String, Set<String>> collectionRolesByEntityParticipant = new ConcurrentHashMap<>();
+	private final Map<String, CollectionPersister> collectionPersisterMap = new HashMap<>();
+	private final Map<String, Set<String>> collectionRolesByEntityParticipant = new HashMap<>();
 
-	private final Map<NavigableRole, EmbeddableValuedModelPart> embeddableValuedModelPart = new ConcurrentHashMap<>();
+	private final Map<NavigableRole, EmbeddableValuedModelPart> embeddableValuedModelPart = new HashMap<>();
 
 	private ConstraintModel constraintModel;
 

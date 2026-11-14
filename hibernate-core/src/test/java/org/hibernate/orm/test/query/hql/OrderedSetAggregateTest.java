@@ -23,6 +23,7 @@ import jakarta.persistence.Tuple;
 import jakarta.persistence.TypedQuery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 /**
  * @author Christian Beikov
@@ -158,6 +159,23 @@ public class OrderedSetAggregateTest {
 				session -> {
 					TypedQuery<Integer> q = session.createQuery( "select percentile_disc(0.5) within group (order by eob.theInt asc) from EntityOfBasics eob", Integer.class );
 					assertEquals( 6, q.getSingleResult() );
+				}
+		);
+	}
+
+	@Test
+	@JiraKey("HHH-21086")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsInverseDistributionFunctions.class)
+	public void testPercentileContOfIntegerIsNotTruncated(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					// theInt values are 5, 5, 6, 7, 13 so the interpolated value is 6 + 0.4 * (7 - 6)
+					Object result = session.createQuery(
+							"select percentile_cont(0.6) within group (order by eob.theInt asc) from EntityOfBasics eob",
+							Object.class
+					).getSingleResult();
+					assertInstanceOf( Double.class, result, "result was: " + result );
+					assertEquals( 6.4, (Double) result, 0.000001 );
 				}
 		);
 	}

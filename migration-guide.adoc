@@ -68,6 +68,19 @@ The deprecated `PersistenceContext.reentrantSafeEntityEntries()` method has been
 
 This section describes changes in behavior that applications should be aware of.
 
+[[percentile-cont-result-type]]
+=== Result type of `percentile_cont` for integer sort keys
+
+`percentile_cont` over an integer sort key now returns `Double`.
+Previously the result was typed as the sort key, so the interpolated value was read back as an integer and lost
+its fractional part.
+For example, `percentile_cont(0.5) within group (order by e.intValue)` over the values `4` and `5` now returns
+`4.5` instead of `4` or `5`, depending on the JDBC driver.
+
+Queries which select this expression with an integer result type, such as `createQuery(hql, Integer.class)`,
+should use `Double` instead.
+The result type for other sort key types, and for `percentile_disc` and `mode`, is unchanged.
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // XSD changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -28,6 +28,7 @@ import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.internal.StatsHelper;
+import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
@@ -41,6 +42,7 @@ import static org.hibernate.engine.internal.Nullability.NullabilityCheckType.UPD
  */
 public class EntityUpdateAction extends EntityAction {
 
+	@Nonnull
 	private final Object[] state;
 	@Nullable
 	private final Object[] previousState;
@@ -172,19 +174,21 @@ public class EntityUpdateAction extends EntityAction {
 	///
 	/// @since 8.0
 	public boolean prepareDeferredOwnerPreUpdate() {
-		if ( !ownerPreUpdateDeferred ) {
+		if ( ownerPreUpdateDeferred ) {
+			ownerPreUpdateDeferred = false;
+			final var session = getSession();
+			final var persister = getPersister();
+			session.runEntityLifecycleCallback( () -> persister.getEntityCallbacks().preUpdate( getInstance() ) );
+			refreshStateAfterOwnerCallback( persister );
+			new Nullability( session, UPDATE ).checkNullability( state, persister );
+			return true;
+		}
+		else {
 			return false;
 		}
-		ownerPreUpdateDeferred = false;
-		final var session = getSession();
-		final var persister = getPersister();
-		session.runEntityLifecycleCallback( () -> persister.getEntityCallbacks().preUpdate( getInstance() ) );
-		refreshStateAfterOwnerCallback( persister );
-		new Nullability( session, UPDATE ).checkNullability( state, persister );
-		return true;
 	}
 
-	private void refreshStateAfterOwnerCallback(EntityPersister persister) {
+	private void refreshStateAfterOwnerCallback(@Nonnull EntityPersister persister) {
 		final Object[] callbackState = persister.getValues( getInstance() );
 		final var propertyTypes = persister.getPropertyTypes();
 		if ( persister.hasCollections() ) {
@@ -201,13 +205,18 @@ public class EntityUpdateAction extends EntityAction {
 			}
 		}
 		int dirtyCount = dirtyFields == null ? 0 : dirtyFields.length;
+		final int versionProperty = persister.getVersionPropertyIndex();
 		for ( int i = 0; i < state.length; i++ ) {
-			if ( state[i] == UNFETCHED_PROPERTY && callbackState[i] != UNFETCHED_PROPERTY
-					|| state[i] != callbackState[i] && !propertyTypes[i].isEqual( state[i], callbackState[i] ) ) {
-				state[i] = callbackState[i];
-				if ( !dirty[i] ) {
-					dirty[i] = true;
-					dirtyCount++;
+			// The update state already holds the next version,
+			// but the entity still holds the previous one.
+			if ( i != versionProperty ) {
+				if ( isInitialized( i, callbackState )
+						|| isModified( i, callbackState, propertyTypes ) ) {
+					state[i] = callbackState[i];
+					if ( !dirty[i] ) {
+						dirty[i] = true;
+						dirtyCount++;
+					}
 				}
 			}
 		}
@@ -220,6 +229,16 @@ public class EntityUpdateAction extends EntityAction {
 				}
 			}
 		}
+	}
+
+	private boolean isInitialized(int i, @Nonnull Object[] callbackState) {
+		return state[i] == UNFETCHED_PROPERTY
+			&& callbackState[i] != UNFETCHED_PROPERTY;
+	}
+
+	private boolean isModified(int i, @Nonnull Object[] callbackState, @Nonnull Type[] propertyTypes) {
+		return state[i] != callbackState[i]
+			&& !propertyTypes[i].isEqual( state[i], callbackState[i] );
 	}
 
 	@Nullable

@@ -3,6 +3,7 @@ package org.hibernate.orm.test.type.temporal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.SpannerDialect;
+import org.hibernate.type.internal.DirectJavaTimeJdbcTypeResolver;
 
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -22,12 +23,23 @@ public class AbstractParametersBuilder<V,D extends Data<V>,B extends AbstractPar
 
 	private final List<Class<? extends AbstractRemappingH2Dialect>> remappingDialectClasses = new ArrayList<>();
 
-	private ZoneId forcedJdbcTimeZone = null;
+	private final Class<?> javaTimeType;
 
-	protected AbstractParametersBuilder(Dialect dialect) {
+	private ZoneId forcedJdbcTimeZone = null;
+	private boolean directJdbcOnly = false;
+
+	protected AbstractParametersBuilder(Dialect dialect, Class<?> javaTimeType) {
 		this.dialect = dialect;
+		this.javaTimeType = javaTimeType;
 		// Always test without remapping
 		remappingDialectClasses.add( null );
+	}
+
+	protected boolean supportsDirectJdbc() {
+		return DirectJavaTimeJdbcTypeResolver.resolve(
+				javaTimeType,
+				dialect.getDirectJavaTimeJdbcSupport()::supports
+		) != null;
 	}
 
 	public B skippedForDialects(List<Class<?>> dialectsToSkip, Consumer<B> ifNotSkipped) {
@@ -47,6 +59,19 @@ public class AbstractParametersBuilder<V,D extends Data<V>,B extends AbstractPar
 	public B skippedForDialects(Predicate<Dialect> skipPredicate, Consumer<B> ifNotSkipped) {
 		if ( !skipPredicate.test( dialect ) ) {
 			ifNotSkipped.accept( thisAsB() );
+		}
+		return thisAsB();
+	}
+
+	public B onlyDirectJdbc(Consumer<B> contributor) {
+		if ( supportsDirectJdbc() ) {
+			directJdbcOnly = true;
+			try {
+				contributor.accept( thisAsB() );
+			}
+			finally {
+				directJdbcOnly = false;
+			}
 		}
 		return thisAsB();
 	}
@@ -100,11 +125,20 @@ public class AbstractParametersBuilder<V,D extends Data<V>,B extends AbstractPar
 			ZoneId forcedJdbcTimeZone,
 			Class<? extends AbstractRemappingH2Dialect> remappingDialectClass,
 			D testData) {
-		result.add( new Parameter<>(
-				new Environment( defaultJvmTimeZone, forcedJdbcTimeZone, remappingDialectClass ),
-				testData
-		) );
+		var canDirectJdbc = supportsDirectJdbc() && remappingDialectClass == null;
 
+		if ( !directJdbcOnly ) {
+			result.add( new Parameter<>(
+					new Environment( defaultJvmTimeZone, forcedJdbcTimeZone, remappingDialectClass, false ),
+					testData
+			) );
+		}
+		if ( canDirectJdbc ) {
+			result.add( new Parameter<>(
+					new Environment( defaultJvmTimeZone, forcedJdbcTimeZone, null, true, !directJdbcOnly ),
+					testData
+			) );
+		}
 	}
 
 	protected Iterable<? extends ZoneId> getHibernateJdbcTimeZonesToTest() {

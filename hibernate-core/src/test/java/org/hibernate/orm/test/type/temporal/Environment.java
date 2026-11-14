@@ -10,19 +10,32 @@ import java.time.ZoneId;
  * @param hibernateJdbcTimeZone The Hibernate setting, {@value AvailableSettings#JDBC_TIME_ZONE},
  * may affect a lot of time-related types,
  * which is why we take it into account even with timezone-independent types such as Instant.
+ * @param legacyJdbcSupported Whether this input can be exercised through the legacy JDBC strategy.
  */
 public record Environment(
 		ZoneId defaultJvmTimeZone,
 		ZoneId hibernateJdbcTimeZone,
-		Class<? extends AbstractRemappingH2Dialect> remappingDialectClass) {
+		Class<? extends AbstractRemappingH2Dialect> remappingDialectClass,
+		boolean directJdbc,
+		boolean legacyJdbcSupported) {
+
+	public Environment(
+			ZoneId defaultJvmTimeZone,
+			ZoneId hibernateJdbcTimeZone,
+			Class<? extends AbstractRemappingH2Dialect> remappingDialectClass,
+			boolean directJdbc) {
+		this( defaultJvmTimeZone, hibernateJdbcTimeZone, remappingDialectClass, directJdbc, true );
+	}
 
 	@Override
 	public String toString() {
 		return String.format(
-				"[JVM TZ: %s, JDBC TZ: %s, remapping dialect: %s]",
+				"[JVM TZ: %s, JDBC TZ: %s, remapping dialect: %s, direct JDBC: %s, legacy JDBC supported: %s]",
 				defaultJvmTimeZone,
 				hibernateJdbcTimeZone,
-				remappingDialectClass == null ? null : remappingDialectClass.getSimpleName()
+				remappingDialectClass == null ? null : remappingDialectClass.getSimpleName(),
+				directJdbc,
+				legacyJdbcSupported
 		);
 	}
 }

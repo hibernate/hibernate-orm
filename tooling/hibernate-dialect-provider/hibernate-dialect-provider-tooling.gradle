@@ -128,15 +128,22 @@ def validateDialectProviderBoundariesTask = tasks.register("validateDialectProvi
 	dependsOn ":documentation:generateClassificationMetadata"
 	classpath = sourceSets.main.runtimeClasspath
 	mainClass = "org.hibernate.orm.tooling.dialectprovider.internal.ProviderBoundaryRunner"
-	doFirst {
-		args "validate",
+	// computed lazily through a provider: the arguments cannot be resolved from the project while the task runs,
+	// and the other projects are only configured on demand (through the `dependsOn` above)
+	def textReport = layout.buildDirectory.file( "reports/hibernate-dialect-provider/boundary-validation.txt" )
+	def jsonReport = layout.buildDirectory.file( "reports/hibernate-dialect-provider/boundary-validation.json" )
+	def providerJar = providerFixtureJarTask.flatMap { it.archiveFile }
+	argumentProviders.add( new LazyArgumentsProvider( arguments: providers.provider {
+		[
+				"validate",
 				"--metadata", project( ":documentation" ).layout.buildDirectory.file( "orm/reports/classifications.json.gz" ).get().asFile.absolutePath,
 				"--provider-package", "org.example.orm.dialect",
-				"--text-report", layout.buildDirectory.file( "reports/hibernate-dialect-provider/boundary-validation.txt" ).get().asFile.absolutePath,
-				"--json-report", layout.buildDirectory.file( "reports/hibernate-dialect-provider/boundary-validation.json" ).get().asFile.absolutePath,
-				"--provider", providerFixtureJarTask.get().archiveFile.get().asFile.absolutePath,
+				"--text-report", textReport.get().asFile.absolutePath,
+				"--json-report", jsonReport.get().asFile.absolutePath,
+				"--provider", providerJar.get().asFile.absolutePath,
 				"--upstream", project( ":hibernate-core" ).tasks.named( "jar", Jar ).get().archiveFile.get().asFile.absolutePath
-	}
+		]
+	} ) )
 }
 
 tasks.register("verifyDialectProvider") {

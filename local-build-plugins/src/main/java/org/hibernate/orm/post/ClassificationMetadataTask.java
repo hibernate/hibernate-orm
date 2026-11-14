@@ -8,12 +8,12 @@ import java.nio.file.Files;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
-
-import org.hibernate.build.OrmBuildDetails;
 
 /// Generates the canonical `classifications.json` metadata document.
 ///
@@ -52,19 +52,24 @@ public abstract class ClassificationMetadataTask extends AbstractJandexAwareTask
 		return migrationCompatibilityArtifacts;
 	}
 
+	@Input
+	public abstract Property<String> getHibernateVersionFamily();
+
+	@Input
+	public abstract Property<String> getHibernateVersionName();
+
 	@TaskAction
 	public void generateClassificationMetadata() {
 		final IndexManager indexManager = getIndexManager();
 		final ClassificationModel model = new JandexClassificationClassifier( indexManager::getArtifact )
 				.classify( indexManager.getIndex() );
-		final OrmBuildDetails buildDetails = getProject().getExtensions().getByType( OrmBuildDetails.class );
 		final ClassificationMetadata metadata = new ClassificationMetadata(
-				buildDetails.getHibernateVersionFamily(),
-				buildDetails.getHibernateVersionName(),
+				getHibernateVersionFamily().get(),
+				getHibernateVersionName().get(),
 				model,
 				indexManager.getClassificationArtifacts(
 						model,
-						buildDetails.getHibernateVersionName(),
+						getHibernateVersionName().get(),
 						migrationCompatibilityArtifacts.getFiles()
 				)
 		);

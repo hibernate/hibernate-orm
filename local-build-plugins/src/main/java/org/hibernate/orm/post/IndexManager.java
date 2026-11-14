@@ -15,16 +15,13 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
-import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
-import org.gradle.api.artifacts.result.ResolvedArtifactResult;
+import org.gradle.api.file.ArchiveOperations;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.file.FileVisitDetails;
 import org.gradle.api.file.FileVisitor;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RelativePath;
+import org.gradle.api.logging.Logger;
 import org.gradle.api.provider.Provider;
 
 import org.jboss.jandex.ClassSummary;
@@ -39,36 +36,23 @@ import org.jboss.jandex.Indexer;
  * @author Steve Ebersole
  */
 public class IndexManager {
-	private final Configuration artifactsToProcess;
 	private final Provider<RegularFile> indexFileReferenceAccess;
 	private final Provider<RegularFile> artifactFileReferenceAccess;
-	private final Project project;
+	private final Provider<RegularFile> descriptorFileReferenceAccess;
 
 	private Index index;
 	private Map<String, TreeSet<String>> artifactsByElement;
 	private Map<String, ClassificationMetadata.Artifact> artifactDescriptors;
 
-	public IndexManager(Configuration artifactsToProcess, Project project) {
-		this.artifactsToProcess = artifactsToProcess;
-		this.indexFileReferenceAccess = project.getLayout()
-				.getBuildDirectory()
-				.file( "orm/reports/indexing/jandex.idx" );
-		this.artifactFileReferenceAccess = project.getLayout()
-				.getBuildDirectory()
-				.file( "orm/reports/indexing/artifacts.txt" );
-		this.project = project;
-	}
-
-	public Configuration getArtifactsToProcess() {
-		return artifactsToProcess;
-	}
-
-	public Provider<RegularFile> getIndexFileReferenceAccess() {
-		return indexFileReferenceAccess;
-	}
-
-	public Provider<RegularFile> getArtifactFileReferenceAccess() {
-		return artifactFileReferenceAccess;
+	/// Creates a manager over the files produced by [IndexerTask]. Holds no reference to the
+	/// Gradle model, so it is safe to create from a task action under the configuration cache.
+	public IndexManager(
+			Provider<RegularFile> indexFileReferenceAccess,
+			Provider<RegularFile> artifactFileReferenceAccess,
+			Provider<RegularFile> descriptorFileReferenceAccess) {
+		this.indexFileReferenceAccess = indexFileReferenceAccess;
+		this.artifactFileReferenceAccess = artifactFileReferenceAccess;
+		this.descriptorFileReferenceAccess = descriptorFileReferenceAccess;
 	}
 
 	public Index getIndex() {
@@ -103,7 +87,7 @@ public class IndexManager {
 			Collection<File> migrationCompatibilityArtifacts) {
 		getIndex();
 		if ( artifactDescriptors == null ) {
-			artifactDescriptors = resolveArtifactDescriptors();
+			artifactDescriptors = loadArtifactDescriptors( descriptorFileReferenceAccess );
 		}
 		final Set<String> requiredFiles = new TreeSet<>();
 		final Set<String> compatibilityFiles = new TreeSet<>();
@@ -180,10 +164,38 @@ public class IndexManager {
 	}
 
 
+	private static Map<String, ClassificationMetadata.Artifact> loadArtifactDescriptors(
+			Provider<RegularFile> descriptorFileReferenceAccess) {
+		final File descriptorFile = descriptorFileReferenceAccess.get().getAsFile();
+		if ( !descriptorFile.exists() ) {
+			throw new IllegalStateException( "Cannot load artifact coordinates; the stored file does not exist - " + descriptorFile.getAbsolutePath() );
+		}
+		final Map<String, ClassificationMetadata.Artifact> descriptors = new TreeMap<>();
+		try {
+			for ( String line : Files.readAllLines( descriptorFile.toPath() ) ) {
+				final String[] parts = line.split( "\t", -1 );
+				if ( parts.length != 5 ) {
+					throw new IllegalStateException( "Malformed artifact coordinates: " + line );
+				}
+				descriptors.put(
+						parts[0],
+						new ClassificationMetadata.Artifact( parts[0], parts[1], parts[2], parts[3], Boolean.parseBoolean( parts[4] ) )
+				);
+			}
+			return descriptors;
+		}
+		catch (IOException e) {
+			throw new RuntimeException( "Unable to read artifact coordinates - " + descriptorFile.getAbsolutePath(), e );
+		}
+	}
+
 	/**
 	 * Used from {@link IndexerTask} as its action
 	 */
-	void index() {
+	void index(
+			Map<File, ClassificationMetadata.Artifact> descriptors,
+			ArchiveOperations archiveOperations,
+			Logger logger) {
 		if ( index != null ) {
 			throw new IllegalStateException( "Index was already created or loaded" );
 		}
@@ -193,21 +205,18 @@ public class IndexManager {
 
 		// note: each of `artifacts` is a jar-file
 		artifactDescriptors = new TreeMap<>();
-		final Set<ResolvedArtifactResult> resolvedArtifacts = artifactsToProcess.getIncoming().getArtifacts().getArtifacts();
 		final Set<File> artifacts = new TreeSet<>();
-		for ( ResolvedArtifactResult resolvedArtifact : resolvedArtifacts ) {
-			final File file = resolvedArtifact.getFile();
+		descriptors.forEach( (file, descriptor) -> {
 			artifacts.add( file );
-			final ClassificationMetadata.Artifact descriptor = descriptor( resolvedArtifact );
 			final ClassificationMetadata.Artifact previous = artifactDescriptors.put( file.getName(), descriptor );
 			if ( previous != null && !previous.getCoordinates().equals( descriptor.getCoordinates() ) ) {
 				throw new IllegalStateException( "Artifact file name maps to multiple coordinates: " + file.getName() );
 			}
-		}
+		} );
 
 		artifacts.forEach( (jar) -> {
 			final String artifactName = jar.getName();
-			final FileTree jarFileTree = project.zipTree( jar );
+			final FileTree jarFileTree = archiveOperations.zipTree( jar );
 			jarFileTree.visit(
 					new FileVisitor() {
 						private boolean isInOrmPackage(RelativePath relativePath) {
@@ -230,9 +239,7 @@ public class IndexManager {
 								try (final FileInputStream stream = new FileInputStream( details.getFile() )) {
 									final ClassSummary classSummary = indexer.indexWithSummary( stream );
 									if ( classSummary == null ) {
-										project.getLogger()
-												.lifecycle( "Problem indexing class file - " + details.getFile()
-														.getAbsolutePath() );
+										logger.lifecycle( "Problem indexing class file - {}", details.getFile().getAbsolutePath() );
 									}
 									else {
 										final String className = classSummary.name().toString();
@@ -264,53 +271,7 @@ public class IndexManager {
 		this.index = indexer.complete();
 		storeIndex();
 		storeArtifacts();
-	}
-
-	private Map<String, ClassificationMetadata.Artifact> resolveArtifactDescriptors() {
-		final Map<String, ClassificationMetadata.Artifact> descriptors = new TreeMap<>();
-		for ( ResolvedArtifactResult resolvedArtifact : artifactsToProcess.getIncoming().getArtifacts().getArtifacts() ) {
-			final ClassificationMetadata.Artifact descriptor = descriptor( resolvedArtifact );
-			final ClassificationMetadata.Artifact previous = descriptors.put(
-					resolvedArtifact.getFile().getName(),
-					descriptor
-			);
-			if ( previous != null && !previous.getCoordinates().equals( descriptor.getCoordinates() ) ) {
-				throw new IllegalStateException(
-						"Artifact file name maps to multiple coordinates: " + resolvedArtifact.getFile().getName()
-				);
-			}
-		}
-		return descriptors;
-	}
-
-	private ClassificationMetadata.Artifact descriptor(ResolvedArtifactResult artifact) {
-		if ( artifact.getId().getComponentIdentifier() instanceof ModuleComponentIdentifier ) {
-			final ModuleComponentIdentifier module = (ModuleComponentIdentifier) artifact.getId().getComponentIdentifier();
-			return new ClassificationMetadata.Artifact(
-					artifact.getFile().getName(),
-					module.getGroup(),
-					module.getModule(),
-					module.getVersion(),
-					false
-			);
-		}
-		if ( artifact.getId().getComponentIdentifier() instanceof ProjectComponentIdentifier ) {
-			final ProjectComponentIdentifier identifier = (ProjectComponentIdentifier) artifact.getId().getComponentIdentifier();
-			final Project owner = project.getRootProject().findProject( identifier.getProjectPath() );
-			if ( owner == null ) {
-				throw new IllegalStateException( "Unable to locate artifact project " + identifier.getProjectPath() );
-			}
-			return new ClassificationMetadata.Artifact(
-					artifact.getFile().getName(),
-					owner.getGroup().toString(),
-					owner.getName(),
-					owner.getVersion().toString(),
-					true
-			);
-		}
-		throw new IllegalStateException(
-				"Classified artifact does not have module coordinates: " + artifact.getFile()
-		);
+		storeDescriptors();
 	}
 
 	private void recordArtifact(String elementId, String artifactName) {
@@ -346,6 +307,24 @@ public class IndexManager {
 		}
 		catch (IOException e) {
 			throw new RuntimeException( "Error writing indexed artifact provenance - " + artifactFile.getAbsolutePath(), e );
+		}
+	}
+
+	private void storeDescriptors() {
+		final File descriptorFile = prepareOutputFile( descriptorFileReferenceAccess );
+		try ( final FileWriter fileWriter = new FileWriter( descriptorFile ) ) {
+			for ( ClassificationMetadata.Artifact artifact : artifactDescriptors.values() ) {
+				fileWriter.write( String.join( "\t",
+						artifact.getFileName(),
+						artifact.getGroup(),
+						artifact.getModule(),
+						artifact.getVersion(),
+						Boolean.toString( artifact.isHibernateOrmModule() ) ) );
+				fileWriter.write( '\n' );
+			}
+		}
+		catch (IOException e) {
+			throw new RuntimeException( "Error writing artifact coordinates - " + descriptorFile.getAbsolutePath(), e );
 		}
 	}
 

@@ -5,12 +5,13 @@ import java.io.IOException;
 
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.RegularFile;
+import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.OutputFile;
-
-import org.hibernate.build.OrmBuildDetails;
 
 import static org.hibernate.orm.post.ReportGenerationPlugin.TASK_GROUP_NAME;
 
@@ -18,31 +19,28 @@ import static org.hibernate.orm.post.ReportGenerationPlugin.TASK_GROUP_NAME;
  * @author Steve Ebersole
  */
 public abstract class AbstractJandexAwareTask extends DefaultTask {
-	private final Provider<IndexManager> indexManager;
-
 	public AbstractJandexAwareTask() {
 		setGroup( TASK_GROUP_NAME );
-
-		this.indexManager = getProject().provider( () -> getProject().getExtensions().getByType( IndexManager.class ) );
-		getInputs().property(
-				"version",
-				getProject().provider(
-						() -> getProject().getExtensions().getByType( OrmBuildDetails.class ).getHibernateVersion()
-				)
-		);
 	}
 
 	@Internal
 	protected abstract Provider<RegularFile> getTaskReportFileReference();
 
-	@Internal
-	protected IndexManager getIndexManager() {
-		return indexManager.get();
-	}
+	@Input
+	public abstract Property<String> getHibernateVersion();
 
 	@InputFile
-	public Provider<RegularFile> getIndexFileReference() {
-		return indexManager.get().getIndexFileReferenceAccess();
+	public abstract RegularFileProperty getIndexFile();
+
+	@InputFile
+	public abstract RegularFileProperty getArtifactFile();
+
+	@InputFile
+	public abstract RegularFileProperty getDescriptorFile();
+
+	@Internal
+	protected IndexManager getIndexManager() {
+		return new IndexManager( getIndexFile(), getArtifactFile(), getDescriptorFile() );
 	}
 
 	@OutputFile

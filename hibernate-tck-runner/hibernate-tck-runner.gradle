@@ -73,8 +73,9 @@ test {
     // IDE cannot deal with the onlyIf ...
     // TCK is expected to be executed with a PostgreSQL DB.
     // hence running without it is "pointless":
+    def tckDbType = project.hasProperty('db') ? project.property('db') : ''
+    def tckRequested = project.hasProperty('runtck')
     onlyIf {
-        def dbType = project.hasProperty('db') ? project.property('db') : ''
-        return (["postgresql", "pgsql", "postgis", ""].contains( dbType )) && project.hasProperty('runtck')
+        return (["postgresql", "pgsql", "postgis", ""].contains( tckDbType )) && tckRequested
     }
 }

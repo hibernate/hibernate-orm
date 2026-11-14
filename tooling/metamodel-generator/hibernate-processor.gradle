@@ -152,14 +152,24 @@ compileDataIntegrationTestJava {
 	options.annotationProcessorPath = sourceSets.main.runtimeClasspath + files( sourceSets.main.java.classesDirectory ) + configurations.dataIntegrationTestCompileClasspath
 }
 
+interface InjectedFileOps {
+	@Inject FileSystemOperations getFileSystem()
+}
+def injectedFileOps = objects.newInstance( InjectedFileOps )
+
 processIntegrationTestResources {
 	duplicatesStrategy = DuplicatesStrategy.INCLUDE
 	inputs.property( "db", db )
+	// resolved here so the action does not use the project (configuration cache)
+	def fileSystem = injectedFileOps.fileSystem
+	def hibernateProperties = file( 'src/integrationTest/resources/hibernate.properties' )
+	def targetDir = layout.buildDirectory.dir( "resources/integrationTest" )
+	def dbTokens = dbBundle[db]
 	doLast {
-		copy {
-			from file( 'src/integrationTest/resources/hibernate.properties' )
-			into layout.buildDirectory.dir( "resources/integrationTest" ).get().asFile
-			filter( ReplaceTokens, tokens: dbBundle[db] )
+		fileSystem.copy {
+			from hibernateProperties
+			into targetDir
+			filter( ReplaceTokens, tokens: dbTokens )
 		}
 	}
 }
@@ -167,11 +177,15 @@ processIntegrationTestResources {
 processDataIntegrationTestResources {
 	duplicatesStrategy = DuplicatesStrategy.INCLUDE
 	inputs.property( "db", db )
+	def fileSystem = injectedFileOps.fileSystem
+	def hibernateProperties = file( 'src/dataIntegrationTest/resources/hibernate.properties' )
+	def targetDir = layout.buildDirectory.dir( "resources/dataIntegrationTest" )
+	def dbTokens = dbBundle[db]
 	doLast {
-		copy {
-			from file( 'src/dataIntegrationTest/resources/hibernate.properties' )
-			into layout.buildDirectory.dir( "resources/dataIntegrationTest" ).get().asFile
-			filter( ReplaceTokens, tokens: dbBundle[db] )
+		fileSystem.copy {
+			from hibernateProperties
+			into targetDir
+			filter( ReplaceTokens, tokens: dbTokens )
 		}
 	}
 }

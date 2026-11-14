@@ -1241,6 +1241,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			if ( hasJoins( rootTableGroup ) ) {
 				throw new SemanticException( "Not expecting multiple table references for an SQM INSERT-SELECT", (String) null );
 			}
+
+			insertStatement.setConflictClause( visitConflictClause( sqmStatement.getConflictClause() ) );
 		}
 		finally {
 			popProcessingStateStack();
@@ -1260,8 +1262,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					assert !appliedRowNumber;
 				}
 		);
-
-		insertStatement.setConflictClause( visitConflictClause( sqmStatement.getConflictClause() ) );
 
 		this.currentSqmStatement = oldSqmStatement;
 		this.cteContainer = oldCteContainer;

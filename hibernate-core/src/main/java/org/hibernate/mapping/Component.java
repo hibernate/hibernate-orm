@@ -712,7 +712,8 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 
 	@Override
 	public Generator createGenerator(Dialect dialect, RootClass rootClass, Property property, GeneratorSettings defaults) {
-		return getCustomIdGeneratorCreator().isAssigned()
+		final var customIdGeneratorCreator = getCustomIdGeneratorCreator();
+		return customIdGeneratorCreator != null && customIdGeneratorCreator.isAssigned()
 				? GeneratorBinder.buildIdentifierGenerator( getServiceRegistry().requireService( PropertyAccessorService.class ), this, dialect, rootClass, defaults )
 				: super.createGenerator( dialect, rootClass, property, defaults );
 	}

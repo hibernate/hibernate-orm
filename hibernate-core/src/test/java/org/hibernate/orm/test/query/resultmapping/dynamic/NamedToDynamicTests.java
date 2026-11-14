@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.query.resultmapping.dynamic;
 
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import jakarta.persistence.sql.ColumnMapping;
 import jakarta.persistence.sql.CompoundMapping;
 import jakarta.persistence.sql.ConstructorMapping;
@@ -17,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 ///
 /// @author Steve Ebersole
 @DomainModel( annotatedClasses = { Book.class, DropDownItem.class })
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @SessionFactory
 public class NamedToDynamicTests {
 	@Test

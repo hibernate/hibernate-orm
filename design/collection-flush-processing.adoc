@@ -12,6 +12,14 @@ Approval date: 2026-08-06
 
 Post-approval clarifications::
 
+* `2026-11-10` -- Reconciled HHH-21102's coordinator-owned JDBC batch lifetime
+  and added alternating-key/current-history regression obligations. No batching
+  policy or semantic completion model changed.
+
+* `2026-11-10` -- Reconciled HHH-21101 collection-history maintenance with the
+  existing dependency and semantic-completion model. This records implemented
+  repairs, not completion of the proposal's remaining acceptance work.
+
 * `2026-08-06` -- Confirmed that collection diagnostic monitoring surrounds
   physical execution and completes before semantic state advancement, cache
   work, post-events, callbacks, and statistics.  Linked the companion cascade
@@ -502,6 +510,27 @@ The implementation must maintain the following invariants.
   action.
 * Batched operations count as complete only after their batch execution succeeds.
 * Empty physical plans still complete their logical action exactly once.
+
+History-table augmentation must cover row removal, remove-all (including an
+unloaded collection), and logical value/index replacement as well as insertion.
+Close the old interval before inserting its replacement; temporary list positions
+are execution details, not historical states. Explicit dependencies must order
+all old-interval closures before replacement history inserts. All such operations
+belong to the enclosing semantic mutation's completion obligations, including
+failure handling. Apply the same obligations to interpreted and snapshot fallback
+paths without changing audit hook applicability.
+
+Result-check expectations follow the logical operation's cardinality. A temporal
+remove-all implemented as SQL `UPDATE` uses its bulk-removal expectation, not a
+single-row update expectation. This does not relax individual row checks.
+
+Reusable JDBC mutation executors must resolve the coordinator's current batch
+when accessing statements and adding work. A switch to another key may execute
+and release a previously obtained batch, so retaining that object across
+interleaved executors can silently lose mutations. HHH-21102 repairs this
+ownership issue in `MutationExecutorSingleBatched`; it does not impose a new
+physical operation order or claim that every other executor lifetime has been
+audited.
 
 === Ordering invariants
 
@@ -1917,6 +1946,19 @@ Test multiple logical actions against the same table and shape:
 * batch failure prevents successful completion,
 * audit capture occurs before collection state advancement,
 * queued-operation completion precedes later work for the same collection.
+
+History-specific controls include `HistoryCollectionDecomposerTest` and
+`TemporalCollectionHistoryRepairTests` (HHH-21101): assert exact current/history
+contents and interval endpoints after swaps, shifts, removals, clear/recreate,
+and owner deletion, plus completion and rollback behavior. These supplement the
+existing general lifecycle tests rather than replacing their acceptance criteria.
+
+For HHH-21102, `InterleavedMutationExecutorTest` and
+`TemporalLegacyHistoryBatchTests` verify alternating current/history-end/insert
+keys across reused executors. Assert exact stored rows and intervals, same-key
+batch-size boundaries and final tails, rollback, and retained per-row checks.
+Include batching disabled/enabled and temporal preservation disabled/enabled;
+this batch-lifetime contract is independent of temporal value interpretation.
 
 === Event and monitoring tests
 

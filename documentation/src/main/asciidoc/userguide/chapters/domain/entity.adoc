@@ -149,6 +149,8 @@ Database timestamps also depend on the database's clock and timestamp semantics;
 Hibernate normally generates a temporal version in the VM.
 `@CurrentTimestamp(source = SourceType.DB)` uses the database clock, while `source = SourceType.VM` uses the VM clock.
 The default source of `@CurrentTimestamp` is `DB`.
+With `hibernate.type.temporal_preservation=true`, a database-generated Java Time version also requires a Dialect-supported producer for its Java/JDBC mapping and preservation policy.
+Support for storing the type alone does not establish support for generating its version value; Hibernate rejects an unassessed producer at bootstrap.
 For a version attribute, obtaining the database timestamp can occur before the write; do not assume that every database-generated value uses identical SQL or retrieval behavior.
 See <<mapping-generated-CurrentTimestamp,`@CurrentTimestamp` generation>> for the general annotation contract.
 

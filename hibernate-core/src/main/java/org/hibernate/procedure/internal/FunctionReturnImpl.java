@@ -1,5 +1,7 @@
 package org.hibernate.procedure.internal;
 
+import org.hibernate.type.internal.TemporalMappingValidator;
+
 import java.sql.Types;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -55,6 +57,12 @@ class FunctionReturnImpl<T> implements FunctionReturnImplementor<T> {
 			return new RefCurserJdbcCallFunctionReturnImpl( new JdbcCallRefCursorExtractorImpl( 1 ) );
 		}
 		else {
+			if ( persistenceContext.getFactory().getSessionFactoryOptions().isPreferJavaTimeJdbcTypesEnabled()
+					&& ormType instanceof org.hibernate.type.BasicType<?> basic ) {
+				TemporalMappingValidator.validate(
+						persistenceContext.getFactory().getJdbcServices().getDialect(), basic,
+						procedureCall.getProcedureName() + " function return", persistenceContext.getFactory().getProperties() );
+			}
 			return new RegularJdbcCallFunctionReturnImpl(
 					ormType,
 					new JdbcCallParameterExtractorImpl<T>(

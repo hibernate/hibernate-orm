@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.mapping.generated;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -46,6 +49,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DomainModel( annotatedClasses = ComplexValueGenerationTests.AuditedEntity.class )
 @SessionFactory
 @SuppressWarnings("JUnitMalformedDeclaration")
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 public class ComplexValueGenerationTests {
 	@Test
 	public void testGenerations(SessionFactoryScope scope) {

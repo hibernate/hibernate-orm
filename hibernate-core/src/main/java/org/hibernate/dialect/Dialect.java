@@ -1,6 +1,7 @@
 package org.hibernate.dialect;
 
-
+import org.hibernate.dialect.temporaltype.internal.TemporalPreservationHelper;
+import org.hibernate.dialect.temporaltype.spi.StandardTemporalPreservation;
 import org.hibernate.dialect.type.spi.DdlTypeBuilder;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
@@ -31,11 +32,9 @@ import org.hibernate.dialect.lob.spi.LobSupports;
 import org.hibernate.dialect.rowid.spi.RowIdSupport;
 import org.hibernate.dialect.rowid.spi.RowIdSupports;
 
-
 import org.hibernate.dialect.lock.spi.RowLockStrategy;
 
 import org.hibernate.dialect.aggregate.spi.FunctionalDependencyAnalysisSupport;
-
 
 import org.hibernate.dialect.sql.ast.spi.FetchClauseSupport;
 import org.hibernate.dialect.sql.ast.spi.SyntheticTableGroupSupport;
@@ -128,6 +127,7 @@ import org.hibernate.dialect.temporaltype.spi.TemporalFormatSupport;
 import org.hibernate.dialect.temporaltype.spi.TemporalFormatSupports;
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
+import org.hibernate.dialect.temporaltype.spi.TemporalPreservation;
 import org.hibernate.dialect.temptable.spi.PersistentTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.spi.StandardTemporaryTableExporter;
 import org.hibernate.dialect.temptable.spi.TemporaryTableExporter;
@@ -194,6 +194,7 @@ import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.LongNVarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.LongVarbinaryJdbcType;
 import org.hibernate.type.descriptor.jdbc.LongVarcharJdbcType;
@@ -1631,7 +1632,9 @@ public abstract class Dialect implements ConversionContext, AlterTableSupport,
 			jdbcTypeRegistry.addDescriptor( TimeUtcAsOffsetTimeJdbcType.INSTANCE );
 		}
 		else {
-			jdbcTypeRegistry.addDescriptor( TimestampUtcAsJdbcTimestampJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( org.hibernate.boot.spi.MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( serviceRegistry )
+					? org.hibernate.type.descriptor.jdbc.TimestampUtcAsPlainJdbcTimestampJdbcType.INSTANCE
+					: TimestampUtcAsJdbcTimestampJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptor( TimeUtcAsJdbcTimeJdbcType.INSTANCE );
 		}
 
@@ -2112,6 +2115,27 @@ public abstract class Dialect implements ConversionContext, AlterTableSupport,
 	@SPI({ IMPLEMENT, SUPPLY })
 	public TemporalValueSemantics getTemporalValueSemantics() {
 		return TemporalValueSemantics.STANDARD;
+	}
+
+
+	/// Reports preservation for the actual resolved descriptor pair. Unrecognized
+	/// pairs, including custom subclasses, must not inherit guarantees merely from
+	/// a Java class or SQL type code. Override only for handling whose complete
+	/// binding, extraction and reconstruction behavior is established.
+	///
+	/// Built-in Dialects first consult [org.hibernate.type.descriptor.jdbc.TemporalJdbcType].
+	/// A present report is authoritative; a declined pair follows existing recognition.
+	/// An application override retains precedence unless it delegates to this method.
+	/// Adjustment and auxiliary storage are assessed by mapping validation.
+	///
+	/// @since 8.1
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
+		final var contributed = TemporalPreservationHelper.assess( javaType, jdbcType, this );
+		if ( contributed != null ) {
+			return contributed;
+		}
+		return StandardTemporalPreservation.assess( javaType, jdbcType, getDirectJavaTimeJdbcSupport() );
 	}
 
 

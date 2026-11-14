@@ -45,6 +45,11 @@ public class OracleOsonJdbcType extends OracleJsonJdbcType {
 	}
 
 	@Override
+	public boolean usesOsonTemporalValues() {
+		return true;
+	}
+
+	@Override
 	public String toString() {
 		return "OracleOsonJdbcType";
 	}

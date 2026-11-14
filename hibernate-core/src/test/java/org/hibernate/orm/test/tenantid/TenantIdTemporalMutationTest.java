@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import org.hibernate.cfg.MappingSettings;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -46,7 +47,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @DomainModel(annotatedClasses = { TenantIdTemporalMutationTest.Item.class, TenantIdTemporalMutationTest.PlainItem.class,
 		TenantIdTemporalMutationTest.CompositeItem.class })
 @SessionFactory(useCollectingStatementInspector = true)
+// Exercise established history/period mutations under legacy timestamp interpretation.
 @ServiceRegistry(settings = {
+		@Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
 		@Setting(name = MULTI_TENANT_IDENTIFIER_RESOLVER,
 				value = "org.hibernate.orm.test.tenantid.TenantIdMutationTest$Resolver"),
 		@Setting(name = MULTI_TENANT_RLS_ENABLED, value = "false"),

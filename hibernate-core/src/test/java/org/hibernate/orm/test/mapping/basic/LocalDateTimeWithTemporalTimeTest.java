@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.mapping.basic;
 
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import java.time.LocalDateTime;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -14,7 +16,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * @author Vlad Mihalcea
  */
-@Jpa( annotatedClasses = {LocalDateTimeWithTemporalTimeTest.DateEvent.class} )
+@Jpa(
+		properties = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
+		annotatedClasses = LocalDateTimeWithTemporalTimeTest.DateEvent.class
+)
 public class LocalDateTimeWithTemporalTimeTest {
 
 	@Test

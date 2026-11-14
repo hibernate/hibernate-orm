@@ -4,6 +4,9 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.query.Query;
 import org.hibernate.query.common.JoinType;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
@@ -37,6 +40,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Christian Beikov
  */
+// Retain the shared fixture's legacy temporal interpretation while testing query behavior.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel(standardModels = StandardDomainModel.CONTACTS)
 @SessionFactory
 public class SubQueryInFromTests {

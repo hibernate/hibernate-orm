@@ -9301,6 +9301,25 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitBetweenPredicate(BetweenPredicate betweenPredicate) {
+		final var tuple = getSqlTuple( betweenPredicate.getExpression() );
+		if ( tuple != null && tuple.getExpressions().size() > 1
+				&& !dialect.getRowValueSupport().supports( ORDERING_COMPARISON ) ) {
+			// Use the existing lexicographic tuple comparison emulation, including
+			// ordinary SQL null semantics, on databases without row ordering syntax.
+			final boolean negated = betweenPredicate.isNegated();
+			appendSql( OPEN_PARENTHESIS );
+			visitRelationalPredicate( new ComparisonPredicate(
+					betweenPredicate.getExpression(),
+					negated ? ComparisonOperator.LESS_THAN : ComparisonOperator.GREATER_THAN_OR_EQUAL,
+					betweenPredicate.getLowerBound() ) );
+			appendSql( negated ? " or " : " and " );
+			visitRelationalPredicate( new ComparisonPredicate(
+					betweenPredicate.getExpression(),
+					negated ? ComparisonOperator.GREATER_THAN : ComparisonOperator.LESS_THAN_OR_EQUAL,
+					betweenPredicate.getUpperBound() ) );
+			appendSql( CLOSE_PARENTHESIS );
+			return;
+		}
 		betweenPredicate.getExpression().accept( this );
 		if ( betweenPredicate.isNegated() ) {
 			appendSql( " not" );

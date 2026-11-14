@@ -2,6 +2,9 @@ package org.hibernate.orm.test.query.options;
 
 import java.util.List;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
@@ -18,6 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Steve Ebersole
  */
+// Retain the shared fixture's legacy temporal interpretation while testing query behavior.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel( standardModels = StandardDomainModel.CONTACTS )
 @SessionFactory
 public class CacheModeTests {

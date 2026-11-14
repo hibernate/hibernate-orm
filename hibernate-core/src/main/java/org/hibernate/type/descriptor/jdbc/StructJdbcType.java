@@ -135,7 +135,8 @@ public class StructJdbcType implements StructuredJdbcType {
 			final int logicalIndex = orderMapping == null ? physicalIndex : orderMapping[physicalIndex];
 			final var jdbcMapping = embeddableMappingType.getJdbcValueSelectable( logicalIndex ).getJdbcMapping();
 			if ( jdbcMapping.getJdbcType() instanceof JavaTimeJdbcType javaTimeJdbcType ) {
-				final Class<?> javaTimeType = javaTimeJdbcType.getPreferredJavaTypeClass( options );
+				// The binder may have selected a different carrier than the mapped type.
+				final Class<?> javaTimeType = jdbcValue.getClass();
 				if ( options.getDialect()
 						.getDirectJavaTimeJdbcSupport()
 						.supportsInStruct( javaTimeType ) ) {

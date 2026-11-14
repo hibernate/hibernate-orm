@@ -1,5 +1,7 @@
 package org.hibernate.procedure.internal;
 
+import org.hibernate.type.internal.TemporalMappingValidator;
+
 import java.util.Locale;
 import java.util.Objects;
 
@@ -119,6 +121,14 @@ class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> implements Pro
 						getBindableType( binding ),
 						session.getFactory().getQueryEngine().getCriteriaBuilder()
 				);
+
+		if ( mode != ParameterMode.REF_CURSOR && typeToUse instanceof org.hibernate.type.BasicType<?> basic
+				&& session.getFactory().getSessionFactoryOptions().isPreferJavaTimeJdbcTypesEnabled() ) {
+			TemporalMappingValidator.validate(
+					session.getFactory().getJdbcServices().getDialect(), basic,
+					procedureCall.getProcedureName() + " parameter " + (name == null ? startIndex : name),
+					session.getFactory().getProperties() );
+		}
 
 		final String jdbcParamName;
 		final JdbcParameterBinder parameterBinder;

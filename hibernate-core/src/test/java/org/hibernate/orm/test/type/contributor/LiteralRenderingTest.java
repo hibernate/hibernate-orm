@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.type.contributor;
 
+import org.hibernate.cfg.MappingSettings;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.InetAddress;
@@ -25,6 +26,7 @@ import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
@@ -36,7 +38,8 @@ import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-@ServiceRegistry
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel( standardModels = StandardDomainModel.GAMBIT )
 @SessionFactory
 @JiraKey(value = "HHH-15590")

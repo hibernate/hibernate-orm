@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.query.sqm.exec;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -9,6 +12,8 @@ import org.junit.jupiter.api.Test;
 
 @DomainModel( standardModels = StandardDomainModel.GAMBIT )
 @SessionFactory
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 public class LiteralTests {
 
 	@Test

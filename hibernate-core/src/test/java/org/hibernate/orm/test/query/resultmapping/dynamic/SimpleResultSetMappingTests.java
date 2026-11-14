@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.query.resultmapping.dynamic;
 
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.sql.ResultSetMapping;
@@ -20,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 ///
 /// @author Steve Ebersole
 @DomainModel( annotatedClasses = { Book.class, DropDownItem.class })
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @SessionFactory
 public class SimpleResultSetMappingTests {
 	@BeforeEach

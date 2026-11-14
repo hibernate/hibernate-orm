@@ -81,4 +81,19 @@ public interface TemporalTableSupport {
 	/// Return the concrete strategy selected when configuration requests
 	/// [TemporalTableStrategy#AUTO].
 	TemporalTableStrategy getDefaultTemporalTableStrategy();
+
+	/// Return a preserving Instant period descriptor, without changing the registry.
+	/// Null explicitly means that this strategy has no preserving period profile.
+	default @Nullable org.hibernate.type.descriptor.jdbc.JdbcType getPreservingTemporalJdbcType(
+			TemporalTableStrategy strategy,
+			org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry registry) {
+		return null;
+	}
+
+	/// Render a transaction-stable current instant in the period descriptor's encoding.
+	default @Nullable String getPreservingTemporalCurrentTimestampExpression(
+			TemporalTableStrategy strategy, org.hibernate.type.descriptor.jdbc.JdbcType jdbcType) {
+		return null;
+	}
+
 }

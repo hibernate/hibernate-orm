@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.mapping.generated;
 
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -18,7 +20,10 @@ import static org.hibernate.annotations.SourceType.DB;
 import static org.hibernate.testing.orm.junit.DialectContext.awaitServerTimestampTick;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Jpa(annotatedClasses = GeneratedByDbOnForcedIncrementTest.WithUpdateTimestamp.class)
+@Jpa(
+		properties = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
+		annotatedClasses = GeneratedByDbOnForcedIncrementTest.WithUpdateTimestamp.class
+)
 @SkipForDialect(dialectClass = InformixDialect.class,
 		reason = "JDBC driver returns timestamp with seconds precision")
 class GeneratedByDbOnForcedIncrementTest {

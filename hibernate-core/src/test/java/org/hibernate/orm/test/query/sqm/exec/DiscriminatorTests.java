@@ -2,6 +2,8 @@ package org.hibernate.orm.test.query.sqm.exec;
 
 import java.util.List;
 
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.query.Query;
 
@@ -20,6 +22,13 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Steve Ebersole
  */
 public class DiscriminatorTests extends BaseSessionFactoryFunctionalTest {
+
+	@Override
+	protected void applySettings(StandardServiceRegistryBuilder builder) {
+		super.applySettings( builder );
+		// Retain Product's legacy generated version while testing discriminator queries.
+		builder.applySetting( MappingSettings.TEMPORAL_PRESERVATION, false );
+	}
 
 	@Override
 	protected void applyMetadataSources(MetadataSources metadataSources) {

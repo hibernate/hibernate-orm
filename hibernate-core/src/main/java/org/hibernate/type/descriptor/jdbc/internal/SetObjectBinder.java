@@ -9,11 +9,9 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
-/**
- * Support for binding values directly through `setObject` JDBC driver calls.
- *
- * @author Steve Ebersole
- */
+/// Support for binding values directly through \`setObject\` JDBC driver calls.
+///
+/// @author Steve Ebersole
 public class SetObjectBinder<T> extends BasicBinder<T> {
 	private final Class<?> baseClass;
 	private final int jdbcTypeCode;
@@ -30,16 +28,30 @@ public class SetObjectBinder<T> extends BasicBinder<T> {
 
 	@Override
 	protected void doBind(PreparedStatement st, T value, int index, WrapperOptions options) throws SQLException {
-		st.setObject( index, normalize( value, options ), jdbcTypeCode );
+		st.setObject( index, checked( normalize( value, options ), options ), jdbcTypeCode );
 	}
 
 	protected Object normalize(T value, WrapperOptions options) {
+		if ( value instanceof java.time.Instant && TemporalJdbcValueRanges.isTemporalSqlType( jdbcTypeCode ) ) {
+			TemporalJdbcValueRanges.check( value, options );
+		}
 		return getJavaType().unwrap( value, baseClass, options );
+	}
+
+	private Object checked(Object value, WrapperOptions options) {
+		if ( TemporalJdbcValueRanges.isTemporalSqlType( jdbcTypeCode ) ) TemporalJdbcValueRanges.check( value, options );
+		return value;
+	}
+
+	@Override
+	public Object getBindValue(T value, WrapperOptions options) throws SQLException {
+		if ( !TemporalJdbcValueRanges.isTemporalSqlType( jdbcTypeCode ) || !TemporalJdbcValueRanges.isNewHandling( options ) ) return super.getBindValue( value, options );
+		return value == null ? null : checked( normalize( value, options ), options );
 	}
 
 	@Override
 	protected void doBind(CallableStatement st, T value, String name, WrapperOptions options) throws SQLException {
-		st.setObject( name, normalize( value, options ), jdbcTypeCode );
+		st.setObject( name, checked( normalize( value, options ), options ), jdbcTypeCode );
 	}
 
 	@Override

@@ -13,6 +13,7 @@ import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPla
 import org.hibernate.action.queue.internal.decompose.entity.AuditEntityMutationPlanContributor;
 import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor;
 import org.hibernate.audit.ModificationType;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.AuxiliaryTableHolder;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -197,12 +198,8 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 			@Nonnull MappingModelCreationProcess creationProcess) {
 		final var creationContext = creationProcess.getCreationContext();
 		final var typeConfiguration = creationContext.getTypeConfiguration();
-		final var changesetCoordinator =
-				creationContext.getSessionFactory()
-						.getChangesetCoordinator();
-		final var csIdJdbcMapping =
-				resolveJdbcMapping( typeConfiguration,
-						changesetCoordinator.getIdentifierType() );
+		final var csIdJdbcMapping = ((BasicValue) rootClass.getAuxiliaryColumn( CHANGESET_ID ).getValue())
+				.resolve().getLegacyResolvedBasicType();
 		final var modTypeJdbcMapping = resolveJdbcMapping( typeConfiguration, ModificationType.class );
 
 		final var map = new HashMap<String, AuditMappingImpl.TableAuditInfo>();
@@ -407,12 +404,8 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 		final String auditTableName = getTableIdentifierExpression( auditTable, creationProcess );
 		final var creationContext = creationProcess.getCreationContext();
 		final var typeConfiguration = creationContext.getTypeConfiguration();
-		final var changesetCoordinator =
-				creationContext.getSessionFactory()
-						.getChangesetCoordinator();
-		final var csIdJdbcMapping =
-				resolveJdbcMapping( typeConfiguration,
-						changesetCoordinator.getIdentifierType() );
+		final var csIdJdbcMapping = ((BasicValue) bootDescriptor.getAuxiliaryColumn( CHANGESET_ID ).getValue())
+				.resolve().getLegacyResolvedBasicType();
 		final var modTypeJdbcMapping = resolveJdbcMapping( typeConfiguration, ModificationType.class );
 		return new AuditMappingImpl(
 				Map.of(

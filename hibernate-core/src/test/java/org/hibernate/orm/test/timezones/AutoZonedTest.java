@@ -8,6 +8,7 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
 
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -28,7 +29,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DomainModel(annotatedClasses = AutoZonedTest.Zoned.class)
 @SessionFactory
-@ServiceRegistry(settings = @Setting(name = AvailableSettings.TIMEZONE_DEFAULT_STORAGE, value = "AUTO"))
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = { @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"), @Setting(name = AvailableSettings.TIMEZONE_DEFAULT_STORAGE, value = "AUTO") })
 public class AutoZonedTest {
 
 	@Test void test(SessionFactoryScope scope) {

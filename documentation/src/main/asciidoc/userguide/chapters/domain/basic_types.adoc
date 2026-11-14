@@ -44,7 +44,7 @@ should be mapped to the database.
 |<<basic-enums,Enums>>, <<basic-json,JSON>>, <<basic-xml,XML>>, <<basic-single-column-collections,Arrays and collections stored in a single column>>
 
 |Mapping options
-|<<basic-basic-annotation,@Basic>>, <<basic-temporal,Temporal mapping>>, <<basic-java-time-direct-jdbc,Java time at the JDBC boundary>>, <<basic-datetime-time-zone,JDBC time zone>>, <<basic-timestamp-with-time-zone,Time-zone storage>>, <<basic-jpa-convert,Attribute converters>>, <<basic-formula-annotation,@Formula>>, <<mapping-column-read-and-write,Column transformers>>, <<mapping-generated,Generated properties>>
+|<<basic-basic-annotation,@Basic>>, <<basic-temporal,Temporal mapping>>, <<basic-temporal-preservation,Preservability Guarantees>>, <<basic-datetime-time-zone,JDBC time zone>>, <<basic-timestamp-with-time-zone,Time-zone storage>>, <<basic-jpa-convert,Attribute converters>>, <<basic-formula-annotation,@Formula>>, <<mapping-column-read-and-write,Column transformers>>, <<mapping-generated,Generated properties>>
 |===
 
 
@@ -766,41 +766,306 @@ include::{example-dir-basic-mapping}/basic/LocaleMappingTests.java[tags=basic-Lo
 [[basic-temporal]]
 ==== Handling temporal data
 
-Hibernate supports mapping temporal values to the following SQL date/time types:
+Hibernate recommends `java.time` types for temporal values. Use local types for calendar dates and local
+clock readings, `Instant` for a point on the timeline, and offset- or zone-bearing types when that information
+is part of the domain value. Hibernate also supports legacy `java.util.Date`, `java.util.Calendar`, and
+`java.sql` date/time types, as well as related types such as `Duration`, `Year`, `TimeZone`, and `ZoneOffset`.
 
-DATE:: Represents a calendar date by storing years, months and days.
-TIME:: Represents the time of a day by storing hours, minutes and seconds.
-TIME WITH TIME ZONE:: Represents a time of day with a zone offset.
-TIMESTAMP:: Represents both a DATE and a TIME plus nanoseconds.
-TIMESTAMP WITH TIME ZONE:: Represents both a DATE and a TIME plus nanoseconds and zone id or offset.
+The Java type describes the value's meaning. Its physical representation depends on the dialect, the
+selected mapping and the preservation requirements. Relevant SQL types include:
 
-The mapping of `java.time` temporal types to the specific SQL Date/Time types is implied as follows:
+DATE:: A calendar date.
+TIME:: A time of day, with fractional seconds where supported.
+TIME WITH TIME ZONE:: A time of day with an offset.
+TIMESTAMP:: A date and time, with fractional seconds subject to database and column precision.
+TIMESTAMP WITH TIME ZONE:: A timestamp whose timezone information and interpretation depend on the database;
+the name alone does not promise retention of the original offset or zone ID.
 
-DATE:: `java.time.LocalDate`
-TIME:: `java.time.LocalTime`, or `java.time.OffsetTime` when its offset is normalized
-TIME WITH TIME ZONE:: `java.time.OffsetTime`, when supported and selected by the mapping
-TIMESTAMP:: `java.time.LocalDateTime`, or `java.time.Instant`, `java.time.OffsetDateTime`, and `java.time.ZonedDateTime` when normalized
-TIMESTAMP WITH TIME ZONE:: `java.time.Instant`, `java.time.OffsetDateTime`, or `java.time.ZonedDateTime`, depending on dialect support and storage configuration
+There is no universal one-to-one correspondence between these SQL types and Java types. For example,
+Oracle's preserving `LocalTime` handling uses a timestamp carrier. Storage choices do not implicitly
+request timezone adjustment or permission to discard information.
 
-Although Hibernate recommends the use of the `java.time` package for representing temporal values,
-it does support using `java.sql.Date`, `java.sql.Time`, `java.sql.Timestamp`, `java.util.Date` and
-`java.util.Calendar`.
+[[basic-temporal-preservation]]
+===== Preservability Guarantees
 
-The mappings for `java.sql.Date`, `java.sql.Time`, `java.sql.Timestamp` are implicit:
+Preservability guarantees define which parts of a Java time value Hibernate retains when the value is
+stored and read back. The required guarantee depends on the Java type and any explicit representation
+or timezone adjustment selected for the mapping.
 
-DATE:: `java.sql.Date`
-TIME:: `java.sql.Time`
-TIMESTAMP:: `java.sql.Timestamp`
+[[basic-java-time-direct-jdbc]]
+The <<settings-hibernate.type.temporal_preservation,`hibernate.type.temporal_preservation`>> setting
+enables these guarantees and defaults to `true`.
+Hibernate uses direct JDBC access when supported, or a preserving fallback conversion.
+The guarantee follows the Java type, not the SQL type name or whether direct JDBC access is used.
+Hibernate rejects a mapping when its resolved Java/JDBC handling cannot establish the required guarantee;
+it does not silently substitute instant-only handling for an offset- or zone-preserving mapping.
 
+[[basic-temporal-preservation-policy]]
+====== Configurable preservation policies
+
+`hibernate.type.temporal_preservation_policy` selects `domain_value` (the default) or `normalized`.
+Preservation must remain enabled. `NORMALIZED` requires the same instant for `OffsetDateTime` and
+`ZonedDateTime`, while allowing the original offset and zone ID to change. For `OffsetTime`, it requires
+the same UTC-equivalent time of day modulo 24 hours: `00:30+02:00` and `22:30Z` are equivalent.
+This explicitly discards day displacement and differs from `OffsetTime.isEqual()` across midnight.
+It does not invent a date, require UTC output, select storage, or request timezone adjustment.
+Local Java Time types and `Instant` retain their existing guarantees.
+
+Each offset-bearing type may override the common default:
+
+[source,properties]
+----
+hibernate.type.temporal_preservation=true
+hibernate.type.temporal_preservation_policy=domain_value
+hibernate.type.temporal_preservation_policy.offset_datetime=normalized
+hibernate.type.temporal_preservation_policy.zoned_datetime=normalized
+hibernate.type.temporal_preservation_policy.offset_time=domain_value
+----
+
+`@TemporalPreservationPolicy` overrides configuration on a member, declaring class, package or module.
+Its `Type` enum contains `DOMAIN_VALUE` and `NORMALIZED`. For example, using static imports of these constants:
+
+[source,java]
+----
+@TemporalPreservationPolicy(NORMALIZED)
+OffsetDateTime occurredAt;
+
+@TemporalPreservationPolicy(DOMAIN_VALUE)
+OffsetDateTime enteredAt;
+----
+
+On a class, package or module, the annotation is repeatable and may select exact types:
+
+[source,java]
+----
+@TemporalPreservationPolicy(value = NORMALIZED, types = { OffsetDateTime.class, ZonedDateTime.class })
+@TemporalPreservationPolicy(value = DOMAIN_VALUE, types = OffsetTime.class)
+----
+
+Lookup uses the mapped member, its declaring class and superclass chain, exact declaring package,
+module, per-type setting, then common setting. At one scope, a matching typed declaration wins over an
+untargeted default. A nearer untargeted default wins over a farther typed declaration. Overlapping type
+selectors or multiple untargeted declarations at one scope are invalid. On members, omit `types`.
+For an application converter, selectors and validation use its relational Java type.
+A broad normalized default leaves local types unchanged; directly requesting normalization on a local type is invalid.
+
+The selected requirement must still be supported by the actual descriptors. Policy changes do not migrate
+historical data or establish its interpretation. Equality, dirty checking and cache serialization remain
+unchanged: an offset-only change may be dirty, and a cache hit may retain an offset that a database reload
+normalizes. Both must meet the selected precision-qualified guarantee.
+
+====== Guarantees by policy
+
+[[basic-temporal-preservation-matrix]]
+.Guarantees with temporal preservation enabled and no timezone adjustment
+[cols="1,3,3",options="header"]
+|===
+|Java type |`DOMAIN_VALUE` (default) |`NORMALIZED`
+|`LocalDate` |Calendar date. |Unchanged under a broad default.
+|`LocalTime` |Local time of day. |Unchanged under a broad default.
+|`LocalDateTime` |Local date and time. |Unchanged under a broad default.
+|`Instant` |Instant on the UTC timeline. |Same instant.
+|`OffsetTime` |Local time of day and offset. |UTC-equivalent time of day modulo 24 hours; original offset and day displacement need not survive.
+|`OffsetDateTime` |Local date-time and offset, and therefore the same instant. |Same instant; original offset and local date-time need not survive.
+|`ZonedDateTime` |Local date-time, zone ID and resolved offset, and therefore the same instant. |Same instant; original zone ID, offset and local date-time need not survive.
+|===
+
+The matrix defines guarantees for these seven Java Time types, including their supported version mappings,
+and for Hibernate's synthetic `Instant` system-period boundaries. It does not introduce equivalent guarantees
+for `java.util.Date`, `Calendar`, the `java.sql` temporal classes, `Duration`, `Year`, or standalone zone types.
+Those retain their established mapping semantics. Enabling preservation can still affect shared validation:
+for example, a `java.sql.Time` handler cannot satisfy requested precision beyond milliseconds.
+
+These guarantees apply within the supported finite SQL range and column precision.
+Fractional seconds may be rounded or truncated according to the supported driver/database handling and column precision;
+these guarantees do not promise to retain all nine Java nanosecond digits in a lower-precision column. Java minimum/maximum sentinels are not a portable
+way to store database infinity.
+
+There is one explicit representation qualification: `@TimeZoneRepresentation(COLUMN)` stores an offset
+separately, so a `ZonedDateTime` round trip preserves local date-time and offset but reconstructs a fixed-offset
+zone, not the original region ID. A `WITH TIME ZONE` primary column does not restore a region discarded
+by this decomposition. Choose this representation only when the offset-only contract is suitable.
+
+Database support for `TIMESTAMP WITH TIME ZONE` alone does not establish zone-ID or offset preservation.
+For example, H2's offset-only inline handling cannot meet the baseline `ZonedDateTime` guarantee, and
+PostgreSQL's instant-preserving timestamp handling does not preserve an arbitrary original offset.
+Provider limitations do not silently weaken the contract: choose a supported mapping, an explicit preservation
+policy, or an explicit adjustment whose semantics match the application.
+
+For an active application `AttributeConverter`, validation follows its relational Java type and JDBC mapping.
+Thus, a non-Java-Time attribute converted to `Instant` receives the Instant guarantee at the JDBC boundary;
+a Java Time attribute converted to `String` does not receive a guarantee about the application's encoding.
+Hibernate does not guarantee that application conversion itself is lossless. An active whole-value converter
+cannot be combined with synthetic COLUMN storage or with a non-NONE timezone adjustment.
+
+This mode also applies to Java time version attributes and synthetic `Instant` system-period boundaries.
+Version generation, optimistic-lock predicates, and historical queries use their resolved temporal mappings.
+Enabled system periods require a preserving dialect contribution for their storage and generation strategy.
+For example, an offset-only JDBC mapping cannot preserve a region-bearing `ZonedDateTime` version.
+
+Applications that need the existing direct-disabled temporal interpretations can select compatibility mode:
+
+[source,properties]
+----
+hibernate.type.temporal_preservation=false
+----
+
+The entity attributes may still use `java.time` types, for which Hibernate continues to offer no preservability guarantees.  This selects legacy handling, including timestamp versions and system periods; it does not convert existing data.
 
 [IMPORTANT]
 ====
-Applying `@Temporal` to `java.sql.Date`, `java.sql.Time`, `java.sql.Timestamp` or any of the `java.time` types
-is considered an exception
+Assess existing schemas and encoded values as part of migrating applications using Java Time types in the domain model.
+
+Schema validation and data migration script generation is planned as part of the `hibernate-migration-recipes` project.
 ====
 
-When using `java.util.Date` or `java.util.Calendar`, Hibernate assumes `TIMESTAMP`.  To alter that,
-use `@Temporal`.
+.Temporal settings
+[cols="2,3",options="header"]
+|===
+|Setting |Meaning
+|`hibernate.type.temporal_preservation`
+|Defaults to `true`. Enables the guarantees above, including Java time versions and supported system periods.
+`false` selects the existing direct-disabled interpretation; it does not migrate data.
+|`hibernate.type.java_time_use_direct_jdbc`
+|Deprecated alias, used only when the new setting is absent.
+|`hibernate.type.preferred_instant_jdbc_type`
+|Explicitly overrides the preferred JDBC type for application `Instant` mappings, without waiving preservation validation.
+|`hibernate.jdbc.time_zone`
+|Controls timezone-aware legacy JDBC conversions where applicable. It does not request domain-value adjustment,
+set the database session timezone, or migrate stored data.
+|===
+
+The deprecated `hibernate.type.java_time_use_direct_jdbc` setting remains an alias when the new setting is absent.
+An explicit `hibernate.type.temporal_preservation` value takes precedence over a conflicting alias.
+With neither setting supplied, preservation is enabled.
+
+Direct JDBC access and fallback conversion are ways to fulfill the guarantee. At the _JDBC boundary_,
+Hibernate binds statement parameters and extracts result values. The Java type exchanged with the driver
+may differ from the attribute type: a preserving conversion is acceptable if it retains the required value.
+Choosing direct access alone does not establish preservation.
+
+JDBC 4.2 requires direct support for several Java time classes but not `Instant` or `ZonedDateTime`;
+actual driver support varies. The dialect selects direct access or the matching fallback.
+Enabled preservation derives an `INSTANT` preferred JDBC type for `Instant`, with a `TIMESTAMP_UTC` fallback
+when direct access is unavailable. Disabled preservation derives the legacy `TIMESTAMP_UTC` preference.
+An explicit `hibernate.type.preferred_instant_jdbc_type` overrides that preference but does not waive an enabled guarantee.
+Synthetic period layouts remain selected by the dialect's period contribution rather than the application Instant preference.
+For legacy JDBC timezone configuration, see <<basic-datetime-time-zone>>.
+
+[[basic-timestamp-with-time-zone]]
+===== Storage representation and timezone adjustment
+
+With preservation enabled, storage representation and timezone adjustment are separate decisions.
+`@TimeZoneRepresentation(INLINE)` (the default) uses the primary column; `COLUMN` stores an offset in an
+additional column, customizable with `@TimeZoneColumn`. Neither choice by itself requests timezone adjustment.
+
+`@TimeZoneAdjustment("America/New_York")` explicitly expresses a value in that target zone on both write and read.
+For `OffsetDateTime` and `ZonedDateTime`, adjustment retains the instant while changing local fields and the
+offset/zone as required. For `OffsetTime`, the target must be a fixed offset, since there is no date with
+which to resolve a region's rules. `@TimeZoneAdjustment(TimeZoneAdjustment.NONE)` cancels an inherited
+adjustment. It does not disable preservation or an application converter.
+
+[source,java,opts=novalidate]
+----
+@TimeZoneRepresentation(TimeZoneRepresentation.Type.COLUMN)
+OffsetDateTime recordedAt; // retains local date-time and offset
+
+@TimeZoneRepresentation(TimeZoneRepresentation.Type.INLINE)
+@TimeZoneAdjustment("UTC")
+OffsetDateTime publishedAt; // deliberately reads and writes in UTC
+----
+
+Declarations may be placed on supported mapped members, their declaring classes and superclass chain,
+the exact declaring package, or the declaring module. The nearer declaration wins for each decision.
+These annotations require enabled preservation; they are not a way to alter compatibility mode.
+They apply to supported basic attributes and basic set/list/bag elements, not identifiers, version attributes,
+map keys/values, arrays or aggregate mappings such as JSON, XML and SQL structs. Explicit declarations on
+excluded roles are rejected; broader defaults do not alter those roles. Java time version attributes still
+receive preservation validation through their version mappings.
+
+The deprecated `@TimeZoneStorage` and `TimeZoneStorageType` combine these decisions.
+Prefer the separate annotations for new mappings. In enabled mode, legacy `COLUMN`, `NATIVE`, and
+`NORMALIZE_UTC` declarations retain compatibility translations and their constraints; they do not waive
+the guarantees. Member-level `AUTO`, `DEFAULT`, and `NORMALIZE` require an explicit replacement or
+compatibility mode. An explicitly configured global legacy policy may also require narrower declarations;
+setting adjustment to NONE alone does not replace its storage choice.
+
+[[basic-temporal-custom-descriptors]]
+===== Custom temporal descriptors
+
+`@JavaType`, `@JdbcType` and `@JdbcTypeCode` select handling; they do not waive preservation
+requirements. Hibernate assesses the actual resolved Java/JDBC descriptor pair. Extending a
+supported built-in descriptor does not automatically establish that a replacement preserves
+its conversions.
+
+A custom `TemporalJavaType` may implement `PreservationAwareTemporalJavaType` to declare the
+independent temporal parts needed to reconstruct its values. Its `getRequiredTemporalParts()`
+returns a stable, nonempty set without null elements. For the seven Java Time classes in the
+guarantee matrix, a participating replacement must declare the existing contract exactly:
+for example, `OffsetDateTime` requires `INSTANT` and `OFFSET`. Other custom domain classes opt
+into validation through this interface; existing `TemporalJavaType` implementations are unchanged.
+This declaration alone does not certify a JDBC pairing or add COLUMN decomposition, timezone
+adjustment, identifier/version generation, or system-period support for a custom domain.
+
+A `JdbcType` may implement `TemporalJdbcType` to assess its actual pairing with a supplied
+`JavaType` and `Dialect`. Its `getTemporalPreservation()` returns an `Optional<TemporalPreservation>`:
+
+* `Optional.empty()` declines the pair and allows normal Dialect fallback.
+* A present report is authoritative at this stage. Required parts must be `SUPPORTED`;
+`UNKNOWN`, `UNSUPPORTED` and `IRRELEVANT` do not satisfy them. Hibernate does not fill gaps
+with more optimistic fallback reports.
+
+The Java-side declaration remains the domain contract even when a mapping selects `NORMALIZED`;
+Hibernate applies the mapping's policy afterward. `NORMALIZED_TIME` is the separate assessment for
+UTC-equivalent time of day modulo 24 hours. `TIME` alone does not establish it. Supported `TIME` and
+`OFFSET` together imply it when no explicit normalized-time assessment is supplied. The original
+five-argument report constructor remains available and leaves the new component unknown.
+
+The report must account for wrapping/unwrapping, binding, extraction and reconstruction.
+Recognize descriptor behavior that the implementation actually understands, not merely a
+matching domain class or SQL type code. For example, a delegating JDBC adapter whose execution
+uses an established pair can reuse that pair's assessment:
+
+[source,java]
+----
+@Override
+public Optional<TemporalPreservation> getTemporalPreservation(
+        JavaType<?> javaType, Dialect dialect) {
+    if ( javaType != supportedJavaType ) {
+        return Optional.empty();
+    }
+    // Binding and extraction delegate using exactly these underlying descriptors.
+    return Optional.of( dialect.getTemporalPreservation( delegateJavaType, delegateJdbcType ) );
+}
+----
+
+Here the adapter must also establish that its conversion to and from `delegateJavaType` preserves
+the required parts. Delegating an assessment does not prove that conversion. Delegation must
+use a distinct pair; recursive assessment fails with a mapping diagnostic.
+
+Built-in Dialects consult this SPI before their existing pair recognition. An application
+Dialect override remains authoritative; delegating to `super` gives the descriptor its SPI
+opportunity. The existing Dialect override mechanism therefore remains valid.
+
+An explicitly adopted SPI contract may be inherited, but a subclass changing execution must
+update or decline its assessment. Callbacks must be deterministic for the configured descriptor
+instances, side-effect-free, and independent of boot metadata access. They must not acquire
+connections or change execution. Reports do not certify arbitrary schemas, supported value
+ranges, precision, or every callable operation; those remain separate responsibilities.
+Active application converters are assessed using their relational Java descriptor, not a
+requirement declaration on the converter's domain type. With `temporal_preservation=false`,
+ordinary mapping and query execution does not invoke these new validation callbacks.
+
+[[basic-legacy-temporal-conversions]]
+===== Legacy temporal conversions
+
+The `java.sql.Date`, `java.sql.Time`, and `java.sql.Timestamp` classes have implicit DATE, TIME, and TIMESTAMP
+mappings respectively. For `java.util.Date` and `java.util.Calendar`, Hibernate assumes TIMESTAMP;
+`@Temporal` selects DATE, TIME, or TIMESTAMP precision where supported.
+
+Use `@Temporal` for legacy `java.util.Date`/`Calendar` mappings. Java Time and `java.sql` temporal classes
+already express their temporal kind and do not need this annotation. Do not rely on it to select their
+JDBC handler or enable preservation guarantees.
 
 [[basic-temporal-java-util-example]]
 .Mapping java.util.Date
@@ -811,51 +1076,13 @@ include::{example-dir-basic-mapping}/basic/DatePrecisionTests.java[tags=basic-te
 ----
 ====
 
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-[[basic-java-time-direct-jdbc]]
-===== Java time at the JDBC boundary
-
-The _JDBC boundary_ is where Hibernate binds parameter values to a JDBC statement and extracts values from a JDBC result set.
-The Java type exchanged with the JDBC driver at this boundary can differ from the type of the entity attribute.
-For example, Hibernate can map a `LocalDate` attribute to a SQL `DATE` column either by passing the `LocalDate` directly to the driver,
-or by converting it to a `java.sql.Date` for JDBC access and converting the retrieved value back to `LocalDate`.
-
-The <<settings-hibernate.type.java_time_use_direct_jdbc,`hibernate.type.java_time_use_direct_jdbc`>> setting controls
-whether Hibernate prefers to exchange `java.time` values directly with the driver using `PreparedStatement.setObject()`
-and `ResultSet.getObject(..., Class)`.
-It defaults to `false`, so Hibernate converts `java.time` values to legacy JDBC representations by default.
-This setting controls the Java representation at the JDBC boundary, independently of the SQL column type and time-zone storage strategy.
-
-JDBC 4.2, included in Java 8, requires support for `LocalDate`, `LocalTime`, `LocalDateTime`, `OffsetTime`, and `OffsetDateTime`.
-Despite this requirement, some JDBC drivers still do not support all of these types at the JDBC boundary.
-Running on Java 8 or later therefore does not by itself guarantee that a driver can bind and extract these values directly.
-Hibernate uses the configured dialect's knowledge of driver support to select direct access for each Java time type.
-When direct access is requested but the dialect reports a type as unsupported, Hibernate uses the corresponding legacy JDBC representation
-and logs the known limitation.
-
-To enable direct JDBC access globally for supported Java time types, set:
-
-[source,properties]
-----
-hibernate.type.java_time_use_direct_jdbc=true
-----
-
-The entity attributes may still use `java.time` types; Hibernate performs the conversions needed for JDBC access.
-For time-zone configuration when using legacy JDBC temporal types, see <<basic-datetime-time-zone>>.
-
-[NOTE]
-====
-JDBC 4.2 does not require direct support for `Instant` or `ZonedDateTime`.
-The `hibernate.type.java_time_use_direct_jdbc` setting does not enable direct `Instant` access.
-That requires `hibernate.type.preferred_instant_jdbc_type=INSTANT` and dialect support for the driver's `Instant` handling.
-For a `ZonedDateTime` attribute, Hibernate may exchange an `OffsetDateTime` at the JDBC boundary when the driver supports that type
-but does not support `ZonedDateTime` directly.
-====
-
 [[basic-datetime-time-zone]]
-===== Using a specific time zone
+====== Legacy JDBC timezone conversion
+
+The `hibernate.jdbc.time_zone` setting controls applicable JDBC conversions for legacy temporal mappings, including Java Time
+attributes using compatibility mode. It does not select a domain adjustment target, set the database session
+timezone, or rewrite existing values. Preserving JDBC handlers may instead use their own fixed conversion
+protocol to satisfy the guarantee independently of this setting.
 
 By default, Hibernate uses the https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTimestamp-int-java.sql.Timestamp-[`PreparedStatement.setTimestamp(int parameterIndex, java.sql.Timestamp)`] or
 https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTime-int-java.sql.Time-[`PreparedStatement.setTime(int parameterIndex, java.sql.Time x)`] when saving a `java.sql.Timestamp` or a `java.sql.Time` property.
@@ -905,8 +1132,11 @@ Session session = sessionFactory()
 With this configuration property in place, Hibernate calls the https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTimestamp-int-java.sql.Timestamp-java.util.Calendar-[`PreparedStatement.setTimestamp(int parameterIndex, java.sql.Timestamp, Calendar cal)`] or
 https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTime-int-java.sql.Time-java.util.Calendar-[`PreparedStatement.setTime(int parameterIndex, java.sql.Time x, Calendar cal)`], where the `java.util.Calendar` references the time zone provided via the `hibernate.jdbc.time_zone` property.
 
-[[basic-timestamp-with-time-zone]]
-===== Handling time zoned temporal data
+[[basic-legacy-timezone-storage]]
+====== Legacy timezone storage
+
+The following strategies describe compatibility mode (`hibernate.type.temporal_preservation=false`).
+They may discard offsets or region IDs and must not be read as enabled-preservation guarantees.
 
 The default time zone storage strategy is `DEFAULT`.
 For `OffsetDateTime` and `ZonedDateTime`, it uses `NATIVE` when the dialect supports preserving offsets in a `TIMESTAMP WITH TIME ZONE` column, and `NORMALIZE_UTC` otherwise.
@@ -930,7 +1160,7 @@ settings.put(
 
 Hibernate determines native time zone support through `Dialect#getTimeZoneSupport()`.
 
-===== `@TimeZoneStorage`
+====== Legacy `@TimeZoneStorage`
 
 Hibernate supports defining the storage to use for time zone information for individual properties
 via the `@TimeZoneStorage` and `@TimeZoneColumn` annotations.
@@ -998,7 +1228,10 @@ For example, assigning `Year.of(2026)` stores the integer `2026` and reconstruct
 [[basic-instant]]
 ====== Instant
 
-`Instant` is mapped to the `TIMESTAMP_UTC` SQL type.
+`Instant` requires preservation of the point on the timeline. With preservation enabled, Hibernate prefers
+direct `INSTANT` JDBC handling or a preserving `TIMESTAMP_UTC` fallback. These are Hibernate type codes,
+not SQL column type names. The physical column may be a plain or zoned timestamp according to the dialect
+and selected handler. See <<basic-temporal-preservation>> for explicit preferences and compatibility mode.
 
 
 [[basic-instant-example]]
@@ -1018,7 +1251,8 @@ See <<basic-temporal>> for basics of temporal mapping
 [[basic-localdate]]
 ====== LocalDate
 
-`LocalDate` is mapped to the `DATE` JDBC type.
+`LocalDate` preserves the calendar date and normally uses a SQL `DATE` column. Direct JDBC handling exchanges
+`LocalDate` values with the driver; the SQL column type and the Java class used at JDBC are distinct choices.
 
 [[basic-localDate-example]]
 .Mapping LocalDate
@@ -1037,7 +1271,9 @@ See <<basic-temporal>> for basics of temporal mapping
 [[basic-localtime]]
 ====== LocalTime
 
-`LocalTime` is mapped to the `TIME` JDBC type.
+`LocalTime` preserves the local time of day, subject to supported precision. It normally uses a SQL `TIME`
+column, but a dialect may use another carrier to fulfill the guarantee. Oracle, for example, uses a
+zone-less timestamp with a fixed carrier date to retain local fields and fractions.
 
 [[basic-localTime-example]]
 .Mapping LocalTime
@@ -1056,7 +1292,8 @@ See <<basic-temporal>> for basics of temporal mapping
 [[basic-localdatetime]]
 ====== LocalDateTime
 
-`LocalDateTime` is mapped to the `TIMESTAMP` JDBC type.
+`LocalDateTime` preserves local date and time fields, subject to supported precision, and normally uses a
+SQL `TIMESTAMP` column. The value has no offset or zone; mapping it does not assign it an intrinsic instant.
 
 [[basic-localDateTime-example]]
 .Mapping LocalDateTime
@@ -1075,8 +1312,14 @@ See <<basic-temporal>> for basics of temporal mapping
 [[basic-offsettime]]
 ====== OffsetTime
 
-`OffsetTime` is mapped to the `TIME` or `TIME_WITH_TIMEZONE` JDBC type
-depending on the database.
+Without explicit adjustment, `OffsetTime` requires preservation of both local time and offset.
+An inline mapping needs a database/JDBC pair that retains both, using a suitable zoned time or timestamp
+carrier. A plain time value alone cannot retain the original offset. Explicit COLUMN representation stores
+the offset separately. Unsupported mappings are rejected; Hibernate does not silently normalize the offset
+away. A fixed-offset adjustment deliberately selects a different representation of the time value.
+
+The following unannotated example uses the default INLINE representation and therefore requires a supporting
+provider. See <<basic-timestamp-with-time-zone>> for explicit representation and adjustment choices.
 
 
 [[basic-OffsetTime-example]]
@@ -1096,8 +1339,13 @@ See <<basic-temporal>> for temporal mapping and <<basic-datetime-time-zone>> for
 [[basic-offsetdatetime]]
 ====== OffsetDateTime
 
-`OffsetDateTime` is mapped to the `TIMESTAMP` or `TIMESTAMP_WITH_TIMEZONE` JDBC type
-depending on the database.
+Without explicit adjustment, `OffsetDateTime` requires preservation of local date-time and offset,
+and therefore the instant. The default INLINE mapping requires a database/JDBC pair that retains the offset;
+instant-only timestamp handling is insufficient. Explicit COLUMN representation stores the offset separately.
+A mapping that cannot meet the guarantee is rejected instead of silently selecting normalization.
+
+The following unannotated example requires a supporting INLINE provider. An application that deliberately
+wants a target zone or offset may declare adjustment separately; see <<basic-timestamp-with-time-zone>>.
 
 
 [[basic-OffsetDateTime-example]]
@@ -1119,8 +1367,16 @@ See <<basic-temporal>> for temporal mapping and <<basic-datetime-time-zone>> for
 ====== ZonedDateTime
 
 
-`ZonedDateTime` is mapped to the `TIMESTAMP` or `TIMESTAMP_WITH_TIMEZONE` JDBC type
-depending on the database.
+With temporal preservation enabled (the default), an inline `ZonedDateTime` mapping
+requires a database/JDBC pair that preserves the local date-time, regional zone ID,
+and resolved offset. `TIMESTAMP_WITH_TIMEZONE` alone does not establish that guarantee;
+Hibernate rejects unsupported pairs, including H2's offset-only inline handling.
+
+An explicit `COLUMN` representation offers the qualified offset-only alternative shown
+below. It preserves local date-time and offset, subject to timestamp precision, but does
+not guarantee the original regional zone ID. Choose it only when that contract is suitable.
+Legacy applications may set `hibernate.type.temporal_preservation=false` to retain their
+previous interpretation.
 
 
 [[basic-ZonedDateTime-example]]
@@ -1128,7 +1384,7 @@ depending on the database.
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-basic-mapping}/basic/ZonedDateTimeMappingTests.java[tags=basic-ZonedDateTime-example]
+include::{example-dir-basic-mapping}/basic/ZonedDateTimeColumnMappingTests.java[tags=basic-ZonedDateTime-example]
 ----
 ====
 
@@ -1143,7 +1399,7 @@ See <<basic-temporal>> for temporal mapping and <<basic-datetime-time-zone>> for
 `TimeZone` is mapped to `VARCHAR` JDBC type.
 
 [[basic-TimeZone-example]]
-.Mapping OffsetTime
+.Mapping TimeZone
 ====
 [source, java, indent=0]
 ----

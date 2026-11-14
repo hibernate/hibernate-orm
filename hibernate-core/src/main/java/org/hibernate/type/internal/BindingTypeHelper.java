@@ -173,6 +173,13 @@ public class BindingTypeHelper {
 			Class<?> javaType,
 			BindableType<?> baseType,
 			TypeConfiguration typeConfiguration) {
+		if ( (javaType == LocalTime.class || javaType == OffsetTime.class)
+				&& typeConfiguration.getCurrentBaseSqlTypeIndicators().isPreferJavaTimeJdbcTypesEnabled()
+				&& baseType.getJavaType().isAssignableFrom( javaType ) ) {
+			// In particular, COLUMN's UTC time carrier must not be replaced with
+			// the global OffsetTime type when binding a predicate or assignment.
+			return baseType;
+		}
 		if ( Calendar.class.isAssignableFrom( javaType ) ) {
 			return typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.CALENDAR_TIME );
 		}

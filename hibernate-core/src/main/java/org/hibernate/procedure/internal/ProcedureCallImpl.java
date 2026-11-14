@@ -1,5 +1,7 @@
 package org.hibernate.procedure.internal;
 
+import org.hibernate.type.internal.TemporalMappingValidator;
+
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
@@ -41,6 +43,7 @@ import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.AbstractQuery;
+import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderBasicStandard;
 import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.query.spi.MutationQueryImplementor;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
@@ -59,9 +62,12 @@ import org.hibernate.sql.exec.spi.JdbcOperationQueryCall;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.OutputableType;
+import org.hibernate.type.descriptor.converter.internal.TemporalAdjustmentConverter;
+import org.hibernate.type.descriptor.java.PreservationAwareTemporalJavaType;
 
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -657,31 +663,41 @@ public class ProcedureCallImpl<R>
 	@Nonnull
 	public ProcedureCall markAsFunctionCall(@Nonnull Type<?> typeReference) {
 		checkNotClosed();
+		validateCallableShape( typeReference, "function return" );
 		if ( !(typeReference instanceof OutputableType<?> outputableType) ) {
 			throw new IllegalArgumentException( "Given type is not an OutputableType: " + typeReference );
+		}
+
+		if ( typeReference instanceof BasicType<?> basic
+				&& getSessionFactory().getSessionFactoryOptions().isPreferJavaTimeJdbcTypesEnabled() ) {
+			TemporalMappingValidator.validate(
+					getSessionFactory().getJdbcServices().getDialect(), basic,
+					getProcedureName() + " function return", getSessionFactory().getProperties() );
 		}
 
 		assert !resultSetMappings.isEmpty();
 		final var firstResultSetMapping = resultSetMappings.get( 0 );
 		if ( firstResultSetMapping.getNumberOfResultBuilders() == 0 ) {
 			final var expressible = resolveExpressible( typeReference );
-			// Function returns might not be represented as callable parameters,
-			// but we still want to convert the result to the requested java type if possible
-			firstResultSetMapping.addResultBuilder( new ScalarDomainResultBuilder<>( expressible.getExpressibleJavaType() ) );
+			// Some dialects expose function returns as result sets instead of OUT
+			// parameters. Retain the explicit temporal pair on that path too.
+			if ( typeReference instanceof BasicType<?> basic
+					&& ( getSessionFactory().getSessionFactoryOptions().isPreferJavaTimeJdbcTypesEnabled()
+							&& ( Temporal.class.isAssignableFrom( basic.getJdbcJavaType().getJavaTypeClass() )
+								|| basic.getJdbcJavaType() instanceof PreservationAwareTemporalJavaType<?> )
+						|| basic.getValueConverter() instanceof TemporalAdjustmentConverter<?> ) ) {
+				firstResultSetMapping.addResultBuilder( new DynamicResultBuilderBasicStandard( 1, basic ) );
+			}
+			else {
+				firstResultSetMapping.addResultBuilder( new ScalarDomainResultBuilder<>( expressible.getExpressibleJavaType() ) );
+			}
 		}
 		functionReturn = new FunctionReturnImpl<>( this, (OutputableType<?>) outputableType );
 		return this;
 	}
 
 	private void markAsFunctionCall(BasicType<?> basicType) {
-		assert !resultSetMappings.isEmpty();
-		final var firstResultSetMapping = resultSetMappings.get( 0 );
-		if ( firstResultSetMapping.getNumberOfResultBuilders() == 0 ) {
-			// Function returns might not be represented as callable parameters,
-			// but we still want to convert the result to the requested java type if possible
-			firstResultSetMapping.addResultBuilder( new ScalarDomainResultBuilder<>( basicType.getExpressibleJavaType() ) );
-		}
-		functionReturn = new FunctionReturnImpl<>( this, (OutputableType<?>) basicType );
+		markAsFunctionCall( (Type<?>) basicType );
 	}
 
 	@Override
@@ -825,11 +841,21 @@ public class ProcedureCallImpl<R>
 			int position,
 			@Nonnull Type<T> typeReference,
 			@Nonnull ParameterMode mode) {
+		validateCallableShape( typeReference, "parameter " + position );
 		final var expressible = resolveExpressible( typeReference );
 		final var procedureParameter =
 				new ProcedureParameterImpl<>( position, mode, typeReference.getJavaType(), expressible );
 		registerParameter( procedureParameter );
 		return procedureParameter;
+	}
+
+	private void validateCallableShape(Type<?> type, String role) {
+		if ( type instanceof jakarta.persistence.metamodel.EmbeddableType<?> ) {
+			throw new IllegalArgumentException( "Procedure/function '" + getProcedureName() + "' " + role
+					+ " of Java type '" + type.getJavaType().getTypeName()
+					+ "' uses a composite mapping. Multi-column callable parameters and returns are unsupported; "
+					+ "use an explicitly supported single-column mapping." );
+		}
 	}
 
 	private <T> SqmBindableType<T> resolveExpressible(@Nonnull Type<T> typeReference) {
@@ -914,6 +940,7 @@ public class ProcedureCallImpl<R>
 			@Nonnull Type<T> typeReference,
 			@Nonnull ParameterMode mode) {
 		checkNotClosed();
+		validateCallableShape( typeReference, "parameter " + name );
 		final var parameter =
 				new ProcedureParameterImpl<>( name, mode, typeReference.getJavaType(),
 						resolveExpressible( typeReference ) );

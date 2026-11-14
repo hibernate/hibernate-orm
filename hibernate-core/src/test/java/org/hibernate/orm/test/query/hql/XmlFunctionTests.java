@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.query.hql;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -50,6 +53,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 })
 @SessionFactory
 @Jira("https://hibernate.atlassian.net/browse/HHH-18497")
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 public class XmlFunctionTests {
 
 	XmlHolder entity;

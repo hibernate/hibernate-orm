@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.query.joinfetch;
 
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 import org.hibernate.internal.util.StringHelper;
 
@@ -22,6 +25,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Steve Ebersole
  */
+// Retain Product's legacy generated version while testing the retail model.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel(standardModels = StandardDomainModel.RETAIL)
 @SessionFactory(useCollectingStatementObserver = true)
 @Jira( "https://hibernate.atlassian.net/browse/HHH-16955" )

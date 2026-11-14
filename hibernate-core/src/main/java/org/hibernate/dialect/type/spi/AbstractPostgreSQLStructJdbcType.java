@@ -37,6 +37,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
@@ -1086,6 +1087,12 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 	}
 
 	private static Object fromRawObject(JdbcMapping jdbcMapping, Object raw, WrapperOptions options) {
+		// A TIMESTAMP_UTC component may use a plain timestamp carrier. Its fields
+		// are UTC, unlike an ordinary TIMESTAMP interpreted by the legacy wrapper.
+		if ( raw instanceof LocalDateTime timestamp
+				&& jdbcMapping.getJdbcType().getDefaultSqlTypeCode() == SqlTypes.TIMESTAMP_UTC ) {
+			raw = timestamp.toInstant( ZoneOffset.UTC );
+		}
 		return jdbcMapping.getJdbcJavaType().wrap(
 				raw,
 				options
@@ -1228,10 +1235,11 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 		final JavaType<Object> jdbcJavaType = (JavaType<Object>) jdbcMapping.getJdbcJavaType();
 		if ( jdbcMapping.getJdbcType() instanceof JavaTimeJdbcType ) {
 			appender.quoteStart();
-			jdbcJavaType.appendEncodedString(
-					appender,
-					jdbcJavaType.unwrap( subValue, jdbcJavaType.getJavaTypeClass(), options )
-			);
+			// Aggregate components have already passed through their binders.
+			// Serialize that representation, not the original mapped Java class.
+			final JavaType<Object> physicalJavaType = options.getTypeConfiguration()
+					.getJavaTypeRegistry().getDescriptor( subValue.getClass() );
+			physicalJavaType.appendEncodedString( appender, subValue );
 			appender.quoteEnd();
 			return;
 		}

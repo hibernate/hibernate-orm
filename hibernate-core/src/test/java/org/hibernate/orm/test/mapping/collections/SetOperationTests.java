@@ -1,10 +1,12 @@
 package org.hibernate.orm.test.mapping.collections;
 
+import org.hibernate.cfg.MappingSettings;
 import java.util.Iterator;
 
 import org.hibernate.Hibernate;
 import org.hibernate.persister.collection.CollectionPersister;
 
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.hamcrest.InitializationCheckMatcher;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfSets;
@@ -31,7 +33,8 @@ import static org.hibernate.testing.hamcrest.InitializationCheckMatcher.isNotIni
  * @author Steve Ebersole
  */
 @DomainModel( standardModels = StandardDomainModel.GAMBIT )
-@ServiceRegistry
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @SessionFactory
 public class SetOperationTests {
 	@BeforeEach

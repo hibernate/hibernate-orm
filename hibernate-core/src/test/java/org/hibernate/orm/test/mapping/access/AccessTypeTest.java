@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.mapping.access;
 
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import jakarta.persistence.*;
 import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -13,7 +15,10 @@ import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
-@Jpa(annotatedClasses = AccessTypeTest.SomeEntity.class)
+@Jpa(
+		properties = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
+		annotatedClasses = AccessTypeTest.SomeEntity.class
+)
 class AccessTypeTest {
 	@Test void test(EntityManagerFactoryScope scope) {
 		EntityType<SomeEntity> someEntityType =

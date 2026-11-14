@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Set;
 
 import jakarta.persistence.LockModeType;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.H2Dialect;
@@ -48,8 +49,9 @@ import static org.hamcrest.Matchers.notNullValue;
 		},
 		xmlMappings = "org/hibernate/orm/test/query/resultmapping/result-set-mapping.hbm.xml"
 )
+// Retain the legacy temporal semantics of this regression fixture.
 @ServiceRegistry(
-		settings = {
+		settings = { @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
 				@Setting(
 						name = AvailableSettings.JDBC_TIME_ZONE,
 						value = "UTC"

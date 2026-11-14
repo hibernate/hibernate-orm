@@ -44,6 +44,19 @@ public class OracleBaseStructJdbcType extends StructJdbcType {
 	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
 		return new BasicBinder<>( javaType, this ) {
 			@Override
+			protected void doBindNull(PreparedStatement st, int index, WrapperOptions options)
+					throws SQLException {
+				// Oracle requires the SQL object type name even when there is no value.
+				st.setNull( index, getJdbcTypeCode(), getStructTypeName() );
+			}
+
+			@Override
+			protected void doBindNull(CallableStatement st, String name, WrapperOptions options)
+					throws SQLException {
+				st.setNull( name, getJdbcTypeCode(), getStructTypeName() );
+			}
+
+			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
 				st.setObject( index, createJdbcValue( value, options ) );

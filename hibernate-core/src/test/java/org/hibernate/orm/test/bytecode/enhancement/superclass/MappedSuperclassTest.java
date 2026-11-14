@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.bytecode.enhancement.superclass;
 
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDateTime;
@@ -19,11 +22,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 
 @JiraKey("HHH-17418")
-@DomainModel(
-		annotatedClasses = {
-				MappedSuperclassTest.MyEntity.class
-		}
-)
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
+@DomainModel( annotatedClasses = MappedSuperclassTest.MyEntity.class )
 @SessionFactory
 @BytecodeEnhanced
 public class MappedSuperclassTest {

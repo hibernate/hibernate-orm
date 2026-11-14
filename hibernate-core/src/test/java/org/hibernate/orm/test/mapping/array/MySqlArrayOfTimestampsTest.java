@@ -27,6 +27,7 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@RequiresDialect(MySQLDialect.class)
 @DomainModel(annotatedClasses = MySqlArrayOfTimestampsTest.Foo.class)
 @SessionFactory
 @JiraKey("HHH-18881")
@@ -62,7 +63,6 @@ class MySqlArrayOfTimestampsTest {
 
 	@Test
 	@Order(1)
-	@RequiresDialect(MySQLDialect.class)
 	public void testLocalDateTime(SessionFactoryScope scope) {
 
 		final Integer basicId = scope.fromTransaction( session -> {
@@ -83,7 +83,6 @@ class MySqlArrayOfTimestampsTest {
 
 	@Test
 	@Order(2)
-	@RequiresDialect(MySQLDialect.class)
 	public void testDate(SessionFactoryScope scope) {
 		Date[] dataArray = {Calendar.getInstance().getTime(), Calendar.getInstance().getTime()};
 

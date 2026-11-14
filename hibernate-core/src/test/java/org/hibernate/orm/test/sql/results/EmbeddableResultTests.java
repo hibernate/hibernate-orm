@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.sql.results;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.results.graph.DomainResultGraphPrinter;
 
@@ -14,6 +17,8 @@ import org.junit.jupiter.api.Test;
  */
 @DomainModel( standardModels = StandardDomainModel.GAMBIT )
 @SessionFactory( exportSchema = false )
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 public class EmbeddableResultTests extends AbstractResultTests {
 	@Test
 	public void simpleTest(SessionFactoryScope scope) {

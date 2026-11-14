@@ -1,0 +1,119 @@
+= Temporal regression tests
+
+These tests exercise direct-enabled Java Time handling and matched fallback
+conversion. Unsupported mappings assert rejection; they do not accept reduced
+preservation. The original org.hibernate.orm.test.type.temporal tests retain
+legacy explicit-conversion coverage.
+
+TimeZoneAwareTemporalPreservationMatrixTests checks JDBC/composite handling.
+TimeZoneAwareTemporalOrmPreservationMatrixTests and
+NonTimeZoneAwareTemporalPreservationMatrixTests exercise persistence, fresh-session
+reads, null updates and cleanup, with actual descriptor/SQL-form assertions.
+TemporalFallbackCompatibilityTests independently checks legacy descriptor selection.
+The context package covers mapping reuse, exclusions, caches and dirty checking.
+The type.temporal.preservation package provides the seven-type input/profile matrix.
+
+== Environment options
+
+* temporalTestJvmTimeZone sets user.timezone on the forked JVM before driver
+initialization, exposing accidental dependence on JVM defaults and driver caches.
+* temporalTestSessionTimeZone initializes every test connection's database session
+zone on H2, PostgreSQL and Oracle. It varies connection interpretation/output
+independently of the JVM. It does not change a server-global timezone.
+* temporalTestJdbcTimeZone sets the existing hibernate.jdbc.time_zone conversion
+option independently of the other two axes.
+* temporalTestWriterTimeZone and temporalTestReaderTimeZone override initialization
+on the actual transaction connection for asymmetric write/read checks.
+
+TemporalMatrixEnvironment applies phase-specific zones and verifies the requested
+axes. Unspecified axes are left alone, so an IDE run can expose its actual defaults.
+The ordinary Gradle test JVM defaults to UTC. None of these options requests domain
+adjustment. PostgreSQL session state is checked with current_setting('TimeZone');
+pgJDBC's UTC OffsetDateTime output does not reveal that state. H2/Oracle checks
+verify the effective current session offset rather than full region-rule identity.
+
+[source,shell]
+----
+./gradlew :hibernate-core:test -Pdb=h2 -Ptest.threads=1 \
+  -PtemporalTestJvmTimeZone=America/Denver \
+  -PtemporalTestSessionTimeZone=Asia/Tokyo \
+  -PtemporalTestWriterTimeZone=UTC \
+  -PtemporalTestReaderTimeZone=Asia/Tokyo \
+  --tests 'org.hibernate.orm.test.mapping.javatime.redesign.*PreservationMatrixTests'
+----
+
+Use fresh JVM launches for JVM-default variations; changing the default in-process
+does not reset driver initialization. Supported live profiles here are H2,
+PostgreSQL and Oracle. SQL Server live verification remains deferred. These tests
+do not vary server-global settings or timezone-rule versions.
+
+== Distinct connections and separate JVMs
+
+TemporalCrossEnvironmentTests is a regression test. Its ordinary JUnit invocation
+holds two connections open, checks different server session IDs, commits through
+one and reads through the other. It covers local fields, Instant and matched
+plain/zoned timestamp fallbacks, plus offset-preserving COLUMN reconstruction and
+both New York overlap occurrences.
+
+The optional write/read phases test different JVM defaults across launches. Use
+the temporalCrossEnvironment JavaExec task so JUnit's launch-time schema cleaner
+does not remove the writer's rows. Both launches must use the same dedicated test
+database; use a shared file-backed URL for H2. Set temporalTestCrossUrl to override
+its JDBC URL. The reader validates schema and persisted writer process/JVM identity,
+checks the values, then removes the fixture's rows and schema objects.
+
+[source,shell]
+----
+./gradlew :hibernate-core:temporalCrossEnvironment -Pdb=postgresql -Ptest.threads=1 \
+  -PtemporalTestCrossPhase=write -PtemporalTestJvmTimeZone=America/Denver \
+  -PtemporalTestWriterTimeZone=UTC
+./gradlew :hibernate-core:temporalCrossEnvironment -Pdb=postgresql -Ptest.threads=1 \
+  -PtemporalTestCrossPhase=read -PtemporalTestJvmTimeZone=Asia/Tokyo \
+  -PtemporalTestReaderTimeZone=Asia/Tokyo
+----
+
+Reverse writer/reader JVM and session zones for the opposite direction. COLUMN
+ZonedDateTime assertions expect fixed-offset reconstruction; a zoned primary does
+not restore a region discarded during decomposition. This focused test does not
+replace the seven-type matrix or native region-bearing INLINE descriptor tests.
+
+== Matched fallback handling
+
+Plain UTC timestamp fallback uses UTC Calendar clock fields in a plain TIMESTAMP.
+Zoned timestamp fallback must match the driver: H2 uses explicit zoned Timestamp
+binding, PostgreSQL uses UTC Calendar binding, and Oracle constructs an explicitly
+UTC TIMESTAMPTZ datum to retain historical instants across session zones.
+The legacy TimestampUtcAsJdbcTimestampJdbcType remains a separate compatibility path.
+A columnDefinition changes DDL and does not select a matching JDBC descriptor.
+
+== Live environment eligibility and compatibility fixtures
+
+The live timezone and connection matrices use explicit H2, PostgreSQL/PostGIS/EDB,
+and Oracle profiles. A PostgreSQL Dialect subclass does not by itself establish
+support for session timezone SQL or physical-session identity queries; in particular,
+Spanner PostgreSQL is not admitted to these live regression matrices. Unsupported profiles are
+reported before provisioning. Ordinary mapping tests retain their own eligibility.
+
+The type-specific preservation matrix discovers the actual server version through a
+separate setup connection. Runtime bootstrap with JDBC metadata access disabled still
+uses its guarded provider and must acquire no bootstrap connections. Oracle setup
+uses owned-object cleanup followed by creation, including servers before version 23.
+
+Shared query and history fixtures that exercise legacy interpretation set
+`hibernate.type.temporal_preservation=false` on their own factory. This does not
+change the suite default. Enabled descriptor selection, preservation, rejection,
+period and migration tests remain separate. The PostgreSQL instant-only array case
+formerly in `GlobalJavaTimeJdbcTypeTests.testArray` now resides unchanged in
+`LegacyJavaTimeArrayJdbcTypeTests.testArray`; the original local-type tests stay enabled.
+
+== SQL Server TIME precision
+
+`org.hibernate.orm.test.temporal.SQLServerTimePrecisionMetadataTests` builds actual SQL Server
+contributions with boot JDBC disabled. Omitted TIME precision is unspecified and renders `time`;
+explicit zero renders `time(0)`. Both preservation settings retain this distinction. SQL Server's
+physical default of seven digits does not constitute a requested seven-digit Java/JDBC guarantee.
+
+`SQLServerTimePrecisionTests` and its independent legacy factory are SQL Server CI controls for
+catalog scale, strict prepared round trips, retained default storage, nulls, casts and callable
+parameters. H2 skips these provider tests; offline success is not live SQL Server evidence.
+The original fractional-second tests and legacy explicit-conversion coverage remain active.

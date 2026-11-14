@@ -959,6 +959,31 @@ public interface HibernateAnnotations {
 			EnumSet.of( Kind.FIELD, Kind.METHOD ),
 			false
 	);
+	CompleteAnnotationDescriptor<TemporalPreservationPolicies, TemporalPreservationPoliciesAnnotation> TEMPORAL_PRESERVATION_POLICIES = new CompleteAnnotationDescriptor<>(
+			TemporalPreservationPolicies.class,
+			TemporalPreservationPoliciesAnnotation.class,
+			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
+			false
+	);
+	CompleteAnnotationDescriptor<TemporalPreservationPolicy, TemporalPreservationPolicyAnnotation> TEMPORAL_PRESERVATION_POLICY = new CompleteAnnotationDescriptor<>(
+			TemporalPreservationPolicy.class,
+			TemporalPreservationPolicyAnnotation.class,
+			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
+			false,
+			TEMPORAL_PRESERVATION_POLICIES
+	);
+	CompleteAnnotationDescriptor<TimeZoneAdjustment, TimeZoneAdjustmentAnnotation> TIME_ZONE_ADJUSTMENT = new CompleteAnnotationDescriptor<>(
+			TimeZoneAdjustment.class,
+			TimeZoneAdjustmentAnnotation.class,
+			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
+			false
+	);
+	CompleteAnnotationDescriptor<TimeZoneRepresentation, TimeZoneRepresentationAnnotation> TIME_ZONE_REPRESENTATION = new CompleteAnnotationDescriptor<>(
+			TimeZoneRepresentation.class,
+			TimeZoneRepresentationAnnotation.class,
+			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
+			false
+	);
 	CompleteAnnotationDescriptor<TimeZoneColumn, TimeZoneColumnAnnotation> TIME_ZONE_COLUMN = new CompleteAnnotationDescriptor<>(
 			TimeZoneColumn.class,
 			TimeZoneColumnAnnotation.class,

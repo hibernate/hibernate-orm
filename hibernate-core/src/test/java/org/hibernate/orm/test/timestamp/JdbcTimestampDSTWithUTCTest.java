@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.timestamp;
 
+import org.hibernate.cfg.MappingSettings;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -42,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 )
 @SessionFactory
 @ServiceRegistry(
-		settings = @Setting(name = AvailableSettings.JDBC_TIME_ZONE, value = "UTC")
+		settings = { @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"), @Setting(name = AvailableSettings.JDBC_TIME_ZONE, value = "UTC") }
 )
 public class JdbcTimestampDSTWithUTCTest {
 

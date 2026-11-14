@@ -1,5 +1,6 @@
 package org.hibernate.temporal;
 
+import org.hibernate.cfg.MappingSettings;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityNotFoundException;
@@ -39,7 +40,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DomainModel(annotatedClasses =
 		{TemporalEntityNativeTest.TemporalEntity.class,
 		TemporalEntityNativeTest.TemporalChild.class})
-@ServiceRegistry(settings = @Setting(name = StateManagementSettings.TEMPORAL_TABLE_STRATEGY, value = "NATIVE"))
+// Exercise established history/period mutations under legacy timestamp interpretation.
+@ServiceRegistry(settings = {@Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"), @Setting(name = StateManagementSettings.TEMPORAL_TABLE_STRATEGY, value = "NATIVE")})
 @RequiresDialect(MariaDBDialect.class)
 @RequiresDialect(DB2Dialect.class)
 @RequiresDialect(SQLServerDialect.class)

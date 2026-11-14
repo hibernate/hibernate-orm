@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.sql.ast;
 
+import org.hibernate.cfg.MappingSettings;
 
 import java.util.List;
 
@@ -10,6 +11,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.sql.spi.ParameterMarkerStrategy;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -37,7 +39,8 @@ import static org.hibernate.internal.util.StringHelper.*;
  *
  * @author Steve Ebersole
  */
-@ServiceRegistry( services = @ServiceRegistry.Service(
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),  services = @ServiceRegistry.Service(
 		role = ParameterMarkerStrategy.class,
 		impl = ParameterMarkerStrategyTests.ParameterMarkerStrategyImpl.class )
 )

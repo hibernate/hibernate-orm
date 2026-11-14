@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.foreignkeys.disabled;
 
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -27,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Vlad Mihalcea
  */
 @JiraKey(value = "HHH-9306")
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel(
 		annotatedClasses = {InheritanceManyToManyForeignKeyTest.LocalDateEvent.class,
 				InheritanceManyToManyForeignKeyTest.UserEvents.class,

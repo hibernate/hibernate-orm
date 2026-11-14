@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.query;
 
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -14,6 +17,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 @DomainModel(annotatedClasses = TemporalParameterPlusDurationTest.SimpleEntity.class)
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @SessionFactory
 @JiraKey("HHH-18201")
 public class TemporalParameterPlusDurationTest {

@@ -1,5 +1,9 @@
 package org.hibernate.dialect.temporaltype.spi;
 
+import org.hibernate.annotations.TemporalPreservationPolicy.Type;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+
 import jakarta.annotation.Nullable;
 
 import org.hibernate.SPI;
@@ -28,4 +32,17 @@ public abstract class DelegatingCurrentTemporalSupport implements CurrentTempora
 	@Override public String currentTimestampWithTimeZone() { return delegate.currentTimestampWithTimeZone(); }
 	@Override public @Nullable CurrentTimestampSelection getCurrentTimestampSelection() { return delegate.getCurrentTimestampSelection(); }
 	@Override public boolean isCurrentTimestampStable() { return delegate.isCurrentTimestampStable(); }
+
+	@Override
+	public @Nullable CurrentTimestampSelection getCurrentTimestampSelection(
+			org.hibernate.type.descriptor.java.JavaType<?> javaType,
+			org.hibernate.type.descriptor.jdbc.JdbcType jdbcType) {
+		return delegate.getCurrentTimestampSelection( javaType, jdbcType );
+	}
+
+	@Override
+	public @Nullable CurrentTimestampSelection getCurrentTimestampSelection(JavaType<?> javaType, JdbcType jdbcType, Type policy) {
+		return delegate.getCurrentTimestampSelection( javaType, jdbcType, policy );
+	}
+
 }

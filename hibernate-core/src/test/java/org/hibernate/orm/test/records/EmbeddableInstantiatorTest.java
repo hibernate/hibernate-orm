@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.records;
 
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import java.time.LocalDate;
 
 import org.hibernate.annotations.EmbeddableInstantiator;
@@ -23,6 +26,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 				EmbeddableInstantiatorTest.Wrapper.class
 		}
 )
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @SessionFactory
 @JiraKey(value = "HHH-16457")
 public class EmbeddableInstantiatorTest {

@@ -2,6 +2,7 @@ package org.hibernate.orm.test.query.hql;
 
 import java.util.Map;
 
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
@@ -45,6 +46,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Steve Ebersole
  */
 public class SelectClauseTests extends BaseSqmUnitTest {
+	@Override
+	protected void applySettings(org.hibernate.boot.registry.StandardServiceRegistryBuilder builder) {
+		super.applySettings( builder );
+		// Retain the legacy temporal semantics of the shared query fixture.
+		builder.applySetting( MappingSettings.TEMPORAL_PRESERVATION, false );
+	}
+
 
 	@Test
 	public void testSimpleAliasSelection() {

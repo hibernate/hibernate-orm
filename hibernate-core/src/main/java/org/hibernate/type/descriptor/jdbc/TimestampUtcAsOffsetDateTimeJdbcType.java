@@ -73,12 +73,23 @@ public class TimestampUtcAsOffsetDateTimeJdbcType implements JdbcType {
 	public <X> ValueBinder<X> getBinder(final JavaType<X> javaType) {
 		return new BasicBinder<>( javaType, this ) {
 			@Override
+			public Object getBindValue(X value, WrapperOptions options) throws SQLException {
+				if ( !org.hibernate.type.descriptor.jdbc.internal.TemporalJdbcValueRanges.isNewHandling( options ) ) return super.getBindValue( value, options );
+				if ( value == null ) return null;
+				if ( value instanceof Instant ) org.hibernate.type.descriptor.jdbc.internal.TemporalJdbcValueRanges.check( value, options );
+				final var dateTime = javaType.unwrap( value, OffsetDateTime.class, options );
+				org.hibernate.type.descriptor.jdbc.internal.TemporalJdbcValueRanges.check( dateTime.toInstant(), options );
+				return dateTime.withOffsetSameInstant( ZoneOffset.UTC );
+			}
+			@Override
 			protected void doBind(
 					PreparedStatement st,
 					X value,
 					int index,
 					WrapperOptions wrapperOptions) throws SQLException {
+				if ( value instanceof java.time.Instant ) org.hibernate.type.descriptor.jdbc.internal.TemporalJdbcValueRanges.check( value, wrapperOptions );
 				final OffsetDateTime dateTime = javaType.unwrap( value, OffsetDateTime.class, wrapperOptions );
+				org.hibernate.type.descriptor.jdbc.internal.TemporalJdbcValueRanges.check( dateTime.toInstant(), wrapperOptions );
 				// supposed to be supported in JDBC 4.2
 				st.setObject( index, dateTime.withOffsetSameInstant( ZoneOffset.UTC ), Types.TIMESTAMP_WITH_TIMEZONE );
 			}
@@ -90,7 +101,9 @@ public class TimestampUtcAsOffsetDateTimeJdbcType implements JdbcType {
 					String name,
 					WrapperOptions wrapperOptions)
 					throws SQLException {
+				if ( value instanceof java.time.Instant ) org.hibernate.type.descriptor.jdbc.internal.TemporalJdbcValueRanges.check( value, wrapperOptions );
 				final OffsetDateTime dateTime = javaType.unwrap( value, OffsetDateTime.class, wrapperOptions );
+				org.hibernate.type.descriptor.jdbc.internal.TemporalJdbcValueRanges.check( dateTime.toInstant(), wrapperOptions );
 				// supposed to be supported in JDBC 4.2
 				st.setObject( name, dateTime.withOffsetSameInstant( ZoneOffset.UTC ), Types.TIMESTAMP_WITH_TIMEZONE );
 			}
@@ -102,17 +115,23 @@ public class TimestampUtcAsOffsetDateTimeJdbcType implements JdbcType {
 		return new BasicExtractor<>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int position, WrapperOptions wrapperOptions) throws SQLException {
-				return javaType.wrap( rs.getObject( position, OffsetDateTime.class ), wrapperOptions );
+				final var value = rs.getObject( position, OffsetDateTime.class );
+				org.hibernate.type.descriptor.jdbc.internal.TemporalJdbcValueRanges.check( value, wrapperOptions );
+				return javaType.wrap( value, wrapperOptions );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int position, WrapperOptions wrapperOptions) throws SQLException {
-				return javaType.wrap( statement.getObject( position, OffsetDateTime.class ), wrapperOptions );
+				final var value = statement.getObject( position, OffsetDateTime.class );
+				org.hibernate.type.descriptor.jdbc.internal.TemporalJdbcValueRanges.check( value, wrapperOptions );
+				return javaType.wrap( value, wrapperOptions );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions wrapperOptions) throws SQLException {
-				return javaType.wrap( statement.getObject( name, OffsetDateTime.class ), wrapperOptions );
+				final var value = statement.getObject( name, OffsetDateTime.class );
+				org.hibernate.type.descriptor.jdbc.internal.TemporalJdbcValueRanges.check( value, wrapperOptions );
+				return javaType.wrap( value, wrapperOptions );
 			}
 		};
 	}

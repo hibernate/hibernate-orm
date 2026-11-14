@@ -13,6 +13,7 @@ import java.util.Date;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.test.entities.reventity.CustomLocalDateTimeRevEntity;
 import org.hibernate.cfg.MappingSettings;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
 import org.hibernate.testing.envers.junit.EnversTest;
 import org.hibernate.testing.orm.junit.BeforeClassTemplate;
@@ -36,14 +37,21 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @EnversTest
 @Jpa(
 		annotatedClasses = {StrTestEntity.class, CustomLocalDateTimeRevEntity.class},
-		integrationSettings = @Setting(name = MappingSettings.JAVA_TIME_USE_DIRECT_JDBC, value = "true")
+		integrationSettings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false")
 )
 public class LocalDateTimeTest {
+	// HHH-10496 verifies legacy revision generation and lookup, not field preservation.
+	protected boolean preservationEnabled() {
+		return false;
+	}
+
 	private Instant timestampStart;
 	private Instant timestampEnd;
 
 	@BeforeClassTemplate
 	public void initData(EntityManagerFactoryScope scope) throws InterruptedException {
+		assertEquals( preservationEnabled(), scope.getEntityManagerFactory()
+				.unwrap( SessionFactoryImplementor.class ).getSessionFactoryOptions().isTemporalPreservationEnabled() );
 		timestampStart = Instant.now();
 
 		// some DBMs truncate time to seconds.

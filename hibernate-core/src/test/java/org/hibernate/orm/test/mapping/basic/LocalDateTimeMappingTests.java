@@ -11,6 +11,8 @@ import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.orm.test.mapping.javatime.redesign.TemporalEligibilityChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -23,6 +25,7 @@ import static org.hamcrest.Matchers.equalTo;
 /**
  * @author Steve Ebersole
  */
+@RequiresDialectFeature(feature = TemporalEligibilityChecks.LocalDateTimeMapping.class)
 @DomainModel(annotatedClasses = LocalDateTimeMappingTests.EntityWithLocalDateTime.class)
 @SessionFactory
 public class LocalDateTimeMappingTests {
@@ -61,7 +64,7 @@ public class LocalDateTimeMappingTests {
 		private Integer id;
 
 		//tag::basic-localDateTime-example[]
-		// mapped as TIMESTAMP
+		// preserves local date-time fields, normally in a SQL TIMESTAMP column
 		private LocalDateTime localDateTime;
 		//end::basic-localDateTime-example[]
 

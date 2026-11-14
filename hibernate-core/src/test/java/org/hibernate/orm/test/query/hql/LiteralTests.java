@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.query.hql;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.animal.Classification;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -37,7 +39,8 @@ import static org.hamcrest.Matchers.is;
  * @author Steve Ebersole
  */
 @SuppressWarnings("deprecation")
-@ServiceRegistry
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel( standardModels = {StandardDomainModel.GAMBIT, StandardDomainModel.ANIMAL} )
 @SessionFactory
 public class LiteralTests {

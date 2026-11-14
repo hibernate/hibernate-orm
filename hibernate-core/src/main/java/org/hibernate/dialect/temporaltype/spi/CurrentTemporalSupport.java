@@ -4,6 +4,9 @@ import jakarta.annotation.Nullable;
 
 import org.hibernate.SPI;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.annotations.TemporalPreservationPolicy.Type;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import static org.hibernate.SPI.Role.IMPLEMENT;
 import static org.hibernate.SPI.Role.SUPPLY;
@@ -66,4 +69,20 @@ public interface CurrentTemporalSupport {
 	default boolean isCurrentTimestampStable() {
 		return false;
 	}
+
+	/// Select a current value encoded for this exact Java/JDBC pair. A null result
+	/// means typed DB generation is unsupported; it must not fall back to Timestamp.
+	default @Nullable CurrentTimestampSelection getCurrentTimestampSelection(
+			org.hibernate.type.descriptor.java.JavaType<?> javaType,
+			org.hibernate.type.descriptor.jdbc.JdbcType jdbcType) {
+		return null;
+	}
+
+	/// Select the same producer under a mapping-specific preservation requirement.
+	/// Existing contributions remain responsible for their declared execution guarantees.
+	default @Nullable CurrentTimestampSelection getCurrentTimestampSelection(
+			JavaType<?> javaType, JdbcType jdbcType, Type policy) {
+		return getCurrentTimestampSelection( javaType, jdbcType );
+	}
+
 }

@@ -399,6 +399,12 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 			toOne.setTypeName( typeName );
 		}
 		else if ( value instanceof Component component ) {
+			// A contextual temporal composite already describes the resolved domain
+			// and its tuple. The generic declaration's Object type is not a new
+			// composite implementation or a reason to erase its components.
+			if ( component.getContextualCompositeUserType() != null ) {
+				return;
+			}
 			// Avoid setting type name for generic components
 			if ( !component.isGeneric() ) {
 				component.setComponentClassName( typeName );

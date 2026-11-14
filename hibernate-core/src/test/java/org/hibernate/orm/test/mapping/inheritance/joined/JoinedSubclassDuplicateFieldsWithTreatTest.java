@@ -3,6 +3,9 @@ package org.hibernate.orm.test.mapping.inheritance.joined;
 import java.util.List;
 
 
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.retail.CardPayment;
 import org.hibernate.testing.orm.domain.retail.CashPayment;
@@ -22,6 +25,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey( "HHH-11686" )
+// Retain Product's legacy generated version while testing the retail model.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel(standardModels = StandardDomainModel.RETAIL)
 @SessionFactory
 public class JoinedSubclassDuplicateFieldsWithTreatTest {

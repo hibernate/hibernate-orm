@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.mapping.generated;
 
+import org.hibernate.cfg.MappingSettings;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -25,6 +26,7 @@ import org.hibernate.orm.test.annotations.MutableClock;
 import org.hibernate.orm.test.annotations.MutableClockSettingProvider;
 
 
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -55,7 +57,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @RequiresDialectFeature( feature = DialectFeatureChecks.CurrentTimestampHasMicrosecondPrecision.class )
 @RequiresDialectFeature( feature = DialectFeatureChecks.UsesStandardCurrentTimestampFunction.class )
-@ServiceRegistry(settingProviders = @SettingProvider(settingName = CurrentTimestampGeneration.CLOCK_SETTING_NAME, provider = MutableClockSettingProvider.class))
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"), settingProviders = @SettingProvider(settingName = CurrentTimestampGeneration.CLOCK_SETTING_NAME, provider = MutableClockSettingProvider.class))
 @DomainModel( annotatedClasses = DefaultGeneratedValueTest.TheEntity.class )
 @SessionFactory
 @SuppressWarnings("JUnitMalformedDeclaration")

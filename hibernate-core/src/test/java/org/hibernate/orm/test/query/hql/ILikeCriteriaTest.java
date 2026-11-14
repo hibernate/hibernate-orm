@@ -4,6 +4,7 @@ import java.util.List;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.query.Query;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
@@ -28,7 +29,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		standardModels = StandardDomainModel.GAMBIT
 )
 @SessionFactory
-@ServiceRegistry(settings = @Setting(name = AvailableSettings.CRITERIA_COPY_TREE, value = "true"))
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = { @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"), @Setting(name = AvailableSettings.CRITERIA_COPY_TREE, value = "true") })
 public class ILikeCriteriaTest {
 
 	@BeforeAll

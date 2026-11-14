@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.mapping.converted.converter;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.domain.gambit.MutableValue;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -18,6 +21,8 @@ import static org.hibernate.testing.orm.domain.gambit.EntityOfBasics.Gender.OTHE
  */
 @DomainModel( annotatedClasses = EntityOfBasics.class )
 @SessionFactory
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 public class ConvertedAttributeUsageTests {
 	@Test
 	public void testBasicUsage(SessionFactoryScope scope) {

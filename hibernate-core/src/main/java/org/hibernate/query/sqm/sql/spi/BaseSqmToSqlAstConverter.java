@@ -1,5 +1,6 @@
 package org.hibernate.query.sqm.sql.spi;
 
+
 import jakarta.persistence.criteria.Predicate.BooleanOperator;
 import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.annotation.Nonnull;
@@ -10,6 +11,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.SPI;
+import org.hibernate.annotations.TimeZoneAdjustment;
+import org.hibernate.type.internal.TemporalMappingValidator;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.TimestampaddFunction;
@@ -390,6 +393,7 @@ import org.hibernate.type.BindableType;
 import org.hibernate.type.BottomType;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.converter.internal.TemporalAdjustmentConverter;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -6285,10 +6289,75 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return consumeSqmParameter( expression );
 	}
 
+	private record TemporalParameterUse(Object binding, String description) {}
+
+	private final Map<QueryParameterImplementor<?>, TemporalParameterUse> temporalParameterUses = new HashMap<>();
+
+	/// Binding currently shares one temporal conversion/composite decomposition
+	/// across occurrences of a query parameter. Receiving mappings may require
+	/// different targets or tuples even when their domain Java class is identical.
+	/// Reject those uses during SQL AST preparation, before one occurrence's mapping
+	/// can silently determine the value bound for every occurrence.
+	private void validateTemporalParameterUse(SqmParameter<?> parameter, MappingModelExpressible<?> mapping) {
+			// Compatibility mode retains the legacy parameter inference and binding rules.
+			if ( !getSessionFactoryOptions().isTemporalPreservationEnabled() ) {
+				return;
+			}
+		final Object signature;
+		final String description;
+		final String role = mapping instanceof ModelPart part
+				? "mapping '" + part.getNavigableRole() + "'"
+				: "mapping for " + mapping.getClass().getSimpleName();
+
+		if ( mapping.getJdbcTypeCount() == 1 ) {
+			final var jdbc = mapping.getSingleJdbcMapping();
+			final var converter = jdbc.getValueConverter();
+			if ( converter instanceof TemporalAdjustmentConverter<?> temporal ) {
+				signature = List.of( jdbc.getJdbcType(), temporal.getTarget() );
+				description = role + " (INLINE, timezone adjustment '" + temporal.getTarget()
+						+ "', JDBC handler " + jdbc.getJdbcType().getClass().getSimpleName() + ")";
+			}
+			else if ( TemporalMappingValidator.supportsRepresentation( jdbc.getJavaTypeDescriptor().getJavaTypeClass() ) ) {
+				signature = List.of( jdbc.getJdbcType(), TimeZoneAdjustment.NONE );
+				description = role + " (INLINE, no timezone adjustment, JDBC handler "
+						+ jdbc.getJdbcType().getClass().getSimpleName() + ")";
+			}
+			else return;
+		}
+		else if ( mapping instanceof EmbeddableValuedModelPart embedded
+				&& TemporalMappingValidator.supportsRepresentation( embedded.getJavaType().getJavaTypeClass() ) ) {
+			// The existing binding path shares composite decomposition across uses.
+			signature = mapping;
+			description = role + " (COLUMN, " + mapping.getJdbcTypeCount() + " JDBC columns; mapping-specific decomposition)";
+		}
+		else {
+			return;
+		}
+		final var domain = parameterMapping.getQueryParameter( parameter );
+		final TemporalParameterUse previous = temporalParameterUses.putIfAbsent( domain, new TemporalParameterUse( signature, description ) );
+
+		if ( previous != null && !previous.binding().equals( signature ) ) {
+			throw new ConversionException( String.format( Locale.ROOT,
+					"Query parameter '%s' requires different temporal bindings for %s and %s."
+							+ " Hibernate cannot apply different timezone adjustments or COLUMN decompositions"
+							+ " to separate occurrences of the same parameter in this query."
+							+ " Use a separate parameter name or position for each mapping.",
+					domain == null ? "<?>" : domain.getName() == null ? "?" + domain.getPosition() : ":" + domain.getName(),
+					previous.description(),
+					description
+			) );
+		}
+	}
+
 	protected Expression consumeSqmParameter(
 			SqmParameter<?> sqmParameter,
 			MappingModelExpressible<?> valueMapping,
 			BiConsumer<Integer, JdbcParameter> jdbcParameterConsumer) {
+		final var receivingMapping = getInferredValueMapping();
+		if ( receivingMapping != null ) {
+			validateTemporalParameterUse( sqmParameter, receivingMapping );
+		}
+		validateTemporalParameterUse( sqmParameter, valueMapping );
 		final List<JdbcParameter> jdbcParametersForSqm = new ArrayList<>();
 
 		resolveSqmParameter(

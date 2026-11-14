@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.type.temporal;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -34,6 +37,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = Java8DateTimeTests.TheEntity.class)
 @SessionFactory
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 public class Java8DateTimeTests {
 	@Test
 	public void test(DomainModelScope modelScope, SessionFactoryScope factoryScope) {

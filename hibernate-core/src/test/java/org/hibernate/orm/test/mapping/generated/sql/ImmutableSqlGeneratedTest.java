@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.mapping.generated.sql;
 
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.annotations.Generated;
@@ -24,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 /**
  * @author Gavin King
  */
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel(annotatedClasses = ImmutableSqlGeneratedTest.OrderLine.class)
 @SessionFactory
 @SkipForDialect(dialectClass = SybaseASEDialect.class,

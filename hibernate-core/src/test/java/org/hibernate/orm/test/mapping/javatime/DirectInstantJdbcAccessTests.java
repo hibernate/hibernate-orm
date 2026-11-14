@@ -42,7 +42,7 @@ class DirectInstantJdbcAccessTests {
 			),
 			@Setting(name = MappingSettings.PREFERRED_INSTANT_JDBC_TYPE, value = "INSTANT")
 	})
-	@DomainModel(annotatedClasses = DirectInstantJdbcAccessTests.EntityWithInstants.class)
+	@DomainModel(annotatedClasses = EntityWithInferredInstants.class)
 	@SessionFactory(exportSchema = false)
 	void unsupportedPreferenceWarnsAndFallsBack(
 			DomainModelScope domainModelScope,
@@ -51,12 +51,10 @@ class DirectInstantJdbcAccessTests {
 		assertThat( sessionFactoryScope.getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForInstant() )
 				.isEqualTo( SqlTypes.TIMESTAMP_UTC );
 
-		final var entityBinding = domainModelScope.getEntityBinding( EntityWithInstants.class );
+		final var entityBinding = domainModelScope.getEntityBinding( EntityWithInferredInstants.class );
 		final BasicValue inferred = (BasicValue) entityBinding.getProperty( "inferred" ).getValue();
-		final BasicValue explicit = (BasicValue) entityBinding.getProperty( "explicit" ).getValue();
 
 		assertThat( inferred.resolve().getJdbcType().getJdbcTypeCode() ).isNotEqualTo( SqlTypes.INSTANT );
-		assertThat( explicit.resolve().getJdbcType().getJdbcTypeCode() ).isEqualTo( SqlTypes.INSTANT );
 
 		assertThat( warningWatcher.getTriggeredMessages() )
 				.singleElement()
@@ -74,12 +72,22 @@ class DirectInstantJdbcAccessTests {
 					name = JdbcSettings.DIALECT,
 					value = "org.hibernate.orm.test.mapping.javatime.DirectJavaTimeJdbcAccessTests$NoDirectJavaTimeDialect"
 			),
+			@Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
 			@Setting(name = MappingSettings.PREFERRED_INSTANT_JDBC_TYPE, value = "INSTANT")
 	})
 	@DomainModel(annotatedClasses = EntityWithExplicitInstant.class)
 	@SessionFactory(exportSchema = false)
-	void explicitJdbcTypeDoesNotWarn(MessageKeyWatcher warningWatcher) {
+	void explicitJdbcTypeDoesNotWarn(MessageKeyWatcher warningWatcher, DomainModelScope scope) {
+		final var value = (BasicValue) scope.getEntityBinding( EntityWithExplicitInstant.class ).getProperty( "explicit" ).getValue();
+		assertThat( value.resolve().getJdbcType().getJdbcTypeCode() ).isEqualTo( SqlTypes.INSTANT );
 		assertThat( warningWatcher.wasTriggered() ).isFalse();
+	}
+
+	@Entity(name = "EntityWithInferredInstants")
+	static class EntityWithInferredInstants {
+		@Id Integer id;
+		Instant inferred;
+		Instant anotherInferred;
 	}
 
 	@Entity(name = "EntityWithInstants")

@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.idgen.mixed;
 
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Entity;
@@ -22,14 +24,15 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DomainModel( annotatedClasses = MixedTypeEntityGeneratorsTest.Event.class )
-@SessionFactory
 @ServiceRegistry(
+		settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
 		settingProviders = @SettingProvider(
 				settingName = CurrentTimestampGeneration.CLOCK_SETTING_NAME,
 				provider = MutableClockSettingProvider.class
 		)
 )
+@DomainModel( annotatedClasses = MixedTypeEntityGeneratorsTest.Event.class )
+@SessionFactory
 class MixedTypeEntityGeneratorsTest {
 
 	private MutableClock clock;

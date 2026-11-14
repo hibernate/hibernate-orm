@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.annotations.comment;
 
+import org.hibernate.cfg.MappingSettings;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
@@ -39,7 +40,9 @@ public class CommentsTest {
 	@Test
 	@JiraKey(value = "HHH-4369")
 	public void testComments() {
-		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
+				.applySetting( MappingSettings.TEMPORAL_PRESERVATION, false )
+				.build();
 		Metadata metadata = new MetadataSources(ssr).addAnnotatedClass(TestEntity.class).buildMetadata();
 		org.hibernate.mapping.Table table = StreamSupport.stream(metadata.getDatabase().getNamespaces().spliterator(), false)
 				.flatMap(namespace -> namespace.getTables().stream()).filter(t -> t.getName().equals(TABLE_NAME))

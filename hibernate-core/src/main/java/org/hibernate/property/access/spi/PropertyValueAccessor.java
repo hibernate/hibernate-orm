@@ -7,6 +7,7 @@ import java.util.Map;
 import jakarta.annotation.Nullable;
 
 import org.hibernate.Incubating;
+import org.hibernate.TemporalValueException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.accessor.ValueReader;
 import org.hibernate.accessor.ValueWriter;
@@ -236,6 +237,9 @@ public final class PropertyValueAccessor {
 		catch (Throwable t) {
 			if ( kind == Kind.CHAINED && t instanceof org.hibernate.PropertyAccessException cause ) {
 				throw cause;
+			}
+			if ( kind == Kind.COMPOSITE_USER_TYPE && t instanceof TemporalValueException temporalValue ) {
+				throw temporalValue;
 			}
 			throw accessException( t, owner, false );
 		}

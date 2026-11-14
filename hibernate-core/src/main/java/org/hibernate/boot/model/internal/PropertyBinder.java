@@ -812,6 +812,10 @@ public class PropertyBinder {
 			// Because it's a value type, there is no bidirectional association, hence second pass
 			// ordering does not matter
 			final var memberDetails = inferredData.getAttributeMember();
+			TemporalPolicyConfiguration.rejectExcludedDeclaration( memberDetails,
+					propertyHolder.isOrWithinEmbeddedId()
+							|| propertyHolder instanceof ComponentPropertyHolder componentHolder
+							&& componentHolder.getAggregateColumn() != null );
 			if ( memberDetails.hasDirectAnnotationUsage( Parent.class ) ) {
 				handleParentProperty( propertyHolder, inferredData, memberDetails );
 			}
@@ -1185,7 +1189,7 @@ public class PropertyBinder {
 			AnnotatedColumns actualColumns,
 			PropertyData overridingProperty) {
 
-		final var compositeUserType = resolveCompositeUserType( inferredData, buildingContext );
+		final var compositeUserType = resolveCompositeUserType( inferredData, propertyHolder, buildingContext );
 
 		final var memberDetails = inferredData.getAttributeMember();
 		if ( isComposite || compositeUserType != null ) {
@@ -1435,6 +1439,7 @@ public class PropertyBinder {
 
 	private static Class<? extends CompositeUserType<?>> resolveCompositeUserType(
 			PropertyData inferredData,
+			PropertyHolder propertyHolder,
 			MetadataBuildingContext buildingContext) {
 		final var modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 
@@ -1443,12 +1448,19 @@ public class PropertyBinder {
 		final var returnedClass = classOrElementType.determineRawClass();
 
 		if ( attributeMember != null ) {
+			final boolean excludedTemporalContext = buildingContext.isPreferJavaTimeJdbcTypesEnabled()
+					&& (propertyHolder.isOrWithinEmbeddedId()
+							|| propertyHolder instanceof ComponentPropertyHolder componentHolder
+									&& componentHolder.getAggregateColumn() != null);
+			if ( excludedTemporalContext ) {
+				TemporalMappingConfiguration.rejectExplicitDeclarations( attributeMember );
+			}
 			final var compositeType = attributeMember.locateAnnotationUsage( CompositeType.class, modelsContext );
 			if ( compositeType != null ) {
 				return compositeType.value();
 			}
-			final var compositeUserType =
-					resolveTimeZoneStorageCompositeUserType( attributeMember, returnedClass, buildingContext );
+			final var compositeUserType = excludedTemporalContext ? null
+					: resolveTimeZoneStorageCompositeUserType( attributeMember, returnedClass, buildingContext );
 			if ( compositeUserType != null ) {
 				return compositeUserType;
 			}

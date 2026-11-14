@@ -441,17 +441,18 @@ public final class ConfigurationHelper {
 
 	public static synchronized int getPreferredSqlTypeCodeForInstant(ServiceRegistry serviceRegistry) {
 		final Integer explicitSetting = getExplicitPreferredSqlTypeCodeForInstant( serviceRegistry );
-		if ( explicitSetting == null ) {
-			return SqlTypes.TIMESTAMP_UTC;
-		}
-		if ( explicitSetting == SqlTypes.INSTANT
+		final int preferred = explicitSetting != null ? explicitSetting
+				: org.hibernate.type.internal.TemporalPreservationSettings.resolve(
+						serviceRegistry.requireService( org.hibernate.engine.config.spi.ConfigurationService.class )
+								.getSettings() ).baseInstantJdbcType();
+		if ( preferred == SqlTypes.INSTANT
 				&& !serviceRegistry.requireService( JdbcServices.class )
 						.getDialect()
 						.getDirectJavaTimeJdbcSupport()
 						.supports( java.time.Instant.class ) ) {
 			return SqlTypes.TIMESTAMP_UTC;
 		}
-		return explicitSetting;
+		return preferred;
 	}
 
 	@Internal

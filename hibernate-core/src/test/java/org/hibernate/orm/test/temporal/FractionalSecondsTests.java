@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.temporal;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -51,6 +54,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 public class FractionalSecondsTests {
 	@Test
 	@DomainModel(annotatedClasses = {TestEntity.class, TestEntity0.class, TestEntity3.class, TestEntity9.class} )
@@ -63,7 +68,8 @@ public class FractionalSecondsTests {
 		final PersistentClass entityBinding = scope.getEntityBinding( TestEntity.class );
 		checkPrecision( "theInstant", defaultPrecision, entityBinding, domainModel );
 		checkPrecision( "theLocalDateTime", defaultPrecision, entityBinding, domainModel );
-		checkPrecision( "theLocalTime", 0, entityBinding, domainModel );
+		// SQL Server retains an unspecified TIME precision (server default), distinct from explicit zero.
+		checkPrecision( "theLocalTime", dialect instanceof SQLServerDialect ? null : 0, entityBinding, domainModel );
 		checkPrecision( "theOffsetDateTime", defaultPrecision, entityBinding, domainModel );
 		checkPrecision( "theOffsetTime", 0, entityBinding, domainModel );
 		checkPrecision( "theZonedDateTime", defaultPrecision, entityBinding, domainModel );
@@ -85,7 +91,7 @@ public class FractionalSecondsTests {
 
 	private void checkPrecision(
 			String propertyName,
-			int expectedMinimumSize,
+			Integer expectedMinimumSize,
 			PersistentClass entityBinding,
 			MetadataImplementor domainModel) {
 		final Property theInstant = entityBinding.getProperty( propertyName );

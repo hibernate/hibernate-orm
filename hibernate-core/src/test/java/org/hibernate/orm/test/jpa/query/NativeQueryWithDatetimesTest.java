@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.jpa.query;
 
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -22,7 +24,7 @@ import java.time.LocalTime;
 
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
-@Jpa(annotatedClasses = NativeQueryWithDatetimesTest.Datetimes.class)
+@Jpa(properties = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"), annotatedClasses = NativeQueryWithDatetimesTest.Datetimes.class)
 public class NativeQueryWithDatetimesTest {
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class)
 	@SkipForDialect(dialectClass = OracleDialect.class)

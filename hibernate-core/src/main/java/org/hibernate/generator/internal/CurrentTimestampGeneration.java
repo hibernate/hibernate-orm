@@ -85,6 +85,8 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 	private final JavaType<?> propertyType;
 	private final GeneratorDelegate delegate;
 	private final boolean version;
+	private org.hibernate.type.descriptor.jdbc.JdbcType preservingJdbcType;
+	private org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection preservingSelection;
 
 	private static final ConcurrentHashMap<Key, GeneratorDelegate> GENERATOR_DELEGATES = new ConcurrentHashMap<>();
 
@@ -93,6 +95,7 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 		eventTypes = fromArray( annotation.event() );
 		propertyType = getPropertyType( context );
 		version = isVersion( context );
+		initializePreservingSelection( context );
 		if ( eventTypes.contains( EventType.INSERT ) ) {
 			notNull( context );
 		}
@@ -103,6 +106,7 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 		eventTypes = INSERT_ONLY;
 		propertyType = getPropertyType( context );
 		version = isVersion( context );
+		initializePreservingSelection( context );
 		notNull( context );
 	}
 
@@ -111,7 +115,31 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 		eventTypes = INSERT_AND_UPDATE;
 		propertyType = getPropertyType( context );
 		version = isVersion( context );
+		initializePreservingSelection( context );
 		notNull( context );
+	}
+
+	private void initializePreservingSelection(GeneratorCreationContext context) {
+		if ( !version || delegate != null
+				|| !org.hibernate.boot.spi.MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( context.getServiceRegistry() ) ) {
+			return;
+		}
+		final var javaClass = propertyType.getJavaTypeClass();
+		if ( javaClass != Instant.class && javaClass != LocalDateTime.class
+				&& javaClass != OffsetDateTime.class && javaClass != ZonedDateTime.class ) {
+			return;
+		}
+		final var value = (BasicValue) context.getProperty().getValue();
+		final var mapping = value.resolve();
+		preservingJdbcType = mapping.getJdbcType();
+		preservingSelection = context.getDatabase().getDialect().getCurrentTemporalSupport()
+				.getCurrentTimestampSelection( propertyType, preservingJdbcType, value.getTemporalPreservationPolicy().policy() );
+		if ( preservingSelection == null ) {
+			throw new org.hibernate.MappingException( "Version '" + context.getPersistentClass().getEntityName()
+					+ "." + context.getProperty().getName() + "' with temporal_preservation=true has no preserving DB producer for "
+					+ javaClass.getName() + " / " + preservingJdbcType.getClass().getName()
+					+ " on " + context.getDatabase().getDialect().getClass().getName() );
+		}
 	}
 
 	private static boolean isVersion(GeneratorCreationContext context) {
@@ -209,7 +237,9 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 			if ( !version && eventType != EventType.FORCE_INCREMENT ) {
 				throw new UnsupportedOperationException( "CurrentTimestampGeneration.generate() should not have been called" );
 			}
-			return propertyType.wrap( getCurrentTimestamp( session ), session );
+			return preservingSelection == null
+					? propertyType.wrap( getCurrentTimestamp( session ), session )
+					: TypedCurrentTimestamp.generate( session, propertyType, preservingJdbcType, preservingSelection );
 		}
 		else {
 			return delegate.generate();

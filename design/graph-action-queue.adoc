@@ -261,6 +261,20 @@ operations.
 Self-executing operations should be reserved for lifecycle carriers or work that
 is not naturally batchable.
 
+The JDBC coordinator owns the active batch's lifetime. A reusable mutation
+executor must not retain a `GroupedBatch` across another executor's batch-key
+switch: that batch may already have been executed and released. HHH-21102 makes
+`MutationExecutorSingleBatched` resolve the coordinator-owned batch for statement
+access and for adding work. This is an executor ownership rule, not a new graph
+ordering or batching policy. It applies to legacy collection-history execution
+as well as any caller reusing the executor across interleaved keys.
+
+`InterleavedMutationExecutorTest` checks actual stored rows for alternating keys,
+same-key threshold/tail execution, and failure rollback. Together with
+`TemporalLegacyHistoryBatchTests`, it protects against lost current/history
+updates and duplicate open intervals. Do not infer correctness only from batch
+counts or resolver calls.
+
 == Core Concepts
 
 `FlushOperation`::
@@ -374,6 +388,13 @@ Collection contributors distinguish row-scoped and action-scoped hooks:
 
 * `contributeAdditionalInsert` is row-scoped.  Use it for one extra operation
   per inserted row, such as history-table row mirroring.
+* `contributeAdditionalDelete` augments an effective row deletion without
+  replacing the current-table operation.
+* `contributeAdditionalRemove` augments remove-all, including an unloaded
+  collection's removal.
+* `contributeAdditionalUpdate` augments one logical value or position change.
+  Its context carries the old and new row representations; intermediate temporary
+  positions used to execute a reorder are not logical history versions.
 * `contributeCollectionChange` is action-scoped.  Use it for whole-collection
   logical notifications, such as audit collection-change collection.
 * `contributeValueChange` is row-change-scoped.  Use it when a logical in-place
@@ -456,12 +477,30 @@ For graph queue support:
 * standard current-table operations still run,
 * contributors append history-table operations,
 * entity history support uses additional insert/update/delete operations,
-* collection history support uses row-scoped insertion augmentation and
-  replacement operations where needed.
+* collection history support augments insertion, row deletion, remove-all, and
+  logical value/position changes without replacing the current-table operations.
 
 History-table support is additive unless the logical operation itself must use a
 different physical current-table shape.
 Keep current-table and history-table mutation concerns distinct.
+
+HHH-21101 makes the collection history obligations explicit. Removal closes the
+old open interval; a logical value or position change closes the old interval and
+inserts its replacement. List swaps and shifts must record only the logical old
+and new positions, never temporary execution positions. Both interpreted changes
+and snapshot fallback paths must contribute this work.
+
+All old history intervals for a collection change must close before replacement
+history inserts can satisfy an open-interval restriction. The history contributor
+uses explicit execution prerequisites, not operation encounter order or ordinal
+values. Every additional history operation participates in the existing semantic
+mutation completion accounting; history failure prevents successful completion.
+Do not broaden the audit collection-change hook's lifecycle scope merely to emit
+history removal work.
+
+A bulk temporal closure is a remove-all even when implemented as SQL `UPDATE`.
+It uses the remove-all row-count expectation; row-scoped closures retain their
+per-row checks.
 
 === Audit
 
@@ -812,6 +851,13 @@ For soft-delete, temporal, history, and audit, cover:
 * queued operations,
 * order-column/index changes,
 * remove-all and recreate paths.
+
+History collection regressions::
+`HistoryCollectionDecomposerTest` and `TemporalCollectionHistoryRepairTests`
+cover the HHH-21101 additions, dependency ordering, logical position changes,
+row/owner removal, and completion/failure behavior. Keep these alongside ordinary,
+single-table temporal, and audit controls; history coverage does not establish
+all state-management combinations.
 
 Regression tests for defaults::
 Keep a focused test proving that an unconfigured factory uses `QueueType.GRAPH`.

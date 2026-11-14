@@ -9,6 +9,7 @@ import org.hibernate.dialect.type.spi.StringValueSemantics;
 import org.hibernate.SPI;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.jdbc.spi.PostgreSQLDriverKind;
 import org.hibernate.dialect.sql.ast.spi.PostgreSQLSqlAstTranslator;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupportFactory;
@@ -54,15 +55,19 @@ public class PostgresPlusDialect extends PostgreSQLDialect implements CurrentTem
 	 * Constructs a PostgresPlusDialect
 	 */
 	public PostgresPlusDialect() {
-		super();
+		this( MINIMUM_VERSION );
 	}
 
 	public PostgresPlusDialect(DialectResolutionInfo info) {
-		super( info );
+		super( info.makeCopyOrDefault( MINIMUM_VERSION ),
+				"PostgreSQL JDBC Driver".equals( info.getDriverName() )
+						? PostgreSQLDriverKind.PG_JDBC : PostgreSQLDriverKind.OTHER );
 	}
 
 	public PostgresPlusDialect(DatabaseVersion version) {
-		super( version );
+		// Without driver metadata, use the casting descriptors accepted by the EDB driver.
+		// A loadable PGobject class does not identify the driver of the active connection.
+		super( version, PostgreSQLDriverKind.OTHER );
 	}
 
 	@Override
@@ -110,6 +115,15 @@ public class PostgresPlusDialect extends PostgreSQLDialect implements CurrentTem
 			}
 		}
 		return super.castPattern( from, to );
+	}
+
+	@Override
+	@SPI({ USE, IMPLEMENT })
+	public boolean isCurrentTimestampStable() {
+		// EDB may evaluate current_timestamp differently in separate statements of
+		// one transaction. History and audit mutations must share the timestamp
+		// obtained by the existing changeset supplier and cached by the session.
+		return false;
 	}
 
 	@Override

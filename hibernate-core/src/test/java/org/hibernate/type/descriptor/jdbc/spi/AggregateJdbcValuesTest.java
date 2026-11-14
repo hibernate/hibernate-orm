@@ -1,6 +1,9 @@
 package org.hibernate.type.descriptor.jdbc.spi;
 
 import java.sql.SQLException;
+import java.time.LocalTime;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -29,6 +32,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.withSettings;
 
 /// @author Steve Ebersole
@@ -179,6 +183,22 @@ class AggregateJdbcValuesTest {
 						options
 				)
 		);
+	}
+
+	@Test
+	void converterAndBinderProduceThePhysicalComponentOnce() throws SQLException {
+		var mapping = mappingType( 1 );
+		var component = mapping.getAttributeMapping( 0 ).getSingleJdbcMapping();
+		var time = LocalTime.of( 12, 34, 56, 123456789 );
+		LocalDateTime carrier = time.atDate( LocalDate.of( 1970, 1, 1 ) );
+		when( component.convertToRelationalValue( "clock" ) ).thenReturn( time );
+		@SuppressWarnings("unchecked")
+		var binder = (ValueBinder<Object>) component.getJdbcValueBinder();
+		when( binder.getBindValue( time, options ) ).thenReturn( carrier );
+		assertArrayEquals( new Object[] { carrier }, AggregateJdbcValues.fromDomainValue(
+				mapping, new Object[] { "clock" }, options ) );
+		verify( component ).convertToRelationalValue( "clock" );
+		verify( binder ).getBindValue( time, options );
 	}
 
 	private EmbeddableMappingType mappingType() throws SQLException {

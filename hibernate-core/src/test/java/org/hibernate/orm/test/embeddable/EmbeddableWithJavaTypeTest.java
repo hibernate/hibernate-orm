@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.embeddable;
 
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JavaType;
 import org.hibernate.query.spi.QueryImplementor;
@@ -23,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 @JiraKey("HHH-18898")
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel(
 		annotatedClasses = {
 				EmbeddableWithJavaTypeTest.EntityEmbedCustom.class,

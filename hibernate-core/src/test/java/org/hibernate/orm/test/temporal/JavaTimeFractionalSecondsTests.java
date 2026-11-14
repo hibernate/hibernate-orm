@@ -3,12 +3,10 @@ package org.hibernate.orm.test.temporal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
-import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 
 import org.hibernate.annotations.FractionalSeconds;
+import org.hibernate.orm.test.mapping.javatime.redesign.TemporalEligibilityChecks;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.community.dialect.AltibaseDialect;
@@ -53,9 +51,11 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
+// The legacy offset/zoned matrix is retained in LegacyJavaTimeFractionalSecondsTests.
 public class JavaTimeFractionalSecondsTests {
 	@Test
 	@DomainModel(annotatedClasses = {TestEntity.class, TestEntity0.class, TestEntity3.class, TestEntity9.class} )
+	@RequiresDialectFeature(feature = TemporalEligibilityChecks.ExplicitLocalFields.class)
 	void testMapping(DomainModelScope scope) {
 		final MetadataImplementor domainModel = scope.getDomainModel();
 
@@ -65,10 +65,8 @@ public class JavaTimeFractionalSecondsTests {
 		final PersistentClass entityBinding = scope.getEntityBinding( TestEntity.class );
 		checkPrecision( "theInstant", defaultPrecision, entityBinding, domainModel );
 		checkPrecision( "theLocalDateTime", defaultPrecision, entityBinding, domainModel );
-		checkPrecision( "theLocalTime", 0, entityBinding, domainModel );
-		checkPrecision( "theOffsetDateTime", defaultPrecision, entityBinding, domainModel );
-		checkPrecision( "theOffsetTime", 0, entityBinding, domainModel );
-		checkPrecision( "theZonedDateTime", defaultPrecision, entityBinding, domainModel );
+		// SQL Server retains an unspecified TIME precision (server default), distinct from explicit zero.
+		checkPrecision( "theLocalTime", dialect instanceof SQLServerDialect ? null : 0, entityBinding, domainModel );
 
 		final PersistentClass entityBinding0 = scope.getEntityBinding( TestEntity0.class );
 		checkPrecision( "theInstant", 0, entityBinding0, domainModel );
@@ -80,14 +78,35 @@ public class JavaTimeFractionalSecondsTests {
 
 		final PersistentClass entityBinding9 = scope.getEntityBinding( TestEntity9.class );
 		checkPrecision( "theInstant", 9, entityBinding9, domainModel );
-		checkPrecision( "theOffsetDateTime", 9, entityBinding9, domainModel );
-		checkPrecision( "theOffsetTime", 9, entityBinding9, domainModel );
-		checkPrecision( "theZonedDateTime", 9, entityBinding9, domainModel );
+	}
+
+	@Test
+	@DomainModel(annotatedClasses = { InstantEntity.class, InstantEntity3.class })
+	void instantMappings(DomainModelScope scope) {
+		final var metadata = scope.getDomainModel();
+		checkPrecision( "theInstant", metadata.getDatabase().getDialect().getTypeSizingProfile().defaultTimestampPrecision(),
+				scope.getEntityBinding( InstantEntity.class ), metadata );
+		checkPrecision( "theInstant", 3, scope.getEntityBinding( InstantEntity3.class ), metadata );
+	}
+
+	@Test
+	@DomainModel(annotatedClasses = InstantEntity3.class)
+	@SessionFactory
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTimestampPrecision3.class)
+	void instantPrecisionThree(SessionFactoryScope scope) {
+		final var start = Instant.parse( "2024-02-29T12:34:56.123456789Z" );
+		final var dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+		scope.inTransaction( session -> {
+			final var row = new InstantEntity3(); row.id = 1; row.theInstant = start;
+			session.persist( row );
+		} );
+		scope.inTransaction( session -> assertThat( session.find( InstantEntity3.class, 1 ).theInstant )
+				.isEqualTo( DateTimeUtils.adjustToPrecision( start, 3, dialect ) ) );
 	}
 
 	private void checkPrecision(
 			String propertyName,
-			int expectedMinimumSize,
+			Integer expectedMinimumSize,
 			PersistentClass entityBinding,
 			MetadataImplementor domainModel) {
 		final Property theInstant = entityBinding.getProperty( propertyName );
@@ -98,7 +117,7 @@ public class JavaTimeFractionalSecondsTests {
 	}
 
 	@Test
-	@DomainModel(annotatedClasses = TestEntity.class)
+	@DomainModel(annotatedClasses = InstantEntity.class)
 	@SessionFactory
 	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "Because... Sybase...", matchSubTypes = true)
 	void testUsage(SessionFactoryScope scope) {
@@ -112,14 +131,14 @@ public class JavaTimeFractionalSecondsTests {
 		}
 
 		scope.inTransaction( (session) -> {
-			final TestEntity testEntity = new TestEntity();
+			final InstantEntity testEntity = new InstantEntity();
 			testEntity.id = 1;
 			testEntity.theInstant = start;
 			session.persist( testEntity );
 		} );
 
 		scope.inTransaction( (session) -> {
-			final TestEntity testEntity = session.find( TestEntity.class, 1 );
+			final InstantEntity testEntity = session.find( InstantEntity.class, 1 );
 			assertThat( testEntity.theInstant ).isEqualTo( DateTimeUtils.adjustToDefaultPrecision( start, dialect ) );
 		} );
 	}
@@ -170,6 +189,7 @@ public class JavaTimeFractionalSecondsTests {
 	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support specifying precision on timestamps")
 	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner doesn't support specifying precision on timestamps")
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTimestampPrecision3.class)
+	@RequiresDialectFeature(feature = TemporalEligibilityChecks.ExplicitLocalFields.class)
 	void testUsage3(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final Instant start;
@@ -180,16 +200,21 @@ public class JavaTimeFractionalSecondsTests {
 			start = Instant.now();
 		}
 
+		final var local = LocalDateTime.of( 2024, 2, 29, 12, 34, 56, 123456789 );
 		scope.inTransaction( (session) -> {
 			final TestEntity3 testEntity = new TestEntity3();
 			testEntity.id = 1;
 			testEntity.theInstant = start;
+			testEntity.theLocalDateTime = local;
+			testEntity.theLocalTime = local.toLocalTime();
 			session.persist( testEntity );
 		} );
 
 		scope.inTransaction( (session) -> {
 			final TestEntity3 testEntity = session.find( TestEntity3.class, 1 );
 			assertThat( testEntity.theInstant ).isEqualTo( DateTimeUtils.adjustToPrecision( start, 3, dialect ) );
+			assertThat( testEntity.theLocalDateTime ).isEqualTo( DateTimeUtils.adjustToPrecision( local, 3, dialect ) );
+			assertThat( testEntity.theLocalTime ).isEqualTo( DateTimeUtils.adjustToPrecision( local.toLocalTime(), 3, dialect ) );
 		} );
 	}
 
@@ -231,6 +256,18 @@ public class JavaTimeFractionalSecondsTests {
 		} );
 	}
 
+	@Entity(name = "InstantEntity")
+	public static class InstantEntity {
+		@Id Integer id;
+		Instant theInstant;
+	}
+
+	@Entity(name = "InstantEntity3")
+	public static class InstantEntity3 {
+		@Id Integer id;
+		@FractionalSeconds(3) Instant theInstant;
+	}
+
 	@Entity(name="TestEntity")
 	@Table(name="TestEntity")
 	public static class TestEntity {
@@ -244,12 +281,6 @@ public class JavaTimeFractionalSecondsTests {
 
 		@JdbcTypeCode(SqlTypes.LOCAL_TIME)
 		private LocalTime theLocalTime;
-
-		private OffsetDateTime theOffsetDateTime;
-
-		private OffsetTime theOffsetTime;
-
-		private ZonedDateTime theZonedDateTime;
 
 	}
 
@@ -291,15 +322,6 @@ public class JavaTimeFractionalSecondsTests {
 
 		@FractionalSeconds(9)
 		private Instant theInstant;
-
-		@FractionalSeconds(9)
-		private OffsetDateTime theOffsetDateTime;
-
-		@FractionalSeconds(9)
-		private OffsetTime theOffsetTime;
-
-		@FractionalSeconds(9)
-		private ZonedDateTime theZonedDateTime;
 
 	}
 }

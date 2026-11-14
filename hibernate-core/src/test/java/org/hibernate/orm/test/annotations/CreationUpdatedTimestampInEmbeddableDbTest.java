@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.annotations;
 
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.cfg.MappingSettings;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Embeddable;
@@ -19,6 +22,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel(
 		annotatedClasses = {
 				CreationUpdatedTimestampInEmbeddableDbTest.Event.class,

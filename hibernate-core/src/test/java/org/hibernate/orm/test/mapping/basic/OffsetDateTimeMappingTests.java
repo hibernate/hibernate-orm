@@ -1,6 +1,9 @@
 package org.hibernate.orm.test.mapping.basic;
 
 import java.time.OffsetDateTime;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -26,6 +29,9 @@ import static org.hamcrest.Matchers.isOneOf;
 /**
  * @author Steve Ebersole
  */
+// The documented INLINE example requires an established offset-preserving provider.
+@RequiresDialect(H2Dialect.class)
+@RequiresDialect(OracleDialect.class)
 @DomainModel(annotatedClasses = OffsetDateTimeMappingTests.EntityWithOffsetDateTime.class)
 @SessionFactory
 public class OffsetDateTimeMappingTests {
@@ -64,7 +70,7 @@ public class OffsetDateTimeMappingTests {
 		private Integer id;
 
 		//tag::basic-OffsetDateTime-example[]
-		// mapped as TIMESTAMP or TIMESTAMP_WITH_TIMEZONE
+		// requires INLINE handling that preserves local date-time and offset
 		private OffsetDateTime offsetDateTime;
 		//end::basic-OffsetDateTime-example[]
 

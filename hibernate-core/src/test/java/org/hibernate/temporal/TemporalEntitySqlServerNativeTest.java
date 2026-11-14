@@ -11,6 +11,7 @@ import jakarta.persistence.Version;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.cfg.StateManagementSettings;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -35,7 +36,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DomainModel(annotatedClasses =
 		{TemporalEntitySqlServerNativeTest.TemporalEntity.class,
 		TemporalEntitySqlServerNativeTest.TemporalChild.class})
-@ServiceRegistry(settings = @Setting(name = StateManagementSettings.TEMPORAL_TABLE_STRATEGY, value = "NATIVE"))
+@ServiceRegistry(settings = {
+		@Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
+		@Setting(name = StateManagementSettings.TEMPORAL_TABLE_STRATEGY, value = "NATIVE") })
 @RequiresDialect(SQLServerDialect.class)
 class TemporalEntitySqlServerNativeTest {
 

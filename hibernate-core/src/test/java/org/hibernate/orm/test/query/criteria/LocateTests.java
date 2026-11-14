@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.query.criteria;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import java.util.List;
 
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
@@ -20,6 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @DomainModel( annotatedClasses = EntityOfBasics.class )
 @SessionFactory
+// Retain the legacy temporal semantics of this regression fixture.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 public class LocateTests {
 
 	@Test

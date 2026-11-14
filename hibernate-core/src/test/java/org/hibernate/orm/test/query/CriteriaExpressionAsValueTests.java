@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.query;
 
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaParameterExpression;
@@ -18,6 +21,8 @@ import jakarta.persistence.Tuple;
 /**
  * @author Christian Beikov
  */
+// Retain the shared fixture's legacy temporal interpretation while testing query behavior.
+@ServiceRegistry(settings = @Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"))
 @DomainModel(standardModels = StandardDomainModel.CONTACTS)
 @SessionFactory
 @JiraKey("HHH-17412")

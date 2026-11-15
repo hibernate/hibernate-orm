@@ -476,6 +476,7 @@ public abstract class CollectionType extends AbstractType implements Association
 			Object owner,
 			Map<Object, Object> copyCache,
 			SharedSessionContractImplementor session) {
+		final boolean wasDirty = target instanceof PersistentCollection<?> collection && collection.isDirty();
 		final var result = (Collection) target;
 		result.clear();
 
@@ -488,20 +489,22 @@ public abstract class CollectionType extends AbstractType implements Association
 		// if the original is a PersistentCollection, and that original
 		// was not flagged as dirty, then reset the target's dirty flag
 		// here after the copy operation.
-		//
-		// One thing to be careful of here is a "bare" original collection
-		// in which case we should never ever ever reset the dirty flag
-		// on the target because we simply do not know...
+		boolean snapshotChanged = false;
 		if ( original instanceof PersistentCollection<?> originalPersistentCollection
 				&& result instanceof PersistentCollection<?> resultPersistentCollection) {
+			final var previousSnapshot = resultPersistentCollection.getStoredSnapshot();
 			preserveSnapshot( originalPersistentCollection, resultPersistentCollection,
 					elemType, owner, copyCache, session );
+			snapshotChanged = previousSnapshot != resultPersistentCollection.getStoredSnapshot();
 			if ( !originalPersistentCollection.isDirty() ) {
 				resultPersistentCollection.clearDirty();
 			}
 		}
 
-		if ( target instanceof PersistentCollection<?> targetPersistentCollection
+		// Preserve existing dirtiness, and only optimize against a retained target snapshot.
+		// A copied source snapshot may be stale or describe a filtered collection.
+		if ( !wasDirty && !snapshotChanged
+				&& target instanceof PersistentCollection<?> targetPersistentCollection
 				&& targetPersistentCollection.wasInitialized()
 				&& targetPersistentCollection.isDirty()
 				&& targetPersistentCollection.getStoredSnapshot() != null

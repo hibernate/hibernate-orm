@@ -6,9 +6,9 @@
     <entity name="DynamicParent" metadata-complete="true">
         <attributes>
             <id name="id">
-                <target>Long</target>
                 <generated-value generator="parent-id-gen"/>
                 <generic-generator name="parent-id-gen" class="increment"/>
+                <target>Long</target>
             </id>
             <basic name="name">
                 <target>String</target>
@@ -22,9 +22,9 @@
     <entity name="DynamicChild" metadata-complete="true">
         <attributes>
             <id name="id">
-                <target>Long</target>
                 <generated-value generator="child-id-gen"/>
                 <generic-generator name="child-id-gen" class="increment"/>
+                <target>Long</target>
             </id>
             <basic name="label">
                 <target>String</target>

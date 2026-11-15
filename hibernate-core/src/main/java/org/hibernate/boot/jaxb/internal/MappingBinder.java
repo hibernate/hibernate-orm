@@ -112,7 +112,7 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 		else {
 			this.optionsAccess = () -> (Options) () -> {
 				final Object setting = settingsAccess.apply( VALIDATE_XML );
-				return setting != null && BOOLEAN.convert( setting );
+				return setting == null || BOOLEAN.convert( setting );
 			};
 		}
 	}

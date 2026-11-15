@@ -23,7 +23,6 @@
                 <jdbc-type>org.hibernate.type.descriptor.jdbc.BigIntJdbcType</jdbc-type>
             </id>
             <basic name="description" fetch="EAGER" optional="false" optimistic-lock="true">
-                <generated>NEVER</generated>
                 <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
                 <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
             </basic>
@@ -62,12 +61,10 @@
     <embeddable class="org.hibernate.orm.test.cut.MonetoryAmount" name="org.hibernate.orm.test.cut.MonetoryAmount" access="PROPERTY" metadata-complete="true">
         <attributes>
             <basic name="amount" fetch="EAGER" optional="false" optimistic-lock="true">
-                <generated>NEVER</generated>
                 <java-type>org.hibernate.type.descriptor.java.BigDecimalJavaType</java-type>
                 <jdbc-type>org.hibernate.type.descriptor.jdbc.NumericJdbcType</jdbc-type>
             </basic>
             <basic name="currency" fetch="EAGER" optional="false" optimistic-lock="true">
-                <generated>NEVER</generated>
                 <java-type>org.hibernate.type.descriptor.java.CurrencyJavaType</java-type>
                 <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
             </basic>

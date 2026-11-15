@@ -19,13 +19,11 @@
             </id>
             <natural-id mutable="false">
                 <basic name="referenceCode" fetch="EAGER" optional="false" optimistic-lock="true">
-                    <generated>NEVER</generated>
                     <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
                     <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
                 </basic>
             </natural-id>
             <basic name="data" fetch="EAGER" optional="true" optimistic-lock="true">
-                <generated>NEVER</generated>
                 <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
                 <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
             </basic>

@@ -5,11 +5,11 @@
     <entity class="org.hibernate.orm.test.boot.models.xml.attr.VersionAttributeTests$SimpleEntity" metadata-complete="true" access="FIELD">
         <attributes>
             <id name="id"/>
+            <basic name="name"/>
             <version name="version">
                 <temporal>TIMESTAMP</temporal>
                 <update-timestamp source="DB"/>
             </version>
-            <basic name="name"/>
         </attributes>
     </entity>
 </entity-mappings>

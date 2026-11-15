@@ -6,7 +6,7 @@
         <table name="events"/>
         <attributes>
             <embedded-id name="id">
-                <generic-generator class="org.hibernate.orm.test.cid.xml.EventIdGenerator"/>
+                <generic-generator name="event-id" class="org.hibernate.orm.test.cid.xml.EventIdGenerator"/>
             </embedded-id>
             <basic name="name"/>
         </attributes>

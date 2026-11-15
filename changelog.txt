@@ -1,6 +1,19 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.4.16.Final (November 15, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/40541
+
+
+** Bug
+    * HHH-21105 AltibaseDialect renders "case end" for a CASE expression without WHEN fragments
+    * HHH-21065 Index options of orm.xml are ignored
+
+** Task
+    * HHH-20630 Reverse engineering DTD is resolved over the network instead of from the classpath
+
 Changes in 7.4.15.Final (November 06, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

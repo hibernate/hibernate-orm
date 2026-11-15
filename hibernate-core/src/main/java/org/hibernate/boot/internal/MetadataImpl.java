@@ -41,6 +41,7 @@ import org.hibernate.jpa.boot.spi.PersistenceUnitCallbackDefinition;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.FetchProfile;
+import org.hibernate.mapping.FilterConfiguration;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
@@ -492,12 +493,24 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public void validate() throws MappingException {
-		for ( var entityBinding : this.getEntityBindings() ) {
+		for ( var entityBinding : getEntityBindings() ) {
 			entityBinding.validate( this );
+			validateFilters( entityBinding.getFilters(), "Entity", entityBinding.getEntityName() );
 		}
 
-		for ( var collectionBinding : this.getCollectionBindings() ) {
+		for ( var collectionBinding : getCollectionBindings() ) {
 			collectionBinding.validate( this );
+			validateFilters( collectionBinding.getFilters(), "Collection", collectionBinding.getRole() );
+			validateFilters( collectionBinding.getManyToManyFilters(), "Collection", collectionBinding.getRole() );
+		}
+	}
+
+	private void validateFilters(List<FilterConfiguration> filters, String kind, String role) {
+		for ( var filter : filters ) {
+			if ( !filterDefinitionMap.containsKey( filter.getName() ) ) {
+				throw new MappingException( kind + " '" + role
+						+ "' refers to an undefined filter named '" + filter.getName() + "'" );
+			}
 		}
 	}
 

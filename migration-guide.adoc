@@ -68,6 +68,13 @@ The deprecated `PersistenceContext.reentrantSafeEntityEntries()` method has been
 
 This section describes changes in behavior that applications should be aware of.
 
+[[xml-validation]]
+=== XML mapping validation
+
+XML mapping documents are now validated against their schema by default, as documented for `hibernate.validate_xml`.
+Previously, validation was disabled when this setting was absent, allowing invalid attributes to be silently ignored.
+Applications with invalid `orm.xml` or `hbm.xml` documents must correct their mappings or explicitly set `hibernate.validate_xml=false` to disable validation.
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // XSD changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

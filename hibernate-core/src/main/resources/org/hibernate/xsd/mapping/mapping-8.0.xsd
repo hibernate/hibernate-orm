@@ -1001,9 +1001,9 @@
         </xsd:annotation>
         <xsd:sequence>
             <xsd:element name="column" type="orm:column-result"
-                         maxOccurs="unbounded"/>
+                         minOccurs="0" maxOccurs="unbounded"/>
             <xsd:element name="entity" type="orm:entity-result"
-                         maxOccurs="unbounded"/>
+                         minOccurs="0" maxOccurs="unbounded"/>
         </xsd:sequence>
         <xsd:attribute name="target-class" type="xsd:string" use="required"/>
     </xsd:complexType>
@@ -2468,7 +2468,7 @@
         <xsd:sequence>
             <xsd:element name="description" type="xsd:string" minOccurs="0"/>
             <xsd:element name="query" type="xsd:string"/>
-            <xsd:element name="entity-graph" type="xsd:string"/>
+            <xsd:element name="entity-graph" type="xsd:string" minOccurs="0"/>
             <xsd:element name="lock-mode" type="orm:lock-mode-type" minOccurs="0"/>
             <xsd:element name="lock-scope" type="orm:pessimistic-lock-scope" minOccurs="0"/>
             <xsd:element name="hint" type="orm:query-hint" minOccurs="0" maxOccurs="unbounded"/>

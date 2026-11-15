@@ -5,9 +5,9 @@
     <entity name="TestEntity" metadata-complete="true" access="FIELD">
         <attributes>
             <id name="id">
-                <target>Long</target>
                 <generated-value generator="id-generator"/>
                 <generic-generator name="id-generator" class="native"/>
+                <target>Long</target>
             </id>
             <basic name="name">
                 <target>String</target>

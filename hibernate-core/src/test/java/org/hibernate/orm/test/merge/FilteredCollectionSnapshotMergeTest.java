@@ -27,6 +27,7 @@ class FilteredCollectionSnapshotMergeTest {
 
 	@Test
 	void mergingFilteredCollectionPreservesUnseenRows(SessionFactoryScope scope) {
+		// Guards against dropping the detached snapshot to fix HHH-21124.
 		scope.inTransaction( session -> {
 			final var owner = new Owner();
 			owner.tags.addAll( Set.of( "visible", "hidden" ) );

@@ -32,6 +32,7 @@ public final class CollectionEntry implements Serializable {
 
 	// session-start/post-flush persistent state
 	private @Nullable Serializable snapshot;
+	private boolean snapshotFromMerge;
 	// allow the CollectionSnapshot to be serialized
 	private @Nullable String role;
 	private boolean readOnly;
@@ -125,11 +126,13 @@ public final class CollectionEntry implements Serializable {
 			@Nullable Serializable snapshot,
 			@Nullable Object loadedKey,
 			boolean readOnly,
+			boolean snapshotFromMerge,
 			@Nullable SessionFactoryImplementor factory) {
 		this.role = role;
 		this.snapshot = snapshot;
 		this.loadedKey = loadedKey;
 		this.readOnly = readOnly;
+		this.snapshotFromMerge = snapshotFromMerge;
 		if ( role != null ) {
 			afterDeserialize( factory );
 		}
@@ -233,6 +236,7 @@ public final class CollectionEntry implements Serializable {
 	public void postInitialize(PersistentCollection<?> collection, SharedSessionContractImplementor session) {
 		final var loadedPersister = this.loadedPersister;
 		snapshot = loadedPersister != null && isModifiable() ? collection.getSnapshot( loadedPersister ) : null;
+		snapshotFromMerge = false;
 		collection.setSnapshot( loadedKey, role, snapshot );
 		collection.afterInitializationSnapshot();
 		if ( loadedPersister != null
@@ -267,6 +271,7 @@ public final class CollectionEntry implements Serializable {
 			snapshot = isModifiable()
 					? collection.getSnapshot( castNonNull( loadedPersister ) )
 					: null;
+			snapshotFromMerge = false;
 		}
 		collection.postAction();
 	}
@@ -281,6 +286,14 @@ public final class CollectionEntry implements Serializable {
 
 	public @Nullable Serializable getSnapshot() {
 		return snapshot;
+	}
+
+	/**
+	 * Whether the current snapshot was copied during merge, rather than taken
+	 * when the collection was initialized or its changes were flushed.
+	 */
+	public boolean isSnapshotFromMerge() {
+		return snapshotFromMerge;
 	}
 
 	public boolean isReadOnly() {
@@ -299,6 +312,9 @@ public final class CollectionEntry implements Serializable {
 	public void resetStoredSnapshot(PersistentCollection<?> collection, Serializable storedSnapshot) {
 		CORE_LOGGER.resetStoredSnapshot( storedSnapshot, this );
 		if ( !fromMerge ) {
+			if ( snapshot != storedSnapshot ) {
+				snapshotFromMerge = true;
+			}
 			snapshot = storedSnapshot;
 			collection.setSnapshot( loadedKey, role, snapshot );
 			fromMerge = true;
@@ -310,6 +326,7 @@ public final class CollectionEntry implements Serializable {
 			this.readOnly = readOnly;
 			if ( readOnly ) {
 				snapshot = null;
+				snapshotFromMerge = false;
 				collection.setSnapshot( loadedKey, role, null );
 			}
 			else {
@@ -318,6 +335,7 @@ public final class CollectionEntry implements Serializable {
 						&& loadedPersister != null
 						&& loadedPersister.isMutable() ) {
 					snapshot = collection.getSnapshot( loadedPersister );
+					snapshotFromMerge = false;
 					collection.setSnapshot( loadedKey, role, snapshot );
 				}
 			}
@@ -439,6 +457,7 @@ public final class CollectionEntry implements Serializable {
 		oos.writeObject( snapshot );
 		oos.writeObject( loadedKey );
 		oos.writeBoolean( readOnly );
+		oos.writeBoolean( snapshotFromMerge );
 	}
 
 	/**
@@ -456,6 +475,7 @@ public final class CollectionEntry implements Serializable {
 				(String) ois.readObject(),
 				(Serializable) ois.readObject(),
 				ois.readObject(),
+				ois.readBoolean(),
 				ois.readBoolean(),
 				session == null ? null : session.getFactory()
 		);

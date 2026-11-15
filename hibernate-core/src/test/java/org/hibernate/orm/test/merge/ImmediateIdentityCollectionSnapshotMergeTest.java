@@ -13,7 +13,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
 import org.hibernate.Hibernate;
-import org.hibernate.cfg.FlushSettings;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PreCollectionUpdateEventListener;
@@ -21,10 +20,8 @@ import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 
 import org.junit.jupiter.api.Test;
 
@@ -36,13 +33,13 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 		ImmediateIdentityCollectionSnapshotMergeTest.Child.class
 })
 @SessionFactory
-@ServiceRegistry(settings = @Setting(name = FlushSettings.GRAPH_DEFER_IDENTITY_INSERTS, value = "false"))
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 @Jira("https://hibernate.atlassian.net/browse/HHH-21124")
 class ImmediateIdentityCollectionSnapshotMergeTest {
 
 	@Test
 	void mergeRetainsCollectionEventBeforeImage(SessionFactoryScope scope) {
+		// Guards against comparing with the target snapshot before preserving the detached snapshot.
 		scope.inTransaction( session -> session.persist( new Owner() ) );
 		final var detached = scope.fromTransaction( session -> {
 			final var owner = session.find( Owner.class, 1L );

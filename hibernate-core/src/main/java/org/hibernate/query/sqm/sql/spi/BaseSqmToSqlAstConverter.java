@@ -8274,8 +8274,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Predicate visitComparisonPredicate(SqmComparisonPredicate predicate) {
 		final var fromClauseIndex = fromClauseIndexStack.getCurrent();
-		final var left = predicate.getLeftHandExpression();
-		final var right = predicate.getRightHandExpression();
+		final var left = instantOfTemporalInTwoColumns(
+				predicate.getLeftHandExpression(),
+				predicate.getRightHandExpression()
+		);
+		final var right = instantOfTemporalInTwoColumns(
+				predicate.getRightHandExpression(),
+				predicate.getLeftHandExpression()
+		);
 		final Expression lhs;
 		final Expression rhs;
 		if ( left instanceof SqmParameter<?> && right instanceof SqmPath<?> rightPath
@@ -8305,6 +8311,55 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			handleTypeComparison( lhs, rhs, sqmOperator == ComparisonOperator.EQUAL );
 			return new ComparisonPredicate( lhs, sqmOperator, rhs, getBooleanType() );
 		}
+	}
+
+	/// A date-time stored as its instant in one column and its offset or zone
+	/// in a second is compared with a value occupying a single column, such
+	/// as a literal, by its instant. Compared with a value which also has
+	/// two parts, such as a parameter, it is left as it is.
+	private static SqmExpression<?> instantOfTemporalInTwoColumns(SqmExpression<?> operand, SqmExpression<?> other) {
+		if ( SqmExpressionHelper.isCompositeTemporal( operand ) && !SqmExpressionHelper.isCompositeTemporal( other ) ) {
+			final Integer length = operand.getTupleLength();
+			final Integer otherLength = other.getTupleLength();
+			if ( length != null && otherLength != null && length.intValue() != otherLength.intValue() ) {
+				return SqmExpressionHelper.getActualExpression( operand );
+			}
+		}
+		return operand;
+	}
+
+	/// As [#instantOfTemporalInTwoColumns(SqmExpression, SqmExpression)], for
+	/// the operands of a predicate which has more than two, such as `between`
+	/// and `in`. Where any of them occupies a single column, every date-time
+	/// stored in two columns stands for its instant.
+	private List<SqmExpression<?>> instantsOfTemporalsInTwoColumns(List<? extends SqmExpression<?>> operands) {
+		SqmExpression<?> single = null;
+		boolean anyInTwoColumns = false;
+		for ( var operand : operands ) {
+			if ( SqmExpressionHelper.isCompositeTemporal( operand ) ) {
+				anyInTwoColumns = true;
+			}
+			else if ( single == null && Integer.valueOf( 1 ).equals( operand.getTupleLength() ) ) {
+				single = operand;
+			}
+		}
+		if ( !anyInTwoColumns || single == null ) {
+			return new ArrayList<>( operands );
+		}
+		final List<SqmExpression<?>> result = new ArrayList<>( operands.size() );
+		for ( var operand : operands ) {
+			if ( operand instanceof SqmParameter<?> ) {
+				// A parameter compared with a date-time stored in two columns stands
+				// for both of them, and cannot stand for the instant alone.
+				throw new SemanticException(
+						"Cannot compare a date-time stored in two columns with parameters and with values"
+						+ " occupying a single column, such as literals, in the same predicate;"
+						+ " use parameters for all of them, or for none"
+				);
+			}
+			result.add( instantOfTemporalInTwoColumns( operand, single ) );
+		}
+		return result;
 	}
 
 	private Expression interpretComparisonOperand(
@@ -8518,19 +8573,28 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public BetweenPredicate visitBetweenPredicate(SqmBetweenPredicate predicate) {
 		final var fromClauseIndex = fromClauseIndexStack.getCurrent();
+		// a date-time stored in two columns is compared with bounds occupying a single column by its instant
+		final var operands = instantsOfTemporalsInTwoColumns( List.of(
+				predicate.getExpression(),
+				predicate.getLowerBound(),
+				predicate.getUpperBound()
+		) );
+		final SqmExpression<?> sqmExpression = operands.get( 0 );
+		final SqmExpression<?> sqmLowerBound = operands.get( 1 );
+		final SqmExpression<?> sqmUpperBound = operands.get( 2 );
 		final Expression expression;
 		final Expression lowerBound;
 		final Expression upperBound;
 
 		inferrableTypeAccessStack.push(
 				() -> coalesceSuppliedValues(
-						() -> determineValueMapping( predicate.getLowerBound(), fromClauseIndex ),
-						() -> determineValueMapping( predicate.getUpperBound(), fromClauseIndex )
+						() -> determineValueMapping( sqmLowerBound, fromClauseIndex ),
+						() -> determineValueMapping( sqmUpperBound, fromClauseIndex )
 				)
 		);
 
 		try {
-			expression = (Expression) visitWithRequiredResult( predicate.getExpression() );
+			expression = (Expression) visitWithRequiredResult( sqmExpression );
 		}
 		finally {
 			inferrableTypeAccessStack.pop();
@@ -8538,12 +8602,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		inferrableTypeAccessStack.push(
 				() -> coalesceSuppliedValues(
-						() -> determineValueMapping( predicate.getExpression(), fromClauseIndex ),
-						() -> determineValueMapping( predicate.getUpperBound(), fromClauseIndex )
+						() -> determineValueMapping( sqmExpression, fromClauseIndex ),
+						() -> determineValueMapping( sqmUpperBound, fromClauseIndex )
 				)
 		);
 		try {
-			lowerBound = (Expression) visitWithRequiredResult( predicate.getLowerBound() );
+			lowerBound = (Expression) visitWithRequiredResult( sqmLowerBound );
 		}
 		finally {
 			inferrableTypeAccessStack.pop();
@@ -8551,12 +8615,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		inferrableTypeAccessStack.push(
 				() -> coalesceSuppliedValues(
-						() -> determineValueMapping( predicate.getExpression(), fromClauseIndex ),
-						() -> determineValueMapping( predicate.getLowerBound(), fromClauseIndex )
+						() -> determineValueMapping( sqmExpression, fromClauseIndex ),
+						() -> determineValueMapping( sqmLowerBound, fromClauseIndex )
 				)
 		);
 		try {
-			upperBound = (Expression) visitWithRequiredResult( predicate.getUpperBound() );
+			upperBound = (Expression) visitWithRequiredResult( sqmUpperBound );
 		}
 		finally {
 			inferrableTypeAccessStack.pop();
@@ -8645,9 +8709,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		// otherwise - no special case...
 		final var fromClauseIndex = fromClauseIndexStack.getCurrent();
+		// a date-time stored in two columns is compared with values occupying a single column by its instant
+		final List<SqmExpression<?>> inOperands = new ArrayList<>( listExpressions.size() + 1 );
+		inOperands.add( predicate.getTestExpression() );
+		inOperands.addAll( listExpressions );
+		final var operands = instantsOfTemporalsInTwoColumns( inOperands );
+		final SqmExpression<?> sqmTestExpression = operands.get( 0 );
+		final List<SqmExpression<?>> sqmListExpressions = operands.subList( 1, operands.size() );
 		inferrableTypeAccessStack.push(
 				() -> {
-					for ( var listExpression : listExpressions ) {
+					for ( var listExpression : sqmListExpressions ) {
 						final var mapping = determineValueMapping( listExpression, fromClauseIndex );
 						if ( mapping != null ) {
 							return mapping;
@@ -8658,7 +8729,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 		final Expression testExpression;
 		try {
-			testExpression = (Expression) visitWithRequiredResult( predicate.getTestExpression() );
+			testExpression = (Expression) visitWithRequiredResult( sqmTestExpression );
 		}
 		finally {
 			inferrableTypeAccessStack.pop();
@@ -8666,10 +8737,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final var inPredicate = new InListPredicate( testExpression, predicate.isNegated(), getBooleanType() );
 
-		inferrableTypeAccessStack.push( () -> determineValueMapping( predicate.getTestExpression(), fromClauseIndex ) );
+		inferrableTypeAccessStack.push( () -> determineValueMapping( sqmTestExpression, fromClauseIndex ) );
 
 		try {
-			for ( var expression : listExpressions ) {
+			for ( var expression : sqmListExpressions ) {
 				inPredicate.addExpression( (Expression) visitWithRequiredResult( expression ) );
 			}
 		}
@@ -8779,6 +8850,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public InSubQueryPredicate visitInSubQueryPredicate(SqmInSubQueryPredicate<?> predicate) {
 		final var testExpression = predicate.getTestExpression();
 		final var subQueryExpression = predicate.getSubQueryExpression();
+		final Integer selected = subQueryExpression.getTupleLength();
+		if ( SqmExpressionHelper.isCompositeTemporal( testExpression )
+				&& selected != null
+				&& !selected.equals( testExpression.getTupleLength() ) ) {
+			throw new SemanticException(
+					"Cannot compare '" + ( (SqmPath<?>) testExpression ).getNavigablePath().getFullPath()
+					+ "' with the result of a subquery: it is stored in two columns, and the subquery"
+					+ " selects " + selected + "; select a value stored the same way, or compare by a predicate"
+					+ " in the subquery instead"
+			);
+		}
 		return new InSubQueryPredicate(
 				visitWithInferredType( testExpression, subQueryExpression ),
 				visitWithInferredType( subQueryExpression, testExpression ),

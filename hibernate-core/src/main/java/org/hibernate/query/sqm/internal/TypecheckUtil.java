@@ -13,6 +13,7 @@ import org.hibernate.query.sqm.spi.SqmBindableType;
 import org.hibernate.query.sqm.tuple.spi.TupleType;
 import org.hibernate.metamodel.model.domain.internal.EntityDiscriminatorSqmPathSource;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.descriptor.java.JavaTypeHelper;
 import org.hibernate.type.BindingContext;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
@@ -22,6 +23,7 @@ import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
 import org.hibernate.query.sqm.tree.spi.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.spi.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.spi.expression.SqmExpressionHelper;
 import org.hibernate.query.sqm.tree.spi.expression.SqmLiteralNull;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.ConvertedBasicType;
@@ -410,6 +412,15 @@ public class TypecheckUtil {
 				.getEntityDescriptor( bindingContext.getJpaMetamodel().qualifyImportableName( name ) );
 	}
 
+	/// Whether one of the expressions is a date-time stored as its instant
+	/// with its offset or zone in a second column, and the other is some other
+	/// temporal value, in which case the two are compared by instant.
+	private static boolean areInstantsComparable(SqmExpression<?> left, SqmExpression<?> right) {
+		return SqmExpressionHelper.isCompositeTemporal( left ) != SqmExpressionHelper.isCompositeTemporal( right )
+			&& JavaTypeHelper.isTemporal( left.getJavaTypeDescriptor() )
+			&& JavaTypeHelper.isTemporal( right.getJavaTypeDescriptor() );
+	}
+
 	/**
 	 * @see TypecheckUtil#assertAssignable(String, SqmPath, SqmTypedNode, BindingContext)
 	 */
@@ -419,7 +430,11 @@ public class TypecheckUtil {
 		final Integer leftTupleLength = left.getTupleLength();
 		final Integer rightTupleLength = right.getTupleLength();
 		if ( leftTupleLength != null && rightTupleLength != null
-				&& leftTupleLength.intValue() != rightTupleLength.intValue() ) {
+				&& leftTupleLength.intValue() != rightTupleLength.intValue()
+				// a date-time stored as its instant with its offset or zone in a second
+				// column is compared with a value in a single column by its instant
+				&& !SqmExpressionHelper.isCompositeTemporal( left )
+				&& !SqmExpressionHelper.isCompositeTemporal( right ) ) {
 			throw new SemanticException( "Cannot compare tuples of different lengths", (String) null );
 		}
 
@@ -445,7 +460,8 @@ public class TypecheckUtil {
 					);
 				}
 			}
-			else if ( !areTypesComparable( leftType, rightType, bindingContext ) ) {
+			else if ( !areInstantsComparable( left, right )
+					&& !areTypesComparable( leftType, rightType, bindingContext ) ) {
 				throw new SemanticException(
 						String.format(
 								"Cannot compare left expression of type '%s' with right expression of type '%s'",

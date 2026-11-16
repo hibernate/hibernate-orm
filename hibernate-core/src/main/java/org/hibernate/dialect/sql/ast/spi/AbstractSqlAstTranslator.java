@@ -5699,10 +5699,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 		}
 		else if ( offsetExpression != null ) {
+			// The row numbers are one-based and inclusive: skipping `offset` rows and
+			// fetching `fetch` rows is rows `offset + 1` to `offset + fetch`
 			appendSql( "rows " );
 			clauseStack.push( Clause.OFFSET );
 			try {
-				renderOffsetExpression( offsetExpression );
+				renderOffsetPlusConstantExpressionAsSingleParameter( offsetExpression, 1 );
 			}
 			finally {
 				clauseStack.pop();
@@ -5714,7 +5716,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					appendSql( Integer.MAX_VALUE );
 				}
 				else {
-					renderFetchPlusOffsetExpressionAsSingleParameter( fetchExpression, offsetExpression, -1 );
+					renderFetchPlusOffsetExpressionAsSingleParameter( fetchExpression, offsetExpression, 0 );
 				}
 			}
 			finally {
@@ -5722,6 +5724,43 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 		}
 		appendSql( WHITESPACE );
+	}
+
+	/**
+	 * Renders the offset plus a constant as a single value, for example
+	 * to convert a zero-based offset to a one-based row number.
+	 */
+	protected void renderOffsetPlusConstantExpressionAsSingleParameter(Expression offsetExpression, int constant) {
+		if ( offsetExpression instanceof Literal offsetLiteral ) {
+			appendSql( ( (Number) offsetLiteral.getLiteralValue() ).intValue() + constant );
+		}
+		else {
+			final JdbcParameter offsetParameter = (JdbcParameter) offsetExpression;
+			final int parameterPosition = addParameterBinder(
+					offsetParameter,
+					(statement, startPosition, jdbcParameterBindings, executionContext) -> {
+						final int offsetValue;
+						if ( offsetParameter instanceof OffsetJdbcParameter ) {
+							offsetValue = executionContext.getQueryOptions().getEffectiveLimit().getFirstRow();
+						}
+						else {
+							final JdbcParameterBinding binding = jdbcParameterBindings.getBinding( offsetParameter );
+							if ( binding == null ) {
+								throw new ExecutionException( "JDBC parameter value not bound - " + offsetParameter );
+							}
+							offsetValue = ( (Number) binding.getBindValue() ).intValue();
+						}
+						//noinspection unchecked
+						offsetParameter.getExpressionType().getSingleJdbcMapping().getJdbcValueBinder().bind(
+								statement,
+								offsetValue + constant,
+								startPosition,
+								executionContext.getSession()
+						);
+					}
+			);
+			renderParameterAsParameter( parameterPosition, offsetParameter );
+		}
 	}
 
 	protected void renderCombinedLimitClause(QueryPart queryPart) {

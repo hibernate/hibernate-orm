@@ -22,6 +22,7 @@ import org.hibernate.dialect.temporaltype.spi.TemporalFormatSupports;
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupports;
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
 import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.sql.spi.StringBuilderDialectSqlAppender;
 import org.hibernate.sql.spi.StringBuilderSqlAppender;
 import org.junit.jupiter.api.Test;
 
@@ -122,7 +123,7 @@ public class TemporalTypeSupportTests {
 	@Test
 	void standardFormatAndOperationBehaviorIsPreserved() {
 		final var dialect = new Dialect( DatabaseVersion.make( 1 ) ) {};
-		final var appender = new StringBuilderSqlAppender();
+		final var appender = new StringBuilderDialectSqlAppender( dialect );
 		dialect.getTemporalFormatSupport().appendFormat( appender, "yyyy-MM-dd" );
 		assertEquals( "YYYY-MM-DD", appender.toString() );
 		assertEquals( "extract(?1 from ?2)", dialect.getTemporalOperationSupport().extractPattern( TemporalUnit.DAY ) );

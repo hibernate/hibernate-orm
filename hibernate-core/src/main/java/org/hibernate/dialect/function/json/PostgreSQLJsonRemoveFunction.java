@@ -45,7 +45,7 @@ public class PostgreSQLJsonRemoveFunction extends AbstractJsonRemoveFunction {
 		for ( JsonPathHelper.JsonPathElement pathElement : jsonPathElements ) {
 			sqlAppender.appendSql( separator );
 			if ( pathElement instanceof JsonPathHelper.JsonAttribute attribute ) {
-				sqlAppender.appendSingleQuoteEscapedString( attribute.attribute() );
+				sqlAppender.appendLiteral( attribute.attribute() );
 			}
 			else if ( pathElement instanceof JsonPathHelper.JsonParameterIndexAccess parameterIndexAccess ) {
 				final String parameterName = parameterIndexAccess.parameterName();

@@ -101,10 +101,7 @@ public class JsonExistsFunction extends AbstractSqmSelfRenderingFunctionDescript
 				jsonPath.accept( walker );
 			}
 			else {
-				walker.getSessionFactory().getJdbcServices().getDialect().appendLiteral(
-						sqlAppender,
-						walker.getLiteralValue( jsonPath )
-				);
+				sqlAppender.appendLiteral( walker.getLiteralValue( jsonPath ) );
 			}
 			if ( passingClause != null ) {
 				sqlAppender.appendSql( " passing " );

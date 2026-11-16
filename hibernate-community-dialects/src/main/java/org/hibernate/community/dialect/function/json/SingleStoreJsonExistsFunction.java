@@ -42,7 +42,7 @@ public class SingleStoreJsonExistsFunction extends JsonExistsFunction {
 		for ( JsonPathHelper.JsonPathElement pathElement : jsonPathElements ) {
 			sqlAppender.appendSql( ',' );
 			if ( pathElement instanceof JsonPathHelper.JsonAttribute attribute ) {
-				sqlAppender.appendSingleQuoteEscapedString( attribute.attribute() );
+				sqlAppender.appendLiteral( attribute.attribute() );
 			}
 			else if ( pathElement instanceof JsonPathHelper.JsonParameterIndexAccess jsonParameterIndexAccess) {
 				final String parameterName = jsonParameterIndexAccess.parameterName();

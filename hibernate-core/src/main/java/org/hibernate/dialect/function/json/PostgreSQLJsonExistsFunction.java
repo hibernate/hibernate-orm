@@ -5,6 +5,7 @@ import java.util.Map;
 import jakarta.annotation.Nullable;
 import org.hibernate.QueryException;
 import org.hibernate.metamodel.model.domain.ReturnableType;
+import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
 import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
@@ -38,13 +39,20 @@ public class PostgreSQLJsonExistsFunction extends JsonExistsFunction {
 		sqlAppender.appendSql( "jsonb_path_exists(" );
 		jsonDocument.accept( walker );
 		sqlAppender.appendSql( ',' );
-		jsonPath.accept( walker );
+		if ( jsonPath instanceof Literal ) {
+			jsonPath.accept( walker );
+		}
+		else {
+			sqlAppender.appendSql( "cast(" );
+			jsonPath.accept( walker );
+			sqlAppender.appendSql( " as jsonpath)" );
+		}
 		if ( passingClause != null ) {
 			sqlAppender.append( ",jsonb_build_object" );
 			char separator = '(';
 			for ( Map.Entry<String, Expression> entry : passingClause.getPassingExpressions().entrySet() ) {
 				sqlAppender.append( separator );
-				sqlAppender.appendSingleQuoteEscapedString( entry.getKey() );
+				sqlAppender.appendLiteral( entry.getKey() );
 				sqlAppender.append( ',' );
 				entry.getValue().accept( walker );
 				separator = ',';

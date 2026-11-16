@@ -157,12 +157,12 @@ public class XmlTableFunction extends AbstractSqmSelfRenderingSetReturningFuncti
 	protected void renderColumnPath(String name, @Nullable String xpath, SqlAppender sqlAppender, SqlAstTranslator<?> walker) {
 		if ( xpath != null ) {
 			sqlAppender.appendSql( " path " );
-			sqlAppender.appendSingleQuoteEscapedString( xpath );
+			sqlAppender.appendLiteral( xpath );
 		}
 		else {
 			// To avoid case sensitivity issues, just pass the path always
 			sqlAppender.appendSql( " path " );
-			sqlAppender.appendSingleQuoteEscapedString( name );
+			sqlAppender.appendLiteral( name );
 		}
 	}
 

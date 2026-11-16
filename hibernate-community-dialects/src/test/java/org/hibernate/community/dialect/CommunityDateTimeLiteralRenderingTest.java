@@ -10,7 +10,7 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.sql.spi.StringBuilderSqlAppender;
+import org.hibernate.sql.spi.StringBuilderDialectSqlAppender;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -125,7 +125,7 @@ public class CommunityDateTimeLiteralRenderingTest {
 	private static String render(Dialect dialect, TemporalAccessor value, TemporalType temporalType) {
 		final var result = new StringBuilder();
 		dialect.getLiteralSupport().appendDateTimeLiteral(
-				new StringBuilderSqlAppender( result ),
+				new StringBuilderDialectSqlAppender( dialect, result ),
 				value,
 				temporalType,
 				UTC

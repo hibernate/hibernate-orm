@@ -103,7 +103,7 @@ public class HANAJsonTableFunction extends JsonTableFunction {
 				final String jsonPath = "$.v" + rawJsonPath.substring( 1 );
 
 				sqlAppender.appendSql( "nested path " );
-				sqlAppender.appendSingleQuoteEscapedString( jsonPath );
+				sqlAppender.appendLiteral( jsonPath );
 				sqlAppender.appendSql( " columns" );
 			}
 			else {

@@ -68,7 +68,7 @@ public class StringFunction
 				sqlAppender.appendSql( " when " );
 				sqlAppender.appendSql( enumValue.ordinal() );
 				sqlAppender.appendSql( " then " );
-				sqlAppender.appendSingleQuoteEscapedString( enumValue.name() );
+				sqlAppender.appendLiteral( enumValue.name() );
 			}
 			sqlAppender.appendSql( " end" );
 		}

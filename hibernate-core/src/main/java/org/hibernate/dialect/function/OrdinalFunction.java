@@ -67,7 +67,7 @@ public class OrdinalFunction
 			for ( Object e : enumConstants ) {
 				Enum<?> enumValue = (Enum<?>) e;
 				sqlAppender.appendSql( " when " );
-				sqlAppender.appendSingleQuoteEscapedString( (String) singleJdbcMapping.convertToRelationalValue(
+				sqlAppender.appendLiteral( (String) singleJdbcMapping.convertToRelationalValue(
 						enumValue.toString() ) );
 				sqlAppender.appendSql( " then " );
 				sqlAppender.appendSql( enumValue.ordinal() );

@@ -50,7 +50,7 @@ public class PostgreSQLJsonReplaceFunction extends AbstractJsonReplaceFunction {
 		for ( JsonPathHelper.JsonPathElement pathElement : jsonPathElements ) {
 			sqlAppender.appendSql( separator );
 			if ( pathElement instanceof JsonPathHelper.JsonAttribute attribute ) {
-				sqlAppender.appendSingleQuoteEscapedString( attribute.attribute() );
+				sqlAppender.appendLiteral( attribute.attribute() );
 			}
 			else if ( pathElement instanceof JsonPathHelper.JsonParameterIndexAccess jsonParameterIndexAccess ) {
 				final String parameterName = jsonParameterIndexAccess.parameterName();

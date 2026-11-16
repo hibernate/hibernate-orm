@@ -14,6 +14,7 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.SPI;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.QuotingHelper;
 import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.sql.spi.StringBuilderSqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -38,6 +39,16 @@ public interface LiteralSupport {
 	/// Append a SQL string literal.
 	default void appendLiteral(SqlAppender appender, String literal) {
 		appender.appendSingleQuoteEscapedString( literal );
+	}
+
+	/// Append the escaped content of a SQL string literal, without the enclosing quotes.
+	///
+	/// The caller is responsible for rendering the enclosing quotes.
+	/// Implementations must apply the same escaping rules as [#appendLiteral(SqlAppender, String)].
+	default void appendLiteralContent(SqlAppender appender, String literal) {
+		final StringBuilder sb = new StringBuilder( literal.length() );
+		QuotingHelper.appendSingleQuoteEscapedStringContent( sb, literal );
+		appender.appendSql( sb.toString() );
 	}
 
 	/// Append a SQL binary literal.

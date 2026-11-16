@@ -73,7 +73,7 @@ public class SQLServerXmlTableFunction extends XmlTableFunction {
 		sqlAppender.appendSql( "t1_.d.value('(" );
 		sqlAppender.appendSql( definition.xpath() == null ? definition.name() : definition.xpath() );
 		sqlAppender.appendSql( ")[1]'," );
-		sqlAppender.appendSingleQuoteEscapedString( determineColumnType( definition.type(), walker ) );
+		sqlAppender.appendLiteral( determineColumnType( definition.type(), walker ) );
 		sqlAppender.appendSql( ')' );
 
 		if ( definition.defaultExpression() != null ) {

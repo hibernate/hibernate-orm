@@ -31,7 +31,7 @@ import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 import org.hibernate.sql.ast.spi.translation.Clause;
 import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
-import org.hibernate.sql.spi.StringBuilderSqlAppender;
+import org.hibernate.sql.spi.StringBuilderDialectSqlAppender;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.junit.jupiter.api.Test;
@@ -180,7 +180,7 @@ public class TupleCountSupportTests {
 		final SqlTuple tuple = new SqlTuple( List.of( first, second ), null );
 		final SqlAstNode argument = distinct ? new Distinct( tuple ) : tuple;
 		final Predicate filter = filtered ? mock( Predicate.class ) : null;
-		final StringBuilderSqlAppender appender = new StringBuilderSqlAppender();
+		final StringBuilderDialectSqlAppender appender = new StringBuilderDialectSqlAppender( dialect );
 
 		final SqlAstTranslator<?> translator = mock( SqlAstTranslator.class );
 		final Stack<Clause> clauseStack = mock( Stack.class );

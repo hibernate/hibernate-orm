@@ -66,6 +66,25 @@ public interface SqlAppender extends Appendable {
 		appendSql( sb.toString() );
 	}
 
+	/**
+	 * Add the passed value as string literal into the in-flight buffer
+	 */
+	default void appendLiteral(String value) {
+		final StringBuilder sb = new StringBuilder( value.length() + 2 );
+		QuotingHelper.appendSingleQuoteEscapedString( sb, value );
+		appendSql( sb.toString() );
+	}
+
+	/**
+	 * Add the passed value as string literal content into the in-flight buffer,
+	 * taking care of escaping, but assuming that quoting is already handled.
+	 */
+	default void appendLiteralContent(String value) {
+		final StringBuilder sb = new StringBuilder( value.length() );
+		QuotingHelper.appendSingleQuoteEscapedStringContent( sb, value );
+		appendSql( sb.toString() );
+	}
+
 	default Appendable append(CharSequence csq) {
 		appendSql( csq.toString() );
 		return this;

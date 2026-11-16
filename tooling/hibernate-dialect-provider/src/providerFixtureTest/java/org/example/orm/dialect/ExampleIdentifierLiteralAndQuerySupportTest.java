@@ -18,7 +18,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.JdbcMetadata;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
-import org.hibernate.sql.spi.StringBuilderSqlAppender;
+import org.hibernate.sql.spi.StringBuilderDialectSqlAppender;
 
 import org.junit.jupiter.api.Test;
 
@@ -74,7 +74,7 @@ public class ExampleIdentifierLiteralAndQuerySupportTest {
 	@Test
 	void decoratesLiteralAndSuppliesQueryUtilities() {
 		final var result = new StringBuilder();
-		dialect.getLiteralSupport().appendLiteral( new StringBuilderSqlAppender( result ), "it's" );
+		dialect.getLiteralSupport().appendLiteral( new StringBuilderDialectSqlAppender( dialect, result ), "it's" );
 		assertEquals( "fixture('it''s')", result.toString() );
 		assertEquals( QueryHintPlacement.BEFORE_COMMENT, dialect.getQueryHintPlacement() );
 		assertEquals( "/*+ parallel */ select 1", dialect.getQueryHintString( "select 1", "parallel" ) );
@@ -85,7 +85,7 @@ public class ExampleIdentifierLiteralAndQuerySupportTest {
 
 		final var temporal = new StringBuilder();
 		dialect.getLiteralSupport().appendDateTimeLiteral(
-				new StringBuilderSqlAppender( temporal ),
+				new StringBuilderDialectSqlAppender( dialect, temporal ),
 				LocalDate.of( 2026, 1, 2 ),
 				TemporalType.DATE,
 				TimeZone.getTimeZone( "UTC" )
@@ -94,7 +94,7 @@ public class ExampleIdentifierLiteralAndQuerySupportTest {
 
 		final var offsetTimestamp = new StringBuilder();
 		dialect.getLiteralSupport().appendDateTimeLiteral(
-				new StringBuilderSqlAppender( offsetTimestamp ),
+				new StringBuilderDialectSqlAppender( dialect, offsetTimestamp ),
 				OffsetDateTime.of( 2026, 1, 2, 3, 4, 5, 123_456_000, ZoneOffset.UTC ),
 				TemporalType.TIMESTAMP,
 				TimeZone.getTimeZone( "UTC" )
@@ -103,7 +103,7 @@ public class ExampleIdentifierLiteralAndQuerySupportTest {
 
 		final var array = new StringBuilder();
 		dialect.getLiteralSupport().appendArrayLiteral(
-				new StringBuilderSqlAppender( array ),
+				new StringBuilderDialectSqlAppender( dialect, array ),
 				new Object[] { 1, null, 2 },
 				(appender, value, suppliedDialect, options) -> appender.appendSql( value.toString() ),
 				null

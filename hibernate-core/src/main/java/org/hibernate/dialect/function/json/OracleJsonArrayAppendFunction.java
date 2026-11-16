@@ -36,15 +36,15 @@ public class OracleJsonArrayAppendFunction extends AbstractJsonArrayAppendFuncti
 			sqlAppender.appendSql( c );
 		}
 		sqlAppender.appendSql( ".type()'),'x') when 'x' then t.d when 'array' then json_transform(t.d,append " );
-		sqlAppender.appendSingleQuoteEscapedString( jsonPath );
+		sqlAppender.appendLiteral( jsonPath );
 		sqlAppender.appendSql( "=t.v) when 'object' then json_transform(t.d,set " );
-		sqlAppender.appendSingleQuoteEscapedString( jsonPath );
+		sqlAppender.appendLiteral( jsonPath );
 		sqlAppender.appendSql( "=json_array(coalesce(json_query(t.d," );
-		sqlAppender.appendSingleQuoteEscapedString( jsonPath );
+		sqlAppender.appendLiteral( jsonPath );
 		sqlAppender.appendSql( "),'null') format json,t.v)) else json_transform(t.d,set " );
-		sqlAppender.appendSingleQuoteEscapedString( jsonPath );
+		sqlAppender.appendLiteral( jsonPath );
 		sqlAppender.appendSql( "=json_array(coalesce(json_value(t.d," );
-		sqlAppender.appendSingleQuoteEscapedString( jsonPath );
+		sqlAppender.appendLiteral( jsonPath );
 		sqlAppender.appendSql( "),'null') format json,t.v)) end from (select " );
 		json.accept( translator );
 		sqlAppender.appendSql( " d," );

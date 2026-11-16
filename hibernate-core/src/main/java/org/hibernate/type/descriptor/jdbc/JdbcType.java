@@ -13,7 +13,7 @@ import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.sql.spi.SqlAppender;
-import org.hibernate.sql.spi.StringBuilderSqlAppender;
+import org.hibernate.sql.spi.StringBuilderDialectSqlAppender;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.Type;
@@ -205,7 +205,7 @@ public interface JdbcType extends Serializable {
 	@Incubating(since = "6.2")
 	default String wrapWriteExpression(String writeExpression, @Nullable Size size, Dialect dialect) {
 		final var wrapped = new StringBuilder( writeExpression.length() );
-		appendWriteExpression( writeExpression, size, new StringBuilderSqlAppender( wrapped ), dialect );
+		appendWriteExpression( writeExpression, size, new StringBuilderDialectSqlAppender( dialect, wrapped ), dialect );
 		return wrapped.toString();
 	}
 

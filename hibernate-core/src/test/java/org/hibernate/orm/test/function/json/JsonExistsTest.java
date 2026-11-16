@@ -6,8 +6,13 @@ import java.util.List;
 import jakarta.persistence.Tuple;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
+import org.hibernate.community.dialect.SingleStoreDialect;
+import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.sql.exec.ExecutionException;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -21,7 +26,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.orm.test.function.json.JsonTestHelper.assertNoJsonInjection;
+import static org.hibernate.orm.test.function.json.JsonTestHelper.assertNoInjection;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -29,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Christian Beikov
  */
 @DomainModel(annotatedClasses = EntityWithJson.class)
-@SessionFactory
+@SessionFactory(useCollectingStatementObserver = true)
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsJsonExists.class)
 public class JsonExistsTest {
 
@@ -98,44 +103,90 @@ public class JsonExistsTest {
 
 	@Test
 	public void testPathInjection(SessionFactoryScope scope) {
-		scope.inSession( em -> {
-			try {
-				em.createQuery( "select json_exists(e.json, :path) from EntityWithJson e", Tuple.class )
-						.setParameter( "path", "$'--" )
-						.getResultList();
-			}
-			catch ( RuntimeException e ) {
-				assertNoJsonInjection( e );
-			}
+		assertNoInjection( scope, em -> {
+			em.createQuery( "select json_exists(e.json, :path) from EntityWithJson e", Tuple.class )
+					.setParameter( "path", "$'--" )
+					.getResultList();
 		} );
 	}
 
 	@Test
 	public void testPassingInjection(SessionFactoryScope scope) {
-		scope.inSession( em -> {
-			try {
-				em.createQuery( "select json_exists(e.json, '$[$a]' passing :val as a) from EntityWithJson e", Tuple.class )
-						.setParameter( "val", "'--" )
-						.getResultList();
-			}
-			catch ( RuntimeException e ) {
-				assertNoJsonInjection( e );
-			}
+		assertNoInjection( scope, em -> {
+			em.createQuery( "select json_exists(e.json, '$[$a]' passing :val as a) from EntityWithJson e", Tuple.class )
+					.setParameter( "val", "'--" )
+					.getResultList();
 		} );
 	}
 
 	@Test
 	public void testPathPassingInjection(SessionFactoryScope scope) {
+		assertNoInjection( scope, em -> {
+			em.createQuery( "select json_exists(e.json, :path passing :val as a) from EntityWithJson e", Tuple.class )
+					.setParameter( "path", "$'--" )
+					.setParameter( "val", "'--" )
+					.getResultList();
+		} );
+	}
+
+	@Test
+	public void testPathBackslashInjection(SessionFactoryScope scope) {
+		assertNoInjection( scope, em -> {
+			em.createQuery( "select json_exists(e.json, :path) from EntityWithJson e", Tuple.class )
+					.setParameter( "path", "$\\'--" )
+					.getResultList();
+		} );
+	}
+
+	@Test
+	public void testPassingBackslashInjection(SessionFactoryScope scope) {
+		assertNoInjection( scope, em -> {
+			em.createQuery( "select json_exists(e.json, '$[$a]' passing :val as a) from EntityWithJson e", Tuple.class )
+					.setParameter( "val", "\\'--" )
+					.getResultList();
+		} );
+	}
+
+	@Test
+	public void testPathPassingBackslashInjection(SessionFactoryScope scope) {
+		assertNoInjection( scope, em -> {
+			em.createQuery( "select json_exists(e.json, :path passing :val as a) from EntityWithJson e", Tuple.class )
+					.setParameter( "path", "$\\'--" )
+					.setParameter( "val", "\\'--" )
+					.getResultList();
+		} );
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = H2Dialect.class, reason = "The H2 emulation doesn't support quoted member names in JSON paths")
+	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "The SQL Server emulation doesn't support quoted member names in JSON paths")
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "The CockroachDB emulation doesn't support quoted member names in JSON paths")
+	@SkipForDialect(dialectClass = SingleStoreDialect.class, reason = "The SingleStore emulation doesn't support quoted member names in JSON paths")
+	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 doesn't support quoted member names in JSON paths")
+	public void testPathQuoteRoundTrip(SessionFactoryScope scope) {
+		JsonValueTest.persistSpecialCharacterEntity( scope );
 		scope.inSession( em -> {
-			try {
-				em.createQuery( "select json_exists(e.json, :path passing :val as a) from EntityWithJson e", Tuple.class )
-						.setParameter( "path", "$'--" )
-						.setParameter( "val", "'--" )
-						.getResultList();
-			}
-			catch ( RuntimeException e ) {
-				assertNoJsonInjection( e );
-			}
+			assertEquals( true, em.createQuery( "select json_exists(e.json, :path) from EntityWithJson e where e.id = 2", Boolean.class )
+					.setParameter( "path", "$.\"a'b\"" )
+					.getSingleResult() );
+			assertEquals( false, em.createQuery( "select json_exists(e.json, :path) from EntityWithJson e where e.id = 2", Boolean.class )
+					.setParameter( "path", "$.\"a''b\"" )
+					.getSingleResult() );
+		} );
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = H2Dialect.class, reason = "The H2 emulation doesn't support quoted member names in JSON paths")
+	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "The SQL Server emulation doesn't support quoted member names in JSON paths")
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "The CockroachDB emulation doesn't support quoted member names in JSON paths")
+	@SkipForDialect(dialectClass = SingleStoreDialect.class, reason = "The SingleStore emulation doesn't support quoted member names in JSON paths")
+	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 doesn't support quoted member names in JSON paths")
+	public void testPathBackslashRoundTrip(SessionFactoryScope scope) {
+		JsonValueTest.persistSpecialCharacterEntity( scope );
+		scope.inSession( em -> {
+			assertEquals( true, em.createQuery( "select json_exists(e.json, :path) from EntityWithJson e where e.id = 2", Boolean.class )
+					.setParameter( "path", "$.\"a\\\\b\"" )
+					.getSingleResult() );
 		} );
 	}
 

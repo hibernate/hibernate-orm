@@ -56,10 +56,7 @@ public class SQLServerJsonValueFunction extends JsonValueFunction {
 				);
 			}
 			else {
-				walker.getSessionFactory().getJdbcServices().getDialect().appendLiteral(
-						sqlAppender,
-						"strict " + walker.getLiteralValue( arguments.jsonPath() )
-				);
+				sqlAppender.appendLiteral( "strict " + walker.getLiteralValue( arguments.jsonPath() ) );
 			}
 		}
 		else if ( passingClause != null ) {

@@ -37,7 +37,7 @@ public class DB2XmlTableFunction extends XmlTableFunction {
 		sqlAppender.appendSql( "xmltable(" );
 		// DB2 doesn't like parameters for the xpath expression
 		final String xpath = walker.getLiteralValue( arguments.xpath() );
-		sqlAppender.appendSingleQuoteEscapedString( "$d" + xpath );
+		sqlAppender.appendLiteral( "$d" + xpath );
 		sqlAppender.appendSql( " passing " );
 		if ( !arguments.isXmlType() ) {
 			sqlAppender.appendSql( "xmlparse(document " );

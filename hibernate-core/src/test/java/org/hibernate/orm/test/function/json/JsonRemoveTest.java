@@ -17,14 +17,14 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.orm.test.function.json.JsonTestHelper.assertNoJsonInjection;
+import static org.hibernate.orm.test.function.json.JsonTestHelper.assertNoInjection;
 
 /**
  * @author Christian Beikov
  */
 @DomainModel(standardModels = StandardDomainModel.GAMBIT)
-@SessionFactory
 @ServiceRegistry(settings = @Setting(name = QuerySettings.JSON_FUNCTIONS_ENABLED, value = "true"))
+@SessionFactory(useCollectingStatementInspector = true)
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsJsonRemove.class)
 public class JsonRemoveTest {
 
@@ -39,15 +39,19 @@ public class JsonRemoveTest {
 
 	@Test
 	public void testPathInjection(SessionFactoryScope scope) {
-		scope.inSession( em -> {
-			try {
-				em.createQuery( "select json_remove('{\"a\":1}', :path)", Tuple.class )
-						.setParameter( "path", "$'--" )
-						.getResultList();
-			}
-			catch ( RuntimeException e ) {
-				assertNoJsonInjection( e );
-			}
+		assertNoInjection( scope, em -> {
+			em.createQuery( "select json_remove('{\"a\":1}', :path)", Tuple.class )
+					.setParameter( "path", "$'--" )
+					.getResultList();
+		} );
+	}
+
+	@Test
+	public void testPathBackslashInjection(SessionFactoryScope scope) {
+		assertNoInjection( scope, em -> {
+			em.createQuery( "select json_remove('{\"a\":1}', :path)", Tuple.class )
+					.setParameter( "path", "$\\'--" )
+					.getResultList();
 		} );
 	}
 

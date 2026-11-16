@@ -84,7 +84,7 @@ public class PostgreSQLJsonTableFunction extends JsonTableFunction {
 				char separator = '(';
 				for ( Map.Entry<String, Expression> entry : passingClause.getPassingExpressions().entrySet() ) {
 					sqlAppender.append( separator );
-					sqlAppender.appendSingleQuoteEscapedString( entry.getKey() );
+					sqlAppender.appendLiteral( entry.getKey() );
 					sqlAppender.append( ',' );
 					entry.getValue().accept( walker );
 					separator = ',';
@@ -108,7 +108,7 @@ public class PostgreSQLJsonTableFunction extends JsonTableFunction {
 				sqlAppender.appendSql( " left join lateral jsonb_path_query(t" );
 				sqlAppender.appendSql( clauseLevel );
 				sqlAppender.appendSql( ".d," );
-				sqlAppender.appendSingleQuoteEscapedString( nestedColumnDefinition.jsonPath() );
+				sqlAppender.appendLiteral( nestedColumnDefinition.jsonPath() );
 				sqlAppender.appendSql( ") with ordinality t" );
 				sqlAppender.appendSql( clauseLevel + 1 );
 				sqlAppender.appendSql( "(d,i) on true" );

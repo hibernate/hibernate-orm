@@ -35,8 +35,10 @@ elif [ "$RDBMS" == "gaussdb"  ]; then
   goal="-Pdb=gaussdb -DdbHost=localhost:8000"
 elif [ "$RDBMS" == "edb" ]; then
   goal="-Pdb=edb -DdbHost=localhost:5444"
-elif [ "$RDBMS" == "edb_14" ]; then
-  goal="-Pdb=edb -DdbHost=localhost:5444 -PdbVersion=14"
+  containerName=edb
+elif [ "$RDBMS" == "edb_15" ]; then
+  goal="-Pdb=edb -DdbHost=localhost:5444 -PdbVersion=${DB_VERSION:-15}"
+  containerName=edb
 elif [ "$RDBMS" == "oracle" ]; then
   goal="-Pdb=oracle"
 elif [ "$RDBMS" == "oracle_xe" ]; then

@@ -345,11 +345,6 @@ edb() {
     edb_17
 }
 
-edb_14() {
-    compose_down "edb"
-    compose_up "versioned/edb-14/docker-compose.yaml"
-    edb_setup 14
-}
 
 edb_15() {
     compose_down "edb"
@@ -1214,7 +1209,6 @@ if [ -z ${1} ]; then
     echo -e "\tedb_17"
     echo -e "\tedb_16"
     echo -e "\tedb_15"
-    echo -e "\tedb_14"
     echo -e "\thana"
     echo -e "\tmariadb"
     echo -e "\tmariadb_verylatest"

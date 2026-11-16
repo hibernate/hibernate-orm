@@ -13,7 +13,7 @@ import org.hibernate.dialect.schema.spi.ColumnDefinitionRequest;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
-import org.hibernate.sql.spi.StringBuilderSqlAppender;
+import org.hibernate.sql.spi.StringBuilderDialectSqlAppender;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
@@ -246,7 +246,7 @@ public class ColumnDefinitions {
 			final String columnType = column.getSqlType( metadata );
 			final String collation = column.getCollation();
 			dialect.getColumnDefinitionSupport().appendDefinition(
-					new StringBuilderSqlAppender( definition ),
+					new StringBuilderDialectSqlAppender( dialect, definition ),
 					new ColumnDefinitionRequest(
 							columnType,
 							collation == null ? null : dialect.getIdentifierSupport().quoteCollation( collation ),

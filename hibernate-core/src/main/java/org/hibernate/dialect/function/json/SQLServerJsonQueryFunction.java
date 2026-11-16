@@ -133,7 +133,7 @@ public class SQLServerJsonQueryFunction extends JsonQueryFunction {
 			final JsonPathHelper.JsonPathElement jsonPathElement = jsonPathElements.get( index );
 			if ( jsonPathElement instanceof JsonPathHelper.JsonAttribute attribute ) {
 				sqlAppender.appendSql( "t.[key]=" );
-				sqlAppender.appendSingleQuoteEscapedString( attribute.attribute() );
+				sqlAppender.appendLiteral( attribute.attribute() );
 			}
 			else if ( jsonPathElement instanceof JsonPathHelper.JsonIndexAccess indexAccess ) {
 				sqlAppender.appendSql( "t.[key]=" );

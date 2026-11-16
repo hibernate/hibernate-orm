@@ -30,7 +30,7 @@ public class H2XmlForestFunction extends XmlForestFunction {
 			final AliasedExpression expression = (AliasedExpression) sqlAstArgument;
 			sqlAppender.appendSql( separator );
 			sqlAppender.appendSql( "xmlnode(" );
-			sqlAppender.appendSingleQuoteEscapedString( expression.getAlias() );
+			sqlAppender.appendLiteral( expression.getAlias() );
 			sqlAppender.appendSql( ",null," );
 			expression.getExpression().accept( walker );
 			sqlAppender.appendSql( ",false)" );

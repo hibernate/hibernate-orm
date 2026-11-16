@@ -904,6 +904,13 @@ public class SingleStoreDialect extends Dialect implements CurrentTemporalSuppor
 	@SPI({ USE, IMPLEMENT })
 	public void appendLiteral(SqlAppender appender, String literal) {
 		appender.appendSql( '\'' );
+		appendLiteralContent( appender, literal );
+		appender.appendSql( '\'' );
+	}
+
+	@Override
+	@SPI({ USE, IMPLEMENT })
+	public void appendLiteralContent(SqlAppender appender, String literal) {
 		for ( int i = 0; i < literal.length(); i++ ) {
 			final char c = literal.charAt( i );
 			if ( c == '\'' ) {
@@ -914,7 +921,6 @@ public class SingleStoreDialect extends Dialect implements CurrentTemporalSuppor
 			}
 			appender.appendSql( c );
 		}
-		appender.appendSql( '\'' );
 	}
 
 	@Override

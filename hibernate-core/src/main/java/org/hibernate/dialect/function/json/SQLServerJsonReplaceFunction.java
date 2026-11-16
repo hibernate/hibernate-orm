@@ -53,9 +53,9 @@ public class SQLServerJsonReplaceFunction extends AbstractJsonReplaceFunction {
 			}
 
 			sqlAppender.appendSql( "(select 1 from openjson(t.d," );
-			sqlAppender.appendSingleQuoteEscapedString( prefix );
+			sqlAppender.appendLiteral( prefix );
 			sqlAppender.appendSql( ") t where t.[key]=" );
-			sqlAppender.appendSingleQuoteEscapedString( terminalKey );
+			sqlAppender.appendLiteral( terminalKey );
 			sqlAppender.appendSql( ")=1" );
 		}
 		sqlAppender.appendSql( " then json_modify(t.d,t.p," );

@@ -1248,6 +1248,13 @@ public class MySQLLegacyDialect extends Dialect implements CurrentTemporalSuppor
 	@SPI({ USE, IMPLEMENT })
 	public void appendLiteral(SqlAppender appender, String literal) {
 		appender.appendSql( '\'' );
+		appendLiteralContent( appender, literal );
+		appender.appendSql( '\'' );
+	}
+
+	@Override
+	@SPI({ USE, IMPLEMENT })
+	public void appendLiteralContent(SqlAppender appender, String literal) {
 		for ( int i = 0; i < literal.length(); i++ ) {
 			final char c = literal.charAt( i );
 			switch ( c ) {
@@ -1255,12 +1262,14 @@ public class MySQLLegacyDialect extends Dialect implements CurrentTemporalSuppor
 					appender.appendSql( '\'' );
 					break;
 				case '\\':
-					appender.appendSql( '\\' );
+					if ( !noBackslashEscapesEnabled ) {
+						// See https://dev.mysql.com/doc/refman/8.0/en/sql-mode.html#sqlmode_no_backslash_escapes
+						appender.appendSql( '\\' );
+					}
 					break;
 			}
 			appender.appendSql( c );
 		}
-		appender.appendSql( '\'' );
 	}
 
 	@Override

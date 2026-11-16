@@ -23,7 +23,7 @@ import org.hibernate.loader.ast.internal.MultiKeyLoadHelper;
 import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcSelect;
-import org.hibernate.sql.spi.StringBuilderSqlAppender;
+import org.hibernate.sql.spi.StringBuilderDialectSqlAppender;
 
 import org.junit.jupiter.api.Test;
 
@@ -136,7 +136,7 @@ public class ArraySupportTests {
 
 		final StringBuilder sql = new StringBuilder();
 		standard.appendArrayLiteral(
-				new StringBuilderSqlAppender( sql ),
+				new StringBuilderDialectSqlAppender( standard, sql ),
 				new Object[] { 1, null, 2 },
 				(appender, value, dialect, options) -> appender.appendSql( value.toString() ),
 				null
@@ -152,7 +152,7 @@ public class ArraySupportTests {
 		assertThat( nonstandard.getPreferredSqlTypeCodeForArray() ).isEqualTo( Types.VARBINARY );
 		assertThatExceptionOfType( UnsupportedOperationException.class )
 				.isThrownBy( () -> nonstandard.appendArrayLiteral(
-						new StringBuilderSqlAppender( new StringBuilder() ),
+						new StringBuilderDialectSqlAppender( nonstandard, new StringBuilder() ),
 						new Object[] { 1 },
 						(appender, value, dialect, options) -> appender.appendSql( value.toString() ),
 						null

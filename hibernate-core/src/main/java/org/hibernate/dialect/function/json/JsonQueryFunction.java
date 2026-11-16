@@ -104,10 +104,7 @@ public class JsonQueryFunction extends AbstractSqmSelfRenderingFunctionDescripto
 				arguments.jsonPath().accept( walker );
 			}
 			else {
-				walker.getSessionFactory().getJdbcServices().getDialect().appendLiteral(
-						sqlAppender,
-						walker.getLiteralValue( arguments.jsonPath() )
-				);
+				sqlAppender.appendLiteral( walker.getLiteralValue( arguments.jsonPath() ) );
 			}
 			if ( passingClause != null ) {
 				sqlAppender.appendSql( " passing " );

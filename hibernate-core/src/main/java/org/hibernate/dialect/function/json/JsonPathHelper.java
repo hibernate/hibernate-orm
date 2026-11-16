@@ -8,7 +8,6 @@ import org.hibernate.QueryException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
 import org.hibernate.sql.spi.SqlAppender;
-import org.hibernate.sql.spi.StringBuilderSqlAppender;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.JsonPathPassingClause;
 
@@ -78,13 +77,13 @@ public class JsonPathHelper {
 			String jsonPath,
 			JsonPathPassingClause passingClause,
 			SqlAstTranslator<?> walker) {
-		if ( !passingClause.getPassingExpressions().isEmpty() ) {
-			final StringBuilderSqlAppender sqlAppender = new StringBuilderSqlAppender();
-			for ( Map.Entry<String, Expression> entry : passingClause.getPassingExpressions().entrySet() ) {
-				sqlAppender.getStringBuilder().setLength( 0 );
-				appendJsonPassingLiteralValue( sqlAppender, walker.getLiteralValue( entry.getValue() ) );
-				jsonPath = jsonPath.replace( "$" + entry.getKey(), sqlAppender.getStringBuilder().toString() );
-			}
+		// The result is a plain JSON path, not SQL, so no SQL escaping must happen here.
+		// Callers are responsible for rendering the result as SQL string literal.
+		for ( Map.Entry<String, Expression> entry : passingClause.getPassingExpressions().entrySet() ) {
+			jsonPath = jsonPath.replace(
+					"$" + entry.getKey(),
+					String.valueOf( walker.<Object>getLiteralValue( entry.getValue() ) )
+			);
 		}
 		return jsonPath;
 	}
@@ -103,7 +102,7 @@ public class JsonPathHelper {
 		if ( jsonPath.charAt( 0 ) == '$' ) {
 			start = 1;
 			sqlAppender.appendSql( '$' );
-			appendLiteral( sqlAppender, 0, parts[0] );
+			sqlAppender.appendLiteralContent( parts[0] );
 		}
 		else {
 			start = 0;
@@ -118,23 +117,13 @@ public class JsonPathHelper {
 				throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed", (String) null );
 			}
 			appendJsonPassingLiteralValue( sqlAppender, walker.getLiteralValue( expression ) );
-			appendLiteral( sqlAppender, parameterNameEndIndex, part );
+			sqlAppender.appendLiteralContent( part.substring( parameterNameEndIndex ) );
 		}
 		sqlAppender.appendSql( '\'' );
 	}
 
 	public static void appendJsonPassingLiteralValue(SqlAppender sqlAppender, Object literalValue) {
-		appendLiteral( sqlAppender, 0, String.valueOf( literalValue ) );
-	}
-
-	private static void appendLiteral(SqlAppender sqlAppender, int startIndex, String part) {
-		for ( int j = startIndex; j < part.length(); j++ ) {
-			final char c = part.charAt( j );
-			if ( c == '\'') {
-				sqlAppender.appendSql( '\'' );
-			}
-			sqlAppender.appendSql( c );
-		}
+		sqlAppender.appendLiteralContent( String.valueOf( literalValue ) );
 	}
 
 	private static void appendJsonPathConcatenatedPassingClause(
@@ -154,7 +143,7 @@ public class JsonPathHelper {
 			sqlAppender.appendSql( separator );
 			sqlAppender.appendSql( "'$'" );
 			sqlAppender.appendSql( concatCombine );
-			sqlAppender.appendSingleQuoteEscapedString( parts[0] );
+			sqlAppender.appendLiteral( parts[0] );
 			separator = concatCombine;
 		}
 		else {
@@ -172,7 +161,7 @@ public class JsonPathHelper {
 			}
 			expression.accept( walker );
 			sqlAppender.appendSql( ',' );
-			sqlAppender.appendSingleQuoteEscapedString( part.substring( parameterNameEndIndex ) );
+			sqlAppender.appendLiteral( part.substring( parameterNameEndIndex ) );
 			separator = concatCombine;
 		}
 		sqlAppender.appendSql( ')' );

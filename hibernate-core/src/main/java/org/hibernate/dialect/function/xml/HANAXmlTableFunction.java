@@ -363,19 +363,19 @@ public class HANAXmlTableFunction extends XmlTableFunction {
 		final Expression documentExpression = arguments.xmlDocument();
 		final String xpath = walker.getLiteralValue( arguments.xpath() );
 		if ( documentExpression instanceof TableColumnReferenceExpression ) {
-			sqlAppender.appendSingleQuoteEscapedString( "/root" + xpath );
+			sqlAppender.appendLiteral( "/root" + xpath );
 		}
 		else {
-			sqlAppender.appendSingleQuoteEscapedString( xpath );
+			sqlAppender.appendLiteral( xpath );
 		}
 		sqlAppender.appendSql( " passing " );
 		// We have to handle the rendering of strings/literals manually here to avoid using nationalized literals,
 		// because HANA doesn't support that syntax in xmltable()
 		if ( documentExpression instanceof Literal literal ) {
-			sqlAppender.appendSingleQuoteEscapedString( (String) literal.getLiteralValue() );
+			sqlAppender.appendLiteral( (String) literal.getLiteralValue() );
 		}
 		else if ( isParameter( documentExpression ) ) {
-			sqlAppender.appendSingleQuoteEscapedString( walker.getLiteralValue( documentExpression ) );
+			sqlAppender.appendLiteral( walker.getLiteralValue( documentExpression ) );
 		}
 		else {
 			documentExpression.accept( walker );
@@ -441,7 +441,7 @@ public class HANAXmlTableFunction extends XmlTableFunction {
 	protected void renderDefaultExpression(@Nullable Expression expression, SqlAppender sqlAppender, SqlAstTranslator<?> walker) {
 		if ( expression != null ) {
 			sqlAppender.appendSql( " default " );
-			sqlAppender.appendSingleQuoteEscapedString( walker.getLiteralValue( expression ) );
+			sqlAppender.appendLiteral( walker.getLiteralValue( expression ) );
 		}
 	}
 

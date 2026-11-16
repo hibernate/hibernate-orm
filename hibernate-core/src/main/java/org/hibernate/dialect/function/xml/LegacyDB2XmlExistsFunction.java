@@ -29,7 +29,7 @@ public class LegacyDB2XmlExistsFunction extends XmlExistsFunction {
 		final Expression xmlDocument = (Expression) sqlAstArguments.get( 1 );
 		final boolean needsCast = !ExpressionTypeHelper.isXml( xmlDocument );
 		sqlAppender.appendSql( "xmlexists(" );
-		sqlAppender.appendSingleQuoteEscapedString( "$d" + xquery );
+		sqlAppender.appendLiteral( "$d" + xquery );
 		sqlAppender.appendSql( " passing " );
 		if ( needsCast ) {
 			sqlAppender.appendSql( "xmlparse(document " );

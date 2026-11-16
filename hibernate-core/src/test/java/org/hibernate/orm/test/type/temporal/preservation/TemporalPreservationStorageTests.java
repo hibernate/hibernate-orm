@@ -172,7 +172,6 @@ class TemporalPreservationStorageTests {
 		void instant(SessionFactoryScope scope) {
 			for ( var value : new Instant[] {
 					firstInstant( scope ),
-					Instant.parse( "1582-10-25T00:00:00Z" ),
 					Instant.parse( "1583-01-01T00:00:00Z" ),
 					Instant.parse( "1900-01-01T00:00:00Z" ),
 					Instant.EPOCH,

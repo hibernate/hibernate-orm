@@ -9,7 +9,7 @@ H2Dialect,ZonedDateTime,OffsetDateTimeJdbcType,timestamp(6) with time zone,,,,,R
 PostgreSQLDialect,LocalDate,LocalDateJdbcType,date,DATE,,0001-01-01,9999-12-31,QUALIFIED
 PostgreSQLDialect,LocalTime,LocalTimeJdbcType,time(0),TIME,,,,QUALIFIED
 PostgreSQLDialect,LocalDateTime,LocalDateTimeJdbcType,timestamp(6),DATE+TIME,,0001-01-01T00:00,9999-12-31T23:59:59.999999999,QUALIFIED
-PostgreSQLDialect,Instant,TimestampUtcAsJdbcTimestampJdbcType,timestamp(6) with time zone,INSTANT,NATIVE,1582-10-25T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+PostgreSQLDialect,Instant,TimestampUtcAsJdbcTimestampJdbcType,timestamp(6) with time zone,INSTANT,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
 PostgreSQLDialect,OffsetTime,TimeUtcAsJdbcTimeJdbcType,time(0),,,,,REJECTED
 PostgreSQLDialect,OffsetDateTime,TimestampUtcAsJdbcTimestampJdbcType,timestamp(6) with time zone,,,,,REJECTED
 PostgreSQLDialect,ZonedDateTime,TimestampUtcAsJdbcTimestampJdbcType,timestamp(6) with time zone,,,,,REJECTED

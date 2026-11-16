@@ -234,9 +234,10 @@ public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport
 	/// values directly. An `Instant` is stored in a `timestamp with time zone`
 	/// column by way of a [java.sql.Timestamp], for which the driver uses the
 	/// Julian calendar before 1582-10-15. An earlier instant would be stored
-	/// as a different one, and a stored instant from the ten days before that
-	/// date is read as one from the ten days after it. Hence the first day,
-	/// below which a value is rejected both when written and when read.
+	/// as a different one, and a stored instant from before that date, as seen
+	/// in the time zone of the database session, is read as one ten days
+	/// later. Hence the first day, the start of 1583, below which a value is
+	/// rejected both when written and when read.
 	@Override
 	public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
 		var preservation = StandardTemporalPreservations.directLocal(

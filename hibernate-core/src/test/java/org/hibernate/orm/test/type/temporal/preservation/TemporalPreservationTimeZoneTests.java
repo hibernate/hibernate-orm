@@ -18,6 +18,7 @@ import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.Session;
+import org.hibernate.TemporalPreservationException;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.cfg.MappingSettings;
@@ -32,11 +33,14 @@ import org.hibernate.orm.test.type.temporal.preservation.TemporalPreservationBoo
 import org.hibernate.orm.test.type.temporal.preservation.TemporalPreservationBootMatrix.WithLocalDateTime;
 import org.hibernate.orm.test.type.temporal.preservation.TemporalPreservationBootMatrix.WithLocalTime;
 
+import org.hibernate.type.descriptor.java.InstantJavaType;
+
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /// Verifies against a live database that what temporal preservation stores
 /// and reads does not depend on any time zone in the environment.
@@ -68,7 +72,10 @@ class TemporalPreservationTimeZoneTests {
 	/// `null` leaves the zone as it is.
 	private static final String[] JDBC_ZONES = { null, "UTC", "America/New_York", "Asia/Kathmandu" };
 	private static final String[] SESSION_JDBC_ZONES = { null, "Pacific/Chatham" };
-	private static final String[] DATABASE_SESSION_ZONES = { null, "Asia/Kathmandu", "America/New_York" };
+	/// Manila was almost sixteen hours behind UTC until 1844, the greatest
+	/// distance of any zone, which matters for values read near the first
+	/// supported instant.
+	private static final String[] DATABASE_SESSION_ZONES = { null, "Asia/Kathmandu", "America/New_York", "Asia/Manila" };
 
 	private final AtomicInteger ids = new AtomicInteger();
 
@@ -86,6 +93,7 @@ class TemporalPreservationTimeZoneTests {
 								final String combination = "jvm=" + jvmZone + " jdbc=" + jdbcZone
 									+ " sessionJdbc=" + sessionJdbcZone + " databaseSession=" + databaseSessionZone;
 								check( factory, sessionJdbcZone, databaseSessionZone, combination );
+								checkBoundary( factory, sessionJdbcZone, databaseSessionZone, combination );
 								combinations.add( combination );
 							}
 						}
@@ -107,6 +115,68 @@ class TemporalPreservationTimeZoneTests {
 			String databaseSessionZone,
 			String combination) {
 		final Dialect dialect = factory.getJdbcServices().getDialect();
+		inSession( factory, sessionJdbcZone, databaseSessionZone, session -> {
+			for ( var sample : samples( dialect ).entrySet() ) {
+				checkSample( session, dialect, sample.getKey(), sample.getValue(), combination );
+			}
+		} );
+	}
+
+	/// The first supported instant is stored and read as itself, and a row
+	/// from before it is rejected and never returned as a different instant,
+	/// whatever the time zones.
+	private void checkBoundary(
+			SessionFactoryImplementor factory,
+			String sessionJdbcZone,
+			String databaseSessionZone,
+			String combination) {
+		final Dialect dialect = factory.getJdbcServices().getDialect();
+		final Instant first = (Instant) dialect.getTemporalPreservation(
+				InstantJavaType.INSTANCE,
+				factory.getTypeConfiguration().getBasicTypeForJavaType( Instant.class ).getJdbcType()
+		).minimum();
+		assertThat( first ).isNotNull();
+
+		inSession( factory, sessionJdbcZone, databaseSessionZone, session -> {
+			for ( var value : new Instant[] { first, first.plusSeconds( 1 ), first.plusSeconds( 20 * 3600 ) } ) {
+				checkSample( session, dialect, value, instantLiteral( dialect, value ), combination );
+			}
+		} );
+
+		final long hour = 3600;
+		final long day = 24 * hour;
+		// The ten days before 1582-10-15 do not exist in Oracle's calendar,
+		// and Oracle itself stores such a literal as 1582-10-15.
+		final long[] secondsEarlier = dialect instanceof OracleDialect
+				? new long[] { 11 * day, 400 * day }
+				: new long[] { 1, hour, 5 * hour, 16 * hour, day, 2 * day, 9 * day, 10 * day, 11 * day,
+						60 * day, 78 * day, 79 * day, 80 * day, 90 * day, 400 * day };
+		for ( long seconds : secondsEarlier ) {
+			final Instant earlier = first.minusSeconds( seconds );
+			final int id = ids.incrementAndGet();
+			inSession( factory, sessionJdbcZone, databaseSessionZone, session -> {
+				session.createNativeMutationQuery(
+						"insert into tp_instant (id, theValue) values (" + id + ", "
+							+ instantLiteral( dialect, earlier ) + ")"
+				).executeUpdate();
+				assertThatThrownBy( () -> {
+					final Object read = session.createQuery(
+							"select e.theValue from WithInstant e where e.id = :id",
+							Object.class
+					).setParameter( "id", id ).getSingleResult();
+					throw new AssertionError( "Read " + read + " for " + earlier );
+				} ).as( "read of %s with %s", earlier, combination )
+						.isInstanceOf( TemporalPreservationException.class );
+			} );
+		}
+	}
+
+	private static void inSession(
+			SessionFactoryImplementor factory,
+			String sessionJdbcZone,
+			String databaseSessionZone,
+			java.util.function.Consumer<Session> action) {
+		final Dialect dialect = factory.getJdbcServices().getDialect();
 		final var sessionBuilder = factory.withOptions();
 		if ( sessionJdbcZone != null ) {
 			sessionBuilder.jdbcTimeZone( TimeZone.getTimeZone( sessionJdbcZone ) );
@@ -122,9 +192,7 @@ class TemporalPreservationTimeZoneTests {
 							databaseSessionZone
 					) );
 				}
-				for ( var sample : samples( dialect ).entrySet() ) {
-					checkSample( session, dialect, sample.getKey(), sample.getValue(), combination );
-				}
+				action.accept( session );
 			}
 			finally {
 				if ( restore[0] != null ) {
@@ -133,6 +201,13 @@ class TemporalPreservationTimeZoneTests {
 				session.getTransaction().rollback();
 			}
 		}
+	}
+
+	private static String instantLiteral(Dialect dialect, Instant value) {
+		final String fields = DATE_TIME.format( value.atOffset( ZoneOffset.UTC ) );
+		return dialect instanceof OracleDialect
+				? "timestamp '" + fields + " +00:00'"
+				: "timestamp with time zone '" + fields + "+00:00'";
 	}
 
 	private void checkSample(Session session, Dialect dialect, Object value, String literal, String combination) {

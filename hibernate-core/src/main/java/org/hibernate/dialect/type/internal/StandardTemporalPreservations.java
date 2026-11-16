@@ -39,10 +39,12 @@ public final class StandardTemporalPreservations {
 	public static final LocalDate GREGORIAN_START = LocalDate.of( 1582, 10, 15 );
 	/// The first day from which a value requested from a JDBC driver as a
 	/// [java.sql.Timestamp] can be trusted when the database uses the proleptic
-	/// Gregorian calendar. Such a driver reads the ten days up to 1582-10-14
-	/// as the ten days from 1582-10-15, so only a value read as this day or
-	/// later is known not to be one of those.
-	public static final LocalDate TIMESTAMP_READ_SAFE_START = LocalDate.of( 1582, 10, 25 );
+	/// Gregorian calendar. Such a driver reads a stored date before 1582-10-15
+	/// as the date ten days later, and decides that by the date as seen in the
+	/// time zone of the database session, which may be most of a day away from
+	/// the date in UTC. A value read as the first day of 1583 or later cannot
+	/// be one of those, whatever the session time zone.
+	public static final LocalDate TIMESTAMP_READ_SAFE_START = LocalDate.of( 1583, 1, 1 );
 	/// The last day with a four-digit year.
 	public static final LocalDate FOUR_DIGIT_YEAR_END = LocalDate.of( 9999, 12, 31 );
 

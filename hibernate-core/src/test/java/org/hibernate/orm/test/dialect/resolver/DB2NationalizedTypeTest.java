@@ -7,6 +7,12 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DB2iDialect;
 import org.hibernate.dialect.DB2zDialect;
@@ -14,6 +20,9 @@ import org.hibernate.dialect.Database;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.spi.DatabaseMetaDataDialectResolutionInfoAdapter;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.hibernate.tool.schema.extract.internal.ColumnInformationImpl;
+import org.hibernate.tool.schema.extract.spi.TableInformation;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -30,6 +39,9 @@ import static java.sql.Types.NCLOB;
 import static java.sql.Types.NVARCHAR;
 import static java.sql.Types.SMALLINT;
 import static java.sql.Types.VARCHAR;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
+import static org.hibernate.tool.schema.internal.ColumnDefinitions.hasMatchingType;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -70,7 +82,7 @@ class DB2NationalizedTypeTest {
 		final var dialect = luw( "utf-8", "CHAR_CU32" );
 		assertCharacterPairs( dialect, true );
 		assertFalse( dialect.equivalentTypes( NCLOB, CLOB, "DBCLOB" ) );
-		assertFalse( dialect.equivalentTypes( CLOB, CLOB, "DBCLOB" ) );
+		assertTrue( dialect.equivalentTypes( CLOB, CLOB, "DBCLOB" ) );
 		assertTrue( dialect.equivalentTypes( CLOB, CLOB, "CLOB" ) );
 		assertFalse( dialect.equivalentTypes( NCHAR, NCHAR, "GRAPHIC" ) );
 	}
@@ -85,9 +97,31 @@ class DB2NationalizedTypeTest {
 		assertTrue( dialect.equivalentTypes( NVARCHAR, VARCHAR, "VARGRAPHIC" ) );
 		assertTrue( dialect.equivalentTypes( NCLOB, CLOB, "DBCLOB" ) );
 		assertTrue( dialect.equivalentTypes( NCLOB, NCLOB, "DBCLOB" ) );
-		assertFalse( dialect.equivalentTypes( CHAR, CHAR, "GRAPHIC" ) );
+		assertTrue( dialect.equivalentTypes( CHAR, CHAR, "GRAPHIC" ) );
 		assertFalse( dialect.equivalentTypes( NCLOB, CLOB, "CLOB" ) );
 		assertFalse( dialect.equivalentTypes( NCHAR, VARCHAR, "VARGRAPHIC" ) );
+	}
+
+	@ParameterizedTest
+	@ValueSource(ints = { VARCHAR, NVARCHAR })
+	void plainStringOnVargraphic(int jdbcType) throws SQLException {
+		final var dialect = luw( "UTF-8", "GRAPHIC_CU16" );
+		try ( var registry = ServiceRegistryUtil.serviceRegistryBuilder()
+				.applySetting( AvailableSettings.DIALECT, dialect )
+				.applySetting( AvailableSettings.ALLOW_METADATA_ON_BOOT, false )
+				.build() ) {
+			final var metadata = new MetadataSources( registry ).addAnnotatedClass( Label.class ).buildMetadata();
+			final var table = metadata.getEntityBinding( Label.class.getName() ).getTable();
+			final var name = toIdentifier( "text" );
+			final TableInformation tableInfo = mock();
+			final var columnInfo = new ColumnInformationImpl( tableInfo, name, jdbcType, "VARGRAPHIC", 255, 0, false );
+			when( tableInfo.getColumn( name ) ).thenReturn( columnInfo );
+
+			assertTrue( hasMatchingType( table.getColumn( name ), columnInfo, metadata, dialect ) );
+			final var context = SqlStringGenerationContextImpl.forTests( metadata.getDatabase().getJdbcEnvironment() );
+			final var alterStatements = dialect.getTableMigrator().getSqlAlterStrings( table, metadata, tableInfo, context );
+			assertThat( alterStatements ).isEmpty();
+		}
 	}
 
 	@ParameterizedTest
@@ -128,18 +162,28 @@ class DB2NationalizedTypeTest {
 		verify( metadata, never() ).getConnection();
 	}
 
-	private static void assertCharacterPairs(Dialect dialect, boolean equivalent) {
-		assertEquals( equivalent, dialect.equivalentTypes( NCHAR, CHAR ) );
-		assertEquals( equivalent, dialect.equivalentTypes( CHAR, NCHAR ) );
-		assertEquals( equivalent, dialect.equivalentTypes( NVARCHAR, VARCHAR ) );
-		assertEquals( equivalent, dialect.equivalentTypes( VARCHAR, NVARCHAR ) );
-		assertEquals( equivalent, dialect.equivalentTypes( NCLOB, CLOB ) );
-		assertEquals( equivalent, dialect.equivalentTypes( CLOB, NCLOB ) );
-		assertEquals( equivalent, dialect.equivalentTypes( LONGNVARCHAR, VARCHAR ) );
+	private static void assertCharacterPairs(Dialect dialect, boolean acceptsCharacterColumns) {
+		assertEquals( acceptsCharacterColumns, dialect.equivalentTypes( NCHAR, CHAR, "CHAR" ) );
+		assertEquals( acceptsCharacterColumns, dialect.equivalentTypes( NVARCHAR, VARCHAR, "VARCHAR" ) );
+		assertEquals( acceptsCharacterColumns, dialect.equivalentTypes( NCLOB, CLOB, "CLOB" ) );
+		assertEquals( acceptsCharacterColumns, dialect.equivalentTypes( LONGNVARCHAR, VARCHAR, "VARCHAR" ) );
+		assertTrue( dialect.equivalentTypes( CHAR, NCHAR, "GRAPHIC" ) );
+		assertTrue( dialect.equivalentTypes( VARCHAR, NVARCHAR, "VARGRAPHIC" ) );
+		assertTrue( dialect.equivalentTypes( VARCHAR, VARCHAR, "VARGRAPHIC" ) );
+		assertTrue( dialect.equivalentTypes( CLOB, NCLOB, "DBCLOB" ) );
+		assertTrue( dialect.equivalentTypes( NCHAR, CHAR ) );
+		assertTrue( dialect.equivalentTypes( NVARCHAR, VARCHAR ) );
+		assertTrue( dialect.equivalentTypes( NCLOB, CLOB ) );
 		assertTrue( dialect.equivalentTypes( LONGNVARCHAR, NVARCHAR ) );
 		assertTrue( dialect.equivalentTypes( VARCHAR, LONGVARCHAR ) );
 		assertTrue( dialect.equivalentTypes( SMALLINT, INTEGER ) );
 		assertFalse( dialect.equivalentTypes( INTEGER, SMALLINT ) );
 		assertFalse( dialect.equivalentTypes( NCHAR, CLOB ) );
+	}
+
+	@Entity
+	static class Label {
+		@Id
+		String text;
 	}
 }

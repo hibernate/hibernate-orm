@@ -1406,31 +1406,31 @@ public class DB2Dialect extends Dialect implements CurrentTemporalSupport, Tempo
 	@Override
 	@SPI({ USE, IMPLEMENT })
 	public boolean equivalentTypes(int typeCode1, int typeCode2) {
-		if ( typeCode1 == NCHAR && typeCode2 == CHAR || typeCode1 == CHAR && typeCode2 == NCHAR
-				|| typeCode1 == NCLOB && typeCode2 == CLOB || typeCode1 == CLOB && typeCode2 == NCLOB
-				|| SqlTypes.isVarcharType( typeCode1 ) && SqlTypes.isVarcharType( typeCode2 )
-						&& JdbcType.isNationalized( typeCode1 ) != JdbcType.isNationalized( typeCode2 ) ) {
-			// Retain the historical behavior when the LUW configuration is unavailable.
-			return ncharMapping == NcharMapping.CHARACTER || ncharMapping == NcharMapping.UNKNOWN;
-		}
-		return super.equivalentTypes( typeCode1, typeCode2 );
+		// HHH-21137: JCC may report ordinary JDBC codes for national character columns.
+		return typeCode1 == NCHAR && typeCode2 == CHAR
+			|| typeCode1 == CHAR && typeCode2 == NCHAR
+			|| typeCode1 == NCLOB && typeCode2 == CLOB
+			|| typeCode1 == CLOB && typeCode2 == NCLOB
+			|| super.equivalentTypes( typeCode1, typeCode2 );
 	}
 
 	@Override
 	@SPI({ USE, IMPLEMENT })
-	public boolean equivalentTypes(int typeCode1, int typeCode2, @Nullable String columnTypeName) {
-		if ( ncharMapping != NcharMapping.UNKNOWN ) {
-			// JCC may report ordinary JDBC codes even for GRAPHIC, VARGRAPHIC and DBCLOB.
+	public boolean equivalentTypes(int mappedType, int jdbcType, @Nullable String columnTypeName) {
+		if ( JdbcType.isNationalized( mappedType ) && ncharMapping != NcharMapping.UNKNOWN ) {
 			if ( "GRAPHIC".equalsIgnoreCase( columnTypeName ) ) {
-				return ncharMapping == NcharMapping.GRAPHIC && typeCode1 == NCHAR;
+				return ncharMapping == NcharMapping.GRAPHIC && mappedType == NCHAR;
 			}
 			if ( "VARGRAPHIC".equalsIgnoreCase( columnTypeName ) ) {
-				return ncharMapping == NcharMapping.GRAPHIC && equivalentTypes( typeCode1, NVARCHAR );
+				return ncharMapping == NcharMapping.GRAPHIC && equivalentTypes( mappedType, NVARCHAR );
 			}
 			if ( "DBCLOB".equalsIgnoreCase( columnTypeName ) ) {
-				return ncharMapping == NcharMapping.GRAPHIC && equivalentTypes( typeCode1, NCLOB );
+				return ncharMapping == NcharMapping.GRAPHIC && equivalentTypes( mappedType, NCLOB );
+			}
+			if ( ncharMapping != NcharMapping.CHARACTER && !JdbcType.isNationalized( jdbcType ) ) {
+				return false;
 			}
 		}
-		return equivalentTypes( typeCode1, typeCode2 );
+		return equivalentTypes( mappedType, jdbcType );
 	}
 }

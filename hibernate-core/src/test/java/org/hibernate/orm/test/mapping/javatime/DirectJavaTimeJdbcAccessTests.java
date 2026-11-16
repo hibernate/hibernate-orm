@@ -85,6 +85,7 @@ class DirectJavaTimeJdbcAccessTests {
 					name = JdbcSettings.DIALECT,
 					value = "org.hibernate.orm.test.mapping.javatime.DirectJavaTimeJdbcAccessTests$NoDirectJavaTimeDialect"
 			),
+			@Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
 			@Setting(name = MappingSettings.JAVA_TIME_USE_DIRECT_JDBC, value = "false")
 	})
 	@DomainModel(annotatedClasses = EntityWithLocalDates.class)

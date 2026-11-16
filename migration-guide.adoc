@@ -1779,6 +1779,14 @@ Stored XML is unchanged and no data migration is required.
 Explicitly present aggregates with all-null members retain their existing behavior.
 
 
+[[callable-embeddable-types]]
+=== Embeddable types in procedure and function calls
+
+Registering a procedure parameter or function return with an embeddable `Type` now resolves the embeddable's
+single-column aggregate mapping (such as a struct), matching registration by Java class.
+An embeddable without such a mapping is rejected with an `IllegalArgumentException` at registration,
+since multi-column callable parameters and returns are not supported. Previously the registration was accepted.
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // XSD changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

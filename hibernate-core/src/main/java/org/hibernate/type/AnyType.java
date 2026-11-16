@@ -39,14 +39,12 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  */
 @SPI
 public class AnyType extends AbstractType implements CompositeType, AssociationType {
-	private final TypeConfiguration typeConfiguration;
 	private final Type identifierType;
 	private final MetaType discriminatorType;
 	private final boolean eager;
 
 	@Internal
 	public AnyType(TypeConfiguration typeConfiguration, MetaType discriminatorType, Type identifierType, boolean lazy) {
-		this.typeConfiguration = typeConfiguration;
 		this.discriminatorType = discriminatorType;
 		this.identifierType = identifierType;
 		this.eager = !lazy;

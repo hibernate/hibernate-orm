@@ -203,10 +203,6 @@ public class SqlTreePrinter {
 		);
 	}
 
-	private void logNode(String text) {
-		logWithIndentation( "%s", text );
-	}
-
 	private void logNode(String text, Runnable subTreeHandler) {
 		logNode( text, subTreeHandler, false );
 	}

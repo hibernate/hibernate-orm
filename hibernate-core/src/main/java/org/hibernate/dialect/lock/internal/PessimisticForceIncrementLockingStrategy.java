@@ -20,7 +20,6 @@ import org.hibernate.persister.entity.EntityPersister;
  * @since 3.5
  */
 public class PessimisticForceIncrementLockingStrategy implements LockingStrategy {
-	private final EntityPersister lockable;
 	private final LockMode lockMode;
 
 	/**
@@ -30,7 +29,6 @@ public class PessimisticForceIncrementLockingStrategy implements LockingStrategy
 	 * @param lockMode Indicates the type of lock to be acquired.
 	 */
 	public PessimisticForceIncrementLockingStrategy(EntityPersister lockable, LockMode lockMode) {
-		this.lockable = lockable;
 		this.lockMode = lockMode;
 		// ForceIncrement can be used for PESSIMISTIC_READ, PESSIMISTIC_WRITE or PESSIMISTIC_FORCE_INCREMENT
 		if ( lockMode.lessThan( LockMode.PESSIMISTIC_READ ) ) {

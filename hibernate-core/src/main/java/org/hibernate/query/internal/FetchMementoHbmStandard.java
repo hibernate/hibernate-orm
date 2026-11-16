@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
@@ -37,8 +36,6 @@ public class FetchMementoHbmStandard implements FetchMemento, FetchMemento.Paren
 	private final String ownerTableAlias;
 	private final String tableAlias;
 	private final List<String> keyColumnNames;
-	private final LockMode lockMode;
-	private final FetchParentMemento parent;
 	private final Map<String, FetchMemento> fetchMementoMap;
 	private final Fetchable fetchable;
 
@@ -47,16 +44,12 @@ public class FetchMementoHbmStandard implements FetchMemento, FetchMemento.Paren
 			String ownerTableAlias,
 			String tableAlias,
 			List<String> keyColumnNames,
-			LockMode lockMode,
-			FetchParentMemento parent,
 			Map<String, FetchMemento> fetchMementoMap,
 			Fetchable fetchable) {
 		this.navigablePath = navigablePath;
 		this.ownerTableAlias = ownerTableAlias;
 		this.tableAlias = tableAlias;
 		this.keyColumnNames = keyColumnNames;
-		this.lockMode = lockMode;
-		this.parent = parent;
 		this.fetchMementoMap = fetchMementoMap;
 		this.fetchable = fetchable;
 	}

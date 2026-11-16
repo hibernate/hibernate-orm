@@ -698,11 +698,6 @@ public class LoaderSelectBuilder {
 		);
 	}
 
-	@Nonnull
-	private SqlAliasBaseGenerator getSqlAliasBaseGenerator() {
-		return sqlAliasBasGenerator;
-	}
-
 	private void applyRestriction(
 			@Nonnull QuerySpec rootQuerySpec,
 			@Nonnull NavigablePath rootNavigablePath,

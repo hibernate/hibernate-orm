@@ -55,7 +55,6 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	}
 
 	private final EventType<T> eventType;
-	private final boolean isJpaBootstrap;
 
 	//TODO at least the list of listeners should be made constant;
 	//unfortunately a number of external integrations rely on being able to make
@@ -64,9 +63,8 @@ class EventListenerGroupImpl<T> implements EventListenerGroup<T> {
 	private volatile T[] listeners = null;
 	private volatile List<T> listenersAsList = emptyList();
 
-	public EventListenerGroupImpl(EventType<T> eventType, boolean isJpaBootstrap) {
+	public EventListenerGroupImpl(EventType<T> eventType) {
 		this.eventType = eventType;
-		this.isJpaBootstrap = isJpaBootstrap;
 	}
 
 	@Override

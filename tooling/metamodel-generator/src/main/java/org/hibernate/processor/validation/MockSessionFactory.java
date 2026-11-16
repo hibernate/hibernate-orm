@@ -1295,7 +1295,7 @@ public abstract class MockSessionFactory
 
 	private <T> EmbeddableTypeImpl<T> createEmbeddableDomainType(String entityName, CompositeType compositeType, ManagedDomainType<T> owner) {
 		final var javaType = new UnknownBasicJavaType<T>(null, compositeType.getReturnedClassName());
-		return new EmbeddableTypeImpl<>( javaType, null, null, true, metamodel.getJpaMetamodel() ) {
+		return new EmbeddableTypeImpl<>( javaType, null, null, metamodel.getJpaMetamodel() ) {
 			@Override
 			public @Nullable SqmPersistentAttribute<T, ?> findAttribute(@Nonnull String name) {
 				return createAttribute(

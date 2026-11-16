@@ -35,9 +35,7 @@ public final class SQLServer2012LimitHandler extends OffsetFetchLimitHandler {
 
 		SELECT ("select(\\s+(distinct|all))?"),
 		FROM ("from"),
-		ORDER_BY ("order\\s+by"),
-		AS ("as"),
-		WITH ("with");
+		ORDER_BY ("order\\s+by");
 
 		final Pattern pattern;
 		Keyword(String keyword) {

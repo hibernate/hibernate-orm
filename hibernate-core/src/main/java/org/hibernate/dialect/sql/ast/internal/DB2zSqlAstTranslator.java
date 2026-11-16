@@ -21,11 +21,8 @@ import static org.hibernate.dialect.DB2zDialect.DB2_LUW_VERSION;
  */
 public class DB2zSqlAstTranslator<T extends JdbcOperation> extends DB2SqlAstTranslator<T> {
 
-	private final DatabaseVersion version;
-
 	public DB2zSqlAstTranslator(SqlAstTranslationRequest<? extends Statement, T> request, DatabaseVersion version) {
 		super( request );
-		this.version = version;
 	}
 
 	@Override

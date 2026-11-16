@@ -122,7 +122,6 @@ public class PropertyBinder {
 	private AnnotatedColumns columns;
 	private PropertyHolder holder;
 	private Value value;
-	private Component componentElement;
 	private boolean insertable = true;
 	private boolean updatable = true;
 	private EnumSet<CascadeType> cascadeTypes;
@@ -208,7 +207,6 @@ public class PropertyBinder {
 	}
 
 	private void setComponentElement(Component componentElement) {
-		this.componentElement = componentElement;
 	}
 
 	public void setCascade(EnumSet<CascadeType> cascadeTypes) {

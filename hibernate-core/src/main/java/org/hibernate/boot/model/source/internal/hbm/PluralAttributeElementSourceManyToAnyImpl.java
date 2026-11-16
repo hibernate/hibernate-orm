@@ -22,8 +22,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
  */
 public class PluralAttributeElementSourceManyToAnyImpl
 		implements PluralAttributeElementSourceManyToAny {
-	private final String cascade;
-
 	private final AnyDiscriminatorSource discriminatorSource;
 	private final AnyKeySource keySource;
 
@@ -32,8 +30,6 @@ public class PluralAttributeElementSourceManyToAnyImpl
 			final AbstractPluralAttributeSourceImpl pluralAttributeSource,
 			final JaxbHbmManyToAnyCollectionElementType jaxbManyToAnyMapping,
 			String cascade) {
-		this.cascade = cascade;
-
 		final List<RelationalValueSource> relationalValueSources = RelationalValueSourceHelper.buildValueSources(
 				mappingDocument,
 				null,

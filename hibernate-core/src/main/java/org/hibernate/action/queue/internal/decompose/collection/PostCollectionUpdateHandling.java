@@ -22,7 +22,6 @@ import org.hibernate.persister.collection.CollectionPersister;
 public class PostCollectionUpdateHandling implements PostExecutionCallback {
 	private final CollectionPersister persister;
 	private final PersistentCollection<?> collection;
-	private final Object key;
 	private final Object cacheKey;
 
 	private final Object affectedOwner;
@@ -31,13 +30,11 @@ public class PostCollectionUpdateHandling implements PostExecutionCallback {
 	public PostCollectionUpdateHandling(
 			CollectionPersister persister,
 			PersistentCollection<?> collection,
-			Object key,
 			Object affectedOwner,
 			Object affectedOwnerId,
 			Object cacheKey) {
 		this.persister = persister;
 		this.collection = collection;
-		this.key = key;
 		this.affectedOwner = affectedOwner;
 		this.affectedOwnerId = affectedOwnerId;
 		this.cacheKey = cacheKey;

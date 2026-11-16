@@ -17,10 +17,8 @@ public class TimeZoneConnectionProvider
 		extends ConnectionProviderDelegate {
 
 	private final String defaultTimeZone;
-	private final String customTimeZone;
 
 	public TimeZoneConnectionProvider(String customTimeZone) {
-		this.customTimeZone = customTimeZone;
 		this.defaultTimeZone =  System.setProperty( "user.timezone", customTimeZone);
 		TimeZone.setDefault(TimeZone.getTimeZone( customTimeZone ));
 		// Clear the connection pool to avoid issues with drivers that initialize the session TZ to the system TZ

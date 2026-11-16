@@ -474,10 +474,6 @@ public class SQLiteDialect extends Dialect implements CurrentTemporalSupport, Te
 	private static final int SQLITE_BUSY = 5;
 	private static final int SQLITE_LOCKED = 6;
 	private static final int SQLITE_IOERR = 10;
-	private static final int SQLITE_CORRUPT = 11;
-	private static final int SQLITE_NOTFOUND = 12;
-	private static final int SQLITE_FULL = 13;
-	private static final int SQLITE_CANTOPEN = 14;
 	private static final int SQLITE_PROTOCOL = 15;
 	private static final int SQLITE_TOOBIG = 18;
 	private static final int SQLITE_CONSTRAINT = 19;

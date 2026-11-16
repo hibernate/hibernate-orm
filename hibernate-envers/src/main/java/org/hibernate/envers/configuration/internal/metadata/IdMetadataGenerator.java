@@ -8,7 +8,6 @@ import org.hibernate.envers.boot.model.CompositeIdentifier;
 import org.hibernate.envers.boot.model.Identifier;
 import org.hibernate.envers.boot.model.IdentifierRelation;
 import org.hibernate.envers.boot.model.ManyToOneAttribute;
-import org.hibernate.envers.boot.registry.classloading.ClassLoaderAccessHelper;
 import org.hibernate.envers.boot.spi.EnversMetadataBuildingContext;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.internal.entities.IdMappingData;
@@ -43,10 +42,6 @@ public final class IdMetadataGenerator extends AbstractMetadataGenerator {
 	public IdMetadataGenerator(EnversMetadataBuildingContext metadataBuildingContext, BasicMetadataGenerator basicMetadataGenerator) {
 		super( metadataBuildingContext );
 		this.basicMetadataGenerator = basicMetadataGenerator;
-	}
-
-	private Class<?> loadClass(Component component) {
-		return ClassLoaderAccessHelper.loadClass( getMetadataBuildingContext(), component.getComponentClassName() );
 	}
 
 	private static boolean isSameType(Property left, Property right) {

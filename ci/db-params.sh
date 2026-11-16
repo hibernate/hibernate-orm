@@ -15,9 +15,6 @@ if [ "$RDBMS" == "h2" ] || [ "$RDBMS" == "" ]; then
 elif [ "$RDBMS" == "hsqldb" ]; then
   goal="-Pdb=hsqldb"
   dbParam=
-elif [ "$RDBMS" == "hsqldb_2_6" ]; then
-  goal="-Pdb=hsqldb -PdbVersion=${DB_VERSION:-2.6}"
-  dbParam=
 elif [ "$RDBMS" == "mysql" ]; then
   goal="-Pdb=mysql"
   containerName=mysql

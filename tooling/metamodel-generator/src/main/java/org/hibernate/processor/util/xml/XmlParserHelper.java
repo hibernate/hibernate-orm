@@ -46,8 +46,6 @@ public class XmlParserHelper {
 	 */
 	private static final int NUMBER_OF_SCHEMAS = 4;
 
-	private static final XMLInputFactory XML_INPUT_FACTORY = XMLInputFactory.newInstance();
-
 	private static final ConcurrentMap<String, Schema> SCHEMA_CACHE = new ConcurrentHashMap<>(
 			NUMBER_OF_SCHEMAS
 	);
@@ -144,9 +142,10 @@ public class XmlParserHelper {
 		}
 	}
 
-	private synchronized XMLEventReader createXmlEventReader(InputStream xmlStream) throws XMLStreamException {
-		XmlFactoryUtil.configureXmlFactory( XML_INPUT_FACTORY, context.allowDtdAndExternalEntities() );
-		return XML_INPUT_FACTORY.createXMLEventReader( xmlStream );
+	private XMLEventReader createXmlEventReader(InputStream xmlStream) throws XMLStreamException {
+		final var xmlInputFactory = XMLInputFactory.newInstance();
+		XmlFactoryUtil.configureXmlFactory( xmlInputFactory, context.allowDtdAndExternalEntities() );
+		return xmlInputFactory.createXMLEventReader( xmlStream );
 	}
 
 	private String getPackage(String resourceName) {

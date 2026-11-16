@@ -163,7 +163,12 @@ public record TemporalPreservation(
 	/// A class which is not a recognized Java Time class requires every part,
 	/// so that nothing is reported as preserved by accident.
 	public @Nullable Part firstUnsupportedPart(Class<?> javaTimeClass) {
-		final var required = Part.requiredBy( javaTimeClass );
+		return firstUnsupportedPart( Part.requiredBy( javaTimeClass ) );
+	}
+
+	/// The first of the given parts which is not [Level#SUPPORTED], or `null`
+	/// when every one of them is supported.
+	public @Nullable Part firstUnsupportedPart(Set<Part> required) {
 		for ( var part : Part.values() ) {
 			if ( required.contains( part ) && level( part ) != Level.SUPPORTED ) {
 				return part;
@@ -197,6 +202,17 @@ public record TemporalPreservation(
 
 		/// The parts which make up a value of the given Java Time class. A
 		/// class which is not a recognized Java Time class requires every part.
+		/// The parts required of a value of the given Java Time class when
+		/// only its instant matters, as selected with
+		/// [org.hibernate.annotations.TemporalPreservationPolicy.Type#NORMALIZED].
+		/// For any class other than `OffsetDateTime` and `ZonedDateTime` these
+		/// are the parts which make up the value.
+		public static Set<Part> requiredOfNormalized(Class<?> javaTimeClass) {
+			return javaTimeClass == OffsetDateTime.class || javaTimeClass == ZonedDateTime.class
+					? OF_INSTANT
+					: requiredBy( javaTimeClass );
+		}
+
 		public static Set<Part> requiredBy(Class<?> javaTimeClass) {
 			if ( javaTimeClass == LocalDate.class ) {
 				return OF_DATE;

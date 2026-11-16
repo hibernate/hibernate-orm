@@ -39,10 +39,10 @@ class TemporalPreservationBootMatrixTests {
 
 	@Test
 	void manifestMatchesWhatBoots() throws IOException {
-		final List<Cell> cells = TemporalPreservationBootMatrix.boot(
+		final List<Cell> cells = TemporalPreservationBootMatrix.bootWithPolicies(
 				Map.of( MappingSettings.TEMPORAL_PRESERVATION, true )
 		);
-		assertThat( cells ).hasSize( TemporalPreservationBootMatrix.JAVA_TIME_CLASSES.size() );
+		assertThat( cells ).hasSize( TemporalPreservationBootMatrix.JAVA_TIME_CLASSES.size() + 6 );
 		record( cells );
 
 		final String dialect = cells.get( 0 ).dialect();
@@ -68,8 +68,10 @@ class TemporalPreservationBootMatrixTests {
 		) ) ).isEqualTo( TemporalPreservationBootMatrix.boot( Map.of( MappingSettings.TEMPORAL_PRESERVATION, true ) ) );
 	}
 
-	/// Direct JDBC access alone selects the same JDBC types and column types
-	/// as temporal preservation does, but nothing is assessed or rejected.
+	/// Direct JDBC access alone assesses and rejects nothing. For the types
+	/// without an offset or a zone it selects the same JDBC types and column
+	/// types as temporal preservation does; for the others, temporal
+	/// preservation may add a second column, which direct JDBC access never does.
 	@Test
 	@DisabledIfSystemProperty(
 			named = "hibernate.type.temporal_preservation",
@@ -84,12 +86,14 @@ class TemporalPreservationBootMatrixTests {
 				Map.of( MappingSettings.TEMPORAL_PRESERVATION, true )
 		);
 		assertThat( direct ).allSatisfy( cell -> assertThat( cell.outcome() ).isEqualTo( "DISABLED" ) );
-		assertThat( direct ).extracting( Cell::jdbcType ).containsExactlyElementsOf(
-				preserving.stream().map( Cell::jdbcType ).toList()
-		);
-		assertThat( direct ).extracting( Cell::columnType ).containsExactlyElementsOf(
-				preserving.stream().map( Cell::columnType ).toList()
-		);
+		assertThat( direct ).allSatisfy( cell -> assertThat( cell.jdbcType() ).doesNotContain( "+" ) );
+		for ( int i = 0; i < direct.size(); i++ ) {
+			final String javaClass = direct.get( i ).javaClass();
+			if ( !javaClass.equals( "OffsetDateTime" ) && !javaClass.equals( "ZonedDateTime" ) ) {
+				assertThat( direct.get( i ).jdbcType() ).as( javaClass ).isEqualTo( preserving.get( i ).jdbcType() );
+				assertThat( direct.get( i ).columnType() ).as( javaClass ).isEqualTo( preserving.get( i ).columnType() );
+			}
+		}
 	}
 
 	@Test

@@ -1,5 +1,6 @@
 package org.hibernate.dialect;
 
+import org.hibernate.type.descriptor.jdbc.OffsetDateTimeJdbcType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.dialect.type.spi.TemporalPreservation;
 import org.hibernate.dialect.type.internal.StandardTemporalPreservations;
@@ -757,7 +758,8 @@ public class H2Dialect extends Dialect implements CurrentTemporalSupport, Tempor
 
 	/// Assessed for H2 with its own JDBC driver. H2 uses the proleptic Gregorian
 	/// calendar and accepts and returns Java Time values directly, including
-	/// an `Instant` for a `timestamp with time zone` column.
+	/// an `Instant` for a `timestamp with time zone` column. That column keeps
+	/// the offset of an `OffsetDateTime` as well as its instant.
 	@Override
 	public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
 		var preservation = StandardTemporalPreservations.directLocal(
@@ -774,6 +776,16 @@ public class H2Dialect extends Dialect implements CurrentTemporalSupport, Tempor
 					jdbcType,
 					TimestampUtcAsInstantJdbcType.class,
 					TemporalPreservation.InstantBasis.NATIVE,
+					StandardTemporalPreservations.COMMON_ERA_START
+			);
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			// the column keeps the offset, to the second, but not a region
+			preservation = StandardTemporalPreservations.offsetOrZoned(
+					javaType,
+					jdbcType,
+					OffsetDateTimeJdbcType.class,
+					TemporalPreservation.Level.SUPPORTED,
 					StandardTemporalPreservations.COMMON_ERA_START
 			);
 		}

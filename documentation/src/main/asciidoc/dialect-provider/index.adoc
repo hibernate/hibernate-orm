@@ -512,6 +512,12 @@ identity) as supported, unsupported or unknown, together with the least and
 greatest value which is preserved. The default answer is unknown for
 everything, so a Dialect supports nothing until it says otherwise.
 
+Report each part for what the combination really does, and leave it to the
+application's preservation policy to decide which parts it needs. For an
+`OffsetDateTime` stored in a column which keeps only the instant, report the
+instant as supported and the offset as unsupported: the mapping is then
+accepted with the `NORMALIZED` policy and rejected with the default one.
+
 Report a combination as supported only on evidence from the database and its
 JDBC driver that the stored SQL value is correct by the database's own
 semantics, and not merely that the value reads back equal. Match the

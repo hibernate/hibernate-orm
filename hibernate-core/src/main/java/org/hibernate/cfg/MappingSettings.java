@@ -242,7 +242,12 @@ public interface MappingSettings {
 	 *     JDBC type which the {@linkplain org.hibernate.dialect.Dialect Dialect}
 	 *     {@linkplain org.hibernate.dialect.Dialect#getTemporalPreservation
 	 *     reports} as preserving every part of the value which the Java type
-	 *     requires. A mapping which is known to lose a part, or which has
+	 *     requires. For an {@link java.time.OffsetDateTime} or a
+	 *     {@link java.time.ZonedDateTime}, the required parts can be reduced
+	 *     to the instant alone with
+	 *     {@link org.hibernate.annotations.TemporalPreservationPolicy} or
+	 *     {@link #TEMPORAL_PRESERVATION_POLICY}. A mapping which is known to
+	 *     lose a required part, or which has
 	 *     simply not been assessed, is rejected when the
 	 *     {@link org.hibernate.SessionFactory} is built. There is no
 	 *     warn-and-continue mode.
@@ -293,6 +298,51 @@ public interface MappingSettings {
 	 * @since 8.1
 	 */
 	boolean TEMPORAL_PRESERVATION_DEFAULT = false;
+
+	/**
+	 * Selects, for every {@link java.time.OffsetDateTime} and
+	 * {@link java.time.ZonedDateTime} mapping which does not select one with
+	 * {@link org.hibernate.annotations.TemporalPreservationPolicy}, which parts
+	 * of the value must be preserved when {@link #TEMPORAL_PRESERVATION} is
+	 * enabled.
+	 * <p>
+	 * Accepts a {@link org.hibernate.annotations.TemporalPreservationPolicy.Type}
+	 * or its name, in any case: {@code value} requires every part of
+	 * the value, and {@code normalized} requires only the instant.
+	 * <p>
+	 * Has no effect when {@link #TEMPORAL_PRESERVATION} is disabled.
+	 *
+	 * @settingDefault {@code value}
+	 *
+	 * @see #TEMPORAL_PRESERVATION_POLICY_OFFSET_DATETIME
+	 * @see #TEMPORAL_PRESERVATION_POLICY_ZONED_DATETIME
+	 *
+	 * @since 8.1
+	 */
+	@Incubating(since = "8.1")
+	String TEMPORAL_PRESERVATION_POLICY = "hibernate.type.temporal_preservation_policy";
+
+	/**
+	 * As {@link #TEMPORAL_PRESERVATION_POLICY}, for
+	 * {@link java.time.OffsetDateTime} only, and taking precedence over it.
+	 *
+	 * @settingDefault The value of {@link #TEMPORAL_PRESERVATION_POLICY}
+	 *
+	 * @since 8.1
+	 */
+	@Incubating(since = "8.1")
+	String TEMPORAL_PRESERVATION_POLICY_OFFSET_DATETIME = "hibernate.type.temporal_preservation_policy.offset_datetime";
+
+	/**
+	 * As {@link #TEMPORAL_PRESERVATION_POLICY}, for
+	 * {@link java.time.ZonedDateTime} only, and taking precedence over it.
+	 *
+	 * @settingDefault The value of {@link #TEMPORAL_PRESERVATION_POLICY}
+	 *
+	 * @since 8.1
+	 */
+	@Incubating(since = "8.1")
+	String TEMPORAL_PRESERVATION_POLICY_ZONED_DATETIME = "hibernate.type.temporal_preservation_policy.zoned_datetime";
 
 	/**
 	 * Indicates whether to use {@linkplain java.time Java Time} references at the JDBC

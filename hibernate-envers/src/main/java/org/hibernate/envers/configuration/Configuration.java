@@ -425,12 +425,5 @@ public class Configuration {
 		boolean getBoolean(String propertyName, boolean defaultValue) {
 			return ConfigurationHelper.getBoolean( propertyName, properties, defaultValue );
 		}
-
-		boolean getBooleanWithFallback(String basePropertyName, String newPropertyName, boolean defaultValue) {
-			if ( !properties.containsKey( basePropertyName ) ) {
-				return getBoolean( newPropertyName, defaultValue );
-			}
-			return ConfigurationHelper.getBoolean( basePropertyName, properties );
-		}
 	}
 }

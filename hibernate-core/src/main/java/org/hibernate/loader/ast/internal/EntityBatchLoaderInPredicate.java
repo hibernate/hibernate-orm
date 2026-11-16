@@ -179,7 +179,6 @@ public class EntityBatchLoaderInPredicate<T>
 				identifierMapping.getJdbcTypeCount(),
 				identifierMapping,
 				jdbcParameters,
-				sqlAst,
 				jdbcSelectOperation
 		);
 	}

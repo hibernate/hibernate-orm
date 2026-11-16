@@ -36,11 +36,6 @@ public final class ValidationResult {
 		return new ValidationResult( diagnostics, configurationErrors );
 	}
 
-	static ValidationResult focused(List<ValidationDiagnostic> diagnostics) {
-		diagnostics.sort( ValidationDiagnostic.ORDERING );
-		return new ValidationResult( diagnostics, Collections.emptyList() );
-	}
-
 	private ValidationResult(List<ValidationDiagnostic> diagnostics, List<String> configurationErrors) {
 		this.diagnostics = Collections.unmodifiableList( new ArrayList<>( diagnostics ) );
 		this.configurationErrors = Collections.unmodifiableList( new ArrayList<>( configurationErrors ) );

@@ -96,7 +96,7 @@ public final class ToOneRelationMetadataGenerator extends AbstractMetadataGenera
 		final PropertyData propertyData = propertyAuditingData.resolvePropertyData();
 		mapper.addComposite(
 				propertyData,
-				new ToOneIdMapper( relMapper, propertyData, referencedEntityName, nonInsertableFake, lazy )
+				new ToOneIdMapper( relMapper, propertyData, referencedEntityName, nonInsertableFake)
 		);
 	}
 

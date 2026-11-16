@@ -6,8 +6,6 @@ import org.hibernate.mapping.Property;
 
 public class HQLCompletionProposal {
 
-	static final char[] NO_CHAR = new char[0];
-
 	public static final int ENTITY_NAME = 1;
 	public static final int PROPERTY = 2;
 	public static final int KEYWORD = 3;

@@ -7,7 +7,6 @@ import jakarta.annotation.Nonnull;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.Bindable;
-import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -52,7 +51,6 @@ public class MultiKeyLoadChunker<K> {
 	private final Bindable bindable;
 
 	private final JdbcParametersList jdbcParameters;
-	private final SelectStatement sqlAst;
 	private final JdbcSelect jdbcSelect;
 
 	public MultiKeyLoadChunker(
@@ -60,13 +58,11 @@ public class MultiKeyLoadChunker<K> {
 			int keyColumnCount,
 			@Nonnull Bindable bindable,
 			@Nonnull JdbcParametersList jdbcParameters,
-			@Nonnull SelectStatement sqlAst,
 			@Nonnull JdbcSelect jdbcSelect) {
 		this.chunkSize = chunkSize;
 		this.keyColumnCount = keyColumnCount;
 		this.bindable = bindable;
 		this.jdbcParameters = jdbcParameters;
-		this.sqlAst = sqlAst;
 		this.jdbcSelect = jdbcSelect;
 	}
 

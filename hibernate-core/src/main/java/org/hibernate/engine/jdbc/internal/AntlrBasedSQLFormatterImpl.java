@@ -1064,26 +1064,6 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 			return pos < tokens.size() ? tokens.get(pos) : null;
 		}
 
-		/**
-		 * NOTE: currently unused, but leaving it in for now, might come in handy in the future?
-		 * Iterate ahead (excluding the current position being processed) through the token stream until reaching the
-		 * delimiter, while looking for an occurrence of the Token that we want to find. If the delimiter itself is not
-		 * found we return 'not found'.
-		*/
-		private boolean findBeforeDelimiter(int typeToBeFound, int typeDelimiter) {
-			boolean tokenFound = false;
-			for ( int i = position + 1; i < tokens.size(); i++ ) {
-				int nextTokenType = tokens.get(i).getType();
-				if (nextTokenType == typeDelimiter) {
-					return tokenFound;
-				}
-				if (nextTokenType == typeToBeFound) {
-					tokenFound = true;
-				}
-			}
-			return false;
-		}
-
 		private Token peekBack(int offset) {
 			int pos = position - offset;
 			return pos >= 0 ? tokens.get(pos) : null;

@@ -153,7 +153,6 @@ class IdentifierSourceAggregatedCompositeImpl implements IdentifierSourceAggrega
 
 	private static class EmbeddedAttributeMappingAdapterAggregatedCompositeId
 			implements EmbeddedAttributeMapping, EmbeddableSourceContainer, EmbeddableMapping {
-		private final RootEntitySourceImpl rootEntitySource;
 		private final JaxbHbmCompositeIdType jaxbCompositeIdMapping;
 
 		private final AttributeRole idAttributeRole;
@@ -162,7 +161,6 @@ class IdentifierSourceAggregatedCompositeImpl implements IdentifierSourceAggrega
 
 		private EmbeddedAttributeMappingAdapterAggregatedCompositeId(
 				RootEntitySourceImpl rootEntitySource) {
-			this.rootEntitySource = rootEntitySource;
 			this.jaxbCompositeIdMapping = rootEntitySource.jaxbEntityMapping().getCompositeId();
 
 			this.idAttributeRole = rootEntitySource.getAttributeRoleBase().append( jaxbCompositeIdMapping.getName() );

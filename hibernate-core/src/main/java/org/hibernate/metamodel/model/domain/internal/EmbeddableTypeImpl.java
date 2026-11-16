@@ -31,8 +31,6 @@ import static jakarta.persistence.metamodel.Type.PersistenceType.EMBEDDABLE;
 public class EmbeddableTypeImpl<J>
 		extends AbstractManagedType<J>
 		implements SqmEmbeddableDomainType<J>, Serializable {
-	@SuppressWarnings("FieldCanBeLocal")
-	private final boolean isDynamic;
 	private final EmbeddedDiscriminatorSqmPathSource<?> discriminatorPathSource;
 	private final List<SqmEmbeddableDomainType<? extends J>> subtypes = new ArrayList<>();
 
@@ -40,10 +38,8 @@ public class EmbeddableTypeImpl<J>
 			JavaType<J> javaType,
 			ManagedDomainType<? super J> superType,
 			DomainType<?> discriminatorType,
-			boolean isDynamic,
 			JpaMetamodelImplementor domainMetamodel) {
 		super( javaType.getTypeName(), javaType, superType, domainMetamodel );
-		this.isDynamic = isDynamic;
 		discriminatorPathSource =
 				discriminatorType == null ? null
 						: new EmbeddedDiscriminatorSqmPathSource<>( discriminatorType, this );

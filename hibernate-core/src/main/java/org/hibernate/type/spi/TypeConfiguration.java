@@ -46,7 +46,6 @@ import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.SessionFactoryRegistry;
-import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -614,16 +613,6 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			}
 		}
 
-		private JpaCompliance getJpaCompliance() {
-			if ( metadataBuildingContext != null ) {
-				return metadataBuildingContext.getBootstrapContext().getJpaCompliance();
-			}
-			else if ( sessionFactory != null ) {
-				return sessionFactory.getSessionFactoryOptions().getJpaCompliance();
-			}
-			return null;
-		}
-
 		private void setMetadataBuildingContext(MetadataBuildingContext context) {
 			metadataBuildingContext = context;
 			if ( context != null ) {
@@ -835,15 +824,6 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	private static <J> BasicType<J> checkExisting(Class<J> javaClass, BasicType<?> existing) {
 		if ( existing.getJavaType() != canonicalize( javaClass ) ) {
-			throw new IllegalStateException( "Type registration was corrupted for: " + javaClass.getName() );
-		}
-		@SuppressWarnings("unchecked") // safe, we just checked
-		final var basicType = (BasicType<J>) existing;
-		return basicType;
-	}
-
-	private static <J> BasicType<J> checkExistingExact(Class<J> javaClass, BasicType<?> existing) {
-		if ( existing.getJavaType() != javaClass ) {
 			throw new IllegalStateException( "Type registration was corrupted for: " + javaClass.getName() );
 		}
 		@SuppressWarnings("unchecked") // safe, we just checked

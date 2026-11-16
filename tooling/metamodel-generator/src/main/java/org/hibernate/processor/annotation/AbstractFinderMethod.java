@@ -6,8 +6,6 @@ import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
 import static org.hibernate.metamodel.mapping.EntityIdentifierMapping.ID_ROLE_NAME;
-import static org.hibernate.processor.util.Constants.HIB_SESSION;
-import static org.hibernate.processor.util.Constants.HIB_STATELESS_SESSION;
 
 /**
  * @author Gavin King
@@ -142,15 +140,6 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod {
 	String qualifier(String name) {
 		final var index = name.indexOf('.');
 		return index > 0 ? name.substring(0, index) : name;
-	}
-
-	void unwrapSession(StringBuilder declaration) {
-		if ( isUsingEntityManager() || isUsingEntityAgent() ) {
-			declaration
-					.append(".unwrap(")
-					.append(annotationMetaEntity.importType(isUsingEntityAgent() ? HIB_STATELESS_SESSION : HIB_SESSION))
-					.append(".class)\n\t\t\t");
-		}
 	}
 
 	boolean enableFetchProfile(StringBuilder declaration, boolean unwrapped) {

@@ -3,17 +3,13 @@ package org.hibernate.tool.schema.internal;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.schema.spi.Exporter;
 
 /**
  * @author Steve Ebersole
  */
 public class StandardAuxiliaryDatabaseObjectExporter implements Exporter<AuxiliaryDatabaseObject> {
-	private final Dialect dialect;
-
-	public StandardAuxiliaryDatabaseObjectExporter(Dialect dialect) {
-		this.dialect = dialect;
+	public StandardAuxiliaryDatabaseObjectExporter() {
 	}
 
 	@Override

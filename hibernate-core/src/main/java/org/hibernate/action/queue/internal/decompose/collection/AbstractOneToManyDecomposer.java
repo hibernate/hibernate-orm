@@ -239,7 +239,6 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 		var postUpdateHandling = new PostCollectionUpdateHandling(
 				persister,
 				collection,
-				key,
 				action.getAffectedOwner(),
 				action.getAffectedOwnerId(),
 				DecompositionSupport.generateCacheKey( action, session )

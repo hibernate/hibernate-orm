@@ -140,24 +140,6 @@ final class CollectionMutationPlanSupport {
 		}
 	}
 
-	static void bindRemoveRestrictions(
-			CollectionPersister persister,
-			Object key,
-			SharedSessionContractImplementor session,
-			org.hibernate.action.queue.spi.bind.JdbcValueBindings valueBindings) {
-		persister.getAttributeMapping().getKeyDescriptor().getKeyPart().decompose(
-				key,
-				(valueIndex, value, jdbcValueMapping) -> {
-					valueBindings.bindValue(
-							value,
-							jdbcValueMapping.getSelectionExpression(),
-							ParameterUsage.RESTRICT
-					);
-				},
-				session
-		);
-	}
-
 	static void bindDeleteRestrictions(
 			CollectionPersister persister,
 			PersistentCollection<?> collection,

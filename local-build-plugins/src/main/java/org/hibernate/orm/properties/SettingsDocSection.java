@@ -25,13 +25,6 @@ public class SettingsDocSection {
 		this.name = name;
 	}
 
-	private SettingsDocSection(
-			String name,
-			Integer explicitPosition) {
-		this.name = name;
-		this.explicitPosition = explicitPosition;
-	}
-
 	@Internal
 	public String getName() {
 		return name;

@@ -1206,8 +1206,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						r -> new SqmAliasedNodePositionTracker(
 								r,
 								selectQueryPart.getFirstQuerySpec()
-						),
-						getCurrentClauseStack()::getCurrent
+						)
 				)
 		);
 		currentClauseStack.push( Clause.INSERT );
@@ -1310,8 +1309,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		pushProcessingState(
 				new SqlAstProcessingStateImpl(
 						null,
-						this,
-						getCurrentClauseStack()::getCurrent
+						this
 				)
 		);
 

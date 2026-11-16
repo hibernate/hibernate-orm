@@ -597,7 +597,6 @@ public class MetadataContext {
 				getJavaTypeRegistry().resolveManagedTypeDescriptor( componentClass ),
 				getMappedSuperclassDomainType( idClassComponent, componentClass ),
 				null,
-				false,
 				getJpaMetamodel()
 		);
 	}

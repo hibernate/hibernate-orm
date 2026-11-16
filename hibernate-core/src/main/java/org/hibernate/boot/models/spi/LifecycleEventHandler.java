@@ -394,13 +394,6 @@ public class LifecycleEventHandler {
 	}
 
 	/// Create a handler from annotations based on annotated methods on the given `listenerClassDetails`.
-	/// Used from XML parsing when no explicit methods are identified indicating that we should use
-	/// whatever event annotations are available, and errror if none are found.
-	private static LifecycleEventHandler from(JpaEventListenerStyle consumerType, ClassDetails listenerClassDetails) {
-		return from( consumerType, listenerClassDetails, true );
-	}
-
-	/// Create a handler from annotations based on annotated methods on the given `listenerClassDetails`.
 	public static LifecycleEventHandler from(
 			JpaEventListenerStyle consumerType,
 			ClassDetails listenerClassDetails,

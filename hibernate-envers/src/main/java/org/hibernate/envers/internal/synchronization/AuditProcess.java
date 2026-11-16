@@ -27,7 +27,6 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 	private static final Logger log = Logger.getLogger( AuditProcess.class );
 
 	private final RevisionInfoGenerator revisionInfoGenerator;
-	private final SharedSessionContractImplementor session;
 
 	private final LinkedList<AuditWorkUnit> workUnits;
 	private final Queue<AuditWorkUnit> undoQueue;
@@ -40,7 +39,6 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 
 	public AuditProcess(RevisionInfoGenerator revisionInfoGenerator, SharedSessionContractImplementor session) {
 		this.revisionInfoGenerator = revisionInfoGenerator;
-		this.session = session;
 
 		workUnits = new LinkedList<>();
 		undoQueue = new LinkedList<>();

@@ -44,11 +44,6 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 		this.beanInjections = beanInjections;
 	}
 
-	private DynamicInstantiationAssemblerInjectionImpl(List<BeanInjection> beanInjections, JavaType<T> target) {
-		this.target = target;
-		this.beanInjections = beanInjections;
-	}
-
 	private static BeanInjection injection(BeanInfo beanInfo, ArgumentReader<?> argument, Class<?> targetJavaType) {
 		final var argType = argument.getAssembledJavaType().getJavaTypeClass();
 		final String alias = argument.getAlias();

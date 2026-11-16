@@ -18,8 +18,6 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STR
 
 public class SpannerConcatFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
-	private static final String CAST = "::text";
-
 	public SpannerConcatFunction(TypeConfiguration typeConfiguration) {
 		super( "concat",
 				FunctionKind.NORMAL,

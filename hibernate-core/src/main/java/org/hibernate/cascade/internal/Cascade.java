@@ -146,10 +146,6 @@ public final class Cascade {
 		);
 	}
 
-	static <T> void traverseMetadata(CascadeTraversalContext<T> context) throws HibernateException {
-		traverseMetadata( context, null );
-	}
-
 	static <T> void traverseMetadata(
 			CascadeTraversalContext<T> context,
 			CascadePropertySelection propertySelectionOverride) throws HibernateException {

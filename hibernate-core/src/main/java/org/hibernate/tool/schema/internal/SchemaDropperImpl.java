@@ -273,7 +273,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			Formatter formatter,
 			SqlStringGenerationContext context,
 			GenerationTarget[] targets) {
-		final var exporter = new StandardAuxiliaryDatabaseObjectExporter( dialect );
+		final var exporter = new StandardAuxiliaryDatabaseObjectExporter( );
 		for ( var auxiliaryDatabaseObject :
 				reverse( metadata.getDatabase().getAuxiliaryDatabaseObjects() ) ) {
 			if ( !auxiliaryDatabaseObject.beforeTablesOnCreation()

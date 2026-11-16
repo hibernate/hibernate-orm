@@ -408,10 +408,6 @@ public class CteGenerateSeriesFunction extends NumberSeriesGenerateSeriesFunctio
 			super( "v", "i" );
 		}
 
-		public CteGenerateSeriesSetReturningFunctionTypeResolver(@Nullable String defaultValueColumnName, String defaultIndexSelectionExpression) {
-			super( defaultValueColumnName, defaultIndexSelectionExpression );
-		}
-
 		@Override
 		public SelectableMapping[] resolveFunctionReturnType(
 				List<? extends SqlAstNode> arguments,

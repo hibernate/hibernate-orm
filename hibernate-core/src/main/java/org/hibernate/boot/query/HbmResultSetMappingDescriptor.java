@@ -756,8 +756,6 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 						ownerTableAlias,
 						tableAlias,
 						keyColumnNames,
-						lockMode,
-						thisAsParentMemento,
 						fetchDescriptorMap,
 						(Fetchable) thisAsParentMemento.getFetchableContainer()
 				);

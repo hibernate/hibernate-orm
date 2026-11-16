@@ -11,7 +11,6 @@ import org.gradle.api.provider.Property;
  */
 public class SplitGrammarDescriptor implements Named {
 	private final String name;
-	private final AntlrSpec antlrSpec;
 
 	private final Property<String> packageName;
 	private final Property<String> lexerFileName;
@@ -23,7 +22,6 @@ public class SplitGrammarDescriptor implements Named {
 	@Inject
 	public SplitGrammarDescriptor(String name, AntlrSpec antlrSpec, ObjectFactory objectFactory) {
 		this.name = name;
-		this.antlrSpec = antlrSpec;
 
 		packageName = objectFactory.property( String.class );
 		lexerFileName = objectFactory.property( String.class );

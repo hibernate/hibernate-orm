@@ -22,7 +22,6 @@ import org.geolatte.geom.codec.db.oracle.OracleJDBCTypeFactory;
 public class SDOGeometryType implements JdbcType {
 
 	private final OracleJDBCTypeFactory typeFactory;
-	private final boolean useSTGeometry;
 
 	/**
 	 * Constructs a {@code SqlTypeDescriptor} for the Oracle SDOGeometry type.
@@ -32,7 +31,6 @@ public class SDOGeometryType implements JdbcType {
 	 */
 	public SDOGeometryType(OracleJDBCTypeFactory typeFactory, boolean useSTGeometry) {
 		this.typeFactory = typeFactory;
-		this.useSTGeometry = useSTGeometry;
 	}
 
 	@Override

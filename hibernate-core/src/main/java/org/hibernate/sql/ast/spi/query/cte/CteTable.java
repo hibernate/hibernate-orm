@@ -111,12 +111,6 @@ public class CteTable {
 		} );
 	}
 
-	private static void forEachCteColumn(String prefix, ModelPart modelPart, Consumer<CteColumn> consumer) {
-		SqmMutationStrategyHelper.forEachSelectableMapping( prefix, modelPart, (s, selectableMapping) -> {
-			consumer.accept( new CteColumn( s, selectableMapping.getJdbcMapping() ) );
-		} );
-	}
-
 	public List<CteColumn> findCteColumns(ModelPart modelPart) {
 		final String prefix;
 		if ( modelPart instanceof AttributeMapping attributeMapping ) {

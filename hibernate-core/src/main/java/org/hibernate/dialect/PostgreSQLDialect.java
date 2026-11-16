@@ -257,6 +257,16 @@ public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport
 					StandardTemporalPreservations.TIMESTAMP_READ_SAFE_START
 			);
 		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			// stored the way an Instant is: the column keeps the instant and nothing else
+			preservation = StandardTemporalPreservations.offsetOrZoned(
+					javaType,
+					jdbcType,
+					TimestampUtcAsJdbcTimestampJdbcType.class,
+					TemporalPreservation.Level.UNSUPPORTED,
+					StandardTemporalPreservations.TIMESTAMP_READ_SAFE_START
+			);
+		}
 		return preservation;
 	}
 

@@ -4,6 +4,7 @@ import org.hibernate.MappingException;
 import org.hibernate.TemporalPreservationException;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.internal.util.config.ConfigurationException;
+import org.hibernate.query.SemanticException;
 
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
@@ -19,8 +20,9 @@ import org.opentest4j.TestAbortedException;
 /// Temporal preservation rejects every mapping and value it does not support,
 /// and much of the test suite maps such things, for purposes which have
 /// nothing to do with Java Time. Some tests also explicitly disable direct
-/// JDBC access, which contradicts the setting. A test which is rejected for
-/// either reason
+/// JDBC access, which contradicts the setting, and some use query functions
+/// which are not yet supported for a value it stores in two columns. A test
+/// which is rejected for any of these reasons
 /// says nothing about temporal preservation, so it is reported as aborted
 /// instead of failed, as are the remaining tests of its class. Every other
 /// outcome is left alone: a test which runs must pass.
@@ -108,7 +110,9 @@ public class TemporalPreservationProfileExtension
 	private static boolean isRejection(Throwable throwable) {
 		for ( Throwable cause = throwable; cause != null; cause = cause.getCause() ) {
 			if ( cause instanceof TemporalPreservationException
-				|| ( cause instanceof MappingException || cause instanceof ConfigurationException )
+				|| ( cause instanceof MappingException
+						|| cause instanceof ConfigurationException
+						|| cause instanceof SemanticException )
 						&& String.valueOf( cause.getMessage() ).contains( MappingSettings.TEMPORAL_PRESERVATION ) ) {
 				return true;
 			}

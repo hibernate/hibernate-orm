@@ -7,7 +7,10 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoField;
 import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAccessor;
+import java.util.Set;
 
 import jakarta.annotation.Nullable;
 
@@ -15,6 +18,7 @@ import org.hibernate.Internal;
 import org.hibernate.TemporalPreservationException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.type.spi.TemporalPreservation;
+import org.hibernate.dialect.type.spi.TemporalPreservation.Part;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -138,6 +142,33 @@ public final class TemporalPreservationGuard {
 		}
 	}
 
+	/// Reject a value with an offset about to be rendered as a SQL literal
+	/// which the literal formats cannot express. They write an offset as
+	/// hours and minutes, so an offset with seconds would denote a different
+	/// instant. They write the year of the date in the value's own offset
+	/// with four digits and no era, which for a value near either end of its
+	/// range may fall outside the years 1 to 9999 although its instant does not.
+	public static void checkLiteralOffset(Object value, JavaType<?> javaType) {
+		if ( value instanceof TemporalAccessor temporal && temporal.isSupported( ChronoField.OFFSET_SECONDS ) ) {
+			final String problem;
+			if ( temporal.get( ChronoField.OFFSET_SECONDS ) % 60 != 0 ) {
+				problem = "a literal whose offset has seconds";
+			}
+			else if ( temporal.isSupported( ChronoField.YEAR )
+					&& ( temporal.get( ChronoField.YEAR ) < 1 || temporal.get( ChronoField.YEAR ) > 9999 ) ) {
+				problem = "a literal whose date, in its own offset, is outside the years 1 to 9999";
+			}
+			else {
+				return;
+			}
+			throw new TemporalPreservationException(
+					"Cannot render as a SQL literal the value '" + value + "' of type '" + javaType.getTypeName()
+					+ "': with '" + TEMPORAL_PRESERVATION + "' enabled, " + problem
+					+ " is not supported; bind the value as a parameter instead"
+			);
+		}
+	}
+
 	private static void check(
 			Object value,
 			JavaType<?> javaType,
@@ -158,7 +189,16 @@ public final class TemporalPreservationGuard {
 		final var preservation = isJavaTimeContainer( javaType )
 				? TemporalPreservation.unknown()
 				: dialect.getTemporalPreservation( javaType, jdbcType );
-		final String problem = unsupportedReason( dialect, javaType, jdbcType, preservation );
+		// Which parts a mapping requires was settled when the factory was built.
+		// Here, where the mapping is not known, the least any mapping may require
+		// is required, which is also what a value without a mapping is held to.
+		final String problem = unsupportedReason(
+				dialect,
+				javaType,
+				jdbcType,
+				preservation,
+				Part.requiredOfNormalized( javaType.getJavaTypeClass() )
+		);
 		if ( problem != null ) {
 			throw new TemporalPreservationException(
 					"Cannot " + operation + " a value of type '" + javaType.getTypeName() + "': " + problem
@@ -174,16 +214,27 @@ public final class TemporalPreservationGuard {
 		}
 	}
 
-	/// Explain why the combination is not supported for temporal preservation
-	/// on the Dialect, or return `null` when it is supported.
+	/// Explain why the combination does not preserve every part which makes
+	/// up a value of the Java type on the Dialect, or return `null` when it does.
 	public static @Nullable String unsupportedReason(Dialect dialect, JavaType<?> javaType, JdbcType jdbcType) {
+		return unsupportedReason( dialect, javaType, jdbcType, Part.requiredBy( javaType.getJavaTypeClass() ) );
+	}
+
+	/// Explain why the combination does not preserve the given parts on the
+	/// Dialect, or return `null` when it does.
+	public static @Nullable String unsupportedReason(
+			Dialect dialect,
+			JavaType<?> javaType,
+			JdbcType jdbcType,
+			Set<Part> required) {
 		return unsupportedReason(
 				dialect,
 				javaType,
 				jdbcType,
 				isJavaTimeContainer( javaType )
 						? TemporalPreservation.unknown()
-						: dialect.getTemporalPreservation( javaType, jdbcType )
+						: dialect.getTemporalPreservation( javaType, jdbcType ),
+				required
 		);
 	}
 
@@ -191,12 +242,13 @@ public final class TemporalPreservationGuard {
 			Dialect dialect,
 			JavaType<?> javaType,
 			JdbcType jdbcType,
-			TemporalPreservation preservation) {
+			TemporalPreservation preservation,
+			Set<Part> required) {
 		if ( isJavaTimeContainer( javaType ) ) {
 			return "with '" + TEMPORAL_PRESERVATION + "' enabled, arrays and collections of Java Time values"
 				+ " stored in a single column are not supported";
 		}
-		final var part = preservation.firstUnsupportedPart( javaType.getJavaTypeClass() );
+		final var part = preservation.firstUnsupportedPart( required );
 		if ( part == null ) {
 			return null;
 		}
@@ -216,13 +268,33 @@ public final class TemporalPreservationGuard {
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private static boolean isBefore(Object value, @Nullable Temporal minimum) {
-		return minimum != null
-			&& ( value.getClass() != minimum.getClass() || ( (Comparable) value ).compareTo( minimum ) < 0 );
+		if ( minimum == null ) {
+			return false;
+		}
+		final Object comparable = comparableTo( value, minimum );
+		return comparable.getClass() != minimum.getClass() || ( (Comparable) comparable ).compareTo( minimum ) < 0;
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private static boolean isAfter(Object value, @Nullable Temporal maximum) {
-		return maximum != null
-			&& ( value.getClass() != maximum.getClass() || ( (Comparable) value ).compareTo( maximum ) > 0 );
+		if ( maximum == null ) {
+			return false;
+		}
+		final Object comparable = comparableTo( value, maximum );
+		return comparable.getClass() != maximum.getClass() || ( (Comparable) comparable ).compareTo( maximum ) > 0;
+	}
+
+	/// A range stated as instants applies to a value with an offset or a
+	/// zone by the instant it denotes.
+	private static Object comparableTo(Object value, Temporal bound) {
+		if ( bound instanceof Instant ) {
+			if ( value instanceof OffsetDateTime offsetDateTime ) {
+				return offsetDateTime.toInstant();
+			}
+			else if ( value instanceof ZonedDateTime zonedDateTime ) {
+				return zonedDateTime.toInstant();
+			}
+		}
+		return value;
 	}
 }

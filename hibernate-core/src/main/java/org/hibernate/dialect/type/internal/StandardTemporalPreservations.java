@@ -13,6 +13,8 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.LocalDateJavaType;
 import org.hibernate.type.descriptor.java.LocalDateTimeJavaType;
 import org.hibernate.type.descriptor.java.LocalTimeJavaType;
+import org.hibernate.type.descriptor.java.OffsetDateTimeJavaType;
+import org.hibernate.type.descriptor.java.ZonedDateTimeJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalDateJdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalDateTimeJdbcType;
@@ -100,6 +102,37 @@ public final class StandardTemporalPreservations {
 						lastMoment().toInstant( ZoneOffset.UTC )
 				)
 				: TemporalPreservation.unknown();
+	}
+
+	/// Report for an [java.time.OffsetDateTime] or [java.time.ZonedDateTime]
+	/// stored through exactly the given JDBC type class in a column which
+	/// itself denotes an instant, preserved from the start of the given first
+	/// day in UTC through the year 9999. The identity of a region-based zone
+	/// is reported as lost, since no assessed column keeps it. Answers
+	/// [TemporalPreservation#unknown()] for anything else.
+	///
+	/// @param offset whether the offset is preserved as well as the instant
+	public static TemporalPreservation offsetOrZoned(
+			JavaType<?> javaType,
+			JdbcType jdbcType,
+			Class<? extends JdbcType> jdbcTypeClass,
+			TemporalPreservation.Level offset,
+			LocalDate firstDay) {
+		final boolean zoned = javaType.getClass() == ZonedDateTimeJavaType.class;
+		if ( jdbcType.getClass() != jdbcTypeClass
+				|| !zoned && javaType.getClass() != OffsetDateTimeJavaType.class ) {
+			return TemporalPreservation.unknown();
+		}
+		return new TemporalPreservation(
+				TemporalPreservation.Level.UNKNOWN,
+				TemporalPreservation.Level.UNKNOWN,
+				TemporalPreservation.Level.SUPPORTED,
+				offset,
+				zoned ? TemporalPreservation.Level.UNSUPPORTED : TemporalPreservation.Level.UNKNOWN,
+				InstantBasis.NATIVE,
+				firstDay.atStartOfDay().toInstant( ZoneOffset.UTC ),
+				lastMoment().toInstant( ZoneOffset.UTC )
+		);
 	}
 
 	private static LocalDateTime lastMoment() {

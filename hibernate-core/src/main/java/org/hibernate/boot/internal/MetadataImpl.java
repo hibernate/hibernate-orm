@@ -528,7 +528,12 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		}
 
 		if ( isTemporalPreservationEnabled() ) {
-			TemporalPreservationValidator.validate( this );
+			try {
+				TemporalPreservationValidator.validate( this, bootstrapContext.getModelsContext() );
+			}
+			catch (UnknownServiceException e) {
+				// the registry is no longer active, so no factory can be built from this model
+			}
 		}
 	}
 

@@ -1,5 +1,6 @@
 package org.hibernate.dialect;
 
+import org.hibernate.type.descriptor.jdbc.OffsetDateTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampUtcAsOffsetDateTimeJdbcType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.dialect.type.spi.TemporalPreservation;
@@ -1004,6 +1005,19 @@ public class OracleDialect extends Dialect implements CurrentTemporalSupport, Te
 					TimestampUtcAsOffsetDateTimeJdbcType.class,
 					TemporalPreservation.InstantBasis.NATIVE,
 					StandardTemporalPreservations.GREGORIAN_START
+			);
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			// The column keeps the instant, but the offset only to the minute, so
+			// an offset with seconds is lost. The later first day keeps clear of
+			// values whose date differs between UTC and their own offset around
+			// the start of the Gregorian calendar.
+			preservation = StandardTemporalPreservations.offsetOrZoned(
+					javaType,
+					jdbcType,
+					OffsetDateTimeJdbcType.class,
+					TemporalPreservation.Level.UNSUPPORTED,
+					StandardTemporalPreservations.TIMESTAMP_READ_SAFE_START
 			);
 		}
 		return preservation;

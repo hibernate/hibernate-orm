@@ -8,23 +8,28 @@ import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.MappingException;
+import org.hibernate.annotations.TimeZoneRepresentation;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.dialect.type.spi.TemporalPreservation;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.type.spi.TemporalPreservation.Level;
 import org.hibernate.dialect.type.spi.TemporalPreservation.Part;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Component;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.internal.TemporalPreservationSettings;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -66,7 +71,9 @@ final class TemporalPreservationBootMatrix {
 	/// One cell of the matrix.
 	///
 	/// @param dialect the simple name of the Dialect class
-	/// @param javaClass the simple name of the Java Time class
+	/// @param javaClass the simple name of the Java Time class, followed in
+	///        parentheses by `INLINE` or `COLUMN` when that representation is
+	///        declared, or by `NORMALIZED` when booted with that policy
 	/// @param jdbcType the simple name of the selected JDBC type class
 	/// @param columnType the column type in generated DDL
 	/// @param preservedParts the required parts reported as supported
@@ -87,8 +94,7 @@ final class TemporalPreservationBootMatrix {
 			String maximum,
 			String outcome) {
 		String toCsv() {
-			return String.join(
-					",",
+			return Stream.of(
 					dialect,
 					javaClass,
 					jdbcType,
@@ -98,7 +104,7 @@ final class TemporalPreservationBootMatrix {
 					minimum,
 					maximum,
 					outcome
-			);
+			).map( field -> field.contains( "," ) ? '"' + field + '"' : field ).collect( Collectors.joining( "," ) );
 		}
 	}
 
@@ -106,84 +112,158 @@ final class TemporalPreservationBootMatrix {
 			"Dialect,Java class,JDBC type,Column type,Preserved parts,Instant basis,Minimum,Maximum,Outcome";
 
 	/// Boot each Java Time class with the given settings applied on top of
-	/// the current test profile.
+	/// the current test profile, with nothing declared on the attribute.
 	static List<Cell> boot(Map<String, Object> settings) {
 		final List<Cell> cells = new ArrayList<>();
 		for ( var javaClass : JAVA_TIME_CLASSES ) {
-			cells.add( boot( javaClass, settings ) );
+			cells.add( boot( ENTITIES.get( javaClass ), javaClass, "", settings, false ) );
 		}
 		return cells;
 	}
 
-	static Cell boot(Class<?> javaClass, Map<String, Object> settings) {
+	/// As [#boot(Map)], followed by `OffsetDateTime` and `ZonedDateTime` with
+	/// each explicit representation and with the `NORMALIZED` policy.
+	static List<Cell> bootWithPolicies(Map<String, Object> settings) {
+		final List<Cell> cells = boot( settings );
+		final Map<String, Object> normalized = new HashMap<>( settings );
+		normalized.put( MappingSettings.TEMPORAL_PRESERVATION_POLICY, "normalized" );
+		cells.add( boot( WithOffsetDateTimeInline.class, OffsetDateTime.class, "INLINE", settings, false ) );
+		cells.add( boot( WithZonedDateTimeInline.class, ZonedDateTime.class, "INLINE", settings, false ) );
+		cells.add( boot( WithOffsetDateTimeColumn.class, OffsetDateTime.class, "COLUMN", settings, false ) );
+		cells.add( boot( WithZonedDateTimeColumn.class, ZonedDateTime.class, "COLUMN", settings, false ) );
+		cells.add( boot( WithOffsetDateTime.class, OffsetDateTime.class, "NORMALIZED", normalized, true ) );
+		cells.add( boot( WithZonedDateTime.class, ZonedDateTime.class, "NORMALIZED", normalized, true ) );
+		return cells;
+	}
+
+	/// Boot one entity, whose attribute `theValue` is of the given class.
+	///
+	/// @param mark what distinguishes the mapping from the default one, or empty
+	/// @param normalized whether the settings select the `NORMALIZED` policy
+	static Cell boot(
+			Class<?> entityClass,
+			Class<?> javaClass,
+			String mark,
+			Map<String, Object> settings,
+			boolean normalized) {
 		final var registryBuilder = ServiceRegistryUtil.serviceRegistryBuilder();
 		settings.forEach( registryBuilder::applySetting );
 		try ( var registry = registryBuilder.build() ) {
 			final var metadata = (MetadataImplementor) new MetadataSources( registry )
-					.addAnnotatedClass( ENTITIES.get( javaClass ) )
+					.addAnnotatedClass( entityClass )
 					.buildMetadata();
 			final var dialect = metadata.getDatabase().getDialect();
-			final var value = (BasicValue) metadata.getEntityBinding( ENTITIES.get( javaClass ).getName() )
-					.getProperty( "theValue" )
-					.getValue();
-			final var resolution = value.resolve();
-			final JavaType<?> javaType = resolution.getRelationalJavaType();
-			final JdbcType jdbcType = resolution.getJdbcType();
-			final String columnType = ( (Column) value.getColumn() ).getSqlType( metadata );
 			final boolean enabled = TemporalPreservationSettings.resolve(
 					registry.requireService( ConfigurationService.class ).getSettings()
 			).preservationEnabled();
+			final var value = metadata.getEntityBinding( entityClass.getName() ).getProperty( "theValue" ).getValue();
 
-			final String outcome;
+			// one column, or the instant in one column and the offset or zone in a second
+			final BasicValue primary;
+			final BasicValue companion;
+			if ( value instanceof Component component ) {
+				primary = (BasicValue) component.getProperty( "instant" ).getValue();
+				companion = (BasicValue) component.getProperty( component.getPropertySpan() == 2
+						&& component.hasProperty( "zoneId" ) ? "zoneId" : "zoneOffset" ).getValue();
+			}
+			else {
+				primary = (BasicValue) value;
+				companion = null;
+			}
+			final JavaType<?> javaType = primary.resolve().getRelationalJavaType();
+			final JdbcType jdbcType = primary.resolve().getJdbcType();
+			final String jdbcTypes = jdbcType.getClass().getSimpleName()
+				+ ( companion == null ? "" : " + " + companion.resolve().getJdbcType().getClass().getSimpleName() );
+			final String columnTypes = ( (Column) primary.getColumn() ).getSqlType( metadata )
+				+ ( companion == null ? "" : " + " + ( (Column) companion.getColumn() ).getSqlType( metadata ) );
+			final String label = javaClass.getSimpleName() + ( mark.isEmpty() ? "" : " (" + mark + ")" );
+
+			final boolean built;
 			try ( var sessionFactory = metadata.buildSessionFactory() ) {
-				outcome = enabled ? "QUALIFIED" : "DISABLED";
+				built = true;
 			}
 			catch (MappingException e) {
 				if ( !enabled ) {
 					throw e;
 				}
-				return cell( dialect.getClass(), javaClass, jdbcType, columnType, null, "REJECTED" );
+				return new Cell(
+						dialect.getClass().getSimpleName(), label, jdbcTypes, columnTypes, "", "", "", "", "REJECTED"
+				);
 			}
-			return cell(
-					dialect.getClass(),
-					javaClass,
-					jdbcType,
-					columnType,
-					enabled ? dialect.getTemporalPreservation( javaType, jdbcType ) : null,
-					outcome
+			if ( !enabled ) {
+				return new Cell(
+						dialect.getClass().getSimpleName(), label, jdbcTypes, columnTypes, "", "", "", "", "DISABLED"
+				);
+			}
+
+			final var preservation = dialect.getTemporalPreservation( javaType, jdbcType );
+			final var parts = new StringJoiner( "+" );
+			if ( companion != null ) {
+				// the second column supplies what the instant lacks
+				parts.add( "INSTANT" );
+				if ( !normalized ) {
+					parts.add( "OFFSET" );
+					if ( javaClass == ZonedDateTime.class ) {
+						parts.add( "ZONE_ID" );
+					}
+				}
+			}
+			else {
+				final var required = normalized ? Part.requiredOfNormalized( javaClass ) : Part.requiredBy( javaClass );
+				for ( var part : Part.values() ) {
+					if ( required.contains( part ) && preservation.level( part ) == Level.SUPPORTED ) {
+						parts.add( part.name() );
+					}
+				}
+			}
+			return new Cell(
+					dialect.getClass().getSimpleName(),
+					label,
+					jdbcTypes,
+					columnTypes,
+					parts.toString(),
+					preservation.instantBasis() == null ? "" : preservation.instantBasis().name(),
+					preservation.minimum() == null ? "" : preservation.minimum().toString(),
+					preservation.maximum() == null ? "" : preservation.maximum().toString(),
+					"QUALIFIED"
 			);
 		}
 	}
 
-	private static Cell cell(
-			Class<?> dialectClass,
-			Class<?> javaClass,
-			JdbcType jdbcType,
-			String columnType,
-			TemporalPreservation preservation,
-			String outcome) {
-		final var parts = new StringJoiner( "+" );
-		if ( preservation != null ) {
-			final var required = Part.requiredBy( javaClass );
-			for ( var part : Part.values() ) {
-				if ( required.contains( part ) && preservation.level( part ) == Level.SUPPORTED ) {
-					parts.add( part.name() );
-				}
-			}
-		}
-		return new Cell(
-				dialectClass.getSimpleName(),
-				javaClass.getSimpleName(),
-				jdbcType.getClass().getSimpleName(),
-				columnType,
-				parts.toString(),
-				preservation == null || preservation.instantBasis() == null
-						? ""
-						: preservation.instantBasis().name(),
-				preservation == null || preservation.minimum() == null ? "" : preservation.minimum().toString(),
-				preservation == null || preservation.maximum() == null ? "" : preservation.maximum().toString(),
-				outcome
-		);
+	@Entity(name = "WithOffsetDateTimeInline")
+	@Table(name = "tp_offset_date_time_inline")
+	static class WithOffsetDateTimeInline {
+		@Id
+		Integer id;
+		@TimeZoneRepresentation(TimeZoneRepresentation.Type.INLINE)
+		OffsetDateTime theValue;
+	}
+
+	@Entity(name = "WithZonedDateTimeInline")
+	@Table(name = "tp_zoned_date_time_inline")
+	static class WithZonedDateTimeInline {
+		@Id
+		Integer id;
+		@TimeZoneRepresentation(TimeZoneRepresentation.Type.INLINE)
+		ZonedDateTime theValue;
+	}
+
+	@Entity(name = "WithOffsetDateTimeColumn")
+	@Table(name = "tp_offset_date_time_column")
+	static class WithOffsetDateTimeColumn {
+		@Id
+		Integer id;
+		@TimeZoneRepresentation(TimeZoneRepresentation.Type.COLUMN)
+		OffsetDateTime theValue;
+	}
+
+	@Entity(name = "WithZonedDateTimeColumn")
+	@Table(name = "tp_zoned_date_time_column")
+	static class WithZonedDateTimeColumn {
+		@Id
+		Integer id;
+		@TimeZoneRepresentation(TimeZoneRepresentation.Type.COLUMN)
+		ZonedDateTime theValue;
 	}
 
 	@Entity(name = "WithLocalDate")

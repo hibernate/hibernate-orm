@@ -23,6 +23,7 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
+import org.hibernate.usertype.internal.ZonedDateTimeZoneIdCompositeUserType;
 import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
 
 import jakarta.persistence.AssociationOverride;
@@ -38,6 +39,7 @@ import static org.hibernate.boot.model.internal.PropertyBinder.isManyToOne;
 import static org.hibernate.boot.model.internal.PropertyBinder.isOneToOne;
 import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.isOffsetTimeClass;
 import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.useColumnForTimeZoneStorage;
+import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.usesZoneIdColumn;
 import static org.hibernate.boot.models.annotations.internal.AssociationOverrideJpaAnnotation.DEFAULT_JOIN_TABLE;
 import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.StringHelper.qualify;
@@ -529,7 +531,9 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			}
 			final var offsetColumn = createTimeZoneColumn( element, column, context );
 			columnOverrideMap.put(
-					path + "." + AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME,
+					path + "." + ( usesZoneIdColumn( element, context )
+							? ZonedDateTimeZoneIdCompositeUserType.ZONE_ID_NAME
+							: AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME ),
 					List.of( offsetColumn )
 			);
 		}

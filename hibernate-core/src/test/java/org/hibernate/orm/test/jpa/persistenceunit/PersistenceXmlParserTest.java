@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.jpa.persistenceunit;
 
 import jakarta.persistence.PersistenceUnitTransactionType;
+import org.hibernate.boot.MappingException;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
@@ -20,10 +21,14 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hibernate.cfg.MappingSettings.XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES;
 import static org.hibernate.internal.util.ConfigHelper.findAsResource;
 
 @JiraKey("HHH-18231")
 public class PersistenceXmlParserTest {
+	private static final String DTD_ENTITY_PU = "dtd-entity";
+	private static final String DTD_ENTITY_PROPERTY = "hibernate.test.entity.property";
 
 	@Test
 	public void create_classLoaders() {
@@ -95,6 +100,28 @@ public class PersistenceXmlParserTest {
 				.returns( "multipu3", PersistenceUnitDescriptor::getName )
 				.returns( PersistenceUnitTransactionType.JTA,
 						PersistenceUnitDescriptor::getPersistenceUnitTransactionType );
+	}
+
+	@Test
+	public void parse_rejectsDtdAndExternalEntitiesByDefault() {
+		final var parser = PersistenceXmlParser.create();
+		assertThatThrownBy( () -> parser.parse( List.of( findPuResource( DTD_ENTITY_PU ) ) ) )
+				.isInstanceOf( MappingException.class );
+	}
+
+	@Test
+	public void parse_integrationSettingAllowsDtdAndExternalEntities() {
+		final var parser = PersistenceXmlParser.create( Map.of( XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES, "true" ) );
+		final var result = parser.parse( List.of( findPuResource( DTD_ENTITY_PU ) ) );
+		assertThat( result.get( DTD_ENTITY_PU ).getProperties() )
+				.containsEntry( DTD_ENTITY_PROPERTY, "resolved" );
+	}
+
+	@Test
+	public void parse_integrationSettingFalseRejectsDtdAndExternalEntities() {
+		final var parser = PersistenceXmlParser.create( Map.of( XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES, false ) );
+		assertThatThrownBy( () -> parser.parse( List.of( findPuResource( DTD_ENTITY_PU ) ) ) )
+				.isInstanceOf( MappingException.class );
 	}
 
 	private static URL findPuResource(String resourceName) {

@@ -22,6 +22,7 @@ import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
 
 import jakarta.persistence.PersistenceException;
@@ -311,6 +312,17 @@ public final class PersistenceXmlParser {
 		}
 	}
 
+	/**
+	 * Settings that affect parsing of {@code persistence.xml} itself. Properties declared
+	 * inside the file cannot apply to its own parsing, so only integration settings and
+	 * {@code hibernate.properties}/system properties are consulted, in that order.
+	 */
+	private Object getXmlParsingSetting(String settingName) {
+		return integration.containsKey( settingName )
+				? integration.get( settingName )
+				: Environment.getProperties().get( settingName );
+	}
+
 	private JaxbPersistenceImpl loadUrlWithJaxb(URL xmlUrl) {
 		final String resourceName = xmlUrl.toExternalForm();
 		try {
@@ -318,7 +330,7 @@ public final class PersistenceXmlParser {
 			// avoid JAR locking on Windows and Tomcat
 			connection.setUseCaches( false );
 			try ( var inputStream = connection.getInputStream() ) {
-				return new ConfigurationBinder( classLoaderService )
+				return new ConfigurationBinder( classLoaderService, this::getXmlParsingSetting )
 						.bind( new StreamSource( inputStream ),
 								new Origin( SourceType.URL, resourceName ) )
 						.getRoot();

@@ -110,7 +110,10 @@ class SQLServerTimePrecisionTests {
 
 	private static LocalTime round(LocalTime value, int precision) {
 		final long unit = (long) Math.pow( 10, 9 - precision );
-		return value.plusNanos( unit / 2 ).withNano( (int) ((value.getNano() + unit / 2) % 1_000_000_000 / unit * unit) );
+		final long rounded = (value.toNanoOfDay() + unit / 2) / unit * unit;
+		// SQL Server TIME clamps at the last representable time instead of wrapping to the next day.
+		final long maximum = LocalTime.MAX.toNanoOfDay() / unit * unit;
+		return LocalTime.ofNanoOfDay( Math.min( rounded, maximum ) );
 	}
 
 	@Entity(name = "TimePrecisionRow")

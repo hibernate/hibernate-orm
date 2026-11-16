@@ -777,6 +777,14 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect implements Curre
 
 	@Override
 	@SPI({ USE, IMPLEMENT })
+	public boolean isCurrentTimestampStable() {
+		// Spanner timestamps may differ between statements in one transaction.
+		// Cache one server timestamp for all history and audit mutations.
+		return false;
+	}
+
+	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTimestamp() {
 		return currentTimestampWithTimeZone();
 	}

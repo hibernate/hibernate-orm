@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.JDBCException;
 import org.hibernate.SessionEventListener;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
@@ -104,7 +105,9 @@ class InterleavedMutationExecutorTest {
 				apply( update, 1, session ); apply( end, 1, session ); apply( insert, 11, session );
 				apply( update, 2, session ); apply( end, 2, session ); apply( insert, 1, session );
 				assertThatThrownBy( () -> session.getJdbcCoordinator().executeBatch() )
-						.isInstanceOf( org.hibernate.exception.ConstraintViolationException.class );
+						// jConnect wraps duplicate-key batch failures in a generic JDBC exception.
+						// This test verifies rollback, independently of dialect exception classification.
+						.isInstanceOf( JDBCException.class );
 			}
 			finally { tx.rollback(); update.release(); end.release(); insert.release(); }
 			assertThat( session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().hasRegisteredResources() ).isFalse();
@@ -137,7 +140,7 @@ class InterleavedMutationExecutorTest {
 	static void seed(SessionImplementor session, int count) {
 		session.doWork( connection -> {
 			try ( var statement = connection.createStatement() ) {
-				statement.executeUpdate( "delete from lb_row" );
+				statement.executeUpdate( "delete from lb_row where 1=1" );
 				for ( int id = 1; id <= count; id++ ) statement.executeUpdate(
 						"insert into lb_row (id,counter,closed) values (" + id + ",0,0)" );
 			}

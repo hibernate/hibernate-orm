@@ -79,13 +79,9 @@ public class IdentityAndGeneratedValuesSupportTests {
 		assertThat( h2.hasIdentityInsertKeyword() ).isTrue();
 		assertThat( h2.getIdentityInsertString() ).isEqualTo( "default" );
 
-		final var hsql1 = new HSQLDialect( DatabaseVersion.make( 1, 8 ) ).getIdentityColumnSupport();
-		assertThat( hsql1.hasIdentityInsertKeyword() ).isTrue();
-		assertThat( hsql1.getIdentityInsertString() ).isEqualTo( "null" );
-
-		final var hsql2 = new HSQLDialect( DatabaseVersion.make( 2 ) ).getIdentityColumnSupport();
-		assertThat( hsql2.hasIdentityInsertKeyword() ).isTrue();
-		assertThat( hsql2.getIdentityInsertString() ).isEqualTo( "default" );
+		final var hsql = new HSQLDialect().getIdentityColumnSupport();
+		assertThat( hsql.hasIdentityInsertKeyword() ).isTrue();
+		assertThat( hsql.getIdentityInsertString() ).isEqualTo( "default" );
 	}
 
 	@Test

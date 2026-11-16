@@ -1,16 +1,15 @@
 package org.hibernate.dialect.identity.internal;
 
-import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.identity.spi.IdentityColumnSupportBase;
 
 /**
  * @author Andrea Boriero
  */
 public class HSQLIdentityColumnSupport extends IdentityColumnSupportBase {
-	final private DatabaseVersion dbVersion;
 
-	public HSQLIdentityColumnSupport(DatabaseVersion dbVersion) {
-		this.dbVersion = dbVersion;
+	public static final HSQLIdentityColumnSupport INSTANCE = new HSQLIdentityColumnSupport();
+
+	private HSQLIdentityColumnSupport() {
 	}
 
 	@Override
@@ -31,6 +30,6 @@ public class HSQLIdentityColumnSupport extends IdentityColumnSupportBase {
 
 	@Override
 	public String getIdentityInsertString() {
-		return dbVersion.isBefore( 2 ) ? "null" : "default";
+		return "default";
 	}
 }

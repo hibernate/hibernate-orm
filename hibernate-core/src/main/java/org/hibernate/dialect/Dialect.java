@@ -5249,6 +5249,16 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		appender.appendSingleQuoteEscapedString( literal );
 	}
 
+	/// Append the escaped content of a SQL string literal, without the enclosing quotes.
+	///
+	/// The caller is responsible for rendering the enclosing quotes.
+	/// Implementations must apply the same escaping rules as [#appendLiteral(SqlAppender, String)].
+	public void appendLiteralContent(SqlAppender appender, String literal) {
+		final StringBuilder sb = new StringBuilder( literal.length() );
+		QuotingHelper.appendSingleQuoteEscapedStringContent( sb, literal );
+		appender.appendSql( sb.toString() );
+	}
+
 	/**
 	 * Append a binary literal to the given {@link SqlAppender}.
 	 */

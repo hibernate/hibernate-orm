@@ -136,14 +136,14 @@ public class DB2JsonTableFunction extends JsonTableFunction {
 					jsonDocument.accept( walker );
 					sqlAppender.appendSql( "||'}'," );
 					final String adaptedJsonPath = jsonPathString.substring( 0, jsonPathString.length() - 3 );
-					sqlAppender.appendSingleQuoteEscapedString( adaptedJsonPath.replace( "$", "$.a" ) );
+					sqlAppender.appendLiteral( adaptedJsonPath.replace( "$", "$.a" ) );
 					sqlAppender.appendSql( "||'['||(i.i-1)||']')" );
 				}
 				else {
 					sqlAppender.appendSql( "json_query('{\"a\":'||" );
 					jsonDocument.accept( walker );
 					sqlAppender.appendSql( "||'}'," );
-					sqlAppender.appendSingleQuoteEscapedString( jsonPathString.replace( "$", "$.a" ) );
+					sqlAppender.appendLiteral( jsonPathString.replace( "$", "$.a" ) );
 					sqlAppender.appendSql( " with wrapper)||'}','$.a['||(i.i-1)||']')" );
 				}
 			}
@@ -172,7 +172,7 @@ public class DB2JsonTableFunction extends JsonTableFunction {
 					jsonDocument.accept( walker );
 					sqlAppender.appendSql( "||'}'," );
 					final String adaptedJsonPath = jsonPathString.substring( 0, jsonPathString.length() - 3 );
-					sqlAppender.appendSingleQuoteEscapedString( adaptedJsonPath.replace( "$", "$.a" ) );
+					sqlAppender.appendLiteral( adaptedJsonPath.replace( "$", "$.a" ) );
 					sqlAppender.appendSql( "||'['||(i.i-1)||']'" );
 				}
 				else {
@@ -180,7 +180,7 @@ public class DB2JsonTableFunction extends JsonTableFunction {
 					sqlAppender.appendSql( "json_query('{\"a\":'||" );
 					jsonDocument.accept( walker );
 					sqlAppender.appendSql( "||'}'," );
-					sqlAppender.appendSingleQuoteEscapedString( jsonPathString.replace( "$", "$.a" ) );
+					sqlAppender.appendLiteral( jsonPathString.replace( "$", "$.a" ) );
 					sqlAppender.appendSql( " with wrapper)||'}','$.a['||(i.i-1)||']'" );
 				}
 			}
@@ -313,7 +313,7 @@ public class DB2JsonTableFunction extends JsonTableFunction {
 				final String jsonPath = existsColumnDefinition.jsonPath() == null
 						? "$." + existsColumnDefinition.name()
 						: existsColumnDefinition.jsonPath();
-				sqlAppender.appendSingleQuoteEscapedString( jsonPath );
+				sqlAppender.appendLiteral( jsonPath );
 				final JsonExistsErrorBehavior errorBehavior = existsColumnDefinition.errorBehavior();
 				if ( errorBehavior != null && errorBehavior != JsonExistsErrorBehavior.FALSE ) {
 					if ( errorBehavior == JsonExistsErrorBehavior.TRUE ) {
@@ -517,7 +517,7 @@ public class DB2JsonTableFunction extends JsonTableFunction {
 		final String jsonPath = isArrayAccess( definition.jsonPath() )
 				? definition.jsonPath().substring( 0, definition.jsonPath().length() - 3 )
 				: definition.jsonPath();
-		sqlAppender.appendSingleQuoteEscapedString( jsonPath );
+		sqlAppender.appendLiteral( jsonPath );
 		return clauseLevel + countNestedColumnDefinitions( definition.columns() );
 	}
 

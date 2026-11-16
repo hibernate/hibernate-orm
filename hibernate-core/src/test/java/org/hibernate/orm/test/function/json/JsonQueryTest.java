@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Tuple;
 
-import static org.hibernate.orm.test.function.json.JsonTestHelper.assertNoJsonInjection;
+import static org.hibernate.orm.test.function.json.JsonTestHelper.assertNoInjection;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -35,8 +35,8 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Christian Beikov
  */
 @DomainModel(annotatedClasses = EntityWithJson.class)
-@SessionFactory
 @ServiceRegistry(settings = @Setting(name = QuerySettings.JSON_FUNCTIONS_ENABLED, value = "true"))
+@SessionFactory(useCollectingStatementInspector = true)
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsJsonQuery.class)
 public class JsonQueryTest {
 
@@ -135,60 +135,80 @@ public class JsonQueryTest {
 	@Test
 	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "SQL Server implementation requires parsing the JSON path with our limited parser")
 	public void testPathInjection(SessionFactoryScope scope) {
-		scope.inSession( em -> {
-			try {
-				em.createQuery( "select json_query(e.json, :path) from EntityWithJson e", Tuple.class )
-						.setParameter( "path", "$'--" )
-						.getResultList();
-			}
-			catch ( RuntimeException e ) {
-				assertNoJsonInjection( e );
-			}
+		assertNoInjection( scope, em -> {
+			em.createQuery( "select json_query(e.json, :path) from EntityWithJson e", Tuple.class )
+					.setParameter( "path", "$'--" )
+					.getResultList();
 		} );
 	}
 
 	@Test
 	public void testPassingInjection(SessionFactoryScope scope) {
-		scope.inSession( em -> {
-			try {
-				em.createQuery( "select json_query(e.json, '$[$a]' passing :val as a) from EntityWithJson e", Tuple.class )
-						.setParameter( "val", "'--" )
-						.getResultList();
-			}
-			catch ( RuntimeException e ) {
-				assertNoJsonInjection( e );
-			}
+		assertNoInjection( scope, em -> {
+			em.createQuery( "select json_query(e.json, '$[$a]' passing :val as a) from EntityWithJson e", Tuple.class )
+					.setParameter( "val", "'--" )
+					.getResultList();
 		} );
 	}
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonFunctionErrorBehavior.class)
 	public void testPassingInjectionError(SessionFactoryScope scope) {
-		scope.inSession( em -> {
-			try {
-				em.createQuery( "select json_query(e.json, '$[$a]' passing :val as a error on empty) from EntityWithJson e", Tuple.class )
-						.setParameter( "val", "'--" )
-						.getResultList();
-			}
-			catch ( RuntimeException e ) {
-				assertNoJsonInjection( e );
-			}
+		assertNoInjection( scope, em -> {
+			em.createQuery( "select json_query(e.json, '$[$a]' passing :val as a error on empty) from EntityWithJson e", Tuple.class )
+					.setParameter( "val", "'--" )
+					.getResultList();
 		} );
 	}
 
 	@Test
 	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "SQL Server implementation requires parsing the JSON path with our limited parser")
 	public void testPathPassingInjection(SessionFactoryScope scope) {
-		scope.inSession( em -> {
-			try {
-				em.createQuery( "select json_query(e.json, :path passing :val as a) from EntityWithJson e", Tuple.class )
-						.setParameter( "path", "$'--" )
-						.setParameter( "val", "'--" )
-						.getResultList();
-			}
-			catch ( RuntimeException e ) {
-				assertNoJsonInjection( e );
-			}
+		assertNoInjection( scope, em -> {
+			em.createQuery( "select json_query(e.json, :path passing :val as a) from EntityWithJson e", Tuple.class )
+					.setParameter( "path", "$'--" )
+					.setParameter( "val", "'--" )
+					.getResultList();
+		} );
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "SQL Server implementation requires parsing the JSON path with our limited parser")
+	public void testPathBackslashInjection(SessionFactoryScope scope) {
+		assertNoInjection( scope, em -> {
+			em.createQuery( "select json_query(e.json, :path) from EntityWithJson e", Tuple.class )
+					.setParameter( "path", "$\\'--" )
+					.getResultList();
+		} );
+	}
+
+	@Test
+	public void testPassingBackslashInjection(SessionFactoryScope scope) {
+		assertNoInjection( scope, em -> {
+			em.createQuery( "select json_query(e.json, '$[$a]' passing :val as a) from EntityWithJson e", Tuple.class )
+					.setParameter( "val", "\\'--" )
+					.getResultList();
+		} );
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonFunctionErrorBehavior.class)
+	public void testPassingBackslashInjectionError(SessionFactoryScope scope) {
+		assertNoInjection( scope, em -> {
+			em.createQuery( "select json_query(e.json, '$[$a]' passing :val as a error on empty) from EntityWithJson e", Tuple.class )
+					.setParameter( "val", "\\'--" )
+					.getResultList();
+		} );
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "SQL Server implementation requires parsing the JSON path with our limited parser")
+	public void testPathPassingBackslashInjection(SessionFactoryScope scope) {
+		assertNoInjection( scope, em -> {
+			em.createQuery( "select json_query(e.json, :path passing :val as a) from EntityWithJson e", Tuple.class )
+					.setParameter( "path", "$\\'--" )
+					.setParameter( "val", "\\'--" )
+					.getResultList();
 		} );
 	}
 

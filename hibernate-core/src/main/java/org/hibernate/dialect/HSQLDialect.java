@@ -103,7 +103,7 @@ import static org.hibernate.type.SqlTypes.DOUBLE;
 import static org.hibernate.type.SqlTypes.NCLOB;
 
 /**
- * A {@linkplain Dialect SQL dialect} for HSQLDB (HyperSQL) 2.6.1 and above.
+ * A {@linkplain Dialect SQL dialect} for HSQLDB (HyperSQL) 2.7.4 and above.
  * <p>
  * This dialect does not support HSQLDB's {@code MVCC} transaction control mode.
  * <p>
@@ -142,13 +142,11 @@ public class HSQLDialect extends Dialect implements CurrentTemporalSupport, Temp
 					.startValueColumn( "start_with" )
 					.build();
 
-	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 2, 6, 1 );
+	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 2, 7, 4 );
 	private final UniqueDelegate uniqueDelegate = UniqueDelegates.createTable( this );
-	private final HSQLIdentityColumnSupport identityColumnSupport;
 
 	public HSQLDialect(DialectResolutionInfo info) {
 		super( info );
-		this.identityColumnSupport = new HSQLIdentityColumnSupport( getVersion() );
 	}
 
 	public HSQLDialect() {
@@ -157,7 +155,6 @@ public class HSQLDialect extends Dialect implements CurrentTemporalSupport, Temp
 
 	public HSQLDialect(DatabaseVersion version) {
 		super( version );
-		this.identityColumnSupport = new HSQLIdentityColumnSupport( getVersion() );
 	}
 
 	@Override
@@ -269,12 +266,10 @@ public class HSQLDialect extends Dialect implements CurrentTemporalSupport, Temp
 
 		registerArrayFunctions( functionFactory );
 
-		if ( getVersion().isSameOrAfter( 2, 7 ) ) {
-			functionFactory.jsonObject_hsqldb();
-			functionFactory.jsonArray_hsqldb();
-			functionFactory.jsonArrayAgg_hsqldb();
-			functionFactory.jsonObjectAgg_h2();
-		}
+		functionFactory.jsonObject_hsqldb();
+		functionFactory.jsonArray_hsqldb();
+		functionFactory.jsonArrayAgg_hsqldb();
+		functionFactory.jsonObjectAgg_h2();
 
 		functionFactory.unnest( "c1", "c2" );
 		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), true, false );
@@ -674,10 +669,7 @@ public class HSQLDialect extends Dialect implements CurrentTemporalSupport, Temp
 	public CteSupport getCteSupport() {
 		return CteSupport.builder()
 				.placement( CteSupport.Placement.TOP_LEVEL )
-				.recursiveFeature(
-						CteSupport.RecursiveFeature.RECURSIVE,
-						getVersion().isSameOrAfter( 2 )
-				)
+				.recursiveFeature( CteSupport.RecursiveFeature.RECURSIVE, true )
 				.supportsRecursiveClauseArrayAndRowEmulation( false )
 				.build();
 	}
@@ -696,7 +688,7 @@ public class HSQLDialect extends Dialect implements CurrentTemporalSupport, Temp
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return identityColumnSupport;
+		return HSQLIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override

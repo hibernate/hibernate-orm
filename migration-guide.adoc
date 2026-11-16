@@ -84,6 +84,14 @@ XML mapping documents are now validated against their schema by default, as docu
 Previously, validation was disabled when this setting was absent, allowing invalid attributes to be silently ignored.
 Applications with invalid `orm.xml` or `hbm.xml` documents must correct their mappings or explicitly set `hibernate.validate_xml=false` to disable validation.
 
+[[callable-embeddable-types]]
+=== Embeddable types in procedure and function calls
+
+Registering a procedure parameter or function return with an embeddable `Type` now resolves the embeddable's
+single-column aggregate mapping (such as a struct), matching registration by Java class.
+An embeddable without such a mapping is rejected with an `IllegalArgumentException` at registration,
+since multi-column callable parameters and returns are not supported. Previously the registration was accepted.
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // XSD changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

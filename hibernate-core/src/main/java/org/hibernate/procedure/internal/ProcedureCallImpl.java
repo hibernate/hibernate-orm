@@ -14,6 +14,7 @@ import jakarta.persistence.ParameterMode;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.Type;
+import jakarta.persistence.metamodel.EmbeddableType;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.ScrollMode;
@@ -58,6 +59,7 @@ import org.hibernate.sql.exec.spi.JdbcCallRefCursorExtractor;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryCall;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.OutputableType;
 
 import java.sql.SQLException;
@@ -657,6 +659,7 @@ public class ProcedureCallImpl<R>
 	@Nonnull
 	public ProcedureCall markAsFunctionCall(@Nonnull Type<?> typeReference) {
 		checkNotClosed();
+		typeReference = resolveCallableType( typeReference, "function return" );
 		if ( !(typeReference instanceof OutputableType<?> outputableType) ) {
 			throw new IllegalArgumentException( "Given type is not an OutputableType: " + typeReference );
 		}
@@ -825,11 +828,30 @@ public class ProcedureCallImpl<R>
 			int position,
 			@Nonnull Type<T> typeReference,
 			@Nonnull ParameterMode mode) {
+		typeReference = resolveCallableType( typeReference, "parameter " + position );
 		final var expressible = resolveExpressible( typeReference );
 		final var procedureParameter =
 				new ProcedureParameterImpl<>( position, mode, typeReference.getJavaType(), expressible );
 		registerParameter( procedureParameter );
 		return procedureParameter;
+	}
+
+	private <T> Type<T> resolveCallableType(Type<T> type, String role) {
+		if ( type instanceof EmbeddableType<?> ) {
+			// Aggregate mappings register their single JDBC value as a BasicType.
+			// Resolve that same mapping used by the Class overload, rather than using
+			// the embeddable's logical member count as its callable JDBC arity.
+			final var basicType = getTypeConfiguration().getBasicTypeForJavaType( type.getJavaType() );
+			if ( basicType != null && basicType.getJdbcTypeCount() == 1
+					&& basicType.getJdbcType() instanceof AggregateJdbcType ) {
+				return basicType;
+			}
+			throw new IllegalArgumentException( "Procedure/function '" + getProcedureName() + "' " + role
+					+ " of Java type '" + type.getJavaType().getTypeName()
+					+ "' has no supported single-column callable mapping. Multi-column callable parameters and returns "
+					+ "are unsupported; use an explicitly supported single-column mapping." );
+		}
+		return type;
 	}
 
 	private <T> SqmBindableType<T> resolveExpressible(@Nonnull Type<T> typeReference) {
@@ -914,6 +936,7 @@ public class ProcedureCallImpl<R>
 			@Nonnull Type<T> typeReference,
 			@Nonnull ParameterMode mode) {
 		checkNotClosed();
+		typeReference = resolveCallableType( typeReference, "parameter " + name );
 		final var parameter =
 				new ProcedureParameterImpl<>( name, mode, typeReference.getJavaType(),
 						resolveExpressible( typeReference ) );

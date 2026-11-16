@@ -1340,6 +1340,12 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public void appendLiteral(SqlAppender appender, String literal) {
 		appender.appendSql( '\'' );
+		appendLiteralContent( appender, literal );
+		appender.appendSql( '\'' );
+	}
+
+	@Override
+	public void appendLiteralContent(SqlAppender appender, String literal) {
 		for ( int i = 0; i < literal.length(); i++ ) {
 			final char c = literal.charAt( i );
 			switch ( c ) {
@@ -1355,7 +1361,6 @@ public class MySQLDialect extends Dialect {
 			}
 			appender.appendSql( c );
 		}
-		appender.appendSql( '\'' );
 	}
 
 	@Override

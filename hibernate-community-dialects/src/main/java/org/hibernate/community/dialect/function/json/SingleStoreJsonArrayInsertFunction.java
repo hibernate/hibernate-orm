@@ -98,7 +98,7 @@ public class SingleStoreJsonArrayInsertFunction extends AbstractJsonArrayInsertF
 			JsonPathHelper.JsonPathElement pathElement = jsonPathElements.get( i );
 			sqlAppender.appendSql( ',' );
 			if ( pathElement instanceof JsonPathHelper.JsonAttribute attribute ) {
-				sqlAppender.appendSingleQuoteEscapedString( attribute.attribute() );
+				sqlAppender.appendLiteral( attribute.attribute() );
 			}
 			else if ( pathElement instanceof JsonPathHelper.JsonParameterIndexAccess ) {
 				final String parameterName = ( (JsonPathHelper.JsonParameterIndexAccess) pathElement ).parameterName();

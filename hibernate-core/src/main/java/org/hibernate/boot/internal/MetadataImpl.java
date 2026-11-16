@@ -27,6 +27,8 @@ import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.service.UnknownServiceException;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderFactory;
@@ -73,6 +75,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	private final @Nonnull UUID uuid;
 	private final MetadataBuildingOptions metadataBuildingOptions;
+	private Boolean temporalPreservationEnabled;
 	private final BootstrapContext bootstrapContext;
 
 	private final Map<String,PersistentClass> entityBindingMap;
@@ -491,6 +494,26 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		};
 	}
 
+	/// Resolved the first time the model is validated, which building a factory
+	/// always does, and remembered, because the service registry may have been
+	/// shut down by the time of a later validation.
+	private boolean isTemporalPreservationEnabled() {
+		if ( temporalPreservationEnabled == null ) {
+			boolean enabled;
+			try {
+				enabled = MetadataBuildingContext.isTemporalPreservationEnabled(
+						metadataBuildingOptions.getServiceRegistry()
+				);
+			}
+			catch (UnknownServiceException e) {
+				// the registry is no longer active, so no factory can be built from this model
+				enabled = false;
+			}
+			temporalPreservationEnabled = enabled;
+		}
+		return temporalPreservationEnabled;
+	}
+
 	@Override
 	public void validate() throws MappingException {
 		for ( var entityBinding : getEntityBindings() ) {
@@ -502,6 +525,10 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			collectionBinding.validate( this );
 			validateFilters( collectionBinding.getFilters(), "Collection", collectionBinding.getRole() );
 			validateFilters( collectionBinding.getManyToManyFilters(), "Collection", collectionBinding.getRole() );
+		}
+
+		if ( isTemporalPreservationEnabled() ) {
+			TemporalPreservationValidator.validate( this );
 		}
 	}
 

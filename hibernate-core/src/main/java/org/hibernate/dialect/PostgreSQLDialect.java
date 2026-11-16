@@ -1,5 +1,9 @@
 package org.hibernate.dialect;
 
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.dialect.type.spi.TemporalPreservation;
+import org.hibernate.dialect.type.internal.StandardTemporalPreservations;
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
@@ -224,6 +228,36 @@ import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering
 public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
 
 	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 15 );
+
+	/// Assessed for PostgreSQL with the PostgreSQL JDBC driver. PostgreSQL uses
+	/// the proleptic Gregorian calendar, as does the driver when given Java Time
+	/// values directly. An `Instant` is stored in a `timestamp with time zone`
+	/// column by way of a [java.sql.Timestamp], for which the driver uses the
+	/// Julian calendar before 1582-10-15. An earlier instant would be stored
+	/// as a different one, and a stored instant from the ten days before that
+	/// date is read as one from the ten days after it. Hence the first day,
+	/// below which a value is rejected both when written and when read.
+	@Override
+	public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
+		var preservation = StandardTemporalPreservations.directLocal(
+				javaType,
+				jdbcType,
+				StandardTemporalPreservations.COMMON_ERA_START
+		);
+		if ( preservation == TemporalPreservation.unknown() ) {
+			preservation = StandardTemporalPreservations.directLocalTime( javaType, jdbcType );
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			preservation = StandardTemporalPreservations.instant(
+					javaType,
+					jdbcType,
+					TimestampUtcAsJdbcTimestampJdbcType.class,
+					TemporalPreservation.InstantBasis.NATIVE,
+					StandardTemporalPreservations.TIMESTAMP_READ_SAFE_START
+			);
+		}
+		return preservation;
+	}
 
 	@Override
 	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {

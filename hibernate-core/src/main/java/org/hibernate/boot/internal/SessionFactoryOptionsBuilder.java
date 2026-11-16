@@ -42,6 +42,7 @@ import org.hibernate.context.spi.TenantDataSourceMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.type.internal.TemporalPreservationSettings;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -236,6 +237,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private final Boolean useOfJdbcNamedParametersEnabled;
 	private boolean namedQueryStartupCheckingEnabled;
 	private final boolean preferJavaTimeJdbcTypes;
+	private final boolean temporalPreservationEnabled;
 	@Nonnull
 	private final DirectJavaTimeJdbcSupport directJavaTimeJdbcSupport;
 	private final boolean preferNativeEnumTypes;
@@ -498,6 +500,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				configurationService.getSetting( QUERY_STARTUP_CHECKING, BOOLEAN, true );
 
 		preferJavaTimeJdbcTypes = MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( configurationService );
+		temporalPreservationEnabled = TemporalPreservationSettings.resolve( configurationService.getSettings() )
+				.preservationEnabled();
 		preferNativeEnumTypes = MetadataBuildingContext.isPreferNativeEnumTypesEnabled( configurationService );
 		preferLocaleLanguageTagEnabled = MetadataBuildingContext.isPreferNativeEnumTypesEnabled( configurationService );
 		preferredSqlTypeCodeForBoolean = ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( serviceRegistry );
@@ -1614,6 +1618,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Deprecated(since = "8.0")
 	public boolean isPreferJavaTimeJdbcTypesEnabled() {
 		return preferJavaTimeJdbcTypes;
+	}
+
+	@Override
+	public boolean isTemporalPreservationEnabled() {
+		return temporalPreservationEnabled;
 	}
 
 	@Override

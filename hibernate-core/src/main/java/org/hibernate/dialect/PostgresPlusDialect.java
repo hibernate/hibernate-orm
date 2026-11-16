@@ -1,5 +1,8 @@
 package org.hibernate.dialect;
 
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.dialect.type.spi.TemporalPreservation;
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
@@ -168,5 +171,12 @@ public class PostgresPlusDialect extends PostgreSQLDialect implements CurrentTem
 				};
 			}
 		};
+	}
+
+	/// Nothing has been assessed for EDB Postgres Advanced Server, which is a different
+	/// database with a different JDBC driver than PostgreSQL.
+	@Override
+	public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
+		return TemporalPreservation.unknown();
 	}
 }

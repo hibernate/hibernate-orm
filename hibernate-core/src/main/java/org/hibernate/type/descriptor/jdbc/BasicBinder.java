@@ -13,6 +13,7 @@ import org.hibernate.type.descriptor.JdbcBindingLogging;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.internal.TemporalPreservationGuard;
 
 import static org.hibernate.SPI.Role.IMPLEMENT;
 import static org.hibernate.SPI.Role.USE;
@@ -28,6 +29,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 
 	private final JavaType<J> javaType;
 	private final JdbcType jdbcType;
+	private final boolean temporalPreservationGuarded;
 
 	public JavaType<J> getJavaType() {
 		return javaType;
@@ -42,6 +44,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 	public BasicBinder(JavaType<J> javaType, JdbcType jdbcType) {
 		this.javaType = javaType;
 		this.jdbcType = jdbcType;
+		this.temporalPreservationGuarded = TemporalPreservationGuard.appliesTo( javaType );
 	}
 
 	@Override
@@ -57,6 +60,9 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 			doBindNull( st, index, options );
 		}
 		else {
+			if ( temporalPreservationGuarded ) {
+				TemporalPreservationGuard.checkBind( value, javaType, jdbcType, options );
+			}
 			if ( JdbcBindingLogging.LOGGER.isTraceEnabled() ) {
 				JdbcBindingLogging.logBinding(
 						index,
@@ -85,6 +91,9 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 			doBindNull( st, name, options );
 		}
 		else {
+			if ( temporalPreservationGuarded ) {
+				TemporalPreservationGuard.checkBind( value, javaType, jdbcType, options );
+			}
 			if ( JdbcBindingLogging.LOGGER.isTraceEnabled() ) {
 				JdbcBindingLogging.logBinding(
 						name,
@@ -101,6 +110,9 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 	public Object getBindValue(@Nullable J value, @Nonnull WrapperOptions options) throws SQLException {
 		if ( value == null ) {
 			return null;
+		}
+		if ( temporalPreservationGuarded ) {
+			TemporalPreservationGuard.checkBind( value, javaType, jdbcType, options );
 		}
 		final var preferredClass = jdbcType.getPreferredJavaTypeClass( options );
 		return preferredClass == null ? value : getJavaType().unwrap( value, preferredClass, options );

@@ -1,5 +1,8 @@
 package org.hibernate.dialect;
 
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.dialect.type.spi.TemporalPreservation;
 import java.time.LocalDate;
 
 import org.hibernate.dialect.sql.ast.spi.OptionalTableUpdateOperationRequest;
@@ -1024,5 +1027,12 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect implements Curre
 
 	public boolean useIntegerForPrimaryKey() {
 		return useIntegerForPrimaryKey;
+	}
+
+	/// Nothing has been assessed for Spanner, which is a different
+	/// database with a different JDBC driver than PostgreSQL.
+	@Override
+	public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
+		return TemporalPreservation.unknown();
 	}
 }

@@ -1,5 +1,7 @@
 package org.hibernate.type.descriptor.jdbc.internal;
 
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.time.temporal.TemporalAccessor;
 import java.util.TimeZone;
 import jakarta.persistence.TemporalType;
@@ -35,6 +37,16 @@ public class JdbcLiteralFormatterTemporal<T> extends BasicJdbcLiteralFormatter<T
 			dialect.getLiteralSupport().appendDateTimeLiteral( appender, calendar, precision, jdbcTimeZone );
 		}
 		else if ( value instanceof TemporalAccessor temporalAccessor ) {
+			if ( TemporalPreservationGuard.isEnabled( options ) ) {
+				TemporalPreservationGuard.checkLiteral( value, getJavaType(), options );
+				if ( value instanceof Instant instant && precision == TemporalType.TIMESTAMP ) {
+					// An instant rendered as date and time fields in the JDBC time zone
+					// is interpreted by the database in the time zone of its session,
+					// and is ambiguous when clocks are set back. Render it with its
+					// offset instead, which leaves nothing to interpret.
+					temporalAccessor = instant.atOffset( ZoneOffset.UTC );
+				}
+			}
 			dialect.getLiteralSupport().appendDateTimeLiteral( appender, temporalAccessor, precision, jdbcTimeZone );
 		}
 		else {

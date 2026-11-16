@@ -68,6 +68,15 @@ The deprecated `PersistenceContext.reentrantSafeEntityEntries()` method has been
 
 This section describes changes in behavior that applications should be aware of.
 
+[[oracle-nested-xml-nulls]]
+=== Oracle nested XML null extraction
+
+Nested XML aggregate projections and null predicates now preserve SQL nulls when the extracted child content is absent.
+Previously, the extraction expression manufactured an empty XML root, so a projection could return an empty embeddable
+and an `is null` predicate could incorrectly exclude a null child or null parent payload.
+Stored XML is unchanged and no data migration is required.
+Explicitly present aggregates with all-null members retain their existing behavior.
+
 [[xml-validation]]
 === XML mapping validation
 

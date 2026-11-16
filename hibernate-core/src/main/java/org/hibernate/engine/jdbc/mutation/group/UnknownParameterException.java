@@ -15,11 +15,6 @@ import org.hibernate.sql.spi.mutation.MutationType;
  * @author Steve Ebersole
  */
 public class UnknownParameterException extends HibernateException {
-	private final MutationType mutationType;
-	private final MutationTarget mutationTarget;
-	private final String tableName;
-	private final String columnName;
-	private final ParameterUsage usage;
 
 	public UnknownParameterException(
 			MutationType mutationType,
@@ -36,11 +31,6 @@ public class UnknownParameterException extends HibernateException {
 				mutationType.name(),
 				mutationTarget.getRolePath()
 		) );
-		this.mutationType = mutationType;
-		this.mutationTarget = mutationTarget;
-		this.tableName = tableName;
-		this.columnName = columnName;
-		this.usage = usage;
 	}
 
 	public UnknownParameterException(
@@ -58,10 +48,5 @@ public class UnknownParameterException extends HibernateException {
 				mutationType.name(),
 				mutationTargetRole
 		) );
-		this.mutationType = mutationType;
-		this.mutationTarget = null;
-		this.tableName = tableName;
-		this.columnName = columnName;
-		this.usage = usage;
 	}
 }

@@ -11,7 +11,6 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.creation.FromClauseAccess;
-import org.hibernate.sql.ast.spi.query.from.PluralTableGroup;
 import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -29,7 +28,6 @@ import jakarta.annotation.Nullable;
  * @author Steve Ebersole
  */
 public class EagerCollectionFetch extends CollectionFetch {
-	private final PluralTableGroup collectionTableGroup;
 	private final @Nullable DomainResult<?> collectionKeyResult;
 	private final DomainResult<?> collectionValueKeyResult;
 
@@ -53,7 +51,6 @@ public class EagerCollectionFetch extends CollectionFetch {
 				fetchParent,
 				creationState.getFetchOptions( fetchedPath )
 		);
-		this.collectionTableGroup = (PluralTableGroup) collectionTableGroup;
 
 		final FromClauseAccess fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
 		final NavigablePath parentPath = fetchedPath.getParent();

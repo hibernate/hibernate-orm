@@ -63,7 +63,6 @@ public class Decomposer implements DecompositionContext {
 	private Map<PersistentCollection<?>, CollectionMutationCompletion> pendingQueuedCollectionMutations;
 	private List<CollectionMutationCompletion> flushSuccessCompletions;
 	private long nextCollectionMutationId;
-	private boolean flushActive;
 
 	public Decomposer(SessionImplementor session) {
 		this.session = session;
@@ -78,7 +77,6 @@ public class Decomposer implements DecompositionContext {
 		// if this ever shows up as a hot spot (unlikely), we could move collecting these
 		// into the action queue proper as the actions are added and then pass into the
 		// Decomposer as arguments.
-		flushActive = true;
 		generatedIdentifierHandles = null;
 		pendingQueuedCollectionMutations = null;
 		flushSuccessCompletions = null;
@@ -137,7 +135,6 @@ public class Decomposer implements DecompositionContext {
 	/// End a flush operation - clear the tracking sets
 	public void endFlush() {
 		sealPendingQueuedCollectionMutations();
-		flushActive = false;
 		entitiesBeingInserted = null;
 		entitiesBeingDeleted = null;
 		updatedAttributesByDeletedEntity = null;

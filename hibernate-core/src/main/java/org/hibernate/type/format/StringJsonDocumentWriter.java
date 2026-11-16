@@ -237,12 +237,6 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 		return this;
 	}
 
-	private <T> void convertedCastBasicValueToString(Object value, WrapperOptions options, JsonAppender appender, JavaType<T> javaType, JdbcType jdbcType) {
-		assert javaType.isInstance( value );
-		//noinspection unchecked
-		convertedBasicValueToString( (T) value, options, appender, javaType, jdbcType );
-	}
-
 	/**
 	 * Converts a value to String according to its mapping type.
 	 * This method serializes the value and writes it into the underlying appender

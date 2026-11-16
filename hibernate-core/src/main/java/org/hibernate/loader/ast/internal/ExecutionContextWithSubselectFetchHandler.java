@@ -16,7 +16,6 @@ class ExecutionContextWithSubselectFetchHandler extends BaseExecutionContext {
 
 	@Nullable
 	private final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler;
-	private final boolean readOnly;
 	private final QueryOptions queryOptions;
 
 	public ExecutionContextWithSubselectFetchHandler(
@@ -24,7 +23,6 @@ class ExecutionContextWithSubselectFetchHandler extends BaseExecutionContext {
 			@Nullable SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler) {
 		super( session );
 		this.subSelectFetchableKeysHandler = subSelectFetchableKeysHandler;
-		this.readOnly = false;
 		this.queryOptions = QueryOptions.NONE;
 	}
 
@@ -35,7 +33,6 @@ class ExecutionContextWithSubselectFetchHandler extends BaseExecutionContext {
 			@Nonnull LockOptions lockOptions) {
 		super( session );
 		this.subSelectFetchableKeysHandler = subSelectFetchableKeysHandler;
-		this.readOnly = readOnly;
 		this.queryOptions = determineQueryOptions( readOnly, lockOptions );
 	}
 

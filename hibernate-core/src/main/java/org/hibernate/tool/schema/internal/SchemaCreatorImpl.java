@@ -242,7 +242,7 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 			SqlStringGenerationContext context,
 			Set<String> exportIdentifiers,
 			GenerationTarget[] targets) {
-		final var exporter = new StandardAuxiliaryDatabaseObjectExporter( dialect );
+		final var exporter = new StandardAuxiliaryDatabaseObjectExporter( );
 		for ( var auxiliaryDatabaseObject : metadata.getDatabase().getAuxiliaryDatabaseObjects() ) {
 			if ( auxiliaryDatabaseObject.appliesToDialect( dialect )
 					&& !auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
@@ -455,7 +455,7 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 			SqlStringGenerationContext context,
 			Set<String> exportIdentifiers,
 			GenerationTarget[] targets) {
-		final var exporter = new StandardAuxiliaryDatabaseObjectExporter( dialect );
+		final var exporter = new StandardAuxiliaryDatabaseObjectExporter( );
 		for ( var auxiliaryDatabaseObject : metadata.getDatabase().getAuxiliaryDatabaseObjects() ) {
 			if ( auxiliaryDatabaseObject.beforeTablesOnCreation()
 					&& auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {

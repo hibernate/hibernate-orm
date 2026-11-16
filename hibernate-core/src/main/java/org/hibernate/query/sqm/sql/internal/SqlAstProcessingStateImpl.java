@@ -6,10 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import org.hibernate.query.sqm.sql.spi.ConversionException;
-import org.hibernate.sql.ast.spi.translation.Clause;
 import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.creation.SqlAstProcessingState;
 import org.hibernate.sql.ast.spi.creation.SqlExpressionResolver;
@@ -30,29 +28,24 @@ public class SqlAstProcessingStateImpl
 	private final SqlAstProcessingState parentState;
 	private final SqlAstCreationState creationState;
 	private final SqlExpressionResolver expressionResolver;
-	private final Supplier<Clause> currentClauseAccess;
 
 	private final Map<ColumnReferenceKey, Expression> expressionMap = new HashMap<>();
 
 	public SqlAstProcessingStateImpl(
 			SqlAstProcessingState parentState,
-			SqlAstCreationState creationState,
-			Supplier<Clause> currentClauseAccess) {
+			SqlAstCreationState creationState) {
 		this.parentState = parentState;
 		this.creationState = creationState;
 		this.expressionResolver = this;
-		this.currentClauseAccess = currentClauseAccess;
 	}
 
 	public SqlAstProcessingStateImpl(
 			SqlAstProcessingState parentState,
 			SqlAstCreationState creationState,
-			Function<SqlExpressionResolver, SqlExpressionResolver> expressionResolverDecorator,
-			Supplier<Clause> currentClauseAccess) {
+			Function<SqlExpressionResolver, SqlExpressionResolver> expressionResolverDecorator) {
 		this.parentState = parentState;
 		this.creationState = creationState;
 		this.expressionResolver = expressionResolverDecorator.apply( this );
-		this.currentClauseAccess = currentClauseAccess;
 	}
 
 

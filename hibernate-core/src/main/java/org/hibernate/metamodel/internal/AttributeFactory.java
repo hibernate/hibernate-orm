@@ -282,7 +282,6 @@ public class AttributeFactory {
 				context.getJavaTypeRegistry().resolveManagedTypeDescriptor( subclass ),
 				castSuperType,
 				discriminatorType,
-				false,
 				context.getJpaMetamodel()
 		);
 	}
@@ -292,7 +291,6 @@ public class AttributeFactory {
 				context.getJavaTypeRegistry().resolveDescriptor( java.util.Map.class ),
 				null,
 				null,
-				true,
 				context.getJpaMetamodel()
 		);
 

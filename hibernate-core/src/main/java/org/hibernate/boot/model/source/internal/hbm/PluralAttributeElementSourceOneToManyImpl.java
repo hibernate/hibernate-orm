@@ -14,7 +14,6 @@ public class PluralAttributeElementSourceOneToManyImpl
 		implements PluralAttributeElementSourceOneToMany {
 	private final JaxbHbmOneToManyCollectionElementType jaxbOneToManyElement;
 	private final String referencedEntityName;
-	private final String cascadeString;
 
 	public PluralAttributeElementSourceOneToManyImpl(
 			MappingDocument mappingDocument,
@@ -23,7 +22,6 @@ public class PluralAttributeElementSourceOneToManyImpl
 			String cascadeString) {
 		super( mappingDocument, pluralAttributeSource );
 		this.jaxbOneToManyElement = jaxbOneToManyElement;
-		this.cascadeString = cascadeString;
 
 		this.referencedEntityName = StringHelper.isNotEmpty( jaxbOneToManyElement.getEntityName() )
 				? jaxbOneToManyElement.getEntityName()

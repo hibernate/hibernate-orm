@@ -979,25 +979,6 @@ class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 		);
 	}
 
-	/**
-	 * Creates a new, empty map with the specified initial capacity
-	 * and load factor and with the default reference types (weak keys,
-	 * strong values), and concurrencyLevel (16).
-	 *
-	 * @param initialCapacity The implementation performs internal
-	 * sizing to accommodate this many elements.
-	 * @param loadFactor the load factor threshold, used to control resizing.
-	 * Resizing may be performed when the average number of elements per
-	 * bin exceeds this threshold.
-	 *
-	 * @throws IllegalArgumentException if the initial capacity of
-	 * elements is negative or the load factor is nonpositive
-	 * @since 1.6
-	 */
-	public ConcurrentReferenceHashMap(int initialCapacity, float loadFactor) {
-		this( initialCapacity, loadFactor, DEFAULT_CONCURRENCY_LEVEL );
-	}
-
 
 	/**
 	 * Creates a new, empty map with the specified initial capacity,
@@ -1021,46 +1002,12 @@ class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 	}
 
 	/**
-	 * Creates a new, empty map with the specified initial capacity,
-	 * and with default reference types (weak keys, strong values),
-	 * load factor (0.75) and concurrencyLevel (16).
-	 *
-	 * @param initialCapacity the initial capacity. The implementation
-	 * performs internal sizing to accommodate this many elements.
-	 *
-	 * @throws IllegalArgumentException if the initial capacity of
-	 * elements is negative.
-	 */
-	public ConcurrentReferenceHashMap(int initialCapacity) {
-		this( initialCapacity, DEFAULT_LOAD_FACTOR, DEFAULT_CONCURRENCY_LEVEL );
-	}
-
-	/**
 	 * Creates a new, empty map with a default initial capacity (16),
 	 * reference types (weak keys, strong values), default
 	 * load factor (0.75) and concurrencyLevel (16).
 	 */
 	public ConcurrentReferenceHashMap() {
 		this( DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR, DEFAULT_CONCURRENCY_LEVEL );
-	}
-
-	/**
-	 * Creates a new map with the same mappings as the given map.
-	 * The map is created with a capacity of 1.5 times the number
-	 * of mappings in the given map or 16 (whichever is greater),
-	 * and a default load factor (0.75) and concurrencyLevel (16).
-	 *
-	 * @param m the map
-	 */
-	public ConcurrentReferenceHashMap(Map<? extends K, ? extends V> m) {
-		this(
-				Math.max(
-						(int) ( m.size() / DEFAULT_LOAD_FACTOR ) + 1,
-						DEFAULT_INITIAL_CAPACITY
-				),
-				DEFAULT_LOAD_FACTOR, DEFAULT_CONCURRENCY_LEVEL
-		);
-		putAll( m );
 	}
 
 	/**
@@ -1269,27 +1216,6 @@ class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 	}
 
 	/**
-	 * Legacy method testing if some key maps into the specified value
-	 * in this table.  This method is identical in functionality to
-	 * {@link #containsValue}, and exists solely to ensure
-	 * full compatibility with class {@link java.util.Hashtable},
-	 * which supported this method prior to introduction of the
-	 * Java Collections framework.
-	 *
-	 * @param value a value to search for
-	 *
-	 * @return {@code true} if and only if some key maps to the
-	 * {@code value} argument in this table as
-	 * determined by the {@code equals} method;
-	 * {@code false} otherwise
-	 *
-	 * @throws NullPointerException if the specified value is null
-	 */
-	public boolean contains(Object value) {
-		return containsValue( value );
-	}
-
-	/**
 	 * Maps the specified key to the specified value in this table.
 	 * Neither the key nor the value can be null.
 	 * <p>
@@ -1419,23 +1345,6 @@ class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 		}
 	}
 
-	/**
-	 * Removes any stale entries whose keys have been finalized. Use of this
-	 * method is normally not necessary since stale entries are automatically
-	 * removed lazily, when blocking operations are required. However, there
-	 * are some cases where this operation should be performed eagerly, such
-	 * as cleaning up old references to a ClassLoader in a multi-classloader
-	 * environment.
-	 * <p>
-	 * Note: this method will acquire locks, one at a time, across all segments
-	 * of this table, so if it is to be used, it should be used sparingly.
-	 */
-	public void purgeStaleEntries() {
-		for ( int i = 0; i < segments.length; ++i ) {
-			segments[i].removeStale();
-		}
-	}
-
 
 	/**
 	 * Returns a {@link Set} view of the keys contained in this map.
@@ -1501,28 +1410,6 @@ class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 	public Set<Entry<K, V>> entrySet() {
 		Set<Entry<K, V>> es = entrySet;
 		return ( es != null ) ? es : ( entrySet = new EntrySet() );
-	}
-
-	/**
-	 * Returns an enumeration of the keys in this table.
-	 *
-	 * @return an enumeration of the keys in this table
-	 *
-	 * @see #keySet()
-	 */
-	public Enumeration<K> keys() {
-		return new KeyIterator();
-	}
-
-	/**
-	 * Returns an enumeration of the values in this table.
-	 *
-	 * @return an enumeration of the values in this table
-	 *
-	 * @see #values()
-	 */
-	public Enumeration<V> elements() {
-		return new ValueIterator();
 	}
 
 	/* ---------------- Iterator Support -------------- */
@@ -1645,11 +1532,6 @@ class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 		public SimpleEntry(K key, V value) {
 			this.key = key;
 			this.value = value;
-		}
-
-		public SimpleEntry(Entry<? extends K, ? extends V> entry) {
-			this.key = entry.getKey();
-			this.value = entry.getValue();
 		}
 
 		@Override

@@ -20,7 +20,6 @@ import org.hibernate.boot.model.source.spi.ToolingHintContext;
 class IdClassSource implements EmbeddableSource {
 	private final JavaTypeDescriptor idClassDescriptor;
 	private final RootEntitySourceImpl rootEntitySource;
-	private final MappingDocument sourceMappingDocument;
 	private final AttributePath attributePathBase;
 	private final AttributeRole attributeRoleBase;
 
@@ -33,7 +32,6 @@ class IdClassSource implements EmbeddableSource {
 			MappingDocument sourceMappingDocument) {
 		this.idClassDescriptor = idClassDescriptor;
 		this.rootEntitySource = rootEntitySource;
-		this.sourceMappingDocument = sourceMappingDocument;
 		this.attributePathBase = rootEntitySource.getAttributePathBase().append( "<IdClass>" );
 		this.attributeRoleBase = rootEntitySource.getAttributeRoleBase().append( "<IdClass>" );
 

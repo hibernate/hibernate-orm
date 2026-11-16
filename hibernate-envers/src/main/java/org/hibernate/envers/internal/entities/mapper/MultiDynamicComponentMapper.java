@@ -15,10 +15,7 @@ import java.util.Map;
  */
 public class MultiDynamicComponentMapper extends MultiPropertyMapper {
 
-	private PropertyData dynamicComponentData;
-
-	public MultiDynamicComponentMapper(PropertyData dynamicComponentData) {
-		this.dynamicComponentData = dynamicComponentData;
+	public MultiDynamicComponentMapper() {
 	}
 
 	@Override

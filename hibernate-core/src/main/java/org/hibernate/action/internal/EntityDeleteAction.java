@@ -104,11 +104,6 @@ public class EntityDeleteAction extends EntityAction {
 	}
 
 	@Nullable
-	private Object getNaturalIdValues() {
-		return naturalIdValues;
-	}
-
-	@Nullable
 	protected SoftLock getLock() {
 		return lock;
 	}

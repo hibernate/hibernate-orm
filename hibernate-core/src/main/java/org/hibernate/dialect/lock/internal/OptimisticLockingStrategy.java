@@ -21,7 +21,6 @@ import org.hibernate.persister.entity.EntityPersister;
  * @since 3.5
  */
 public class OptimisticLockingStrategy implements LockingStrategy {
-	private final EntityPersister lockable;
 	private final LockMode lockMode;
 
 	/**
@@ -31,7 +30,6 @@ public class OptimisticLockingStrategy implements LockingStrategy {
 	 * @param lockMode Indicates the type of lock to be acquired.
 	 */
 	public OptimisticLockingStrategy(EntityPersister lockable, LockMode lockMode) {
-		this.lockable = lockable;
 		this.lockMode = lockMode;
 		if ( lockMode.lessThan( LockMode.OPTIMISTIC ) ) {
 			throw new HibernateException( "Entity '" + lockable.getEntityName()

@@ -111,24 +111,6 @@ public class ManyToOneType extends EntityType {
 		return ForeignKeyDirection.FROM_PARENT;
 	}
 
-	/**
-	 * Register the entity as batch loadable, if enabled
-	 */
-	private void scheduleBatchLoadIfNeeded(Object id, SharedSessionContractImplementor session)
-			throws MappingException {
-		//cannot batch fetch by unique key (property-ref associations)
-		if ( uniqueKeyPropertyName == null && id != null ) {
-			final var persister = getAssociatedEntityPersister( session.getFactory() );
-			if ( session.getLoadQueryInfluencers().effectivelyBatchLoadable( persister ) ) {
-				final var entityKey = session.generateEntityKey( id, persister );
-				final var persistenceContext = session.getPersistenceContextInternal();
-				if ( !persistenceContext.containsEntity( entityKey ) ) {
-					persistenceContext.getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
-				}
-			}
-		}
-	}
-
 	@Override
 	public boolean useLHSPrimaryKey() {
 		return false;

@@ -65,8 +65,4 @@ final class CommunityNamespaceSupport implements NamespaceSupport {
 	static String[] unsupportedCatalog(String name) {
 		throw new UnsupportedOperationException( "Catalog lifecycle is not supported" );
 	}
-
-	static String[] unsupportedSchema(String name) {
-		throw new UnsupportedOperationException( "Schema lifecycle is not supported" );
-	}
 }

@@ -834,11 +834,6 @@ abstract class BaseEntityPersister implements Serializable {
 		return subclassId;
 	}
 
-	@Nonnull
-	public EntityType getEntityType() {
-		return entityType;
-	}
-
 	@Nullable
 	protected String getIdentifierAttributeName() {
 		return identifierPropertyName;

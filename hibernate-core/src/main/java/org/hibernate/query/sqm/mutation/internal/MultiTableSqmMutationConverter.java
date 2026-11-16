@@ -80,8 +80,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 
 		final SqlAstProcessingStateImpl rootProcessingState = new SqlAstProcessingStateImpl(
 				null,
-				this,
-				getCurrentClauseStack()::getCurrent
+				this
 		);
 
 		pushProcessingState( rootProcessingState );

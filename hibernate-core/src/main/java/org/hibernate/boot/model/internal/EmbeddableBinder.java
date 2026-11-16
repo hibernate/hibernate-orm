@@ -1094,10 +1094,6 @@ public class EmbeddableBinder {
 		embeddable.setColumnNamingPattern( columnNamingPattern );
 	}
 
-	private static ConstructorDetails resolveInstantiator(TypeDetails embeddableClass) {
-		return embeddableClass == null ? null : resolveInstantiator( embeddableClass.determineRawClass() );
-	}
-
 	private static ConstructorDetails resolveInstantiator(ClassDetails embeddableClass) {
 		if ( embeddableClass == null ) {
 			return null;

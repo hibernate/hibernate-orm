@@ -50,10 +50,8 @@ import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
 import org.hibernate.dialect.sql.ast.spi.ValuesListSupport;
 
 import jakarta.persistence.TemporalType;
-import jakarta.persistence.Timeout;
 import jakarta.annotation.Nullable;
 import org.hibernate.QueryTimeoutException;
-import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.aggregate.spi.AggregateSupport;
@@ -785,14 +783,6 @@ public class H2Dialect extends Dialect implements CurrentTemporalSupport, Tempor
 	@Override
 	public LockingSupport getLockingSupport() {
 		return getVersion().isSameOrAfter( 2, 2, 220 ) ? H2LockingSupport.INSTANCE : H2LockingSupport.LEGACY_INSTANCE;
-	}
-
-
-
-
-	private String withRealTimeout(String lockString, Timeout timeout) {
-		assert Timeouts.isRealTimeout( timeout );
-		return lockString + " wait " + Timeouts.getTimeoutInSeconds( timeout );
 	}
 
 	@Override

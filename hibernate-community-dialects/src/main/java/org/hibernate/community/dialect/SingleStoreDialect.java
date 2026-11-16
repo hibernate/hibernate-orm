@@ -234,7 +234,6 @@ public class SingleStoreDialect extends Dialect implements CurrentTemporalSuppor
 	@Override public TypeSizingProfile getTypeSizingProfile() { return typeSizingProfile; }
 
 	private static final int PARAM_LIST_SIZE_LIMIT = 1_048_576;
-	private static final String[] NO_COMMANDS = new String[0];
 	private static final EmptyExporter NOOP_EXPORTER = new EmptyExporter();
 	private static final UniqueDelegate NOOP_UNIQUE_DELEGATE = UniqueDelegates.none();
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 8, 0 );

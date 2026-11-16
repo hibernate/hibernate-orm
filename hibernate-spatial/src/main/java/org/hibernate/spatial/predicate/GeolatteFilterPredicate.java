@@ -20,15 +20,9 @@ import org.geolatte.geom.crs.CoordinateReferenceSystem;
 @Deprecated(since = "6.2")
 public class GeolatteFilterPredicate {
 
-	private final Expression<? extends Geometry> geometry;
-	private final Expression<? extends Geometry> filter;
-
 	public GeolatteFilterPredicate(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry,
 			Expression<? extends Geometry> filter) {
-
-		this.geometry = geometry;
-		this.filter = filter;
 	}
 
 	public GeolatteFilterPredicate(

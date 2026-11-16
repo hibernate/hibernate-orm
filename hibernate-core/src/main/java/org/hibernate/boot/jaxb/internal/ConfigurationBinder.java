@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.jaxb.internal;
 
+import java.util.function.Function;
 import javax.xml.stream.XMLEventFactory;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.events.StartElement;
@@ -15,20 +16,36 @@ import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl;
 import org.hibernate.boot.jaxb.internal.stax.ConfigurationEventReader;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.xsd.ConfigXsdSupport;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.internal.util.config.ConfigurationException;
 
+import jakarta.annotation.Nullable;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
+
+import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 
 /**
  * @author Steve Ebersole
  */
 public class ConfigurationBinder extends AbstractBinder<JaxbPersistenceImpl> {
 	private final XMLEventFactory xmlEventFactory = XMLEventFactory.newInstance();
+	/**
+	 * Access to the settings available while parsing {@code persistence.xml}.
+	 * {@code null} means no settings, in which case the secure defaults apply.
+	 */
+	private final @Nullable Function<String, Object> settingsAccess;
 	private JAXBContext jaxbContext;
 
 	public ConfigurationBinder(ResourceStreamLocator resourceStreamLocator) {
+		this( resourceStreamLocator, null );
+	}
+
+	public ConfigurationBinder(
+			ResourceStreamLocator resourceStreamLocator,
+			@Nullable Function<String, Object> settingsAccess) {
 		super( resourceStreamLocator );
+		this.settingsAccess = settingsAccess;
 	}
 
 	@Override
@@ -36,12 +53,16 @@ public class ConfigurationBinder extends AbstractBinder<JaxbPersistenceImpl> {
 		return false;
 	}
 
-	// persistence.xml is parsed before Hibernate settings are resolved, so there is no
-	// settings source to read from here; always apply the secure defaults.
+	// persistence.xml is parsed before the persistence unit properties are known, so
+	// only the settings supplied through settingsAccess can enable DTD processing here.
 
 	@Override
 	public boolean isDtdAndExternalEntitiesAllowed() {
-		return false;
+		if ( settingsAccess == null ) {
+			return false;
+		}
+		final Object setting = settingsAccess.apply( MappingSettings.XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES );
+		return setting != null && BOOLEAN.convert( setting );
 	}
 
 	@Override

@@ -22,6 +22,7 @@ import static org.hibernate.SPI.Role.IMPLEMENT;
 import static org.hibernate.SPI.Role.SUPPLY;
 
 import org.hibernate.dialect.type.spi.StandardDdlTypes;
+import org.hibernate.dialect.type.internal.SQLServerTimeDdlType;
 
 import org.hibernate.dialect.type.spi.TypeSizingProfile;
 
@@ -268,6 +269,14 @@ public class SQLServerDialect extends AbstractTransactSQLDialect implements Curr
 				? arrayJdbcType.getElementJdbcType()
 				: jdbcType;
 			return switch ( elementJdbcType.getDdlTypeCode() ) {
+				case TIME -> {
+					SQLServerTimeDdlType.validatePrecision( precision );
+					final Size size = super.resolveSize( jdbcType, javaType, precision, scale, length );
+					// Omission means the server default, not the JavaType's implicit zero.
+					// Keep it distinct from an explicitly requested time(0).
+					size.setPrecision( precision );
+					yield size;
+				}
 				case BLOB, CLOB, NCLOB ->
 						super.resolveSize( jdbcType, javaType, precision, scale,
 								length == null ? getTypeSizingProfile().defaultLobLength() : length );
@@ -388,6 +397,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect implements Curr
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final var ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+		// Preserve subclass-supplied column/cast patterns. Only the standard TIME
+		// declaration needs our distinction between omitted and explicit precision.
+		if ( "time".equals( columnType( TIME ) ) && "time".equals( castType( TIME ) ) ) {
+			ddlTypeRegistry.addDescriptor( new SQLServerTimeDdlType( this ) );
+		}
 		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( GEOMETRY, "geometry", this ) );
 		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( GEOGRAPHY, "geography", this ) );
 		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( SQLXML, "xml", this ) );

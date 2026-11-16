@@ -1891,6 +1891,21 @@ applying to the same property, including constraints inherited from overridden g
 Previously, the column length depended on the iteration order of the constraints and
 may have resulted in a different constraint being applied.
 
+[[sqlserver-time-precision]]
+=== SQL Server TIME precision
+
+SQL Server `TIME` columns now honor explicitly declared fractional-second precision, including
+`@Column(secondPrecision = 0)` and the deprecated `@FractionalSeconds` annotation.
+For example, precision three generates `time(3)` instead of plain `time`.
+Omitting precision continues to generate `time`, retaining SQL Server's seven-digit default.
+
+Existing schemas are not automatically narrowed. If an application previously requested a lower
+precision but its column was created as plain `time`, review the physical schema before migrating.
+Reducing its precision may change stored values, including values near a second or midnight boundary.
+Declare precision seven or retain an appropriate explicit column definition when that existing storage
+precision is intended.
+
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Dependency changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

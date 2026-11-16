@@ -18,6 +18,7 @@ import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.SpannerDialect;
@@ -213,8 +214,7 @@ public class PessimisticRefreshSnapshotTest implements ServiceRegistryProducer {
 				final var failure = assertThrows( PersistenceException.class,
 						() -> session.find( RefreshTarget.class, 1, loadMode ),
 						"Locking a row updated since the transaction snapshot must fail" );
-				final var sqlException = sqlException( failure );
-				assertEquals( "40001", sqlException.getSQLState(), "Expected a serialization failure" );
+				assertSerializationFailure( scope, failure );
 				return;
 			}
 			if ( isMariaSnapshotIsolation( scope, session ) ) {
@@ -246,7 +246,7 @@ public class PessimisticRefreshSnapshotTest implements ServiceRegistryProducer {
 							&& isH2( scope.getSessionFactory().getJdbcServices().getDialect() ) ) {
 				// H2 also detects the conflict once the target itself has been read.
 				final var failure = assertThrows( PersistenceException.class, () -> session.refresh( target, loadMode ) );
-				assertEquals( "40001", sqlException( failure ).getSQLState() );
+				assertSerializationFailure( scope, failure );
 				return;
 			}
 			if ( isMariaSnapshotIsolation( scope, session ) ) {
@@ -288,6 +288,17 @@ public class PessimisticRefreshSnapshotTest implements ServiceRegistryProducer {
 		assertEquals( errorCode, sqlException( failure ).getErrorCode() );
 	}
 
+	private static void assertSerializationFailure(SessionFactoryScope scope, PersistenceException failure) {
+		final var sqlException = sqlException( failure );
+		if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof CUBRIDDialect ) {
+			// CUBRID reports ER_MVCC_SERIALIZABLE_CONFLICT without an SQLState
+			assertEquals( -1158, sqlException.getErrorCode(), "Expected a serialization failure" );
+		}
+		else {
+			assertEquals( "40001", sqlException.getSQLState(), "Expected a serialization failure" );
+		}
+	}
+
 	@Test
 	void sameValueTimestampForceIncrementDoesNotProveOwnWriteVisibility(SessionFactoryScope scope) {
 		scope.inTransaction( session -> session.persist( new TimestampTarget() ) );
@@ -296,7 +307,7 @@ public class PessimisticRefreshSnapshotTest implements ServiceRegistryProducer {
 			if ( hasFixedLockingSnapshot( scope ) ) {
 				final var failure = assertThrows( PersistenceException.class,
 						() -> session.find( TimestampTarget.class, 1, LockMode.PESSIMISTIC_FORCE_INCREMENT ) );
-				assertEquals( "40001", sqlException( failure ).getSQLState() );
+				assertSerializationFailure( scope, failure );
 				return;
 			}
 			if ( isMariaSnapshotIsolation( scope, session ) ) {
@@ -336,6 +347,7 @@ public class PessimisticRefreshSnapshotTest implements ServiceRegistryProducer {
 		return dialect.getLockingSupport().getTransactionConcurrencyResolver()
 				instanceof org.hibernate.dialect.lock.internal.PostgreSQLTransactionConcurrencyResolver
 				&& isolationLevel == TRANSACTION_REPEATABLE_READ
+				|| dialect instanceof CUBRIDDialect && isolationLevel == TRANSACTION_REPEATABLE_READ
 				|| isH2( dialect ) && isolationLevel == 6;
 	}
 

@@ -198,19 +198,6 @@ public final class ByteBuddyState {
 		}
 	}
 
-	private Class<?> load(Class<?> referenceClass, TypeCache<TypeCache.SimpleKey> cache,
-			TypeCache.SimpleKey cacheKey, Function<ByteBuddy, DynamicType.Builder<?>> makeProxyFunction) {
-		return cache.findOrInsert(
-				referenceClass.getClassLoader(),
-				cacheKey,
-				() -> make( makeProxyFunction.apply( byteBuddy ) )
-						.load( referenceClass.getClassLoader(),
-								resolveClassLoadingStrategy( referenceClass ) )
-						.getLoaded(),
-				cache
-		);
-	}
-
 	public Unloaded<?> make(Function<ByteBuddy, DynamicType.Builder<?>> makeProxyFunction) {
 		return make( makeProxyFunction.apply( byteBuddy ) );
 	}

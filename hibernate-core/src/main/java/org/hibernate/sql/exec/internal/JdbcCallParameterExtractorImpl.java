@@ -13,7 +13,6 @@ import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
  * @author Steve Ebersole
  */
 public class JdbcCallParameterExtractorImpl<T> implements JdbcCallParameterExtractor<T> {
-	private final String callableName;
 	private final String parameterName;
 	private final int parameterPosition;
 	private final OutputableType<T> ormType;
@@ -23,7 +22,6 @@ public class JdbcCallParameterExtractorImpl<T> implements JdbcCallParameterExtra
 			String parameterName,
 			int parameterPosition,
 			OutputableType<T> ormType) {
-		this.callableName = callableName;
 		this.parameterName = parameterName;
 		this.parameterPosition = parameterPosition;
 		this.ormType = ormType;

@@ -1,7 +1,6 @@
 package org.hibernate.query.sqm.internal;
 
 import java.util.List;
-import java.util.Locale;
 
 import jakarta.annotation.Nullable;
 import org.hibernate.query.sqm.spi.DiscriminatorSqmPath;
@@ -245,35 +244,9 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 		logWithIndentation(  String.format( pattern, arg1 ) );
 	}
 
-	private void logWithIndentation(String pattern, Object arg1, Object arg2) {
-		logWithIndentation( String.format( pattern, arg1, arg2 ) );
-	}
-
-	private void logWithIndentation(String pattern, Object... args) {
-		logWithIndentation( String.format( pattern, args ) );
-	}
-
 	private void logIndented(String line) {
 		depth++;
 		logWithIndentation( line );
-		depth--;
-	}
-
-	private void logIndented(String pattern, Object arg) {
-		depth++;
-		logWithIndentation( String.format( Locale.ROOT, pattern, arg ) );
-		depth--;
-	}
-
-	private void logIndented(String pattern, Object arg1, Object arg2) {
-		depth++;
-		logWithIndentation( String.format( Locale.ROOT, pattern, arg1, arg2 ) );
-		depth--;
-	}
-
-	private void logIndented(String pattern, Object... args) {
-		depth++;
-		logWithIndentation( String.format( Locale.ROOT, pattern, args ) );
 		depth--;
 	}
 

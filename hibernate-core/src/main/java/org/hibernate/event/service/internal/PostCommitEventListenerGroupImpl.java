@@ -23,7 +23,7 @@ class PostCommitEventListenerGroupImpl<T> extends EventListenerGroupImpl<T> {
 	public PostCommitEventListenerGroupImpl(
 			EventType<T> eventType,
 			boolean isJpaBootstrap) {
-		super( eventType, isJpaBootstrap );
+		super( eventType);
 
 		if ( eventType == EventType.POST_COMMIT_DELETE ) {
 			extendedListenerContract = PostCommitDeleteEventListener.class;

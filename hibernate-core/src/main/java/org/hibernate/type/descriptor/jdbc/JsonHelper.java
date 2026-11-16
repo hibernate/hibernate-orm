@@ -312,10 +312,6 @@ public class JsonHelper {
 			}
 		}
 
-		public Object[] getUnderlyingArray() {
-			return array;
-		}
-
 		@Override
 		public int size() {
 			return size;

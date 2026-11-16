@@ -9,10 +9,7 @@ import java.util.Locale;
 public class InterSystemsIRISLimitHandler extends AbstractLimitHandler {
 	public static final InterSystemsIRISLimitHandler INSTANCE = new InterSystemsIRISLimitHandler(true);
 
-	private final boolean variableLimit;
-
 	public InterSystemsIRISLimitHandler(boolean variableLimit) {
-		this.variableLimit = variableLimit;
 	}
 
 	@Override

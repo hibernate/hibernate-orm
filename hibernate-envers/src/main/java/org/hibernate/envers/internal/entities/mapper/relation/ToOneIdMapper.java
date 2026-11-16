@@ -26,19 +26,16 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 	private final IdMapper delegate;
 	private final String referencedEntityName;
 	private final boolean nonInsertableFake;
-	private final boolean lazyMapping;
 
 	public ToOneIdMapper(
 			IdMapper delegate,
 			PropertyData propertyData,
 			String referencedEntityName,
-			boolean nonInsertableFake,
-			boolean lazyMapping) {
+			boolean nonInsertableFake) {
 		super( delegate.getServiceRegistry(), propertyData );
 		this.delegate = delegate;
 		this.referencedEntityName = referencedEntityName;
 		this.nonInsertableFake = nonInsertableFake;
-		this.lazyMapping = lazyMapping;
 	}
 
 	@Override

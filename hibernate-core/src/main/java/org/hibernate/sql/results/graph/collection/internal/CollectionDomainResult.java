@@ -32,7 +32,6 @@ public class CollectionDomainResult implements DomainResult, CollectionResultGra
 	private final PluralAttributeMapping loadingAttribute;
 
 	private final String resultVariable;
-	private final TableGroup tableGroup;
 
 	private final DomainResult fkResult;
 
@@ -47,7 +46,6 @@ public class CollectionDomainResult implements DomainResult, CollectionResultGra
 		this.loadingPath = loadingPath;
 		this.loadingAttribute = loadingAttribute;
 		this.resultVariable = resultVariable;
-		this.tableGroup = tableGroup;
 		// The collection is always the target side
 		this.fkResult = loadingAttribute.getKeyDescriptor().createKeyDomainResult(
 				loadingPath,

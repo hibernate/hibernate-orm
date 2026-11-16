@@ -81,10 +81,6 @@ class ByteBuddyEnhancementContext {
 		return options.doBiDirectionalAssociationManagement();
 	}
 
-	public boolean isDiscoveredType(TypeDescription typeDescription) {
-		return session.discoveredTypes.containsKey(typeDescription.getName());
-	}
-
 	public void registerDiscoveredType(TypeDescription typeDescription, Type.PersistenceType type) {
 		session.discoveredTypes.put(typeDescription.getName(), type);
 	}

@@ -12,7 +12,6 @@ import org.hibernate.cascade.spi.CascadeStyle;
 import org.hibernate.cascade.spi.CascadeStyles;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
-import org.hibernate.jpa.boot.spi.CallbackDefinition;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.models.spi.MemberDetails;
@@ -73,7 +72,6 @@ public class Property implements Serializable, MetaAttributable {
 	private boolean isGeneric;
 	private boolean isGenericSpecialization;
 	private boolean lob;
-	private java.util.List<CallbackDefinition> callbackDefinitions;
 	private String returnedClassName;
 
 	public boolean isBackRef() {

@@ -162,7 +162,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		final Set<String> exportIdentifiers = setOfSize( 50 );
 
 		final var database = metadata.getDatabase();
-		final var auxiliaryExporter = new StandardAuxiliaryDatabaseObjectExporter( dialect );
+		final var auxiliaryExporter = new StandardAuxiliaryDatabaseObjectExporter( );
 
 		// Drop all AuxiliaryDatabaseObjects
 		for ( var auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {

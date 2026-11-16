@@ -151,10 +151,6 @@ public class HANAJsonValueFunction extends JsonValueFunction {
 		}
 	}
 
-	static boolean isEncodedBoolean(JdbcMapping type) {
-		return type.getJdbcType().isBoolean();
-	}
-
 	private static boolean requiresSpecialExtraction(int sqlTypeCode) {
 		return switch ( sqlTypeCode ) {
 			case BOOLEAN, UUID, BINARY, VARBINARY, LONG32VARBINARY, BLOB, TIMESTAMP, TIMESTAMP_WITH_TIMEZONE,

@@ -40,13 +40,6 @@ public class DynamicInstantiationAssemblerMapImpl implements DomainResultAssembl
 		}
 	}
 
-	private DynamicInstantiationAssemblerMapImpl(
-			List<ArgumentReader<?>> argumentReaders,
-			JavaType<Map<?,?>> mapJavaType) {
-		this.mapJavaType = mapJavaType;
-		this.argumentReaders = argumentReaders;
-	}
-
 	@Override
 	public JavaType<Map<?,?>> getAssembledJavaType() {
 		return mapJavaType;

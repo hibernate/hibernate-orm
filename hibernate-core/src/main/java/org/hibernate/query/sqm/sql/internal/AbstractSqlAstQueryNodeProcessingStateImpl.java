@@ -24,7 +24,7 @@ public abstract class AbstractSqlAstQueryNodeProcessingStateImpl
 			SqlAstProcessingState parent,
 			SqlAstCreationState creationState,
 			Supplier<Clause> currentClauseAccess) {
-		super( parent, creationState, currentClauseAccess );
+		super( parent, creationState);
 	}
 
 	public AbstractSqlAstQueryNodeProcessingStateImpl(
@@ -32,7 +32,7 @@ public abstract class AbstractSqlAstQueryNodeProcessingStateImpl
 			SqlAstCreationState creationState,
 			Function<SqlExpressionResolver, SqlExpressionResolver> expressionResolverDecorator,
 			Supplier<Clause> currentClauseAccess) {
-		super( parent, creationState, expressionResolverDecorator, currentClauseAccess );
+		super( parent, creationState, expressionResolverDecorator);
 	}
 
 	@Override

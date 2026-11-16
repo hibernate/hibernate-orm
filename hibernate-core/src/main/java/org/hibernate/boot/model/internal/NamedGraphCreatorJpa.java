@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static java.util.Collections.emptyList;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 
@@ -37,14 +36,6 @@ class NamedGraphCreatorJpa implements NamedGraphCreator {
 	private final String jpaEntityName;
 	private final List<FetchGraphContribution> fetchContributions;
 	private final ModelsContext modelsContext;
-
-	NamedGraphCreatorJpa(NamedEntityGraph annotation, String jpaEntityName) {
-		this( annotation, jpaEntityName, emptyList(), null );
-	}
-
-	NamedGraphCreatorJpa(NamedEntityGraph annotation, String jpaEntityName, List<FetchGraphContribution> fetchContributions) {
-		this( annotation, jpaEntityName, fetchContributions, null );
-	}
 
 	NamedGraphCreatorJpa(
 			NamedEntityGraph annotation,

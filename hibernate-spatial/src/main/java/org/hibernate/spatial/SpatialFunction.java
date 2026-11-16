@@ -19,127 +19,127 @@ public enum SpatialFunction {
 	/**
 	 * The dimension function, cfr. OGC 99-049, s2.1.1.1
 	 */
-	dimension( "SFS 1.1" ),
+	dimension( ),
 
 	/**
 	 * The geometryType function, cfr. OGC 99-049, s2.1.1.1
 	 */
-	geometrytype( "SFS 1.1" ),
+	geometrytype( ),
 
 	/**
 	 * The SRID function, cfr. OGC 99-049, s2.1.1.1
 	 */
-	srid( "SFS 1.1" ),
+	srid( ),
 
 	/**
 	 * The envelope function, cfr. OGC 99-049, s2.1.1.1
 	 */
-	envelope( "SFS 1.1" ),
+	envelope( ),
 
 	/**
 	 * The asText function, cfr. OGC 99-049, s2.1.1.1
 	 */
-	astext( "SFS 1.1" ),
+	astext( ),
 
 	/**
 	 * The asBinary function, cfr. OGC 99-049, s2.1.1.1
 	 */
-	asbinary( "SFS 1.1" ),
+	asbinary( ),
 
 	/**
 	 * The isEmpty function, cfr. OGC 99-049, s2.1.1.1
 	 */
-	isempty( "SFS 1.1" ),
+	isempty( ),
 
 	/**
 	 * The isSimple function, cfr. OGC 99-049, s2.1.1.1
 	 */
-	issimple( "SFS 1.1" ),
+	issimple( ),
 
 	/**
 	 * The boundery function, cfr. OGC 99-049, s2.1.1.1
 	 */
-	boundary( "SFS 1.1" ),
+	boundary( ),
 
 	/**
 	 * The equals function, cfr. OGC 99-049, s2.1.1.2
 	 */
-	equals( "SFS 1.1" ),
+	equals( ),
 
 	/**
 	 * The disjoint function, cfr. OGC 99-049, s2.1.1.2
 	 */
-	disjoint( "SFS 1.1" ),
+	disjoint( ),
 
 	/**
 	 * The intersects function, cfr. OGC 99-049, s2.1.1.2
 	 */
-	intersects( "SFS 1.1" ),
+	intersects( ),
 
 	/**
 	 * The touches function, cfr. OGC 99-049, s2.1.1.2
 	 */
-	touches( "SFS 1.1" ),
+	touches( ),
 
 	/**
 	 * The crosses function, cfr. OGC 99-049, s2.1.1.2
 	 */
-	crosses( "SFS 1.1" ),
+	crosses( ),
 
 	/**
 	 * The within function, cfr. OGC 99-049, s2.1.1.2
 	 */
-	within( "SFS 1.1" ),
+	within( ),
 
 	/**
 	 * The contains function, cfr. OGC 99-049, s2.1.1.2
 	 */
-	contains( "SFS 1.1" ),
+	contains( ),
 
 	/**
 	 * The overlaps function, cfr. OGC 99-049, s2.1.1.2
 	 */
-	overlaps( "SFS 1.1" ),
+	overlaps( ),
 
 	/**
 	 * The relate function, cfr. OGC 99-049, s2.1.1.2
 	 */
-	relate( "SFS 1.1" ),
+	relate( ),
 
 	/**
 	 * The distance function, cfr. OGC 99-049, s2.1.1.3
 	 */
-	distance( "SFS 1.1" ),
+	distance( ),
 
 	/**
 	 * The buffer function, cfr. OGC 99-049, s2.1.1.3
 	 */
-	buffer( "SFS 1.1" ),
+	buffer( ),
 
 	/**
 	 * The convexHull function, cfr. OGC 99-049, s2.1.1.3
 	 */
-	convexhull( "SFS 1.1" ),
+	convexhull( ),
 
 	/**
 	 * The intersection function, cfr. OGC 99-049, s2.1.1.3
 	 */
-	intersection( "SFS 1.1" ),
+	intersection( ),
 
 	/**
 	 * The union function, cfr. OGC 99-049, s2.1.1.3
 	 */
-	geomunion( "SFS 1.1" ),
+	geomunion( ),
 
 	/**
 	 * The difference function, cfr. OGC 99-049, s2.1.1.3
 	 */
-	difference( "SFS 1.1" ),
+	difference( ),
 
 	/**
 	 * The symDifference function, cfr. OGC 99-049, s2.1.1.3
 	 */
-	symdifference( "SFS 1.1" ),
+	symdifference( ),
 
 	/**
 	 * the distance within function
@@ -147,7 +147,7 @@ public enum SpatialFunction {
 	 * The semantics are those of Postgis function ST_Dwithin (geom1, geom2, distance) : boolean. It returns true
 	 * if geom1 and geom2 are within the specified distance of one another (in units of the spatial reference system).
 	 */
-	dwithin( "common" ),
+	dwithin( ),
 
 	/**
 	 * the transform function
@@ -155,27 +155,24 @@ public enum SpatialFunction {
 	 * The semantics are those of the Postgis function ST_Transform(geometry, srid) : geometry. It returns new geometry
 	 * with its coordinates transformed to the spatial reference system referenced by the srid parameter.
 	 */
-	transform( "common" ),
+	transform( ),
 
 	/**
 	 * the extents function
 	 */
-	extent( "common" ),
+	extent( ),
 
 	/**
 	 * The filter function
 	 * <p>
 	 * Corresponds to the Oracle Spatial's "SDO_FILTER" function, or the "&amp;&amp;" operator of PostGIS.
 	 */
-	filter( "filter" ),
+	filter( ),
 
 	;
 
-	private final String description;
 
-
-	SpatialFunction(String specification) {
-		this.description = specification;
+	SpatialFunction() {
 	}
 
 }

@@ -1,5 +1,6 @@
 package org.hibernate.action.internal;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -79,10 +80,7 @@ public class EntityDeleteAction extends EntityAction {
 		return state;
 	}
 
-	private Object getNaturalIdValues() {
-		return naturalIdValues;
-	}
-
+	@Nullable
 	protected SoftLock getLock() {
 		return lock;
 	}

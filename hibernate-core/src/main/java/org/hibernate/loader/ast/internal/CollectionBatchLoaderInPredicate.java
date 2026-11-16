@@ -106,7 +106,6 @@ public class CollectionBatchLoaderInPredicate
 				keyColumnCount,
 				getLoadable().getKeyDescriptor(),
 				jdbcParameters,
-				sqlAst,
 				jdbcSelect
 		);
 

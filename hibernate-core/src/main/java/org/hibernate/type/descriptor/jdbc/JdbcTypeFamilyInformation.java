@@ -33,13 +33,6 @@ public class JdbcTypeFamilyInformation {
 	}
 
 	private final ConcurrentHashMap<Integer,Family> typeCodeToFamilyMap = new ConcurrentHashMap<>();
-	{
-		for ( Family family : Family.values() ) {
-			for ( int typeCode : family.getTypeCodes() ) {
-				typeCodeToFamilyMap.put( typeCode, family );
-			}
-		}
-	}
 
 	/**
 	 * Will return {@code null} if no match is found.

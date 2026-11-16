@@ -40,24 +40,6 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	}
 
 	/**
-	 * Retrieve the identifier of the entity being visited.
-	 *
-	 * @return The entity's identifier.
-	 */
-	final Object getOwnerIdentifier() {
-		return ownerIdentifier;
-	}
-
-	/**
-	 * Retrieve the entity being visited.
-	 *
-	 * @return The entity.
-	 */
-	final Object getOwner() {
-		return owner;
-	}
-
-	/**
 	 * {@inheritDoc}
 	 */
 	@Override

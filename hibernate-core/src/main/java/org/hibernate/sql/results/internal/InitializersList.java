@@ -21,15 +21,12 @@ public final class InitializersList {
 
 	private final Initializer<?>[] initializers;
 	private final Initializer<?>[] sortedForResolveInstance;
-	private final boolean hasCollectionInitializers;
 
 	private InitializersList(
 			Initializer<?>[] initializers,
-			Initializer<?>[] sortedForResolveInstance,
-			boolean hasCollectionInitializers) {
+			Initializer<?>[] sortedForResolveInstance) {
 		this.initializers = initializers;
 		this.sortedForResolveInstance = sortedForResolveInstance;
-		this.hasCollectionInitializers = hasCollectionInitializers;
 	}
 
 	public Initializer<?>[] getInitializers() {
@@ -98,8 +95,7 @@ public final class InitializersList {
 			final boolean hasCollectionInitializers = ( nonCollectionInitializersNum != initializers.size() );
 			return new InitializersList(
 					originalSortInitializers,
-					sortedForResolveInstance,
-					hasCollectionInitializers
+					sortedForResolveInstance
 			);
 		}
 

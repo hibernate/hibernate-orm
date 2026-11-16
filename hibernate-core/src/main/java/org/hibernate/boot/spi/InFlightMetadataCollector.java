@@ -390,8 +390,6 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	}
 
 	class DuplicateSecondaryTableException extends HibernateException {
-		private final Identifier tableName;
-
 		public DuplicateSecondaryTableException(Identifier tableName) {
 			super(
 					String.format(
@@ -400,7 +398,6 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 							tableName.render()
 					)
 			);
-			this.tableName = tableName;
 		}
 	}
 

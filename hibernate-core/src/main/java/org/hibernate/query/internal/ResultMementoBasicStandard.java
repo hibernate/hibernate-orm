@@ -162,11 +162,6 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 		return typeConfiguration.standardBasicTypeForJavaType( typeArguments[1] );
 	}
 
-	private ResultMementoBasicStandard(String explicitColumnName, ResultBuilderBasicValued builder) {
-		this.explicitColumnName = explicitColumnName;
-		this.builder = builder;
-	}
-
 	public ResultMementoBasicStandard(
 			String explicitColumnName,
 			BasicType<?> explicitType) {

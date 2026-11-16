@@ -190,7 +190,6 @@ public class JoinColumnCollectionMetadataGenerator extends AbstractCollectionMet
 				// when constructing the PropertyData.
 				new PropertyData( auditMappedBy, null, null ),
 				entityName,
-				false,
 				false
 		);
 	}

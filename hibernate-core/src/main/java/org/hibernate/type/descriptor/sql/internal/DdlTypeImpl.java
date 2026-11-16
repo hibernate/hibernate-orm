@@ -123,9 +123,10 @@ public class DdlTypeImpl implements DdlType {
 	@Override
 	public String getCastTypeName(Size columnSize, SqlExpressible type, DdlTypeRegistry ddlTypeRegistry) {
 		final var jdbcMapping = type.getJdbcMapping();
+		// SQL sizes describe the relational value, which may differ from a converter's domain type.
 		return castTypeName(
 				jdbcMapping.getJdbcType(),
-				jdbcMapping.getJavaTypeDescriptor(),
+				jdbcMapping.getJdbcJavaType(),
 				columnSize.getLength(),
 				columnSize.getPrecision(),
 				columnSize.getScale(),
@@ -201,7 +202,7 @@ public class DdlTypeImpl implements DdlType {
 
 		final var jdbcMapping = type.getJdbcMapping();
 		final var jdbcType = jdbcMapping.getJdbcType();
-		final var javaType = jdbcMapping.getJavaTypeDescriptor();
+		final var javaType = jdbcMapping.getJdbcJavaType();
 		final var size = dialect.getSizeStrategy().resolveSize(
 				jdbcType,
 				javaType,

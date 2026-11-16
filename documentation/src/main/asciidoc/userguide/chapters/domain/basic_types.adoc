@@ -907,8 +907,10 @@ The ranges are narrower than what these databases are able to store, for the fol
 * Years after 9999 are excluded because the format of a SQL literal is no longer unambiguous.
 * On Oracle, dates before 15 October 1582 are excluded because Oracle uses the Julian calendar for them.
   Such a date would keep its year, month and day, but would denote a different day in date arithmetic done by the database.
-* On PostgreSQL, an `Instant` before 25 October 1582 is excluded because the PostgreSQL JDBC driver uses the Julian calendar for a `java.sql.Timestamp` before 15 October 1582.
-  The ten days up to 14 October would be read as the ten days from 15 October, so only a value read as 25 October or later can be trusted.
+* On PostgreSQL, an `Instant` before the year 1583 is excluded because the PostgreSQL JDBC driver uses the Julian calendar for a `java.sql.Timestamp` before 15 October 1582.
+  A stored instant from before that date would be read as one ten days later.
+  The driver decides this by the date as seen in the time zone of the database session, which can be most of a day away from the date in UTC,
+  so only a value read as 1 January 1583 or later can be trusted in every session time zone.
   `LocalDate` and `LocalDateTime` are not affected, since they are not exchanged as a `java.sql.Timestamp`.
 
 A range is stated without regard to the precision of the column.

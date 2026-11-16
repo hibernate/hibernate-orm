@@ -111,6 +111,34 @@ public class TimesTenDialectTest {
 	}
 
 	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-21184")
+	void hqlDistinctPage(SessionFactoryScope scope) {
+		// TimesTen requires FIRST / ROWS before DISTINCT; `select distinct first ?` is rejected (TT7025)
+		assertThat( hql( scope, "select distinct b.title from Book b order by b.title", 5, 5 ) ).satisfies( execution -> {
+			assertThat( execution.sql ).startsWith( "select rows ? to ? distinct " );
+			assertThat( execution.parameters ).containsExactly( entry( 1, 6 ), entry( 2, 10 ) );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-21184")
+	void hqlDistinctMaxResultsOnly(SessionFactoryScope scope) {
+		assertThat( hql( scope, "select distinct b.title from Book b order by b.title", null, 5 ) ).satisfies( execution -> {
+			assertThat( execution.sql ).startsWith( "select first ? distinct " );
+			assertThat( execution.parameters ).containsExactly( entry( 1, 5 ) );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-21184")
+	void nativeDistinctPage(SessionFactoryScope scope) {
+		assertThat( nativeQuery( scope, "select distinct id, title from Book order by id", 5, 5 ) ).satisfies( execution -> {
+			assertThat( execution.sql ).startsWith( "select rows ? to ? distinct id, title from " );
+			assertThat( execution.parameters ).containsExactly( entry( 1, 6 ), entry( 2, 10 ) );
+		} );
+	}
+
+	@Test
 	@Jira("https://hibernate.atlassian.net/browse/HHH-21180")
 	void nativeOffsetOnly(SessionFactoryScope scope) {
 		assertThat( nativeQuery( scope, 10, null ) ).satisfies( execution -> {

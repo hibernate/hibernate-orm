@@ -6113,12 +6113,24 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			cteSelectHintPending = null;
 			renderCteSelectHint( cte );
 		}
+		// `rows m to n` is only accepted before `distinct`
+		final boolean paginationBeforeDistinct = selectClause.isDistinct() && isRowsToPagination();
+		if ( paginationBeforeDistinct ) {
+			renderPaginationAtSelectClause();
+		}
 		if ( selectClause.isDistinct() ) {
 			appendSql( "distinct " );
 		}
-		renderPaginationAtSelectClause();
+		if ( !paginationBeforeDistinct ) {
+			renderPaginationAtSelectClause();
+		}
 		renderSelectItems( selectClause );
 		renderVirtualSelections( selectClause );
+	}
+
+	private boolean isRowsToPagination() {
+		return queryPartStack.getCurrent() instanceof QuerySpec querySpec
+			&& determinePaginationRenderingPlan( querySpec ) instanceof PaginationRenderingPlan.RowsTo;
 	}
 
 	/**

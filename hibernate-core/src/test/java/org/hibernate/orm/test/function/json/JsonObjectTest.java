@@ -8,13 +8,13 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.orm.test.function.json.JsonTestHelper.assertNoJsonInjection;
+import static org.hibernate.orm.test.function.json.JsonTestHelper.assertNoInjection;
 
 /**
  * @author Christian Beikov
  */
 @DomainModel
-@SessionFactory
+@SessionFactory(useCollectingStatementObserver = true)
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsJsonObject.class)
 public class JsonObjectTest {
 
@@ -45,29 +45,28 @@ public class JsonObjectTest {
 
 	@Test
 	public void testKeyInjection(SessionFactoryScope scope) {
-		scope.inSession( em -> {
-			try {
-				em.createQuery( "select json_object(:path: cast('{}' as json))", Tuple.class )
-						.setParameter( "path", "'--" )
-						.getResultList();
-			}
-			catch ( RuntimeException e ) {
-				assertNoJsonInjection( e );
-			}
+		assertNoInjection( scope, em -> {
+			em.createQuery( "select json_object(:path: cast('{}' as json))", Tuple.class )
+					.setParameter( "path", "'--" )
+					.getResultList();
+		} );
+	}
+
+	@Test
+	public void testKeyBackslashInjection(SessionFactoryScope scope) {
+		assertNoInjection( scope, em -> {
+			em.createQuery( "select json_object(:path: cast('{}' as json))", Tuple.class )
+					.setParameter( "path", "\\'--" )
+					.getResultList();
 		} );
 	}
 
 	@Test
 	public void testKeyInjection2(SessionFactoryScope scope) {
-		scope.inSession( em -> {
-			try {
-				em.createQuery( "select json_object(:path: cast('{}' as json))", Tuple.class )
-						.setParameter( "path", "\"--" )
-						.getResultList();
-			}
-			catch ( RuntimeException e ) {
-				assertNoJsonInjection( e, "\"--" );
-			}
+		assertNoInjection( scope, em -> {
+			em.createQuery( "select json_object(:path: cast('{}' as json))", Tuple.class )
+					.setParameter( "path", "\"--" )
+					.getResultList();
 		} );
 	}
 

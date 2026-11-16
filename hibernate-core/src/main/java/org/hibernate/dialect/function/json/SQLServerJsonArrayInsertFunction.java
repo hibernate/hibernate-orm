@@ -63,7 +63,7 @@ public class SQLServerJsonArrayInsertFunction extends AbstractJsonArrayInsertFun
 		sqlAppender.appendSql( "from (values(" );
 		json.accept( translator );
 		sqlAppender.append( ',' );
-		sqlAppender.appendSingleQuoteEscapedString( jsonPath.substring( 0, bracketStartIndex ) );
+		sqlAppender.appendLiteral( jsonPath.substring( 0, bracketStartIndex ) );
 		sqlAppender.append( ',' );
 		sqlAppender.appendSql( index );
 		sqlAppender.append( ',' );

@@ -59,7 +59,7 @@ public class SQLServerJsonTableFunction extends JsonTableFunction {
 			else {
 				jsonPath = rawJsonPath;
 			}
-			sqlAppender.appendSingleQuoteEscapedString(
+			sqlAppender.appendLiteral(
 					// openjson unwraps arrays automatically and doesn't support this syntax, so remove it
 					jsonPath.endsWith( "[*]" )
 							? jsonPath.substring( 0, jsonPath.length() - 3 )
@@ -175,9 +175,9 @@ public class SQLServerJsonTableFunction extends JsonTableFunction {
 				sqlAppender.appendSql( "." );
 				sqlAppender.appendSql( existsColumnDefinition.name() );
 				sqlAppender.appendSql( ',' );
-				sqlAppender.appendSingleQuoteEscapedString( prefix );
+				sqlAppender.appendLiteral( prefix );
 				sqlAppender.appendSql( ") t where t.[key]=" );
-				sqlAppender.appendSingleQuoteEscapedString( terminalKey );
+				sqlAppender.appendLiteral( terminalKey );
 				sqlAppender.appendSql( "),0) " );
 				sqlAppender.appendSql( existsColumnDefinition.name() );
 			}
@@ -226,7 +226,7 @@ public class SQLServerJsonTableFunction extends JsonTableFunction {
 	protected void renderColumnPath(String name, @Nullable String jsonPath, SqlAppender sqlAppender, SqlAstTranslator<?> walker) {
 		if ( jsonPath != null ) {
 			sqlAppender.appendSql( ' ' );
-			sqlAppender.appendSingleQuoteEscapedString( jsonPath );
+			sqlAppender.appendLiteral( jsonPath );
 		}
 	}
 
@@ -239,7 +239,7 @@ public class SQLServerJsonTableFunction extends JsonTableFunction {
 		final String jsonPath = definition.jsonPath().endsWith( "[*]" )
 				? definition.jsonPath().substring( 0, definition.jsonPath().length() - 3 )
 				: definition.jsonPath();
-		sqlAppender.appendSingleQuoteEscapedString( jsonPath );
+		sqlAppender.appendLiteral( jsonPath );
 		sqlAppender.appendSql( " as json" );
 		return clauseLevel + countNestedColumnDefinitions( definition.columns() );
 	}

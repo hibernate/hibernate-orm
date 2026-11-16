@@ -50,10 +50,7 @@ public class SQLServerJsonExistsFunction extends JsonExistsFunction {
 				);
 			}
 			else {
-				walker.getSessionFactory().getJdbcServices().getDialect().appendLiteral(
-						sqlAppender,
-						walker.getLiteralValue( arguments.jsonPath() )
-				);
+				sqlAppender.appendLiteral( walker.getLiteralValue( arguments.jsonPath() ) );
 			}
 			sqlAppender.appendSql( ")=1" );
 			if ( arguments.errorBehavior() == JsonExistsErrorBehavior.ERROR ) {
@@ -72,10 +69,7 @@ public class SQLServerJsonExistsFunction extends JsonExistsFunction {
 					);
 				}
 				else {
-					walker.getSessionFactory().getJdbcServices().getDialect().appendLiteral(
-							sqlAppender,
-							walker.getLiteralValue( arguments.jsonPath() )
-					);
+					sqlAppender.appendLiteral( walker.getLiteralValue( arguments.jsonPath() ) );
 				}
 				sqlAppender.appendSql( ")) is null)" );
 			}
@@ -106,9 +100,9 @@ public class SQLServerJsonExistsFunction extends JsonExistsFunction {
 			sqlAppender.appendSql( "(select 1 from openjson(" );
 			arguments.jsonDocument().accept( walker );
 			sqlAppender.appendSql( ',' );
-			sqlAppender.appendSingleQuoteEscapedString( prefix );
+			sqlAppender.appendLiteral( prefix );
 			sqlAppender.appendSql( ") t where t.[key]=" );
-			sqlAppender.appendSingleQuoteEscapedString( terminalKey );
+			sqlAppender.appendLiteral( terminalKey );
 			sqlAppender.appendSql( ")=1" );
 		}
 	}

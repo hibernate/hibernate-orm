@@ -8,7 +8,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.schema.spi.ColumnDefinitionRequest;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.spi.ParameterMarkerStrategy;
-import org.hibernate.sql.spi.StringBuilderSqlAppender;
+import org.hibernate.sql.spi.StringBuilderDialectSqlAppender;
 
 import static org.hibernate.SPI.Role.SUPPLY;
 import static org.hibernate.SPI.Role.USE;
@@ -59,7 +59,7 @@ public final class StandardTemporaryTableExporter implements TemporaryTableExpor
 			if ( temporaryTableStrategy.supportsTemporaryTableNullConstraint()
 					&& !databaseTypeName.toLowerCase( Locale.ROOT ).contains( "not null" ) ) {
 				dialect.getColumnDefinitionSupport().appendDefinition(
-						new StringBuilderSqlAppender( buffer ),
+						new StringBuilderDialectSqlAppender( dialect, buffer ),
 						new ColumnDefinitionRequest( annotatedType, null, column.isNullable(), null, null )
 				);
 			}

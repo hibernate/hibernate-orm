@@ -173,7 +173,7 @@ public class JsonTableFunction extends AbstractSqmSelfRenderingSetReturningFunct
 
 	protected int renderJsonNestedColumnDefinition(SqlAppender sqlAppender, JsonTableNestedColumnDefinition definition, int clauseLevel, SqlAstTranslator<?> walker) {
 		sqlAppender.appendSql( "nested " );
-		sqlAppender.appendSingleQuoteEscapedString( definition.jsonPath() );
+		sqlAppender.appendLiteral( definition.jsonPath() );
 		return renderColumns( sqlAppender, definition.columns(), clauseLevel, walker );
 	}
 
@@ -229,7 +229,7 @@ public class JsonTableFunction extends AbstractSqmSelfRenderingSetReturningFunct
 	protected void renderColumnPath(String name, @Nullable String jsonPath, SqlAppender sqlAppender, SqlAstTranslator<?> walker) {
 		if ( jsonPath != null ) {
 			sqlAppender.appendSql( " path " );
-			sqlAppender.appendSingleQuoteEscapedString( jsonPath );
+			sqlAppender.appendLiteral( jsonPath );
 		}
 		else {
 			// Always append implicit path to avoid identifier case sensitivity issues

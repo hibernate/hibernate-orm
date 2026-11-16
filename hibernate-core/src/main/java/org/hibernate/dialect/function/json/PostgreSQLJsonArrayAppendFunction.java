@@ -79,7 +79,7 @@ public class PostgreSQLJsonArrayAppendFunction extends AbstractJsonArrayAppendFu
 		for ( JsonPathHelper.JsonPathElement pathElement : jsonPathElements ) {
 			sqlAppender.appendSql( separator );
 			if ( pathElement instanceof JsonPathHelper.JsonAttribute attribute ) {
-				sqlAppender.appendSingleQuoteEscapedString( attribute.attribute() );
+				sqlAppender.appendLiteral( attribute.attribute() );
 			}
 			else if ( pathElement instanceof JsonPathHelper.JsonParameterIndexAccess ) {
 				final String parameterName = ( (JsonPathHelper.JsonParameterIndexAccess) pathElement ).parameterName();

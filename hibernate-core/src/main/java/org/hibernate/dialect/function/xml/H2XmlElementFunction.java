@@ -24,13 +24,13 @@ public class H2XmlElementFunction extends XmlElementFunction {
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		sqlAppender.appendSql( "xmlnode(" );
-		sqlAppender.appendSingleQuoteEscapedString( arguments.elementName() );
+		sqlAppender.appendLiteral( arguments.elementName() );
 		if ( arguments.attributes() != null ) {
 			String separator = ",";
 			for ( Map.Entry<String, Expression> entry : arguments.attributes().getAttributes().entrySet() ) {
 				sqlAppender.appendSql( separator );
 				sqlAppender.appendSql( "xmlattr(" );
-				sqlAppender.appendSingleQuoteEscapedString( entry.getKey() );
+				sqlAppender.appendLiteral( entry.getKey() );
 				sqlAppender.appendSql( ',' );
 				entry.getValue().accept( walker );
 				sqlAppender.appendSql( ')' );

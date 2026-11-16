@@ -67,7 +67,7 @@ public class MySQLJsonTableFunction extends JsonTableFunction {
 	protected int renderJsonNestedColumnDefinition(SqlAppender sqlAppender, JsonTableNestedColumnDefinition definition, int clauseLevel, SqlAstTranslator<?> walker) {
 		// MySQL docs way that "path" is optional, but it isn't...
 		sqlAppender.appendSql( "nested path " );
-		sqlAppender.appendSingleQuoteEscapedString( definition.jsonPath() );
+		sqlAppender.appendLiteral( definition.jsonPath() );
 		return renderColumns( sqlAppender, definition.columns(), clauseLevel, walker );
 	}
 
@@ -79,7 +79,7 @@ public class MySQLJsonTableFunction extends JsonTableFunction {
 
 		if ( definition.jsonPath() != null ) {
 			sqlAppender.appendSql( " path " );
-			sqlAppender.appendSingleQuoteEscapedString( definition.jsonPath() );
+			sqlAppender.appendLiteral( definition.jsonPath() );
 		}
 		else {
 			sqlAppender.appendSql( " path '$." );
@@ -130,7 +130,7 @@ public class MySQLJsonTableFunction extends JsonTableFunction {
 
 		if ( definition.jsonPath() != null ) {
 			sqlAppender.appendSql( " path " );
-			sqlAppender.appendSingleQuoteEscapedString( definition.jsonPath() );
+			sqlAppender.appendLiteral( definition.jsonPath() );
 		}
 		else {
 			sqlAppender.appendSql( " path '$." );
@@ -171,7 +171,7 @@ public class MySQLJsonTableFunction extends JsonTableFunction {
 		sqlAppender.appendSql( " exists" );
 		if ( definition.jsonPath() != null ) {
 			sqlAppender.appendSql( " path " );
-			sqlAppender.appendSingleQuoteEscapedString( definition.jsonPath() );
+			sqlAppender.appendLiteral( definition.jsonPath() );
 		}
 		else {
 			sqlAppender.appendSql( " path '$." );

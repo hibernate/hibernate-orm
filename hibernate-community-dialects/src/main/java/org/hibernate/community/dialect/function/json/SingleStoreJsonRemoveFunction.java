@@ -36,7 +36,7 @@ public class SingleStoreJsonRemoveFunction extends AbstractJsonRemoveFunction {
 		for ( JsonPathHelper.JsonPathElement pathElement : jsonPathElements ) {
 			sqlAppender.appendSql( ',' );
 			if ( pathElement instanceof JsonPathHelper.JsonAttribute attribute ) {
-				sqlAppender.appendSingleQuoteEscapedString( attribute.attribute() );
+				sqlAppender.appendLiteral( attribute.attribute() );
 			}
 			else if ( pathElement instanceof JsonPathHelper.JsonParameterIndexAccess indexParameter) {
 				final String parameterName = indexParameter.parameterName();

@@ -46,6 +46,12 @@ public class DelegatingLiteralSupport implements LiteralSupport {
 
 	@Override
 	@SPI({ USE, IMPLEMENT })
+	public void appendLiteralContent(SqlAppender appender, String literal) {
+		delegate.appendLiteralContent( appender, literal );
+	}
+
+	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
 		delegate.appendBinaryLiteral( appender, bytes );
 	}

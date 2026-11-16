@@ -50,6 +50,7 @@ import static org.hibernate.cfg.AvailableSettings.PASS;
 import static org.hibernate.cfg.AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.URL;
 import static org.hibernate.cfg.AvailableSettings.USER;
+import static org.hibernate.cfg.MappingSettings.XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES;
 import static org.hibernate.cfg.PersistenceSettings.PERSISTENCE_UNIT_NAME;
 import static org.hibernate.cfg.TransactionSettings.FLUSH_BEFORE_COMPLETION;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
@@ -91,7 +92,7 @@ final class JpaSettingsAssembler {
 		// see if the persistence.xml settings named a Hibernate config file
 		final String cfgXmlResourceName = getCfgXmlResourceName( Collections.emptyMap(), mergedSettings );
 		if ( isNotEmpty( cfgXmlResourceName ) ) {
-			processHibernateConfigXmlResources( standardRegistryBuilder, mergedSettings, cfgXmlResourceName );
+			processHibernateConfigXmlResources( standardRegistryBuilder, Collections.emptyMap(), mergedSettings, cfgXmlResourceName );
 		}
 
 		normalizeSettings( null, null, mergedSettings );
@@ -117,7 +118,7 @@ final class JpaSettingsAssembler {
 		// see if the persistence.xml settings named a Hibernate config file
 		final String cfgXmlResourceName = getCfgXmlResourceName( integrationSettings, mergedSettings );
 		if ( isNotEmpty( cfgXmlResourceName ) ) {
-			processHibernateConfigXmlResources( registryBuilder, mergedSettings, cfgXmlResourceName );
+			processHibernateConfigXmlResources( registryBuilder, integrationSettings, mergedSettings, cfgXmlResourceName );
 		}
 
 		normalizeSettings( persistenceUnit, integrationSettings, mergedSettings );
@@ -793,13 +794,31 @@ final class JpaSettingsAssembler {
 
 	private void processHibernateConfigXmlResources(
 			StandardServiceRegistryBuilder serviceRegistryBuilder,
+			Map<String, Object> integrationSettings,
 			MergedSettings mergedSettings,
 			String cfgXmlResourceName) {
+		applyXmlParsingSettings( serviceRegistryBuilder, integrationSettings, mergedSettings );
 		final var loadedConfig =
 				serviceRegistryBuilder.getConfigLoader()
 						.loadConfigXmlResource( cfgXmlResourceName );
 		mergedSettings.processHibernateConfigXmlResources( loadedConfig );
 		serviceRegistryBuilder.getAggregatedCfgXml().merge( loadedConfig );
+	}
+
+	// The `cfg.xml` file is parsed before the merged settings are applied to the registry builder,
+	// so its parser would otherwise never see `hibernate.xml.allow_dtd_and_external_entities`.
+	// Integration settings take precedence, consistent with [#normalizeSettings].
+	private static void applyXmlParsingSettings(
+			StandardServiceRegistryBuilder serviceRegistryBuilder,
+			Map<String, Object> integrationSettings,
+			MergedSettings mergedSettings) {
+		final Object allowDtdAndExternalEntities =
+				integrationSettings != null && integrationSettings.containsKey( XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES )
+						? integrationSettings.get( XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES )
+						: mergedSettings.getConfigurationValues().get( XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES );
+		if ( allowDtdAndExternalEntities != null ) {
+			serviceRegistryBuilder.applySetting( XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES, allowDtdAndExternalEntities );
+		}
 	}
 
 	private CacheRegionDefinition parseCacheRegionDefinitionEntry(

@@ -4,10 +4,10 @@
  */
 package org.hibernate.dialect;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
@@ -5159,6 +5159,16 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public void appendLiteral(SqlAppender appender, String literal) {
 		appender.appendSingleQuoteEscapedString( literal );
+	}
+
+	/// Append the escaped content of a SQL string literal, without the enclosing quotes.
+	///
+	/// The caller is responsible for rendering the enclosing quotes.
+	/// Implementations must apply the same escaping rules as [#appendLiteral(SqlAppender, String)].
+	public void appendLiteralContent(SqlAppender appender, String literal) {
+		final StringBuilder sb = new StringBuilder( literal.length() );
+		QuotingHelper.appendSingleQuoteEscapedStringContent( sb, literal );
+		appender.appendSql( sb.toString() );
 	}
 
 	/**

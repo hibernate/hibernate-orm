@@ -19,6 +19,7 @@ import java.util.Map;
 import javax.xml.namespace.QName;
 
 import jakarta.xml.bind.annotation.XmlElement;
+import org.hibernate.sql.ast.spi.StringBuilderDialectSqlAppender;
 import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.internal.util.ReflectHelper;
@@ -280,7 +281,8 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 		}
 		try {
 			final StringWriter stringWriter = new StringWriter();
-			final StringBuilderSqlAppender appender = new StringBuilderSqlAppender();
+			final StringBuilderDialectSqlAppender appender =
+					new StringBuilderDialectSqlAppender( wrapperOptions.getDialect() );
 			if ( Map.class.isAssignableFrom( javaType.getJavaTypeClass() ) ) {
 				final JAXBContext context;
 				final Class<?> keyClass;

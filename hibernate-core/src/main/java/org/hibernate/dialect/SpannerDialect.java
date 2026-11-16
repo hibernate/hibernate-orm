@@ -49,6 +49,7 @@ import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 
 import java.util.Date;
 import java.util.Map;
@@ -522,6 +523,42 @@ public class SpannerDialect extends Dialect {
 	@Override
 	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
 		appender.appendSql( bool );
+	}
+
+	@Override
+	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
+		appender.appendSql( "FROM_HEX('" );
+		PrimitiveByteArrayJavaType.INSTANCE.appendString( appender, bytes );
+		appender.appendSql( "')" );
+	}
+
+	@Override
+	public void appendLiteral(SqlAppender appender, String literal) {
+		// Spanner uses backslash escaping, so escape single quotes and backslashes with \
+		// We also explicitly escape newlines (\n) because Spanner forbids raw line breaks
+		// inside standard quoted strings
+		appender.append( '\'' );
+		appendLiteralContent( appender, literal );
+		appender.append( '\'' );
+	}
+
+	@Override
+	public void appendLiteralContent(SqlAppender appender, String literal) {
+		for ( int i = 0; i < literal.length(); i++ ) {
+			final char c = literal.charAt( i );
+			switch ( c ) {
+				case '\'':
+				case '\\':
+					appender.append( '\\' );
+					appender.append( c );
+					break;
+				case '\n':
+					appender.append( "\\n" );
+					break;
+				default:
+					appender.append( c );
+			}
+		}
 	}
 
 	@Override

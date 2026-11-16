@@ -165,9 +165,30 @@ public class DialectFilterExtension implements ExecutionCondition {
 					yield dialect.getVersion().isSame( matchingMajorVersion, matchingMinorVersion, matchingMicroVersion );
 				}
 			}
-			case SAME_OR_OLDER -> dialect.getVersion().isSameOrBefore( matchingMajorVersion, minorVersion, microVersion );
+			// Unspecified minor/micro versions mean "any", so the upper bound must cover e.g. all 15.x versions
+			case SAME_OR_OLDER -> {
+				if ( matchingMinorVersion < 0 ) {
+					yield dialect.getVersion().isBefore( matchingMajorVersion + 1 );
+				}
+				else if ( matchingMicroVersion < 0 ) {
+					yield dialect.getVersion().isBefore( matchingMajorVersion, matchingMinorVersion + 1 );
+				}
+				else {
+					yield dialect.getVersion().isSameOrBefore( matchingMajorVersion, matchingMinorVersion, matchingMicroVersion );
+				}
+			}
 			case SAME_OR_NEWER -> dialect.getVersion().isSameOrAfter( matchingMajorVersion, minorVersion, microVersion );
-			case NEWER -> dialect.getVersion().isAfter( matchingMajorVersion, minorVersion, microVersion );
+			case NEWER -> {
+				if ( matchingMinorVersion < 0 ) {
+					yield dialect.getVersion().isSameOrAfter( matchingMajorVersion + 1 );
+				}
+				else if ( matchingMicroVersion < 0 ) {
+					yield dialect.getVersion().isSameOrAfter( matchingMajorVersion, matchingMinorVersion + 1 );
+				}
+				else {
+					yield dialect.getVersion().isAfter( matchingMajorVersion, matchingMinorVersion, matchingMicroVersion );
+				}
+			}
 			case OLDER -> dialect.getVersion().isBefore( matchingMajorVersion, minorVersion, microVersion );
 		};
 	}

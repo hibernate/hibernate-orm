@@ -26,6 +26,7 @@ import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.StringBuilderDialectSqlAppender;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
@@ -224,7 +225,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 					final Dialect dialect = walker.getCreationContext().getDialect();
 					Expression formatExpression = null;
 					final var sb = new StringBuilder();
-					final StringBuilderSqlAppender sqlAppender = new StringBuilderSqlAppender( sb );
+					final StringBuilderSqlAppender sqlAppender = new StringBuilderDialectSqlAppender( dialect, sb );
 					final String delimiter;
 					if ( supportsPatternLiterals ) {
 						dialect.appendDatetimeFormat( sqlAppender, "'a'" );

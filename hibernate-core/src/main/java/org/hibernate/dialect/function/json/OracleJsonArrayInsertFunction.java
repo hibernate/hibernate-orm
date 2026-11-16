@@ -34,7 +34,7 @@ public class OracleJsonArrayInsertFunction extends AbstractJsonArrayInsertFuncti
 		sqlAppender.appendSql( "json_transform(" );
 		json.accept( translator );
 		sqlAppender.appendSql( ",insert " );
-		sqlAppender.appendSingleQuoteEscapedString( jsonPath );
+		sqlAppender.appendLiteral( jsonPath );
 		sqlAppender.appendSql( '=' );
 		value.accept( translator );
 		sqlAppender.appendSql( " ignore on existing)" );

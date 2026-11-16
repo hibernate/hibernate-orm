@@ -69,12 +69,12 @@ public class JpaDescriptorParser {
 		this.xmlParserHelper = new XmlParserHelper( context );
 
 		final ResourceStreamLocatorImpl resourceStreamLocator = new ResourceStreamLocatorImpl( context );
-		this.configurationBinder = new ConfigurationBinder( resourceStreamLocator );
+		this.configurationBinder = new ConfigurationBinder( resourceStreamLocator, this::mappingSetting );
 		this.mappingBinder = new MappingBinder( resourceStreamLocator, this::mappingSetting );
 	}
 
 	/**
-	 * Exposes to the {@link MappingBinder} the only settings relevant to the processor:
+	 * Exposes to the {@link ConfigurationBinder} and {@link MappingBinder} the only settings relevant to the processor:
 	 * XML validation stays enabled, and DTD/external entity support follows the
 	 * {@value org.hibernate.processor.HibernateProcessor#ALLOW_DTD_AND_EXTERNAL_ENTITIES} option.
 	 */

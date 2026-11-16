@@ -492,9 +492,42 @@ This strategy describes Java values at the JDBC boundary. Keep it separate
 from `TimeZoneSupport`, which describes database type behavior, and
 `TemporalValueSemantics`, which describes precision adjustment and temporal
 literal offset preservation. If direct access is requested but the profile
-reports it unsupported, Hibernate falls back to the corresponding physical
+reports it unsupported, Hibernate selects the corresponding physical
 representation and logs the known limitation once per Java Time class, with
 the offset pair logged together.
+
+Direct access is requested with `hibernate.type.java_time_use_direct_jdbc`,
+and is implied by enabling temporal preservation with
+`hibernate.type.temporal_preservation`. With temporal preservation enabled,
+Hibernate additionally asks the Dialect, through
+link:{doc-javadoc-url}org/hibernate/dialect/Dialect.html#getTemporalPreservation(org.hibernate.type.descriptor.java.JavaType,org.hibernate.type.descriptor.jdbc.JdbcType)[`getTemporalPreservation()`],
+whether each combination of `JavaType` and `JdbcType` used for a Java Time
+value preserves it, and rejects any mapping, and any bound or extracted
+value, for which the answer is not a definite yes.
+
+The answer is a
+link:{doc-javadoc-url}org/hibernate/dialect/type/spi/TemporalPreservation.html[`TemporalPreservation`],
+which reports each part of a value (date, time, instant, offset, zone
+identity) as supported, unsupported or unknown, together with the least and
+greatest value which is preserved. The default answer is unknown for
+everything, so a Dialect supports nothing until it says otherwise.
+
+Report a combination as supported only on evidence from the database and its
+JDBC driver that the stored SQL value is correct by the database's own
+semantics, and not merely that the value reads back equal. Match the
+combination by the exact classes of the two descriptors; a SQL type code, a
+Java class, or a descriptor's superclass does not establish anything. Narrow
+the range to exclude values for which the driver or the database uses a
+different calendar than Java Time, or for which a value read back cannot be
+told apart from a different stored value. A combination which converts the
+value, for example through `java.sql.Timestamp`, may be reported as supported
+on the same evidence, provided the conversion uses a fixed time zone and not
+`hibernate.jdbc.time_zone`, the default time zone of the JVM, or the time zone
+of the database session. A descriptor which retries through a different JDBC
+call when the driver fails must not do so with temporal preservation enabled.
+A Dialect which extends another
+inherits its answers, and must override them if it targets a different
+database or driver.
 
 === Implementing and contributing Java/JDBC types
 

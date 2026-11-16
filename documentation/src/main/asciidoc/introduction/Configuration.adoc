@@ -615,13 +615,13 @@ Alternatively, you can configure SQL Server to use the UTF-8 enabled collation `
 
 Hibernate highly recommends that applications use `java.time` types to represent temporal-related values.
 By default, Hibernate converts `java.time` values to `java.sql` date/time types at the JDBC boundary.
-Set `hibernate.type.java_time_use_direct_jdbc` to `true` to use `java.time` types directly
-where the configured Dialect reports that the exact Java class is supported by the driver.
-JDBC drivers are required to directly support `java.time` types since Java 8 (JDBC 4.2).
-
-When the Dialect reports that a requested type is unsupported, Hibernate falls back to the corresponding
-legacy JDBC representation and logs the known driver/database limitation.  This capability is resolved
-separately for each Java Time class, with `OffsetTime` and `OffsetDateTime` treated as a matched pair.
+Set `hibernate.type.temporal_preservation` to `true` to have Hibernate reject any `java.time` value
+which it cannot guarantee is stored correctly.
+In this mode Hibernate passes a `java.time` value directly to the JDBC driver where the Dialect reports that the driver supports it,
+and otherwise still converts it, but accepts the conversion only if the Dialect reports that it loses nothing.
+This strict mode is available for a limited set of databases and `java.time` types, which the User Guide lists.
+The separate setting `hibernate.type.java_time_use_direct_jdbc` only asks for `java.time` values to be passed directly
+to the driver where supported, falling back to conversion otherwise, with no guarantee and no rejection.
 
 When `java.sql` date/time types are used (either in the model or with
 `hibernate.type.java_time_use_direct_jdbc=false`, the default) it is important to make sure that

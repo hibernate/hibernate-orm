@@ -578,6 +578,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean isTemporalPreservationEnabled() {
+		return delegate.isTemporalPreservationEnabled();
+	}
+
+	@Override
 	public boolean isPreferNativeEnumTypesEnabled() {
 		return delegate.isPreferNativeEnumTypesEnabled();
 	}

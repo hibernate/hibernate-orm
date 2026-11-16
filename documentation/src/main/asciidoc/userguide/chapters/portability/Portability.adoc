@@ -148,6 +148,11 @@ types at the JDBC boundary. Some drivers do not correctly implement the required
 A database's temporal column support does not by itself establish that a driver's direct
 Java-time access works; see <<basic-java-time-direct-jdbc>> for the setting and affected types.
 
+The setting `hibernate.type.temporal_preservation` enables a strict mode in which Hibernate either stores
+a `java.time` value correctly or rejects it. It is supported for a limited set of databases and types,
+and an application which enables it is rejected at startup on any other database;
+see <<basic-temporal-preservation>> for the list.
+
 [[portability-types-specialized]]
 ==== Database-specific representations
 

@@ -1,0 +1,22 @@
+Dialect,Java class,JDBC type,Column type,Preserved parts,Instant basis,Minimum,Maximum,Outcome
+H2Dialect,LocalDate,LocalDateJdbcType,date,DATE,,0001-01-01,9999-12-31,QUALIFIED
+H2Dialect,LocalTime,LocalTimeJdbcType,time(0),TIME,,,,QUALIFIED
+H2Dialect,LocalDateTime,LocalDateTimeJdbcType,timestamp(6),DATE+TIME,,0001-01-01T00:00,9999-12-31T23:59:59.999999999,QUALIFIED
+H2Dialect,Instant,TimestampUtcAsInstantJdbcType,timestamp(6) with time zone,INSTANT,NATIVE,0001-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+H2Dialect,OffsetTime,OffsetTimeJdbcType,time(0) with time zone,,,,,REJECTED
+H2Dialect,OffsetDateTime,OffsetDateTimeJdbcType,timestamp(6) with time zone,,,,,REJECTED
+H2Dialect,ZonedDateTime,OffsetDateTimeJdbcType,timestamp(6) with time zone,,,,,REJECTED
+PostgreSQLDialect,LocalDate,LocalDateJdbcType,date,DATE,,0001-01-01,9999-12-31,QUALIFIED
+PostgreSQLDialect,LocalTime,LocalTimeJdbcType,time(0),TIME,,,,QUALIFIED
+PostgreSQLDialect,LocalDateTime,LocalDateTimeJdbcType,timestamp(6),DATE+TIME,,0001-01-01T00:00,9999-12-31T23:59:59.999999999,QUALIFIED
+PostgreSQLDialect,Instant,TimestampUtcAsJdbcTimestampJdbcType,timestamp(6) with time zone,INSTANT,NATIVE,1582-10-25T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+PostgreSQLDialect,OffsetTime,TimeUtcAsJdbcTimeJdbcType,time(0),,,,,REJECTED
+PostgreSQLDialect,OffsetDateTime,TimestampUtcAsJdbcTimestampJdbcType,timestamp(6) with time zone,,,,,REJECTED
+PostgreSQLDialect,ZonedDateTime,TimestampUtcAsJdbcTimestampJdbcType,timestamp(6) with time zone,,,,,REJECTED
+OracleDialect,LocalDate,LocalDateJdbcType,date,DATE,,1582-10-15,9999-12-31,QUALIFIED
+OracleDialect,LocalTime,LocalTimeJdbcType,timestamp(0),,,,,REJECTED
+OracleDialect,LocalDateTime,LocalDateTimeJdbcType,timestamp(9),DATE+TIME,,1582-10-15T00:00,9999-12-31T23:59:59.999999999,QUALIFIED
+OracleDialect,Instant,TimestampUtcAsOffsetDateTimeJdbcType,timestamp(9) with time zone,INSTANT,NATIVE,1582-10-15T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+OracleDialect,OffsetTime,OffsetTimeJdbcType,timestamp(0) with time zone,,,,,REJECTED
+OracleDialect,OffsetDateTime,OffsetDateTimeJdbcType,timestamp(9) with time zone,,,,,REJECTED
+OracleDialect,ZonedDateTime,OffsetDateTimeJdbcType,timestamp(9) with time zone,,,,,REJECTED

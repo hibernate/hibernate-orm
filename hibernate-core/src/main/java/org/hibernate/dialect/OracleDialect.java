@@ -1,5 +1,9 @@
 package org.hibernate.dialect;
 
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsOffsetDateTimeJdbcType;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.dialect.type.spi.TemporalPreservation;
+import org.hibernate.dialect.type.internal.StandardTemporalPreservations;
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
 
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
@@ -981,6 +985,28 @@ public class OracleDialect extends Dialect implements CurrentTemporalSupport, Te
 		// We need the DDL type during runtime to produce the proper encoding in certain functions
 		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( BIT, "number(1,0)", this ) );
 
+	}
+
+	/// Assessed for Oracle with the Oracle JDBC driver. Oracle uses the Julian
+	/// calendar before 1582-10-15, so that earlier dates keep their fields but
+	/// denote a different day in database arithmetic, hence the first day.
+	@Override
+	public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
+		var preservation = StandardTemporalPreservations.directLocal(
+				javaType,
+				jdbcType,
+				StandardTemporalPreservations.GREGORIAN_START
+		);
+		if ( preservation == TemporalPreservation.unknown() ) {
+			preservation = StandardTemporalPreservations.instant(
+					javaType,
+					jdbcType,
+					TimestampUtcAsOffsetDateTimeJdbcType.class,
+					TemporalPreservation.InstantBasis.NATIVE,
+					StandardTemporalPreservations.GREGORIAN_START
+			);
+		}
+		return preservation;
 	}
 
 	@Override

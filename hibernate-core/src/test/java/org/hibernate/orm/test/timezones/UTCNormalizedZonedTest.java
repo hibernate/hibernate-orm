@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SessionFactory
 @ServiceRegistry(settings = {
 		@Setting(name = AvailableSettings.TIMEZONE_DEFAULT_STORAGE, value = "NORMALIZE_UTC"),
+		@Setting(name = AvailableSettings.TEMPORAL_PRESERVATION, value = "false"),
 		@Setting(name = AvailableSettings.JAVA_TIME_USE_DIRECT_JDBC, value = "false")
 })
 public class UTCNormalizedZonedTest {

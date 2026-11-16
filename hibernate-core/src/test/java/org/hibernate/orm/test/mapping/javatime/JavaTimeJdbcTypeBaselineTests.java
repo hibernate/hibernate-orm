@@ -17,6 +17,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -32,6 +33,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel( annotatedClasses = JavaTimeJdbcTypeBaselineTests.EntityWithJavaTimeValues.class )
 @SessionFactory
+@DisabledIfSystemProperty(
+	named = "hibernate.type.temporal_preservation",
+	matches = "true",
+	disabledReason = "Verifies the behavior with the setting left unset"
+)
 public class JavaTimeJdbcTypeBaselineTests {
 	@Test
 	void testMappings(DomainModelScope scope) {

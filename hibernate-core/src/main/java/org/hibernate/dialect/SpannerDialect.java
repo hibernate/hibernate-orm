@@ -849,25 +849,29 @@ public class SpannerDialect extends Dialect implements CurrentTemporalSupport, T
 		// Spanner uses backslash escaping, so escape single quotes and backslashes with \
 		// We also explicitly escape newlines (\n) because Spanner forbids raw line breaks
 		// inside standard quoted strings
-		StringBuilder builder = new StringBuilder( literal.length() + 2 );
-		builder.append( '\'' );
+		appender.append( '\'' );
+		appendLiteralContent( appender, literal );
+		appender.append( '\'' );
+	}
+
+	@Override
+	@SPI({ USE, IMPLEMENT })
+	public void appendLiteralContent(SqlAppender appender, String literal) {
 		for ( int i = 0; i < literal.length(); i++ ) {
 			final char c = literal.charAt( i );
 			switch ( c ) {
 				case '\'':
 				case '\\':
-					builder.append( '\\' );
-					builder.append( c );
+					appender.append( '\\' );
+					appender.append( c );
 					break;
 				case '\n':
-					builder.append( "\\n" );
+					appender.append( "\\n" );
 					break;
 				default:
-					builder.append( c );
+					appender.append( c );
 			}
 		}
-		builder.append( '\'' );
-		appender.appendSql( builder.toString() );
 	}
 
 	@Override

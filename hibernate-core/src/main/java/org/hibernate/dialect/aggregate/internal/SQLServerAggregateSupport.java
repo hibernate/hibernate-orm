@@ -565,7 +565,7 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 				separator = ',';
 			}
 			sb.append( " for xml path(" );
-			sb.appendSingleQuoteEscapedString( getTagName() );
+			sb.appendLiteral( getTagName() );
 			sb.append( "),type)" );
 		}
 	}

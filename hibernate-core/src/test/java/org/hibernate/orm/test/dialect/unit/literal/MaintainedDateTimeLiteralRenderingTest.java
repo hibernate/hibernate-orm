@@ -20,7 +20,7 @@ import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.sql.spi.StringBuilderSqlAppender;
+import org.hibernate.sql.spi.StringBuilderDialectSqlAppender;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -98,7 +98,7 @@ public class MaintainedDateTimeLiteralRenderingTest {
 	private static String render(Dialect dialect, TemporalAccessor value) {
 		final var result = new StringBuilder();
 		dialect.getLiteralSupport().appendDateTimeLiteral(
-				new StringBuilderSqlAppender( result ),
+				new StringBuilderDialectSqlAppender( dialect, result ),
 				value,
 				TemporalType.TIMESTAMP,
 				UTC

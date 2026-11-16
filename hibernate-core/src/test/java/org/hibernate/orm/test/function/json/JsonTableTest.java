@@ -12,11 +12,14 @@ import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
 import org.hibernate.query.sqm.tree.spi.expression.SqmJsonTableFunction;
 import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
+import org.hibernate.dialect.H2Dialect;
+
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,7 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.hibernate.orm.test.function.json.JsonTestHelper.assertNoJsonInjection;
+import static org.hibernate.orm.test.function.json.JsonTestHelper.assertNoInjection;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -36,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Christian Beikov
  */
 @DomainModel(annotatedClasses = EntityWithJson.class)
-@SessionFactory
+@SessionFactory(useCollectingStatementObserver = true)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonTable.class)
 public class JsonTableTest {
 
@@ -245,63 +248,100 @@ public class JsonTableTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = H2Dialect.class, reason = "H2 json_table() only supports literal json paths and passing values, so values can never be injected")
 	public void testPathInjection(SessionFactoryScope scope) {
-		scope.inSession( em -> {
-			try {
-				final String query = """
-						select t.a
-						from json_table('{"a":1}', :path columns(
-						a Integer
-						)) t
-						""";
-				em.createQuery( query, Tuple.class )
-						.setParameter( "path", "$'--" )
-						.getResultList();
-			}
-			catch ( RuntimeException e ) {
-				assertNoJsonInjection( e );
-			}
+		assertNoInjection( scope, em -> {
+			final String query = """
+					select t.a
+					from json_table('{"a":1}', :path columns(
+					a Integer
+					)) t
+					""";
+			em.createQuery( query, Tuple.class )
+					.setParameter( "path", "$'--" )
+					.getResultList();
 		} );
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = H2Dialect.class, reason = "H2 json_table() only supports literal json paths and passing values, so values can never be injected")
 	public void testPassingInjection(SessionFactoryScope scope) {
-		scope.inSession( em -> {
-			try {
-				final String query = """
-						select t.a
-						from json_table('{"a":1}', '$[$a]' passing :val as a columns(
-						a Integer
-						)) t
-						""";
-				em.createQuery( query, Tuple.class )
-						.setParameter( "val", "'--" )
-						.getResultList();
-			}
-			catch ( RuntimeException e ) {
-				assertNoJsonInjection( e );
-			}
+		assertNoInjection( scope, em -> {
+			final String query = """
+					select t.a
+					from json_table('{"a":1}', '$[$a]' passing :val as a columns(
+					a Integer
+					)) t
+					""";
+			em.createQuery( query, Tuple.class )
+					.setParameter( "val", "'--" )
+					.getResultList();
 		} );
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = H2Dialect.class, reason = "H2 json_table() only supports literal json paths and passing values, so values can never be injected")
 	public void testPathPassingInjection(SessionFactoryScope scope) {
-		scope.inSession( em -> {
-			try {
-				final String query = """
-						select t.a
-						from json_table('{"a":1}', :path passing :val as a columns(
-						a Integer
-						)) t
-						""";
-				em.createQuery( query, Tuple.class )
-						.setParameter( "path", "$'--" )
-						.setParameter( "val", "'--" )
-						.getResultList();
-			}
-			catch ( RuntimeException e ) {
-				assertNoJsonInjection( e );
-			}
+		assertNoInjection( scope, em -> {
+			final String query = """
+					select t.a
+					from json_table('{"a":1}', :path passing :val as a columns(
+					a Integer
+					)) t
+					""";
+			em.createQuery( query, Tuple.class )
+					.setParameter( "path", "$'--" )
+					.setParameter( "val", "'--" )
+					.getResultList();
+		} );
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = H2Dialect.class, reason = "H2 json_table() only supports literal json paths and passing values, so values can never be injected")
+	public void testPathBackslashInjection(SessionFactoryScope scope) {
+		assertNoInjection( scope, em -> {
+			final String query = """
+					select t.a
+					from json_table('{"a":1}', :path columns(
+					a Integer
+					)) t
+					""";
+			em.createQuery( query, Tuple.class )
+					.setParameter( "path", "$\\'--" )
+					.getResultList();
+		} );
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = H2Dialect.class, reason = "H2 json_table() only supports literal json paths and passing values, so values can never be injected")
+	public void testPassingBackslashInjection(SessionFactoryScope scope) {
+		assertNoInjection( scope, em -> {
+			final String query = """
+					select t.a
+					from json_table('{"a":1}', '$[$a]' passing :val as a columns(
+					a Integer
+					)) t
+					""";
+			em.createQuery( query, Tuple.class )
+					.setParameter( "val", "\\'--" )
+					.getResultList();
+		} );
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = H2Dialect.class, reason = "H2 json_table() only supports literal json paths and passing values, so values can never be injected")
+	public void testPathPassingBackslashInjection(SessionFactoryScope scope) {
+		assertNoInjection( scope, em -> {
+			final String query = """
+					select t.a
+					from json_table('{"a":1}', :path passing :val as a columns(
+					a Integer
+					)) t
+					""";
+			em.createQuery( query, Tuple.class )
+					.setParameter( "path", "$\\'--" )
+					.setParameter( "val", "\\'--" )
+					.getResultList();
 		} );
 	}
 

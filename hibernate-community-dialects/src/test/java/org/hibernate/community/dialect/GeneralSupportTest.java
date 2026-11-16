@@ -2,7 +2,7 @@ package org.hibernate.community.dialect;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.queryhint.spi.QueryHintPlacement;
-import org.hibernate.sql.spi.StringBuilderSqlAppender;
+import org.hibernate.sql.spi.StringBuilderDialectSqlAppender;
 
 import org.junit.jupiter.api.Test;
 
@@ -30,7 +30,7 @@ public class GeneralSupportTest {
 	void preservesLegacyLiteralAndDefaultPropertyValues() {
 		final var mysql = new MySQLLegacyDialect();
 		final var literal = new StringBuilder();
-		mysql.getLiteralSupport().appendLiteral( new StringBuilderSqlAppender( literal ), "a\\b" );
+		mysql.getLiteralSupport().appendLiteral( new StringBuilderDialectSqlAppender( mysql, literal ), "a\\b" );
 		assertEquals( "'a\\\\b'", literal.toString() );
 		assertEquals( "2", mysql.getDefaultProperties().getProperty( AvailableSettings.MAX_FETCH_DEPTH ) );
 

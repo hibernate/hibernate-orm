@@ -22,7 +22,7 @@ import org.hibernate.dialect.schema.spi.IndexDdlRequest;
 import org.hibernate.dialect.schema.spi.SchemaDropSupport;
 import org.hibernate.dialect.schema.spi.TableCreationKind;
 import org.hibernate.dialect.schema.spi.TruncateRequest;
-import org.hibernate.sql.spi.StringBuilderSqlAppender;
+import org.hibernate.sql.spi.StringBuilderDialectSqlAppender;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.Test;
 
@@ -91,7 +91,7 @@ class SchemaSupportContractTests {
 		assertEquals( "create table", dialect.createTableCommand( TableCreationKind.MULTISET ) );
 		assertFalse( dialect.requiresViewColumnList() );
 
-		final var appender = new StringBuilderSqlAppender();
+		final var appender = new StringBuilderDialectSqlAppender( dialect );
 		dialect.appendDefinition(
 				appender,
 				new ColumnDefinitionRequest( "integer", "en_US", false, "7", "quantity + 1" )

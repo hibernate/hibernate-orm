@@ -13,6 +13,7 @@ import org.hibernate.Locking;
 import org.hibernate.SPI;
 import org.hibernate.Timeouts;
 import org.hibernate.sql.ast.spi.query.SqlAstTreeHelper;
+import org.hibernate.sql.spi.StringBuilderDialectSqlAppender;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.array.spi.ArraySupport;
@@ -206,7 +207,6 @@ import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.spi.mutation.MutationTarget;
 import org.hibernate.sql.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.spi.SqlAppender;
-import org.hibernate.sql.spi.StringBuilderSqlAppender;
 import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
 import org.hibernate.sql.ast.spi.model.TenantIdColumnValueBinding;
 import org.hibernate.sql.ast.spi.model.ColumnValueParameter;
@@ -528,7 +528,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	/// the mutable main SQL buffer.
 	protected final void renderStatementPrefix(Consumer<SqlAppender> renderer) {
 		final var prefixBuffer = new StringBuilder();
-		renderer.accept( new StringBuilderSqlAppender( prefixBuffer ) );
+		renderer.accept( new StringBuilderDialectSqlAppender( getDialect(), prefixBuffer ) );
 		sqlBuffer.insert( 0, prefixBuffer );
 	}
 
@@ -626,6 +626,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	@Override
 	public void appendSingleQuoteEscapedString(String value) {
 		QuotingHelper.appendSingleQuoteEscapedString( sqlBuffer, value );
+	}
+
+	@Override
+	public void appendLiteral(String value) {
+		dialect.getLiteralSupport().appendLiteral( this, value );
+	}
+
+	@Override
+	public void appendLiteralContent(String value) {
+		dialect.getLiteralSupport().appendLiteralContent( this, value );
 	}
 
 	@Override

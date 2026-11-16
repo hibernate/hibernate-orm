@@ -83,7 +83,7 @@ public class PostgreSQLJsonQueryFunction extends JsonQueryFunction {
 			char separator = '(';
 			for ( Map.Entry<String, Expression> entry : passingClause.getPassingExpressions().entrySet() ) {
 				sqlAppender.append( separator );
-				sqlAppender.appendSingleQuoteEscapedString( entry.getKey() );
+				sqlAppender.appendLiteral( entry.getKey() );
 				sqlAppender.append( ',' );
 				entry.getValue().accept( walker );
 				separator = ',';

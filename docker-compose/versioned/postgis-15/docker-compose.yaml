@@ -1,6 +1,6 @@
 services:
   postgis:
-    image: ${DB_IMAGE_POSTGIS_15:-docker.io/postgis/postgis:15-3.6@sha256:1d8ecd89be6bad966087db8a147f96a17032e7daec958e392fc620bb40a9ce73}
+    image: ${DB_IMAGE_POSTGIS_15:-docker.io/postgis/postgis:15-3.7@sha256:1ded7c334574959eb1450865a0a0e55d409460d77771c8ac5d850cfc635e918d}
     container_name: postgis
     platform: ${POSTGRESQL_PLATFORM:-linux/amd64}
     environment:

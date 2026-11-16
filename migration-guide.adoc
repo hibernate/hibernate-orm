@@ -1769,6 +1769,16 @@ XML mapping documents are now validated against their schema by default, as docu
 Previously, validation was disabled when this setting was absent, allowing invalid attributes to be silently ignored.
 Applications with invalid `orm.xml` or `hbm.xml` documents must correct their mappings or explicitly set `hibernate.validate_xml=false` to disable validation.
 
+[[oracle-nested-xml-nulls]]
+=== Oracle nested XML null extraction
+
+Nested XML aggregate projections and null predicates now preserve SQL nulls when the extracted child content is absent.
+Previously, the extraction expression manufactured an empty XML root, so a projection could return an empty embeddable
+and an `is null` predicate could incorrectly exclude a null child or null parent payload.
+Stored XML is unchanged and no data migration is required.
+Explicitly present aggregates with all-null members retain their existing behavior.
+
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // XSD changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

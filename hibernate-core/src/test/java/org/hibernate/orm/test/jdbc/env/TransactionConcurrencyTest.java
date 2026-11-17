@@ -48,10 +48,13 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
 import static java.sql.Connection.TRANSACTION_REPEATABLE_READ;
+import static java.sql.Connection.TRANSACTION_SERIALIZABLE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hibernate.dialect.lock.spi.BlockingDuration.*;
 import static org.hibernate.dialect.lock.spi.Operation.*;
+import static org.hibernate.orm.test.locking.ConcurrencyConfiguration.TRANSACTION_H2_SNAPSHOT_ISOLATION;
+import static org.hibernate.orm.test.locking.ConcurrencyConfiguration.TRANSACTION_SQL_SERVER_SNAPSHOT_ISOLATION;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -80,7 +83,7 @@ class TransactionConcurrencyTest {
 	}
 
 	@ParameterizedTest
-	@ValueSource(ints = { TRANSACTION_READ_COMMITTED, 4096 })
+	@ValueSource(ints = { TRANSACTION_READ_COMMITTED, TRANSACTION_SQL_SERVER_SNAPSHOT_ISOLATION})
 	void sqlServerVersionedReadsDoNotBlockWriters(int isolation) throws Exception {
 		final var concurrency = resolve( new SQLServerDialect(), metadata( isolation ), snapshotConnection( true ), null,
 				JdbcMetadataOnBoot.ALLOW );
@@ -240,7 +243,7 @@ class TransactionConcurrencyTest {
 	@Test
 	void cockroachSerializableDoesNotPromiseDurableLocks() {
 		final var dialect = new org.hibernate.dialect.CockroachDialect();
-		final var result = resolve( dialect, metadata( Connection.TRANSACTION_SERIALIZABLE ),
+		final var result = resolve( dialect, metadata( TRANSACTION_SERIALIZABLE ),
 				null, null, JdbcMetadataOnBoot.ALLOW );
 		assertThat( result.supports( UPDATE_LOCK_READ ) ).isTrue();
 		assertThat( result.getReadGuarantees( UPDATE_LOCK_READ ).preventsConcurrentModification() ).isFalse();
@@ -303,7 +306,7 @@ class TransactionConcurrencyTest {
 				new org.hibernate.dialect.PostgreSQLDialect(), new org.hibernate.dialect.MySQLDialect(),
 				new org.hibernate.dialect.MariaDBDialect()
 		};
-		final int[] isolationLevels = { 6, 4096, Connection.TRANSACTION_SERIALIZABLE,
+		final int[] isolationLevels = { TRANSACTION_H2_SNAPSHOT_ISOLATION, TRANSACTION_SQL_SERVER_SNAPSHOT_ISOLATION, TRANSACTION_SERIALIZABLE,
 				TRANSACTION_REPEATABLE_READ, TRANSACTION_REPEATABLE_READ, TRANSACTION_REPEATABLE_READ };
 		for ( int i = 0; i < dialects.length; i++ ) {
 			final var result = resolve( dialects[i], metadata( isolationLevels[i] ), null,
@@ -546,7 +549,7 @@ class TransactionConcurrencyTest {
 			when( statement.executeQuery( anyString() ) ).thenReturn( rows );
 			when( rows.next() ).thenReturn( true );
 			when( rows.getString( 1 ) ).thenReturn( "READ_LOCK_MODE_UNSPECIFIED" );
-			final var result = resolve( dialect, metadata( Connection.TRANSACTION_SERIALIZABLE ), connection, null, JdbcMetadataOnBoot.ALLOW );
+			final var result = resolve( dialect, metadata( TRANSACTION_SERIALIZABLE ), connection, null, JdbcMetadataOnBoot.ALLOW );
 			assertThat( result.getReadGuarantees( READ ).isCurrentRead() ).isTrue();
 			assertThat( result.getBlockingDuration( READ, WRITE ) ).isEqualTo( TRANSACTION );
 			assertThat( sql( dialect, result ) ).doesNotContain( "for update" );
@@ -556,7 +559,7 @@ class TransactionConcurrencyTest {
 			verify( statement ).close();
 			verify( rows ).close();
 			when( rows.getString( 1 ) ).thenReturn( "OPTIMISTIC" );
-			final var optimistic = resolve( dialect, metadata( Connection.TRANSACTION_SERIALIZABLE ), connection, null, JdbcMetadataOnBoot.ALLOW );
+			final var optimistic = resolve( dialect, metadata( TRANSACTION_SERIALIZABLE ), connection, null, JdbcMetadataOnBoot.ALLOW );
 			assertThat( optimistic.getReadGuarantees( READ ).isCurrentRead() ).isFalse();
 			assertThat( optimistic.getReadGuarantees( READ ).preventsConcurrentModification() ).isFalse();
 			assertThat( optimistic.supports( CURRENT_READ ) ).isFalse();
@@ -581,11 +584,11 @@ class TransactionConcurrencyTest {
 		when( connection.createStatement() ).thenThrow( new SQLException( "unsupported" ) );
 		final var dialect = new org.hibernate.dialect.SpannerDialect();
 		if ( access == JdbcMetadataOnBoot.REQUIRE ) {
-			assertThatThrownBy( () -> resolve( dialect, metadata( Connection.TRANSACTION_SERIALIZABLE ), connection, null, access ) )
+			assertThatThrownBy( () -> resolve( dialect, metadata( TRANSACTION_SERIALIZABLE ), connection, null, access ) )
 					.isInstanceOf( TransactionConcurrencyResolutionException.class );
 		}
 		else {
-			assertThat( resolve( dialect, metadata( Connection.TRANSACTION_SERIALIZABLE ), connection, null, access )
+			assertThat( resolve( dialect, metadata( TRANSACTION_SERIALIZABLE ), connection, null, access )
 					.getReadGuarantees( READ ).isCurrentRead() ).isFalse();
 		}
 		if ( access == JdbcMetadataOnBoot.DISALLOW ) {

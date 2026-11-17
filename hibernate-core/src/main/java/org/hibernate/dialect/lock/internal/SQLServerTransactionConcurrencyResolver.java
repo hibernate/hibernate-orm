@@ -16,6 +16,7 @@ import static java.sql.Connection.*;
 /// @since 8.0
 /// @author Steve Ebersole
 public final class SQLServerTransactionConcurrencyResolver extends AbstractTransactionConcurrencyResolver {
+	public static final int TRANSACTION_SNAPSHOT_ISOLATION = 4096;
 	public static final SQLServerTransactionConcurrencyResolver INSTANCE = new SQLServerTransactionConcurrencyResolver();
 
 	private SQLServerTransactionConcurrencyResolver() {
@@ -45,12 +46,12 @@ public final class SQLServerTransactionConcurrencyResolver extends AbstractTrans
 
 	@Override
 	protected int snapshotIsolation() {
-		return 4096;
+		return TRANSACTION_SNAPSHOT_ISOLATION;
 	}
 
 	@Override
 	protected Boolean versionedReads(Integer isolation) {
-		return isolation == null || isolation == TRANSACTION_READ_COMMITTED ? null : isolation == 4096;
+		return isolation == null || isolation == TRANSACTION_READ_COMMITTED ? null : isolation == TRANSACTION_SNAPSHOT_ISOLATION;
 	}
 
 	@Override
@@ -85,12 +86,12 @@ public final class SQLServerTransactionConcurrencyResolver extends AbstractTrans
 
 	@Override
 	protected boolean knownIsolation(Integer isolation) {
-		return super.knownIsolation( isolation ) || isolation != null && isolation == 4096;
+		return super.knownIsolation( isolation ) || isolation != null && isolation == TRANSACTION_SNAPSHOT_ISOLATION;
 	}
 
 	@Override
 	protected boolean stableReads(Integer isolation) {
-		return super.stableReads( isolation ) || isolation != null && isolation == 4096;
+		return super.stableReads( isolation ) || isolation != null && isolation == TRANSACTION_SNAPSHOT_ISOLATION;
 	}
 
 	@Override

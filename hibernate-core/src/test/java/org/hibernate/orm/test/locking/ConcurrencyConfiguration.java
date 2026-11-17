@@ -15,6 +15,8 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.dialect.*;
+import org.hibernate.dialect.lock.internal.H2TransactionConcurrencyResolver;
+import org.hibernate.dialect.lock.internal.SQLServerTransactionConcurrencyResolver;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.testing.jdbc.JdbcProperties;
@@ -32,6 +34,9 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 /// @author Steve Ebersole
 public record ConcurrencyConfiguration(int isolation, Boolean rcsi, Boolean mariaSnapshot) {
 
+	public static final int TRANSACTION_H2_SNAPSHOT_ISOLATION = H2TransactionConcurrencyResolver.TRANSACTION_SNAPSHOT_ISOLATION;
+	public static final int TRANSACTION_SQL_SERVER_SNAPSHOT_ISOLATION = SQLServerTransactionConcurrencyResolver.TRANSACTION_SNAPSHOT_ISOLATION;
+
 	public static Stream<ConcurrencyConfiguration> configurations() {
 		return configurations( DialectContext.getDialect() );
 	}
@@ -43,23 +48,29 @@ public record ConcurrencyConfiguration(int isolation, Boolean rcsi, Boolean mari
 			return Stream.of( new ConcurrencyConfiguration( TRANSACTION_SERIALIZABLE ) );
 		}
 		if ( dialect instanceof SQLServerDialect ) {
-			return Stream.of( new ConcurrencyConfiguration( 2, false, null ),
-					new ConcurrencyConfiguration( 2, true, null ), new ConcurrencyConfiguration( 4096, true, null ) );
+			return Stream.of(
+					new ConcurrencyConfiguration( TRANSACTION_READ_COMMITTED, false, null ),
+					new ConcurrencyConfiguration( TRANSACTION_READ_COMMITTED, true, null ),
+					new ConcurrencyConfiguration( TRANSACTION_SQL_SERVER_SNAPSHOT_ISOLATION, true, null )
+			);
 		}
 		if ( dialect instanceof MariaDBDialect ) {
-			return Stream.of( new ConcurrencyConfiguration( 2, null, null ),
-					new ConcurrencyConfiguration( 4, null, false ), new ConcurrencyConfiguration( 4, null, true ) );
+			return Stream.of(
+					new ConcurrencyConfiguration( TRANSACTION_READ_COMMITTED, null, null ),
+					new ConcurrencyConfiguration( TRANSACTION_REPEATABLE_READ, null, false ),
+					new ConcurrencyConfiguration( TRANSACTION_REPEATABLE_READ, null, true )
+			);
 		}
 		if ( dialect instanceof H2Dialect ) {
-			return Stream.of( 2, 4, 6, 8 ).map( ConcurrencyConfiguration::new );
+			return Stream.of( TRANSACTION_READ_COMMITTED, TRANSACTION_REPEATABLE_READ, TRANSACTION_H2_SNAPSHOT_ISOLATION, TRANSACTION_SERIALIZABLE ).map( ConcurrencyConfiguration::new );
 		}
 		if ( dialect instanceof PostgreSQLDialect || dialect instanceof MySQLDialect ) {
-			return Stream.of( 2, 4, 8 ).map( ConcurrencyConfiguration::new );
+			return Stream.of( TRANSACTION_READ_COMMITTED, TRANSACTION_REPEATABLE_READ, TRANSACTION_SERIALIZABLE ).map( ConcurrencyConfiguration::new );
 		}
 		if ( dialect instanceof OracleDialect ) {
-			return Stream.of( 2, 8 ).map( ConcurrencyConfiguration::new );
+			return Stream.of( TRANSACTION_READ_COMMITTED, TRANSACTION_SERIALIZABLE ).map( ConcurrencyConfiguration::new );
 		}
-		return Stream.of( new ConcurrencyConfiguration( 2 ) );
+		return Stream.of( new ConcurrencyConfiguration( TRANSACTION_READ_COMMITTED ) );
 	}
 
 	private static boolean isSpanner(Dialect dialect) {
@@ -77,18 +88,18 @@ public record ConcurrencyConfiguration(int isolation, Boolean rcsi, Boolean mari
 	}
 
 	public boolean ordinaryProtection(Dialect dialect) {
-		return dialect instanceof SQLServerDialect && (isolation == 4 || isolation == 8)
-				|| dialect instanceof MySQLDialect && isolation == 8;
+		return dialect instanceof SQLServerDialect && (isolation == TRANSACTION_REPEATABLE_READ || isolation == TRANSACTION_SERIALIZABLE)
+				|| dialect instanceof MySQLDialect && isolation == TRANSACTION_SERIALIZABLE;
 	}
 
 	public Boolean ordinaryCurrentRead(Dialect dialect) {
 		if ( dialect instanceof DB2Dialect || isSpanner( dialect ) ) return null; // configuration not classified here
 		return dialect instanceof SybaseDialect || ordinaryProtection( dialect )
-				|| dialect instanceof SQLServerDialect && isolation == 2 && !Boolean.TRUE.equals( rcsi );
+				|| dialect instanceof SQLServerDialect && isolation == TRANSACTION_READ_COMMITTED && !Boolean.TRUE.equals( rcsi );
 	}
 
 	public boolean mayConflict(Dialect dialect, org.hibernate.dialect.lock.spi.Operation operation) {
-		return currentReadConflicts( dialect ) || dialect instanceof SQLServerDialect && isolation == 4096
+		return currentReadConflicts( dialect ) || dialect instanceof SQLServerDialect && isolation == TRANSACTION_SQL_SERVER_SNAPSHOT_ISOLATION
 				&& operation != org.hibernate.dialect.lock.spi.Operation.CURRENT_READ;
 	}
 
@@ -97,9 +108,9 @@ public record ConcurrencyConfiguration(int isolation, Boolean rcsi, Boolean mari
 	}
 
 	public boolean currentReadConflicts(Dialect dialect) {
-		return !isSpanner( dialect ) && (dialect instanceof H2Dialect && isolation != 2
-				|| dialect instanceof PostgreSQLDialect && isolation != 2
-				|| dialect instanceof OracleDialect && isolation == 8
+		return !isSpanner( dialect ) && (dialect instanceof H2Dialect && isolation != TRANSACTION_READ_COMMITTED
+				|| dialect instanceof PostgreSQLDialect && isolation != TRANSACTION_READ_COMMITTED
+				|| dialect instanceof OracleDialect && isolation == TRANSACTION_SERIALIZABLE
 				|| dialect instanceof MariaDBDialect && Boolean.TRUE.equals( mariaSnapshot ));
 	}
 
@@ -115,7 +126,7 @@ public record ConcurrencyConfiguration(int isolation, Boolean rcsi, Boolean mari
 
 	public boolean conditionalWriteConflicts(Dialect dialect) {
 		return currentReadConflicts( dialect ) || isolation == TRANSACTION_SERIALIZABLE
-				|| dialect instanceof SQLServerDialect && isolation == 4096;
+				|| dialect instanceof SQLServerDialect && isolation == TRANSACTION_SQL_SERVER_SNAPSHOT_ISOLATION;
 	}
 
 	public void assertConflict(Throwable failure, Dialect dialect) {
@@ -229,7 +240,7 @@ public record ConcurrencyConfiguration(int isolation, Boolean rcsi, Boolean mari
 				}
 				registry = builder.build();
 				final var metadata = new MetadataSources( registry ).addAnnotatedClass( Row.class ).buildMetadata();
-				if ( dialect instanceof OracleDialect && configuration.isolation == 8 ) {
+				if ( dialect instanceof OracleDialect && configuration.isolation == TRANSACTION_SERIALIZABLE ) {
 					metadata.getEntityBinding( Row.class.getName() ).getTable().setOptions( "segment creation immediate" );
 				}
 				factory = (SessionFactoryImplementor) metadata.buildSessionFactory();

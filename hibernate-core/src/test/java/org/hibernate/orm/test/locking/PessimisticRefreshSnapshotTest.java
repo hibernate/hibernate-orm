@@ -51,6 +51,7 @@ import static java.sql.Connection.TRANSACTION_REPEATABLE_READ;
 import static org.hibernate.cfg.JdbcSettings.CONNECTION_HANDLING;
 import static org.hibernate.cfg.JdbcSettings.ISOLATION;
 import static org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider.INIT_SQL;
+import static org.hibernate.orm.test.locking.ConcurrencyConfiguration.TRANSACTION_SQL_SERVER_SNAPSHOT_ISOLATION;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -116,19 +117,40 @@ public class PessimisticRefreshSnapshotTest implements ServiceRegistryProducer {
 		final var jdbc = JdbcProperties.INSTANCE;
 		assumeTrue( assertDoesNotThrow( () -> {
 			try ( var connection = DriverManager.getConnection( jdbc.getUrl(), jdbc.getUser(), jdbc.getPassword() ) ) {
-				if ( isolationLevel == 4096 && isSQLServer( dialect ) ) {
+				if ( isolationLevel == TRANSACTION_SQL_SERVER_SNAPSHOT_ISOLATION && isSQLServer( dialect ) ) {
 					try ( var statement = connection.createStatement(); var rows = statement.executeQuery(
 							"select snapshot_isolation_state from sys.databases where name=db_name()" ) ) {
 						return rows.next() && rows.getInt( 1 ) == 1;
 					}
 				}
-				return connection.getMetaData().supportsTransactionIsolationLevel( isolationLevel );
+				return connection.getMetaData().supportsTransactionIsolationLevel( isolationLevel )
+						&& retainsIsolation( connection, isolationLevel );
 			}
-		} ), "JDBC driver does not support isolation level " + isolationLevel );
+		} ), "Database does not support isolation level " + isolationLevel );
+	}
+
+	/// Drivers may report support without consulting the server, and some databases
+	/// silently upgrade an unavailable level (e.g. CockroachDB runs REPEATABLE READ as
+	/// SERIALIZABLE unless enabled by a cluster setting). Probe the effective level.
+	private static boolean retainsIsolation(Connection connection, int isolationLevel) {
+		if ( isolationLevel != Connection.TRANSACTION_READ_UNCOMMITTED
+				&& isolationLevel != Connection.TRANSACTION_READ_COMMITTED
+				&& isolationLevel != Connection.TRANSACTION_REPEATABLE_READ
+				&& isolationLevel != Connection.TRANSACTION_SERIALIZABLE ) {
+			// Vendor-specific levels are configured and verified separately
+			return true;
+		}
+		try {
+			connection.setTransactionIsolation( isolationLevel );
+			return connection.getTransactionIsolation() == isolationLevel;
+		}
+		catch (SQLException e) {
+			return false;
+		}
 	}
 
 	static StandardServiceRegistryBuilder configureIsolation(StandardServiceRegistryBuilder builder, int isolation) {
-		if ( isolation == 4096 ) {
+		if ( isolation == TRANSACTION_SQL_SERVER_SNAPSHOT_ISOLATION ) {
 			// A raw SET statement leaves the Microsoft driver's cached isolation at
 			// READ_COMMITTED. Its connection property initializes both JDBC and SQL.
 			builder.getSettings().remove( ISOLATION );
@@ -213,8 +235,7 @@ public class PessimisticRefreshSnapshotTest implements ServiceRegistryProducer {
 				final var failure = assertThrows( PersistenceException.class,
 						() -> session.find( RefreshTarget.class, 1, loadMode ),
 						"Locking a row updated since the transaction snapshot must fail" );
-				final var sqlException = sqlException( failure );
-				assertEquals( "40001", sqlException.getSQLState(), "Expected a serialization failure" );
+				assertSerializationFailure( scope, failure );
 				return;
 			}
 			if ( isMariaSnapshotIsolation( scope, session ) ) {
@@ -241,12 +262,13 @@ public class PessimisticRefreshSnapshotTest implements ServiceRegistryProducer {
 				assertIsolation( other );
 				other.get( UnversionedTarget.class, 1 ).data = "updated";
 			} );
+			final var dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 			if ( hasFixedLockingSnapshot( scope )
-					|| isolationLevel == TRANSACTION_REPEATABLE_READ
-							&& isH2( scope.getSessionFactory().getJdbcServices().getDialect() ) ) {
-				// H2 also detects the conflict once the target itself has been read.
+					|| isolationLevel == TRANSACTION_REPEATABLE_READ && (isH2( dialect ) || isCockroachDB( dialect )) ) {
+				// H2 and CockroachDB also detect the conflict once the target itself has been read
+				// (CockroachDB raises a WriteTooOldError retry error with SQLState 40001).
 				final var failure = assertThrows( PersistenceException.class, () -> session.refresh( target, loadMode ) );
-				assertEquals( "40001", sqlException( failure ).getSQLState() );
+				assertSerializationFailure( scope, failure );
 				return;
 			}
 			if ( isMariaSnapshotIsolation( scope, session ) ) {
@@ -288,6 +310,23 @@ public class PessimisticRefreshSnapshotTest implements ServiceRegistryProducer {
 		assertEquals( errorCode, sqlException( failure ).getErrorCode() );
 	}
 
+	private static void assertSerializationFailure(SessionFactoryScope scope, PersistenceException failure) {
+		final var sqlException = sqlException( failure );
+		final var dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+		if ( isHANA( dialect ) ) {
+			// HANA reports error 138 "transaction serialization failure" without SQLState 40001
+			assertEquals( 138, sqlException.getErrorCode(), "Expected a serialization failure" );
+			Throwable cause = failure;
+			while ( cause != null && !(cause instanceof org.hibernate.exception.TransactionSerializationException) ) {
+				cause = cause.getCause();
+			}
+			assertNotNull( cause, "Expected a TransactionSerializationException classification" );
+		}
+		else {
+			assertEquals( "40001", sqlException.getSQLState(), "Expected a serialization failure" );
+		}
+	}
+
 	@Test
 	void sameValueTimestampForceIncrementDoesNotProveOwnWriteVisibility(SessionFactoryScope scope) {
 		scope.inTransaction( session -> session.persist( new TimestampTarget() ) );
@@ -296,7 +335,7 @@ public class PessimisticRefreshSnapshotTest implements ServiceRegistryProducer {
 			if ( hasFixedLockingSnapshot( scope ) ) {
 				final var failure = assertThrows( PersistenceException.class,
 						() -> session.find( TimestampTarget.class, 1, LockMode.PESSIMISTIC_FORCE_INCREMENT ) );
-				assertEquals( "40001", sqlException( failure ).getSQLState() );
+				assertSerializationFailure( scope, failure );
 				return;
 			}
 			if ( isMariaSnapshotIsolation( scope, session ) ) {
@@ -336,7 +375,14 @@ public class PessimisticRefreshSnapshotTest implements ServiceRegistryProducer {
 		return dialect.getLockingSupport().getTransactionConcurrencyResolver()
 				instanceof org.hibernate.dialect.lock.internal.PostgreSQLTransactionConcurrencyResolver
 				&& isolationLevel == TRANSACTION_REPEATABLE_READ
+				// HANA REPEATABLE READ uses a transaction-level snapshot, also for locking reads
+				|| isHANA( dialect ) && isolationLevel == TRANSACTION_REPEATABLE_READ
 				|| isH2( dialect ) && isolationLevel == 6;
+	}
+
+	static boolean isHANA(org.hibernate.dialect.Dialect dialect) {
+		return dialect.getLockingSupport().getTransactionConcurrencyResolver()
+				instanceof org.hibernate.dialect.lock.internal.HANATransactionConcurrencyResolver;
 	}
 
 	// Classify the selected family profile so legacy Dialects use the same
@@ -349,6 +395,11 @@ public class PessimisticRefreshSnapshotTest implements ServiceRegistryProducer {
 	static boolean isSQLServer(org.hibernate.dialect.Dialect dialect) {
 		return dialect.getLockingSupport().getTransactionConcurrencyResolver()
 				instanceof org.hibernate.dialect.lock.internal.SQLServerTransactionConcurrencyResolver;
+	}
+
+	static boolean isCockroachDB(org.hibernate.dialect.Dialect dialect) {
+		return dialect.getLockingSupport().getTransactionConcurrencyResolver()
+				instanceof org.hibernate.dialect.lock.internal.CockroachTransactionConcurrencyResolver;
 	}
 
 	private void assertIsolation(Session session) {

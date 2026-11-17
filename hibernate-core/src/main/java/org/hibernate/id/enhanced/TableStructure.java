@@ -188,9 +188,11 @@ public class TableStructure implements DatabaseStructure {
 								} while ( rows == 0 );
 
 								accessCounter++;
+								// spacing must match how the table row advanced
+								final int spacing = applyIncrementSizeToSourceValues ? incrementSize : 1;
 								final long[] result = new long[count];
 								for ( int i = 0; i < result.length; i++ ) {
-									result[i] = (long) i * incrementSize + value;
+									result[i] = (long) i * spacing + value;
 								}
 								return result;
 							}

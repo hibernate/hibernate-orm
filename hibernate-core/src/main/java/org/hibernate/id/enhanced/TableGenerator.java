@@ -610,10 +610,12 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 		}
 		while ( rows == 0 );
 		accessCount++;
+		// spacing must match how the table row advanced
+		final int spacing = optimizer.applyIncrementSizeToSourceValues() ? incrementSize : 1;
 		final long[] result = new long[count];
 		final long baseValue = storeLastUsedValue ? value + 1 : value;
 		for ( int i = 0; i < result.length; i++ ) {
-			result[i] = (long) i * incrementSize + baseValue;
+			result[i] = (long) i * spacing + baseValue;
 		}
 		return result;
 	}

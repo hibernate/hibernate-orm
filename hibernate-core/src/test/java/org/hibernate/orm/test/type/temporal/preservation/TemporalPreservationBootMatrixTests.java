@@ -42,7 +42,7 @@ class TemporalPreservationBootMatrixTests {
 		final List<Cell> cells = TemporalPreservationBootMatrix.bootWithPolicies(
 				Map.of( MappingSettings.TEMPORAL_PRESERVATION, true )
 		);
-		assertThat( cells ).hasSize( TemporalPreservationBootMatrix.JAVA_TIME_CLASSES.size() + 8 );
+		assertThat( cells ).hasSize( TemporalPreservationBootMatrix.JAVA_TIME_CLASSES.size() + 12 );
 		record( cells );
 
 		final String dialect = cells.get( 0 ).dialect();
@@ -89,7 +89,10 @@ class TemporalPreservationBootMatrixTests {
 		assertThat( direct ).allSatisfy( cell -> assertThat( cell.jdbcType() ).doesNotContain( "+" ) );
 		for ( int i = 0; i < direct.size(); i++ ) {
 			final String javaClass = direct.get( i ).javaClass();
-			if ( !javaClass.equals( "OffsetDateTime" ) && !javaClass.equals( "ZonedDateTime" ) ) {
+			// where the offset or zone is stored is decided differently with preservation enabled
+			if ( !javaClass.equals( "OffsetTime" )
+					&& !javaClass.equals( "OffsetDateTime" )
+					&& !javaClass.equals( "ZonedDateTime" ) ) {
 				assertThat( direct.get( i ).jdbcType() ).as( javaClass ).isEqualTo( preserving.get( i ).jdbcType() );
 				assertThat( direct.get( i ).columnType() ).as( javaClass ).isEqualTo( preserving.get( i ).columnType() );
 			}

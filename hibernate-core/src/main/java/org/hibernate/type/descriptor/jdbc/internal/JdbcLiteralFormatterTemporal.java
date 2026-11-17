@@ -40,6 +40,9 @@ public class JdbcLiteralFormatterTemporal<T> extends BasicJdbcLiteralFormatter<T
 			if ( TemporalPreservationGuard.isEnabled( options ) ) {
 				TemporalPreservationGuard.checkLiteral( value, getJavaType(), options );
 				TemporalPreservationGuard.checkLiteralOffset( value, getJavaType() );
+				if ( precision == TemporalType.TIME ) {
+					TemporalPreservationGuard.checkTimeLiteral( value, getJavaType(), dialect );
+				}
 				if ( value instanceof Instant instant && precision == TemporalType.TIMESTAMP ) {
 					// An instant rendered as date and time fields in the JDBC time zone
 					// is interpreted by the database in the time zone of its session,

@@ -39,6 +39,7 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Value;
 import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
+import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.ClockHelper;
 
@@ -141,7 +142,8 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 	private static boolean isInstantWithCompanion(Value value) {
 		return value instanceof Component component
 			&& component.getPropertySpan() == 2
-			&& component.hasProperty( AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME );
+			&& ( component.hasProperty( AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME )
+				|| component.hasProperty( OffsetTimeCompositeUserType.LOCAL_TIME_NAME ) );
 	}
 
 	private static GeneratorDelegate getGeneratorDelegate(
@@ -190,8 +192,11 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 		final var value = context.getProperty().getValue();
 		final var basicValue = isInstantWithCompanion( value )
 				// the precision is that of the column holding the instant
-				? (BasicValue) ( (Component) value ).getProperty( AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME )
-						.getValue()
+				? (BasicValue) ( (Component) value ).getProperty(
+						( (Component) value ).hasProperty( AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME )
+								? AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME
+								: OffsetTimeCompositeUserType.LOCAL_TIME_NAME
+				).getValue()
 				: (BasicValue) value;
 		final Size size =
 				basicValue.getColumns().get( 0 )

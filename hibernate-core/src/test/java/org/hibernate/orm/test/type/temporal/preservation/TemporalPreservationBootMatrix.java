@@ -123,20 +123,24 @@ final class TemporalPreservationBootMatrix {
 		return cells;
 	}
 
-	/// As [#boot(Map)], followed by `OffsetDateTime` and `ZonedDateTime` with
+	/// As [#boot(Map)], followed by `OffsetTime`, `OffsetDateTime` and `ZonedDateTime` with
 	/// each explicit representation, with the `NORMALIZED` policy, and with a
 	/// zone declared by `@TimeZoneAdjustment`.
 	static List<Cell> bootWithPolicies(Map<String, Object> settings) {
 		final List<Cell> cells = boot( settings );
 		final Map<String, Object> normalized = new HashMap<>( settings );
 		normalized.put( MappingSettings.TEMPORAL_PRESERVATION_POLICY, "normalized" );
+		cells.add( boot( WithOffsetTimeInline.class, OffsetTime.class, "INLINE", settings, false ) );
 		cells.add( boot( WithOffsetDateTimeInline.class, OffsetDateTime.class, "INLINE", settings, false ) );
 		cells.add( boot( WithZonedDateTimeInline.class, ZonedDateTime.class, "INLINE", settings, false ) );
+		cells.add( boot( WithOffsetTimeColumn.class, OffsetTime.class, "COLUMN", settings, false ) );
 		cells.add( boot( WithOffsetDateTimeColumn.class, OffsetDateTime.class, "COLUMN", settings, false ) );
 		cells.add( boot( WithZonedDateTimeColumn.class, ZonedDateTime.class, "COLUMN", settings, false ) );
+		cells.add( boot( WithOffsetTime.class, OffsetTime.class, "NORMALIZED", normalized, true ) );
 		cells.add( boot( WithOffsetDateTime.class, OffsetDateTime.class, "NORMALIZED", normalized, true ) );
 		cells.add( boot( WithZonedDateTime.class, ZonedDateTime.class, "NORMALIZED", normalized, true ) );
 		// with a declared zone, the column need only hold the instant
+		cells.add( boot( WithOffsetTimeAdjusted.class, OffsetTime.class, "ADJUSTED", settings, true ) );
 		cells.add( boot( WithOffsetDateTimeAdjusted.class, OffsetDateTime.class, "ADJUSTED", settings, true ) );
 		cells.add( boot( WithZonedDateTimeAdjusted.class, ZonedDateTime.class, "ADJUSTED", settings, true ) );
 		return cells;
@@ -169,7 +173,9 @@ final class TemporalPreservationBootMatrix {
 			final BasicValue primary;
 			final BasicValue companion;
 			if ( value instanceof Component component ) {
-				primary = (BasicValue) component.getProperty( "instant" ).getValue();
+				primary = (BasicValue) component.getProperty(
+						component.hasProperty( "instant" ) ? "instant" : "utcTime"
+				).getValue();
 				companion = (BasicValue) component.getProperty( component.getPropertySpan() == 2
 						&& component.hasProperty( "zoneId" ) ? "zoneId" : "zoneOffset" ).getValue();
 			}
@@ -206,8 +212,8 @@ final class TemporalPreservationBootMatrix {
 			final var preservation = dialect.getTemporalPreservation( javaType, jdbcType );
 			final var parts = new StringJoiner( "+" );
 			if ( companion != null ) {
-				// the second column supplies what the instant lacks
-				parts.add( "INSTANT" );
+				// the second column supplies what the instant, or the time at UTC, lacks
+				parts.add( javaClass == OffsetTime.class ? "TIME" : "INSTANT" );
 				if ( !normalized ) {
 					parts.add( "OFFSET" );
 					if ( javaClass == ZonedDateTime.class ) {
@@ -235,6 +241,33 @@ final class TemporalPreservationBootMatrix {
 					"QUALIFIED"
 			);
 		}
+	}
+
+	@Entity(name = "WithOffsetTimeInline")
+	@Table(name = "tp_offset_time_inline")
+	static class WithOffsetTimeInline {
+		@Id
+		Integer id;
+		@TimeZoneRepresentation(TimeZoneRepresentation.Type.INLINE)
+		OffsetTime theValue;
+	}
+
+	@Entity(name = "WithOffsetTimeColumn")
+	@Table(name = "tp_offset_time_column")
+	static class WithOffsetTimeColumn {
+		@Id
+		Integer id;
+		@TimeZoneRepresentation(TimeZoneRepresentation.Type.COLUMN)
+		OffsetTime theValue;
+	}
+
+	@Entity(name = "WithOffsetTimeAdjusted")
+	@Table(name = "tp_offset_time_adjusted")
+	static class WithOffsetTimeAdjusted {
+		@Id
+		Integer id;
+		@TimeZoneAdjustment("Z")
+		OffsetTime theValue;
 	}
 
 	@Entity(name = "WithOffsetDateTimeInline")

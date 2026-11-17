@@ -12,15 +12,17 @@ import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-/// Declares the time zone of every value of an [java.time.OffsetDateTime] or
-/// [java.time.ZonedDateTime] attribute when
+/// Declares the time zone of every value of an [java.time.OffsetTime],
+/// [java.time.OffsetDateTime] or [java.time.ZonedDateTime] attribute when
 /// [temporal preservation][org.hibernate.cfg.MappingSettings#TEMPORAL_PRESERVATION]
 /// is enabled.
 ///
 /// The zone is a fixed part of the mapping and is not stored. The value is
 /// stored in a single column, of which only the instant is required, and is
 /// always read back in the declared zone. For an `OffsetDateTime`, that is the
-/// offset which the declared zone has at the instant of the value.
+/// offset which the declared zone has at the instant of the value. For an
+/// `OffsetTime`, which has no date by which to determine the offset of a
+/// region, the zone must be a fixed offset.
 ///
 /// What happens to a value which is written in another zone or offset is
 /// decided by the [TemporalPreservationPolicy] of the attribute:

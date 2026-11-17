@@ -1,6 +1,7 @@
 package org.hibernate.dialect;
 
 import org.hibernate.type.descriptor.jdbc.OffsetDateTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.OffsetTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampUtcAsOffsetDateTimeJdbcType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.dialect.type.spi.TemporalPreservation;
@@ -1018,6 +1019,16 @@ public class OracleDialect extends Dialect implements CurrentTemporalSupport, Te
 					OffsetDateTimeJdbcType.class,
 					TemporalPreservation.Level.UNSUPPORTED,
 					StandardTemporalPreservations.TIMESTAMP_READ_SAFE_START
+			);
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			// Stored in a TIMESTAMP WITH TIME ZONE column, on the first day of 1970.
+			// The column keeps the time at UTC, but the offset only to the minute.
+			preservation = StandardTemporalPreservations.offsetTime(
+					javaType,
+					jdbcType,
+					OffsetTimeJdbcType.class,
+					TemporalPreservation.Level.UNSUPPORTED
 			);
 		}
 		return preservation;

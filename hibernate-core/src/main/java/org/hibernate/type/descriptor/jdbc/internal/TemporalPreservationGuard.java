@@ -169,6 +169,23 @@ public final class TemporalPreservationGuard {
 		}
 	}
 
+	/// Check a time of day with an offset about to be rendered as a SQL
+	/// literal, with temporal preservation known to be enabled. Where the
+	/// Dialect renders a time literal without an offset, the offset of the
+	/// value would be dropped, and the literal would denote another time.
+	public static void checkTimeLiteral(Object value, JavaType<?> javaType, Dialect dialect) {
+		if ( value instanceof TemporalAccessor temporal
+				&& temporal.isSupported( ChronoField.OFFSET_SECONDS )
+				&& !dialect.getTemporalValueSemantics().supportsLiteralOffset() ) {
+			throw new TemporalPreservationException(
+					"Cannot render as a SQL literal the value '" + value + "' of type '" + javaType.getTypeName()
+					+ "': with '" + TEMPORAL_PRESERVATION + "' enabled, a literal for a time with an offset is"
+					+ " not supported on " + dialect.getClass().getSimpleName()
+					+ ", where it would be rendered without its offset; bind the value as a parameter instead"
+			);
+		}
+	}
+
 	private static void check(
 			Object value,
 			JavaType<?> javaType,

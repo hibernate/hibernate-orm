@@ -404,6 +404,7 @@ import org.hibernate.usertype.UserVersionType;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.OffsetTime;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8317,12 +8318,25 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	/// in a second is compared with a value occupying a single column, such
 	/// as a literal, by its instant. Compared with a value which also has
 	/// two parts, such as a parameter, it is left as it is.
-	private static SqmExpression<?> instantOfTemporalInTwoColumns(SqmExpression<?> operand, SqmExpression<?> other) {
+	private SqmExpression<?> instantOfTemporalInTwoColumns(SqmExpression<?> operand, SqmExpression<?> other) {
 		if ( SqmExpressionHelper.isCompositeTemporal( operand ) && !SqmExpressionHelper.isCompositeTemporal( other ) ) {
 			final Integer length = operand.getTupleLength();
 			final Integer otherLength = other.getTupleLength();
 			if ( length != null && otherLength != null && length.intValue() != otherLength.intValue() ) {
-				return SqmExpressionHelper.getActualExpression( operand );
+				final var actual = SqmExpressionHelper.getActualExpression( operand );
+				if ( operand.getJavaTypeDescriptor() != null
+						&& operand.getJavaTypeDescriptor().getJavaTypeClass() == OffsetTime.class
+						&& creationContext.getSessionFactory().getSessionFactoryOptions().isTemporalPreservationEnabled() ) {
+					// its first column holds a time of day at UTC, in a column type which
+					// differs by database and which need not compare as a time with an offset
+					throw new SemanticException(
+							"Cannot compare '" + ( (SqmPath<?>) operand ).getNavigablePath().getFullPath()
+							+ "' with a value occupying a single column: with '"
+							+ org.hibernate.cfg.MappingSettings.TEMPORAL_PRESERVATION + "' enabled it is stored as its time at UTC"
+							+ " and its offset in two columns; compare it with a parameter instead"
+					);
+				}
+				return actual;
 			}
 		}
 		return operand;

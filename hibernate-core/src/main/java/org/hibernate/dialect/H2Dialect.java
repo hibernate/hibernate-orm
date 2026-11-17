@@ -1,6 +1,7 @@
 package org.hibernate.dialect;
 
 import org.hibernate.type.descriptor.jdbc.OffsetDateTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.OffsetTimeJdbcType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.dialect.type.spi.TemporalPreservation;
 import org.hibernate.dialect.type.internal.StandardTemporalPreservations;
@@ -787,6 +788,15 @@ public class H2Dialect extends Dialect implements CurrentTemporalSupport, Tempor
 					OffsetDateTimeJdbcType.class,
 					TemporalPreservation.Level.SUPPORTED,
 					StandardTemporalPreservations.COMMON_ERA_START
+			);
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			// the column keeps the time and the offset, to the second
+			preservation = StandardTemporalPreservations.offsetTime(
+					javaType,
+					jdbcType,
+					OffsetTimeJdbcType.class,
+					TemporalPreservation.Level.SUPPORTED
 			);
 		}
 		return preservation;

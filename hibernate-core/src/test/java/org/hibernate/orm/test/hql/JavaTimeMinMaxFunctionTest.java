@@ -11,6 +11,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import java.time.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -247,6 +248,11 @@ public class JavaTimeMinMaxFunctionTest {
 	}
 
 	@Test
+	@DisabledIfSystemProperty(
+			named = "hibernate.type.temporal_preservation",
+			matches = "true",
+			disabledReason = "Aggregate functions are not supported for a ZonedDateTime stored in two columns"
+	)
 	void maxMinFunctionsShouldWorkWithZonedDateTimeAndDirectJdbc(SessionFactoryScope scope) {
 		scope.inTransaction(session -> {
 			var foo1 = new Foo();

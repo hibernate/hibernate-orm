@@ -14,6 +14,7 @@ import org.hibernate.type.descriptor.java.LocalDateJavaType;
 import org.hibernate.type.descriptor.java.LocalDateTimeJavaType;
 import org.hibernate.type.descriptor.java.LocalTimeJavaType;
 import org.hibernate.type.descriptor.java.OffsetDateTimeJavaType;
+import org.hibernate.type.descriptor.java.OffsetTimeJavaType;
 import org.hibernate.type.descriptor.java.ZonedDateTimeJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalDateJdbcType;
@@ -133,6 +134,31 @@ public final class StandardTemporalPreservations {
 				firstDay.atStartOfDay().toInstant( ZoneOffset.UTC ),
 				lastMoment().toInstant( ZoneOffset.UTC )
 		);
+	}
+
+	/// Report for an [java.time.OffsetTime] passed to and requested from the
+	/// JDBC driver directly, through exactly the given JDBC type class. The
+	/// time of day, as expressed at UTC, is preserved for every value.
+	/// Answers [TemporalPreservation#unknown()] for anything else.
+	///
+	/// @param offset whether the offset is preserved as well
+	public static TemporalPreservation offsetTime(
+			JavaType<?> javaType,
+			JdbcType jdbcType,
+			Class<? extends JdbcType> jdbcTypeClass,
+			TemporalPreservation.Level offset) {
+		return isPair( javaType, jdbcType, OffsetTimeJavaType.class, jdbcTypeClass )
+				? new TemporalPreservation(
+						TemporalPreservation.Level.UNKNOWN,
+						TemporalPreservation.Level.SUPPORTED,
+						TemporalPreservation.Level.UNKNOWN,
+						offset,
+						TemporalPreservation.Level.UNKNOWN,
+						null,
+						null,
+						null
+				)
+				: TemporalPreservation.unknown();
 	}
 
 	private static LocalDateTime lastMoment() {

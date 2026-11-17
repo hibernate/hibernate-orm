@@ -2,7 +2,9 @@ package org.hibernate.type.descriptor.converter.internal;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.OffsetTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
 import jakarta.persistence.AttributeConverter;
@@ -17,7 +19,7 @@ import static org.hibernate.cfg.MappingSettings.TEMPORAL_PRESERVATION;
 /// and a value written in another zone or offset is either rejected or
 /// converted to the declared zone, keeping its instant.
 ///
-/// @param <T> `OffsetDateTime` or `ZonedDateTime`
+/// @param <T> `OffsetTime`, `OffsetDateTime` or `ZonedDateTime`
 ///
 /// @since 8.1
 /// @author Steve Ebersole
@@ -37,7 +39,8 @@ public abstract sealed class TimeZoneAdjustmentConverter<T> implements Attribute
 	}
 
 	/// The converter for values of the given class, which must be
-	/// `OffsetDateTime` or `ZonedDateTime`.
+	/// `OffsetDateTime` or `ZonedDateTime`, or `OffsetTime` when the zone is a
+	/// fixed offset.
 	public static TimeZoneAdjustmentConverter<?> forClass(Class<?> javaClass, ZoneId zone, boolean strict, String role) {
 		if ( javaClass == OffsetDateTime.class ) {
 			return new ForOffsetDateTime( zone, strict, role );
@@ -45,8 +48,11 @@ public abstract sealed class TimeZoneAdjustmentConverter<T> implements Attribute
 		else if ( javaClass == ZonedDateTime.class ) {
 			return new ForZonedDateTime( zone, strict, role );
 		}
+		else if ( javaClass == OffsetTime.class && zone instanceof ZoneOffset ) {
+			return new ForOffsetTime( zone, strict, role );
+		}
 		else {
-			throw new IllegalArgumentException( "Not an OffsetDateTime or ZonedDateTime: " + javaClass.getName() );
+			throw new IllegalArgumentException( "No conversion to zone '" + zone + "' for " + javaClass.getName() );
 		}
 	}
 
@@ -100,6 +106,22 @@ public abstract sealed class TimeZoneAdjustmentConverter<T> implements Attribute
 		@Override
 		OffsetDateTime inZone(OffsetDateTime value) {
 			return value.atZoneSameInstant( getZone() ).toOffsetDateTime();
+		}
+	}
+
+	public static final class ForOffsetTime extends TimeZoneAdjustmentConverter<OffsetTime> {
+		private ForOffsetTime(ZoneId zone, boolean strict, String role) {
+			super( zone, strict, role );
+		}
+
+		@Override
+		boolean isInZone(OffsetTime value) {
+			return value.getOffset().equals( getZone() );
+		}
+
+		@Override
+		OffsetTime inZone(OffsetTime value) {
+			return value.withOffsetSameInstant( (ZoneOffset) getZone() );
 		}
 	}
 

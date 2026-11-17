@@ -13,15 +13,17 @@ import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-/// Selects which parts of an [java.time.OffsetDateTime] or
-/// [java.time.ZonedDateTime] must be preserved when
+/// Selects which parts of an [java.time.OffsetTime],
+/// [java.time.OffsetDateTime] or [java.time.ZonedDateTime] must be preserved when
 /// [temporal preservation][org.hibernate.cfg.MappingSettings#TEMPORAL_PRESERVATION]
 /// is enabled.
 ///
 /// By default every part of the value must be preserved: the instant and the
 /// offset, and for a `ZonedDateTime` the zone as well. Many databases cannot
 /// store all of that in one column. This annotation lets a mapping state that
-/// the instant alone is what matters, which most databases can store.
+/// the instant alone is what matters, which most databases can store. For an
+/// `OffsetTime`, which denotes no instant, that is its time of day as
+/// expressed at UTC.
 ///
 /// The policy for a mapped attribute is taken from the first of the following
 /// which declares one: the field or property itself, the class which declares
@@ -53,8 +55,9 @@ public @interface TemporalPreservationPolicy {
 	Type value();
 
 	/// The Java types the declaration applies to, each of which must be
-	/// [java.time.OffsetDateTime] or [java.time.ZonedDateTime]. Empty, which
-	/// is the default, applies it to both. Must be empty on a field or
+	/// [java.time.OffsetTime], [java.time.OffsetDateTime] or
+	/// [java.time.ZonedDateTime]. Empty, which is the default, applies it
+	/// to all three. Must be empty on a field or
 	/// property, where the type is that of the attribute.
 	///
 	/// On a class, package or module, a declaration naming the type of an
@@ -66,8 +69,10 @@ public @interface TemporalPreservationPolicy {
 		/// Every part of the value: the instant, the offset and, for a
 		/// `ZonedDateTime`, the zone.
 		VALUE,
-		/// The instant only. The value read back denotes the same instant,
-		/// but may have a different offset or zone than the value written.
+		/// The instant only, or for an `OffsetTime` the time of day at UTC
+		/// only. The value read back denotes the same instant, or the same
+		/// time at UTC, but may have a different offset or zone than the
+		/// value written.
 		NORMALIZED
 	}
 }

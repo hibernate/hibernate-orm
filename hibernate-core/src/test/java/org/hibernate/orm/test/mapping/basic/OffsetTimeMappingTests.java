@@ -16,6 +16,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
 import org.hamcrest.Matcher;
 
@@ -31,6 +32,11 @@ import static org.hamcrest.Matchers.isOneOf;
 public class OffsetTimeMappingTests {
 
 	@Test
+	@DisabledIfSystemProperty(
+			named = "hibernate.type.temporal_preservation",
+			matches = "true",
+			disabledReason = "Asserts the single-column mapping, where temporal preservation may use two columns"
+	)
 	public void verifyMappings(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sf = scope.getSessionFactory();
 

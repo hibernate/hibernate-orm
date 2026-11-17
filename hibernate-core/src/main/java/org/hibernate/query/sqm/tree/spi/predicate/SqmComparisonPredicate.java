@@ -63,12 +63,12 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 		rightHandExpression.applyInferableType( expressibleType, javaType );
 	}
 
-	private SqmComparisonPredicate(@Nonnull SqmComparisonPredicate affirmativeForm) {
-		super( true, affirmativeForm.nodeBuilder() );
-		this.leftHandExpression = affirmativeForm.leftHandExpression;
-		this.rightHandExpression = affirmativeForm.rightHandExpression;
-		this.operator = affirmativeForm.operator;
-		assertComparable( leftHandExpression, rightHandExpression, affirmativeForm.nodeBuilder() );
+	private SqmComparisonPredicate(@Nonnull SqmComparisonPredicate original) {
+		super( !original.isNegated(), original.nodeBuilder() );
+		this.leftHandExpression = original.leftHandExpression;
+		this.rightHandExpression = original.rightHandExpression;
+		this.operator = original.operator;
+		assertComparable( leftHandExpression, rightHandExpression, original.nodeBuilder() );
 	}
 
 	@Nonnull
@@ -107,6 +107,11 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 		return operator;
 	}
 
+	@Nonnull
+	public ComparisonOperator getEffectiveOperator() {
+		return isNegated() ? operator.negated() : operator;
+	}
+
 	@Override
 	public void negate() {
 		this.operator = this.operator.negated();
@@ -128,7 +133,7 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		leftHandExpression.appendHqlString( hql, context );
 		hql.append( ' ' );
-		hql.append( operator.sqlText() );
+		hql.append( getEffectiveOperator().sqlText() );
 		hql.append( ' ' );
 		rightHandExpression.appendHqlString( hql, context );
 	}

@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.paging.keybased;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.Entity;
@@ -115,6 +116,25 @@ class KeyBasedPagingPlanTest {
 					.extracting( e -> e.id ).containsExactly( 4 );
 			assertThat( second.unwrap( SqmStatementAccess.class ).getSqmStatement().toHqlString() )
 					.contains( "join mm.manager owner" );
+		} );
+	}
+
+	@Test
+	void disjunctionInWhereClause(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			// the key restriction of each later page must not be absorbed by the disjunction
+			final var query = session.createSelectionQuery( "from Employee where id = 1 or id >= 3", Employee.class );
+			final List<Integer> ids = new ArrayList<>();
+			KeyedPage<Employee> page = Page.first( 1 ).keyedBy( Order.asc( Employee.class, "id" ) );
+			while ( ids.size() <= 4 ) {
+				final var results = query.getKeyedResultList( page );
+				results.getResultList().forEach( employee -> ids.add( employee.id ) );
+				if ( results.isLastPage() ) {
+					break;
+				}
+				page = results.getNextPage();
+			}
+			assertThat( ids ).containsExactly( 1, 3, 4 );
 		} );
 	}
 

@@ -3696,7 +3696,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					joinedTableGroup,
 					modelPart,
 					joinedTableGroupJoin,
-					sqmJoinType
+					sqmJoinType,
+					lhsTableGroup instanceof CorrelatedTableGroup
 			);
 		}
 		else {
@@ -3731,7 +3732,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			TableGroup joinedTableGroup,
 			ModelPart modelPart,
 			TableGroupJoin joinedTableGroupJoin,
-			SqmJoinType sqmJoinType) {
+			SqmJoinType sqmJoinType,
+			boolean correlatedOwner) {
 		if ( sqmJoin.isFetched() ) {
 			QUERY_MESSAGE_LOGGER.debugf( "Join fetch [%s] is restricted", sqmJoinNavigablePath );
 		}
@@ -3763,6 +3765,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// we can safely enforce the treat restriction as an equivalent query predicate.
 			additionalRestrictions = combinePredicates( additionalRestrictions, predicate );
 		}
+		// The join became a root of the subquery, see applyJoinRestriction()
+		else if ( correlatedOwner
+				&& ( joinForPredicate == joinedTableGroupJoin
+						|| !joinForPredicate.getJoinedGroup().isInitialized() ) ) {
+			additionalRestrictions = combinePredicates( additionalRestrictions, predicate );
+		}
 		// If translating the join predicate didn't initialize the table group,
 		// we can safely apply it on the collection table group instead
 		else if ( joinForPredicate.getJoinedGroup().isInitialized() ) {
@@ -3782,6 +3790,23 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				|| modelPart instanceof PluralAttributeMapping pluralAttributeMapping
 						&& pluralAttributeMapping.getElementDescriptor() instanceof DiscriminatedAssociationModelPart
 				|| sqmJoin.getNodeType() instanceof AnyMappingDomainType<?> );
+	}
+
+	/**
+	 * Apply a restriction to the given join of the given table group.
+	 * <p>
+	 * A join of a correlated table group is added to the subquery as a root, and
+	 * the predicate it has at that point is consumed, so that a predicate applied
+	 * to the join afterwards would be lost. Such a join is always an inner join,
+	 * so the subquery is restricted instead.
+	 */
+	private void applyJoinRestriction(TableGroup lhsTableGroup, TableGroupJoin tableGroupJoin, Predicate predicate) {
+		if ( lhsTableGroup instanceof CorrelatedTableGroup ) {
+			additionalRestrictions = combinePredicates( additionalRestrictions, predicate );
+		}
+		else {
+			tableGroupJoin.applyPredicate( predicate );
+		}
 	}
 
 	private TableGroup consumeCrossJoin(SqmCrossJoin<?, ?> sqmJoin, TableGroup lhsTableGroup, boolean transitive) {
@@ -3833,10 +3858,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				correspondingSqlJoinType,
 				tableGroup
 		);
+		// The auxiliary mapping applies its restriction to the join itself, so apply it
+		// before the join is registered, see applyJoinRestriction()
+		final var auxiliaryMapping = entityDescriptor.getAuxiliaryMapping();
+		if ( auxiliaryMapping != null ) {
+			auxiliaryMapping.applyPredicate( tableGroupJoin, getSqlAliasBaseGenerator(), loadQueryInfluencers );
+		}
 		lhsTableGroup.addTableGroupJoin( tableGroupJoin );
 
 		entityDescriptor.applyBaseRestrictions(
-				tableGroupJoin::applyPredicate,
+				predicate -> applyJoinRestriction( lhsTableGroup, tableGroupJoin, predicate ),
 				tableGroup,
 				true,
 				loadQueryInfluencers.getEnabledFilters(),
@@ -3845,16 +3876,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				this
 		);
 
-		final var auxiliaryMapping = entityDescriptor.getAuxiliaryMapping();
-		if ( auxiliaryMapping != null ) {
-			auxiliaryMapping.applyPredicate( tableGroupJoin, getSqlAliasBaseGenerator(), loadQueryInfluencers );
-		}
-
 		final var joinPredicate = sqmJoin.getJoinPredicate();
 		if ( joinPredicate != null ) {
 			final var oldJoin = currentlyProcessingJoin;
 			currentlyProcessingJoin = sqmJoin;
-			tableGroupJoin.applyPredicate( visitNestedTopLevelPredicate( joinPredicate ) );
+			applyJoinRestriction( lhsTableGroup, tableGroupJoin, visitNestedTopLevelPredicate( joinPredicate ) );
 			currentlyProcessingJoin = oldJoin;
 		}
 		else if ( correspondingSqlJoinType != SqlAstJoinType.CROSS ) {
@@ -3915,7 +3941,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( sqmJoin.getJoinPredicate() != null ) {
 			final var oldJoin = currentlyProcessingJoin;
 			currentlyProcessingJoin = sqmJoin;
-			tableGroupJoin.applyPredicate( visitNestedTopLevelPredicate( sqmJoin.getJoinPredicate() ) );
+			applyJoinRestriction( parentTableGroup, tableGroupJoin,
+					visitNestedTopLevelPredicate( sqmJoin.getJoinPredicate() ) );
 			currentlyProcessingJoin = oldJoin;
 		}
 
@@ -3950,7 +3977,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( joinPredicate != null ) {
 			final var oldJoin = currentlyProcessingJoin;
 			currentlyProcessingJoin = sqmJoin;
-			tableGroupJoin.applyPredicate( visitNestedTopLevelPredicate( joinPredicate ) );
+			applyJoinRestriction( parentTableGroup, tableGroupJoin, visitNestedTopLevelPredicate( joinPredicate ) );
 			currentlyProcessingJoin = oldJoin;
 		}
 
@@ -3982,7 +4009,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( sqmJoin.getJoinPredicate() != null ) {
 			final var oldJoin = currentlyProcessingJoin;
 			currentlyProcessingJoin = sqmJoin;
-			tableGroupJoin.applyPredicate( visitNestedTopLevelPredicate( sqmJoin.getJoinPredicate() ) );
+			applyJoinRestriction( parentTableGroup, tableGroupJoin,
+					visitNestedTopLevelPredicate( sqmJoin.getJoinPredicate() ) );
 			currentlyProcessingJoin = oldJoin;
 		}
 

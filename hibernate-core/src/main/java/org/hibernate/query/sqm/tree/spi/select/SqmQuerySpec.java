@@ -288,6 +288,19 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		return (JpaSelection<T>) getSelectClause().resolveJpaSelection();
 	}
 
+	/**
+	 * The single root selected by a criteria query with no explicit selection.
+	 */
+	@Nonnull
+	public SqmRoot<?> getImplicitSelection() {
+		final var roots = fromClause.getRoots();
+		return switch ( roots.size() ) {
+			case 0 -> throw new IllegalArgumentException( "Criteria did not define any query roots" );
+			case 1 -> roots.get( 0 );
+			default -> throw new IllegalArgumentException( "Criteria has multiple query roots" );
+		};
+	}
+
 	@Nonnull
 	@Override
 	public SqmQuerySpec<T> setSelection(@Nonnull JpaSelection<T> selection) {
@@ -644,7 +657,11 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	@Override
 	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		final var selections = selectClause.getSelections();
-		if ( !selections.isEmpty() ) {
+		if ( selections.isEmpty() && selectClause.isDistinct() ) {
+			hql.append( "select distinct " );
+			getImplicitSelection().appendHqlString( hql, context );
+		}
+		else if ( !selections.isEmpty() ) {
 			hql.append( "select " );
 			if ( selectClause.isDistinct() ) {
 				hql.append( "distinct " );

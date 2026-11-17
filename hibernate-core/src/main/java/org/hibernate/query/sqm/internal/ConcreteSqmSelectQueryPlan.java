@@ -22,7 +22,6 @@ import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.sql.spi.SqmTranslationRequest;
 import org.hibernate.query.sqm.tree.spi.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.spi.from.SqmRoot;
 import org.hibernate.query.sqm.tree.spi.select.SqmJpaCompoundSelection;
 import org.hibernate.query.sqm.tree.spi.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
@@ -249,14 +248,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		final SqmQuerySpec<?> querySpec = sqm.getQueryPart().getFirstQuerySpec();
 		final List<SqmSelection<?>> selections = querySpec.getSelectClause().getSelections();
 		if ( selections == null || selections.isEmpty() ) {
-			final List<SqmRoot<?>> sqmRoots = querySpec.getFromClause().getRoots();
-			if ( sqmRoots == null || sqmRoots.isEmpty() ) {
-				throw new IllegalArgumentException( "Criteria did not define any query roots" );
-			}
-			if ( sqmRoots.size() != 1 ) {
-				throw new IllegalArgumentException( "Criteria has multiple query roots" );
-			}
-			return Collections.singletonList( new SqmSelection<>( sqmRoots.get( 0 ), sqm.nodeBuilder() ) );
+			return Collections.singletonList( new SqmSelection<>( querySpec.getImplicitSelection(), sqm.nodeBuilder() ) );
 		}
 		else {
 			return selections;

@@ -2267,6 +2267,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( fetch && processingStateStack.depth() > 1 ) {
 			throw new SemanticException( "The 'from' clause of a subquery has a 'fetch'", query );
 		}
+		if ( fetch && ( joinType == SqmJoinType.RIGHT || joinType == SqmJoinType.FULL ) ) {
+			throw new SemanticException( "Fetch join is a " + joinType.getText()
+					+ " join (only inner and left outer joins may be fetched)", query );
+		}
 
 		final var joinRestrictionContext = parserJoin.joinRestriction();
 		// Joins are allowed to be reused if they don't have a join condition

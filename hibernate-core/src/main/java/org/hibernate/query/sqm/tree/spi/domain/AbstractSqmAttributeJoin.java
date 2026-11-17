@@ -51,6 +51,7 @@ public abstract class AbstractSqmAttributeJoin<L, R>
 				nodeBuilder
 		);
 		this.fetchJoin = fetchJoin;
+		validateFetchJoinType( joinType, fetchJoin );
 		validateFetchAlias( alias, false, nodeBuilder );
 		implicitJoin = isImplicitAlias( alias ); //TODO: add a parameter
 	}
@@ -90,6 +91,15 @@ public abstract class AbstractSqmAttributeJoin<L, R>
 	@Override
 	public void clearFetched() {
 		fetchJoin = false;
+	}
+
+	private static void validateFetchJoinType(@Nonnull SqmJoinType joinType, boolean fetchJoin) {
+		if ( fetchJoin && ( joinType == SqmJoinType.RIGHT || joinType == SqmJoinType.FULL ) ) {
+			throw new IllegalArgumentException(
+					"Fetch join is a " + joinType.getText()
+							+ " join (only inner and left outer joins may be fetched)"
+			);
+		}
 	}
 
 	private static void validateFetchAlias(@Nullable String alias, boolean fetchJoin, @Nonnull NodeBuilder nodeBuilder) {

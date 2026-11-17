@@ -1129,6 +1129,42 @@ Each of their values selects where the offset is stored, in which time zone valu
 and some leave part of that to the dialect, which temporal preservation cannot hold to anything.
 They keep their meaning when temporal preservation is disabled.
 
+[[basic-temporal-preservation-custom]]
+====== Custom JDBC types
+
+What is supported is decided for each exact combination of `JavaType` and `JdbcType`.
+A `JdbcType` of your own, selected with `@JdbcType` or contributed to the registry, is therefore rejected,
+even when it extends one which is supported: Hibernate cannot tell what it does differently.
+
+Such a descriptor can state for itself what it preserves, by implementing `TemporalJdbcType`:
+
+[source,java]
+----
+public class MyDateJdbcType extends LocalDateJdbcType implements TemporalJdbcType {
+    @Override
+    public Optional<TemporalPreservation> getTemporalPreservation(JavaType<?> javaType, Dialect dialect) {
+        return javaType.getJavaTypeClass() == LocalDate.class && dialect instanceof PostgreSQLDialect
+                ? Optional.of( TemporalPreservation.ofDate( LocalDate.of( 1, 1, 1 ), LocalDate.of( 9999, 12, 31 ) ) )
+                : Optional.empty();
+    }
+}
+----
+
+The report is a statement by the author of the descriptor that values survive being written and read back through it, and Hibernate acts on it as given:
+the mapping is checked against it, with its preservation policy, when the `SessionFactory` is built, and every value bound or read is held to the range it states.
+An empty result declines to report, and the mapping is rejected.
+
+Values are checked against the report as they are bound and read, which happens in `BasicBinder` and `BasicExtractor`.
+The binder and the extractor of the descriptor must extend those, must be created for the descriptor itself and not borrowed from another, and must not override `BasicExtractor.extract()`.
+A descriptor which exchanges values by other means would have them go unchecked, so a mapping which uses one is rejected.
+A value rendered as a SQL literal in a query is checked before the literal formatter of the descriptor is asked, so the formatter may be of any kind.
+State each part for what the descriptor really does: one which keeps the instant of an `OffsetDateTime` and not its offset should say so, and is then accepted with the `NORMALIZED` policy.
+
+The descriptor is asked only where the Dialect knows nothing of the combination, so it cannot change what a Dialect has assessed.
+An application with a Dialect of its own may report there instead, by overriding `Dialect.getTemporalPreservation()`.
+
+An attribute mapped with a custom `UserType` remains outside temporal preservation, as described below.
+
 [[basic-temporal-preservation-exclusions]]
 ====== What is rejected, and what is not covered
 
@@ -1148,7 +1184,8 @@ Also a SQL literal for an `OffsetTime` on Oracle, where a time literal carries n
 Such a value can be bound as a parameter
 |When the literal is rendered
 
-|A `java.time` value mapped to a JDBC type, whether selected by Hibernate or named explicitly, which is not listed as `QUALIFIED` above.
+|A `java.time` value mapped to a JDBC type, whether selected by Hibernate or named explicitly, which is not listed as `QUALIFIED` above
+and does not <<basic-temporal-preservation-custom,report for itself>>.
 An example is a `LocalDate` mapped with `@JdbcTypeCode(Types.DATE)`, which converts it to a `java.sql.Date`
 |When the `SessionFactory` is built
 
@@ -1165,6 +1202,12 @@ An example is a `LocalDate` mapped with `@JdbcTypeCode(Types.DATE)`, which conve
 
 |An `OffsetTime` stored in two columns which a query compares with something occupying a single column
 |When the query is translated
+
+|A value stored in two columns which a query tests with `in` against a subquery selecting a single column
+|When the query is translated
+
+|A `java.time` value mapped to a JDBC type whose binder or extractor does not pass through `BasicBinder` and `BasicExtractor`
+|When the `SessionFactory` is built
 |When the `SessionFactory` is built
 
 |A value written to an attribute whose zone is declared with `@TimeZoneAdjustment`, or bound to a query parameter compared with it, when the value is in another zone or offset and the policy is `VALUE`
@@ -1205,7 +1248,7 @@ and fall back to the `java.sql` types, with a warning, where it does not.
 It makes no claim about what is stored, and nothing is rejected because of it.
 
 Temporal preservation implies `java_time_use_direct_jdbc`, so there is no need to set both.
-Setting `hibernate.type.java_time_use_direct_jdbc=false` together with `hibernate.type.temporal_preservation=true` is contradictory, and Hibernate refuses to start.
+Setting `hibernate.type.java_time_use_direct_jdbc=false` together with `hibernate.type.temporal_preservation=true` is contradictory, and Hibernate throws an exception at bootstrap.
 
 [[basic-temporal-preservation-time-zones]]
 ====== Time zones

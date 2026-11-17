@@ -35,6 +35,7 @@ import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.type.descriptor.converter.internal.TimeZoneAdjustmentConverter;
+import org.hibernate.type.descriptor.jdbc.internal.TemporalPreservationGuard;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.internal.OffsetDateTimeCompositeUserType;
 import org.hibernate.usertype.internal.OffsetDateTimeOffsetCompositeUserType;
@@ -285,11 +286,11 @@ public class TimeZoneStorageHelper {
 		final var required = policy == TemporalPreservationPolicy.Type.NORMALIZED
 				? Part.requiredOfNormalized( javaClass )
 				: Part.requiredBy( javaClass );
-		return context.getMetadataCollector()
-				.getDatabase()
-				.getDialect()
-				.getTemporalPreservation( javaType, jdbcType )
-				.firstUnsupportedPart( required ) == null;
+		return TemporalPreservationGuard.preservation(
+				context.getMetadataCollector().getDatabase().getDialect(),
+				javaType,
+				jdbcType
+		).firstUnsupportedPart( required ) == null;
 	}
 
 	private static boolean isTemporalWithTimeZoneClass(String returnedClassName) {

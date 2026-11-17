@@ -784,6 +784,10 @@ public abstract class Dialect implements ConversionContext, AlterTableSupport,
 	/// A subclass of a Dialect inherits its answers. A subclass for a
 	/// different database or driver must override them.
 	///
+	/// Where the answer is [TemporalPreservation#unknown()], a JDBC type
+	/// which implements [org.hibernate.type.descriptor.jdbc.TemporalJdbcType]
+	/// is asked to report for itself.
+	///
 	/// @param javaType the Java type of the value at the JDBC boundary, after
 	///        any attribute conversion
 	/// @param jdbcType the JDBC type which binds and extracts the value

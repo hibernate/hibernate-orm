@@ -34,6 +34,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.ZoneIdJavaType;
 import org.hibernate.type.descriptor.java.ZoneOffsetJavaType;
 import org.hibernate.type.descriptor.jdbc.IntegerJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.internal.TemporalPreservationGuard;
 import org.hibernate.type.internal.TemporalPolicySettings;
@@ -335,6 +336,7 @@ final class TemporalPreservationValidator {
 					+ ( timeOnly ? "time at UTC, " : "instant, " ) + instantProblem
 			);
 		}
+		requireChecked( role, instantResolution.getRelationalJavaType(), instantResolution.getJdbcType() );
 		final var companionResolution = companionValue.resolve();
 		final boolean companionAsExpected = zoneIdColumn
 				? companionResolution.getRelationalJavaType().getClass() == ZoneIdJavaType.class
@@ -453,6 +455,7 @@ final class TemporalPreservationValidator {
 			if ( problem != null ) {
 				throw unsupported( role, javaType, problem );
 			}
+			requireChecked( role, javaType, jdbcType );
 			return;
 		}
 
@@ -491,6 +494,17 @@ final class TemporalPreservationValidator {
 									+ TEMPORAL_PRESERVATION_POLICY + "'"
 								: "" )
 			);
+		}
+		requireChecked( role, javaType, jdbcType );
+	}
+
+	/// A mapping is accepted only where its values are checked as they are
+	/// bound and read, which a JDBC type with a binder or extractor of its
+	/// own design may escape.
+	private static void requireChecked(String role, JavaType<?> javaType, JdbcType jdbcType) {
+		final String unchecked = TemporalPreservationGuard.uncheckedReason( javaType, jdbcType );
+		if ( unchecked != null ) {
+			throw unsupported( role, javaType, unchecked );
 		}
 	}
 

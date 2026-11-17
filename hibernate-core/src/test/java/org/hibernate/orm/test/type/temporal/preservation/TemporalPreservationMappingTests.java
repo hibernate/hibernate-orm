@@ -146,6 +146,26 @@ class TemporalPreservationMappingTests {
 
 	/// The second column is mapped whether the entity is annotated on its
 	/// fields or on its accessor methods.
+	/// The second column is named after the first, inside its quotes when the
+	/// name of the first is quoted.
+	@Test
+	void secondColumnOfAQuotedColumnIsQuoted() {
+		final var component = (Component) valueOf( ENABLED, WithQuotedColumn.class );
+		final List<String> names = new ArrayList<>();
+		for ( var column : component.getColumns() ) {
+			names.add( column.getQuotedName() );
+		}
+		assertThat( names ).containsExactlyInAnyOrder( "`the Value`", "`the Value_tz`" );
+		inFactory( ENABLED, WithQuotedColumn.class, factory -> {
+			final var entity = new WithQuotedColumn();
+			entity.id = 1;
+			entity.theValue = ZonedDateTime.parse( "2021-03-14T12:00:00+01:00[Europe/Paris]" );
+			factory.inTransaction( session -> session.persist( entity ) );
+			factory.inTransaction( session -> assertThat( session.find( WithQuotedColumn.class, 1 ).theValue )
+					.isEqualTo( entity.theValue ) );
+		} );
+	}
+
 	@Test
 	void secondColumnIsMappedWithPropertyAccess() {
 		for ( var entityClass : new Class<?>[] { WithPropertyAccessZone.class, WithPropertyAccessOffset.class } ) {
@@ -909,6 +929,14 @@ class TemporalPreservationMappingTests {
 		public void setTheValue(OffsetDateTime theValue) {
 			this.theValue = theValue;
 		}
+	}
+
+	@Entity(name = "WithQuotedColumn")
+	static class WithQuotedColumn {
+		@Id
+		Integer id;
+		@jakarta.persistence.Column(name = "`the Value`")
+		ZonedDateTime theValue;
 	}
 
 	@Entity(name = "WithJvmTimestamp")

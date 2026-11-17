@@ -551,10 +551,17 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		final var timeZoneColumn = element.getDirectAnnotationUsage( TimeZoneColumn.class );
 		final var created =
 				JpaAnnotations.COLUMN.createUsage( context.getBootstrapContext().getModelsContext() );
-		final String columnName =
-				timeZoneColumn != null
-						? timeZoneColumn.name()
-						: column.name() + "_tz";
+		final String columnName;
+		if ( timeZoneColumn != null ) {
+			columnName = timeZoneColumn.name();
+		}
+		else if ( MetadataBuildingContext.isTemporalPreservationEnabled(
+				context.getBootstrapContext().getServiceRegistry() ) ) {
+			columnName = withSuffix( column.name(), "_tz" );
+		}
+		else {
+			columnName = column.name() + "_tz";
+		}
 		created.name( columnName );
 		created.nullable( column.nullable() );
 
@@ -576,6 +583,19 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		}
 
 		return created;
+	}
+
+	/// The name with the suffix appended, inside its quotes when it is quoted.
+	private static String withSuffix(String name, String suffix) {
+		final int last = name.length() - 1;
+		if ( last > 0 ) {
+			final char open = name.charAt( 0 );
+			final char close = name.charAt( last );
+			if ( open == '`' && close == '`' || open == '"' && close == '"' || open == '[' && close == ']' ) {
+				return name.substring( 0, last ) + suffix + close;
+			}
+		}
+		return name + suffix;
 	}
 
 	private static Column createTemporalColumn(

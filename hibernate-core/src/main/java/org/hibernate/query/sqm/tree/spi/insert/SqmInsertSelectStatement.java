@@ -173,6 +173,7 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		super.appendHqlString( hql, context );
 		hql.append( ' ' );
+		context = appendHqlCteClause( hql, context );
 		selectQueryPart.appendHqlString( hql, context );
 		final SqmConflictClause<?> conflictClause = getConflictClause();
 		if ( conflictClause != null ) {

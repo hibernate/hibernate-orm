@@ -2057,11 +2057,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 		else {
 			for ( var root : roots ) {
-				final var sqmRoot = visitEntityWithJoins( root );
+				final var sqmRoot = (SqmRoot<?>) root.fromRoot().accept( this );
 				// Correlations are implicitly added to the from-clause
 				if ( !( sqmRoot instanceof SqmCorrelation<?, ?> ) ) {
 					fromClause.addRoot( sqmRoot );
 				}
+				// A join may introduce a correlation. Keep the root before it in the FROM clause.
+				consumeJoins( root, sqmRoot );
 			}
 		}
 
@@ -2071,6 +2073,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public SqmRoot<?> visitEntityWithJoins(HqlParser.EntityWithJoinsContext parserSpace) {
 		final var sqmRoot = (SqmRoot<?>) parserSpace.fromRoot().accept( this );
+		consumeJoins( parserSpace, sqmRoot );
+		return sqmRoot;
+	}
+
+	private void consumeJoins(HqlParser.EntityWithJoinsContext parserSpace, SqmRoot<?> sqmRoot) {
 		final int size = parserSpace.getChildCount();
 		for ( int i = 1; i < size; i++ ) {
 			final var parseTree = parserSpace.getChild( i );
@@ -2084,8 +2091,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				consumeJpaCollectionJoin( jpaCollectionJoinContext, sqmRoot );
 			}
 		}
-
-		return sqmRoot;
 	}
 
 	@Override

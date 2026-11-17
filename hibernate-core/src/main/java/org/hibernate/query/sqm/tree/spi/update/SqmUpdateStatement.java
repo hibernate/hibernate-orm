@@ -322,7 +322,7 @@ public class SqmUpdateStatement<T>
 
 	@Override
 	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
-		appendHqlCteString( hql, context );
+		context = appendHqlCteClause( hql, context );
 		hql.append( "update " );
 		if ( versioned ) {
 			hql.append( "versioned " );

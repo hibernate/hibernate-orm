@@ -67,6 +67,19 @@ public class SqmCorrelatedRootJoin<T> extends SqmRoot<T> implements SqmCorrelati
 		return rootJoin;
 	}
 
+	/** The join correlated by this synthetic root. */
+	@Nonnull
+	public SqmJoin<?, ?> getCorrelatedJoin() {
+		final var joins = getSqmJoins();
+		assert joins.size() == 1 && joins.get( 0 ).isCorrelated();
+		return joins.get( 0 );
+	}
+
+	@Override
+	public boolean containsOnlyInnerJoins() {
+		return getCorrelatedJoin().containsOnlyInnerJoins();
+	}
+
 	@Nonnull
 	@Override
 	public SqmRoot<T> getCorrelationParent() {

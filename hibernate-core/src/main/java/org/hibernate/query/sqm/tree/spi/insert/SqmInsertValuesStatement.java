@@ -192,6 +192,7 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		final List<SqmValues> valuesList = castNonNull( this.valuesList );
 
+		context = appendHqlCteClause( hql, context );
 		super.appendHqlString( hql, context );
 		hql.append( " values (" );
 		appendValues( valuesList.get( 0 ), hql, context );

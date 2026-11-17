@@ -16,6 +16,7 @@ import org.hibernate.query.sqm.produce.function.FunctionArgumentTypeResolver;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
+import org.hibernate.query.sqm.tree.spi.SqmRenderContext;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.query.sqm.tree.spi.expression.SqmFunction;
 import org.hibernate.sql.ast.spi.SqlAstNode;
@@ -238,6 +239,23 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 					arguments
 			);
 		}
+	}
+
+	/**
+	 * Append the function name and its parenthesized arguments,
+	 * as rendered for an aggregate or window function.
+	 */
+	protected void appendNameAndArgumentsHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
+		final List<? extends SqmTypedNode<?>> arguments = getArguments();
+		hql.append( getFunctionName() );
+		hql.append( '(' );
+		for ( int i = 0; i < arguments.size(); i++ ) {
+			if ( i > 0 ) {
+				hql.append( ", " );
+			}
+			arguments.get( i ).appendHqlString( hql, context );
+		}
+		hql.append( ')' );
 	}
 
 	private static class FunctionArgumentTypeResolverTypeAccess implements Supplier<MappingModelExpressible<?>> {

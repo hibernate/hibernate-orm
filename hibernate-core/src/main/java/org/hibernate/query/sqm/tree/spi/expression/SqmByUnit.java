@@ -70,9 +70,11 @@ public class SqmByUnit extends AbstractSqmExpression<Long> {
 
 	@Override
 	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
+		hql.append( '(' );
 		duration.appendHqlString( hql, context );
 		hql.append( " by " );
 		hql.append( unit.getUnit() );
+		hql.append( ')' );
 	}
 
 	@Override

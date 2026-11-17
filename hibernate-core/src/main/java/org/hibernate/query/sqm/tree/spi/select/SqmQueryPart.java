@@ -185,33 +185,40 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 
 	public abstract void validateQueryStructureAndFetchOwners();
 
+	protected void appendHqlString(
+			@Nonnull SqmSortSpecification sortSpecification,
+			@Nonnull StringBuilder hql,
+			@Nonnull SqmRenderContext context) {
+		sortSpecification.appendHqlString( hql, context );
+	}
+
 	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		final List<SqmSortSpecification> sortSpecifications = getSortSpecifications();
 		if ( !sortSpecifications.isEmpty() ) {
 			hql.append( " order by " );
-			sortSpecifications.get( 0 ).appendHqlString( hql, context );
+			appendHqlString( sortSpecifications.get( 0 ), hql, context );
 			for ( int i = 1; i < sortSpecifications.size(); i++ ) {
 				hql.append( ", " );
-				sortSpecifications.get( i ).appendHqlString( hql, context );
+				appendHqlString( sortSpecifications.get( i ), hql, context );
 			}
+		}
 
-			final SqmExpression<? extends Number> offsetExpression = this.offsetExpression;
-			if ( offsetExpression != null ) {
-				hql.append( " offset " );
-				offsetExpression.appendHqlString( hql, context );
-				hql.append( " rows " );
-			}
-			final SqmExpression<? extends Number> fetchExpression = this.fetchExpression;
-			if ( fetchExpression != null ) {
-				hql.append( " fetch first " );
-				fetchExpression.appendHqlString( hql, context );
-				hql.append( switch ( fetchClauseType ) {
-					case ROWS_ONLY -> " rows only";
-					case ROWS_WITH_TIES -> " rows with ties";
-					case PERCENT_ONLY -> " percent rows only";
-					case PERCENT_WITH_TIES -> " percent rows with ties";
-				} );
-			}
+		final SqmExpression<? extends Number> offsetExpression = this.offsetExpression;
+		if ( offsetExpression != null ) {
+			hql.append( " offset " );
+			offsetExpression.appendHqlString( hql, context );
+			hql.append( " rows " );
+		}
+		final SqmExpression<? extends Number> fetchExpression = this.fetchExpression;
+		if ( fetchExpression != null ) {
+			hql.append( " fetch first " );
+			fetchExpression.appendHqlString( hql, context );
+			hql.append( switch ( fetchClauseType ) {
+				case ROWS_ONLY -> " rows only";
+				case ROWS_WITH_TIES -> " rows with ties";
+				case PERCENT_ONLY -> " percent rows only";
+				case PERCENT_WITH_TIES -> " percent rows with ties";
+			} );
 		}
 	}
 

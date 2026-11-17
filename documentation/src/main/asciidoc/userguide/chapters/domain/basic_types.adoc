@@ -886,6 +886,7 @@ Enabling temporal preservation has three effects.
 Temporal preservation is supported on H2, PostgreSQL and Oracle, for `LocalDate`, `LocalTime`, `LocalDateTime`, `Instant`,
 `OffsetDateTime` and `ZonedDateTime`. The last two are described further under <<basic-temporal-preservation-policy>>.
 On every other database, and for `OffsetTime`, a mapped value is rejected.
+So is a `LocalTime` on Oracle, which has no `TIME` type: the value is stored in a `TIMESTAMP` column, and that has not been assessed.
 
 The following table lists every combination which has been assessed.
 An `Outcome` of `QUALIFIED` means that the mapping is accepted, and `REJECTED` that the `SessionFactory` cannot be built with such an attribute.
@@ -1053,7 +1054,9 @@ For an attribute, each is taken from the first of the following which declares i
 
 On a class, package or module, a policy naming the type of the attribute wins over one naming no types.
 
-Both apply to `OffsetDateTime` and `ZonedDateTime` only, and have no effect when temporal preservation is disabled.
+Both apply to `OffsetDateTime` and `ZonedDateTime` only.
+On a field or property of any other type, either is rejected when temporal preservation is enabled.
+When it is disabled, neither has any effect, and neither is checked.
 
 `@TimeZoneStorage` and the setting `hibernate.timezone.default_storage` are not supported with temporal preservation enabled, and are rejected.
 Each of their values selects where the offset is stored, in which time zone values are expressed and which column type is used, all at once,
@@ -1088,8 +1091,15 @@ An example is a `LocalDate` mapped with `@JdbcTypeCode(Types.DATE)`, which conve
 |An array or collection of `java.time` values stored in a single column
 |When the `SessionFactory` is built, and when such a value is bound as a parameter
 
-|A `java.time` member of an embeddable which is aggregated into a single column, for example a `STRUCT`, JSON or XML column
+|A `java.time` member of an embeddable which is aggregated into a single column, for example a `STRUCT`, JSON or XML column, or of an array or collection of such embeddables
 |When the `SessionFactory` is built
+
+|`@TemporalPreservationPolicy` or `@TimeZoneRepresentation` on a field or property whose stored value is not an `OffsetDateTime` or `ZonedDateTime`, where it would otherwise be silently ignored
+|When the `SessionFactory` is built
+
+|A column of a native SQL query result with a date or time type, when no Java type is given for it.
+Name the type, as in `createNativeQuery(sql, LocalDateTime.class)` or with `addScalar()`
+|When the value is read
 
 |A query parameter or query result of a `java.time` type which is not supported
 |When the value is bound or read
@@ -1107,6 +1117,8 @@ Hibernate neither preserves nor rejects them, and they behave the same with temp
 * Values computed by the database, for example with `current_timestamp`, a cast, or date arithmetic.
   Reading the result of such an expression as a `java.time` value is covered, but what the database computed is not.
 * Native SQL, apart from `java.time` values bound to its parameters and read from its results.
+  A result of a native SQL query is read as the Java type which the query names, and Hibernate does not check that type against the type of the column.
+  Reading a `TIME` column as an `Instant`, for example, is left to the JDBC driver, which may make up the missing date.
 * Rows written by other applications, or by Hibernate with temporal preservation disabled.
   Enabling or disabling the setting does not migrate any data.
   A row which holds a value outside the supported range is rejected when it is read.

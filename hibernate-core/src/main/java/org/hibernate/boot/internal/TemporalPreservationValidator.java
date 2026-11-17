@@ -9,6 +9,7 @@ import java.util.Set;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.TemporalPreservationPolicy;
+import org.hibernate.annotations.TimeZoneRepresentation;
 import org.hibernate.annotations.TimeZoneStorage;
 import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.boot.model.internal.TemporalPolicyResolver;
@@ -16,6 +17,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.type.spi.TemporalPreservation.Part;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
@@ -56,9 +58,12 @@ import static org.hibernate.cfg.MappingSettings.TIMEZONE_DEFAULT_STORAGE;
 /// Covers identifiers, versions, basic attributes, members of embeddables,
 /// and the keys, indexes and elements of collections. Java Time values which
 /// are members of an embeddable aggregated into a single column, such as a
-/// `STRUCT`, JSON or XML column, are always rejected, as are arrays and
-/// collections of Java Time values stored in a single column, and
-/// `@TimeZoneStorage`, in favor of `@TimeZoneRepresentation`.
+/// `STRUCT`, JSON or XML column, or of an array or collection of such
+/// embeddables, are always rejected, as are arrays and collections of Java
+/// Time values stored in a single column, and `@TimeZoneStorage`, in favor of
+/// `@TimeZoneRepresentation`. A `@TemporalPreservationPolicy` or
+/// `@TimeZoneRepresentation` on a field or property it does not apply to is
+/// rejected too.
 ///
 /// @see org.hibernate.cfg.MappingSettings#TEMPORAL_PRESERVATION
 ///
@@ -144,11 +149,23 @@ final class TemporalPreservationValidator {
 		if ( value == null || !visited.add( value ) ) {
 			return;
 		}
+		if ( attributeName != null && !acceptsDeclarations( value ) ) {
+			rejectDeclarations( findMember( ownerClassName, attributeName ), role );
+		}
 		if ( value instanceof BasicValue basicValue ) {
-			validateBasicValue( basicValue, role, aggregated );
+			final var elementAggregate = aggregateOfElements( basicValue );
+			if ( elementAggregate != null ) {
+				// an array or collection of embeddables, aggregated into a single column
+				for ( var property : elementAggregate.getProperties() ) {
+					validateProperty( property, role + ".<element>", elementAggregate.getComponentClassName(), true );
+				}
+			}
+			else {
+				validateBasicValue( basicValue, role, aggregated );
+			}
 		}
 		else if ( value instanceof Component component ) {
-			if ( component.getTypeName() != null && TIME_ZONE_COLUMN_TYPES.containsKey( component.getTypeName() ) ) {
+			if ( isStoredInTwoColumns( component ) ) {
 				if ( aggregated ) {
 					throw new MappingException(
 							"Mapping '" + role + "' is not supported: with '" + TEMPORAL_PRESERVATION
@@ -174,6 +191,65 @@ final class TemporalPreservationValidator {
 			}
 		}
 		// associations refer to identifiers, which are validated with their own entity
+	}
+
+	private static boolean isStoredInTwoColumns(Component component) {
+		return component.getTypeName() != null && TIME_ZONE_COLUMN_TYPES.containsKey( component.getTypeName() );
+	}
+
+	/// The embeddable whose instances are the elements of the value, when the
+	/// value is an array or collection of embeddables aggregated into a single
+	/// column, and `null` otherwise.
+	private static Component aggregateOfElements(BasicValue basicValue) {
+		for ( var selectable : basicValue.getSelectables() ) {
+			if ( selectable instanceof AggregateColumn aggregateColumn ) {
+				return aggregateColumn.getComponent();
+			}
+		}
+		return null;
+	}
+
+	/// Whether a `@TemporalPreservationPolicy` or `@TimeZoneRepresentation`
+	/// on the attribute which has the value means anything: the value, or
+	/// each element or key of it, is an `OffsetDateTime` or `ZonedDateTime`.
+	private static boolean acceptsDeclarations(Value value) {
+		if ( value instanceof BasicValue basicValue ) {
+			return aggregateOfElements( basicValue ) == null
+				&& TemporalPolicySettings.appliesTo( basicValue.resolve().getRelationalJavaType().getJavaTypeClass() );
+		}
+		else if ( value instanceof Component component ) {
+			return isStoredInTwoColumns( component );
+		}
+		else if ( value instanceof Collection collection ) {
+			return acceptsDeclarations( collection.getElement() )
+				|| collection instanceof IndexedCollection indexed && acceptsDeclarations( indexed.getIndex() );
+		}
+		else {
+			return false;
+		}
+	}
+
+	/// A declaration on a field or property which it does not apply to would
+	/// be ignored, leaving the author to believe it had been honored.
+	private static void rejectDeclarations(MemberDetails member, String role) {
+		if ( member == null ) {
+			return;
+		}
+		final String declared;
+		if ( TemporalPolicyResolver.declaresPolicy( member ) ) {
+			declared = "@TemporalPreservationPolicy";
+		}
+		else if ( member.hasDirectAnnotationUsage( TimeZoneRepresentation.class ) ) {
+			declared = "@TimeZoneRepresentation";
+		}
+		else {
+			return;
+		}
+		throw new MappingException(
+				"Mapping '" + role + "' is not supported: with '" + TEMPORAL_PRESERVATION + "' enabled, "
+				+ declared + " applies only to a value stored as an OffsetDateTime or ZonedDateTime,"
+				+ " which this is not"
+		);
 	}
 
 	/// The value is stored as an instant in one column and, in a second, the

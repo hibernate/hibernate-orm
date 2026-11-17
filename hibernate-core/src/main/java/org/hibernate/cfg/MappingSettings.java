@@ -352,7 +352,7 @@ public interface MappingSettings {
 	 * <p>
 	 * Used to set the value across the entire system as opposed to scattered, individual
 	 * {@linkplain org.hibernate.annotations.JdbcTypeCode} and {@linkplain org.hibernate.annotations.JdbcType}
-	 * naming specific {@linkplain JavaTimeJdbcType} implementations.
+	 * naming specific {@linkplain org.hibernate.type.descriptor.jdbc.JavaTimeJdbcType} implementations.
 	 * The setting is a preference which is applied only when the configured
 	 * {@linkplain org.hibernate.dialect.Dialect Dialect} reports support for the
 	 * Java Time class used at the JDBC boundary.

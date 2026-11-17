@@ -611,6 +611,60 @@ class TemporalPreservationMappingTests {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	/// An array of embeddables aggregated into a single column is one basic
+	/// value in the boot model, and its members are checked all the same.
+	@Test
+	void membersOfArraysOfAggregatedEmbeddablesAreRejected() {
+		assertRejected(
+				ENABLED,
+				WithAggregateArray.class,
+				"WithAggregateArray.aggregated.<element>.theMember",
+				"aggregated into a single column"
+		);
+		assertRejected(
+				ENABLED,
+				WithNestedAggregateArray.class,
+				"WithNestedAggregateArray.aggregated.nested.<element>.theMember",
+				"aggregated into a single column"
+		);
+		assertAccepted( ENABLED, WithAggregateArrayOfOtherThings.class );
+		assertAccepted( DISABLED, WithAggregateArray.class );
+	}
+
+	/// A declaration which would be ignored is a mistake, and is reported.
+	@Test
+	void declarationsWhichDoNotApplyAreRejected() {
+		for ( var entityClass : new Class<?>[] {
+				WithPolicyOnLocalDate.class,
+				WithRepresentationOnInstant.class,
+				WithPolicyOnEmbedded.class,
+				WithPolicyOnConverted.class,
+				WithPolicyOnLocalElements.class
+		} ) {
+			assertRejected( ENABLED, entityClass, entityClass.getSimpleName() + ".theValue", "applies only to" );
+			assertAccepted( DISABLED, entityClass );
+		}
+		assertAccepted( ENABLED, WithPolicyOnElements.class );
+	}
+
+	/// A column of a native query result is read by the JDBC type of the
+	/// column unless the query names a Java type, and that pairing is not one
+	/// which has been assessed.
+	@Test
+	void nativeResultsNeedAJavaType() {
+		inFactory( ENABLED, SupportedRoles.class, factory -> factory.inTransaction( session -> {
+			final String sql = "select timestamp '2020-01-01 10:00:00'";
+			assertThatThrownBy( () -> session.createNativeQuery( sql, Object.class ).getSingleResult() )
+					.isInstanceOf( TemporalPreservationException.class )
+					.hasMessageContaining( MappingSettings.TEMPORAL_PRESERVATION );
+			assertThat( session.createNativeQuery( sql, LocalDateTime.class ).getSingleResult() )
+					.isEqualTo( LocalDateTime.of( 2020, 1, 1, 10, 0 ) );
+		} ) );
+		inFactory( DISABLED, SupportedRoles.class, factory -> factory.inTransaction( session -> assertThat(
+				session.createNativeQuery( "select timestamp '2020-01-01 10:00:00'", Object.class ).getSingleResult()
+		).isNotNull() ) );
+	}
+
 	private static WrapperOptions options(Object session) {
 		return (SharedSessionContractImplementor) session;
 	}
@@ -1004,6 +1058,93 @@ class TemporalPreservationMappingTests {
 		Integer id;
 		@JdbcTypeCode(SqlTypes.JSON)
 		LocalMember aggregated;
+	}
+
+	@Entity(name = "WithAggregateArray")
+	static class WithAggregateArray {
+		@Id
+		Integer id;
+		@JdbcTypeCode(SqlTypes.JSON_ARRAY)
+		LocalMember[] aggregated;
+	}
+
+	@Entity(name = "WithNestedAggregateArray")
+	static class WithNestedAggregateArray {
+		@Id
+		Integer id;
+		@JdbcTypeCode(SqlTypes.JSON)
+		ArrayMember aggregated;
+	}
+
+	@Embeddable
+	static class ArrayMember {
+		@JdbcTypeCode(SqlTypes.JSON_ARRAY)
+		LocalMember[] nested;
+	}
+
+	@Entity(name = "WithAggregateArrayOfOtherThings")
+	static class WithAggregateArrayOfOtherThings {
+		@Id
+		Integer id;
+		@JdbcTypeCode(SqlTypes.JSON_ARRAY)
+		TextMember[] aggregated;
+	}
+
+	@Embeddable
+	static class TextMember {
+		String theMember;
+	}
+
+	@Entity(name = "WithPolicyOnLocalDate")
+	static class WithPolicyOnLocalDate {
+		@Id
+		Integer id;
+		@TemporalPreservationPolicy(TemporalPreservationPolicy.Type.NORMALIZED)
+		LocalDate theValue;
+	}
+
+	@Entity(name = "WithRepresentationOnInstant")
+	static class WithRepresentationOnInstant {
+		@Id
+		Integer id;
+		@TimeZoneRepresentation(TimeZoneRepresentation.Type.COLUMN)
+		Instant theValue;
+	}
+
+	@Entity(name = "WithPolicyOnEmbedded")
+	static class WithPolicyOnEmbedded {
+		@Id
+		Integer id;
+		@Embedded
+		@TemporalPreservationPolicy(TemporalPreservationPolicy.Type.NORMALIZED)
+		TextMember theValue;
+	}
+
+	@Entity(name = "WithPolicyOnConverted")
+	static class WithPolicyOnConverted {
+		@Id
+		Integer id;
+		@Convert(converter = OffsetDateTimeToString.class)
+		@TemporalPreservationPolicy(TemporalPreservationPolicy.Type.NORMALIZED)
+		OffsetDateTime theValue;
+	}
+
+	@Entity(name = "WithPolicyOnLocalElements")
+	static class WithPolicyOnLocalElements {
+		@Id
+		Integer id;
+		@ElementCollection
+		@TemporalPreservationPolicy(TemporalPreservationPolicy.Type.NORMALIZED)
+		Set<LocalDate> theValue;
+	}
+
+	@Entity(name = "WithPolicyOnElements")
+	static class WithPolicyOnElements {
+		@Id
+		Integer id;
+		@ElementCollection
+		@TemporalPreservationPolicy(TemporalPreservationPolicy.Type.NORMALIZED)
+		Set<OffsetDateTime> theValue;
 	}
 
 	@Entity(name = "WithOffsetId")

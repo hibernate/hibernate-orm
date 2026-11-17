@@ -48,8 +48,4 @@ public interface HqlLogging extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(id = 90003504, value = "Misuse of HQL elements() or indices() function, use element() or index() instead")
 	void misuseOfElementsOrIndices();
-
-	@LogMessage(level = DEBUG)
-	@Message(id = 90003505, value = "Ignoring fetch on entity join: %s(%s)")
-	void ignoringFetchOnEntityJoin(String entityName, String alias);
 }

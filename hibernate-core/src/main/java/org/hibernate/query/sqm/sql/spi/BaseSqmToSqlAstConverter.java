@@ -7873,6 +7873,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Junction visitJunctionPredicate(SqmJunctionPredicate predicate) {
 		final var subpredicates = predicate.getPredicates();
+		if ( subpredicates.isEmpty() ) {
+			final boolean conjunction = predicate.getOperator() == BooleanOperator.AND;
+			final var junction = new Junction(
+					conjunction ? Junction.Nature.CONJUNCTION : Junction.Nature.DISJUNCTION,
+					getBooleanType()
+			);
+			junction.add( new BooleanExpressionPredicate( new QueryLiteral<>( conjunction, getBooleanType() ) ) );
+			return junction;
+		}
 
 		// The AND path is simple - visit all child predicates and collect their
 		// SQL AST forms into a SQL AST CONJUNCTION

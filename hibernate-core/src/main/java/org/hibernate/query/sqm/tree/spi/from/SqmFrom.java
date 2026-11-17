@@ -17,6 +17,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaFrom;
 import org.hibernate.query.sqm.spi.SqmPathSource;
 import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
+import org.hibernate.query.sqm.tree.spi.SqmJoinType;
 import org.hibernate.query.sqm.tree.spi.SqmRenderContext;
 import org.hibernate.query.sqm.tree.spi.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.spi.domain.SqmBagJoin;
@@ -54,6 +55,15 @@ public interface SqmFrom<L, R> extends SqmVisitableNode, SqmPath<R>, JpaFrom<L, 
 	@Nonnull
 	default String resolveAlias(@Nonnull SqmRenderContext context) {
 		return context.resolveAlias( this );
+	}
+
+	default boolean containsOnlyInnerJoins() {
+		for ( var sqmJoin : getSqmJoins() ) {
+			if ( sqmJoin.getSqmJoinType() != SqmJoinType.INNER ) {
+				return false;
+			}
+		}
+		return !hasTreats();
 	}
 
 	boolean hasJoins();

@@ -75,8 +75,8 @@ public class SqmWindowFrame extends AbstractSqmNode implements JpaWindowFrame {
 	@Override
 	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmWindowFrame that
-				&& kind == that.kind
-				&& SqmCacheable.areCompatible( expression, that.expression );
+			&& kind == that.kind
+			&& SqmCacheable.areCompatible( expression, that.expression );
 	}
 
 	@Override

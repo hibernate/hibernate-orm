@@ -142,7 +142,7 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 		if ( isNegated() ) {
 			hql.append( " not" );
 		}
-		hql.append( " like " );
+		hql.append( isCaseSensitive ? " like " : " ilike " );
 		pattern.appendHqlString( hql, context );
 		if ( escapeCharacter != null ) {
 			hql.append( " escape " );

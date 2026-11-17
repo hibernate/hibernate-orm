@@ -123,8 +123,8 @@ public class SqmIndexAggregateFunction<T> extends AbstractSqmSpecificPluralPartP
 
 	@Override
 	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
-		hql.append( functionName ).append( "(" );
+		hql.append( functionName ).append( "(indices(" );
 		getLhs().appendHqlString( hql, context );
-		hql.append( ')' );
+		hql.append( "))" );
 	}
 }

@@ -479,14 +479,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
-		if ( !cteStatements.isEmpty() ) {
-			hql.append( "with " );
-			for ( var value : cteStatements.values() ) {
-				value.appendHqlString( hql, context );
-				hql.append( ", " );
-			}
-			hql.setLength( hql.length() - 2 );
-		}
+		context = appendHqlCteClause( hql, context );
 		sqmQueryPart.appendHqlString( hql, context );
 	}
 

@@ -216,17 +216,6 @@ public abstract class AbstractSqmDmlStatement<E>
 		return new SqmSubQuery<>( this, type, nodeBuilder() );
 	}
 
-	protected void appendHqlCteString(@Nonnull StringBuilder sb, @Nonnull SqmRenderContext context) {
-		if ( !cteStatements.isEmpty() ) {
-			sb.append( "with " );
-			for ( var value : cteStatements.values() ) {
-				value.appendHqlString( sb, context );
-				sb.append( ", " );
-			}
-			sb.setLength( sb.length() - 2 );
-		}
-	}
-
 	@Override
 	public boolean equals(@Nullable Object object) {
 		return object instanceof AbstractSqmDmlStatement<?> that

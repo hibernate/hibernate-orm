@@ -18,7 +18,6 @@ import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.spi.SqmPathSource;
 import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
-import org.hibernate.query.sqm.tree.spi.SqmJoinType;
 import org.hibernate.query.sqm.tree.spi.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.spi.domain.SqmCorrelatedRoot;
 import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
@@ -205,15 +204,6 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 	@Nonnull
 	public SqmCorrelatedRoot<E> createCorrelation() {
 		return new SqmCorrelatedRoot<>( this );
-	}
-
-	public boolean containsOnlyInnerJoins() {
-		for ( var sqmJoin : getSqmJoins() ) {
-			if ( sqmJoin.getSqmJoinType() != SqmJoinType.INNER ) {
-				return false;
-			}
-		}
-		return !hasTreats();
 	}
 
 	@Nonnull

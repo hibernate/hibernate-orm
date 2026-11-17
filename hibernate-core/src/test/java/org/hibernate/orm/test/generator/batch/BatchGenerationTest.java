@@ -2,20 +2,28 @@ package org.hibernate.orm.test.generator.batch;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+import java.lang.reflect.Member;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import jakarta.annotation.Nonnull;
+import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.annotations.ValueGenerationType;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
 import org.hibernate.generator.GenerationRequests;
+import org.hibernate.generator.GeneratorCreationContext;
 
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,6 +50,8 @@ class BatchGenerationTest {
 		BatchStringGenerator.generateBatchCallCount.set( 0 );
 		BatchStringGenerator.totalRequestCount.set( 0 );
 		NonBatchStringGenerator.generateCallCount.set( 0 );
+		CountingIdGenerator.generateCallCount.set( 0 );
+		CountingIdGenerator.generateBatchCallCount.set( 0 );
 	}
 
 	@AfterAll
@@ -164,6 +174,80 @@ class BatchGenerationTest {
 		} );
 	}
 
+	// --- hibernate.id.batch_generation ---
+
+	@Test
+	@DomainModel(annotatedClasses = CountingIdEntity.class)
+	@SessionFactory
+	@ServiceRegistry(settings = @Setting(name = AvailableSettings.ID_BATCH_GENERATION, value = "true"))
+	void testStatelessInsertMultipleIdBatchGenerationEnabled(SessionFactoryScope scope) {
+		statelessInsertMultiple( scope, true );
+	}
+
+	@Test
+	@DomainModel(annotatedClasses = CountingIdEntity.class)
+	@SessionFactory
+	@ServiceRegistry(settings = @Setting(name = AvailableSettings.ID_BATCH_GENERATION, value = "false"))
+	void testStatelessInsertMultipleIdBatchGenerationDisabled(SessionFactoryScope scope) {
+		statelessInsertMultiple( scope, false );
+	}
+
+	@Test
+	@DomainModel(annotatedClasses = CountingIdEntity.class)
+	@SessionFactory
+	@ServiceRegistry(settings = @Setting(name = AvailableSettings.ID_BATCH_GENERATION, value = "true"))
+	void testHqlInsertValuesIdBatchGenerationEnabled(SessionFactoryScope scope) {
+		hqlInsertValues( scope, true );
+	}
+
+	@Test
+	@DomainModel(annotatedClasses = CountingIdEntity.class)
+	@SessionFactory
+	@ServiceRegistry(settings = @Setting(name = AvailableSettings.ID_BATCH_GENERATION, value = "false"))
+	void testHqlInsertValuesIdBatchGenerationDisabled(SessionFactoryScope scope) {
+		hqlInsertValues( scope, false );
+	}
+
+	@Test
+	@DomainModel(annotatedClasses = CountingIdEntity.class)
+	@SessionFactory
+	@ServiceRegistry(settings = @Setting(name = AvailableSettings.ID_BATCH_GENERATION, value = "false"))
+	void testPersistIdBatchGenerationDisabled(SessionFactoryScope scope) {
+		// control: stateful persist honors the setting
+		persist( scope );
+	}
+
+	private void statelessInsertMultiple(SessionFactoryScope scope, boolean batchGeneration) {
+		scope.inStatelessTransaction( session ->
+				session.insertMultiple( List.of( new CountingIdEntity(), new CountingIdEntity() ) ) );
+		assertIdGeneration( batchGeneration );
+	}
+
+	private void hqlInsertValues(SessionFactoryScope scope, boolean batchGeneration) {
+		scope.inTransaction( session -> session.createMutationQuery(
+				"insert into CountingIdEntity (name) values ('a'), ('b')" ).executeUpdate() );
+		assertIdGeneration( batchGeneration );
+	}
+
+	private void persist(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.persist( new CountingIdEntity() );
+			session.persist( new CountingIdEntity() );
+		} );
+		assertIdGeneration( false );
+	}
+
+	private static void assertIdGeneration(boolean batchGeneration) {
+		if ( batchGeneration ) {
+			assertThat( CountingIdGenerator.generateBatchCallCount.get() ).as( "generateBatch calls" ).isEqualTo( 1 );
+			assertThat( CountingIdGenerator.generateCallCount.get() ).as( "generate calls" ).isEqualTo( 0 );
+		}
+		else {
+			assertThat( CountingIdGenerator.generateBatchCallCount.get() ).as( "generateBatch calls" ).isEqualTo( 0 );
+			assertThat( CountingIdGenerator.generateCallCount.get() ).as( "generate calls" ).isEqualTo( 2 );
+		}
+	}
+
 	// --- Entities ---
 
 	@Entity(name = "BatchEntity")
@@ -230,7 +314,21 @@ class BatchGenerationTest {
 		}
 	}
 
+	@Entity(name = "CountingIdEntity")
+	static class CountingIdEntity {
+		@Id
+		@CountingId
+		Long id;
+		String name;
+	}
+
 	// --- Annotations ---
+
+	@IdGeneratorType(CountingIdGenerator.class)
+	@Retention(RUNTIME)
+	@Target({ FIELD, METHOD })
+	@interface CountingId {
+	}
 
 	@ValueGenerationType(generatedBy = BatchStringGenerator.class)
 	@Retention(RUNTIME)
@@ -301,6 +399,48 @@ class BatchGenerationTest {
 				EventType eventType) {
 			generateCallCount.incrementAndGet();
 			return "nonbatch-" + sequence.incrementAndGet();
+		}
+
+		@Override
+		public EnumSet<EventType> getEventTypes() {
+			return EventTypeSets.INSERT_ONLY;
+		}
+	}
+
+	public static class CountingIdGenerator implements BeforeExecutionGenerator {
+		static final AtomicInteger generateCallCount = new AtomicInteger();
+		static final AtomicInteger generateBatchCallCount = new AtomicInteger();
+		static final AtomicLong next = new AtomicLong( 1000 );
+
+		public CountingIdGenerator(CountingId annotation, Member member, GeneratorCreationContext context) {
+		}
+
+		@Override
+		public Object generate(
+				SharedSessionContractImplementor session,
+				Object owner,
+				Object currentValue,
+				EventType eventType) {
+			generateCallCount.incrementAndGet();
+			return next.incrementAndGet();
+		}
+
+		@Override
+		public boolean supportsBatchGeneration() {
+			return true;
+		}
+
+		@Override
+		public @Nonnull Object[] generateBatch(
+				@Nonnull SharedSessionContractImplementor session,
+				@Nonnull GenerationRequests requests,
+				@Nonnull EventType eventType) {
+			generateBatchCallCount.incrementAndGet();
+			final Object[] ids = new Object[requests.size()];
+			for ( int i = 0; i < ids.length; i++ ) {
+				ids[i] = next.incrementAndGet();
+			}
+			return ids;
 		}
 
 		@Override

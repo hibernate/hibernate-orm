@@ -7,6 +7,7 @@ import org.hibernate.dialect.function.spi.WindowFunctionSupport;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.MappingException;
@@ -167,6 +168,12 @@ abstract public class DialectFeatureChecks {
 				PessimisticLockScope.NORMAL,
 				LockingSqlRewriteResult.Outcome.APPLIED
 		);
+	}
+
+	public static class NativeGenerationStrategyIsIdentity implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.getNativeValueGenerationStrategy() == GenerationType.IDENTITY;
+		}
 	}
 
 	public static class SupportsSequences implements DialectFeatureCheck {

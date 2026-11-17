@@ -35,7 +35,7 @@ public class LegacyDB2SequenceSupport implements SequenceSupport {
 
 	@Override
 	public @Nullable String getSequenceNextValParameterizedString(String sequenceName) throws MappingException {
-		return "with cte as (select 1 v from sysibm.sysdummy1 t union all select t.v + 1 from cte t where t.v<?) select "
+		return "with cte(v) as (select 1 from sysibm.sysdummy1 t union all select t.v + 1 from cte t where t.v<?) select "
 			+ getSelectSequenceNextValString( sequenceName ) + " from cte t";
 	}
 

@@ -18,6 +18,11 @@ public class SQLServer16SequenceSupport extends SQLServerSequenceSupport{
 	}
 
 	@Override
+	public boolean supportsSelectNextValParameterized() {
+		return true;
+	}
+
+	@Override
 	public @Nullable String getFromGenerateSeries() {
 		return " from generate_series(1,?)";
 	}

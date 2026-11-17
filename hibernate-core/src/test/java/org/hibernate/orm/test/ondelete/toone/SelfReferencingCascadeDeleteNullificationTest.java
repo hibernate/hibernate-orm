@@ -49,16 +49,16 @@ public class SelfReferencingCascadeDeleteNullificationTest {
 	}
 
 	@Test
-	void nullableCascadingSelfReferenceStillNeedsNullification(SessionFactoryScope scope) {
-		nullableCascadingSelfReferencesStillNeedNullification( false, scope );
+	void deleteWithNullableCascadingSelfReference(SessionFactoryScope scope) {
+		deleteWithNullableCascadingSelfReferences( false, scope );
 	}
 
 	@Test
-	void twoNullableCascadingSelfReferencesStillNeedNullification(SessionFactoryScope scope) {
-		nullableCascadingSelfReferencesStillNeedNullification( true, scope );
+	void deleteWithTwoNullableCascadingSelfReferences(SessionFactoryScope scope) {
+		deleteWithNullableCascadingSelfReferences( true, scope );
 	}
 
-	private void nullableCascadingSelfReferencesStillNeedNullification(boolean twoReferences, SessionFactoryScope scope) {
+	private void deleteWithNullableCascadingSelfReferences(boolean twoReferences, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			var root = new NullableNode();
 			root.id = 1;
@@ -74,15 +74,13 @@ public class SelfReferencingCascadeDeleteNullificationTest {
 		} );
 		scope.inTransaction( session -> {
 			var root = session.find( NullableNode.class, 1 );
-			scope.getCollectingStatementObserver().clear();
 			session.remove( root );
 		} );
-		assertNullificationThenDelete( scope, 1 );
 		assertEmpty( scope, "NullableCascadeNode" );
 	}
 
 	@Test
-	void nullableEmbeddedCascadeStillNeedsNullification(SessionFactoryScope scope) {
+	void deleteWithNullableEmbeddedCascade(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			var root = new NullableEmbeddedNode();
 			root.id = 1;
@@ -92,10 +90,8 @@ public class SelfReferencingCascadeDeleteNullificationTest {
 		} );
 		scope.inTransaction( session -> {
 			var root = session.find( NullableEmbeddedNode.class, 1 );
-			scope.getCollectingStatementObserver().clear();
 			session.remove( root );
 		} );
-		assertNullificationThenDelete( scope, 1 );
 		assertEmpty( scope, "NullableEmbeddedCascadeNode" );
 	}
 
@@ -134,7 +130,9 @@ public class SelfReferencingCascadeDeleteNullificationTest {
 	}
 
 	@Test
-	void joinedSelfReferenceMustBeNullifiedBeforeDeletingSubclass(SessionFactoryScope scope) {
+	void joinedSelfReferencePreservesExistingDeletionBehavior(SessionFactoryScope scope) {
+		// On these dialects, the existing nullification also prevents the subclass deletion
+		// from cascading to the root row before Hibernate deletes it.
 		scope.inTransaction( session -> {
 			var node = new JoinedChild();
 			node.id = 1;

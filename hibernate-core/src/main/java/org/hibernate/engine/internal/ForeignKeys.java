@@ -276,7 +276,8 @@ public final class ForeignKeys {
 			// case we definitely need to nullify
 			if ( object == self ) {
 				// A nonnullable cascading self-reference cannot be cleared before deletion.
-				// Keep nullifying nullable references to break cycles involving multiple FKs or tables.
+				// Preserve existing behavior for nullable references, including joined inheritance
+				// deletion cases that currently rely on this dialect workaround.
 				return isEarlyInsert
 					|| isDelete && !skipSelfNullification && requiresSelfReferentialForeignKeyNullification();
 			}

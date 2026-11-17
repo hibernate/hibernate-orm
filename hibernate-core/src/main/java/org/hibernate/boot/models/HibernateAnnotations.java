@@ -978,6 +978,12 @@ public interface HibernateAnnotations {
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
+	CompleteAnnotationDescriptor<TimeZoneAdjustment, TimeZoneAdjustmentAnnotation> TIME_ZONE_ADJUSTMENT = new CompleteAnnotationDescriptor<>(
+			TimeZoneAdjustment.class,
+			TimeZoneAdjustmentAnnotation.class,
+			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
+			false
+	);
 	CompleteAnnotationDescriptor<TimeZoneRepresentation, TimeZoneRepresentationAnnotation> TIME_ZONE_REPRESENTATION = new CompleteAnnotationDescriptor<>(
 			TimeZoneRepresentation.class,
 			TimeZoneRepresentationAnnotation.class,

@@ -20,6 +20,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.MappingException;
+import org.hibernate.annotations.TimeZoneAdjustment;
 import org.hibernate.annotations.TimeZoneRepresentation;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -73,7 +74,8 @@ final class TemporalPreservationBootMatrix {
 	/// @param dialect the simple name of the Dialect class
 	/// @param javaClass the simple name of the Java Time class, followed in
 	///        parentheses by `INLINE` or `COLUMN` when that representation is
-	///        declared, or by `NORMALIZED` when booted with that policy
+	///        declared, by `NORMALIZED` when booted with that policy, or by
+	///        `ADJUSTED` when its zone is declared with `@TimeZoneAdjustment`
 	/// @param jdbcType the simple name of the selected JDBC type class
 	/// @param columnType the column type in generated DDL
 	/// @param preservedParts the required parts reported as supported
@@ -122,7 +124,8 @@ final class TemporalPreservationBootMatrix {
 	}
 
 	/// As [#boot(Map)], followed by `OffsetDateTime` and `ZonedDateTime` with
-	/// each explicit representation and with the `NORMALIZED` policy.
+	/// each explicit representation, with the `NORMALIZED` policy, and with a
+	/// zone declared by `@TimeZoneAdjustment`.
 	static List<Cell> bootWithPolicies(Map<String, Object> settings) {
 		final List<Cell> cells = boot( settings );
 		final Map<String, Object> normalized = new HashMap<>( settings );
@@ -133,13 +136,17 @@ final class TemporalPreservationBootMatrix {
 		cells.add( boot( WithZonedDateTimeColumn.class, ZonedDateTime.class, "COLUMN", settings, false ) );
 		cells.add( boot( WithOffsetDateTime.class, OffsetDateTime.class, "NORMALIZED", normalized, true ) );
 		cells.add( boot( WithZonedDateTime.class, ZonedDateTime.class, "NORMALIZED", normalized, true ) );
+		// with a declared zone, the column need only hold the instant
+		cells.add( boot( WithOffsetDateTimeAdjusted.class, OffsetDateTime.class, "ADJUSTED", settings, true ) );
+		cells.add( boot( WithZonedDateTimeAdjusted.class, ZonedDateTime.class, "ADJUSTED", settings, true ) );
 		return cells;
 	}
 
 	/// Boot one entity, whose attribute `theValue` is of the given class.
 	///
 	/// @param mark what distinguishes the mapping from the default one, or empty
-	/// @param normalized whether the settings select the `NORMALIZED` policy
+	/// @param normalized whether only the instant is required of the column:
+	///        the settings select the `NORMALIZED` policy, or the zone is declared
 	static Cell boot(
 			Class<?> entityClass,
 			Class<?> javaClass,
@@ -263,6 +270,24 @@ final class TemporalPreservationBootMatrix {
 		@Id
 		Integer id;
 		@TimeZoneRepresentation(TimeZoneRepresentation.Type.COLUMN)
+		ZonedDateTime theValue;
+	}
+
+	@Entity(name = "WithOffsetDateTimeAdjusted")
+	@Table(name = "tp_offset_date_time_adjusted")
+	static class WithOffsetDateTimeAdjusted {
+		@Id
+		Integer id;
+		@TimeZoneAdjustment("UTC")
+		OffsetDateTime theValue;
+	}
+
+	@Entity(name = "WithZonedDateTimeAdjusted")
+	@Table(name = "tp_zoned_date_time_adjusted")
+	static class WithZonedDateTimeAdjusted {
+		@Id
+		Integer id;
+		@TimeZoneAdjustment("UTC")
 		ZonedDateTime theValue;
 	}
 

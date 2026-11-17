@@ -958,7 +958,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	@Override
 	public Object visitComparisonPredicate(SqmComparisonPredicate predicate) {
 		processStanza(
-				predicate.isNegated() ? predicate.getSqmOperator().negated().name() : predicate.getSqmOperator().name(),
+				predicate.getEffectiveOperator().name(),
 				() -> {
 					depth++;
 					try {

@@ -19,7 +19,6 @@ import org.hibernate.query.sqm.tree.spi.from.SqmRoot;
 
 import org.hibernate.query.sqm.tree.spi.from.SqmTreatedAttributeJoin;
 
-import static org.hibernate.query.hql.internal.HqlLogging.QUERY_LOGGER;
 import static org.hibernate.query.sqm.internal.SqmUtil.findCompatibleFetchJoin;
 
 /**
@@ -370,6 +369,12 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 				if ( joinedEntityType == null ) {
 					final var cteStatement = creationState.findCteStatement( fullPath );
 					if ( cteStatement != null ) {
+						if ( fetch ) {
+							throw new SemanticException(
+									"Fetch join target '" + fullPath + "' is a CTE (only associations may be fetched)",
+									creationState instanceof SemanticQueryBuilder<?> builder ? builder.getQuery() : null
+							);
+						}
 						//noinspection rawtypes,unchecked
 						join = new SqmCteJoin( cteStatement, alias, joinType, sqmRoot );
 						creationState.getCurrentProcessingState().getPathRegistry().register( join );
@@ -381,7 +386,10 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 				assert ! ( joinedEntityType instanceof SqmPolymorphicRootDescriptor );
 
 				if ( fetch ) {
-					QUERY_LOGGER.ignoringFetchOnEntityJoin( joinedEntityType.getHibernateEntityName(), alias );
+					throw new SemanticException(
+							"Fetch join target '" + fullPath + "' is an entity (only associations may be fetched)",
+							creationState instanceof SemanticQueryBuilder<?> builder ? builder.getQuery() : null
+					);
 				}
 
 				join = new SqmEntityJoin<>( joinedEntityType, alias, joinType, sqmRoot );

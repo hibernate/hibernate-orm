@@ -9326,6 +9326,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitFilterFragmentPredicate(FilterFragmentPredicate filter) {
+		appendSql( '(' );
 		// process a specific filter
 		final String sqlFragment = filter.getSqlFragment();
 		if ( filter.getParameters() == null ) {
@@ -9341,6 +9342,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				appendSql( sqlFragment.substring( lastEnd ) );
 			}
 		}
+		appendSql( ')' );
 	}
 
 	private int processFilterParameter(FilterFragmentParameter parameter, String sqlFragment, int startPosition) {

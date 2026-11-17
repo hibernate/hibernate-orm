@@ -22,19 +22,19 @@ PostgreSQLDialect,LocalDate,LocalDateJdbcType,date,DATE,,0001-01-01,9999-12-31,Q
 PostgreSQLDialect,LocalTime,LocalTimeJdbcType,time(0),TIME,,,,QUALIFIED
 PostgreSQLDialect,LocalDateTime,LocalDateTimeJdbcType,timestamp(6),DATE+TIME,,0001-01-01T00:00,9999-12-31T23:59:59.999999999,QUALIFIED
 PostgreSQLDialect,Instant,TimestampUtcAsJdbcTimestampJdbcType,timestamp(6) with time zone,INSTANT,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
-PostgreSQLDialect,OffsetTime,LocalTimeJdbcType + IntegerJdbcType,time(0) + integer,TIME+OFFSET,,,,QUALIFIED
+PostgreSQLDialect,OffsetTime,TimeUtcAsLocalTimeJdbcType + IntegerJdbcType,time(0) + integer,TIME+OFFSET,,,,QUALIFIED
 PostgreSQLDialect,OffsetDateTime,TimestampUtcAsJdbcTimestampJdbcType + IntegerJdbcType,timestamp(6) with time zone + integer,INSTANT+OFFSET,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
 PostgreSQLDialect,ZonedDateTime,TimestampUtcAsJdbcTimestampJdbcType + VarcharJdbcType,timestamp(6) with time zone + varchar(255),INSTANT+OFFSET+ZONE_ID,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
-PostgreSQLDialect,OffsetTime (INLINE),TimeUtcAsJdbcTimeJdbcType,time(0),,,,,REJECTED
+PostgreSQLDialect,OffsetTime (INLINE),TimeUtcAsLocalTimeJdbcType,time(0),,,,,REJECTED
 PostgreSQLDialect,OffsetDateTime (INLINE),TimestampUtcAsJdbcTimestampJdbcType,timestamp(6) with time zone,,,,,REJECTED
 PostgreSQLDialect,ZonedDateTime (INLINE),TimestampUtcAsJdbcTimestampJdbcType,timestamp(6) with time zone,,,,,REJECTED
-PostgreSQLDialect,OffsetTime (COLUMN),LocalTimeJdbcType + IntegerJdbcType,time(0) + integer,TIME+OFFSET,,,,QUALIFIED
+PostgreSQLDialect,OffsetTime (COLUMN),TimeUtcAsLocalTimeJdbcType + IntegerJdbcType,time(0) + integer,TIME+OFFSET,,,,QUALIFIED
 PostgreSQLDialect,OffsetDateTime (COLUMN),TimestampUtcAsJdbcTimestampJdbcType + IntegerJdbcType,timestamp(6) with time zone + integer,INSTANT+OFFSET,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
 PostgreSQLDialect,ZonedDateTime (COLUMN),TimestampUtcAsJdbcTimestampJdbcType + VarcharJdbcType,timestamp(6) with time zone + varchar(255),INSTANT+OFFSET+ZONE_ID,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
-PostgreSQLDialect,OffsetTime (NORMALIZED),LocalTimeJdbcType + IntegerJdbcType,time(0) + integer,TIME,,,,QUALIFIED
+PostgreSQLDialect,OffsetTime (NORMALIZED),TimeUtcAsLocalTimeJdbcType,time(0),TIME,,,,QUALIFIED
 PostgreSQLDialect,OffsetDateTime (NORMALIZED),TimestampUtcAsJdbcTimestampJdbcType,timestamp(6) with time zone,INSTANT,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
 PostgreSQLDialect,ZonedDateTime (NORMALIZED),TimestampUtcAsJdbcTimestampJdbcType,timestamp(6) with time zone,INSTANT,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
-PostgreSQLDialect,OffsetTime (ADJUSTED),TimeUtcAsJdbcTimeJdbcType,time(0),,,,,REJECTED
+PostgreSQLDialect,OffsetTime (ADJUSTED),TimeUtcAsLocalTimeJdbcType,time(0),TIME,,,,QUALIFIED
 PostgreSQLDialect,OffsetDateTime (ADJUSTED),TimestampUtcAsJdbcTimestampJdbcType,timestamp(6) with time zone,INSTANT,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
 PostgreSQLDialect,ZonedDateTime (ADJUSTED),TimestampUtcAsJdbcTimestampJdbcType,timestamp(6) with time zone,INSTANT,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
 OracleDialect,LocalDate,LocalDateJdbcType,date,DATE,,1582-10-15,9999-12-31,QUALIFIED

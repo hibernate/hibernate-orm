@@ -1,5 +1,6 @@
 package org.hibernate.dialect;
 
+import org.hibernate.type.descriptor.jdbc.TimeUtcAsLocalTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.dialect.type.spi.TemporalPreservation;
@@ -73,6 +74,7 @@ import org.hibernate.QueryTimeoutException;
 import org.hibernate.SPI;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.aggregate.spi.AggregateSupport;
 import org.hibernate.dialect.aggregate.internal.PostgreSQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -265,6 +267,15 @@ public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport
 					TimestampUtcAsJdbcTimestampJdbcType.class,
 					TemporalPreservation.Level.UNSUPPORTED,
 					StandardTemporalPreservations.TIMESTAMP_READ_SAFE_START
+			);
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			// stored as its time of day at UTC, in a column which keeps nothing else
+			preservation = StandardTemporalPreservations.offsetTime(
+					javaType,
+					jdbcType,
+					TimeUtcAsLocalTimeJdbcType.class,
+					TemporalPreservation.Level.UNSUPPORTED
 			);
 		}
 		return preservation;
@@ -1477,6 +1488,12 @@ public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport
 	protected void contributePostgreSQLTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final var jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
+		if ( serviceRegistry != null && MetadataBuildingContext.isTemporalPreservationEnabled( serviceRegistry ) ) {
+			// The time of an OffsetTime at UTC is exchanged with the driver as a LocalTime.
+			// Passing through a java.sql.Time stores a time which depends on the default
+			// time zone of the JVM, which is left as it is when preservation is disabled.
+			jdbcTypeRegistry.addDescriptor( TimeUtcAsLocalTimeJdbcType.INSTANCE );
+		}
 		// For discussion of BLOB support in Postgres, as of 8.4, see:
 		//     http://jdbc.postgresql.org/documentation/84/binary-data.html
 		// For how this affects Hibernate, see:

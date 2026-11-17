@@ -10,11 +10,13 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
+import java.util.Optional;
 import java.util.Set;
 
 import jakarta.annotation.Nullable;
 
 import org.hibernate.Internal;
+import org.hibernate.MappingException;
 import org.hibernate.TemporalPreservationException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.type.spi.TemporalPreservation;
@@ -22,7 +24,10 @@ import org.hibernate.dialect.type.spi.TemporalPreservation.Part;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.BasicBinder;
+import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.TemporalJdbcType;
 
 import static org.hibernate.cfg.MappingSettings.TEMPORAL_PRESERVATION;
 
@@ -142,6 +147,27 @@ public final class TemporalPreservationGuard {
 		}
 	}
 
+	/// Check a non-null value about to be rendered as a SQL literal through
+	/// the given JDBC type, whatever renders it. Unlike
+	/// [#checkLiteral(Object, JavaType, WrapperOptions)], which the standard
+	/// formatter of temporal literals applies to itself, this is applied
+	/// before any formatter is asked, so that a JDBC type with a formatter
+	/// of its own is held to what is reported for it as well. Does nothing
+	/// when temporal preservation is disabled, or when the value is not yet
+	/// in the form the Java type describes.
+	public static void checkLiteral(
+			@Nullable Object value,
+			JavaType<?> javaType,
+			JdbcType jdbcType,
+			@Nullable WrapperOptions options) {
+		if ( value != null
+				&& isEnabled( options )
+				&& appliesTo( javaType )
+				&& javaType.getJavaTypeClass().isInstance( value ) ) {
+			check( value, javaType, jdbcType, options.getDialect(), "render as a SQL literal" );
+		}
+	}
+
 	/// Reject a value with an offset about to be rendered as a SQL literal
 	/// which the literal formats cannot express. They write an offset as
 	/// hours and minutes, so an offset with seconds would denote a different
@@ -167,6 +193,84 @@ public final class TemporalPreservationGuard {
 					+ " is not supported; bind the value as a parameter instead"
 			);
 		}
+	}
+
+	/// What the combination of Java type and JDBC type preserves on the
+	/// Dialect. The Dialect is asked first. Where it knows nothing of the
+	/// combination, a JDBC type which reports for itself, by implementing
+	/// [TemporalJdbcType], is asked next.
+	public static TemporalPreservation preservation(Dialect dialect, JavaType<?> javaType, JdbcType jdbcType) {
+		final var reported = dialect.getTemporalPreservation( javaType, jdbcType );
+		if ( !TemporalPreservation.unknown().equals( reported ) || !( jdbcType instanceof TemporalJdbcType temporal ) ) {
+			return reported;
+		}
+		final Optional<TemporalPreservation> stated;
+		try {
+			stated = temporal.getTemporalPreservation( javaType, dialect );
+		}
+		catch (RuntimeException e) {
+			throw new MappingException(
+					"TemporalJdbcType " + jdbcType.getClass().getName() + " failed to report what it preserves of '"
+					+ javaType.getTypeName() + "': " + e.getMessage(),
+					e
+			);
+		}
+		//noinspection OptionalAssignedToNull
+		if ( stated == null ) {
+			throw new MappingException(
+					"TemporalJdbcType " + jdbcType.getClass().getName() + " returned null for what it preserves of '"
+					+ javaType.getTypeName() + "'; it must return an empty Optional to decline"
+			);
+		}
+		return stated.orElse( reported );
+	}
+
+	/// Explain why values exchanged through the JDBC type would escape the
+	/// checks made here, or return `null` when they would not. Values are
+	/// checked by [BasicBinder] as they are bound and by [BasicExtractor] as
+	/// they are read, so a JDBC type whose binder or extractor is not one of
+	/// those, or replaces their entry points, is not checked at all, and one
+	/// which hands out those of another JDBC type is checked against the
+	/// report of that other type.
+	public static @Nullable String uncheckedReason(JavaType<?> javaType, JdbcType jdbcType) {
+		final var binder = jdbcType.getBinder( javaType );
+		final var extractor = jdbcType.getExtractor( javaType );
+		final String unchecked;
+		if ( !( binder instanceof BasicBinder<?> basicBinder ) ) {
+			unchecked = "binder is not a BasicBinder";
+		}
+		else if ( !( extractor instanceof BasicExtractor<?> basicExtractor ) ) {
+			unchecked = "extractor is not a BasicExtractor";
+		}
+		else if ( overridesExtract( extractor.getClass() ) ) {
+			unchecked = "extractor overrides BasicExtractor.extract()";
+		}
+		// Values are checked against what is reported for the JDBC type which the binder
+		// or extractor was created for. One borrowed from another JDBC type would have
+		// them checked against the report of that one.
+		else if ( basicBinder.getJdbcType() != jdbcType ) {
+			unchecked = "binder is that of " + basicBinder.getJdbcType().getClass().getSimpleName();
+		}
+		else if ( basicExtractor.getJdbcType() != jdbcType ) {
+			unchecked = "extractor is that of " + basicExtractor.getJdbcType().getClass().getSimpleName();
+		}
+		else {
+			return null;
+		}
+		return "with '" + TEMPORAL_PRESERVATION + "' enabled, values are checked as they pass through BasicBinder"
+			+ " and BasicExtractor, and the " + unchecked + " of " + jdbcType.getClass().getName()
+			+ ", so its values would not be checked";
+	}
+
+	private static boolean overridesExtract(Class<?> extractorClass) {
+		for ( Class<?> type = extractorClass; type != null && type != BasicExtractor.class; type = type.getSuperclass() ) {
+			for ( var method : type.getDeclaredMethods() ) {
+				if ( method.getName().equals( "extract" ) && !method.isSynthetic() ) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	/// Check a time of day with an offset about to be rendered as a SQL
@@ -205,7 +309,7 @@ public final class TemporalPreservationGuard {
 			String operation) {
 		final var preservation = isJavaTimeContainer( javaType )
 				? TemporalPreservation.unknown()
-				: dialect.getTemporalPreservation( javaType, jdbcType );
+				: preservation( dialect, javaType, jdbcType );
 		// Which parts a mapping requires was settled when the factory was built.
 		// Here, where the mapping is not known, the least any mapping may require
 		// is required, which is also what a value without a mapping is held to.
@@ -250,7 +354,7 @@ public final class TemporalPreservationGuard {
 				jdbcType,
 				isJavaTimeContainer( javaType )
 						? TemporalPreservation.unknown()
-						: dialect.getTemporalPreservation( javaType, jdbcType ),
+						: preservation( dialect, javaType, jdbcType ),
 				required
 		);
 	}

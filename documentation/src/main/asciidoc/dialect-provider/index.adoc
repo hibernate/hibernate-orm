@@ -512,6 +512,12 @@ identity) as supported, unsupported or unknown, together with the least and
 greatest value which is preserved. The default answer is unknown for
 everything, so a Dialect supports nothing until it says otherwise.
 
+Where the Dialect answers unknown, a `JdbcType` which implements
+link:{doc-javadoc-url}org/hibernate/type/descriptor/jdbc/TemporalJdbcType.html[`TemporalJdbcType`]
+is asked to report for itself. A descriptor which a provider ships alongside
+its Dialect may be reported on in either place; the answer of the Dialect,
+when it gives one, is the one which is used.
+
 Report each part for what the combination really does, and leave it to the
 application's preservation policy to decide which parts it needs. For an
 `OffsetDateTime` stored in a column which keeps only the instant, report the

@@ -11,6 +11,8 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.criteria.JoinType;
 
 import org.hibernate.Session;
+import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
@@ -25,6 +27,7 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -282,6 +285,10 @@ public class CorrelationRenderingTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFullJoin.class)
+	@SkipForDialect(dialectClass = MariaDBDialect.class,
+			reason = "MariaDB cannot resolve outer references in ON clauses inside full join emulation")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class,
+			reason = "Sybase ASE does not support the UNION needed for full join emulation in a subquery")
 	public void fullJoinPreservesUnmatchedItem(SessionFactoryScope scope) {
 		assertPreservesUnmatchedItem( scope, "full" );
 	}

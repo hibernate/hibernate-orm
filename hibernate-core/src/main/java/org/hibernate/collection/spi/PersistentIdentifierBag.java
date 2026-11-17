@@ -392,7 +392,8 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 	@Override
 	public void preInsert(CollectionPersister persister) throws HibernateException {
 		final var generator = persister.getGenerator();
-		if ( generator.supportsBatchGeneration() ) {
+		if ( generator.supportsBatchGeneration()
+			&& getSession().getFactory().getSessionFactoryOptions().isIdBatchGenerationEnabled() ) {
 			preInsertBatched( generator );
 		}
 		else {

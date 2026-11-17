@@ -428,6 +428,7 @@ public class StatelessSessionImpl
 	}
 
 	private BatchGeneratedValues batchGenerateValues(List<?> entities) {
+		final boolean batchGenerationEnabled = getFactory().getSessionFactoryOptions().isIdBatchGenerationEnabled();
 		final var persisters = new EntityPersister[entities.size()];
 		final var indexByIdGenerator = new IdentityHashMap<BeforeExecutionGenerator, List<Integer>>();
 		final var indexByVersionGenerator = new IdentityHashMap<BeforeExecutionGenerator, List<Integer>>();
@@ -438,7 +439,8 @@ public class StatelessSessionImpl
 			final var idGenerator = persister.getGenerator();
 			persisters[i] = persister;
 
-			if ( idGenerator.generatedBeforeExecution( entity, this )
+			if ( batchGenerationEnabled
+				&& idGenerator.generatedBeforeExecution( entity, this )
 				&& idGenerator.generatesOnInsert()
 				&& idGenerator instanceof BeforeExecutionGenerator beforeExecutionGenerator
 				&& beforeExecutionGenerator.supportsBatchGeneration() ) {
@@ -446,7 +448,8 @@ public class StatelessSessionImpl
 						.add( i );
 			}
 			final var versionGenerator = persister.getVersionGenerator();
-			if ( versionGenerator != null
+			if ( batchGenerationEnabled
+				&& versionGenerator != null
 				&& versionGenerator.generatedBeforeExecution( entity, this )
 				&& versionGenerator.generatesOnInsert()
 				&& versionGenerator.supportsBatchGeneration() ) {

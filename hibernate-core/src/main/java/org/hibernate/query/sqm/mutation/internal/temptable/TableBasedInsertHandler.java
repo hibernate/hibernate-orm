@@ -1139,7 +1139,8 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 				final var rowNumber = (JdbcParameter) parameterBinders.get( 1 );
 				final var basicIdentifierMapping = (BasicEntityIdentifierMapping) identifierMapping;
 				final Object[] generatedIds;
-				if ( beforeExecutionGenerator.supportsBatchGeneration() ) {
+				if ( beforeExecutionGenerator.supportsBatchGeneration()
+						&& session.getFactory().getSessionFactoryOptions().isIdBatchGenerationEnabled() ) {
 					generatedIds = beforeExecutionGenerator.generateBatch(
 							session,
 							GenerationRequests.of( rows ),

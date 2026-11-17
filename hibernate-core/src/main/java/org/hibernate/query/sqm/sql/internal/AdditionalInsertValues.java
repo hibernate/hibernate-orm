@@ -151,7 +151,8 @@ public final class AdditionalInsertValues {
 				JdbcParameterBindings jdbcParamBindings,
 				ExecutionContext executionContext) throws SQLException {
 			final SharedSessionContractImplementor session = executionContext.getSession();
-			if ( generator.supportsBatchGeneration() ) {
+			if ( generator.supportsBatchGeneration()
+					&& session.getFactory().getSessionFactoryOptions().isIdBatchGenerationEnabled() ) {
 				JdbcParameterBinding binding = jdbcParamBindings.getBinding( this );
 				if ( binding == null ) {
 					final Object[] ids =

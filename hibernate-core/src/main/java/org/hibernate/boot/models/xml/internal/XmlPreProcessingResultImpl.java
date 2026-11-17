@@ -1,8 +1,11 @@
 package org.hibernate.boot.models.xml.internal;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.hibernate.MappingException;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
@@ -18,6 +21,7 @@ public class XmlPreProcessingResultImpl implements XmlPreProcessingResult {
 	private final List<XmlDocument> documents = new ArrayList<>();
 	private final List<String> managedClasses = new ArrayList<>();
 	private final List<String> managedNames = new ArrayList<>();
+	private final Map<String, String> entityNamesByClass = new HashMap<>();
 
 	public XmlPreProcessingResultImpl(PersistenceUnitMetadataImpl persistenceUnitMetadata) {
 		this.persistenceUnitMetadata = persistenceUnitMetadata;
@@ -72,7 +76,15 @@ public class XmlPreProcessingResultImpl implements XmlPreProcessingResult {
 		} );
 		jaxbRoot.getEntities().forEach( (jaxbEntity) -> {
 			if ( StringHelper.isNotEmpty( jaxbEntity.getClazz() ) ) {
-				managedClasses.add( XmlProcessingHelper.determineClassName( jaxbRoot, jaxbEntity ) );
+				final String className = XmlProcessingHelper.determineClassName( jaxbRoot, jaxbEntity );
+				if ( StringHelper.isNotEmpty( jaxbEntity.getName() ) ) {
+					final String previousName = entityNamesByClass.putIfAbsent( className, jaxbEntity.getName() );
+					if ( previousName != null && !previousName.equals( jaxbEntity.getName() ) ) {
+						throw new MappingException( "Entity class '" + className
+								+ "' is mapped multiple times with different entity names" );
+					}
+				}
+				managedClasses.add( className );
 			}
 			else if ( StringHelper.isNotEmpty( jaxbEntity.getName() ) ) {
 				managedNames.add( jaxbEntity.getName() );

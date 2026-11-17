@@ -145,6 +145,18 @@ public class SoftDeleteCollectionJoinTests {
 		assertEquals( List.of(), parentsWithNote( scope, "x" ) );
 	}
 
+	@Test
+	public void correlatedCollectionAfterEntityInSubquery(SessionFactoryScope scope) {
+		// the join of the collection follows an entity in the from clause of the subquery
+		assertEquals( List.of( 2 ), ids( scope,
+				"select p.id from Parent p where exists (select 1 from Marker z join p.notes n on n.id = z.id)"
+						+ " order by p.id" ) );
+		// the second marker has no note among those of the first and third parents
+		assertEquals( List.of( 1, 3 ), ids( scope,
+				"select p.id from Parent p where exists (select 1 from Marker z left join p.notes n on n.id = z.id"
+						+ " where z.id = 2 and n.id is null) order by p.id" ) );
+	}
+
 	private static List<Integer> ids(SessionFactoryScope scope, String hql) {
 		return scope.fromSession( session -> session.createSelectionQuery( hql, Integer.class ).getResultList() );
 	}

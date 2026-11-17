@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -433,8 +434,11 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			super( key, hash, next, value );
 			this.owner = owner;
 			this.state = Recency.HIR_RESIDENT;
+		}
 
-			// initially point everything back to self
+		// Only the shared stack and queue header is linked before insertion.
+		private LIRSHashEntry() {
+			this( null, null, 0, null, null );
 			this.previousInStack = this;
 			this.nextInStack = this;
 			this.previousInQueue = this;
@@ -526,18 +530,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
 			// "There are two cases for block X:"
 			if ( inStack ) {
-				// "(1) If X is in the stack S, we change its status to LIR."
-				hot();
-
-				// "This block is also removed from list Q."
-				removeFromQueue();
-
-				// "The LIR block in the bottom of S is moved to the end of list Q
-				// with its status changed to HIR."
-				owner.stackBottom().migrateToQueue();
-
-				// "A stack pruning is then conducted."
-				owner.pruneStack( evicted );
+				promote( evicted );
 			}
 			else {
 				// "(2) If X is not in stack S, we leave its status in HIR and move
@@ -552,13 +545,14 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		 * non-resident entry is re-computed.
 		 */
 		private Set<HashEntry<K, V>> miss() {
+			final boolean recentlyEvicted = owner.recentlyEvictedKeys.remove( key );
 			Set<HashEntry<K, V>> evicted = Collections.emptySet();
 			if ( owner.hotSize < owner.maximumHotSize ) {
 				warmupMiss();
 			}
 			else {
 				evicted = new HashSet<>();
-				fullMiss( evicted );
+				fullMiss( evicted, recentlyEvicted );
 			}
 
 			// now the missed item is in the cache
@@ -580,7 +574,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		/**
 		 * Records a miss when the hot entry set is full.
 		 */
-		private void fullMiss(Set<HashEntry<K, V>> evicted) {
+		private void fullMiss(Set<HashEntry<K, V>> evicted, boolean recentlyEvicted) {
 			// See section 3.3 case 3:
 			// "Upon accessing an HIR non-resident block X:
 			// This is a miss."
@@ -592,27 +586,31 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 				// becomes a non-resident block), and replace it out of the cache."
 				LIRSHashEntry<K, V> evictedNode = owner.queueFront();
 				evicted.add( evictedNode );
+				if ( owner.maximumHotSize > 0 && evictedNode.inStack() ) {
+					owner.rememberEviction( evictedNode.key );
+				}
 			}
 
 			// "Then we load the requested block X into the freed buffer and place
 			// it on the top of stack S."
-			boolean inStack = inStack();
 			moveToStackTop();
 
-			// "There are two cases for block X:"
-			if ( inStack ) {
-				// "(1) If X is in stack S, we change its status to LIR and move the
-				// LIR block in the bottom of stack S to the end of list Q with its
-				// status changed to HIR. A stack pruning is then conducted.
-				hot();
-				owner.stackBottom().migrateToQueue();
-				owner.pruneStack( evicted );
+			if ( recentlyEvicted ) {
+				promote( evicted );
 			}
 			else {
-				// "(2) If X is not in stack S, we leave its status in HIR and place
-				// it in the end of list Q."
 				cold();
 			}
+		}
+
+		private void promote(Set<HashEntry<K, V>> evicted) {
+			hot();
+			removeFromQueue();
+			// An explicit removal can expose cold entries at the bottom of the stack.
+			// Demote the least recent hot entry to keep the hot set at its target size.
+			owner.pruneStack( evicted );
+			owner.stackBottom().migrateToQueue();
+			owner.pruneStack( evicted );
 		}
 
 		/**
@@ -860,12 +858,15 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		 * and entries are evicted from the front of the queue.</li>
 		 * </ul>
 		 */
-		private final LIRSHashEntry<K, V> header = new LIRSHashEntry<>( null, null, 0, null, null );
+		private final LIRSHashEntry<K, V> header = new LIRSHashEntry<>();
 
 		/**
 		 * The maximum number of hot entries (L_lirs in the paper).
 		 */
 		private final int maximumHotSize;
+
+		// Keep only the keys of recently evicted cold entries, up to one segment's capacity.
+		private final LinkedHashSet<K> recentlyEvictedKeys = new LinkedHashSet<>();
 
 		/**
 		 * The maximum number of resident entries (L in the paper).
@@ -891,6 +892,13 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		private static int calculateLIRSize(int maximumSize) {
 			int result = (int) ( L_LIRS * maximumSize );
 			return ( result == maximumSize ) ? maximumSize - 1 : result;
+		}
+
+		private void rememberEviction(K key) {
+			recentlyEvictedKeys.add( key );
+			if ( recentlyEvictedKeys.size() > maximumSize ) {
+				recentlyEvictedKeys.remove( recentlyEvictedKeys.iterator().next() );
+			}
 		}
 
 		@Override
@@ -980,6 +988,9 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		public void onEntryRemove(HashEntry<K, V> e) {
 			assert segment.isHeldByCurrentThread();
 			( (LIRSHashEntry<K, V>) e ).remove();
+			if ( size == 0 ) {
+				recentlyEvictedKeys.clear();
+			}
 			int removed = 0;
 			// we could have multiple instances of e in accessQueue; remove them all
 			while ( accessQueue.remove( e ) ) {
@@ -991,6 +1002,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		@Override
 		public void clear() {
 			assert segment.isHeldByCurrentThread();
+			recentlyEvictedKeys.clear();
 			// A reader can still enqueue a hit on a cleared entry. Mark it nonresident
 			// so that processing that hit cannot link it back into the cache.
 			for ( var entry = stackBottom(); entry != null; entry = stackBottom() ) {

@@ -146,7 +146,8 @@ public class CorrelatedPathJoinTest {
 				arguments( "oi.parent q join Item x on x.parent = q", List.of( 2, 2, 1 ) ),
 				arguments( "oi.parent q left join Item x on x.parent = q and x.name = 'x'", List.of( 1, 1, 1 ) ),
 				// paths from two different outer aliases
-				arguments( "p.items i join oi.parent q join Item y on y.parent = q", List.of( 4, 4, 1 ) )
+				arguments( "p.items i join oi.parent q join Item y on y.parent = q", List.of( 4, 4, 1 ) ),
+				arguments( "p.items i join oi.parent q left join Item y on y.parent = q and y.name = 'x'", List.of( 2, 2, 1 ) )
 		);
 	}
 
@@ -157,6 +158,16 @@ public class CorrelatedPathJoinTest {
 		scope.inSession( session -> assertRendered( session, expected,
 				"select (select cast(count(*) as Integer) from " + fromClause + ")"
 						+ " from Parent p join p.items oi order by oi.id" ) );
+	}
+
+	@Test
+	public void collectionsOfDifferentOuterRoots(SessionFactoryScope scope) {
+		scope.inSession( session -> assertRendered( session, List.of( 2 ), """
+				select p.id from Parent p, Parent q where p.id <> q.id and exists (
+					select 1 from p.items i join q.items j join Item y on y.id = j.id
+					where i.name = 'y' and y.name = 'x'
+				)
+				""" ) );
 	}
 
 	@Test

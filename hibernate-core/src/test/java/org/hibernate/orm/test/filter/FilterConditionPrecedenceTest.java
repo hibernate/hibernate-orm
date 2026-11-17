@@ -13,8 +13,10 @@ import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -114,6 +116,22 @@ class FilterConditionPrecedenceTest {
 					.setParameter( "id", 1 ).getSingleResult();
 			assertThat( owner.items ).extracting( item -> item.id )
 					.containsExactlyInAnyOrderElementsOf( includeDeleted ? List.of( 2, 3 ) : List.of( 2 ) );
+		} );
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsDmlTargetColumnQualifier.class)
+	void bulkUpdateRetainsIdRestriction(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.enableFilter( "visible" ).setParameter( "includeDeleted", true );
+			assertThat( session.createMutationQuery(
+					"update FilterItem set deleted = true where id = :id" )
+					.setParameter( "id", 2 ).executeUpdate() ).isEqualTo( 1 );
+		} );
+		scope.inTransaction( session -> {
+			assertThat( session.createQuery(
+					"select i.id from FilterItem i where i.deleted = false", Integer.class )
+					.getResultList() ).containsExactly( 1 );
 		} );
 	}
 

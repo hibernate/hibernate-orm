@@ -384,6 +384,20 @@ ext {
                     'jdbc.datasource': 'com.google.cloud.spanner.jdbc.JdbcDriver',
                     'connection.init_sql' : '',
             ],
+            timesten : [
+                    // NOTE: A local TimesTen Client installation is mandatory to test TimesTen.
+                    'db.dialect' : 'org.hibernate.community.dialect.TimesTenDialect',
+                    // Set `TIMESTEN_HOME` (or `TT_HOME`) to a TimesTen installation: `ttjdbc21.jar` is added to the
+                    // test classpath and its native libraries to `java.library.path` (see local.java-module.gradle).
+                    'jdbc.driver': 'com.timesten.jdbc.TimesTenDriver',
+                    'jdbc.user'  : 'hibernate_orm_test',
+                    'jdbc.pass'  : 'hibernate_orm_test',
+                    // Client/server connection that needs no client configuration files. `dbHost` may include the port,
+                    // e.g. `-DdbHost=localhost/6626`; the default port is 6625.
+                    'jdbc.url'   : 'jdbc:timesten:client:TTC_SERVER=' + dbHost + ';TTC_SERVER_DSN=hibernate_orm_test;TTC_Timeout=30',
+                    'jdbc.datasource' : 'com.timesten.jdbc.TimesTenDriver',
+                    'connection.init_sql' : ''
+            ],
     ]
 
     // Backward compatibility for existing scripts

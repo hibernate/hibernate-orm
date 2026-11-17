@@ -241,6 +241,10 @@ The following table illustrates a list of commands for various databases that ca
 |CUBRID
 |`./db.sh cubrid`
 |`./gradlew test -Pdb=cubrid`
+
+|TimesTen
+|`./db.sh timesten`
+|`./gradlew test -Pdb=timesten`
 |===
 
 Stopping a test database

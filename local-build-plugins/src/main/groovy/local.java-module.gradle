@@ -13,6 +13,8 @@ plugins {
     id "project-report"
 }
 
+// The TimesTen installation (client or server) that provides the JDBC driver and its native libraries for `-Pdb=timesten`
+def timesTenHome = System.getenv( 'TIMESTEN_HOME' ) ?: System.getenv( 'TT_HOME' )
 def skipJacoco = project.hasProperty('skipJacoco') ? project.getProperty('skipJacoco').toBoolean() : false
 if (!skipJacoco) {
     plugins.apply('jacoco')
@@ -118,6 +120,14 @@ dependencies {
         testRuntimeOnly libs.jdbc.informix
     }
 
+    // The TimesTen JDBC driver is not on Maven Central: use `ttjdbc21.jar` of the local installation
+    if ( db.startsWith( 'timesten' ) && timesTenHome != null ) {
+        final File driver = new File( timesTenHome, 'install/lib/ttjdbc21.jar' )
+        if ( driver.exists() ) {
+            testRuntimeOnly files( driver )
+        }
+    }
+
     annotationProcessor libs.loggingProcessor
     annotationProcessor libs.logging
     annotationProcessor libs.loggingAnnotations
@@ -209,6 +219,12 @@ tasks.withType( Test.class ).configureEach { test ->
     ]
 
     test.maxHeapSize = '3G'
+
+    if ( db.startsWith( 'timesten' ) && timesTenHome != null ) {
+        // The TimesTen JDBC driver loads native libraries and NLS data from the TimesTen installation
+        test.environment( 'TIMESTEN_HOME', timesTenHome )
+        test.jvmArgs( ["-Djava.library.path=${timesTenHome}/install/lib:${timesTenHome}/install/ttoracle_home/instantclient"] )
+    }
 
     // Enable bytecode enhanced engine:
     test.systemProperties['hibernate.testing.bytecode.enhancement.extension.engine.enabled'] = true

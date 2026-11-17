@@ -247,14 +247,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		final var querySpec = sqm.getQueryPart().getFirstQuerySpec();
 		final var selections = querySpec.getSelectClause().getSelections();
 		if ( selections == null || selections.isEmpty() ) {
-			final var sqmRoots = querySpec.getFromClause().getRoots();
-			if ( sqmRoots == null || sqmRoots.isEmpty() ) {
-				throw new IllegalArgumentException( "Criteria did not define any query roots" );
-			}
-			if ( sqmRoots.size() != 1 ) {
-				throw new IllegalArgumentException( "Criteria has multiple query roots" );
-			}
-			return Collections.singletonList( new SqmSelection<>( sqmRoots.get( 0 ), sqm.nodeBuilder() ) );
+			return Collections.singletonList( new SqmSelection<>( querySpec.getImplicitSelection(), sqm.nodeBuilder() ) );
 		}
 		else {
 			return selections;

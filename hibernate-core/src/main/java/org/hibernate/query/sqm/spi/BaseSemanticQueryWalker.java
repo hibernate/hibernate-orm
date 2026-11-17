@@ -295,7 +295,9 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	protected void consumeExplicitJoins(SqmFrom<?, ?> sqmFrom) {
-		sqmFrom.visitSqmJoins( sqmJoin -> consumeExplicitJoin( sqmJoin, true ) );
+		for ( var join : sqmFrom.getDeclaredJoins() ) {
+			consumeExplicitJoin( join, true );
+		}
 		final var sqmTreats = sqmFrom.getSqmTreats();
 		if ( !sqmTreats.isEmpty() ) {
 			for ( var sqmTreat : sqmTreats ) {

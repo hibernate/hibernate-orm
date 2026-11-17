@@ -12,6 +12,7 @@ import org.hibernate.LockMode;
 import org.hibernate.SPI;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.function.TimestampaddFunction;
 import org.hibernate.dialect.function.TimestampdiffFunction;
 import org.hibernate.dialect.function.spi.WindowFunctionSupport;
@@ -3161,11 +3162,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( join.getLhs() == null ) {
 			return tableGroup;
 		}
-		else if ( join.getLhs() instanceof SqmCorrelation<?, ?> correlation ) {
-			return fromClauseIndex.findTableGroup(
-					correlation.getCorrelatedRoot().getNavigablePath()
-			);
-		}
 		else {
 			return fromClauseIndex.findTableGroup( join.getLhs().getNavigablePath() );
 		}
@@ -3466,13 +3462,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 //		if ( LOG.isTraceEnabled() ) {
 //			LOG.tracef( "Visiting explicit joins for '%s'", sqmFrom.getNavigablePath() );
 //		}
-		sqmFrom.visitSqmJoins(
-				sqmJoin -> {
-					final TableGroup actualTableGroup = getActualTableGroup( lhsTableGroup, sqmJoin );
-					registerPathAttributeEntityNameUsage( sqmJoin, actualTableGroup );
-					consumeExplicitJoin( sqmJoin, actualTableGroup, actualTableGroup, true );
-				}
-		);
+		for ( var sqmJoin : sqmFrom.getDeclaredJoins() ) {
+			final TableGroup actualTableGroup = getActualTableGroup( lhsTableGroup, sqmJoin );
+			registerPathAttributeEntityNameUsage( sqmJoin, actualTableGroup );
+			consumeExplicitJoin( sqmJoin, actualTableGroup, actualTableGroup, true );
+		}
 		final var sqmTreats = sqmFrom.getSqmTreats();
 		if ( !sqmTreats.isEmpty() ) {
 			final var queryPartProcessingState = getSqlAstQueryPartProcessingState();
@@ -3627,7 +3621,29 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 		}
 
-		lhsTableGroup.addTableGroupJoin( joinedTableGroupJoin );
+		final boolean correlatedPathJoin = sqmJoin.getLhs().isCorrelated() && !sqmJoin.findRoot().isCorrelated();
+		final boolean crossJoin = correlatedPathJoin && sqmJoinType == SqmJoinType.INNER
+				&& canMoveCorrelationToWhere( sqmJoin );
+		if ( crossJoin ) {
+			lhsTableGroup.addTableGroupJoin( new TableGroupJoin( sqmJoinNavigablePath, SqlAstJoinType.CROSS, joinedTableGroup ) );
+		}
+		else {
+			lhsTableGroup.addTableGroupJoin( joinedTableGroupJoin );
+		}
+
+		if ( correlatedPathJoin && !crossJoin && getDialect() instanceof HSQLDialect ) {
+			// HSQLDB 2.7.4 evaluates this subquery only once if its only outer reference is in ON.
+			// Keep the foreign-key predicate in ON and expose the dependency in WHERE as well.
+			joinedTableGroup.getPrimaryTableReference();
+			final var foreignKeyPredicate = joinedTableGroupJoin.getPredicate();
+			if ( foreignKeyPredicate != null ) {
+				final var alwaysTrue = new CaseSearchedExpression( getBooleanType() );
+				final var trueLiteral = new QueryLiteral<>( true, getBooleanType() );
+				alwaysTrue.when( foreignKeyPredicate, trueLiteral );
+				alwaysTrue.otherwise( trueLiteral );
+				additionalRestrictions = combinePredicates( additionalRestrictions, new BooleanExpressionPredicate( alwaysTrue ) );
+			}
+		}
 
 		registerSqmFromTableGroup( sqmJoin, joinedTableGroup );
 		registerPluralTableGroupParts( joinedTableGroup );
@@ -3688,10 +3704,34 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 		}
 
+		if ( crossJoin ) {
+			// Initializing a to-one join produces its foreign-key predicate.
+			joinedTableGroup.getPrimaryTableReference();
+			additionalRestrictions = combinePredicates( additionalRestrictions, joinedTableGroupJoin.getPredicate() );
+		}
+
 		if ( transitive ) {
 			consumeExplicitJoins( sqmJoin, joinedTableGroup );
 		}
 		return joinedTableGroup;
+	}
+
+	private static boolean canMoveCorrelationToWhere(SqmAttributeJoin<?, ?> join) {
+		// A later RIGHT or FULL join can supply a null row for this whole join chain.
+		// In that case its correlation must stay in ON.
+		final var orderedJoins = join.findRoot().getOrderedJoins();
+		if ( orderedJoins != null ) {
+			for ( int i = orderedJoins.size() - 1; i >= 0; i-- ) {
+				final var following = orderedJoins.get( i );
+				if ( following == join ) {
+					return true;
+				}
+				if ( following.getSqmJoinType() == SqmJoinType.RIGHT || following.getSqmJoinType() == SqmJoinType.FULL ) {
+					break;
+				}
+			}
+		}
+		return false;
 	}
 
 	private TableGroupJoin getJoinForPredicate(

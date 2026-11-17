@@ -1,5 +1,6 @@
 package org.hibernate.query.hql.internal;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -7,7 +8,6 @@ import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmCreationState;
-import org.hibernate.query.sqm.tree.spi.domain.SqmCorrelation;
 import org.hibernate.query.sqm.tree.spi.from.SqmFrom;
 import org.hibernate.query.sqm.tree.spi.from.SqmJoin;
 import org.hibernate.query.sqm.tree.spi.from.SqmRoot;
@@ -50,11 +50,20 @@ public class QualifiedJoinPredicatePathConsumer extends BasicDotIdentifierConsum
 						final var fromClause = querySpec.getFromClause();
 						// If the current processing query contains the root of the current join,
 						// then the root of the processing path must be a root of one of the parent queries
-						if ( fromClause != null && contains( fromClause.getRoots(), joinRoot ) ) {
+						final int joinIndex = fromClause == null ? -1 : indexOf( fromClause.getRoots(), joinRoot );
+						if ( fromClause != null && joinIndex >= 0 ) {
 							// It is allowed to use correlations from the same query
-							if ( !( root instanceof SqmCorrelation<?, ?> ) || !contains( fromClause.getRoots(), root ) ) {
+							final int correlationIndex = root.isCorrelated() ? indexOf( fromClause.getRoots(), root ) : -1;
+							if ( correlationIndex < 0 ) {
 								validateAsRootOnParentQueryClosure( pathRoot, root,
 										processingState.getParentProcessingState() );
+							}
+							else if ( joinIndex < correlationIndex && !pathRoot.isCorrelated() ) {
+								// An outer alias is already in scope, but the alias of a join on it
+								// must be declared before this root and its ON clause.
+								final var roots = new ArrayList<>( fromClause.getRoots() );
+								roots.add( correlationIndex, roots.remove( joinIndex ) );
+								fromClause.setRoots( roots );
 							}
 							return;
 						}
@@ -92,7 +101,7 @@ public class QualifiedJoinPredicatePathConsumer extends BasicDotIdentifierConsum
 						// If we are in a subquery, the "foreign" from element could be one of the subquery roots,
 						// which is totally fine. The aim of this check is to prevent uses of different "spaces"
 						// i.e. `from A a, B b join b.id = a.id` would be illegal
-						if ( fromClause != null && contains( fromClause.getRoots(), root ) ) {
+						if ( fromClause != null && indexOf( fromClause.getRoots(), root ) >= 0 ) {
 							super.validateAsRoot( pathRoot );
 							return;
 						}
@@ -110,13 +119,13 @@ public class QualifiedJoinPredicatePathConsumer extends BasicDotIdentifierConsum
 				);
 			}
 
-			private boolean contains(List<SqmRoot<?>> roots, SqmRoot<?> root) {
-				for ( SqmRoot<?> sqmRoot : roots ) {
-					if ( sqmRoot == root ) {
-						return true;
+			private int indexOf(List<SqmRoot<?>> roots, SqmRoot<?> root) {
+				for ( int i = 0; i < roots.size(); i++ ) {
+					if ( roots.get( i ) == root ) {
+						return i;
 					}
 				}
-				return false;
+				return -1;
 			}
 		};
 	}

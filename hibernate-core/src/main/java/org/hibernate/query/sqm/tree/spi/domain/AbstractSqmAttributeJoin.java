@@ -11,8 +11,10 @@ import org.hibernate.query.sqm.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.spi.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.spi.SqmJoinType;
+import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
 import org.hibernate.query.sqm.tree.spi.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.spi.from.SqmFrom;
+import org.hibernate.query.sqm.tree.spi.from.SqmRoot;
 import org.hibernate.query.sqm.tree.spi.from.SqmTreatedAttributeJoin;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -33,6 +35,32 @@ public abstract class AbstractSqmAttributeJoin<L, R>
 
 	private final boolean implicitJoin;
 	private boolean fetchJoin;
+	private @Nullable SqmRoot<?> declaringRoot;
+
+	/**
+	 * An HQL join on an outer path belongs to the local join chain. Its attribute
+	 * and foreign key are still resolved against the correlated left-hand side.
+	 */
+	public void setDeclaringRoot(@Nonnull SqmRoot<?> root) {
+		declaringRoot = root;
+	}
+
+	public @Nullable SqmRoot<?> getDeclaringRoot() {
+		return declaringRoot;
+	}
+
+	@Override
+	public @Nonnull SqmRoot<?> findRoot() {
+		if ( this instanceof SqmCorrelation<?, ?> correlation ) {
+			return correlation.getCorrelatedRoot();
+		}
+		return declaringRoot == null ? getLhs().findRoot() : declaringRoot;
+	}
+
+	protected void copyTo(@Nonnull AbstractSqmAttributeJoin<L, R> target, @Nonnull SqmCopyContext context) {
+		super.copyTo( target, context );
+		target.declaringRoot = declaringRoot == null ? null : declaringRoot.copy( context );
+	}
 
 	protected AbstractSqmAttributeJoin(
 			@Nonnull SqmFrom<?, L> lhs,

@@ -9,6 +9,7 @@ import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
 import org.hibernate.query.sqm.tree.spi.SqmJoinType;
 import org.hibernate.query.sqm.tree.spi.from.SqmEntityJoin;
+import org.hibernate.query.sqm.tree.spi.from.SqmFrom;
 import org.hibernate.query.sqm.tree.spi.from.SqmRoot;
 
 import org.antlr.v4.runtime.Token;
@@ -126,41 +127,20 @@ public class SqmTreeCreationHelper {
 	 *
 	 * @apiNote Used when {@linkplain JpaCompliance#isJpaQueryComplianceEnabled() JPA compliance} is enabled
 	 */
-	public static <E> void handleRootAsCrossJoin(
-			HqlParser.EntityWithJoinsContext entityWithJoinsContext,
-			SqmRoot<E> sqmPrimaryRoot,
+	public static <L, R> void handleRootAsCrossJoin(
+			SqmFrom<?, L> primaryFrom,
+			SqmRoot<R> sqmRoot,
 			SemanticQueryBuilder<?> sqmBuilder) {
-		final var fromRootContext = (HqlParser.RootEntityContext) entityWithJoinsContext.fromRoot();
-
-		//noinspection unchecked
-		final SqmRoot<E> sqmRoot = (SqmRoot<E>) fromRootContext.accept( sqmBuilder );
-
-//		SqmTreeCreationLogger.LOGGER.tracef( "Handling secondary root path as cross-join - %s", sqmRoot.getEntityName() );
-
-		final SqmEntityJoin<E,E> pseudoCrossJoin = new SqmEntityJoin<>(
+		final var pseudoCrossJoin = new SqmEntityJoin<>(
 				sqmRoot.getManagedType(),
-				extractAlias( fromRootContext.variable(), sqmBuilder ),
+				sqmRoot.getExplicitAlias(),
 				SqmJoinType.CROSS,
-				sqmPrimaryRoot
+				(SqmRoot<L>) primaryFrom.findRoot()
 		);
-		sqmPrimaryRoot.addSqmJoin( pseudoCrossJoin );
+		primaryFrom.addSqmJoin( pseudoCrossJoin );
 
 		sqmBuilder.getProcessingStateStack().getCurrent().getPathRegistry()
 				.replace( pseudoCrossJoin, sqmRoot );
-
-		final int size = entityWithJoinsContext.getChildCount();
-		for ( int i = 1; i < size; i++ ) {
-			final ParseTree parseTree = entityWithJoinsContext.getChild( i );
-			if ( parseTree instanceof HqlParser.CrossJoinContext crossJoinContext ) {
-				sqmBuilder.consumeCrossJoin( crossJoinContext, sqmPrimaryRoot );
-			}
-			else if ( parseTree instanceof HqlParser.JoinContext joinContext ) {
-				sqmBuilder.consumeJoin( joinContext, sqmPrimaryRoot );
-			}
-			else if ( parseTree instanceof HqlParser.JpaCollectionJoinContext collectionJoinContext ) {
-				sqmBuilder.consumeJpaCollectionJoin( collectionJoinContext, sqmPrimaryRoot );
-			}
-		}
 	}
 
 	/**

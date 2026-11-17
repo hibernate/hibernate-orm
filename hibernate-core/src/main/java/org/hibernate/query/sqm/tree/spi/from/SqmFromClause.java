@@ -111,7 +111,7 @@ public class SqmFromClause implements Serializable, SqmCacheable {
 				final SqmFrom<?, ?> correlation = root instanceof SqmCorrelatedRootJoin<?> rootJoin
 						? rootJoin.getCorrelatedJoin()
 						: root;
-				if ( !correlation.hasJoins() && !correlation.hasTreats() ) {
+				if ( correlation.getDeclaredJoins().isEmpty() && !correlation.hasTreats() ) {
 					continue;
 				}
 				if ( !hasRoot ) {
@@ -161,7 +161,7 @@ public class SqmFromClause implements Serializable, SqmCacheable {
 			appendJoins( orderedJoins, sb, false, context );
 		}
 		else {
-			appendJoins( sqmFrom.getSqmJoins(), sb, true, context );
+			appendJoins( sqmFrom.getDeclaredJoins(), sb, true, context );
 		}
 	}
 
@@ -322,7 +322,7 @@ public class SqmFromClause implements Serializable, SqmCacheable {
 			SqmRenderContext context,
 			boolean hasRoot,
 			List<SqmPredicate> predicates) {
-		for ( var join : correlation.getSqmJoins() ) {
+		for ( var join : correlation.getDeclaredJoins() ) {
 			if ( isLateral( join ) ) {
 				if ( !hasRoot ) {
 					// HQL requires a left side for JOIN LATERAL. A single row preserves cardinality.

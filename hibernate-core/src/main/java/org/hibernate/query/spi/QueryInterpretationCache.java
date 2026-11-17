@@ -57,9 +57,6 @@ public interface QueryInterpretationCache {
 	 * <p>
 	 * Note that depending on the cache strategy implementation chosen, clearing the cache might not reclaim all the
 	 * memory.
-	 * <p>
-	 * Typically, when using LIRS, clearing the cache only invalidates the entries but the outdated entries are kept in
-	 * memory until they are replaced by others. It is not considered a memory leak as the cache is bounded.
 	 */
 	void close();
 

@@ -1012,6 +1012,14 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		@Override
 		public void clear() {
 			assert segment.isHeldByCurrentThread();
+			// A reader can still enqueue a hit on a cleared entry. Mark it nonresident
+			// so that processing that hit cannot link it back into the cache.
+			for ( var entry = stackBottom(); entry != null; entry = stackBottom() ) {
+				entry.evict();
+			}
+			for ( var entry = queueFront(); entry != null; entry = queueFront() ) {
+				entry.evict();
+			}
 			int removed = 0;
 			while (accessQueue.poll() != null) {
 				removed++;

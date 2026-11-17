@@ -87,8 +87,10 @@ public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> implements Sq
 	}
 	@Override
 	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
+		hql.append( '(' );
 		hql.append( operation.getOperatorChar() );
 		operand.appendHqlString( hql, context );
+		hql.append( ')' );
 	}
 
 	@Override
@@ -108,8 +110,8 @@ public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> implements Sq
 	@Override
 	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmUnaryOperation<?> that
-				&& operation == that.getOperation()
-				&& operand.isCompatible( that.getOperand() );
+			&& operation == that.getOperation()
+			&& operand.isCompatible( that.getOperand() );
 	}
 
 	@Override

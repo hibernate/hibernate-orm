@@ -237,7 +237,10 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 	}
 
 	private static void appendQueryPart(@Nonnull SqmQueryPart<?> queryPart, @Nonnull StringBuilder sb, @Nonnull SqmRenderContext context) {
-		final boolean needsParenthesis = !queryPart.isSimpleQueryPart();
+		final boolean needsParenthesis = !queryPart.isSimpleQueryPart()
+				|| !queryPart.getSortSpecifications().isEmpty()
+				|| queryPart.getOffsetExpression() != null
+				|| queryPart.getFetchExpression() != null;
 		if ( needsParenthesis ) {
 			sb.append( '(' );
 		}

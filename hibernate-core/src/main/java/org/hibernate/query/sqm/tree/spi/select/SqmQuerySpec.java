@@ -672,12 +672,27 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 				selections.get( i ).appendHqlString( hql, context );
 			}
 		}
-		hql.append( " from" );
-		fromClause.appendHqlString( hql, context );
+		final var correlatedJoinPredicates = fromClause.appendHqlFromClause( hql, context );
 		final var wherePredicate = whereClause == null ? null : whereClause.getPredicate();
-		if ( wherePredicate != null ) {
-			hql.append( " where " );
-			wherePredicate.appendHqlString( hql, context );
+		if ( correlatedJoinPredicates.isEmpty() ) {
+			if ( wherePredicate != null ) {
+				hql.append( " where " );
+				wherePredicate.appendHqlString( hql, context );
+			}
+		}
+		else {
+			String separator = " where (";
+			for ( var joinPredicate : correlatedJoinPredicates ) {
+				hql.append( separator );
+				joinPredicate.appendHqlString( hql, context );
+				hql.append( ')' );
+				separator = " and (";
+			}
+			if ( wherePredicate != null ) {
+				hql.append( separator );
+				wherePredicate.appendHqlString( hql, context );
+				hql.append( ')' );
+			}
 		}
 		if ( !groupByClauseExpressions.isEmpty() ) {
 			hql.append( " group by " );
@@ -694,6 +709,26 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		}
 
 		super.appendHqlString( hql, context );
+	}
+
+	@Override
+	protected void appendHqlString(
+			@Nonnull SqmSortSpecification sortSpecification,
+			@Nonnull StringBuilder hql,
+			@Nonnull SqmRenderContext context) {
+		if ( sortSpecification.isIgnoreCase()
+				&& sortSpecification.getSortExpression() instanceof SqmAliasedNodeRef nodeRef
+				&& nodeRef.getNavigablePath() == null ) {
+			// HQL cannot ignore case when ordering by the position
+			// of a select item, so render the select item itself
+			final var items = selectClause.getSelectionItems();
+			final int position = nodeRef.getPosition();
+			if ( position >= 1 && position <= items.size() ) {
+				sortSpecification.appendHqlString( hql, context, items.get( position - 1 ) );
+				return;
+			}
+		}
+		super.appendHqlString( sortSpecification, hql, context );
 	}
 
 	@Internal

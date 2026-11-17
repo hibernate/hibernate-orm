@@ -16,7 +16,6 @@ import org.hibernate.query.sqm.tree.spi.SqmCacheable;
 import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
 import org.hibernate.query.sqm.tree.spi.SqmRenderContext;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
-import org.hibernate.query.sqm.tree.spi.expression.SqmDistinct;
 import org.hibernate.query.sqm.tree.spi.expression.SqmWindowFunction;
 import org.hibernate.query.sqm.tree.spi.predicate.SqmPredicate;
 import org.hibernate.sql.ast.spi.SqlAstNode;
@@ -123,24 +122,7 @@ public class SelfRenderingSqmWindowFunction<T> extends SelfRenderingSqmFunction<
 
 	@Override
 	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
-		final List<? extends SqmTypedNode<?>> arguments = getArguments();
-		hql.append( getFunctionName() );
-		hql.append( '(' );
-		int i = 1;
-		if ( !arguments.isEmpty() && arguments.get( 0 ) instanceof SqmDistinct<?> ) {
-			arguments.get( 0 ).appendHqlString( hql, context );
-			if ( arguments.size() > 1 ) {
-				hql.append( ' ' );
-				arguments.get( 1 ).appendHqlString( hql, context );
-				i = 2;
-			}
-		}
-		for ( ; i < arguments.size(); i++ ) {
-			hql.append(", ");
-			arguments.get( i ).appendHqlString( hql, context );
-		}
-
-		hql.append( ')' );
+		appendNameAndArgumentsHqlString( hql, context );
 		if ( fromFirst != null ) {
 			if ( fromFirst ) {
 				hql.append( " from first" );

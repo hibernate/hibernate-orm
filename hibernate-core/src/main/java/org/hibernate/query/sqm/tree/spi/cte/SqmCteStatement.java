@@ -342,22 +342,14 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 
 	@Override
 	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
-		if ( cteTable.getName() == null ) {
-			hql.append( "generated_" );
-		}
-		hql.append( cteTable.getCteName() );
-		hql.append( " (" );
-		final List<SqmCteTableColumn> columns = cteTable.getColumns();
-		hql.append( columns.get( 0 ).getColumnName() );
-		for ( int i = 1; i < columns.size(); i++ ) {
-			hql.append( ", " );
-			hql.append( columns.get( i ).getColumnName() );
-		}
-
-		hql.append( ") as " );
-
-		if ( getMaterialization() != CteMaterialization.UNDEFINED ) {
-			hql.append( getMaterialization() ).append( ' ' );
+		// HQL has no list of column names here: the select clause names the columns
+		hql.append( context.resolveCteName( this ) );
+		hql.append( " as " );
+		switch ( getMaterialization() ) {
+			case MATERIALIZED -> hql.append( "materialized " );
+			case NOT_MATERIALIZED -> hql.append( "not materialized " );
+			case UNDEFINED -> {
+			}
 		}
 		if ( getCteDefinition() instanceof SqmSubQuery<?> subQuery ) {
 			subQuery.appendHqlString( hql, context );
@@ -371,10 +363,10 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 		if ( getSearchClauseKind() != null ) {
 			hql.append( " search " );
 			if ( getSearchClauseKind() == CteSearchClauseKind.DEPTH_FIRST ) {
-				hql.append( " depth " );
+				hql.append( "depth" );
 			}
 			else {
-				hql.append( " breadth " );
+				hql.append( "breadth" );
 			}
 			hql.append( " first by " );
 			separator = "";

@@ -165,9 +165,10 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 			hql.append( " not" );
 		}
 		hql.append( " in (" );
-		listExpressions.get( 0 ).appendHqlString( hql, context );
-		for ( int i = 1; i < listExpressions.size(); i++ ) {
-			hql.append( ", " );
+		for ( int i = 0; i < listExpressions.size(); i++ ) {
+			if ( i > 0 ) {
+				hql.append( ", " );
+			}
 			listExpressions.get( i ).appendHqlString( hql, context );
 		}
 		hql.append( ')' );

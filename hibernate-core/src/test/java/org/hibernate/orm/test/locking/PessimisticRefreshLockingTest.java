@@ -68,11 +68,16 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import static jakarta.persistence.PessimisticLockScope.NORMAL;
+import static java.sql.Connection.TRANSACTION_READ_COMMITTED;
+import static java.sql.Connection.TRANSACTION_REPEATABLE_READ;
+import static java.sql.Connection.TRANSACTION_SERIALIZABLE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.LockMode.PESSIMISTIC_FORCE_INCREMENT;
 import static org.hibernate.LockMode.PESSIMISTIC_READ;
 import static org.hibernate.LockMode.PESSIMISTIC_WRITE;
 import static org.hibernate.cfg.JdbcSettings.DIALECT;
+import static org.hibernate.orm.test.locking.ConcurrencyConfiguration.TRANSACTION_H2_SNAPSHOT_ISOLATION;
+import static org.hibernate.orm.test.locking.ConcurrencyConfiguration.TRANSACTION_SQL_SERVER_SNAPSHOT_ISOLATION;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.AdditionalAnswers.delegatesTo;
@@ -111,12 +116,20 @@ class PessimisticRefreshLockingTest implements ServiceRegistryProducer {
 	}
 
 	static Stream<Arguments> configurations() {
-		final var standard = Stream.of( Arguments.of( false, 2 ), Arguments.of( true, 2 ),
-				Arguments.of( null, 2 ), Arguments.of( null, 4 ), Arguments.of( null, 8 ) );
+		final var standard = Stream.of(
+				Arguments.of( false, TRANSACTION_READ_COMMITTED ),
+				Arguments.of( true, TRANSACTION_READ_COMMITTED ),
+				Arguments.of( null, TRANSACTION_READ_COMMITTED ),
+				Arguments.of( null, TRANSACTION_REPEATABLE_READ ),
+				Arguments.of( null, TRANSACTION_SERIALIZABLE )
+		);
 		final var dialect = DialectContext.getDialect();
-		return PessimisticRefreshSnapshotTest.isH2( dialect ) ? Stream.concat( standard, Stream.of( Arguments.of( null, 6 ) ) )
-				: PessimisticRefreshSnapshotTest.isSQLServer( dialect ) ? Stream.concat( standard, Stream.of( Arguments.of( null, 4096 ) ) )
-				: standard;
+		return PessimisticRefreshSnapshotTest.isH2( dialect )
+				? Stream.concat( standard, Stream.of( Arguments.of( null, TRANSACTION_H2_SNAPSHOT_ISOLATION ) ) )
+				: PessimisticRefreshSnapshotTest.isSQLServer( dialect )
+						? Stream.concat( standard, Stream.of( Arguments.of( null,
+						TRANSACTION_SQL_SERVER_SNAPSHOT_ISOLATION ) ) )
+						: standard;
 	}
 
 	@Override
@@ -190,7 +203,7 @@ class PessimisticRefreshLockingTest implements ServiceRegistryProducer {
 		// the pool. Test transactions and bootstrap metadata remain SERIALIZABLE.
 		scope.inSession( session -> session.doWork( connection -> {
 			final int originalIsolation = connection.getTransactionIsolation();
-			connection.setTransactionIsolation( java.sql.Connection.TRANSACTION_READ_COMMITTED );
+			connection.setTransactionIsolation( TRANSACTION_READ_COMMITTED );
 			try {
 				try ( var fixtureSession = scope.getSessionFactory().withOptions().connection( connection ).openSession() ) {
 					TransactionUtil.inTransaction( (SessionImplementor) fixtureSession, action );
@@ -415,8 +428,8 @@ class PessimisticRefreshLockingTest implements ServiceRegistryProducer {
 	private void assumeSkipLockedIsolationSupported(SessionFactoryScope scope) {
 		assumeTrue( !PessimisticRefreshSnapshotTest.isSQLServer(
 				scope.getSessionFactory().getJdbcServices().getDialect() )
-				|| isolation == java.sql.Connection.TRANSACTION_READ_COMMITTED
-				|| isolation == java.sql.Connection.TRANSACTION_REPEATABLE_READ,
+				|| isolation == TRANSACTION_READ_COMMITTED
+				|| isolation == TRANSACTION_REPEATABLE_READ,
 				"SQL Server READPAST requires READ COMMITTED or REPEATABLE READ isolation" );
 	}
 

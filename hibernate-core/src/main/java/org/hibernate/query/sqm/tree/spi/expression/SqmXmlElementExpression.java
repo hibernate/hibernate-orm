@@ -54,7 +54,7 @@ public class SqmXmlElementExpression extends SelfRenderingSqmFunction<String> im
 	@Override
 	public SqmXmlElementExpression attribute(@Nonnull String attributeName, @Nonnull Expression<?> expression) {
 		//noinspection unchecked
-		final List<SqmTypedNode<?>> arguments = (List<SqmTypedNode<?>>) getArguments();
+		final var arguments = (List<SqmTypedNode<?>>) getArguments();
 		if ( arguments.size() > 1 && arguments.get( 1 ) instanceof SqmXmlAttributesExpression attributesExpression ) {
 			attributesExpression.attribute( attributeName, expression );
 		}
@@ -74,7 +74,7 @@ public class SqmXmlElementExpression extends SelfRenderingSqmFunction<String> im
 	@Override
 	public SqmXmlElementExpression content(@Nonnull List<? extends Expression<?>> expressions) {
 		//noinspection unchecked
-		final List<SqmTypedNode<?>> arguments = (List<SqmTypedNode<?>>) getArguments();
+		final var arguments = (List<SqmTypedNode<?>>) getArguments();
 		int contentIndex = 1;
 		if ( arguments.size() > contentIndex ) {
 			if ( arguments.get( contentIndex ) instanceof SqmXmlAttributesExpression ) {
@@ -98,7 +98,7 @@ public class SqmXmlElementExpression extends SelfRenderingSqmFunction<String> im
 			return existing;
 		}
 		final List<SqmTypedNode<?>> arguments = new ArrayList<>( getArguments().size() );
-		for ( SqmTypedNode<?> argument : getArguments() ) {
+		for ( var argument : getArguments() ) {
 			arguments.add( argument.copy( context ) );
 		}
 		return context.registerCopy(
@@ -118,7 +118,7 @@ public class SqmXmlElementExpression extends SelfRenderingSqmFunction<String> im
 
 	@Override
 	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
-		final List<? extends SqmTypedNode<?>> arguments = getArguments();
+		final var arguments = getArguments();
 		hql.append( "xmlelement(name " );
 		arguments.get( 0 ).appendHqlString( hql, context );
 		for ( int i = 1; i < arguments.size(); i++ ) {

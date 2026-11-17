@@ -165,6 +165,21 @@ public final class QuotingHelper {
 		return sb.toString();
 	}
 
+	/**
+	 * Append the given name as a quoted HQL identifier.
+	 */
+	public static void appendQuotedIdentifier(StringBuilder sb, String name) {
+		sb.append( '`' );
+		for ( int i = 0; i < name.length(); i++ ) {
+			final char c = name.charAt( i );
+			if ( c == '`' || c == '\\' ) {
+				sb.append( '\\' );
+			}
+			sb.append( c );
+		}
+		sb.append( '`' );
+	}
+
 	public static void appendDoubleQuoteEscapedString(StringBuilder sb, String text) {
 		appendWithDoubleEscaping( sb, text, '"' );
 	}

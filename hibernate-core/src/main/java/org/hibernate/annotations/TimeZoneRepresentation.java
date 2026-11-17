@@ -30,6 +30,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /// preservation is enabled, [TimeZoneStorage] is rejected.
 ///
 /// @see TimeZoneColumn
+/// @see TimeZoneAdjustment
 ///
 /// @since 8.1
 /// @author Steve Ebersole

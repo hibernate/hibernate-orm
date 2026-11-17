@@ -42,7 +42,7 @@ class TemporalPreservationBootMatrixTests {
 		final List<Cell> cells = TemporalPreservationBootMatrix.bootWithPolicies(
 				Map.of( MappingSettings.TEMPORAL_PRESERVATION, true )
 		);
-		assertThat( cells ).hasSize( TemporalPreservationBootMatrix.JAVA_TIME_CLASSES.size() + 6 );
+		assertThat( cells ).hasSize( TemporalPreservationBootMatrix.JAVA_TIME_CLASSES.size() + 8 );
 		record( cells );
 
 		final String dialect = cells.get( 0 ).dialect();

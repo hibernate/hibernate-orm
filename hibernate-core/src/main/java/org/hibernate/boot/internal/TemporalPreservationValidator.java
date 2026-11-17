@@ -13,6 +13,7 @@ import org.hibernate.annotations.TimeZoneRepresentation;
 import org.hibernate.annotations.TimeZoneStorage;
 import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.boot.model.internal.TemporalPolicyResolver;
+import org.hibernate.boot.model.internal.TimeZoneStorageHelper;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.type.spi.TemporalPreservation.Part;
@@ -28,6 +29,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.type.descriptor.converter.internal.TimeZoneAdjustmentConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.ZoneIdJavaType;
 import org.hibernate.type.descriptor.java.ZoneOffsetJavaType;
@@ -63,7 +65,7 @@ import static org.hibernate.cfg.MappingSettings.TIMEZONE_DEFAULT_STORAGE;
 /// Time values stored in a single column, and `@TimeZoneStorage`, in favor of
 /// `@TimeZoneRepresentation`. A `@TemporalPreservationPolicy` or
 /// `@TimeZoneRepresentation` on a field or property it does not apply to is
-/// rejected too.
+/// rejected too, as is a `@TimeZoneAdjustment` on one it is not applied to.
 ///
 /// @see org.hibernate.cfg.MappingSettings#TEMPORAL_PRESERVATION
 ///
@@ -112,6 +114,13 @@ final class TemporalPreservationValidator {
 		final String entityName = entityBinding.getEntityName();
 		final String className = entityBinding.getClassName();
 		if ( entityBinding.getIdentifier() != null ) {
+			if ( entityBinding.getIdentifierProperty() != null ) {
+				checkDeclarations(
+						entityBinding.getIdentifier(),
+						entityName + ".<id>",
+						findMember( className, entityBinding.getIdentifierProperty().getName() )
+				);
+			}
 			validateValue( entityBinding.getIdentifier(), entityName + ".<id>", null, null, false );
 		}
 		if ( entityBinding.getIdentifierMapper() != null ) {
@@ -149,8 +158,8 @@ final class TemporalPreservationValidator {
 		if ( value == null || !visited.add( value ) ) {
 			return;
 		}
-		if ( attributeName != null && !acceptsDeclarations( value ) ) {
-			rejectDeclarations( findMember( ownerClassName, attributeName ), role );
+		if ( attributeName != null ) {
+			checkDeclarations( value, role, findMember( ownerClassName, attributeName ) );
 		}
 		if ( value instanceof BasicValue basicValue ) {
 			final var elementAggregate = aggregateOfElements( basicValue );
@@ -193,6 +202,25 @@ final class TemporalPreservationValidator {
 		// associations refer to identifiers, which are validated with their own entity
 	}
 
+	/// Reject a declaration on the field or property which is not applied to its value.
+	private static void checkDeclarations(Value value, String role, MemberDetails member) {
+		if ( !acceptsDeclarations( value ) ) {
+			rejectDeclarations( member, role );
+		}
+		if ( member != null
+				&& TimeZoneStorageHelper.declaresTimeZoneAdjustment( member )
+				&& !isAdjusted( value )
+				// which has a message of its own
+				&& !( value instanceof Component component && isStoredInTwoColumns( component ) ) ) {
+			throw new MappingException(
+					"Mapping '" + role + "' is not supported: with '" + TEMPORAL_PRESERVATION + "' enabled,"
+					+ " @TimeZoneAdjustment applies only to an OffsetDateTime or ZonedDateTime stored in a"
+					+ " single column, which is not an identifier or version and has no converter or custom"
+					+ " type, which this is not"
+			);
+		}
+	}
+
 	private static boolean isStoredInTwoColumns(Component component) {
 		return component.getTypeName() != null && TIME_ZONE_COLUMN_TYPES.containsKey( component.getTypeName() );
 	}
@@ -226,6 +254,19 @@ final class TemporalPreservationValidator {
 		}
 		else {
 			return false;
+		}
+	}
+
+	/// Whether the zone declared with `@TimeZoneAdjustment` is applied to the
+	/// value, or to each element of it.
+	private static boolean isAdjusted(Value value) {
+		if ( value instanceof BasicValue basicValue ) {
+			final var converter = basicValue.getJpaAttributeConverterDescriptor();
+			return converter != null
+				&& TimeZoneAdjustmentConverter.class.isAssignableFrom( converter.getAttributeConverterClass() );
+		}
+		else {
+			return value instanceof Collection collection && isAdjusted( collection.getElement() );
 		}
 	}
 
@@ -308,6 +349,15 @@ final class TemporalPreservationValidator {
 		}
 
 		// an offset column does not hold the zone of a ZonedDateTime
+		if ( member != null && TimeZoneStorageHelper.resolveTimeZoneAdjustment( member ) != null ) {
+			throw new MappingException(
+					"Mapping '" + role + "' of type '" + javaClass.getName() + "' is not supported: with '"
+					+ TEMPORAL_PRESERVATION + "' enabled, a zone declared with @TimeZoneAdjustment cannot be"
+					+ " combined with a second column, which stores the zone or offset of each value; remove"
+					+ " @TimeZoneRepresentation(COLUMN), or cancel the declared zone with"
+					+ " @TimeZoneAdjustment(TimeZoneAdjustment.NONE)"
+			);
+		}
 		final var selection = TemporalPolicyResolver.resolve( member, javaClass, settings, role );
 		if ( javaClass == ZonedDateTime.class
 				&& !zoneIdColumn
@@ -407,7 +457,10 @@ final class TemporalPreservationValidator {
 
 		// what an OffsetDateTime or ZonedDateTime must preserve is a matter of policy
 		final var selection = TemporalPolicyResolver.resolve( basicValue.getMemberDetails(), javaClass, settings, role );
-		final boolean normalized = selection.policy() == TemporalPreservationPolicy.Type.NORMALIZED;
+		// with a zone declared by @TimeZoneAdjustment, the zone and offset are part of
+		// the mapping, and a value which has another is rejected or converted when written
+		final boolean adjusted = isAdjusted( basicValue );
+		final boolean normalized = adjusted || selection.policy() == TemporalPreservationPolicy.Type.NORMALIZED;
 		final String problem = TemporalPreservationGuard.unsupportedReason(
 				dialect,
 				javaType,
@@ -424,8 +477,11 @@ final class TemporalPreservationValidator {
 			throw unsupported(
 					role,
 					javaType,
-					problem + ", which the " + selection.policy() + " policy selected by " + selection.source()
-						+ " requires"
+					problem + ", which "
+						+ ( adjusted
+								? "is required even with a zone declared by @TimeZoneAdjustment"
+								: "the " + selection.policy() + " policy selected by " + selection.source()
+									+ " requires" )
 						+ ( normalizedWouldDo
 								? "; the instant is preserved, so the mapping is supported with the NORMALIZED"
 									+ " policy, selected with @TemporalPreservationPolicy or '"

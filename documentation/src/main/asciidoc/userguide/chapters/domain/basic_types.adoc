@@ -894,6 +894,7 @@ An `Outcome` of `QUALIFIED` means that the mapping is accepted, and `REJECTED` t
 An `Instant basis` of `NATIVE` means that the column type itself denotes an instant.
 A row for a Java type alone is for an attribute with nothing declared.
 A row marked `INLINE` or `COLUMN` is for that representation, and a row marked `NORMALIZED` for that policy.
+A row marked `ADJUSTED` is for an attribute whose zone is declared with `@TimeZoneAdjustment`, of which the column need only keep the instant.
 A row for a mapping with two columns names both JDBC types and both column types.
 
 [%header,format=csv]
@@ -950,6 +951,7 @@ and stores it in a single column where that column keeps the whole value, and in
 
 The columns of a mapping therefore depend on the database, and what is preserved does not.
 Two annotations make either decision explicit: where the offset or zone is stored, and what must be preserved.
+A third declares the zone of an attribute once and for all, so that it need not be stored.
 
 *Where the offset or zone is stored*
 
@@ -1042,9 +1044,45 @@ The policy governs what a mapped attribute must preserve.
 A value which is not being written to or read from a mapped attribute, such as a query parameter compared with a column,
 need only be exchanged with the database without changing its instant.
 
+*A zone fixed by the mapping*
+
+Often every value of an attribute is in the same zone: timestamps kept in UTC, or opening hours in the zone of the shop.
+`@TimeZoneAdjustment` declares that zone, as a zone identifier or a fixed offset:
+
+[source,java]
+----
+@TimeZoneAdjustment("Europe/Paris")
+ZonedDateTime opensAt;
+
+@TimeZoneAdjustment("UTC")
+OffsetDateTime recordedAt;
+----
+
+The zone is then part of the mapping and is not stored.
+The value is stored in a single column on every database, of which only the instant is required, and is always read back in the declared zone.
+For an `OffsetDateTime`, that is the offset which the zone has at the instant of the value, so `+02:00` in summer and `+01:00` in winter for `Europe/Paris`.
+
+What happens to a value which is written in another zone or offset depends on the policy of the attribute:
+
+`VALUE`:: It is rejected with a `TemporalPreservationException`, since its own zone or offset would be lost.
+The same goes for a value bound to a query parameter which is compared with the attribute.
+`NORMALIZED`:: It is converted to the declared zone, keeping its instant.
+With a declared zone, what is read back under this policy no longer depends on the database.
+
+A declared zone also applies to the elements of a collection, where a second column is not available.
+It cannot be combined with `@TimeZoneRepresentation(COLUMN)`, which stores the zone or offset of each value, and the combination is rejected.
+`@TimeZoneAdjustment(TimeZoneAdjustment.NONE)` cancels a zone declared on the class, package or module.
+
+A zone declared on a class, package or module is not applied to an identifier or a version,
+nor to an attribute with an `AttributeConverter` or a custom type, which are held to their policy as usual.
+Declared on such a field or property itself, it is rejected.
+
+The declared zone is applied by Hibernate, to values on their way to and from the database.
+An expression evaluated by the database, such as `extract(hour from ...)`, sees the stored instant, in whatever zone the database expresses it.
+
 *How the annotations are resolved*
 
-Both annotations may be placed on a field or property, on a class, on a package, or on a module.
+The three annotations may be placed on a field or property, on a class, on a package, or on a module.
 For an attribute, each is taken from the first of the following which declares it:
 
 . the field or property;
@@ -1054,9 +1092,9 @@ For an attribute, each is taken from the first of the following which declares i
 
 On a class, package or module, a policy naming the type of the attribute wins over one naming no types.
 
-Both apply to `OffsetDateTime` and `ZonedDateTime` only.
-On a field or property of any other type, either is rejected when temporal preservation is enabled.
-When it is disabled, neither has any effect, and neither is checked.
+All three apply to `OffsetDateTime` and `ZonedDateTime` only.
+On a field or property of any other type, each is rejected when temporal preservation is enabled.
+When it is disabled, none has any effect, and none is checked.
 
 `@TimeZoneStorage` and the setting `hibernate.timezone.default_storage` are not supported with temporal preservation enabled, and are rejected.
 Each of their values selects where the offset is stored, in which time zone values are expressed and which column type is used, all at once,
@@ -1096,6 +1134,12 @@ An example is a `LocalDate` mapped with `@JdbcTypeCode(Types.DATE)`, which conve
 
 |`@TemporalPreservationPolicy` or `@TimeZoneRepresentation` on a field or property whose stored value is not an `OffsetDateTime` or `ZonedDateTime`, where it would otherwise be silently ignored
 |When the `SessionFactory` is built
+
+|`@TimeZoneAdjustment` on a field or property it is not applied to, or combined with `@TimeZoneRepresentation(COLUMN)`
+|When the `SessionFactory` is built
+
+|A value written to an attribute whose zone is declared with `@TimeZoneAdjustment`, or bound to a query parameter compared with it, when the value is in another zone or offset and the policy is `VALUE`
+|When the value is bound
 
 |A column of a native SQL query result with a date or time type, when no Java type is given for it.
 Name the type, as in `createNativeQuery(sql, LocalDateTime.class)` or with `addScalar()`

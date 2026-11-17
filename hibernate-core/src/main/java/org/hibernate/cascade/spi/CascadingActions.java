@@ -201,8 +201,14 @@ public class CascadingActions {
 				if ( context.containsKey( child ) && context.isOperatedOn( child ) ) {
 					EVENT_LISTENER_LOGGER.alreadyInMergeProcess();
 				}
-				else {
+				else if ( isTransient( childEntityName, child, null, session ) ) {
+					// A transient @MapsId parent must be persisted first, so that
+					// its identifier is available for the derived id of the child
 					session.persist( childEntityName, child );
+				}
+				else {
+					// A detached or already persistent parent is merged as usual
+					session.merge( childEntityName, child, context );
 				}
 			}
 			else {

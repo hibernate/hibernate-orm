@@ -26,6 +26,10 @@ import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
 import org.hibernate.sql.ast.spi.query.expression.Summarization;
 import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroupJoin;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.ast.spi.query.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.InArrayPredicate;
@@ -41,6 +45,45 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 
 	public HSQLSqlAstTranslator(SqlAstTranslationRequest<? extends Statement, T> request) {
 		super( request );
+	}
+
+	@Override
+	protected String renderFromClauseRoot(TableGroup root, String separator) {
+		if ( !separator.isEmpty() && root.isInitialized() && !root.isVirtual()
+				&& containsRightOrFullJoin( root.getTableGroupJoins() ) && followsCorrelatedPath( root ) ) {
+			// HSQLDB otherwise treats the preceding comma as part of this join's left operand.
+			appendSql( separator );
+			appendSql( OPEN_PARENTHESIS );
+			super.renderFromClauseRoot( root, NO_SEPARATOR );
+			appendSql( CLOSE_PARENTHESIS );
+			return COMMA_SEPARATOR;
+		}
+		return super.renderFromClauseRoot( root, separator );
+	}
+
+	private boolean followsCorrelatedPath(TableGroup root) {
+		if ( getQueryPartStack().getCurrent() instanceof QuerySpec query && !query.isRoot() ) {
+			for ( var preceding : query.getFromClause().getRoots() ) {
+				if ( preceding == root ) {
+					break;
+				}
+				// Joins of a correlated path enter the SQL FROM clause as roots with a parent path.
+				if ( preceding.getNavigablePath().getParent() != null ) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private static boolean containsRightOrFullJoin(List<TableGroupJoin> joins) {
+		for ( var join : joins ) {
+			if ( join.getJoinType() == SqlAstJoinType.RIGHT || join.getJoinType() == SqlAstJoinType.FULL
+					|| containsRightOrFullJoin( join.getJoinedGroup().getTableGroupJoins() ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override

@@ -1,7 +1,10 @@
 package org.hibernate.query.sqm.tree.spi.domain;
 
+import java.util.List;
+
 import jakarta.annotation.Nonnull;
 import org.hibernate.query.sqm.tree.spi.from.SqmFrom;
+import org.hibernate.query.sqm.tree.spi.from.SqmJoin;
 import org.hibernate.query.sqm.tree.spi.from.SqmRoot;
 
 /**
@@ -17,6 +20,17 @@ import org.hibernate.query.sqm.tree.spi.from.SqmRoot;
 public interface SqmCorrelation<L,R> extends SqmFrom<L,R>, SqmPathWrapper<R,R> {
 	@Nonnull
 	SqmRoot<L> getCorrelatedRoot();
+
+	@Override
+	@Nonnull
+	default List<SqmJoin<R, ?>> getDeclaredJoins() {
+		final var joins = getSqmJoins();
+		return joins.isEmpty() ? joins
+				: joins.stream()
+						.filter( join -> !(join instanceof AbstractSqmAttributeJoin<?, ?> attributeJoin)
+								|| attributeJoin.getDeclaringRoot() == null )
+						.toList();
+	}
 
 	@Override
 	@Nonnull

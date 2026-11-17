@@ -58,7 +58,7 @@ public interface SqmFrom<L, R> extends SqmVisitableNode, SqmPath<R>, JpaFrom<L, 
 	}
 
 	default boolean containsOnlyInnerJoins() {
-		for ( var sqmJoin : getSqmJoins() ) {
+		for ( var sqmJoin : getDeclaredJoins() ) {
 			if ( sqmJoin.getSqmJoinType() != SqmJoinType.INNER ) {
 				return false;
 			}
@@ -75,6 +75,12 @@ public interface SqmFrom<L, R> extends SqmVisitableNode, SqmPath<R>, JpaFrom<L, 
 	 */
 	@Nonnull
 	List<SqmJoin<R,?>> getSqmJoins();
+
+	/** The joins on this path that are declared in its own FROM item. */
+	@Nonnull
+	default List<SqmJoin<R, ?>> getDeclaredJoins() {
+		return getSqmJoins();
+	}
 
 	/**
 	 * Add an associated join

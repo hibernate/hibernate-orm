@@ -25,9 +25,6 @@ import org.hibernate.query.sqm.tree.spi.select.SqmAliasedNode;
 import org.hibernate.query.sqm.tree.spi.select.SqmSubQuery;
 import org.hibernate.spi.NavigablePath;
 
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.Root;
-
 /**
  * Container for indexing needed while building an SQM tree.
  *
@@ -205,7 +202,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 
 		var parentProcessingState = associatedProcessingState.getParentProcessingState();
 		if ( searchParent && parentProcessingState != null ) {
-			X parentRegistered;
+			SqmFrom<?, ?> parentRegistered;
 			do {
 				parentRegistered =
 						parentProcessingState.getPathRegistry()
@@ -215,7 +212,8 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 			while (parentProcessingState != null && parentRegistered == null);
 			if ( parentRegistered != null ) {
 				// If a parent query contains the alias, we need to create a correlation on the subquery
-				final var correlated = correlate( parentRegistered );
+				final var subquery = (SqmSubQuery<?>) associatedProcessingState.getProcessingQuery();
+				final var correlated = subquery.correlate( parentRegistered );
 				register( correlated );
 				//noinspection unchecked
 				return (X) correlated;
@@ -231,19 +229,6 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 			}
 		}
 		return null;
-	}
-
-	private <X extends SqmFrom<?, ?>> SqmFrom<?, ?> correlate(X parentRegistered) {
-		final var selectQuery = (SqmSubQuery<?>) associatedProcessingState.getProcessingQuery();
-		if ( parentRegistered instanceof Root<?> root ) {
-			return selectQuery.correlate( root );
-		}
-		else if ( parentRegistered instanceof Join<?, ?> join ) {
-			return selectQuery.correlate( join );
-		}
-		else {
-			throw new UnsupportedOperationException( "Can't correlate from node: " + parentRegistered );
-		}
 	}
 
 	@Override

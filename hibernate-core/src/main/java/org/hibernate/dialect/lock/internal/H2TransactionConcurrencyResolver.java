@@ -11,6 +11,8 @@ import static java.sql.Connection.*;
 /// @since 8.0
 /// @author Steve Ebersole
 public final class H2TransactionConcurrencyResolver extends AbstractTransactionConcurrencyResolver {
+
+	public static final int TRANSACTION_SNAPSHOT_ISOLATION = 6;
 	public static final H2TransactionConcurrencyResolver INSTANCE = new H2TransactionConcurrencyResolver();
 
 	private H2TransactionConcurrencyResolver() {
@@ -40,16 +42,16 @@ public final class H2TransactionConcurrencyResolver extends AbstractTransactionC
 
 	@Override
 	protected int snapshotIsolation() {
-		return 6;
+		return TRANSACTION_SNAPSHOT_ISOLATION;
 	}
 
 	@Override
 	protected boolean knownIsolation(Integer isolation) {
-		return super.knownIsolation( isolation ) || isolation != null && isolation == 6;
+		return super.knownIsolation( isolation ) || isolation != null && isolation == TRANSACTION_SNAPSHOT_ISOLATION;
 	}
 
 	@Override
 	protected boolean stableReads(Integer isolation) {
-		return super.stableReads( isolation ) || isolation != null && isolation == 6;
+		return super.stableReads( isolation ) || isolation != null && isolation == TRANSACTION_SNAPSHOT_ISOLATION;
 	}
 }

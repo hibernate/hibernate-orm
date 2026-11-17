@@ -98,6 +98,7 @@ import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.SQLGrammarException;
+import org.hibernate.exception.TransactionSerializationException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
@@ -666,6 +667,9 @@ public class HANADialect extends Dialect implements CurrentTemporalSupport, Temp
 					case 133 ->
 						// 133 - Transaction rolled back by detected deadlock
 							new LockAcquisitionException( message, sqlException, sql );
+					case 138 ->
+						// 138 - Transaction serialization failure
+							new TransactionSerializationException( message, sqlException, sql );
 					case 257, 259, 260, 261, 262, 263 ->
 						// 259 - Invalid table name
 						// 260 - Invalid column name

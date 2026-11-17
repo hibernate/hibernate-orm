@@ -341,7 +341,8 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 							enhancedField.asDefined().getType().asErasure(),
 							constants.modifierPUBLIC
 					)
-					.intercept( fieldReader( enhancedField ) );
+					.intercept( fieldReader( enhancedField ) )
+					.annotateMethod( constants.GENERATED_ANNOTATION );
 			// Final fields will only be written to from the constructor,
 			// so there's no point trying to replace final field writes with a method call.
 			if ( !enhancedField.getFieldDescription().isFinal() ) {
@@ -352,7 +353,8 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 								constants.modifierPUBLIC
 						)
 						.withParameter( enhancedField.asDefined().getType().asErasure() )
-						.intercept( fieldWriter( enhancedField ) );
+						.intercept( fieldWriter( enhancedField ) )
+						.annotateMethod( constants.GENERATED_ANNOTATION );
 			}
 
 			if ( !compositeOwner
@@ -369,7 +371,8 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 			if ( enhancementContext.isCompositeClass( managedCtClass ) ) {
 				builder = builder.defineMethod( EnhancerConstants.TRACKER_CHANGER_NAME, void.class, constants.modifierPUBLIC )
 						.withParameter( constants.TypeString )
-						.intercept( Advice.to( CodeTemplates.CompositeOwnerDirtyCheckingHandler.class ).wrap( StubMethod.INSTANCE ) );
+						.intercept( Advice.to( CodeTemplates.CompositeOwnerDirtyCheckingHandler.class ).wrap( StubMethod.INSTANCE ) )
+						.annotateMethod( constants.GENERATED_ANNOTATION );
 			}
 		}
 

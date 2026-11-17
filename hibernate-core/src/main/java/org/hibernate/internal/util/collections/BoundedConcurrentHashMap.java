@@ -202,27 +202,6 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			this.value = value;
 		}
 
-		@Override
-		public int hashCode() {
-			int result = 17;
-			result = result * 31 + hash;
-			result = result * 31 + key.hashCode();
-			return result;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			// HashEntry is internal class, never leaks out of CHM, hence slight optimization
-			if ( this == o ) {
-				return true;
-			}
-			if ( o == null ) {
-				return false;
-			}
-			HashEntry<?, ?> other = (HashEntry<?, ?>) o;
-			return hash == other.hash && key.equals( other.key );
-		}
-
 		@SuppressWarnings("unchecked")
 		static <K, V> HashEntry<K, V>[] newArray(int i) {
 			return new HashEntry[i];
@@ -342,7 +321,8 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			try {
 				while ((e = accessQueue.poll()) != null) {
 					removed++;
-					put(e, e.value);
+					// Only refresh the exact entry seen by the reader if it is still resident.
+					replace( e, e.value );
 				}
 			}
 			finally {
@@ -475,10 +455,9 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			if ( this == o ) {
 				return true;
 			}
-			if ( o == null ) {
+			if ( !(o instanceof LIRSHashEntry<?, ?> other) ) {
 				return false;
 			}
-			HashEntry<?, ?> other = (HashEntry<?, ?>) o;
 			return hash == other.hash && key.equals( other.key );
 		}
 
@@ -1322,7 +1301,9 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 					oldValue = e.value;
 					if ( !onlyIfAbsent ) {
 						e.value = value;
-						eviction.onEntryHit( e );
+						if ( eviction.onEntryHit( e ) ) {
+							attemptEviction( true );
+						}
 					}
 				}
 				else {

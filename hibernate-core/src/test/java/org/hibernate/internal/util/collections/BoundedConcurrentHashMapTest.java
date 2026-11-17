@@ -3,6 +3,8 @@ package org.hibernate.internal.util.collections;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -10,6 +12,53 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SuppressWarnings("removal")
 class BoundedConcurrentHashMapTest {
+	@Test
+	void lateLruHitAfterClearCannotEvictALiveEntry() {
+		final var map = new BoundedConcurrentHashMap<String, Integer>( 2, 1 );
+		final var segment = map.segments[0];
+		segment.put( "old", 0, 0, false );
+		final var entrySeenByReader = segment.getFirst( 0 );
+		map.clear();
+		map.put( "a", 1 );
+		map.put( "b", 2 );
+
+		// Resume the reader after both replacement entries have been installed.
+		segment.eviction.onEntryHit( entrySeenByReader );
+		for ( int i = 0; i < BoundedConcurrentHashMap.EvictionPolicy.MAX_BATCH_SIZE; i++ ) {
+			map.put( "b", i );
+		}
+		assertEquals( 2, map.size() );
+		assertEquals( 1, map.get( "a" ) );
+	}
+
+	@Test
+	void lateLruHitDoesNotRefreshAReinsertedKey() {
+		final var map = new BoundedConcurrentHashMap<String, Integer>( 2, 1 );
+		final var segment = map.segments[0];
+		segment.put( "a", 0, 1, false );
+		final var original = segment.getFirst( 0 );
+		segment.remove( "a", 0, null );
+		segment.put( "a", 0, 2, false );
+		segment.put( "b", 1, 3, false );
+		segment.eviction.onEntryHit( original );
+		segment.put( "c", 2, 4, false );
+		assertFalse( segment.containsKey( "a", 0 ) );
+		assertTrue( segment.containsKey( "b", 1 ) );
+	}
+
+	@ParameterizedTest
+	@EnumSource
+	void updatingAnExistingEntryDrainsFullBatches(BoundedConcurrentHashMap.Eviction strategy) {
+		final int batchSize = BoundedConcurrentHashMap.EvictionPolicy.MAX_BATCH_SIZE;
+		final var map = new BoundedConcurrentHashMap<String, Integer>( batchSize, 1, strategy );
+		map.put( "key", 0 );
+		for ( int i = 1; i <= 2 * batchSize; i++ ) {
+			assertEquals( i - 1, map.put( "key", i ) );
+		}
+		assertFalse( map.segments[0].eviction.thresholdExpired() );
+		assertEquals( 2 * batchSize, map.get( "key" ) );
+	}
+
 	@Test
 	void lirsCanRefillAfterClear() {
 		final var map = new BoundedConcurrentHashMap<String, Integer>( 4, 1, BoundedConcurrentHashMap.Eviction.LIRS );

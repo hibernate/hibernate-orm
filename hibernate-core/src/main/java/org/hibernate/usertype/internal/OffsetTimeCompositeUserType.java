@@ -2,6 +2,8 @@ package org.hibernate.usertype.internal;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
 
 import java.time.OffsetTime;
 import java.time.ZoneOffset;
@@ -50,6 +52,7 @@ public class OffsetTimeCompositeUserType extends AbstractTimeZoneStorageComposit
 		return OffsetTime.class;
 	}
 
+	@Access(AccessType.FIELD)
 	public static class OffsetTimeEmbeddable {
 		@TimeZoneStorage(TimeZoneStorageType.NORMALIZE_UTC)
 		private OffsetTime utcTime;

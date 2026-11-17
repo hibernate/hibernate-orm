@@ -2,6 +2,8 @@ package org.hibernate.usertype.internal;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -47,6 +49,7 @@ public class OffsetDateTimeCompositeUserType extends AbstractTimeZoneStorageComp
 		return OffsetDateTime.class;
 	}
 
+	@Access(AccessType.FIELD)
 	public static class OffsetDateTimeEmbeddable {
 		private Instant instant;
 		@JdbcTypeCode( SqlTypes.INTEGER )

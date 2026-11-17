@@ -1346,6 +1346,20 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 	@Override
 	<T> SqmExpression<T> literal(@Nonnull T value);
 
+	/**
+	 * Creates a literal or bound parameter using the type inferred from the given
+	 * expression.
+	 */
+	@Nonnull
+	<T> SqmExpression<T> value(@Nullable T value, @Nullable SqmExpression<? extends T> typeInferenceSource);
+
+	/**
+	 * Creates a parameter bound to the given value, with the given "type inference"
+	 * information. The value is bound even when criteria values are inlined as literals.
+	 */
+	@Nonnull
+	<T> SqmExpression<T> valueParameter(@Nullable T value, @Nullable SqmExpression<? extends T> typeInferenceSource);
+
 	@Nonnull
 	@Override
 	<T> List<? extends SqmExpression<T>> literals(@Nonnull T[] values);

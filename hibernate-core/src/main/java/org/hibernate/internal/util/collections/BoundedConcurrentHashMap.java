@@ -388,7 +388,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			// we could have multiple instances of e in accessQueue; remove them all
 			int removed = 0;
 			while ( accessQueue.remove( e ) ) {
-				removed--;
+				removed++;
 			}
 			accessQueueSize.addAndGet(-removed);
 		}

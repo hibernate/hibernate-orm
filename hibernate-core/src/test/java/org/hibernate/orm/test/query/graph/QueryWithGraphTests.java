@@ -144,6 +144,64 @@ public class QueryWithGraphTests {
 	}
 
 	@Test
+	void ofTypeRejectsUnmappedNativeEntityResult(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> {
+			assertThat( session.createNativeQuery( "select id, name from Publisher" )
+					.getSingleResult() ).isInstanceOf( Object[].class );
+			assertThatIllegalArgumentException().isThrownBy( () -> session
+					.createNativeQuery( "select id, name from Publisher" )
+					.ofType( Publisher.class ) );
+		} );
+	}
+
+	@Test
+	void ofTypePreservesMappedNativeEntityAndParameters(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> {
+			final var query = session.createNativeQuery(
+					"select id, name from Publisher where id = :id", Publisher.class );
+			query.setParameter( "id", 1 );
+			query.setMaxResults( 1 );
+			final var typedQuery = query.ofType( Publisher.class );
+			assertThat( typedQuery.getMaxResults() ).isEqualTo( 1 );
+			assertThat( typedQuery.getSingleResult().name ).isEqualTo( "Me" );
+			assertThat( query.ofType( Object.class ).getSingleResult() ).isInstanceOf( Publisher.class );
+			assertThatIllegalArgumentException().isThrownBy( () -> query.ofType( String.class ) );
+		} );
+	}
+
+	@Test
+	void ofTypePreservesImplicitNativeResults(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> {
+			assertThat( session.createNativeQuery( "select name from Publisher" )
+					.ofType( String.class ).getSingleResult() ).isEqualTo( "Me" );
+			assertThat( session.createNativeQuery( "select id, name from Publisher" )
+					.ofType( Object[].class ).getSingleResult() ).containsExactly( 1, "Me" );
+			assertThat( session.createNativeQuery( "select id, name from Publisher" )
+					.ofType( Object.class ).getSingleResult() ).isInstanceOf( Object[].class );
+		} );
+	}
+
+	@Test
+	void ofTypePreservesTransformedNativeEntity(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> {
+			final var publisher = session.find( Publisher.class, 1 );
+			assertThat( session.createNativeQuery( "select id, name from Publisher" )
+					.setTupleTransformer( (tuple, aliases) -> publisher )
+					.ofType( Publisher.class ).getSingleResult() ).isSameAs( publisher );
+		} );
+	}
+
+	@Test
+	void ofTypePreservesListTransformedNativeEntity(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> {
+			final var publisher = session.find( Publisher.class, 1 );
+			assertThat( session.createNativeQuery( "select id, name from Publisher", Object.class )
+					.setResultListTransformer( list -> List.of( publisher ) )
+					.ofType( Publisher.class ).getSingleResult() ).isSameAs( publisher );
+		} );
+	}
+
+	@Test
 	void incompatibleGraphPreservesHibernateException(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			final EntityGraph<Book> bookGraph = session.createEntityGraph( Book.class );

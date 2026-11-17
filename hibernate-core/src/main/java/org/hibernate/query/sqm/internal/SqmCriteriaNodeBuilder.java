@@ -2591,9 +2591,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		throw new UnsupportedOperationException();
 	}
 
-	/**
-	 * Creates an expression for the value with the given "type inference" information
-	 */
+	@Nonnull
+	@Override
 	public <T> SqmExpression<T> value(@Nullable T value, @Nullable SqmExpression<? extends T> typeInferenceSource) {
 		if ( value instanceof SqmExpression<?> ) {
 			//noinspection unchecked
@@ -2617,7 +2616,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	public <T> SqmExpression<T> value(@Nullable T value) {
 		if ( value instanceof Duration duration ) {
-			final SqmExpression<Duration> expression = duration.getNano() == 0
+			final var expression = duration.getNano() == 0
 					? duration( duration.getSeconds(), TemporalUnit.SECOND )
 					: duration( duration.getNano() + duration.getSeconds() * 1_000_000_000, TemporalUnit.NANOSECOND );
 			//noinspection unchecked
@@ -2672,7 +2671,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 	}
 
-	private <T> ValueBindJpaCriteriaParameter<T> valueParameter(@Nullable T value, @Nullable SqmExpression<? extends T> typeInferenceSource) {
+	@Nonnull
+	@Override
+	public <T> ValueBindJpaCriteriaParameter<T> valueParameter(@Nullable T value, @Nullable SqmExpression<? extends T> typeInferenceSource) {
 		final var bindableType = resolveInferredParameterType( value, typeInferenceSource, getTypeConfiguration() );
 		if ( bindableType == null || isInstance( bindableType, value) ) {
 			@SuppressWarnings("unchecked") // safe, we just checked

@@ -1,6 +1,7 @@
 package org.hibernate.query.internal;
 
 import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Nulls;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.Order;
 import org.hibernate.query.SortDirection;
@@ -80,7 +81,8 @@ public class KeyBasedPagination {
 			final SqmPath key = keyPaths.get(i);
 			final Comparable keyValue = keyValues.get(i);
 			final List<SqmPath<?>> previousKeys = keyPaths.subList(0, i);
-			final SqmPredicate predicate = keyPredicate( key, keyValue, direction, previousKeys, keyValues, builder );
+			final SqmPredicate predicate = keyPredicate(
+					key, keyValue, direction, keyDefinition.get(i).nullPrecedence(), previousKeys, keyValues, builder );
 			restriction = restriction == null ? predicate : builder.or( restriction, predicate );
 		}
 		return restriction;
@@ -115,16 +117,27 @@ public class KeyBasedPagination {
 
 	@SuppressWarnings("rawtypes")
 	private static <C extends Comparable<? super C>> SqmPredicate keyPredicate(
-			Expression<? extends C> key, C keyValue, SortDirection direction,
+			Expression<? extends C> key, C keyValue, SortDirection direction, Nulls nullPrecedence,
 			List<SqmPath<?>> previousKeys, List<Comparable<?>> keyValues,
 			NodeBuilder builder) {
-		SqmPredicate predicate = switch ( direction ) {
-			case ASCENDING -> builder.greaterThan( key, keyValue );
-			case DESCENDING -> builder.lessThan( key, keyValue );
-		};
+		SqmPredicate predicate;
+		if ( keyValue == null ) {
+			predicate = nullPrecedence == Nulls.FIRST ? builder.isNotNull( key ) : builder.disjunction();
+		}
+		else {
+			predicate = switch ( direction ) {
+				case ASCENDING -> builder.greaterThan( key, keyValue );
+				case DESCENDING -> builder.lessThan( key, keyValue );
+			};
+			if ( nullPrecedence == Nulls.LAST ) {
+				predicate = builder.or( predicate, builder.isNull( key ) );
+			}
+		}
 		for ( int i = 0; i < previousKeys.size(); i++ ) {
 			final SqmPath keyPath = previousKeys.get(i);
-			predicate = builder.and( predicate, keyPath.equalTo( keyValues.get(i) ) );
+			final Comparable<?> previousValue = keyValues.get(i);
+			predicate = builder.and( predicate,
+					previousValue == null ? keyPath.isNull() : keyPath.equalTo( previousValue ) );
 		}
 		return predicate;
 	}

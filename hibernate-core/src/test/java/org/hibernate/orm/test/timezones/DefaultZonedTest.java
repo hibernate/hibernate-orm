@@ -17,6 +17,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -26,6 +27,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DomainModel(annotatedClasses = DefaultZonedTest.Zoned.class)
 @SessionFactory
+@DisabledIfSystemProperty(
+		named = "hibernate.type.temporal_preservation",
+		matches = "true",
+		disabledReason = "Verifies the single-column mapping used with the setting left unset"
+)
 public class DefaultZonedTest {
 
 	@Test void test(SessionFactoryScope scope) {

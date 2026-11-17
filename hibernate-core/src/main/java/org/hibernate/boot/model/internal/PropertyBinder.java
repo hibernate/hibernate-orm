@@ -1191,7 +1191,10 @@ public class PropertyBinder {
 			AnnotatedColumns actualColumns,
 			PropertyData overridingProperty) {
 
-		final var compositeUserType = resolveCompositeUserType( inferredData, buildingContext );
+		final var compositeUserType = TimeZoneStorageHelper.withinAggregate(
+				resolveCompositeUserType( inferredData, buildingContext ),
+				propertyHolder
+		);
 
 		final var memberDetails = inferredData.getAttributeMember();
 		if ( isComposite || compositeUserType != null ) {

@@ -90,6 +90,23 @@ public class TimeZoneStorageHelper {
 		return declared == null ? TimeZoneRepresentation.Type.DEFAULT : declared.value();
 	}
 
+	/// A member of an embeddable which is aggregated into a single column,
+	/// such as a `STRUCT`, JSON or XML column, cannot be given a second
+	/// column by temporal preservation, and is left as a single value.
+	///
+	/// @param compositeUserType the type selected for the member, or `null`
+	/// @return the type to use, or `null` for none
+	static Class<? extends CompositeUserType<?>> withinAggregate(
+			Class<? extends CompositeUserType<?>> compositeUserType,
+			PropertyHolder propertyHolder) {
+		return propertyHolder instanceof ComponentPropertyHolder componentHolder
+				&& componentHolder.getAggregateColumn() != null
+				&& ( compositeUserType == OffsetDateTimeOffsetCompositeUserType.class
+					|| compositeUserType == ZonedDateTimeZoneIdCompositeUserType.class )
+				? null
+				: compositeUserType;
+	}
+
 	/// Whether the member is mapped with temporal preservation enabled and
 	/// stores the zone of a `ZonedDateTime` in its second column, as opposed
 	/// to an offset.

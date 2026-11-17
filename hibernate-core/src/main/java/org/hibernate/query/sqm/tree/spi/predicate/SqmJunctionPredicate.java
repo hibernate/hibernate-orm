@@ -111,6 +111,10 @@ public class SqmJunctionPredicate extends AbstractSqmPredicate {
 
 	@Override
 	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
+		if ( predicates.isEmpty() ) {
+			hql.append( booleanOperator == BooleanOperator.AND ? "1 = 1" : "1 = 0" );
+			return;
+		}
 		final String separator =
 				switch ( booleanOperator ) {
 					case AND -> " and ";

@@ -16,6 +16,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
 import org.hamcrest.Matcher;
 
@@ -28,6 +29,11 @@ import static org.hamcrest.Matchers.isOneOf;
  */
 @DomainModel(annotatedClasses = OffsetDateTimeMappingTests.EntityWithOffsetDateTime.class)
 @SessionFactory
+@DisabledIfSystemProperty(
+		named = "hibernate.type.temporal_preservation",
+		matches = "true",
+		disabledReason = "Verifies the single-column mapping used with the setting left unset"
+)
 public class OffsetDateTimeMappingTests {
 
 	@Test

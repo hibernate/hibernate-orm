@@ -6,6 +6,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Types;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.time.OffsetTime;
 import java.time.ZoneOffset;
 import java.util.Calendar;
@@ -63,7 +65,7 @@ public class TimeUtcAsJdbcTimeJdbcType implements JdbcType {
 
 	@Override
 	public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
-		return OffsetTime.class;
+		return Time.class;
 	}
 
 	@Override
@@ -76,17 +78,19 @@ public class TimeUtcAsJdbcTimeJdbcType implements JdbcType {
 		return new BasicBinder<>( javaType, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-				final OffsetTime offsetTime = javaType.unwrap( value, OffsetTime.class, options );
-				st.setTime( index, Time.valueOf( offsetTime.withOffsetSameInstant( ZoneOffset.UTC ).toLocalTime() ),
-						Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) ) );
+				st.setTime( index, getBindValue( value, options ), Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) ) );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				final OffsetTime offsetTime = javaType.unwrap( value, OffsetTime.class, options );
-				st.setTime( name, Time.valueOf( offsetTime.withOffsetSameInstant( ZoneOffset.UTC ).toLocalTime() ),
-						Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) ) );
+				st.setTime( name, getBindValue( value, options ), Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) ) );
+			}
+
+			@Override
+			public Time getBindValue(X value, WrapperOptions options) throws SQLException {
+				final OffsetTime offsetTime = getJavaType().unwrap( value, OffsetTime.class, options );
+				return new Time( offsetTime.atDate( LocalDate.EPOCH ).toEpochSecond() * 1000 + offsetTime.getNano() / 1_000_000 );
 			}
 		};
 	}
@@ -94,22 +98,46 @@ public class TimeUtcAsJdbcTimeJdbcType implements JdbcType {
 	@Override
 	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
 		return new BasicExtractor<>( javaType, this ) {
+
+			private static final long DAY_IN_MILLIS = 24 * 60 * 60 * 1000;
+			private static final int MAX_OFFSET_SECONDS = 18 * 60 * 60;
+
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 				final Time time = rs.getTime( paramIndex, Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) ) );
-				return javaType.wrap( time == null ? null : time.toLocalTime().atOffset( ZoneOffset.UTC ), options );
+				return javaType.wrap( toOffsetTime( time ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
 				final Time time = statement.getTime( index, Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) ) );
-				return javaType.wrap( time == null ? null : time.toLocalTime().atOffset( ZoneOffset.UTC ), options );
+				return javaType.wrap( toOffsetTime( time ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
 				final Time time = statement.getTime( name, Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) ) );
-				return javaType.wrap( time == null ? null : time.toLocalTime().atOffset( ZoneOffset.UTC ), options );
+				return javaType.wrap( toOffsetTime( time ), options );
+			}
+
+			private OffsetTime toOffsetTime(Time time) {
+				if ( time == null ) {
+					return null;
+				}
+				final long epochMillis = time.getTime();
+				final ZoneOffset offset;
+				if ( epochMillis < 0 ) {
+					offset = ZoneOffset.ofTotalSeconds( MAX_OFFSET_SECONDS );
+				}
+				else if ( epochMillis >= DAY_IN_MILLIS ) {
+					offset = ZoneOffset.ofTotalSeconds( -MAX_OFFSET_SECONDS );
+				}
+				else {
+					offset = ZoneOffset.UTC;
+				}
+				return Instant.ofEpochMilli( epochMillis )
+						.atOffset( offset )
+						.toOffsetTime();
 			}
 		};
 	}

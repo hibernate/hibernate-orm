@@ -16,6 +16,7 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
+import static org.hibernate.annotations.OnDeleteAction.CASCADE;
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirtinessTracker;
@@ -92,8 +93,13 @@ public final class ForeignKeys {
 		public void nullifyTransientReferences(final Object[] values) {
 			final String[] propertyNames = persister.getPropertyNames();
 			final Type[] types = persister.getPropertyTypes();
+			final boolean[] nullability = persister.getPropertyNullability();
+			final var onDeleteActions = persister.getPropertyOnDeleteActions();
 			for ( int i = 0; i < types.length; i++ ) {
-				values[i] = nullifyTransientReferences( values[i], propertyNames[i], types[i] );
+				values[i] = nullifyTransientReferences(
+						values[i], propertyNames[i], types[i],
+						isDelete && !nullability[i] && onDeleteActions[i] == CASCADE
+				);
 			}
 		}
 
@@ -104,11 +110,13 @@ public final class ForeignKeys {
 		 * @param value An entity attribute value
 		 * @param propertyName An entity attribute name
 		 * @param type An entity attribute type
+		 * @param skipSelfNullification Whether a nonnullable self-reference can be deleted by the database cascade
 		 *
 		 * @return {@code null} if the argument is an unsaved entity; otherwise return the argument.
 		 */
-		private Object nullifyTransientReferences(final Object value, final String propertyName, final Type type) {
-			final Object returnedValue = nullifyTransient( value, propertyName, type );
+		private Object nullifyTransientReferences(
+				final Object value, final String propertyName, final Type type, final boolean skipSelfNullification) {
+			final Object returnedValue = nullifyTransient( value, propertyName, type, skipSelfNullification );
 			// value != returnedValue if either:
 			// 1) returnedValue was nullified (set to null);
 			// or 2) returnedValue was initialized, but not nullified.
@@ -120,12 +128,12 @@ public final class ForeignKeys {
 			return returnedValue;
 		}
 
-		private Object nullifyTransient(Object value, String propertyName, Type type) {
+		private Object nullifyTransient(Object value, String propertyName, Type type, boolean skipSelfNullification) {
 			if ( value == null ) {
 				return null;
 			}
 			else if ( type instanceof EntityType entityType ) {
-				return nullifyEntityType( value, propertyName, entityType );
+				return nullifyEntityType( value, propertyName, entityType, skipSelfNullification );
 			}
 			else if ( type instanceof AnyType ) {
 				return isNullifiable( null, value) ? null : value;
@@ -142,12 +150,14 @@ public final class ForeignKeys {
 			final Object[] subvalues = compositeType.getPropertyValues(value, session );
 			final Type[] subtypes = compositeType.getSubtypes();
 			final String[] subPropertyNames = compositeType.getPropertyNames();
+			final boolean[] nullability = compositeType.getPropertyNullability();
 			boolean substitute = false;
 			for ( int i = 0; i < subvalues.length; i++ ) {
 				final Object replacement = nullifyTransientReferences(
 						subvalues[i],
 						qualify( propertyName, subPropertyNames[i] ),
-						subtypes[i]
+						subtypes[i],
+						isDelete && !nullability[i] && compositeType.getOnDeleteAction( i ) == CASCADE
 				);
 				if ( replacement != subvalues[i] ) {
 					substitute = true;
@@ -161,7 +171,8 @@ public final class ForeignKeys {
 			return value;
 		}
 
-		private Object nullifyEntityType(Object value, String propertyName, EntityType entityType) {
+		private Object nullifyEntityType(
+				Object value, String propertyName, EntityType entityType, boolean skipSelfNullification) {
 			if ( entityType.isOneToOne() ) {
 				return value;
 			}
@@ -176,7 +187,7 @@ public final class ForeignKeys {
 				else {
 					// If the value is not nullifiable, make sure that the
 					// possibly initialized value is returned.
-					return isNullifiable( entityType.getAssociatedEntityName(), possiblyInitializedValue )
+					return isNullifiable( entityType.getAssociatedEntityName(), possiblyInitializedValue, skipSelfNullification )
 							? null
 							: possiblyInitializedValue;
 				}
@@ -225,6 +236,11 @@ public final class ForeignKeys {
 		 */
 		private boolean isNullifiable(final String entityName, Object object)
 				throws HibernateException {
+			return isNullifiable( entityName, object, false );
+		}
+
+		private boolean isNullifiable(final String entityName, Object object, boolean skipSelfNullification)
+				throws HibernateException {
 			if ( object == UNFETCHED_PROPERTY ) {
 				// this is the best we can do
 				return false;
@@ -259,8 +275,11 @@ public final class ForeignKeys {
 			// unless we are using native id generation, in which
 			// case we definitely need to nullify
 			if ( object == self ) {
+				// A nonnullable cascading self-reference cannot be cleared before deletion.
+				// Preserve existing behavior for nullable references, including joined inheritance
+				// deletion cases that currently rely on this dialect workaround.
 				return isEarlyInsert
-					|| isDelete && requiresSelfReferentialForeignKeyNullification();
+					|| isDelete && !skipSelfNullification && requiresSelfReferentialForeignKeyNullification();
 			}
 
 			// Check if this entity is being inserted in the current flush

@@ -1,7 +1,5 @@
 package org.hibernate.boot.model.internal;
 
-import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.Map;
 
@@ -122,10 +120,10 @@ public final class TemporalPolicyResolver {
 					throw failure( source, "a declaration on a field or property must not name types" );
 				}
 				for ( var type : policy.types() ) {
-					if ( type != OffsetDateTime.class && type != ZonedDateTime.class ) {
+					if ( !TemporalPolicySettings.appliesTo( type ) ) {
 						throw failure(
 								source,
-								"type '" + type.getName() + "' is neither OffsetDateTime nor ZonedDateTime"
+								"type '" + type.getName() + "' is not OffsetTime, OffsetDateTime or ZonedDateTime"
 						);
 					}
 					if ( !seen.add( type ) ) {

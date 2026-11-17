@@ -181,7 +181,9 @@ public record TemporalPreservation(
 	public enum Part {
 		/// The calendar date: year, month and day.
 		DATE,
-		/// The time of day.
+		/// The time of day. For a value with an offset and no date, an
+		/// `OffsetTime`, this is its time of day as expressed at UTC, from
+		/// which its own time of day follows by its offset.
 		TIME,
 		/// The point on the time-line.
 		INSTANT,
@@ -205,12 +207,19 @@ public record TemporalPreservation(
 		/// The parts required of a value of the given Java Time class when
 		/// only its instant matters, as selected with
 		/// [org.hibernate.annotations.TemporalPreservationPolicy.Type#NORMALIZED].
-		/// For any class other than `OffsetDateTime` and `ZonedDateTime` these
-		/// are the parts which make up the value.
+		/// For an `OffsetTime` that is its time of day, as expressed at UTC.
+		/// For any class other than `OffsetTime`, `OffsetDateTime` and
+		/// `ZonedDateTime` these are the parts which make up the value.
 		public static Set<Part> requiredOfNormalized(Class<?> javaTimeClass) {
-			return javaTimeClass == OffsetDateTime.class || javaTimeClass == ZonedDateTime.class
-					? OF_INSTANT
-					: requiredBy( javaTimeClass );
+			if ( javaTimeClass == OffsetDateTime.class || javaTimeClass == ZonedDateTime.class ) {
+				return OF_INSTANT;
+			}
+			else if ( javaTimeClass == OffsetTime.class ) {
+				return OF_TIME;
+			}
+			else {
+				return requiredBy( javaTimeClass );
+			}
 		}
 
 		public static Set<Part> requiredBy(Class<?> javaTimeClass) {

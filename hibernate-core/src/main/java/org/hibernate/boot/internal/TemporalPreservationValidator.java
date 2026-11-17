@@ -41,6 +41,8 @@ import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
 import org.hibernate.usertype.internal.OffsetDateTimeCompositeUserType;
 import org.hibernate.usertype.internal.OffsetDateTimeOffsetCompositeUserType;
 import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
+import org.hibernate.usertype.internal.OffsetTimeLocalTimeCompositeUserType;
+import org.hibernate.usertype.internal.OffsetTimeOffsetCompositeUserType;
 import org.hibernate.usertype.internal.ZonedDateTimeCompositeUserType;
 import org.hibernate.usertype.internal.ZonedDateTimeZoneIdCompositeUserType;
 
@@ -77,7 +79,9 @@ final class TemporalPreservationValidator {
 			OffsetDateTimeOffsetCompositeUserType.class.getName(), OffsetDateTime.class,
 			ZonedDateTimeCompositeUserType.class.getName(), ZonedDateTime.class,
 			ZonedDateTimeZoneIdCompositeUserType.class.getName(), ZonedDateTime.class,
-			OffsetTimeCompositeUserType.class.getName(), OffsetTime.class
+			OffsetTimeCompositeUserType.class.getName(), OffsetTime.class,
+			OffsetTimeOffsetCompositeUserType.class.getName(), OffsetTime.class,
+			OffsetTimeLocalTimeCompositeUserType.class.getName(), OffsetTime.class
 	);
 
 	private final Dialect dialect;
@@ -214,7 +218,7 @@ final class TemporalPreservationValidator {
 				&& !( value instanceof Component component && isStoredInTwoColumns( component ) ) ) {
 			throw new MappingException(
 					"Mapping '" + role + "' is not supported: with '" + TEMPORAL_PRESERVATION + "' enabled,"
-					+ " @TimeZoneAdjustment applies only to an OffsetDateTime or ZonedDateTime stored in a"
+					+ " @TimeZoneAdjustment applies only to an OffsetTime, OffsetDateTime or ZonedDateTime stored in a"
 					+ " single column, which is not an identifier or version and has no converter or custom"
 					+ " type, which this is not"
 			);
@@ -288,29 +292,27 @@ final class TemporalPreservationValidator {
 		}
 		throw new MappingException(
 				"Mapping '" + role + "' is not supported: with '" + TEMPORAL_PRESERVATION + "' enabled, "
-				+ declared + " applies only to a value stored as an OffsetDateTime or ZonedDateTime,"
+				+ declared + " applies only to a value stored as an OffsetTime, OffsetDateTime or ZonedDateTime,"
 				+ " which this is not"
 		);
 	}
 
 	/// The value is stored as an instant in one column and, in a second, the
 	/// offset of an `OffsetDateTime` in seconds or the identifier of the zone
-	/// of a `ZonedDateTime`, by way of `@TimeZoneRepresentation`. Neither
-	/// loses anything. The instant column is held to what the Dialect reports
-	/// for an `Instant` stored that way.
+	/// of a `ZonedDateTime`, by way of `@TimeZoneRepresentation`. An
+	/// `OffsetTime` is stored as its time of day at UTC and its offset in
+	/// seconds. None of these loses anything. The first column is held to
+	/// what the Dialect reports for an `Instant`, or for the time of an
+	/// `OffsetTime` or a `LocalTime`, stored that way.
 	private void validateOffsetColumn(Component component, String role, MemberDetails member) {
 		final Class<?> javaClass = TIME_ZONE_COLUMN_TYPES.get( component.getTypeName() );
 		rejectTimeZoneStorage( member, role );
-		if ( !TemporalPolicySettings.appliesTo( javaClass ) ) {
-			throw new MappingException(
-					"Mapping '" + role + "' of type '" + javaClass.getName() + "' is not supported: with '"
-					+ TEMPORAL_PRESERVATION + "' enabled, values of this type are not supported"
-			);
-		}
-
 		final boolean zoneIdColumn = ZonedDateTimeZoneIdCompositeUserType.class.getName().equals( component.getTypeName() );
+		final boolean timeOnly = javaClass == OffsetTime.class;
 		final var instantValue = (BasicValue) component.getProperty(
-				AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME
+				timeOnly
+						? OffsetTimeCompositeUserType.LOCAL_TIME_NAME
+						: AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME
 		).getValue();
 		final var companionValue = (BasicValue) component.getProperty(
 				zoneIdColumn
@@ -321,15 +323,18 @@ final class TemporalPreservationValidator {
 		visited.add( companionValue );
 
 		final var instantResolution = instantValue.resolve();
+		// an OffsetTime in the first column is always at UTC, so only its time is required
 		final String instantProblem = TemporalPreservationGuard.unsupportedReason(
 				dialect,
 				instantResolution.getRelationalJavaType(),
-				instantResolution.getJdbcType()
+				instantResolution.getJdbcType(),
+				Part.requiredOfNormalized( instantResolution.getRelationalJavaType().getJavaTypeClass() )
 		);
 		if ( instantProblem != null ) {
 			throw new MappingException(
 					"Mapping '" + role + "' of type '" + javaClass.getName()
-					+ "' is not supported: for the column holding its instant, " + instantProblem
+					+ "' is not supported: for the column holding its "
+					+ ( timeOnly ? "time at UTC, " : "instant, " ) + instantProblem
 			);
 		}
 		final var companionResolution = companionValue.resolve();
@@ -455,7 +460,7 @@ final class TemporalPreservationValidator {
 
 		rejectTimeZoneStorage( basicValue.getMemberDetails(), role );
 
-		// what an OffsetDateTime or ZonedDateTime must preserve is a matter of policy
+		// what an OffsetTime, OffsetDateTime or ZonedDateTime must preserve is a matter of policy
 		final var selection = TemporalPolicyResolver.resolve( basicValue.getMemberDetails(), javaClass, settings, role );
 		// with a zone declared by @TimeZoneAdjustment, the zone and offset are part of
 		// the mapping, and a value which has another is rejected or converted when written

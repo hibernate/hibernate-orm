@@ -300,7 +300,8 @@ public interface MappingSettings {
 	boolean TEMPORAL_PRESERVATION_DEFAULT = false;
 
 	/**
-	 * Selects, for every {@link java.time.OffsetDateTime} and
+	 * Selects, for every {@link java.time.OffsetTime},
+	 * {@link java.time.OffsetDateTime} and
 	 * {@link java.time.ZonedDateTime} mapping which does not select one with
 	 * {@link org.hibernate.annotations.TemporalPreservationPolicy}, which parts
 	 * of the value must be preserved when {@link #TEMPORAL_PRESERVATION} is
@@ -308,12 +309,14 @@ public interface MappingSettings {
 	 * <p>
 	 * Accepts a {@link org.hibernate.annotations.TemporalPreservationPolicy.Type}
 	 * or its name, in any case: {@code value} requires every part of
-	 * the value, and {@code normalized} requires only the instant.
+	 * the value, and {@code normalized} requires only the instant, or for an
+	 * {@code OffsetTime} only the time of day as expressed at UTC.
 	 * <p>
 	 * Has no effect when {@link #TEMPORAL_PRESERVATION} is disabled.
 	 *
 	 * @settingDefault {@code value}
 	 *
+	 * @see #TEMPORAL_PRESERVATION_POLICY_OFFSET_TIME
 	 * @see #TEMPORAL_PRESERVATION_POLICY_OFFSET_DATETIME
 	 * @see #TEMPORAL_PRESERVATION_POLICY_ZONED_DATETIME
 	 *
@@ -321,6 +324,17 @@ public interface MappingSettings {
 	 */
 	@Incubating(since = "8.1")
 	String TEMPORAL_PRESERVATION_POLICY = "hibernate.type.temporal_preservation_policy";
+
+	/**
+	 * As {@link #TEMPORAL_PRESERVATION_POLICY}, for
+	 * {@link java.time.OffsetTime} only, and taking precedence over it.
+	 *
+	 * @settingDefault The value of {@link #TEMPORAL_PRESERVATION_POLICY}
+	 *
+	 * @since 8.1
+	 */
+	@Incubating(since = "8.1")
+	String TEMPORAL_PRESERVATION_POLICY_OFFSET_TIME = "hibernate.type.temporal_preservation_policy.offset_time";
 
 	/**
 	 * As {@link #TEMPORAL_PRESERVATION_POLICY}, for

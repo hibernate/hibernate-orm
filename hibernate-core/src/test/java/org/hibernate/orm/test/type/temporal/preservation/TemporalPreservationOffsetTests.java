@@ -512,7 +512,7 @@ class TemporalPreservationOffsetTests {
 		}
 	}
 
-	private static void inSession(
+	static void inSession(
 			SessionFactoryImplementor factory,
 			String sessionJdbcZone,
 			String databaseSessionZone,

@@ -84,13 +84,12 @@ class TemporalPreservationMappingTests {
 	}
 
 	/// With nothing declared, every part of the value is required, and the
-	/// storage is whatever the database needs to keep it. An `OffsetTime`
-	/// has not been assessed.
+	/// storage is whatever the database needs to keep it.
 	@Test
 	void typesWithOffsetOrZoneArePreservedByDefault() {
 		assertAccepted( ENABLED, WithOffsetDateTime.class );
 		assertAccepted( ENABLED, WithZonedDateTime.class );
-		assertRejected( ENABLED, WithOffsetTime.class, "WithOffsetTime.theValue", "TIME" );
+		assertAccepted( ENABLED, WithOffsetTime.class );
 	}
 
 	/// H2 keeps the offset of an `OffsetDateTime` in a single column, but
@@ -232,15 +231,13 @@ class TemporalPreservationMappingTests {
 				"WithNormalizedZonedDateTime.theValue",
 				"has not been established to preserve the INSTANT"
 		);
-		// nor does it apply to anything but OffsetDateTime and ZonedDateTime
-		assertRejected(
+		// of an OffsetTime, only its time at UTC is then required
+		assertAccepted(
 				Map.of(
 						MappingSettings.TEMPORAL_PRESERVATION, true,
-						MappingSettings.TEMPORAL_PRESERVATION_POLICY, "normalized"
+						MappingSettings.TEMPORAL_PRESERVATION_POLICY_OFFSET_TIME, "normalized"
 				),
-				WithOffsetTime.class,
-				"WithOffsetTime.theValue",
-				"TIME"
+				WithOffsetTime.class
 		);
 	}
 
@@ -306,7 +303,7 @@ class TemporalPreservationMappingTests {
 				"expected 'value' or 'normalized'"
 		);
 		assertInvalid( ENABLED, WithTypesOnMember.class, "must not name types" );
-		assertInvalid( ENABLED, WithUnsupportedPolicyType.class, "neither OffsetDateTime nor ZonedDateTime" );
+		assertInvalid( ENABLED, WithUnsupportedPolicyType.class, "is not OffsetTime, OffsetDateTime or ZonedDateTime" );
 		assertInvalid( ENABLED, WithDuplicatePolicyType.class, "named more than once" );
 		assertInvalid( ENABLED, WithTwoUntypedPolicies.class, "more than one declaration names no types" );
 	}
@@ -560,7 +557,8 @@ class TemporalPreservationMappingTests {
 	void unsupportedParameterIsRejectedWhenBound() {
 		inFactory( ENABLED, SupportedRoles.class, factory -> {
 			for ( var value : new Object[] {
-					OffsetTime.now(),
+					// before the range which is preserved
+					LocalDate.of( -5, 1, 1 ),
 					new LocalDate[] { LocalDate.now() }
 			} ) {
 				assertThatThrownBy( () -> factory.inTransaction( session -> session.createNativeQuery(

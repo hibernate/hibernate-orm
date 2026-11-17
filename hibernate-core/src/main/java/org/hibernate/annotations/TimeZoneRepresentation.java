@@ -12,8 +12,9 @@ import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-/// Selects where the offset of an [java.time.OffsetDateTime], or the zone of
-/// a [java.time.ZonedDateTime], is stored when
+/// Selects where the offset of an [java.time.OffsetTime] or
+/// [java.time.OffsetDateTime], or the zone of a [java.time.ZonedDateTime],
+/// is stored when
 /// [temporal preservation][org.hibernate.cfg.MappingSettings#TEMPORAL_PRESERVATION]
 /// is enabled.
 ///
@@ -56,6 +57,8 @@ public @interface TimeZoneRepresentation {
 		/// beyond its instant in a second column, which may be customized
 		/// with [TimeZoneColumn]. For an [java.time.OffsetDateTime] the
 		/// second column holds the offset from UTC as a number of seconds.
+		/// So it does for an [java.time.OffsetTime], whose first column
+		/// holds its time of day at UTC.
 		/// For a [java.time.ZonedDateTime] it holds the identifier of the
 		/// zone, such as `Europe/Paris`. Every database keeps the whole
 		/// value this way.

@@ -1,6 +1,7 @@
 package org.hibernate.type.internal;
 
 import java.time.OffsetDateTime;
+import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.Locale;
 import java.util.Map;
@@ -11,6 +12,7 @@ import org.hibernate.annotations.TemporalPreservationPolicy.Type;
 
 import static org.hibernate.cfg.MappingSettings.TEMPORAL_PRESERVATION_POLICY;
 import static org.hibernate.cfg.MappingSettings.TEMPORAL_PRESERVATION_POLICY_OFFSET_DATETIME;
+import static org.hibernate.cfg.MappingSettings.TEMPORAL_PRESERVATION_POLICY_OFFSET_TIME;
 import static org.hibernate.cfg.MappingSettings.TEMPORAL_PRESERVATION_POLICY_ZONED_DATETIME;
 
 /// Resolves the temporal preservation policy selected by configuration
@@ -24,6 +26,7 @@ import static org.hibernate.cfg.MappingSettings.TEMPORAL_PRESERVATION_POLICY_ZON
 public final class TemporalPolicySettings {
 	private static final String[] KEYS = {
 			TEMPORAL_PRESERVATION_POLICY,
+			TEMPORAL_PRESERVATION_POLICY_OFFSET_TIME,
 			TEMPORAL_PRESERVATION_POLICY_OFFSET_DATETIME,
 			TEMPORAL_PRESERVATION_POLICY_ZONED_DATETIME
 	};
@@ -42,7 +45,9 @@ public final class TemporalPolicySettings {
 
 	/// Whether the Java class is one a policy applies to.
 	public static boolean appliesTo(Class<?> javaClass) {
-		return javaClass == OffsetDateTime.class || javaClass == ZonedDateTime.class;
+		return javaClass == OffsetTime.class
+			|| javaClass == OffsetDateTime.class
+			|| javaClass == ZonedDateTime.class;
 	}
 
 	/// Check every policy setting which is given, whether or not any mapping
@@ -59,7 +64,10 @@ public final class TemporalPolicySettings {
 	/// then the general setting, then the default.
 	public static Selection resolve(Map<?, ?> settings, Class<?> javaClass) {
 		final String specific;
-		if ( javaClass == OffsetDateTime.class ) {
+		if ( javaClass == OffsetTime.class ) {
+			specific = TEMPORAL_PRESERVATION_POLICY_OFFSET_TIME;
+		}
+		else if ( javaClass == OffsetDateTime.class ) {
 			specific = TEMPORAL_PRESERVATION_POLICY_OFFSET_DATETIME;
 		}
 		else if ( javaClass == ZonedDateTime.class ) {

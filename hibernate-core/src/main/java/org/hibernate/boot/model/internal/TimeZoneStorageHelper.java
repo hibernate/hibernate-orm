@@ -5,6 +5,7 @@ import java.time.DateTimeException;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
 import jakarta.persistence.Convert;
@@ -38,6 +39,8 @@ import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.internal.OffsetDateTimeCompositeUserType;
 import org.hibernate.usertype.internal.OffsetDateTimeOffsetCompositeUserType;
 import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
+import org.hibernate.usertype.internal.OffsetTimeLocalTimeCompositeUserType;
+import org.hibernate.usertype.internal.OffsetTimeOffsetCompositeUserType;
 import org.hibernate.usertype.internal.ZonedDateTimeCompositeUserType;
 import org.hibernate.usertype.internal.ZonedDateTimeZoneIdCompositeUserType;
 
@@ -67,15 +70,36 @@ public class TimeZoneStorageHelper {
 						: ZonedDateTimeCompositeUserType.class;
 			}
 			else if ( OFFSET_TIME_CLASS.equals( returnedClassName ) ) {
-				return OffsetTimeCompositeUserType.class;
+				if ( !isPreserved( attributeMember, context ) ) {
+					return OffsetTimeCompositeUserType.class;
+				}
+				// the time at UTC is stored the way the Dialect is able to preserve it
+				return offsetTimePreservesTime( context )
+						? OffsetTimeOffsetCompositeUserType.class
+						: OffsetTimeLocalTimeCompositeUserType.class;
 			}
 		}
 		return null;
 	}
 
+	/// Whether an `OffsetTime` stored in a single column, the way temporal
+	/// preservation maps it by default, keeps its time of day at UTC.
+	private static boolean offsetTimePreservesTime(MetadataBuildingContext context) {
+		final var typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
+		final var javaType = typeConfiguration.getJavaTypeRegistry().resolveDescriptor( OffsetTime.class );
+		final var jdbcType = javaType.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
+		return context.getMetadataCollector()
+				.getDatabase()
+				.getDialect()
+				.getTemporalPreservation( javaType, jdbcType )
+				.firstUnsupportedPart( Part.requiredOfNormalized( OffsetTime.class ) ) == null;
+	}
+
 	/// Whether [TimeZoneRepresentation] applies to the Java class.
 	private static boolean hasTimeZoneRepresentation(String className) {
-		return OFFSET_DATETIME_CLASS.equals( className ) || ZONED_DATETIME_CLASS.equals( className );
+		return OFFSET_TIME_CLASS.equals( className )
+			|| OFFSET_DATETIME_CLASS.equals( className )
+			|| ZONED_DATETIME_CLASS.equals( className );
 	}
 
 	/// The [TimeZoneRepresentation] of a mapped member: from the member, the
@@ -150,7 +174,10 @@ public class TimeZoneStorageHelper {
 			String javaClassName,
 			MetadataBuildingContext context) {
 		final Class<?> javaClass;
-		if ( OFFSET_DATETIME_CLASS.equals( javaClassName ) ) {
+		if ( OFFSET_TIME_CLASS.equals( javaClassName ) ) {
+			javaClass = OffsetTime.class;
+		}
+		else if ( OFFSET_DATETIME_CLASS.equals( javaClassName ) ) {
 			javaClass = OffsetDateTime.class;
 		}
 		else if ( ZONED_DATETIME_CLASS.equals( javaClassName ) ) {
@@ -172,6 +199,13 @@ public class TimeZoneStorageHelper {
 			return null;
 		}
 		final String role = member.getDeclaringType().getName() + "." + member.getName();
+		if ( javaClass == OffsetTime.class && !( zone instanceof ZoneOffset ) ) {
+			// without a date, the offset of a region-based zone cannot be determined
+			throw new MappingException(
+					"Invalid @TimeZoneAdjustment for '" + role + "': the zone of an OffsetTime must be a fixed"
+					+ " offset, such as '+02:00' or 'Z', which '" + zone + "' is not"
+			);
+		}
 		final var policy = TemporalPolicyResolver.resolve(
 				member,
 				javaClass,
@@ -197,7 +231,9 @@ public class TimeZoneStorageHelper {
 			PropertyHolder propertyHolder) {
 		return propertyHolder instanceof ComponentPropertyHolder componentHolder
 				&& componentHolder.getAggregateColumn() != null
-				&& ( compositeUserType == OffsetDateTimeOffsetCompositeUserType.class
+				&& ( compositeUserType == OffsetTimeOffsetCompositeUserType.class
+					|| compositeUserType == OffsetTimeLocalTimeCompositeUserType.class
+					|| compositeUserType == OffsetDateTimeOffsetCompositeUserType.class
 					|| compositeUserType == ZonedDateTimeZoneIdCompositeUserType.class )
 				? null
 				: compositeUserType;

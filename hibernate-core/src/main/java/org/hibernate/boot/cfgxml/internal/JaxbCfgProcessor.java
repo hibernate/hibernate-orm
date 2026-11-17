@@ -100,8 +100,7 @@ public class JaxbCfgProcessor {
 	}
 
 	private XMLInputFactory buildStaxFactory(boolean allowDtdAndExternalEntities) {
-		final var staxFactory = XMLInputFactory.newInstance();
-		XmlFactoryUtil.configureXmlFactory( staxFactory, allowDtdAndExternalEntities );
+		final var staxFactory = XmlFactoryUtil.newXmlInputFactory( allowDtdAndExternalEntities );
 		staxFactory.setXMLResolver( xmlResourceResolver );
 		return staxFactory;
 	}

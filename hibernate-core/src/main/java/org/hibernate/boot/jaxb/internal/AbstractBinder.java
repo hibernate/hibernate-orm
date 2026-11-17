@@ -132,8 +132,7 @@ public abstract class AbstractBinder<T> implements Binder<T> {
 	}
 
 	private XMLInputFactory buildStaxFactory() {
-		XMLInputFactory staxFactory = XMLInputFactory.newInstance();
-		XmlFactoryUtil.configureXmlFactory( staxFactory, isDtdAndExternalEntitiesAllowed() );
+		XMLInputFactory staxFactory = XmlFactoryUtil.newXmlInputFactory( isDtdAndExternalEntitiesAllowed() );
 		staxFactory.setXMLResolver( xmlResourceResolver );
 		return staxFactory;
 	}

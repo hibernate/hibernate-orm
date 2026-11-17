@@ -131,7 +131,8 @@ public class NativeGenerator
 
 	@Override
 	public boolean supportsBatchGeneration() {
-		return ((BeforeExecutionGenerator) dialectNativeGenerator).supportsBatchGeneration();
+		return dialectNativeGenerator instanceof BeforeExecutionGenerator generator
+				&& generator.supportsBatchGeneration();
 	}
 
 	@Override

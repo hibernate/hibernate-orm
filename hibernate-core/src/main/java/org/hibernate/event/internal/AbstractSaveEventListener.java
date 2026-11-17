@@ -385,6 +385,7 @@ public abstract class AbstractSaveEventListener<C extends ManagedOperationContex
 			holder.setEntityEntry( original );
 		}
 		final var generatorSlot = delayInsert && persister.getGenerator() instanceof BeforeExecutionGenerator generator
+					&& !generator.generatedOnExecution() && generator.supportsBatchGeneration()
 				? context.getBatchGenerationContext().reserveGeneratorSlot( generator, INSERT )
 				: null;
 		cascadeBeforeSave( source, persister, entity, context );
@@ -508,9 +509,8 @@ public abstract class AbstractSaveEventListener<C extends ManagedOperationContex
 					delayInsert
 			);
 			source.getActionQueue().addAction( insert );
-			if ( delayInsert && persister.getGenerator() instanceof BeforeExecutionGenerator generator ) {
+			if ( generatorSlot != null && persister.getGenerator() instanceof BeforeExecutionGenerator generator ) {
 				final Object currentValue = generator.allowAssignedIdentifiers() ? persister.getIdentifier( entity ) : null;
-				assert generatorSlot != null;
 				generatorSlot.setGenerationTarget( insert, entity, currentValue, persister );
 			}
 			return insert;

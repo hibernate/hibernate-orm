@@ -263,12 +263,9 @@ public class SelectionQueryImpl<R>
 								.copy( noParamCopyContext( SqmQuerySource.CRITERIA ) ),
 				original.getSqmStatement().nodeBuilder()
 		);
+		queryStringCacheKey = sqm;
 		if ( getSession().isCriteriaPlanCacheEnabled() ) {
-			queryStringCacheKey = sqm.toHqlString();
 			setQueryPlanCacheable( true );
-		}
-		else {
-			queryStringCacheKey = sqm;
 		}
 		hql = CRITERIA_HQL_STRING;
 

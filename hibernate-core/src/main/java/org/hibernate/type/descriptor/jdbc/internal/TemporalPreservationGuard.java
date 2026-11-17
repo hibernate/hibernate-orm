@@ -168,6 +168,34 @@ public final class TemporalPreservationGuard {
 		}
 	}
 
+	/// The instant which the value denotes, when it is an `Instant`, an
+	/// `OffsetDateTime` or a `ZonedDateTime`, and `null` otherwise.
+	public static @Nullable Instant instantOf(Object value) {
+		if ( value instanceof Instant instant ) {
+			return instant;
+		}
+		else if ( value instanceof OffsetDateTime offsetDateTime ) {
+			return offsetDateTime.toInstant();
+		}
+		else if ( value instanceof ZonedDateTime zonedDateTime ) {
+			return zonedDateTime.toInstant();
+		}
+		else {
+			return null;
+		}
+	}
+
+	/// Whether the default mapping of the Java type on the Dialect stores an
+	/// instant as its date and time at UTC, in a column which knows of no
+	/// time zone, as opposed to a column which itself denotes an instant.
+	public static boolean isUtcByConvention(JavaType<?> javaType, WrapperOptions options) {
+		final var jdbcType = javaType.getRecommendedJdbcType(
+				options.getTypeConfiguration().getCurrentBaseSqlTypeIndicators()
+		);
+		return preservation( options.getDialect(), javaType, jdbcType ).instantBasis()
+			== TemporalPreservation.InstantBasis.UTC_CONVENTION;
+	}
+
 	/// Reject a value with an offset about to be rendered as a SQL literal
 	/// which the literal formats cannot express. They write an offset as
 	/// hours and minutes, so an offset with seconds would denote a different

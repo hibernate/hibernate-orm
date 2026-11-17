@@ -16,6 +16,7 @@ import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.QuerySettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.type.internal.StandardTemporalPreservations;
@@ -62,6 +63,7 @@ class TemporalPreservationStorageTests {
 	})
 	@RequiresDialect(H2Dialect.class)
 	@RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
+	@RequiresDialect(MySQLDialect.class)
 	@RequiresDialect(OracleDialect.class)
 	@DomainModel(annotatedClasses = { WithLocalDate.class, WithLocalDateTime.class, WithInstant.class })
 	@SessionFactory
@@ -164,7 +166,8 @@ class TemporalPreservationStorageTests {
 			assertReadRejected(
 					scope,
 					"tp_local_date_time",
-					"cast(" + outsideRangeDateLiteral( scope ) + " as timestamp)"
+					"cast(" + outsideRangeDateLiteral( scope ) + " as "
+						+ ( dialect( scope ) instanceof MySQLDialect ? "datetime" : "timestamp" ) + ")"
 			);
 		}
 
@@ -242,6 +245,7 @@ class TemporalPreservationStorageTests {
 	})
 	@RequiresDialect(H2Dialect.class)
 	@RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
+	@RequiresDialect(MySQLDialect.class)
 	@DomainModel(annotatedClasses = WithLocalTime.class)
 	@SessionFactory
 	class Times {
@@ -401,9 +405,18 @@ class TemporalPreservationStorageTests {
 	}
 
 	private static long epochSecondOfLastRow(SessionFactoryScope scope) {
-		final String expression = scope.getSessionFactory().getJdbcServices().getDialect() instanceof OracleDialect
-				? "round((cast(sys_extract_utc(theValue) as date) - date '1970-01-01') * 86400)"
-				: "extract(epoch from theValue)";
+		final String expression;
+		if ( dialect( scope ) instanceof OracleDialect ) {
+			expression = "round((cast(sys_extract_utc(theValue) as date) - date '1970-01-01') * 86400)";
+		}
+		else if ( dialect( scope ) instanceof MySQLDialect ) {
+			// the column holds the date and time at UTC
+			expression = "timestampdiff(second, timestamp '1970-01-01 00:00:00', theValue)"
+					+ " - (case when theValue < timestamp '1970-01-01 00:00:00' and microsecond(theValue) <> 0 then 1 else 0 end)";
+		}
+		else {
+			expression = "extract(epoch from theValue)";
+		}
 		return scope.fromTransaction( session -> new BigDecimal( session.createNativeQuery(
 				"select " + expression + " from tp_instant where id = " + lastId,
 				Object.class
@@ -445,9 +458,15 @@ class TemporalPreservationStorageTests {
 	}
 
 	private static LocalDate firstDay(SessionFactoryScope scope) {
-		return dialect( scope ) instanceof OracleDialect
-				? StandardTemporalPreservations.GREGORIAN_START
-				: StandardTemporalPreservations.COMMON_ERA_START;
+		if ( dialect( scope ) instanceof OracleDialect ) {
+			return StandardTemporalPreservations.GREGORIAN_START;
+		}
+		else if ( dialect( scope ) instanceof MySQLDialect ) {
+			return StandardTemporalPreservations.MYSQL_SUPPORTED_START;
+		}
+		else {
+			return StandardTemporalPreservations.COMMON_ERA_START;
+		}
 	}
 
 	private static Instant firstInstant(SessionFactoryScope scope) {
@@ -455,7 +474,7 @@ class TemporalPreservationStorageTests {
 		if ( dialect( scope ) instanceof H2Dialect ) {
 			firstDay = StandardTemporalPreservations.COMMON_ERA_START;
 		}
-		else if ( dialect( scope ) instanceof PostgreSQLDialect ) {
+		else if ( dialect( scope ) instanceof PostgreSQLDialect || dialect( scope ) instanceof MySQLDialect ) {
 			firstDay = StandardTemporalPreservations.TIMESTAMP_READ_SAFE_START;
 		}
 		else {
@@ -470,13 +489,29 @@ class TemporalPreservationStorageTests {
 
 	/// A date outside the supported range which the database can store.
 	private static String outsideRangeDateLiteral(SessionFactoryScope scope) {
-		return dialect( scope ) instanceof OracleDialect ? "date '1582-10-04'" : "date '10000-01-01'";
+		if ( dialect( scope ) instanceof OracleDialect ) {
+			return "date '1582-10-04'";
+		}
+		else if ( dialect( scope ) instanceof MySQLDialect ) {
+			// MySQL and MariaDB do not store a date after the year 9999, and do store one before the year 1000
+			return "date '0999-12-31'";
+		}
+		else {
+			return "date '10000-01-01'";
+		}
 	}
 
 	private static String instantLiteral(SessionFactoryScope scope, Instant value) {
 		final String fields = DATE_TIME.format( value.atOffset( ZoneOffset.UTC ) );
-		return dialect( scope ) instanceof OracleDialect
-				? "timestamp '" + fields + " +00:00'"
-				: "timestamp with time zone '" + fields + "+00:00'";
+		if ( dialect( scope ) instanceof OracleDialect ) {
+			return "timestamp '" + fields + " +00:00'";
+		}
+		else if ( dialect( scope ) instanceof MySQLDialect ) {
+			// the column holds the date and time at UTC
+			return "timestamp '" + fields + "'";
+		}
+		else {
+			return "timestamp with time zone '" + fields + "+00:00'";
+		}
 	}
 }

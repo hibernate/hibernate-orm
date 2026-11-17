@@ -21,6 +21,7 @@ import org.hibernate.annotations.TimeZoneRepresentation;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -49,6 +50,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /// @author Steve Ebersole
 @RequiresDialect(H2Dialect.class)
 @RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
+@RequiresDialect(MySQLDialect.class)
 @RequiresDialect(OracleDialect.class)
 class TemporalPreservationOffsetTimeTests {
 	private static final String[] DATABASE_SESSION_ZONES = { null, "Asia/Kathmandu", "America/New_York" };
@@ -113,8 +115,11 @@ class TemporalPreservationOffsetTimeTests {
 						builder.equal( root.get( "id" ), builder.literal( entity.id ) ),
 						builder.equal( root.get( "theValue" ), builder.literal( sameTime ) )
 				);
-				if ( factory.getJdbcServices().getDialect().getTemporalValueSemantics().supportsLiteralOffset()
-						|| factory.getJdbcServices().getDialect() instanceof PostgreSQLDialect ) {
+				final var dialect = factory.getJdbcServices().getDialect();
+				// where the time at UTC is stored without an offset, so is the literal rendered
+				if ( dialect.getTemporalValueSemantics().supportsLiteralOffset()
+						|| dialect instanceof PostgreSQLDialect
+						|| dialect instanceof MySQLDialect ) {
 					assertThat( session.createQuery( query ).getSingleResult() ).isEqualTo( 1L );
 				}
 				else {

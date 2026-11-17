@@ -448,7 +448,7 @@ public class StatelessSessionImpl
 			final var versionGenerator = persister.getVersionGenerator();
 			if ( versionGenerator != null
 				&& versionGenerator.generatedBeforeExecution( entity, this )
-				&& idGenerator.generatesOnInsert()
+				&& versionGenerator.generatesOnInsert()
 				&& versionGenerator.supportsBatchGeneration() ) {
 				// Mimics Versioning#seedVersion
 				if ( states == null ) {

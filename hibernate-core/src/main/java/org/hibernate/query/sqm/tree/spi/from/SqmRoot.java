@@ -18,10 +18,14 @@ import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.spi.SqmPathSource;
 import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
+import org.hibernate.query.sqm.tree.spi.domain.AbstractSqmAttributeJoin;
 import org.hibernate.query.sqm.tree.spi.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.spi.domain.SqmCorrelatedRoot;
+import org.hibernate.query.sqm.tree.spi.domain.SqmCorrelation;
 import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
 import org.hibernate.query.sqm.tree.spi.domain.SqmTreatedRoot;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * @author Steve Ebersole
@@ -90,6 +94,15 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 
 	@Internal
 	public void copyTo(@Nonnull SqmRoot<E> target, @Nonnull SqmCopyContext context) {
+		if ( orderedJoins != null ) {
+			// A local join predicate may refer to a join owned by a correlation.
+			// Copy its path owner first, as we would for an ordinary attribute join.
+			for ( var join : orderedJoins ) {
+				if ( join.getLhs() instanceof SqmCorrelation<?, ?> correlation ) {
+					correlation.getCorrelatedRoot().copy( context );
+				}
+			}
+		}
 		super.copyTo( target, context );
 		if ( orderedJoins != null ) {
 			target.orderedJoins = new ArrayList<>( orderedJoins.size() );
@@ -115,16 +128,26 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 	}
 
 	public void addOrderedJoin(@Nonnull SqmJoin<?, ?> join) {
-		if ( orderedJoins == null ) {
-			// If we encounter anything but an attribute join, we need to order joins strictly
-			if ( !( join instanceof SqmAttributeJoin<?, ?> ) ) {
-				orderedJoins = new ArrayList<>();
-				visitSqmJoins( this::addOrderedJoinTransitive );
+		if ( join instanceof AbstractSqmAttributeJoin<?, ?> attributeJoin && attributeJoin.getDeclaringRoot() != null ) {
+			// The attribute belongs to the correlation, but its join is declared in a local FROM item.
+			final var declaringRoot = attributeJoin.getDeclaringRoot();
+			if ( declaringRoot.orderedJoins == null ) {
+				declaringRoot.initializeOrderedJoins();
 			}
+			castNonNull( declaringRoot.orderedJoins ).add( join );
 		}
-		else {
+		else if ( orderedJoins != null ) {
 			orderedJoins.add( join );
 		}
+		else if ( !( join instanceof SqmAttributeJoin<?, ?> ) ) {
+			// The join is already in the list visited by initializeOrderedJoins().
+			initializeOrderedJoins();
+		}
+	}
+
+	private void initializeOrderedJoins() {
+		orderedJoins = new ArrayList<>();
+		getDeclaredJoins().forEach( this::addOrderedJoinTransitive );
 	}
 
 	private void addOrderedJoinTransitive(@Nonnull SqmJoin<?, ?> join) {

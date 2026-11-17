@@ -40,6 +40,7 @@ import org.hibernate.query.sqm.tree.spi.SqmQuery;
 import org.hibernate.query.sqm.tree.spi.SqmRenderContext;
 import org.hibernate.query.sqm.tree.spi.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.spi.cte.SqmCteStatement;
+import org.hibernate.query.sqm.tree.spi.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.spi.domain.SqmBagJoin;
 import org.hibernate.query.sqm.tree.spi.domain.SqmCorrelatedBagJoin;
 import org.hibernate.query.sqm.tree.spi.domain.SqmCorrelatedCrossJoin;
@@ -536,18 +537,10 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	@Nonnull
 	@Override
 	public <X, Y> SqmFrom<X, Y> correlate(@Nonnull From<X, Y> parentFrom) {
-		if ( parentFrom instanceof Root<?> ) {
-			//noinspection unchecked
-			return (SqmFrom<X, Y>) correlate( (Root<Y>) parentFrom );
-		}
-		else if ( parentFrom instanceof Join<?, ?> ) {
-			return correlate( (Join<X, Y>) parentFrom );
-		}
-		else if ( parentFrom instanceof JpaCrossJoin<?, ?> ) {
-			return (SqmFrom<X, Y>) correlate( (JpaCrossJoin<X, Y>) parentFrom );
-		}
-		else if ( parentFrom instanceof JpaEntityJoin<?, ?> ) {
-			return (SqmFrom<X, Y>) correlate( (JpaEntityJoin<T, Y>) parentFrom );
+		if ( parentFrom instanceof AbstractSqmFrom<X, Y> sqmFrom ) {
+			final var correlated = sqmFrom.createCorrelation();
+			getQuerySpec().addRoot( correlated.getCorrelatedRoot() );
+			return correlated;
 		}
 		else {
 			throw new IllegalArgumentException( "Cannot correlate from node [" + parentFrom + "]" );

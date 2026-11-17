@@ -5735,23 +5735,23 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			appendSql( ( (Number) offsetLiteral.getLiteralValue() ).intValue() + constant );
 		}
 		else {
-			final JdbcParameter offsetParameter = (JdbcParameter) offsetExpression;
+			final JdbcParameter offsetJdbcParameter = (JdbcParameter) offsetExpression;
 			final int parameterPosition = addParameterBinder(
-					offsetParameter,
-					(statement, startPosition, jdbcParameterBindings, executionContext) -> {
+					offsetJdbcParameter,
+					(statement, startPosition, bindings, executionContext) -> {
 						final int offsetValue;
-						if ( offsetParameter instanceof OffsetJdbcParameter ) {
+						if ( offsetJdbcParameter instanceof OffsetJdbcParameter ) {
 							offsetValue = executionContext.getQueryOptions().getEffectiveLimit().getFirstRow();
 						}
 						else {
-							final JdbcParameterBinding binding = jdbcParameterBindings.getBinding( offsetParameter );
+							final JdbcParameterBinding binding = bindings.getBinding( offsetJdbcParameter );
 							if ( binding == null ) {
-								throw new ExecutionException( "JDBC parameter value not bound - " + offsetParameter );
+								throw new ExecutionException( "JDBC parameter value not bound - " + offsetJdbcParameter );
 							}
 							offsetValue = ( (Number) binding.getBindValue() ).intValue();
 						}
 						//noinspection unchecked
-						offsetParameter.getExpressionType().getSingleJdbcMapping().getJdbcValueBinder().bind(
+						offsetJdbcParameter.getExpressionType().getSingleJdbcMapping().getJdbcValueBinder().bind(
 								statement,
 								offsetValue + constant,
 								startPosition,
@@ -5759,7 +5759,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						);
 					}
 			);
-			renderParameterAsParameter( parameterPosition, offsetParameter );
+			renderParameterAsParameter( parameterPosition, offsetJdbcParameter );
 		}
 	}
 

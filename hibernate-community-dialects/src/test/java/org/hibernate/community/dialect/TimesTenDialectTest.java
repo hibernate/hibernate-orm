@@ -11,15 +11,18 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/// Tests pagination on TimesTen, which uses `select first n ...` and `select rows m to n ...`,
-/// where `m` and `n` are 1-based and inclusive and the clause must precede `distinct`.
-///
-/// Run against a TimesTen database with `-Pdb=timesten`.
+/**
+ * Tests pagination on TimesTen, which uses {@code select first n ...} and {@code select rows m to n ...},
+ * where {@code m} and {@code n} are 1-based and inclusive and the clause must precede {@code distinct}.
+ * <p>
+ * Run against a TimesTen database with {@code -Pdb=timesten}.
+ */
 @RequiresDialect(TimesTenDialect.class)
 @DomainModel(annotatedClasses = TimesTenDialectTest.Book.class)
 @SessionFactory
@@ -157,7 +160,9 @@ public class TimesTenDialectTest {
 	public static class Book {
 		@Id
 		private Integer id;
+		@Basic
 		private String title;
+		@Basic
 		private Integer grp;
 
 		public Book() {

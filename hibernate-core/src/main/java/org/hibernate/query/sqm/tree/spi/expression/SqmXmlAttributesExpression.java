@@ -63,7 +63,7 @@ public class SqmXmlAttributesExpression implements SqmTypedNode<Object> {
 	@Override
 	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		final Map<String, Expression> attributes = new LinkedHashMap<>();
-		for ( Map.Entry<String, SqmExpression<?>> entry : this.attributes.entrySet() ) {
+		for ( var entry : this.attributes.entrySet() ) {
 			attributes.put( entry.getKey(), (Expression) castNonNull( entry.getValue().accept( walker ) ) );
 		}
 		//noinspection unchecked
@@ -73,12 +73,12 @@ public class SqmXmlAttributesExpression implements SqmTypedNode<Object> {
 	@Nonnull
 	@Override
 	public SqmXmlAttributesExpression copy(@Nonnull SqmCopyContext context) {
-		final SqmXmlAttributesExpression existing = context.getCopy( this );
+		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
 		final Map<String, SqmExpression<?>> attributes = new LinkedHashMap<>();
-		for ( Map.Entry<String, SqmExpression<?>> entry : this.attributes.entrySet() ) {
+		for ( var entry : this.attributes.entrySet() ) {
 			attributes.put( entry.getKey(), entry.getValue().copy( context ) );
 		}
 		return context.registerCopy( this, new SqmXmlAttributesExpression( attributes ) );
@@ -87,7 +87,7 @@ public class SqmXmlAttributesExpression implements SqmTypedNode<Object> {
 	@Override
 	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		String separator = "xmlattributes(";
-		for ( Map.Entry<String, SqmExpression<?>> entry : attributes.entrySet() ) {
+		for ( var entry : attributes.entrySet() ) {
 			hql.append( separator );
 			entry.getValue().appendHqlString( hql, context );
 			hql.append( " as " );

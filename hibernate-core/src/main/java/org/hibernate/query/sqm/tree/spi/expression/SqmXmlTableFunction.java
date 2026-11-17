@@ -101,22 +101,17 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 			return existing;
 		}
 		final List<? extends SqmTypedNode<?>> arguments = getArguments();
-		final List<SqmTypedNode<?>> argumentsCopy = new ArrayList<>( arguments.size() );
-		for ( int i = 0; i < arguments.size() - 1; i++ ) {
+		// The function descriptor creates the columns argument and any dialect-specific SQM subclass.
+		final int columnIndex = arguments.size() - 1;
+		final var argumentsCopy = new ArrayList<SqmTypedNode<?>>( columnIndex );
+		for ( int i = 0; i < columnIndex; i++ ) {
 			argumentsCopy.add( arguments.get( i ).copy( context ) );
 		}
-		final SqmXmlTableFunction<T> tableFunction = new SqmXmlTableFunction<>(
-				getFunctionDescriptor(),
-				getFunctionRenderer(),
-				argumentsCopy,
-				getArgumentsValidator(),
-				getSetReturningTypeResolver(),
-				nodeBuilder(),
-				columns.columnDefinitions
-		);
-		context.registerCopy( this, tableFunction );
+		final var tableFunction = context.registerCopy( this, (SqmXmlTableFunction<T>)
+				getFunctionDescriptor().<T>generateSqmExpression( argumentsCopy, nodeBuilder().getQueryEngine() ) );
 		tableFunction.columns.columnDefinitions.ensureCapacity( columns.columnDefinitions.size() );
 		for ( ColumnDefinition columnDefinition : columns.columnDefinitions ) {
+			tableFunction.columns.columnNames.add( columnDefinition.name() );
 			tableFunction.columns.columnDefinitions.add( columnDefinition.copy( context ) );
 		}
 		return tableFunction;
@@ -208,20 +203,6 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 			throw new IllegalStateException(
 					"Type for xmltable function is already resolved. Mutation is not allowed anymore" );
 		}
-	}
-
-	@Override
-	public boolean isCompatible(@Nullable Object object) {
-		return object instanceof SqmXmlTableFunction<?> that
-			&& super.isCompatible( object )
-			&& columns.isCompatible( that.columns );
-	}
-
-	@Override
-	public int cacheHashCode() {
-		int result = super.cacheHashCode();
-		result = 31 * result + columns.cacheHashCode();
-		return result;
 	}
 
 	sealed interface ColumnDefinition extends SqmCacheable {

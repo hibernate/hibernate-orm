@@ -2075,9 +2075,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			}
 			else if ( parseTree instanceof HqlParser.JoinContext joinContext ) {
 				final var join = consumeJoin( joinContext, sqmFrom );
-				if ( sqmFrom.getLhs() instanceof SqmCorrelation<?, ?> correlation
-						&& join.getLhs() == correlation ) {
-					// Two paths of the same correlation are siblings in the SQM tree.
+				if ( sqmFrom.getLhs() instanceof SqmCorrelation<?, ?>
+						&& join.getLhs() instanceof SqmCorrelation<?, ?> ) {
+					// Paths of outer aliases may belong to different correlations in the SQM tree.
 					// Attach subsequent entity joins to the later path to preserve declaration order.
 					sqmFrom = join;
 				}

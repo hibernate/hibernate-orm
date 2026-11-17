@@ -32,6 +32,9 @@ import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
 import org.hibernate.sql.ast.spi.query.expression.Summarization;
 import org.hibernate.sql.ast.spi.query.expression.UnparsedNumericLiteral;
 import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroupJoin;
 import org.hibernate.sql.ast.spi.query.predicate.InArrayPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.LikePredicate;
 import org.hibernate.sql.ast.spi.query.select.QuerySpec;
@@ -61,6 +64,30 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 
 	public SpannerSqlAstTranslator(SqlAstTranslationRequest<? extends Statement, T> request) {
 		super( request );
+	}
+
+	@Override
+	protected String renderFromClauseRoot(TableGroup root, String separator) {
+		if ( !separator.isEmpty() && root.isInitialized() && !root.isVirtual()
+				&& containsRightOrFullJoin( root.getTableGroupJoins() ) ) {
+			// Spanner requires parentheses around RIGHT/FULL JOIN after a comma.
+			appendSql( separator );
+			appendSql( OPEN_PARENTHESIS );
+			super.renderFromClauseRoot( root, NO_SEPARATOR );
+			appendSql( CLOSE_PARENTHESIS );
+			return COMMA_SEPARATOR;
+		}
+		return super.renderFromClauseRoot( root, separator );
+	}
+
+	private static boolean containsRightOrFullJoin(List<TableGroupJoin> joins) {
+		for ( var join : joins ) {
+			if ( join.getJoinType() == SqlAstJoinType.RIGHT || join.getJoinType() == SqlAstJoinType.FULL
+					|| containsRightOrFullJoin( join.getJoinedGroup().getTableGroupJoins() ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override

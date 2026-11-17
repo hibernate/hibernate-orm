@@ -8248,10 +8248,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					: determineValueMapping( left, fromClauseIndex ) );
 		}
 
-		final var sqmOperator =
-				predicate.isNegated()
-						? predicate.getSqmOperator().negated()
-						: predicate.getSqmOperator();
+		final var sqmOperator = predicate.getEffectiveOperator();
 		// Avoid rendering predicate-valued expressions as scalar boolean comparisons.
 		final Predicate booleanExpressionPredicate = toBooleanExpressionPredicate( lhs, sqmOperator, rhs );
 		if ( booleanExpressionPredicate != null ) {

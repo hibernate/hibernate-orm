@@ -85,6 +85,12 @@ public class SqmCorrelatedCrossJoin<L, T> extends SqmCrossJoin<L, T> implements 
 
 	@Nonnull
 	@Override
+	public SqmRoot<?> findRoot() {
+		return getCorrelatedRoot();
+	}
+
+	@Nonnull
+	@Override
 	public SqmCorrelatedCrossJoin<L, T> makeCopy(@Nonnull SqmCreationProcessingState creationProcessingState) {
 		final var pathRegistry = creationProcessingState.getPathRegistry();
 		return new SqmCorrelatedCrossJoin<>(

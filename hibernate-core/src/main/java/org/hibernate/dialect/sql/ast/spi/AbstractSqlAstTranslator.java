@@ -6856,7 +6856,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	private String renderFromClauseRoot(TableGroup root, String separator) {
+	protected String renderFromClauseRoot(TableGroup root, String separator) {
 		if ( root.isVirtual() ) {
 			for ( TableGroupJoin tableGroupJoin : root.getTableGroupJoins() ) {
 				addAdditionalWherePredicate( tableGroupJoin.getPredicate() );

@@ -1,10 +1,12 @@
 package org.hibernate.internal.util.collections;
 
 import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -44,6 +46,53 @@ class BoundedConcurrentHashMapTest {
 		segment.put( "c", 2, 4, false );
 		assertFalse( segment.containsKey( "a", 0 ) );
 		assertTrue( segment.containsKey( "b", 1 ) );
+	}
+
+	@Test
+	void firstTimeLirsMissDoesNotDisplaceAHotEntry() {
+		final var map = new BoundedConcurrentHashMap<Integer, Integer>( 4, 1, BoundedConcurrentHashMap.Eviction.LIRS );
+		for ( int key = 0; key < 5; key++ ) {
+			map.put( key, key );
+		}
+		// Three warmup entries fit in the hot set. The fifth key replaces the fourth.
+		assertEquals( Set.of( 0, 1, 2, 4 ), map.keySet() );
+	}
+
+	@Test
+	void lirsAdaptsWhenTheWorkingSetChanges() {
+		final var map = new BoundedConcurrentHashMap<Integer, Integer>( 4, 1, BoundedConcurrentHashMap.Eviction.LIRS );
+		for ( int key = 0; key < 3; key++ ) {
+			map.put( key, key );
+		}
+		// Only one slot is cold. Both new keys must become resident when they recur.
+		for ( int i = 0; i < 10; i++ ) {
+			final int key = 3 + i % 2;
+			if ( map.get( key ) == null ) {
+				map.put( key, key );
+			}
+		}
+		assertEquals( 3, map.get( 3 ) );
+		assertEquals( 4, map.get( 4 ) );
+	}
+
+	@ParameterizedTest
+	@ValueSource(booleans = { false, true })
+	void emptyLirsCacheForgetsEvictedKeys(boolean removeIndividually) {
+		final var map = new BoundedConcurrentHashMap<Integer, Integer>( 4, 1, BoundedConcurrentHashMap.Eviction.LIRS );
+		for ( int key = 0; key < 5; key++ ) {
+			map.put( key, key );
+		}
+		if ( removeIndividually ) {
+			Set.copyOf( map.keySet() ).forEach( map::remove );
+		}
+		else {
+			map.clear();
+		}
+		// Key 3 was evicted before the reset and should now be treated as a first-time miss.
+		for ( int key : List.of( 10, 11, 12, 3, 13 ) ) {
+			map.put( key, key );
+		}
+		assertEquals( Set.of( 10, 11, 12, 13 ), map.keySet() );
 	}
 
 	@ParameterizedTest

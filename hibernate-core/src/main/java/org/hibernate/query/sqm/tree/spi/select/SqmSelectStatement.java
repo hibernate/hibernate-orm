@@ -645,6 +645,11 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 	private <S> void aliasSelections(@Nonnull SqmQueryPart<S> queryPart) {
 		if ( queryPart.isSimpleQueryPart() ) {
 			final SqmQuerySpec<S> querySpec = queryPart.getFirstQuerySpec();
+			final SqmSelectClause selectClause = querySpec.getSelectClause();
+			if ( selectClause.getSelections().isEmpty() ) {
+				// The subquery needs an explicit select list.
+				selectClause.setSelection( querySpec.getImplicitSelection() );
+			}
 			final LinkedHashSet<JpaSelection<?>> newSelections = new LinkedHashSet<>();
 			aliasSelection( querySpec.getSelection(), newSelections );
 			final JpaSelection<?> selection =

@@ -9,7 +9,6 @@ import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
 import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.validation.Schema;
 
@@ -137,8 +136,7 @@ public class XmlParserHelper {
 	}
 
 	private XMLEventReader createXmlEventReader(InputStream xmlStream) throws XMLStreamException {
-		final var xmlInputFactory = XMLInputFactory.newInstance();
-		XmlFactoryUtil.configureXmlFactory( xmlInputFactory, context.allowDtdAndExternalEntities() );
+		final var xmlInputFactory = XmlFactoryUtil.newXmlInputFactory( context.allowDtdAndExternalEntities() );
 		return xmlInputFactory.createXMLEventReader( xmlStream );
 	}
 

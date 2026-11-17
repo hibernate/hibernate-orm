@@ -73,9 +73,8 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 			mapKeyTagName = "k";
 			mapValueTagName = "v";
 		}
-		staxFactory = XMLInputFactory.newInstance();
 		// Values parsed here are runtime data (database, parameters, cache), never resolve DTDs or external entities
-		XmlFactoryUtil.configureXmlFactory( staxFactory, false );
+		staxFactory = XmlFactoryUtil.newXmlInputFactory( false );
 	}
 
 	@Override

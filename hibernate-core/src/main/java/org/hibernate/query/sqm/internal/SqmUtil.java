@@ -1062,14 +1062,7 @@ public class SqmUtil {
 		if ( queryPart instanceof SqmQuerySpec<?> sqmQuerySpec ) {
 			final var selectClause = sqmQuerySpec.getSelectClause();
 			if ( selectClause.getSelections().isEmpty() ) {
-				// make sure there is at least one root
-				final var sqmRoots = sqmQuerySpec.getFromClause().getRoots();
-				if ( sqmRoots == null || sqmRoots.isEmpty() ) {
-					throw new IllegalArgumentException( "Criteria did not define any query roots" );
-				}
-				if ( sqmRoots.size() != 1 ) {
-					throw new IllegalArgumentException( "Criteria has multiple query roots" );
-				}
+				sqmQuerySpec.getImplicitSelection();
 			}
 		}
 		else if ( queryPart instanceof SqmQueryGroup<?> queryGroup ) {
@@ -1212,18 +1205,7 @@ public class SqmUtil {
 	private static void checkQueryReturnType(SqmQuerySpec<?> querySpec, Class<?> expectedResultClass) {
 		final var selections = querySpec.getSelectClause().getSelections();
 		if ( selections == null || selections.isEmpty() ) {
-			// make sure there is at least one root
-			final var sqmRoots = querySpec.getFromClause().getRoots();
-			if ( sqmRoots == null || sqmRoots.isEmpty() ) {
-				throw new IllegalArgumentException( "Criteria did not define any query roots" );
-			}
-			// if there is a single root, use that as the selection
-			if ( sqmRoots.size() == 1 ) {
-				verifySingularSelectionType( expectedResultClass, sqmRoots.get( 0 ) );
-			}
-			else {
-				throw new IllegalArgumentException( "Criteria has multiple query roots" );
-			}
+			verifySingularSelectionType( expectedResultClass, querySpec.getImplicitSelection() );
 		}
 		else if ( selections.size() == 1 ) {
 			final var sqmSelection = selections.get( 0 );

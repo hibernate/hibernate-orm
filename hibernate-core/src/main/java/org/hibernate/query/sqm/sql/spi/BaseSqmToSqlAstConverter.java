@@ -2388,8 +2388,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				for ( int i = 0; i < selections.size(); i++ ) {
 					visitSelection( i, selections.get( i ) );
 				}
-				sqlSelectClause.makeDistinct( selectClause.isDistinct() );
 			}
+			sqlSelectClause.makeDistinct( selectClause.isDistinct() );
 			return sqlSelectClause;
 		}
 		finally {

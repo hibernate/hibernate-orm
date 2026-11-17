@@ -1,17 +1,14 @@
 package org.hibernate.id.enhanced;
 
-import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import static org.hibernate.id.IdentifierGeneratorHelper.makeIntegralValue;
 import static org.hibernate.id.enhanced.OptimizerLogger.OPTIMIZER_MESSAGE_LOGGER;
 
-import org.hibernate.internal.util.MathHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,102 +52,45 @@ public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 
 	@Override
 	public Serializable[] generateBatch(int count, AccessCallback callback) {
-		final var valuesPerInvalidBucket = Math.max(incrementSize - 1, 1);
 		final long[] buckets;
-		final int invalidBuckets;
 		final int availableValues;
-		long baseValue;
+		final long baseValue;
 		final GenerationState generationState = locateGenerationState( callback.getTenantIdentifier() );
-
-		if ( generationState.lastSourceValue == null ) {
-			// first call, so initialize ourselves.  we need to read the database
-			// value and set up the 'bucket' boundaries
-			buckets = determineInitialBuckets( count, callback );
-			invalidBuckets = determineInvalidBuckets( buckets, count );
-			generationState.setLastSourceValue( buckets[buckets.length - 1], incrementSize );
-			baseValue = generationState.value;
-			generationState.value += determineConsumedValuesFromLastBucket( count, buckets.length, invalidBuckets, valuesPerInvalidBucket, incrementSize );
-			availableValues = 0;
+		int available = 0;
+		long base = 0;
+		if ( generationState.lastSourceValue != null ) {
+			available = Math.min( count, (int) Math.max( generationState.upperLimitValue - generationState.value, 0L ) );
+			base = generationState.value;
+			generationState.value += available;
 		}
-		else if ( generationState.value + count - 1 >= generationState.upperLimitValue ) {
-			availableValues = Math.max( (int) (generationState.upperLimitValue - generationState.value), 0 );
-			baseValue = generationState.value;
-			buckets = callback.getNextValues( MathHelper.ceilDiv( count - availableValues, incrementSize ) );
-			invalidBuckets = 0;
+		final int neededValues = count - available;
+		if ( neededValues > 0 ) {
+			buckets = PooledLoOptimizer.fetchBuckets( neededValues, incrementSize, callback );
+			int previousValues = 0;
+			for ( int i = 0; i < buckets.length - 1; i++ ) {
+				previousValues += PooledLoOptimizer.bucketSize( buckets[i], incrementSize );
+			}
 			generationState.setLastSourceValue( buckets[buckets.length - 1], incrementSize );
-			generationState.value += ((count - availableValues - 1) % incrementSize) + 1;
+			generationState.value += neededValues - previousValues;
 		}
 		else {
-			availableValues = count;
-			baseValue = generationState.value;
-			generationState.value += count;
 			buckets = ArrayHelper.EMPTY_LONG_ARRAY;
-			invalidBuckets = 0;
 		}
-		assert availableValues != 0 || buckets.length != 0;
+		availableValues = available;
+		baseValue = base;
 		final Serializable[] result = new Serializable[count];
 		for ( int i = 0; i < availableValues; i++ ) {
 			result[i] = makeIntegralValue( baseValue + i, returnClass );
 		}
-		for ( int i = 0; i < invalidBuckets; i++ ) {
-			for (int j = 0; j < valuesPerInvalidBucket; j++ ) {
-				result[i * valuesPerInvalidBucket + j] = makeIntegralValue( j + 1, returnClass );
-			}
-		}
-		final var baseOffset = availableValues + invalidBuckets * valuesPerInvalidBucket;
-		for ( int i = invalidBuckets; i < buckets.length; i++ ) {
-			baseValue = GenerationState.determineValue( buckets[i], incrementSize );
-			final var offset = baseOffset + (i - invalidBuckets) * incrementSize;
-			for ( int j = 0; j < incrementSize && offset + j < result.length ; j++ ) {
-				result[offset + j] = makeIntegralValue( baseValue++, returnClass );
+		int position = availableValues;
+		for ( long bucket : buckets ) {
+			final long start = GenerationState.determineValue( bucket, incrementSize );
+			final int size = PooledLoOptimizer.bucketSize( bucket, incrementSize );
+			for ( int j = 0; j < size && position < count; j++ ) {
+				result[position++] = makeIntegralValue( start + j, returnClass );
 			}
 		}
 		return result;
-	}
-
-	private int determineConsumedValuesFromLastBucket(int count, int bucketCount, int invalidBuckets, int valuesPerInvalidBucket, int incrementSize) {
-		return count - Math.min( invalidBuckets, bucketCount - 1 ) * valuesPerInvalidBucket
-			- Math.max( bucketCount - 1 - invalidBuckets, 0 ) * incrementSize;
-	}
-
-	private int determineInvalidBuckets(long[] buckets, int count) {
-		int invalidBuckets = 0;
-		for ( long bucketValue : buckets ) {
-			if ( bucketValue > 0L ) {
-				break;
-			}
-			invalidBuckets++;
-		}
-		return invalidBuckets;
-	}
-
-	private @Nonnull long[] determineInitialBuckets(int count, AccessCallback callback) {
-		long[] goodBuckets = null;
-		int neededBuckets = MathHelper.ceilDiv( count, incrementSize );
-		do {
-			final long[] newBuckets = callback.getNextValues( neededBuckets );
-			if ( goodBuckets == null ) {
-				goodBuckets = newBuckets;
-			}
-			else {
-				goodBuckets = Arrays.copyOf(goodBuckets, goodBuckets.length + newBuckets.length);
-				System.arraycopy( newBuckets, 0, goodBuckets, goodBuckets.length - newBuckets.length, newBuckets.length );
-			}
-
-			int invalidBuckets = 0;
-			for ( long bucketValue : goodBuckets ) {
-				if ( bucketValue > 0L ) {
-					break;
-				}
-				invalidBuckets++;
-			}
-			final var valuesPerInvalidBucket = Math.max(incrementSize - 1, 1);
-			final var availableValues = invalidBuckets * valuesPerInvalidBucket + (goodBuckets.length - invalidBuckets) * incrementSize;
-			neededBuckets = availableValues >= count
-					? 0
-					: MathHelper.ceilDiv( count - availableValues, incrementSize );
-		} while ( neededBuckets != 0 );
-		return goodBuckets;
 	}
 
 	private GenerationState locateGenerationState(String tenantIdentifier) {
@@ -210,7 +150,7 @@ public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 		}
 
 		static long determineValue(long lastSourceValue, int incrementSize) {
-			return lastSourceValue;
+			return Math.max( lastSourceValue, 1L );
 		}
 	}
 

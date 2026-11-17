@@ -13,6 +13,7 @@ import static org.hibernate.id.IdentifierGeneratorHelper.makeIntegralValue;
 import static org.hibernate.id.enhanced.OptimizerLogger.OPTIMIZER_MESSAGE_LOGGER;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
@@ -82,25 +83,28 @@ public class LegacyHiLoAlgorithmOptimizer extends AbstractOptimizer {
 	public Serializable[] generateBatch(int count, AccessCallback callback) {
 		final long[] buckets;
 		final int availableValues;
-		long baseValue;
+		final long baseValue;
 		lock.lock();
 		try {
 			final var generationState = locateGenerationState( callback.getTenantIdentifier() );
-			if ( generationState.lo + (count - 1) > generationState.maxLo ) {
-				availableValues = Math.max( 0, (int) (generationState.maxLo - generationState.lo) );
-				baseValue = generationState.hi + generationState.lo;
-				buckets = callback.getNextValues( MathHelper.ceilDiv( count - availableValues, incrementSize ) );
+			final int available = Math.min( count, (int) Math.max( generationState.maxLo - generationState.lo + 1, 0L ) );
+			baseValue = generationState.hi + generationState.lo;
+			generationState.lo += available;
+			final int neededValues = count - available;
+			if ( neededValues > 0 ) {
+				buckets = fetchBuckets( neededValues, callback );
+				int previousValues = 0;
+				for ( int i = 0; i < buckets.length - 1; i++ ) {
+					previousValues += bucketSize( buckets[i] );
+				}
 				generationState.setLastSourceValue( buckets[buckets.length - 1] );
-				generationState.lo += (count - availableValues) % incrementSize;
-				generationState.value = generationState.hi + generationState.lo - 1;
+				generationState.lo += neededValues - previousValues;
 			}
 			else {
-				availableValues = count;
-				baseValue = generationState.hi + generationState.lo;
 				buckets = ArrayHelper.EMPTY_LONG_ARRAY;
-				generationState.lo += count;
-				generationState.value = generationState.hi + generationState.lo - 1;
 			}
+			availableValues = available;
+			generationState.value = generationState.hi + generationState.lo - 1;
 		}
 		finally {
 			lock.unlock();
@@ -109,14 +113,37 @@ public class LegacyHiLoAlgorithmOptimizer extends AbstractOptimizer {
 		for ( int i = 0; i < availableValues; i++ ) {
 			result[i] = makeIntegralValue( baseValue + i, returnClass );
 		}
-		for ( int i = 0; i < buckets.length; i++ ) {
-			baseValue = GenerationState.determineValue( buckets[i], incrementSize );
-			final var offset = availableValues + i * incrementSize;
-			for ( int j = 0; j < incrementSize && offset + j < result.length ; j++ ) {
-				result[offset + j] = makeIntegralValue( baseValue++, returnClass );
+		int position = availableValues;
+		for ( long bucket : buckets ) {
+			final long start = GenerationState.determineValue( bucket, incrementSize );
+			final int size = bucketSize( bucket );
+			for ( int j = 0; j < size && position < count; j++ ) {
+				result[position++] = makeIntegralValue( start + j, returnClass );
 			}
 		}
 		return result;
+	}
+
+	// a bucket holds incrementSize + 1 values, except for source value 0 which holds incrementSize
+	private int bucketSize(long sourceValue) {
+		return sourceValue == 0 ? incrementSize : incrementSize + 1;
+	}
+
+	private long[] fetchBuckets(int neededValues, AccessCallback callback) {
+		// a bucket never holds more than incrementSize + 1 values, so fetching ceil(remaining / (incrementSize + 1))
+		// buckets at a time never retrieves more source values than repeated singular generation would
+		long[] buckets = ArrayHelper.EMPTY_LONG_ARRAY;
+		int remaining = neededValues;
+		while ( remaining > 0 ) {
+			final long[] newBuckets = callback.getNextValues( MathHelper.ceilDiv( remaining, incrementSize + 1 ) );
+			final int previous = buckets.length;
+			buckets = Arrays.copyOf( buckets, previous + newBuckets.length );
+			System.arraycopy( newBuckets, 0, buckets, previous, newBuckets.length );
+			for ( long newBucket : newBuckets ) {
+				remaining -= bucketSize( newBucket );
+			}
+		}
+		return buckets;
 	}
 
 	/**

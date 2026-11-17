@@ -3,10 +3,13 @@ package org.hibernate.orm.test.function.json;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.Tuple;
+import org.hibernate.query.Order;
+import org.hibernate.query.Page;
 import org.hibernate.query.criteria.JpaFunctionJoin;
 import org.hibernate.query.criteria.JpaJsonTableColumnsNode;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.spi.NodeBuilder;
+import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
 import org.hibernate.query.sqm.tree.spi.expression.SqmJsonTableFunction;
 import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -25,7 +28,9 @@ import java.util.Map;
 
 import static org.hibernate.orm.test.function.json.JsonTestHelper.assertNoJsonInjection;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Christian Beikov
@@ -162,7 +167,9 @@ public class JsonTableTest {
 					from json_table('[1,2]','$[*]' columns(val Integer path '$', idx for ordinality)) t
 					order by t.idx
 					""";
-			List<Tuple> resultList = em.createQuery( query, Tuple.class ).getResultList();
+			final var selectionQuery = em.createQuery( query, Tuple.class );
+			List<Tuple> resultList = selectionQuery.getResultList();
+			assertEquals( 2L, selectionQuery.getResultCount() );
 
 			assertEquals( 2, resultList.size() );
 
@@ -170,6 +177,47 @@ public class JsonTableTest {
 			assertEquals( 1, resultList.get( 0 ).get( 1 ) );
 			assertEquals( 2L, resultList.get( 1 ).get( 0 ) );
 			assertEquals( 2, resultList.get( 1 ).get( 1 ) );
+		} );
+	}
+
+	@Test
+	public void testRowPathInKeyedPage(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			final var query = session.createSelectionQuery( """
+					select e from EntityWithJson e
+					where exists
+						(select t.val from json_table('[1,2]', '$[0]' columns(val Integer path '$')) t where t.val = 2)
+					""", EntityWithJson.class );
+			assertEquals( List.of(), query.getKeyedResultList(
+					Page.first( 10 ).keyedBy( Order.asc( EntityWithJson.class, "id" ) )
+			).getResultList() );
+		} );
+	}
+
+	@Test
+	public void testPassingNameInStructuralComparison(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			final NodeBuilder cb = (NodeBuilder) session.getCriteriaBuilder();
+			final var first = cb.jsonTable( cb.literal( "[1,2]" ), "$[$a]" ).passing( "a", cb.literal( 0 ) );
+			final var same = cb.jsonTable( cb.literal( "[1,2]" ), "$[$a]" ).passing( "a", cb.literal( 0 ) );
+			final var other = cb.jsonTable( cb.literal( "[1,2]" ), "$[$a]" ).passing( "b", cb.literal( 0 ) );
+			assertTrue( ( (SqmJsonTableFunction<?>) first ).isCompatible( same ) );
+			assertFalse( ( (SqmJsonTableFunction<?>) first ).isCompatible( other ) );
+		} );
+	}
+
+	@Test
+	public void testCopyWithoutRowPath(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			final NodeBuilder cb = (NodeBuilder) session.getCriteriaBuilder();
+			final var table = cb.jsonTable( cb.literal( "[1,2]" ) );
+			table.valueColumn( "val", Integer.class, "$" );
+			final var copy = table.copy( SqmCopyContext.simpleContext() );
+			assertEquals( table.toHqlString(), copy.toHqlString() );
+			assertTrue( table.isCompatible( copy ) );
+			assertEquals( table.cacheHashCode(), copy.cacheHashCode() );
+			copy.ordinalityColumn( "extra" );
+			assertFalse( table.isCompatible( copy ) );
 		} );
 	}
 

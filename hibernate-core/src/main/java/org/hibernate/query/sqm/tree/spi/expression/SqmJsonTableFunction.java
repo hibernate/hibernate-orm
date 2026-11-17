@@ -47,8 +47,6 @@ import org.hibernate.type.SqlTypes;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -64,8 +62,8 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 
 	private final Set<String> columnNames = new HashSet<>();
 	private final Columns columns;
-	private @Nullable Map<String, SqmExpression<?>> passingExpressions;
-	private ErrorBehavior errorBehavior;
+	private final SqmJsonPathPassingClause passingClause = new SqmJsonPathPassingClause( null );
+	private ErrorBehavior errorBehavior = ErrorBehavior.UNSPECIFIED;
 
 	public SqmJsonTableFunction(
 			@Nonnull SqmSetReturningFunctionDescriptor descriptor,
@@ -81,9 +79,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 				createArgumentsList( document, jsonPath ),
 				argumentsValidator,
 				setReturningTypeResolver,
-				nodeBuilder,
-				null,
-				ErrorBehavior.UNSPECIFIED
+				nodeBuilder
 		);
 	}
 
@@ -96,13 +92,9 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 			@Nonnull List<SqmTypedNode<?>> arguments,
 			@Nullable ArgumentsValidator argumentsValidator,
 			@Nonnull SetReturningFunctionTypeResolver setReturningTypeResolver,
-			@Nonnull NodeBuilder nodeBuilder,
-			@Nullable Map<String, SqmExpression<?>> passingExpressions,
-			@Nonnull ErrorBehavior errorBehavior) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( descriptor, renderer, arguments, argumentsValidator, setReturningTypeResolver, nodeBuilder, "json_table" );
 		this.columns = new Columns( this );
-		this.passingExpressions = passingExpressions;
-		this.errorBehavior = errorBehavior;
 		arguments.set( arguments.size() - 1, this.columns );
 	}
 
@@ -120,7 +112,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 
 	@Nonnull
 	public Map<String, SqmExpression<?>> getPassingExpressions() {
-		return passingExpressions == null ? Collections.emptyMap() : Collections.unmodifiableMap( passingExpressions );
+		return passingClause.getExpressions();
 	}
 
 	@Nonnull
@@ -129,10 +121,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 		if ( columns.nestedColumns.jsonPath == null ) {
 			throw new IllegalStateException( "Can't pass parameter '" + parameterName + "', because json_table has no JSON path" );
 		}
-		if ( passingExpressions == null ) {
-			passingExpressions = new HashMap<>();
-		}
-		passingExpressions.put( parameterName, (SqmExpression<?>) expression );
+		passingClause.add( parameterName, (SqmExpression<?>) expression );
 		return this;
 	}
 
@@ -144,37 +133,41 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 			return existing;
 		}
 		final List<? extends SqmTypedNode<?>> arguments = getArguments();
-		final List<SqmTypedNode<?>> argumentsCopy = new ArrayList<>( arguments.size() );
-		for ( int i = 0; i < arguments.size() - 1; i++ ) {
+		// The function descriptor creates the columns argument and any dialect-specific SQM subclass.
+		final int columnIndex = arguments.size() - 1;
+		final var argumentsCopy = new ArrayList<SqmTypedNode<?>>( columnIndex );
+		for ( int i = 0; i < columnIndex; i++ ) {
 			argumentsCopy.add( arguments.get( i ).copy( context ) );
 		}
-		final Map<String, SqmExpression<?>> passingExpressions;
-		if ( this.passingExpressions == null ) {
-			passingExpressions = null;
-		}
-		else {
-			passingExpressions = new HashMap<>( this.passingExpressions.size() );
-			for ( Map.Entry<String, SqmExpression<?>> entry : this.passingExpressions.entrySet() ) {
-				passingExpressions.put( entry.getKey(), entry.getValue().copy( context ) );
-			}
-		}
-		final SqmJsonTableFunction<T> tableFunction = new SqmJsonTableFunction<>(
-				getFunctionDescriptor(),
-				getFunctionRenderer(),
-				argumentsCopy,
-				getArgumentsValidator(),
-				getSetReturningTypeResolver(),
-				nodeBuilder(),
-				passingExpressions,
-				errorBehavior
-		);
-		context.registerCopy( this, tableFunction );
+		final var tableFunction = context.registerCopy( this, (SqmJsonTableFunction<T>)
+				getFunctionDescriptor().<T>generateSqmExpression( argumentsCopy, nodeBuilder().getQueryEngine() ) );
+		tableFunction.errorBehavior = errorBehavior;
+		passingClause.copyTo( tableFunction.passingClause, context );
 		tableFunction.columnNames.addAll( columnNames );
 		tableFunction.columns.columnDefinitions.ensureCapacity( columns.columnDefinitions.size() );
 		for ( ColumnDefinition columnDefinition : columns.columnDefinitions ) {
 			tableFunction.columns.columnDefinitions.add( columnDefinition.copy( context ) );
 		}
 		return tableFunction;
+	}
+
+	@Override
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
+		final var arguments = getArguments();
+		hql.append( "json_table(" );
+		arguments.get( 0 ).appendHqlString( hql, context );
+		if ( arguments.size() > 2 ) {
+			hql.append( ", " );
+			arguments.get( 1 ).appendHqlString( hql, context );
+		}
+		passingClause.appendHqlString( hql, context );
+		columns.appendHqlString( hql, context );
+		hql.append( switch ( errorBehavior ) {
+			case NULL -> " null on error";
+			case ERROR -> " error on error";
+			case UNSPECIFIED -> "";
+		} );
+		hql.append( ')' );
 	}
 
 	@Nonnull
@@ -202,14 +195,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 	}
 
 	protected @Nullable JsonPathPassingClause createJsonPathPassingClause(@Nonnull SqmToSqlAstConverter walker) {
-		if ( passingExpressions == null || passingExpressions.isEmpty() ) {
-			return null;
-		}
-		final HashMap<String, org.hibernate.sql.ast.spi.query.expression.Expression> converted = new HashMap<>( passingExpressions.size() );
-		for ( Map.Entry<String, SqmExpression<?>> entry : passingExpressions.entrySet() ) {
-			converted.put( entry.getKey(), (org.hibernate.sql.ast.spi.query.expression.Expression) entry.getValue().accept( walker ) );
-		}
-		return new JsonPathPassingClause( converted );
+		return passingClause.convertToSqlAst( walker );
 	}
 
 	@Nonnull
@@ -321,16 +307,14 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 	public boolean equals(@Nullable Object object) {
 		return object instanceof SqmJsonTableFunction<?> that
 			&& super.equals( object )
-			&& columns.equals( that.columns )
-			&& Objects.equals( passingExpressions, that.passingExpressions )
+			&& passingClause.equals( that.passingClause )
 			&& errorBehavior == that.errorBehavior;
 	}
 
 	@Override
 	public int hashCode() {
 		int result = super.hashCode();
-		result = 31 * result + columns.hashCode();
-		result = 31 * result + Objects.hashCode( passingExpressions );
+		result = 31 * result + passingClause.hashCode();
 		result = 31 * result + errorBehavior.hashCode();
 		return result;
 	}
@@ -339,16 +323,14 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmJsonTableFunction<?> that
 				&& super.isCompatible( object )
-				&& columns.isCompatible( that.columns )
-				&& SqmCacheable.areCompatible( passingExpressions, that.passingExpressions )
+				&& passingClause.isCompatible( that.passingClause )
 				&& errorBehavior == that.errorBehavior;
 	}
 
 	@Override
 	public int cacheHashCode() {
 		int result = super.cacheHashCode();
-		result = 31 * result + columns.cacheHashCode();
-		result = 31 * result + SqmCacheable.cacheHashCode( passingExpressions );
+		result = 31 * result + passingClause.cacheHashCode();
 		result = 31 * result + errorBehavior.hashCode();
 		return result;
 	}
@@ -417,7 +399,6 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 				case TRUE -> sb.append( " true on error" );
 				case FALSE -> sb.append( " false on error" );
 			}
-			sb.append( ')' );
 		}
 
 		@Override

@@ -1,6 +1,7 @@
 package org.hibernate.tool.schema.internal.exec;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
@@ -39,14 +40,30 @@ public class ScriptSourceInputFromUrl extends AbstractScriptSourceInput {
 	protected Reader prepareReader() {
 		try {
 			final var stream = url.openStream();
-			return charsetName != null
-					? new InputStreamReader( stream, charsetName )
-					: new InputStreamReader( stream );
+			try {
+				return charsetName != null
+						? new InputStreamReader( stream, charsetName )
+						: new InputStreamReader( stream );
+			}
+			catch (IOException e) {
+				closeStream( stream, e );
+				throw e;
+			}
 		}
 		catch (IOException e) {
 			throw new SchemaManagementException(
-					"Unable to open specified script source url [" + url + "] for reading (" + charsetName + ")"
+					"Unable to open specified script source url [" + url + "] for reading (" + charsetName + ")",
+					e
 			);
+		}
+	}
+
+	private static void closeStream(InputStream stream, IOException failure) {
+		try {
+			stream.close();
+		}
+		catch (IOException closeError) {
+			failure.addSuppressed( closeError );
 		}
 	}
 

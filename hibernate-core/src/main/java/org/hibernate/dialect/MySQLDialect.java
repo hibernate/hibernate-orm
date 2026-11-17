@@ -12,7 +12,10 @@ import org.hibernate.dialect.temporaltype.spi.TemporalFormatSupport;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
 
+import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.dialect.type.internal.StandardTemporalPreservations;
 import org.hibernate.dialect.type.spi.DdlTypeBuilder;
+import org.hibernate.dialect.type.spi.TemporalPreservation;
 
 import org.hibernate.dialect.type.spi.StandardDdlTypes;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
@@ -134,6 +137,8 @@ import org.hibernate.type.descriptor.jdbc.EnumJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.OrdinalEnumJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimeUtcAsLocalTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import java.sql.SQLException;
@@ -799,6 +804,74 @@ public class MySQLDialect extends Dialect implements CurrentTemporalSupport, Tem
 
 		jdbcTypeRegistry.addDescriptor( EnumJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( OrdinalEnumJdbcType.INSTANCE );
+
+		if ( serviceRegistry != null && MetadataBuildingContext.isTemporalPreservationEnabled( serviceRegistry ) ) {
+			// The time of an OffsetTime at UTC is exchanged with the driver as a LocalTime.
+			// Passing through a java.sql.Time stores a time which depends on the default
+			// time zone of the JVM, which is left as it is when preservation is disabled.
+			jdbcTypeRegistry.addDescriptor( TimeUtcAsLocalTimeJdbcType.INSTANCE );
+		}
+	}
+
+	/// What has been established for MySQL with MySQL Connector/J.
+	///
+	/// A date or a date and time is exchanged with the driver directly, and
+	/// is qualified from the first day of the documented range of the DATE
+	/// and DATETIME types. There is no column type which denotes an instant:
+	/// an `Instant`, and the instant of an `OffsetDateTime` or `ZonedDateTime`,
+	/// is stored in a DATETIME column as its date and time at UTC, by
+	/// convention. It passes through a [java.sql.Timestamp], which stores the
+	/// date of the Julian calendar before 15 October 1582, and reads a stored
+	/// date before then as the date ten days later, so only values from 1583
+	/// are qualified. The time of an `OffsetTime` at UTC is exchanged as a
+	/// `LocalTime`.
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
+		return mySqlFamilyTemporalPreservation( javaType, jdbcType );
+	}
+
+	/// The assessment shared by MySQL and MariaDB, each of which has been
+	/// established to behave this way with its own JDBC driver.
+	static TemporalPreservation mySqlFamilyTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
+		var preservation = StandardTemporalPreservations.directLocal(
+				javaType,
+				jdbcType,
+				StandardTemporalPreservations.MYSQL_SUPPORTED_START
+		);
+		if ( preservation == TemporalPreservation.unknown() ) {
+			preservation = StandardTemporalPreservations.directLocalTime( javaType, jdbcType );
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			preservation = StandardTemporalPreservations.instant(
+					javaType,
+					jdbcType,
+					TimestampUtcAsJdbcTimestampJdbcType.class,
+					TemporalPreservation.InstantBasis.UTC_CONVENTION,
+					StandardTemporalPreservations.TIMESTAMP_READ_SAFE_START
+			);
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			// stored the way an Instant is: the column keeps the instant and nothing else
+			preservation = StandardTemporalPreservations.offsetOrZoned(
+					javaType,
+					jdbcType,
+					TimestampUtcAsJdbcTimestampJdbcType.class,
+					TemporalPreservation.Level.UNSUPPORTED,
+					TemporalPreservation.InstantBasis.UTC_CONVENTION,
+					StandardTemporalPreservations.TIMESTAMP_READ_SAFE_START
+			);
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			// stored as its time of day at UTC, in a column which keeps nothing else
+			preservation = StandardTemporalPreservations.offsetTime(
+					javaType,
+					jdbcType,
+					TimeUtcAsLocalTimeJdbcType.class,
+					TemporalPreservation.Level.UNSUPPORTED
+			);
+		}
+		return preservation;
 	}
 
 	@Override

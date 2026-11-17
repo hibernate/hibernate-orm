@@ -25,6 +25,7 @@ import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.QuerySettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -63,6 +64,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /// @author Steve Ebersole
 @RequiresDialect(H2Dialect.class)
 @RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
+@RequiresDialect(MySQLDialect.class)
 @RequiresDialect(OracleDialect.class)
 class TemporalPreservationTimeZoneTests {
 	private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern( "uuuu-MM-dd" );
@@ -205,9 +207,16 @@ class TemporalPreservationTimeZoneTests {
 
 	private static String instantLiteral(Dialect dialect, Instant value) {
 		final String fields = DATE_TIME.format( value.atOffset( ZoneOffset.UTC ) );
-		return dialect instanceof OracleDialect
-				? "timestamp '" + fields + " +00:00'"
-				: "timestamp with time zone '" + fields + "+00:00'";
+		if ( dialect instanceof OracleDialect ) {
+			return "timestamp '" + fields + " +00:00'";
+		}
+		else if ( dialect instanceof MySQLDialect ) {
+			// the column holds the date and time at UTC
+			return "timestamp '" + fields + "'";
+		}
+		else {
+			return "timestamp with time zone '" + fields + "+00:00'";
+		}
 	}
 
 	private void checkSample(Session session, Dialect dialect, Object value, String literal, String combination) {
@@ -228,9 +237,18 @@ class TemporalPreservationTimeZoneTests {
 		).getSingleResult() ).intValue() ).as( "%s stored for %s", literal, description ).isEqualTo( 1 );
 
 		if ( value instanceof Instant instant ) {
-			final String epoch = dialect instanceof OracleDialect
-					? "round((cast(sys_extract_utc(theValue) as date) - date '1970-01-01') * 86400)"
-					: "extract(epoch from theValue)";
+			final String epoch;
+			if ( dialect instanceof OracleDialect ) {
+				epoch = "round((cast(sys_extract_utc(theValue) as date) - date '1970-01-01') * 86400)";
+			}
+			else if ( dialect instanceof MySQLDialect ) {
+				// the column holds the date and time at UTC
+				epoch = "timestampdiff(second, timestamp '1970-01-01 00:00:00', theValue)"
+					+ " - (case when theValue < timestamp '1970-01-01 00:00:00' and microsecond(theValue) <> 0 then 1 else 0 end)";
+			}
+			else {
+				epoch = "extract(epoch from theValue)";
+			}
 			assertThat( new BigDecimal( session.createNativeQuery(
 					"select " + epoch + " from " + table + " where id = " + id,
 					Object.class
@@ -306,12 +324,7 @@ class TemporalPreservationTimeZoneTests {
 				Instant.EPOCH
 		} ) {
 			final String fields = DATE_TIME.format( value.atOffset( ZoneOffset.UTC ) );
-			samples.put(
-					value,
-					dialect instanceof OracleDialect
-							? "timestamp '" + fields + " +00:00'"
-							: "timestamp with time zone '" + fields + "+00:00'"
-			);
+			samples.put( value, instantLiteral( dialect, value ) );
 		}
 		return samples;
 	}
@@ -356,6 +369,11 @@ class TemporalPreservationTimeZoneTests {
 			final String current = queryString( connection, "show time zone" );
 			execute( connection, "set time zone '" + zone + "'" );
 			return "set time zone '" + current + "'";
+		}
+		else if ( dialect instanceof MySQLDialect ) {
+			// MySQL and MariaDB
+			execute( connection, "set time_zone = '" + zone + "'" );
+			return "set time_zone = @@global.time_zone";
 		}
 		else {
 			execute( connection, "set time zone '" + zone + "'" );

@@ -56,3 +56,41 @@ OracleDialect,ZonedDateTime (NORMALIZED),OffsetDateTimeJdbcType,timestamp(9) wit
 OracleDialect,OffsetTime (ADJUSTED),OffsetTimeJdbcType,timestamp(0) with time zone,TIME,,,,QUALIFIED
 OracleDialect,OffsetDateTime (ADJUSTED),OffsetDateTimeJdbcType,timestamp(9) with time zone,INSTANT,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
 OracleDialect,ZonedDateTime (ADJUSTED),OffsetDateTimeJdbcType,timestamp(9) with time zone,INSTANT,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+MySQLDialect,LocalDate,LocalDateJdbcType,date,DATE,,1000-01-01,9999-12-31,QUALIFIED
+MySQLDialect,LocalTime,LocalTimeJdbcType,time(0),TIME,,,,QUALIFIED
+MySQLDialect,LocalDateTime,LocalDateTimeJdbcType,datetime(6),DATE+TIME,,1000-01-01T00:00,9999-12-31T23:59:59.999999999,QUALIFIED
+MySQLDialect,Instant,TimestampUtcAsJdbcTimestampJdbcType,datetime(6),INSTANT,UTC_CONVENTION,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+MySQLDialect,OffsetTime,TimeUtcAsLocalTimeJdbcType + IntegerJdbcType,time(0) + integer,TIME+OFFSET,,,,QUALIFIED
+MySQLDialect,OffsetDateTime,TimestampUtcAsJdbcTimestampJdbcType + IntegerJdbcType,datetime(6) + integer,INSTANT+OFFSET,UTC_CONVENTION,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+MySQLDialect,ZonedDateTime,TimestampUtcAsJdbcTimestampJdbcType + VarcharJdbcType,datetime(6) + varchar(255),INSTANT+OFFSET+ZONE_ID,UTC_CONVENTION,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+MySQLDialect,OffsetTime (INLINE),TimeUtcAsLocalTimeJdbcType,time(0),,,,,REJECTED
+MySQLDialect,OffsetDateTime (INLINE),TimestampUtcAsJdbcTimestampJdbcType,datetime(6),,,,,REJECTED
+MySQLDialect,ZonedDateTime (INLINE),TimestampUtcAsJdbcTimestampJdbcType,datetime(6),,,,,REJECTED
+MySQLDialect,OffsetTime (COLUMN),TimeUtcAsLocalTimeJdbcType + IntegerJdbcType,time(0) + integer,TIME+OFFSET,,,,QUALIFIED
+MySQLDialect,OffsetDateTime (COLUMN),TimestampUtcAsJdbcTimestampJdbcType + IntegerJdbcType,datetime(6) + integer,INSTANT+OFFSET,UTC_CONVENTION,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+MySQLDialect,ZonedDateTime (COLUMN),TimestampUtcAsJdbcTimestampJdbcType + VarcharJdbcType,datetime(6) + varchar(255),INSTANT+OFFSET+ZONE_ID,UTC_CONVENTION,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+MySQLDialect,OffsetTime (NORMALIZED),TimeUtcAsLocalTimeJdbcType,time(0),TIME,,,,QUALIFIED
+MySQLDialect,OffsetDateTime (NORMALIZED),TimestampUtcAsJdbcTimestampJdbcType,datetime(6),INSTANT,UTC_CONVENTION,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+MySQLDialect,ZonedDateTime (NORMALIZED),TimestampUtcAsJdbcTimestampJdbcType,datetime(6),INSTANT,UTC_CONVENTION,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+MySQLDialect,OffsetTime (ADJUSTED),TimeUtcAsLocalTimeJdbcType,time(0),TIME,,,,QUALIFIED
+MySQLDialect,OffsetDateTime (ADJUSTED),TimestampUtcAsJdbcTimestampJdbcType,datetime(6),INSTANT,UTC_CONVENTION,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+MySQLDialect,ZonedDateTime (ADJUSTED),TimestampUtcAsJdbcTimestampJdbcType,datetime(6),INSTANT,UTC_CONVENTION,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+MariaDBDialect,LocalDate,LocalDateJdbcType,date,DATE,,1000-01-01,9999-12-31,QUALIFIED
+MariaDBDialect,LocalTime,LocalTimeJdbcType,time(0),TIME,,,,QUALIFIED
+MariaDBDialect,LocalDateTime,LocalDateTimeJdbcType,datetime(6),DATE+TIME,,1000-01-01T00:00,9999-12-31T23:59:59.999999999,QUALIFIED
+MariaDBDialect,Instant,TimestampUtcAsJdbcTimestampJdbcType,datetime(6),INSTANT,UTC_CONVENTION,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+MariaDBDialect,OffsetTime,TimeUtcAsLocalTimeJdbcType + IntegerJdbcType,time(0) + integer,TIME+OFFSET,,,,QUALIFIED
+MariaDBDialect,OffsetDateTime,TimestampUtcAsJdbcTimestampJdbcType + IntegerJdbcType,datetime(6) + integer,INSTANT+OFFSET,UTC_CONVENTION,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+MariaDBDialect,ZonedDateTime,TimestampUtcAsJdbcTimestampJdbcType + VarcharJdbcType,datetime(6) + varchar(255),INSTANT+OFFSET+ZONE_ID,UTC_CONVENTION,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+MariaDBDialect,OffsetTime (INLINE),TimeUtcAsLocalTimeJdbcType,time(0),,,,,REJECTED
+MariaDBDialect,OffsetDateTime (INLINE),TimestampUtcAsJdbcTimestampJdbcType,datetime(6),,,,,REJECTED
+MariaDBDialect,ZonedDateTime (INLINE),TimestampUtcAsJdbcTimestampJdbcType,datetime(6),,,,,REJECTED
+MariaDBDialect,OffsetTime (COLUMN),TimeUtcAsLocalTimeJdbcType + IntegerJdbcType,time(0) + integer,TIME+OFFSET,,,,QUALIFIED
+MariaDBDialect,OffsetDateTime (COLUMN),TimestampUtcAsJdbcTimestampJdbcType + IntegerJdbcType,datetime(6) + integer,INSTANT+OFFSET,UTC_CONVENTION,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+MariaDBDialect,ZonedDateTime (COLUMN),TimestampUtcAsJdbcTimestampJdbcType + VarcharJdbcType,datetime(6) + varchar(255),INSTANT+OFFSET+ZONE_ID,UTC_CONVENTION,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+MariaDBDialect,OffsetTime (NORMALIZED),TimeUtcAsLocalTimeJdbcType,time(0),TIME,,,,QUALIFIED
+MariaDBDialect,OffsetDateTime (NORMALIZED),TimestampUtcAsJdbcTimestampJdbcType,datetime(6),INSTANT,UTC_CONVENTION,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+MariaDBDialect,ZonedDateTime (NORMALIZED),TimestampUtcAsJdbcTimestampJdbcType,datetime(6),INSTANT,UTC_CONVENTION,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+MariaDBDialect,OffsetTime (ADJUSTED),TimeUtcAsLocalTimeJdbcType,time(0),TIME,,,,QUALIFIED
+MariaDBDialect,OffsetDateTime (ADJUSTED),TimestampUtcAsJdbcTimestampJdbcType,datetime(6),INSTANT,UTC_CONVENTION,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+MariaDBDialect,ZonedDateTime (ADJUSTED),TimestampUtcAsJdbcTimestampJdbcType,datetime(6),INSTANT,UTC_CONVENTION,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED

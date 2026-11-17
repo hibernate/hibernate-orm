@@ -231,4 +231,12 @@ public class TiDBDialect extends MySQLDialect implements TemporalOperationSuppor
 	public TemporalTableSupport getTemporalTableSupport() {
 		return new TiDBTemporalTableSupport( this );
 	}
+
+	/// Nothing has been assessed for TiDB, which is a different database than MySQL.
+	@Override
+	public org.hibernate.dialect.type.spi.TemporalPreservation getTemporalPreservation(
+			org.hibernate.type.descriptor.java.JavaType<?> javaType,
+			org.hibernate.type.descriptor.jdbc.JdbcType jdbcType) {
+		return org.hibernate.dialect.type.spi.TemporalPreservation.unknown();
+	}
 }

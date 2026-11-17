@@ -40,6 +40,11 @@ public final class StandardTemporalPreservations {
 	public static final LocalDate COMMON_ERA_START = LocalDate.of( 1, 1, 1 );
 	/// The first day of the Gregorian calendar.
 	public static final LocalDate GREGORIAN_START = LocalDate.of( 1582, 10, 15 );
+	/// The first day of the range which MySQL and MariaDB document as
+	/// supported for their DATE and DATETIME types. Earlier dates have been
+	/// seen to be stored and returned correctly, and are documented as
+	/// working without any guarantee.
+	public static final LocalDate MYSQL_SUPPORTED_START = LocalDate.of( 1000, 1, 1 );
 	/// The first day from which a value requested from a JDBC driver as a
 	/// [java.sql.Timestamp] can be trusted when the database uses the proleptic
 	/// Gregorian calendar. Such a driver reads a stored date before 1582-10-15
@@ -119,6 +124,18 @@ public final class StandardTemporalPreservations {
 			Class<? extends JdbcType> jdbcTypeClass,
 			TemporalPreservation.Level offset,
 			LocalDate firstDay) {
+		return offsetOrZoned( javaType, jdbcType, jdbcTypeClass, offset, InstantBasis.NATIVE, firstDay );
+	}
+
+	/// As [#offsetOrZoned(JavaType, JdbcType, Class, TemporalPreservation.Level, LocalDate)],
+	/// for a column which denotes an instant in the given way.
+	public static TemporalPreservation offsetOrZoned(
+			JavaType<?> javaType,
+			JdbcType jdbcType,
+			Class<? extends JdbcType> jdbcTypeClass,
+			TemporalPreservation.Level offset,
+			InstantBasis basis,
+			LocalDate firstDay) {
 		final boolean zoned = javaType.getClass() == ZonedDateTimeJavaType.class;
 		if ( jdbcType.getClass() != jdbcTypeClass
 				|| !zoned && javaType.getClass() != OffsetDateTimeJavaType.class ) {
@@ -130,7 +147,7 @@ public final class StandardTemporalPreservations {
 				TemporalPreservation.Level.SUPPORTED,
 				offset,
 				zoned ? TemporalPreservation.Level.UNSUPPORTED : TemporalPreservation.Level.UNKNOWN,
-				InstantBasis.NATIVE,
+				basis,
 				firstDay.atStartOfDay().toInstant( ZoneOffset.UTC ),
 				lastMoment().toInstant( ZoneOffset.UTC )
 		);

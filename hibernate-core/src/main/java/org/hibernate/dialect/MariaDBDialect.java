@@ -9,6 +9,7 @@ import static org.hibernate.SPI.Role.IMPLEMENT;
 import static org.hibernate.SPI.Role.SUPPLY;
 
 import org.hibernate.dialect.type.spi.StandardDdlTypes;
+import org.hibernate.dialect.type.spi.TemporalPreservation;
 
 import org.hibernate.dialect.jdbc.spi.MySQLServerConfiguration;
 
@@ -68,6 +69,7 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorMa
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractors;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.VarcharUUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -259,6 +261,24 @@ public class MariaDBDialect extends MySQLDialect {
 		if ( getVersion().isSameOrAfter( 10, 7 ) ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( VarcharUUIDJdbcType.INSTANCE );
 		}
+	}
+
+	/// What has been established for MariaDB with MariaDB Connector/J.
+	///
+	/// A date or a date and time is exchanged with the driver directly, and
+	/// is qualified from the first day of the documented range of the DATE
+	/// and DATETIME types. There is no column type which denotes an instant:
+	/// an `Instant`, and the instant of an `OffsetDateTime` or `ZonedDateTime`,
+	/// is stored in a DATETIME column as its date and time at UTC, by
+	/// convention. It passes through a [java.sql.Timestamp], which stores the
+	/// date of the Julian calendar before 15 October 1582, and reads a stored
+	/// date before then as the date ten days later, so only values from 1583
+	/// are qualified. The time of an `OffsetTime` at UTC is exchanged as a
+	/// `LocalTime`.
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
+		return mySqlFamilyTemporalPreservation( javaType, jdbcType );
 	}
 
 	@Override

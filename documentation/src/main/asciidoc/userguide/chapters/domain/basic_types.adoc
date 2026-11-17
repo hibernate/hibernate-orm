@@ -884,7 +884,7 @@ Enabling temporal preservation has three effects.
 [[basic-temporal-preservation-support]]
 ====== What is supported
 
-Temporal preservation is supported on H2, PostgreSQL and Oracle, for `LocalDate`, `LocalTime`, `LocalDateTime`, `Instant`,
+Temporal preservation is supported on H2, PostgreSQL, Oracle, MySQL and MariaDB, for `LocalDate`, `LocalTime`, `LocalDateTime`, `Instant`,
 `OffsetTime`, `OffsetDateTime` and `ZonedDateTime`. The last three are described further under <<basic-temporal-preservation-policy>>.
 On every other database, a mapped value is rejected.
 So is a `LocalTime` on Oracle, which has no `TIME` type: the value is stored in a `TIMESTAMP` column,
@@ -894,6 +894,8 @@ The following table lists every combination which has been assessed.
 An `Outcome` of `QUALIFIED` means that the mapping is accepted, and `REJECTED` that the `SessionFactory` cannot be built with such an attribute.
 `Minimum` and `Maximum` are the least and greatest values which are preserved, and are empty where every value is.
 An `Instant basis` of `NATIVE` means that the column type itself denotes an instant.
+`UTC_CONVENTION` means that the database has no such column type, and that Hibernate stores the date and time of the instant at UTC in a column which knows of no time zone.
+The database then compares and orders the values correctly, but anything else which reads the column must know that it holds UTC.
 A row for a Java type alone is for an attribute with nothing declared.
 A row marked `INLINE` or `COLUMN` is for that representation, and a row marked `NORMALIZED` for that policy.
 A row marked `ADJUSTED` is for an attribute whose zone is declared with `@TimeZoneAdjustment`, of which the column need only keep the instant.
@@ -906,7 +908,9 @@ include::{core-project-dir}/src/test/resources/org/hibernate/orm/test/type/tempo
 
 The table is verified against each listed database by Hibernate's own test suite.
 It was established with H2 2.5.252, with PostgreSQL 18.6 and version 42.7.14 of its JDBC driver,
-and with Oracle Database 23.26 and version 23.26.4 of its JDBC driver.
+with Oracle Database 23.26 and version 23.26.4 of its JDBC driver,
+with MySQL 26.10 and version 26.10.0 of MySQL Connector/J,
+and with MariaDB 13.0 and version 4.0.0 of MariaDB Connector/J.
 A dialect which extends one of the listed dialects inherits its rows.
 
 The ranges are narrower than what these databases are able to store, for the following reasons.
@@ -920,6 +924,10 @@ The ranges are narrower than what these databases are able to store, for the fol
   The driver decides this by the date as seen in the time zone of the database session, which can be most of a day away from the date in UTC,
   so only a value read as 1 January 1583 or later can be trusted in every session time zone.
   `LocalDate` and `LocalDateTime` are not affected, since they are not exchanged as a `java.sql.Timestamp`.
+* On MySQL and MariaDB, the same holds for the same reason: an `Instant`, `OffsetDateTime` or `ZonedDateTime` before the year 1583 is excluded,
+  because it passes through a `java.sql.Timestamp`. A value written before 15 October 1582 would also be stored as the date of the Julian calendar.
+* On MySQL and MariaDB, a `LocalDate` or `LocalDateTime` before the year 1000 is excluded. Earlier dates were stored and returned correctly when tested,
+  but both databases document the year 1000 as the start of the supported range of their `DATE` and `DATETIME` types, with no guarantee before it.
 * On Oracle, an `OffsetDateTime` or `ZonedDateTime` before the year 1583 is excluded, to keep clear of values
   whose date in their own offset falls before 15 October 1582 while their date in UTC does not, or the reverse.
 
@@ -938,17 +946,18 @@ Few databases can store all of that in one column:
 |H2 |Kept |Kept |Lost
 |PostgreSQL |Kept |Lost: every value is read back at UTC |Lost
 |Oracle |Kept |Kept only to the minute, so an offset with seconds is lost |Lost
+|MySQL, MariaDB |Kept, as its date and time at UTC |Lost: every value is read back at UTC |Lost
 |===
 
 Nothing needs to be declared to deal with this.
 With temporal preservation enabled, Hibernate requires the whole value to be preserved,
 and stores it in a single column where that column keeps the whole value, and in two columns where it does not:
 
-[cols="1,1,1,1",options="header"]
+[cols="1,1,2",options="header"]
 |===
-|Type |H2 |PostgreSQL |Oracle
-|`OffsetDateTime` |One column |Instant, and offset |Instant, and offset
-|`ZonedDateTime` |Instant, and zone |Instant, and zone |Instant, and zone
+|Type |H2 |PostgreSQL, Oracle, MySQL, MariaDB
+|`OffsetDateTime` |One column |Instant, and offset
+|`ZonedDateTime` |Instant, and zone |Instant, and zone
 |===
 
 The columns of a mapping therefore depend on the database, and what is preserved does not.
@@ -1010,14 +1019,14 @@ Whether a single column keeps the whole value again depends on the database:
 |===
 |Database |Stored in a single column |By default
 |H2 |The time and the offset are kept |One column
-|PostgreSQL |The time at UTC is kept, and the offset is lost |Time at UTC, and offset
+|PostgreSQL, MySQL, MariaDB |The time at UTC is kept, and the offset is lost |Time at UTC, and offset
 |Oracle |The time at UTC is kept, and the offset only to the minute |Time at UTC, and offset
 |===
 
 With `@TimeZoneRepresentation(COLUMN)`, the first column holds the time of day at UTC, and the second the offset as a number of seconds.
-With the `NORMALIZED` policy, only the time of day at UTC is required, which a single column keeps on all three.
+With the `NORMALIZED` policy, only the time of day at UTC is required, which a single column keeps on every supported database.
 
-On PostgreSQL, the time at UTC is exchanged with the JDBC driver as a `LocalTime` when temporal preservation is enabled.
+On PostgreSQL, MySQL and MariaDB, the time at UTC is exchanged with the JDBC driver as a `LocalTime` when temporal preservation is enabled.
 When it is disabled, the value passes through a `java.sql.Time` instead, and what is stored depends on the default time zone of the JVM unless that is UTC.
 A table written with temporal preservation disabled by a JVM in another time zone therefore holds other times than one written with it enabled.
 
@@ -1033,7 +1042,7 @@ The _preservation policy_ of a mapping says so:
 `NORMALIZED`:: Only the instant must be preserved. The value read back denotes the same instant as the value written,
 but may have a different offset or zone.
 
-With the `NORMALIZED` policy a single column suffices on H2, PostgreSQL and Oracle.
+With the `NORMALIZED` policy a single column suffices on every supported database.
 
 The policy is selected with `@TemporalPreservationPolicy`:
 
@@ -1065,7 +1074,7 @@ hibernate.type.temporal_preservation_policy.zoned_datetime=normalized
 
 A policy states a requirement and nothing more.
 It does not make an unsupported mapping supported: a mapping which does not meet it is rejected when the `SessionFactory` is built.
-What is read back with the `NORMALIZED` policy depends on the database: at UTC on PostgreSQL, and with the offset which was written on H2 and Oracle.
+What is read back with the `NORMALIZED` policy depends on the database: at UTC on PostgreSQL, MySQL and MariaDB, and with the offset which was written on H2 and Oracle.
 
 The policy governs what a mapped attribute must preserve.
 A value which is not being written to or read from a mapped attribute, such as a query parameter compared with a column,
@@ -1258,8 +1267,10 @@ or on <<basic-datetime-time-zone,`hibernate.jdbc.time_zone`>>, whether configure
 
 * A `LocalDate`, `LocalTime` or `LocalDateTime` is exchanged with the driver as its fields, with no time zone involved.
 * An `Instant` is exchanged in a form which fixes it to UTC: as an `Instant` on H2, as an `OffsetDateTime` at UTC on Oracle,
-  and on PostgreSQL as a `java.sql.Timestamp` with a UTC calendar, which is not replaced by the configured JDBC time zone.
+  and on PostgreSQL, MySQL and MariaDB as a `java.sql.Timestamp` with a UTC calendar, which is not replaced by the configured JDBC time zone.
 * An `Instant` rendered as a SQL literal carries an explicit UTC offset.
+  On MySQL and MariaDB, where the column holds the date and time at UTC and knows of no time zone, the literal for an `Instant`,
+  `OffsetDateTime` or `ZonedDateTime` is its date and time at UTC without an offset, since the database would convert a literal with an offset to the time zone of its session.
 
 `hibernate.jdbc.time_zone` keeps its meaning for everything outside temporal preservation, such as `java.util.Date` attributes mapped in the same application.
 

@@ -319,8 +319,8 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 					t -> type == EventType.POST_COMMIT_DELETE
 					||   type == EventType.POST_COMMIT_INSERT
 					||   type == EventType.POST_COMMIT_UPDATE
-							? new PostCommitEventListenerGroupImpl<>( type, jpaBootstrap )
-							: new EventListenerGroupImpl<>( type)
+							? new PostCommitEventListenerGroupImpl<>( type )
+							: new EventListenerGroupImpl<>( type )
 			);
 		}
 

@@ -1010,13 +1010,16 @@ Whether a single column keeps the whole value again depends on the database:
 |===
 |Database |Stored in a single column |By default
 |H2 |The time and the offset are kept |One column
-|PostgreSQL |Not supported: the time is stored without its offset, in a way which depends on the default time zone of the JVM |Time at UTC, and offset
+|PostgreSQL |The time at UTC is kept, and the offset is lost |Time at UTC, and offset
 |Oracle |The time at UTC is kept, and the offset only to the minute |Time at UTC, and offset
 |===
 
 With `@TimeZoneRepresentation(COLUMN)`, the first column holds the time of day at UTC, and the second the offset as a number of seconds.
-With the `NORMALIZED` policy, only the time of day at UTC is required, which a single column keeps on H2 and Oracle.
-On PostgreSQL the value is stored in two columns under either policy.
+With the `NORMALIZED` policy, only the time of day at UTC is required, which a single column keeps on all three.
+
+On PostgreSQL, the time at UTC is exchanged with the JDBC driver as a `LocalTime` when temporal preservation is enabled.
+When it is disabled, the value passes through a `java.sql.Time` instead, and what is stored depends on the default time zone of the JVM unless that is UTC.
+A table written with temporal preservation disabled by a JVM in another time zone therefore holds other times than one written with it enabled.
 
 In a query, an `OffsetTime` stored in two columns can be selected, compared with a parameter, and taken apart with functions such as `extract(hour from ...)`.
 Comparing it with anything which occupies a single column, such as a literal or `current_time`, is rejected.
@@ -1085,8 +1088,7 @@ OffsetDateTime recordedAt;
 The zone is then part of the mapping and is not stored.
 The value is stored in a single column on every database, of which only the instant is required, and is always read back in the declared zone.
 For an `OffsetDateTime`, that is the offset which the zone has at the instant of the value, so `+02:00` in summer and `+01:00` in winter for `Europe/Paris`.
-For an `OffsetTime`, which has no date by which to tell, the zone must be a fixed offset such as `+02:00`,
-and a single column must keep the time at UTC, which rules out PostgreSQL.
+For an `OffsetTime`, which has no date by which to tell, the zone must be a fixed offset such as `+02:00`.
 
 What happens to a value which is written in another zone or offset depends on the policy of the attribute:
 
@@ -1142,9 +1144,9 @@ With temporal preservation enabled, the following are always rejected.
 |When the `SessionFactory` is built
 
 |A SQL literal for a value with an offset, when the offset has seconds, or when the year of the date in that offset is before 1 or after 9999.
+Also a SQL literal for an `OffsetTime` on Oracle, where a time literal carries no offset.
 Such a value can be bound as a parameter
 |When the literal is rendered
-Also a SQL literal for an `OffsetTime` on Oracle, where a time literal carries no offset.
 
 |A `java.time` value mapped to a JDBC type, whether selected by Hibernate or named explicitly, which is not listed as `QUALIFIED` above.
 An example is a `LocalDate` mapped with `@JdbcTypeCode(Types.DATE)`, which converts it to a `java.sql.Date`

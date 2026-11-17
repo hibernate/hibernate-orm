@@ -39,7 +39,6 @@ import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.internal.OffsetDateTimeCompositeUserType;
 import org.hibernate.usertype.internal.OffsetDateTimeOffsetCompositeUserType;
 import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
-import org.hibernate.usertype.internal.OffsetTimeLocalTimeCompositeUserType;
 import org.hibernate.usertype.internal.OffsetTimeOffsetCompositeUserType;
 import org.hibernate.usertype.internal.ZonedDateTimeCompositeUserType;
 import org.hibernate.usertype.internal.ZonedDateTimeZoneIdCompositeUserType;
@@ -70,29 +69,12 @@ public class TimeZoneStorageHelper {
 						: ZonedDateTimeCompositeUserType.class;
 			}
 			else if ( OFFSET_TIME_CLASS.equals( returnedClassName ) ) {
-				if ( !isPreserved( attributeMember, context ) ) {
-					return OffsetTimeCompositeUserType.class;
-				}
-				// the time at UTC is stored the way the Dialect is able to preserve it
-				return offsetTimePreservesTime( context )
+				return isPreserved( attributeMember, context )
 						? OffsetTimeOffsetCompositeUserType.class
-						: OffsetTimeLocalTimeCompositeUserType.class;
+						: OffsetTimeCompositeUserType.class;
 			}
 		}
 		return null;
-	}
-
-	/// Whether an `OffsetTime` stored in a single column, the way temporal
-	/// preservation maps it by default, keeps its time of day at UTC.
-	private static boolean offsetTimePreservesTime(MetadataBuildingContext context) {
-		final var typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
-		final var javaType = typeConfiguration.getJavaTypeRegistry().resolveDescriptor( OffsetTime.class );
-		final var jdbcType = javaType.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
-		return context.getMetadataCollector()
-				.getDatabase()
-				.getDialect()
-				.getTemporalPreservation( javaType, jdbcType )
-				.firstUnsupportedPart( Part.requiredOfNormalized( OffsetTime.class ) ) == null;
 	}
 
 	/// Whether [TimeZoneRepresentation] applies to the Java class.
@@ -232,7 +214,6 @@ public class TimeZoneStorageHelper {
 		return propertyHolder instanceof ComponentPropertyHolder componentHolder
 				&& componentHolder.getAggregateColumn() != null
 				&& ( compositeUserType == OffsetTimeOffsetCompositeUserType.class
-					|| compositeUserType == OffsetTimeLocalTimeCompositeUserType.class
 					|| compositeUserType == OffsetDateTimeOffsetCompositeUserType.class
 					|| compositeUserType == ZonedDateTimeZoneIdCompositeUserType.class )
 				? null

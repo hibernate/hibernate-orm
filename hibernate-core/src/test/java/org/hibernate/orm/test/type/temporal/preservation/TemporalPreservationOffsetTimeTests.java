@@ -87,7 +87,44 @@ class TemporalPreservationOffsetTimeTests {
 
 	@Test
 	void normalizedPolicyPreservesTheTimeAtUtc() {
+		assertThat( valueOf( WithNormalizedOffsetTime.class ) ).isInstanceOf( BasicValue.class );
 		checkRoundTrip( WithNormalizedOffsetTime.class, true );
+	}
+
+	/// Stored in a single column, the value is found by a parameter and by a
+	/// literal which denote the same time at UTC, whatever their offset.
+	@Test
+	void singleColumnIsComparedByItsTimeAtUtc() {
+		inEveryEnvironment( List.of( WithNormalizedOffsetTime.class ), (factory, environment) -> {
+			final var entity = new WithNormalizedOffsetTime();
+			entity.id = ids.incrementAndGet();
+			entity.theValue = OffsetTime.parse( "10:15:30+02:00" );
+			factory.inTransaction( session -> session.persist( entity ) );
+			final OffsetTime sameTime = OffsetTime.parse( "13:15:30+05:00" );
+			environment.accept( session -> {
+				assertThat( session.createQuery(
+						"select count(*) from WithNormalizedOffsetTime e where e.id = :id and e.theValue = :value",
+						Long.class
+				).setParameter( "id", entity.id ).setParameter( "value", sameTime ).getSingleResult() ).isEqualTo( 1L );
+				final var builder = session.getCriteriaBuilder();
+				final var query = builder.createQuery( Long.class );
+				final var root = query.from( WithNormalizedOffsetTime.class );
+				query.select( builder.count( root ) ).where(
+						builder.equal( root.get( "id" ), builder.literal( entity.id ) ),
+						builder.equal( root.get( "theValue" ), builder.literal( sameTime ) )
+				);
+				if ( factory.getJdbcServices().getDialect().getTemporalValueSemantics().supportsLiteralOffset()
+						|| factory.getJdbcServices().getDialect() instanceof PostgreSQLDialect ) {
+					assertThat( session.createQuery( query ).getSingleResult() ).isEqualTo( 1L );
+				}
+				else {
+					// the literal would be rendered without its offset
+					assertThatThrownBy( () -> session.createQuery( query ).getSingleResult() )
+							.isInstanceOf( TemporalPreservationException.class )
+							.hasMessageContaining( "bind the value as a parameter" );
+				}
+			} );
+		} );
 	}
 
 	/// The local time of day and the offset are available to queries.
@@ -126,16 +163,10 @@ class TemporalPreservationOffsetTimeTests {
 						.hasStackTraceContaining( MappingSettings.TEMPORAL_PRESERVATION ) );
 	}
 
-	/// A declared offset needs a single column which keeps the time at UTC,
-	/// which the PostgreSQL mapping has not been established to do.
+	/// With a declared offset, a single column which keeps the time at UTC suffices.
 	@Test
 	void declaredOffsetIsApplied() {
-		if ( DialectContext.getDialect() instanceof PostgreSQLDialect ) {
-			assertThatThrownBy( () -> valueOf( WithOffsetTimeAtPlusTwo.class, true ) )
-					.isInstanceOf( MappingException.class )
-					.hasMessageContaining( MappingSettings.TEMPORAL_PRESERVATION );
-			return;
-		}
+		assertThat( valueOf( WithOffsetTimeAtPlusTwo.class ) ).isInstanceOf( BasicValue.class );
 		final ZoneOffset plusTwo = ZoneOffset.ofHours( 2 );
 		inEveryEnvironment( List.of( WithOffsetTimeAtPlusTwo.class, WithNormalizedOffsetTimeAtPlusTwo.class ), (factory, environment) -> {
 			final var entity = new WithOffsetTimeAtPlusTwo();

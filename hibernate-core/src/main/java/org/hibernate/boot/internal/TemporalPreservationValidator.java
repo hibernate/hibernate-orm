@@ -41,7 +41,6 @@ import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
 import org.hibernate.usertype.internal.OffsetDateTimeCompositeUserType;
 import org.hibernate.usertype.internal.OffsetDateTimeOffsetCompositeUserType;
 import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
-import org.hibernate.usertype.internal.OffsetTimeLocalTimeCompositeUserType;
 import org.hibernate.usertype.internal.OffsetTimeOffsetCompositeUserType;
 import org.hibernate.usertype.internal.ZonedDateTimeCompositeUserType;
 import org.hibernate.usertype.internal.ZonedDateTimeZoneIdCompositeUserType;
@@ -80,8 +79,7 @@ final class TemporalPreservationValidator {
 			ZonedDateTimeCompositeUserType.class.getName(), ZonedDateTime.class,
 			ZonedDateTimeZoneIdCompositeUserType.class.getName(), ZonedDateTime.class,
 			OffsetTimeCompositeUserType.class.getName(), OffsetTime.class,
-			OffsetTimeOffsetCompositeUserType.class.getName(), OffsetTime.class,
-			OffsetTimeLocalTimeCompositeUserType.class.getName(), OffsetTime.class
+			OffsetTimeOffsetCompositeUserType.class.getName(), OffsetTime.class
 	);
 
 	private final Dialect dialect;
@@ -303,7 +301,7 @@ final class TemporalPreservationValidator {
 	/// `OffsetTime` is stored as its time of day at UTC and its offset in
 	/// seconds. None of these loses anything. The first column is held to
 	/// what the Dialect reports for an `Instant`, or for the time of an
-	/// `OffsetTime` or a `LocalTime`, stored that way.
+	/// `OffsetTime`, stored that way.
 	private void validateOffsetColumn(Component component, String role, MemberDetails member) {
 		final Class<?> javaClass = TIME_ZONE_COLUMN_TYPES.get( component.getTypeName() );
 		rejectTimeZoneStorage( member, role );

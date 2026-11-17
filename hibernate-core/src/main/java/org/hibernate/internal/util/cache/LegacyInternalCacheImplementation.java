@@ -2,7 +2,6 @@ package org.hibernate.internal.util.cache;
 
 import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
 
-import java.io.Serializable;
 import java.util.function.Function;
 
 /**
@@ -10,7 +9,7 @@ import java.util.function.Function;
  * @param <K>
  * @param <V>
  */
-final class LegacyInternalCacheImplementation<K,V> implements InternalCache<K,V>, Serializable {
+final class LegacyInternalCacheImplementation<K,V> implements InternalCache<K,V> {
 
 	private final BoundedConcurrentHashMap<K,V> map;
 

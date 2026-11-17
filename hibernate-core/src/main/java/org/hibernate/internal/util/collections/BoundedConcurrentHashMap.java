@@ -1,7 +1,5 @@
 package org.hibernate.internal.util.collections;
 
-import java.io.IOException;
-import java.io.Serializable;
 import java.util.AbstractCollection;
 import java.util.AbstractMap;
 import java.util.AbstractSet;
@@ -86,7 +84,7 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 @Deprecated(forRemoval = true)
 public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
-		implements ConcurrentMap<K, V>, Serializable {
+		implements ConcurrentMap<K, V> {
 
 	/*
 	 * The basic strategy is to subdivide the table among Segments,
@@ -141,9 +139,9 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 	 */
 	final Segment<K, V>[] segments;
 
-	transient Set<K> keySet;
-	transient Set<Entry<K, V>> entrySet;
-	transient Collection<V> values;
+	Set<K> keySet;
+	Set<Entry<K, V>> entrySet;
+	Collection<V> values;
 
 	/* ---------------- Small Utilities -------------- */
 
@@ -1087,22 +1085,16 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			*     the "count" field after structurally changing any bin.
 			*     The operations must not take any action that could even
 			*     momentarily cause a concurrent read operation to see
-			*     inconsistent data. This is made easier by the nature of
-			*     the read operations in Map. For example, no operation
-			*     can reveal that the table has grown but the threshold
-			*     has not yet been updated, so there are no atomicity
-			*     requirements for this with respect to reads.
+			*     inconsistent data.
 			*
 			* As a guide, all critical volatile reads and writes to the
 			* count field are marked in code comments.
 			*/
 
-		private static final long serialVersionUID = 2249069246763182397L;
-
 		/**
 		 * The number of elements in this segment's region.
 		 */
-		transient volatile int count;
+		volatile int count;
 
 		/**
 		 * Number of updates that alter the size of the table. This is
@@ -1112,52 +1104,23 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		 * we might have an inconsistent view of state so (usually)
 		 * must retry.
 		 */
-		transient int modCount;
+		int modCount;
 
-		/**
-		 * The table is rehashed when its size exceeds this threshold.
-		 * (The value of this field is always {@code (int)(capacity *
-		 * loadFactor)}.)
-		 */
-		transient int threshold;
-
-		/**
-		 * The per-segment table.
-		 */
-		transient volatile HashEntry<K, V>[] table;
-
-		/**
-		 * The load factor for the hash table.  Even though this value
-		 * is same for all segments, it is replicated to avoid needing
-		 * links to outer object.
-		 *
-		 * @serial
-		 */
-		final float loadFactor;
+		final HashEntry<K, V>[] table;
 
 		final int evictCap;
 
-		transient final EvictionPolicy<K, V> eviction;
+		final EvictionPolicy<K, V> eviction;
 
 		Segment(int cap, int evictCap, float lf, Eviction es) {
-			loadFactor = lf;
 			this.evictCap = evictCap;
 			eviction = es.make( this, evictCap, lf );
-			setTable( HashEntry.newArray( cap ) );
+			table = HashEntry.newArray( cap );
 		}
 
 		@SuppressWarnings("unchecked")
 		private static <K, V> Segment<K, V>[] newArray(int i) {
 			return new Segment[i];
-		}
-
-		/**
-		 * Sets table to new HashEntry array.
-		 * Call only while holding lock or in constructor.
-		 */
-		void setTable(HashEntry<K, V>[] newTable) {
-			threshold = (int) ( newTable.length * loadFactor );
-			table = newTable;
 		}
 
 		/**
@@ -2023,8 +1986,6 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 	 */
 	final class WriteThroughEntry extends SimpleEntry<K, V> {
 
-		private static final long serialVersionUID = -7041346694785573824L;
-
 		WriteThroughEntry(K k, V v) {
 			super( k, v );
 		}
@@ -2152,68 +2113,6 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		@Override
 		public void clear() {
 			BoundedConcurrentHashMap.this.clear();
-		}
-	}
-
-	/* ---------------- Serialization Support -------------- */
-
-	/**
-	 * Save the state of the {@code ConcurrentHashMap} instance to a
-	 * stream (i.e., serialize it).
-	 *
-	 * @param s the stream
-	 *
-	 * @serialData the key (Object) and value (Object)
-	 * for each key-value mapping, followed by a null pair.
-	 * The key-value mappings are emitted in no particular order.
-	 */
-	private void writeObject(java.io.ObjectOutputStream s) throws IOException {
-		s.defaultWriteObject();
-
-		for ( int k = 0; k < segments.length; ++k ) {
-			Segment<K, V> seg = segments[k];
-			seg.lock();
-			try {
-				HashEntry<K, V>[] tab = seg.table;
-				for ( int i = 0; i < tab.length; ++i ) {
-					for ( HashEntry<K, V> e = tab[i]; e != null; e = e.next ) {
-						s.writeObject( e.key );
-						s.writeObject( e.value );
-					}
-				}
-			}
-			finally {
-				seg.unlock();
-			}
-		}
-		s.writeObject( null );
-		s.writeObject( null );
-	}
-
-	/**
-	 * Reconstitute the {@code ConcurrentHashMap} instance from a
-	 * stream (i.e., deserialize it).
-	 *
-	 * @param s the stream
-	 */
-	@SuppressWarnings("unchecked")
-	private void readObject(java.io.ObjectInputStream s) throws IOException,
-			ClassNotFoundException {
-		s.defaultReadObject();
-
-		// Initialize each segment to be minimally sized, and let grow.
-		for ( int i = 0; i < segments.length; ++i ) {
-			segments[i].setTable( new HashEntry[1] );
-		}
-
-		// Read the keys and values, and put the mappings in the table
-		for (; ; ) {
-			K key = (K) s.readObject();
-			V value = (V) s.readObject();
-			if ( key == null ) {
-				break;
-			}
-			put( key, value );
 		}
 	}
 }

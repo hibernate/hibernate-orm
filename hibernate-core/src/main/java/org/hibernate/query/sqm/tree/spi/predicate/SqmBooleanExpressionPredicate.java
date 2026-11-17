@@ -86,7 +86,13 @@ public class SqmBooleanExpressionPredicate extends AbstractNegatableSqmPredicate
 
 	@Override
 	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
+		if ( isNegated() ) {
+			hql.append( "not (" );
+		}
 		booleanExpression.appendHqlString( hql, context );
+		if ( isNegated() ) {
+			hql.append( ')' );
+		}
 	}
 
 	@Override

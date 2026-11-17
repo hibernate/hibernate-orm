@@ -189,9 +189,8 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 
 	@Override
 	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
-		appendHqlCteString( hql, context );
 		hql.append( "insert into " );
-		hql.append( getTarget().getEntityName() );
+		hql.append( getTarget().getEntityName() ).append( ' ' ).append( getTarget().resolveAlias( context ) );
 		final List<SqmPath<?>> insertionTargetPaths = this.insertionTargetPaths;
 		if ( insertionTargetPaths != null && !insertionTargetPaths.isEmpty() ) {
 			hql.append( '(' );

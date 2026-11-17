@@ -134,7 +134,7 @@ public class SqmDeleteStatement<T>
 
 	@Override
 	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
-		appendHqlCteString( hql, context );
+		context = appendHqlCteClause( hql, context );
 		hql.append( "delete from " );
 		final SqmRoot<T> root = getTarget();
 		hql.append( root.getEntityName() );

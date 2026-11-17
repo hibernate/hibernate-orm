@@ -9,6 +9,7 @@ import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.sqm.tree.spi.SqmCacheable;
 import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
 import org.hibernate.query.sqm.tree.spi.SqmRenderContext;
+import org.hibernate.query.sqm.tree.spi.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.spi.expression.SqmExpression;
 
 import jakarta.annotation.Nonnull;
@@ -109,26 +110,27 @@ public class SqmSortSpecification implements JpaOrder, SqmCacheable {
 	}
 
 	public void appendHqlString(StringBuilder sb, SqmRenderContext context) {
-		sortExpression.appendHqlString( sb, context );
-		if ( sortOrder == SortDirection.DESCENDING ) {
-			sb.append( " desc" );
-			if ( nullPrecedence != null ) {
-				if ( nullPrecedence == Nulls.FIRST ) {
-					sb.append( " nulls first" );
-				}
-				else {
-					sb.append( " nulls last" );
-				}
-			}
+		appendHqlString( sb, context, sortExpression );
+	}
+
+	/**
+	 * Render this sort specification with the given node in place of its
+	 * sort expression, for a sort expression which only refers to that node.
+	 */
+	public void appendHqlString(StringBuilder sb, SqmRenderContext context, SqmVisitableNode sortExpression) {
+		if ( ignoreCase ) {
+			sb.append( "lower(" );
 		}
-		else if ( nullPrecedence != null ) {
-			sb.append( " asc" );
-			if ( nullPrecedence == Nulls.FIRST ) {
-				sb.append( " nulls first" );
-			}
-			else {
-				sb.append( " nulls last" );
-			}
+		sortExpression.appendHqlString( sb, context );
+		if ( ignoreCase ) {
+			sb.append( ')' );
+		}
+		sb.append( sortOrder == SortDirection.DESCENDING ? " desc" : " asc" );
+		if ( nullPrecedence == Nulls.FIRST ) {
+			sb.append( " nulls first" );
+		}
+		else if ( nullPrecedence == Nulls.LAST ) {
+			sb.append( " nulls last" );
 		}
 	}
 
@@ -137,7 +139,8 @@ public class SqmSortSpecification implements JpaOrder, SqmCacheable {
 		return other instanceof SqmSortSpecification that
 			&& sortExpression.equals( that.sortExpression )
 			&& this.sortOrder == that.sortOrder
-			&& this.nullPrecedence == that.nullPrecedence;
+			&& this.nullPrecedence == that.nullPrecedence
+			&& this.ignoreCase == that.ignoreCase;
 	}
 
 	@Override
@@ -145,6 +148,7 @@ public class SqmSortSpecification implements JpaOrder, SqmCacheable {
 		int result = sortExpression.hashCode();
 		result = 31 * result + sortOrder.hashCode();
 		result = 31 * result + Objects.hashCode( nullPrecedence );
+		result = 31 * result + Boolean.hashCode( ignoreCase );
 		return result;
 	}
 
@@ -153,7 +157,8 @@ public class SqmSortSpecification implements JpaOrder, SqmCacheable {
 		return other instanceof SqmSortSpecification that
 			&& sortExpression.isCompatible( that.sortExpression )
 			&& this.sortOrder == that.sortOrder
-			&& this.nullPrecedence == that.nullPrecedence;
+			&& this.nullPrecedence == that.nullPrecedence
+			&& this.ignoreCase == that.ignoreCase;
 	}
 
 	@Override
@@ -161,6 +166,7 @@ public class SqmSortSpecification implements JpaOrder, SqmCacheable {
 		int result = sortExpression.cacheHashCode();
 		result = 31 * result + sortOrder.hashCode();
 		result = 31 * result + Objects.hashCode( nullPrecedence );
+		result = 31 * result + Boolean.hashCode( ignoreCase );
 		return result;
 	}
 }

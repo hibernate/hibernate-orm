@@ -149,11 +149,13 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 
 	@Override
 	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
+		hql.append( '(' );
 		lhsOperand.appendHqlString( hql, context );
 		hql.append( ' ' );
 		hql.append( operator.getOperatorSqlText() );
 		hql.append( ' ' );
 		rhsOperand.appendHqlString( hql, context );
+		hql.append( ')' );
 	}
 
 	@Override

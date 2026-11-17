@@ -2839,27 +2839,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final var currentQuerySpec = currentQuerySpec();
 		final var sessionFactory = getSessionFactory();
 		final TableGroup tableGroup;
-		if ( sqmRoot.containsOnlyInnerJoins() ) {
-			// If we have just inner joins against a correlated root, we can render the joins as references
-			// If we correlate a join, we have to create a special SqmRoot shell called SqmCorrelatedRootJoin.
-			// The only purpose of that is to serve as SqmRoot, which is needed for the FROM clause.
-			// It will always contain just a single correlated join though, which is what is actually correlated
-			final SqmFrom<?, ?> from;
-			if ( sqmRoot instanceof SqmCorrelatedRootJoin<?> ) {
-				final var sqmJoins = sqmRoot.getSqmJoins();
-				assert sqmJoins.size() == 1
-					&& sqmJoins.get( 0 ).isCorrelated();
-				from = sqmJoins.get( 0 );
-			}
-			else {
-				from = sqmRoot;
-			}
-			final var parentTableGroup = fromClauseIndex.findTableGroup(
-					from.getCorrelationParent().getNavigablePath()
-			);
-			if ( parentTableGroup == null ) {
-				throw new InterpretationException( null, "Access to from node '" + from.getCorrelationParent() + "' is not possible in from-clause subqueries, unless the 'lateral' keyword is used for the subquery!" );
-			}
+		final SqmFrom<?, ?> from = sqmRoot instanceof SqmCorrelatedRootJoin<?> rootJoin
+				? rootJoin.getCorrelatedJoin()
+				: sqmRoot;
+		final var parentTableGroup = fromClauseIndex.findTableGroup( from.getCorrelationParent().getNavigablePath() );
+		if ( parentTableGroup == null ) {
+			throw new InterpretationException( null, "Access to from node '" + from.getCorrelationParent() + "' is not possible in from-clause subqueries, unless the 'lateral' keyword is used for the subquery!" );
+		}
+		if ( sqmRoot.containsOnlyInnerJoins() || !( from.getNodeType() instanceof EntityDomainType<?> entityType ) ) {
+			// Inner joins can become roots with their predicates in WHERE. A correlation
+			// to a derived row or other non-entity value has no entity root of its own.
 			final var sqlAliasBase = sqlAliasBaseManager.createSqlAliasBase( parentTableGroup.getGroupAlias() );
 			if ( parentTableGroup instanceof PluralTableGroup pluralTableGroup ) {
 				final var correlatedPluralTableGroup = new CorrelatedPluralTableGroup(
@@ -2912,40 +2901,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						sessionFactory
 				);
 			}
-
-			fromClauseIndex.register( from, tableGroup );
-			registerPluralTableGroupParts( tableGroup );
-			// Note that we do not need to register the correlated table group to the from clause
-			// because that is never "rendered" in the subquery anyway.
-			// Any table group joins added to the correlated table group are added to the query spec
-			// as roots anyway, so nothing to worry about
-
-//			LOG.tracef( "Resolved SqmRoot [%s] to correlated TableGroup [%s]", sqmRoot, tableGroup );
-			if ( from instanceof SqmRoot<?> correlatedRoot ) {
-				consumeJoins( correlatedRoot, fromClauseIndex, tableGroup );
-			}
-			else {
-				consumeExplicitJoins( from, tableGroup );
-			}
-			return;
 		}
 		else {
-			final var entityDescriptor = resolveEntityPersister( sqmRoot.getModel() );
-			final var parentTableGroup = fromClauseIndex.findTableGroup(
-					sqmRoot.getCorrelationParent().getNavigablePath()
-			);
+			final var entityDescriptor = resolveEntityPersister( entityType );
 			// If we have non-inner joins against a correlated root, we must render the root with a correlation predicate
 			tableGroup = entityDescriptor.createRootTableGroup(
 					true,
-					sqmRoot.getNavigablePath(),
-					sqmRoot.getExplicitAlias(),
+					from.getNavigablePath(),
+					from.getExplicitAlias(),
 					null,
 					() -> predicate -> {},
 					this
 			);
 			final var identifierMapping = entityDescriptor.getIdentifierMapping();
 			final var navigablePath =
-					sqmRoot.getNavigablePath()
+					from.getNavigablePath()
 							.append( identifierMapping.getNavigableRole().getNavigableName() );
 			final int jdbcTypeCount = identifierMapping.getJdbcTypeCount();
 			if ( jdbcTypeCount == 1 ) {
@@ -2998,14 +2968,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						)
 				);
 			}
+			currentQuerySpec.getFromClause().addRoot( tableGroup );
 		}
-
-//		LOG.tracef( "Resolved SqmRoot [%s] to new TableGroup [%s]", sqmRoot, tableGroup );
-
-		fromClauseIndex.register( sqmRoot, tableGroup );
-		currentQuerySpec.getFromClause().addRoot( tableGroup );
-
-		consumeJoins( sqmRoot, fromClauseIndex, tableGroup );
+		fromClauseIndex.register( from, tableGroup );
+		registerPluralTableGroupParts( tableGroup );
+		if ( from instanceof SqmRoot<?> correlatedRoot ) {
+			consumeJoins( correlatedRoot, fromClauseIndex, tableGroup );
+		}
+		else {
+			consumeExplicitJoins( from, tableGroup );
+		}
 	}
 
 	protected void consumeFromClauseRoot(SqmRoot<?> sqmRoot) {

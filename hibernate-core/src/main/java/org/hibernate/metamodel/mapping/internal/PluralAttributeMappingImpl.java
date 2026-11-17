@@ -1000,7 +1000,12 @@ public class PluralAttributeMappingImpl
 	}
 
 	public SqlAstJoinType determineSqlJoinType(TableGroup lhs, @Nullable SqlAstJoinType requestedJoinType, boolean fetched) {
-		if ( hasSoftDelete() ) {
+		if ( hasSoftDelete() && ( fetched || requestedJoinType != SqlAstJoinType.INNER ) ) {
+			// The restriction which hides the soft-deleted elements is part of the
+			// join predicate. A left join keeps the owner when every element is
+			// hidden, as a fetch requires. A right or full join would bring back
+			// the hidden elements, so it is rendered as a left join too. Only an
+			// inner join which is not a fetch keeps its type.
 			return SqlAstJoinType.LEFT;
 		}
 		else if ( requestedJoinType == null ) {

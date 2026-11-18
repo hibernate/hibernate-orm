@@ -59,21 +59,16 @@ public final class ToOneVisibilityLoader {
 		// The persistence context resolves a unique key regardless of the
 		// association restrictions and of the current filter arguments.
 		final var targets = cache.getTargets( this, plan );
-		final var uniqueKey = uniqueKey( key, session );
+		final var persister = association.getEntityMappingType().getEntityPersister();
+		final String propertyName = association.getReferencedPropertyName();
+		final var uniqueKey = new EntityUniqueKey( persister.getEntityName(), propertyName, key,
+				persister.getPropertyType( propertyName ), session.getFactory() );
 		if ( targets.containsKey( uniqueKey ) ) {
 			return targets.get( uniqueKey );
 		}
 		final Object target = plan.load( key, session );
-		// Keep the lookup key from escaping, allowing its allocation to be eliminated on cache hits.
-		targets.put( uniqueKey( key, session ), target );
+		targets.put( uniqueKey, target );
 		return target;
-	}
-
-	private EntityUniqueKey uniqueKey(Object key, SharedSessionContractImplementor session) {
-		final var persister = association.getEntityMappingType().getEntityPersister();
-		final String propertyName = association.getReferencedPropertyName();
-		return new EntityUniqueKey( persister.getEntityName(), propertyName, key,
-				persister.getPropertyType( propertyName ), session.getFactory() );
 	}
 
 	private Plan getPlan(boolean byUniqueKey, JdbcValuesSourceProcessingState processingState) {

@@ -16,6 +16,7 @@ import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.QuerySettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -63,6 +64,7 @@ class TemporalPreservationStorageTests {
 			@Setting(name = QuerySettings.CRITERIA_VALUE_HANDLING_MODE, value = "inline")
 	})
 	@RequiresDialect(H2Dialect.class)
+	@RequiresDialect(HSQLDialect.class)
 	@RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
 	@RequiresDialect(MySQLDialect.class)
 	@RequiresDialect(SQLServerDialect.class)
@@ -234,7 +236,7 @@ class TemporalPreservationStorageTests {
 			final long day = 86_400;
 			// The ten days before 1582-10-15 do not exist in Oracle's calendar,
 			// and Oracle itself stores such a literal as 1582-10-15.
-			final long[] secondsEarlier = dialect( scope ) instanceof OracleDialect
+			final long[] secondsEarlier = dialect( scope ) instanceof OracleDialect || dialect( scope ) instanceof HSQLDialect
 					? new long[] { 11 * day, 12 * day, 400 * day, 30_000 * day }
 					: new long[] { 1, day, 5 * day, 10 * day, 11 * day, 20 * day, 400 * day, 30_000 * day };
 			for ( long seconds : secondsEarlier ) {
@@ -249,6 +251,7 @@ class TemporalPreservationStorageTests {
 			@Setting(name = QuerySettings.CRITERIA_VALUE_HANDLING_MODE, value = "inline")
 	})
 	@RequiresDialect(H2Dialect.class)
+	@RequiresDialect(HSQLDialect.class)
 	@RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
 	@RequiresDialect(MySQLDialect.class)
 	@RequiresDialect(SQLServerDialect.class)
@@ -423,6 +426,9 @@ class TemporalPreservationStorageTests {
 		else if ( dialect( scope ) instanceof SQLServerDialect ) {
 			expression = TemporalPreservationSql.SQL_SERVER_EPOCH;
 		}
+		else if ( dialect( scope ) instanceof HSQLDialect ) {
+			expression = TemporalPreservationSql.hsqlEpoch( false );
+		}
 		else {
 			expression = "extract(epoch from theValue)";
 		}
@@ -467,7 +473,9 @@ class TemporalPreservationStorageTests {
 	}
 
 	private static LocalDate firstDay(SessionFactoryScope scope) {
-		if ( dialect( scope ) instanceof OracleDialect || dialect( scope ) instanceof SQLServerDialect ) {
+		if ( dialect( scope ) instanceof OracleDialect
+				|| dialect( scope ) instanceof SQLServerDialect
+				|| dialect( scope ) instanceof HSQLDialect ) {
 			return StandardTemporalPreservations.GREGORIAN_START;
 		}
 		else if ( dialect( scope ) instanceof MySQLDialect ) {
@@ -500,7 +508,7 @@ class TemporalPreservationStorageTests {
 
 	/// A date outside the supported range which the database can store.
 	private static String outsideRangeDateLiteral(SessionFactoryScope scope) {
-		if ( dialect( scope ) instanceof OracleDialect ) {
+		if ( dialect( scope ) instanceof OracleDialect || dialect( scope ) instanceof HSQLDialect ) {
 			return "date '1582-10-04'";
 		}
 		else if ( dialect( scope ) instanceof SQLServerDialect ) {
@@ -526,6 +534,10 @@ class TemporalPreservationStorageTests {
 		}
 		else if ( dialect( scope ) instanceof SQLServerDialect ) {
 			return TemporalPreservationSql.sqlServerInstantLiteral( fields );
+		}
+		else if ( dialect( scope ) instanceof HSQLDialect ) {
+			// the column holds the date and time at UTC
+			return TemporalPreservationSql.hsqlInstantLiteral( fields, false );
 		}
 		else {
 			return "timestamp with time zone '" + fields + "+00:00'";

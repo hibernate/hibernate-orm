@@ -91,6 +91,13 @@ import org.hibernate.dialect.sql.ast.spi.OptionalTableUpdateOperationRequest;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractors;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
+import org.hibernate.dialect.type.internal.StandardTemporalPreservations;
+import org.hibernate.dialect.type.spi.TemporalPreservation;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.OffsetDateTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.OffsetTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.SQLException;
@@ -136,6 +143,63 @@ public class HSQLDialect extends Dialect implements CurrentTemporalSupport, Temp
 	@SPI({ IMPLEMENT, SUPPLY })
 	public CurrentTemporalSupport getCurrentTemporalSupport() {
 		return this;
+	}
+
+	/// What has been established for HSQLDB with its own JDBC driver.
+	///
+	/// HSQLDB uses the Julian calendar before 15 October 1582. A date, or a
+	/// date and time, which the driver is handed directly is moved to that
+	/// calendar as it is written, and is not moved back as it is read, so
+	/// only values from 15 October 1582 are qualified. There is no restriction
+	/// on a time of day.
+	///
+	/// An `Instant` is stored in a TIMESTAMP column, which knows of no time
+	/// zone, as its date and time at UTC, by convention. An `OffsetDateTime`
+	/// is stored in a TIMESTAMP WITH TIME ZONE column, and an `OffsetTime` in
+	/// a TIME WITH TIME ZONE column, both of which keep the offset to the
+	/// second. An `OffsetDateTime` is written with its own offset, in which
+	/// its date may fall before 15 October 1582 while its date at UTC does
+	/// not, so it is qualified from 1583.
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
+		var preservation = StandardTemporalPreservations.directLocal(
+				javaType,
+				jdbcType,
+				StandardTemporalPreservations.GREGORIAN_START
+		);
+		if ( preservation == TemporalPreservation.unknown() ) {
+			preservation = StandardTemporalPreservations.directLocalTime( javaType, jdbcType );
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			preservation = StandardTemporalPreservations.instant(
+					javaType,
+					jdbcType,
+					TimestampUtcAsJdbcTimestampJdbcType.class,
+					TemporalPreservation.InstantBasis.UTC_CONVENTION,
+					StandardTemporalPreservations.GREGORIAN_START
+			);
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			// the column keeps the offset, to the second, but not a region
+			preservation = StandardTemporalPreservations.offsetOrZoned(
+					javaType,
+					jdbcType,
+					OffsetDateTimeJdbcType.class,
+					TemporalPreservation.Level.SUPPORTED,
+					StandardTemporalPreservations.TIMESTAMP_READ_SAFE_START
+			);
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			// the column keeps the time and the offset, to the second
+			preservation = StandardTemporalPreservations.offsetTime(
+					javaType,
+					jdbcType,
+					OffsetTimeJdbcType.class,
+					TemporalPreservation.Level.SUPPORTED
+			);
+		}
+		return preservation;
 	}
 	private static final SequenceInformationExtractor SEQUENCE_INFORMATION_EXTRACTOR =
 			SequenceInformationExtractors.builder( "select * from information_schema.sequences" )

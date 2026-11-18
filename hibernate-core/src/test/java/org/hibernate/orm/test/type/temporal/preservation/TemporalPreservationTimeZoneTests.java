@@ -25,6 +25,7 @@ import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.QuerySettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -64,6 +65,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 ///
 /// @author Steve Ebersole
 @RequiresDialect(H2Dialect.class)
+@RequiresDialect(HSQLDialect.class)
 @RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
 @RequiresDialect(MySQLDialect.class)
 @RequiresDialect(SQLServerDialect.class)
@@ -151,7 +153,7 @@ class TemporalPreservationTimeZoneTests {
 		final long day = 24 * hour;
 		// The ten days before 1582-10-15 do not exist in Oracle's calendar,
 		// and Oracle itself stores such a literal as 1582-10-15.
-		final long[] secondsEarlier = dialect instanceof OracleDialect
+		final long[] secondsEarlier = dialect instanceof OracleDialect || dialect instanceof HSQLDialect
 				? new long[] { 11 * day, 400 * day }
 				: new long[] { 1, hour, 5 * hour, 16 * hour, day, 2 * day, 9 * day, 10 * day, 11 * day,
 						60 * day, 78 * day, 79 * day, 80 * day, 90 * day, 400 * day };
@@ -219,6 +221,10 @@ class TemporalPreservationTimeZoneTests {
 		else if ( dialect instanceof SQLServerDialect ) {
 			return TemporalPreservationSql.sqlServerInstantLiteral( fields );
 		}
+		else if ( dialect instanceof HSQLDialect ) {
+			// the column holds the date and time at UTC
+			return TemporalPreservationSql.hsqlInstantLiteral( fields, false );
+		}
 		else {
 			return "timestamp with time zone '" + fields + "+00:00'";
 		}
@@ -253,6 +259,9 @@ class TemporalPreservationTimeZoneTests {
 			}
 			else if ( dialect instanceof SQLServerDialect ) {
 				epoch = TemporalPreservationSql.SQL_SERVER_EPOCH;
+			}
+			else if ( dialect instanceof HSQLDialect ) {
+				epoch = TemporalPreservationSql.hsqlEpoch( false );
 			}
 			else {
 				epoch = "extract(epoch from theValue)";
@@ -386,6 +395,10 @@ class TemporalPreservationTimeZoneTests {
 		else if ( dialect instanceof SQLServerDialect ) {
 			// a session of SQL Server has no time zone
 			return null;
+		}
+		else if ( dialect instanceof HSQLDialect ) {
+			execute( connection, TemporalPreservationSql.hsqlSessionZone( zone ) );
+			return "set time zone local";
 		}
 		else {
 			execute( connection, "set time zone '" + zone + "'" );

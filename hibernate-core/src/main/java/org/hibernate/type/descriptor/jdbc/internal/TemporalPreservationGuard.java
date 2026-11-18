@@ -6,14 +6,18 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
 import java.util.Optional;
+import java.util.TimeZone;
 import java.util.Set;
 
 import jakarta.annotation.Nullable;
+
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
@@ -21,6 +25,7 @@ import org.hibernate.TemporalPreservationException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.type.spi.TemporalPreservation;
 import org.hibernate.dialect.type.spi.TemporalPreservation.Part;
+import org.hibernate.sql.spi.StringBuilderSqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -166,6 +171,45 @@ public final class TemporalPreservationGuard {
 				&& javaType.getJavaTypeClass().isInstance( value ) ) {
 			check( value, javaType, jdbcType, options.getDialect(), "render as a SQL literal" );
 		}
+	}
+
+	/// Check that the Dialect renders the offset of a date and time with an
+	/// offset about to be rendered as a SQL literal, with temporal
+	/// preservation known to be enabled. A Dialect which leaves the offset
+	/// out renders a literal which the database reads in the time zone of
+	/// its session.
+	///
+	/// Whether it does is found out from what it renders, since a Dialect
+	/// may render an offset without reporting that it supports one. Two
+	/// values which denote the same instant at different offsets, and two
+	/// which have the same date and time at different offsets, must each be
+	/// rendered differently.
+	public static void checkOffsetIsRendered(Object value, JavaType<?> javaType, Dialect dialect, TimeZone jdbcTimeZone) {
+		if ( dialect.getTemporalValueSemantics().supportsLiteralOffset() ) {
+			return;
+		}
+		final OffsetDateTime first = OffsetDateTime.of( 2000, 6, 15, 12, 0, 0, 0, ZoneOffset.UTC );
+		final String rendered = timestampLiteral( dialect, first, jdbcTimeZone );
+		if ( rendered.equals( timestampLiteral( dialect, first.withOffsetSameInstant( ZoneOffset.ofHours( 3 ) ), jdbcTimeZone ) )
+				|| rendered.equals( timestampLiteral( dialect, first.withOffsetSameLocal( ZoneOffset.ofHours( 3 ) ), jdbcTimeZone ) ) ) {
+			throw new TemporalPreservationException(
+					"Cannot render as a SQL literal the value '" + value + "' of type '" + javaType.getTypeName()
+					+ "': with '" + TEMPORAL_PRESERVATION + "' enabled, a literal for a date and time with an"
+					+ " offset is not supported on " + dialect.getClass().getSimpleName()
+					+ ", where it would be rendered without its offset; bind the value as a parameter instead"
+			);
+		}
+	}
+
+	private static String timestampLiteral(Dialect dialect, OffsetDateTime value, TimeZone jdbcTimeZone) {
+		final StringBuilder literal = new StringBuilder();
+		dialect.getLiteralSupport().appendDateTimeLiteral(
+				new StringBuilderSqlAppender( literal ),
+				value,
+				TemporalType.TIMESTAMP,
+				jdbcTimeZone
+		);
+		return literal.toString();
 	}
 
 	/// The instant which the value denotes, when it is an `Instant`, an

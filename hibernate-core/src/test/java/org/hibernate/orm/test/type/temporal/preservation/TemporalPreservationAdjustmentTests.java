@@ -25,6 +25,7 @@ import org.hibernate.annotations.TimeZoneRepresentation;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -47,6 +48,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 ///
 /// @author Steve Ebersole
 @RequiresDialect(H2Dialect.class)
+@RequiresDialect(HSQLDialect.class)
 @RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
 @RequiresDialect(MySQLDialect.class)
 @RequiresDialect(SQLServerDialect.class)

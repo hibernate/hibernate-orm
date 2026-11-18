@@ -3,6 +3,7 @@ package org.hibernate.type.descriptor.jdbc.internal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.TimeZone;
 import jakarta.persistence.TemporalType;
@@ -59,6 +60,9 @@ public class JdbcLiteralFormatterTemporal<T> extends BasicJdbcLiteralFormatter<T
 						// and is ambiguous when clocks are set back. Render it with its
 						// offset instead, which leaves nothing to interpret.
 						temporalAccessor = instant.atOffset( ZoneOffset.UTC );
+					}
+					if ( temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
+						TemporalPreservationGuard.checkOffsetIsRendered( value, getJavaType(), dialect, jdbcTimeZone );
 					}
 				}
 			}

@@ -404,6 +404,7 @@ import org.hibernate.usertype.UserVersionType;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.Instant;
 import java.time.OffsetTime;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -8275,14 +8276,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Predicate visitComparisonPredicate(SqmComparisonPredicate predicate) {
 		final var fromClauseIndex = fromClauseIndexStack.getCurrent();
-		final var left = instantOfTemporalInTwoColumns(
+		final var leftInstant = instantOfTemporalInTwoColumns(
 				predicate.getLeftHandExpression(),
 				predicate.getRightHandExpression()
 		);
-		final var right = instantOfTemporalInTwoColumns(
+		final var rightInstant = instantOfTemporalInTwoColumns(
 				predicate.getRightHandExpression(),
 				predicate.getLeftHandExpression()
 		);
+		// a literal compared with the instant of such a date-time is a literal for that instant
+		final var left = rightInstant != predicate.getRightHandExpression()
+				? asLiteralOfInstant( leftInstant, rightInstant )
+				: leftInstant;
+		final var right = leftInstant != predicate.getLeftHandExpression()
+				? asLiteralOfInstant( rightInstant, leftInstant )
+				: rightInstant;
 		final Expression lhs;
 		final Expression rhs;
 		if ( left instanceof SqmParameter<?> && right instanceof SqmPath<?> rightPath
@@ -8342,6 +8350,31 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return operand;
 	}
 
+	/// With temporal preservation enabled, a literal for an `Instant`,
+	/// `OffsetDateTime` or `ZonedDateTime` which is compared with the instant
+	/// of a date-time stored in two columns is replaced by a literal for its
+	/// instant, of the type of the column which holds that instant, so that it
+	/// is rendered the way that column needs. Anything else is left as it is.
+	private SqmExpression<?> asLiteralOfInstant(SqmExpression<?> operand, SqmExpression<?> instantPath) {
+		if ( operand instanceof SqmLiteral<?> literal
+				&& instantPath.getJavaTypeDescriptor() != null
+				&& instantPath.getJavaTypeDescriptor().getJavaTypeClass() == Instant.class
+				&& instantPath.getExpressible() != null
+				&& creationContext.getSessionFactory().getSessionFactoryOptions().isTemporalPreservationEnabled() ) {
+			final Instant instant = org.hibernate.type.descriptor.jdbc.internal.TemporalPreservationGuard
+					.instantOf( literal.getLiteralValue() );
+			if ( instant != null ) {
+				//noinspection unchecked
+				return new SqmLiteral<>(
+						instant,
+						(SqmBindableType<Instant>) instantPath.getExpressible(),
+						literal.nodeBuilder()
+				);
+			}
+		}
+		return operand;
+	}
+
 	/// As [#instantOfTemporalInTwoColumns(SqmExpression, SqmExpression)], for
 	/// the operands of a predicate which has more than two, such as `between`
 	/// and `in`. Where any of them occupies a single column, every date-time
@@ -8372,6 +8405,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				);
 			}
 			result.add( instantOfTemporalInTwoColumns( operand, single ) );
+		}
+		// a literal compared with the instant of such a date-time is a literal for that instant
+		for ( int i = 0; i < result.size(); i++ ) {
+			if ( result.get( i ) != operands.get( i ) ) {
+				final var instantPath = result.get( i );
+				result.replaceAll( operand -> asLiteralOfInstant( operand, instantPath ) );
+				break;
+			}
 		}
 		return result;
 	}

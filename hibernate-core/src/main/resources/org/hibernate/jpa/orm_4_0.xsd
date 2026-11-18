@@ -1077,11 +1077,15 @@
         Defines an entity listener to be invoked at lifecycle events
         for the entities that list this listener.
 
+        If the entity listener class has several overloaded methods
+        with the name specified by method-name, then all of them are
+        registered as callback methods for the given lifecycle event.
+
       </xsd:documentation>
     </xsd:annotation>
     <xsd:sequence>
       <xsd:element name="description" type="xsd:string" minOccurs="0"/>
-      <xsd:element name="pre-merge" type="orm:lifecycle-callback" minOccurs="0">
+      <xsd:element name="pre-merge" type="orm:lifecycle-callback" minOccurs="0" maxOccurs="unbounded">
         <xsd:annotation>
           <xsd:documentation>
 
@@ -1091,7 +1095,7 @@
           </xsd:documentation>
         </xsd:annotation>
       </xsd:element>
-      <xsd:element name="pre-persist" type="orm:lifecycle-callback" minOccurs="0">
+      <xsd:element name="pre-persist" type="orm:lifecycle-callback" minOccurs="0" maxOccurs="unbounded">
         <xsd:annotation>
           <xsd:documentation>
 
@@ -1101,7 +1105,7 @@
           </xsd:documentation>
         </xsd:annotation>
       </xsd:element>
-      <xsd:element name="post-persist" type="orm:lifecycle-callback" minOccurs="0">
+      <xsd:element name="post-persist" type="orm:lifecycle-callback" minOccurs="0" maxOccurs="unbounded">
         <xsd:annotation>
           <xsd:documentation>
 
@@ -1111,7 +1115,7 @@
           </xsd:documentation>
         </xsd:annotation>
       </xsd:element>
-      <xsd:element name="pre-remove" type="orm:lifecycle-callback" minOccurs="0">
+      <xsd:element name="pre-remove" type="orm:lifecycle-callback" minOccurs="0" maxOccurs="unbounded">
         <xsd:annotation>
           <xsd:documentation>
 
@@ -1121,7 +1125,7 @@
           </xsd:documentation>
         </xsd:annotation>
       </xsd:element>
-      <xsd:element name="post-remove" type="orm:lifecycle-callback" minOccurs="0">
+      <xsd:element name="post-remove" type="orm:lifecycle-callback" minOccurs="0" maxOccurs="unbounded">
         <xsd:annotation>
           <xsd:documentation>
 
@@ -1131,7 +1135,7 @@
           </xsd:documentation>
         </xsd:annotation>
       </xsd:element>
-      <xsd:element name="pre-update" type="orm:lifecycle-callback" minOccurs="0">
+      <xsd:element name="pre-update" type="orm:lifecycle-callback" minOccurs="0" maxOccurs="unbounded">
         <xsd:annotation>
           <xsd:documentation>
 
@@ -1141,7 +1145,7 @@
           </xsd:documentation>
         </xsd:annotation>
       </xsd:element>
-      <xsd:element name="post-update" type="orm:lifecycle-callback" minOccurs="0">
+      <xsd:element name="post-update" type="orm:lifecycle-callback" minOccurs="0" maxOccurs="unbounded">
         <xsd:annotation>
           <xsd:documentation>
 
@@ -1151,7 +1155,7 @@
           </xsd:documentation>
         </xsd:annotation>
       </xsd:element>
-      <xsd:element name="pre-upsert" type="orm:lifecycle-callback" minOccurs="0">
+      <xsd:element name="pre-upsert" type="orm:lifecycle-callback" minOccurs="0" maxOccurs="unbounded">
         <xsd:annotation>
           <xsd:documentation>
 
@@ -1161,7 +1165,7 @@
           </xsd:documentation>
         </xsd:annotation>
       </xsd:element>
-      <xsd:element name="post-upsert" type="orm:lifecycle-callback" minOccurs="0">
+      <xsd:element name="post-upsert" type="orm:lifecycle-callback" minOccurs="0" maxOccurs="unbounded">
         <xsd:annotation>
           <xsd:documentation>
 
@@ -1171,7 +1175,7 @@
           </xsd:documentation>
         </xsd:annotation>
       </xsd:element>
-      <xsd:element name="pre-insert" type="orm:lifecycle-callback" minOccurs="0">
+      <xsd:element name="pre-insert" type="orm:lifecycle-callback" minOccurs="0" maxOccurs="unbounded">
         <xsd:annotation>
           <xsd:documentation>
 
@@ -1181,7 +1185,7 @@
           </xsd:documentation>
         </xsd:annotation>
       </xsd:element>
-      <xsd:element name="post-insert" type="orm:lifecycle-callback" minOccurs="0">
+      <xsd:element name="post-insert" type="orm:lifecycle-callback" minOccurs="0" maxOccurs="unbounded">
         <xsd:annotation>
           <xsd:documentation>
 
@@ -1191,7 +1195,7 @@
           </xsd:documentation>
         </xsd:annotation>
       </xsd:element>
-      <xsd:element name="pre-delete" type="orm:lifecycle-callback" minOccurs="0">
+      <xsd:element name="pre-delete" type="orm:lifecycle-callback" minOccurs="0" maxOccurs="unbounded">
         <xsd:annotation>
           <xsd:documentation>
 
@@ -1201,7 +1205,7 @@
           </xsd:documentation>
         </xsd:annotation>
       </xsd:element>
-      <xsd:element name="post-delete" type="orm:lifecycle-callback" minOccurs="0">
+      <xsd:element name="post-delete" type="orm:lifecycle-callback" minOccurs="0" maxOccurs="unbounded">
         <xsd:annotation>
           <xsd:documentation>
 
@@ -1211,7 +1215,7 @@
           </xsd:documentation>
         </xsd:annotation>
       </xsd:element>
-      <xsd:element name="post-load" type="orm:lifecycle-callback" minOccurs="0">
+      <xsd:element name="post-load" type="orm:lifecycle-callback" minOccurs="0" maxOccurs="unbounded">
         <xsd:annotation>
           <xsd:documentation>
 
@@ -1221,7 +1225,7 @@
           </xsd:documentation>
         </xsd:annotation>
       </xsd:element>
-      <xsd:element name="post-create" type="orm:lifecycle-callback" minOccurs="0">
+      <xsd:element name="post-create" type="orm:lifecycle-callback" minOccurs="0" maxOccurs="unbounded">
         <xsd:annotation>
           <xsd:documentation>
 
@@ -1231,7 +1235,7 @@
           </xsd:documentation>
         </xsd:annotation>
       </xsd:element>
-      <xsd:element name="pre-close" type="orm:lifecycle-callback" minOccurs="0">
+      <xsd:element name="pre-close" type="orm:lifecycle-callback" minOccurs="0" maxOccurs="unbounded">
         <xsd:annotation>
           <xsd:documentation>
 

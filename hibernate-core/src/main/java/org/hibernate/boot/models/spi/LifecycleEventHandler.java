@@ -136,9 +136,9 @@ public class LifecycleEventHandler {
 		return !callbackMethods.isEmpty();
 	}
 
-	/// Create a handler from XML representation of a [callback][JpaEventListenerStyle#CALLBACK]
+	/// Create handlers from XML representation of a [callback][JpaEventListenerStyle#CALLBACK]
 	/// or [listener][JpaEventListenerStyle#LISTENER].
-	public static LifecycleEventHandler from(
+	public static List<LifecycleEventHandler> from(
 			JpaEventListenerStyle consumerType,
 			ClassDetails listenerClassDetails,
 			JaxbEntityListenerImpl jaxbMapping,
@@ -146,243 +146,129 @@ public class LifecycleEventHandler {
 		return from( consumerType, listenerClassDetails, jaxbMapping, modelsContext, true );
 	}
 
-	/// Create a handler from XML representation of a [callback][JpaEventListenerStyle#CALLBACK]
+	/// Create handlers from XML representation of a [callback][JpaEventListenerStyle#CALLBACK]
 	/// or [listener][JpaEventListenerStyle#LISTENER].
-	public static LifecycleEventHandler from(
+	///
+	/// Each callback element may match several overloads of the named method; every overload
+	/// with a valid signature is registered, as a separate handler, provided no two methods
+	/// handle the same event for the same parameter type.
+	public static List<LifecycleEventHandler> from(
 			JpaEventListenerStyle consumerType,
 			ClassDetails listenerClassDetails,
 			JaxbEntityListenerImpl jaxbMapping,
 			ModelsContext modelsContext,
 			boolean errorIfEmpty) {
 		if ( isImplicitMethodMappings( jaxbMapping ) ) {
-			return from( consumerType, listenerClassDetails, errorIfEmpty );
+			final var handler = from( consumerType, listenerClassDetails, errorIfEmpty );
+			return handler.hasCallbackMethods() ? List.of( handler ) : List.of();
 		}
 
-		final EnumMap<CallbackType, MethodDetails> callbackMethods = new EnumMap<>( CallbackType.class );
+		final List<LifecycleEventHandler> lifecycleEventHandlers = new ArrayList<>();
+		applyXmlCallbacks( jaxbMapping.getPrePersist(), consumerType, listenerClassDetails,
+				PRE_PERSIST, CallbackType.PRE_PERSIST, modelsContext, lifecycleEventHandlers );
+		applyXmlCallbacks( jaxbMapping.getPostPersist(), consumerType, listenerClassDetails,
+				POST_PERSIST, CallbackType.POST_PERSIST, modelsContext, lifecycleEventHandlers );
+		applyXmlCallbacks( jaxbMapping.getPreRemove(), consumerType, listenerClassDetails,
+				PRE_REMOVE, CallbackType.PRE_REMOVE, modelsContext, lifecycleEventHandlers );
+		applyXmlCallbacks( jaxbMapping.getPostRemove(), consumerType, listenerClassDetails,
+				POST_REMOVE, CallbackType.POST_REMOVE, modelsContext, lifecycleEventHandlers );
+		applyXmlCallbacks( jaxbMapping.getPreUpdate(), consumerType, listenerClassDetails,
+				PRE_UPDATE, CallbackType.PRE_UPDATE, modelsContext, lifecycleEventHandlers );
+		applyXmlCallbacks( jaxbMapping.getPostUpdate(), consumerType, listenerClassDetails,
+				POST_UPDATE, CallbackType.POST_UPDATE, modelsContext, lifecycleEventHandlers );
+		applyXmlCallbacks( jaxbMapping.getPostLoad(), consumerType, listenerClassDetails,
+				POST_LOAD, CallbackType.POST_LOAD, modelsContext, lifecycleEventHandlers );
+		applyXmlCallbacks( jaxbMapping.getPreMerge(), consumerType, listenerClassDetails,
+				PRE_MERGE, CallbackType.PRE_MERGE, modelsContext, lifecycleEventHandlers );
+		applyXmlCallbacks( jaxbMapping.getPreInsert(), consumerType, listenerClassDetails,
+				PRE_INSERT, CallbackType.PRE_INSERT, modelsContext, lifecycleEventHandlers );
+		applyXmlCallbacks( jaxbMapping.getPostInsert(), consumerType, listenerClassDetails,
+				POST_INSERT, CallbackType.POST_INSERT, modelsContext, lifecycleEventHandlers );
+		applyXmlCallbacks( jaxbMapping.getPreUpsert(), consumerType, listenerClassDetails,
+				PRE_UPSERT, CallbackType.PRE_UPSERT, modelsContext, lifecycleEventHandlers );
+		applyXmlCallbacks( jaxbMapping.getPostUpsert(), consumerType, listenerClassDetails,
+				POST_UPSERT, CallbackType.POST_UPSERT, modelsContext, lifecycleEventHandlers );
+		applyXmlCallbacks( jaxbMapping.getPreDelete(), consumerType, listenerClassDetails,
+				PRE_DELETE, CallbackType.PRE_DELETE, modelsContext, lifecycleEventHandlers );
+		applyXmlCallbacks( jaxbMapping.getPostDelete(), consumerType, listenerClassDetails,
+				POST_DELETE, CallbackType.POST_DELETE, modelsContext, lifecycleEventHandlers );
 
-		listenerClassDetails.forEachMethod( (index, methodDetails) -> {
-			final var mutableMethodDetails = (MutableMemberDetails) methodDetails;
-			applyXmlCallback(
-					jaxbMapping.getPrePersist(),
-					methodDetails,
-					mutableMethodDetails,
-					consumerType,
-					listenerClassDetails,
-					PrePersist.class,
-					PRE_PERSIST,
-					CallbackType.PRE_PERSIST,
-					modelsContext,
-					callbackMethods
-			);
-			applyXmlCallback(
-					jaxbMapping.getPostPersist(),
-					methodDetails,
-					mutableMethodDetails,
-					consumerType,
-					listenerClassDetails,
-					PostPersist.class,
-					POST_PERSIST,
-					CallbackType.POST_PERSIST,
-					modelsContext,
-					callbackMethods
-			);
-			applyXmlCallback(
-					jaxbMapping.getPreRemove(),
-					methodDetails,
-					mutableMethodDetails,
-					consumerType,
-					listenerClassDetails,
-					PreRemove.class,
-					PRE_REMOVE,
-					CallbackType.PRE_REMOVE,
-					modelsContext,
-					callbackMethods
-			);
-			applyXmlCallback(
-					jaxbMapping.getPostRemove(),
-					methodDetails,
-					mutableMethodDetails,
-					consumerType,
-					listenerClassDetails,
-					PostRemove.class,
-					POST_REMOVE,
-					CallbackType.POST_REMOVE,
-					modelsContext,
-					callbackMethods
-			);
-			applyXmlCallback(
-					jaxbMapping.getPreUpdate(),
-					methodDetails,
-					mutableMethodDetails,
-					consumerType,
-					listenerClassDetails,
-					PreUpdate.class,
-					PRE_UPDATE,
-					CallbackType.PRE_UPDATE,
-					modelsContext,
-					callbackMethods
-			);
-			applyXmlCallback(
-					jaxbMapping.getPostUpdate(),
-					methodDetails,
-					mutableMethodDetails,
-					consumerType,
-					listenerClassDetails,
-					PostUpdate.class,
-					POST_UPDATE,
-					CallbackType.POST_UPDATE,
-					modelsContext,
-					callbackMethods
-			);
-			applyXmlCallback(
-					jaxbMapping.getPostLoad(),
-					methodDetails,
-					mutableMethodDetails,
-					consumerType,
-					listenerClassDetails,
-					PostLoad.class,
-					POST_LOAD,
-					CallbackType.POST_LOAD,
-					modelsContext,
-					callbackMethods
-			);
-			applyXmlCallback(
-					jaxbMapping.getPreMerge(),
-					methodDetails,
-					mutableMethodDetails,
-					consumerType,
-					listenerClassDetails,
-					PreMerge.class,
-					PRE_MERGE,
-					CallbackType.PRE_MERGE,
-					modelsContext,
-					callbackMethods
-			);
-			applyXmlCallback(
-					jaxbMapping.getPreInsert(),
-					methodDetails,
-					mutableMethodDetails,
-					consumerType,
-					listenerClassDetails,
-					PreInsert.class,
-					PRE_INSERT,
-					CallbackType.PRE_INSERT,
-					modelsContext,
-					callbackMethods
-			);
-			applyXmlCallback(
-					jaxbMapping.getPostInsert(),
-					methodDetails,
-					mutableMethodDetails,
-					consumerType,
-					listenerClassDetails,
-					PostInsert.class,
-					POST_INSERT,
-					CallbackType.POST_INSERT,
-					modelsContext,
-					callbackMethods
-			);
-			applyXmlCallback(
-					jaxbMapping.getPreUpsert(),
-					methodDetails,
-					mutableMethodDetails,
-					consumerType,
-					listenerClassDetails,
-					PreUpsert.class,
-					PRE_UPSERT,
-					CallbackType.PRE_UPSERT,
-					modelsContext,
-					callbackMethods
-			);
-			applyXmlCallback(
-					jaxbMapping.getPostUpsert(),
-					methodDetails,
-					mutableMethodDetails,
-					consumerType,
-					listenerClassDetails,
-					PostUpsert.class,
-					POST_UPSERT,
-					CallbackType.POST_UPSERT,
-					modelsContext,
-					callbackMethods
-			);
-			applyXmlCallback(
-					jaxbMapping.getPreDelete(),
-					methodDetails,
-					mutableMethodDetails,
-					consumerType,
-					listenerClassDetails,
-					PreDelete.class,
-					PRE_DELETE,
-					CallbackType.PRE_DELETE,
-					modelsContext,
-					callbackMethods
-			);
-			applyXmlCallback(
-					jaxbMapping.getPostDelete(),
-					methodDetails,
-					mutableMethodDetails,
-					consumerType,
-					listenerClassDetails,
-					PostDelete.class,
-					POST_DELETE,
-					CallbackType.POST_DELETE,
-					modelsContext,
-					callbackMethods
-			);
-		} );
-
-		final var descriptor =
-				new LifecycleEventHandler( consumerType, listenerClassDetails, callbackMethods );
-		if ( errorIfEmpty ) {
-			errorIfEmpty( descriptor );
+		if ( errorIfEmpty && lifecycleEventHandlers.isEmpty() ) {
+			throw new ModelsException( "Mapping for entity listener '"
+										+ listenerClassDetails.getClassName()
+										+ "' specified no callback methods" );
 		}
-		return descriptor;
+		return lifecycleEventHandlers;
 	}
 
 	public static boolean hasExplicitXmlCallbackMappings(JaxbEntityListenerImpl jaxbMapping) {
 		return !isImplicitMethodMappings( jaxbMapping );
 	}
 
-	private static <A extends Annotation> void applyXmlCallback(
-			JaxbLifecycleCallback lifecycleCallback,
-			MethodDetails methodDetails,
-			MutableMemberDetails mutableMethodDetails,
+	// Registers the methods referenced by the XML callback elements mapped to a single
+	// lifecycle event (e.g. all the `<pre-persist>` elements of an `<entity-listener>`).
+	//
+	// For each element, every method of the listener class named by its `method-name` and
+	// having a valid callback signature for the given `consumerType` is:
+	//
+	// - registered as a separate LifecycleEventHandler for `callbackType`, and
+	// - annotated with the corresponding callback annotation, so that the XML mapping is
+	//   reflected in the models.
+	//
+	// A method already registered for `callbackType` (e.g. because several elements name the
+	// same method) is skipped. Registering two different methods for the same event and the
+	// same parameter type fails, see addIfAbsent.
+	private static <A extends Annotation> void applyXmlCallbacks(
+			List<? extends JaxbLifecycleCallback> lifecycleCallbacks,
 			JpaEventListenerStyle consumerType,
 			ClassDetails listenerClassDetails,
-			Class<A> callbackAnnotation,
 			AnnotationDescriptor<A> annotationDescriptor,
 			CallbackType callbackType,
 			ModelsContext modelsContext,
-			Map<CallbackType, MethodDetails> callbackMethods) {
-		if ( lifecycleCallback != null
-				&& methodDetails.getName().equals( lifecycleCallback.getMethodName() )
-				&& setXmlCallbackMethod(
-						consumerType,
-						listenerClassDetails,
-						callbackAnnotation,
-						callbackType,
-						methodDetails,
-						callbackMethods ) ) {
-			mutableMethodDetails.addAnnotationUsage( annotationDescriptor.createUsage( modelsContext ) );
+			List<LifecycleEventHandler> lifecycleEventHandlers) {
+		for ( var lifecycleCallback : lifecycleCallbacks ) {
+			final String methodName = lifecycleCallback.getMethodName();
+			listenerClassDetails.forEachMethod( (index, methodDetails) -> {
+				if ( methodDetails.getName().equals( methodName )
+						&& matchesSignature( consumerType, methodDetails )
+						&& !isRegistered( callbackType, methodDetails, lifecycleEventHandlers ) ) {
+					addIfAbsent( listenerClassDetails, callbackType, methodDetails, lifecycleEventHandlers );
+					( (MutableMemberDetails) methodDetails )
+							.addAnnotationUsage( annotationDescriptor.createUsage( modelsContext ) );
+				}
+			} );
 		}
 	}
 
+	// Whether the given method is already registered as the `callbackType` callback
+	// of one of the given handlers.
+	private static boolean isRegistered(
+			CallbackType callbackType,
+			MethodDetails methodDetails,
+			List<LifecycleEventHandler> lifecycleEventHandlers) {
+		for ( var existing : lifecycleEventHandlers ) {
+			if ( existing.getCallbackMethod( callbackType ) == methodDetails ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private static boolean isImplicitMethodMappings(JaxbEntityListenerImpl jaxbMapping) {
-		return jaxbMapping.getPrePersist() == null
-			&& jaxbMapping.getPreUpdate() == null
-			&& jaxbMapping.getPreRemove() == null
-			&& jaxbMapping.getPostLoad() == null
-			&& jaxbMapping.getPostPersist() == null
-			&& jaxbMapping.getPostUpdate() == null
-			&& jaxbMapping.getPostRemove() == null
-			&& jaxbMapping.getPreMerge() == null
-			&& jaxbMapping.getPreInsert() == null
-			&& jaxbMapping.getPostInsert() == null
-			&& jaxbMapping.getPreUpsert() == null
-			&& jaxbMapping.getPostUpsert() == null
-			&& jaxbMapping.getPreDelete() == null
-			&& jaxbMapping.getPostDelete() == null;
+		return jaxbMapping.getPrePersist().isEmpty()
+			&& jaxbMapping.getPreUpdate().isEmpty()
+			&& jaxbMapping.getPreRemove().isEmpty()
+			&& jaxbMapping.getPostLoad().isEmpty()
+			&& jaxbMapping.getPostPersist().isEmpty()
+			&& jaxbMapping.getPostUpdate().isEmpty()
+			&& jaxbMapping.getPostRemove().isEmpty()
+			&& jaxbMapping.getPreMerge().isEmpty()
+			&& jaxbMapping.getPreInsert().isEmpty()
+			&& jaxbMapping.getPostInsert().isEmpty()
+			&& jaxbMapping.getPreUpsert().isEmpty()
+			&& jaxbMapping.getPostUpsert().isEmpty()
+			&& jaxbMapping.getPreDelete().isEmpty()
+			&& jaxbMapping.getPostDelete().isEmpty();
 	}
 
 	private static void errorIfEmpty(LifecycleEventHandler descriptor) {
@@ -535,7 +421,7 @@ public class LifecycleEventHandler {
 			ClassDetails listenerClassDetails,
 			ClassDetails targetClassDetails,
 			boolean errorIfEmpty) {
-		final List<LifecycleEventHandler> descriptors = new ArrayList<>();
+		final List<LifecycleEventHandler> lifecycleEventHandlers = new ArrayList<>();
 
 		listenerClassDetails.forEachMethod( (index, methodDetails) -> {
 			applyTargetedAnnotatedCallback(
@@ -544,7 +430,7 @@ public class LifecycleEventHandler {
 					methodDetails,
 					PrePersist.class,
 					CallbackType.PRE_PERSIST,
-					descriptors
+					lifecycleEventHandlers
 			);
 			applyTargetedAnnotatedCallback(
 					listenerClassDetails,
@@ -552,7 +438,7 @@ public class LifecycleEventHandler {
 					methodDetails,
 					PostPersist.class,
 					CallbackType.POST_PERSIST,
-					descriptors
+					lifecycleEventHandlers
 			);
 			applyTargetedAnnotatedCallback(
 					listenerClassDetails,
@@ -560,7 +446,7 @@ public class LifecycleEventHandler {
 					methodDetails,
 					PreRemove.class,
 					CallbackType.PRE_REMOVE,
-					descriptors
+					lifecycleEventHandlers
 			);
 			applyTargetedAnnotatedCallback(
 					listenerClassDetails,
@@ -568,7 +454,7 @@ public class LifecycleEventHandler {
 					methodDetails,
 					PostRemove.class,
 					CallbackType.POST_REMOVE,
-					descriptors
+					lifecycleEventHandlers
 			);
 			applyTargetedAnnotatedCallback(
 					listenerClassDetails,
@@ -576,7 +462,7 @@ public class LifecycleEventHandler {
 					methodDetails,
 					PreMerge.class,
 					CallbackType.PRE_MERGE,
-					descriptors
+					lifecycleEventHandlers
 			);
 			applyTargetedAnnotatedCallback(
 					listenerClassDetails,
@@ -584,7 +470,7 @@ public class LifecycleEventHandler {
 					methodDetails,
 					PreInsert.class,
 					CallbackType.PRE_INSERT,
-					descriptors
+					lifecycleEventHandlers
 			);
 			applyTargetedAnnotatedCallback(
 					listenerClassDetails,
@@ -592,7 +478,7 @@ public class LifecycleEventHandler {
 					methodDetails,
 					PostInsert.class,
 					CallbackType.POST_INSERT,
-					descriptors
+					lifecycleEventHandlers
 			);
 			applyTargetedAnnotatedCallback(
 					listenerClassDetails,
@@ -600,7 +486,7 @@ public class LifecycleEventHandler {
 					methodDetails,
 					PreUpdate.class,
 					CallbackType.PRE_UPDATE,
-					descriptors
+					lifecycleEventHandlers
 			);
 			applyTargetedAnnotatedCallback(
 					listenerClassDetails,
@@ -608,7 +494,7 @@ public class LifecycleEventHandler {
 					methodDetails,
 					PostUpdate.class,
 					CallbackType.POST_UPDATE,
-					descriptors
+					lifecycleEventHandlers
 			);
 			applyTargetedAnnotatedCallback(
 					listenerClassDetails,
@@ -616,7 +502,7 @@ public class LifecycleEventHandler {
 					methodDetails,
 					PreUpsert.class,
 					CallbackType.PRE_UPSERT,
-					descriptors
+					lifecycleEventHandlers
 			);
 			applyTargetedAnnotatedCallback(
 					listenerClassDetails,
@@ -624,7 +510,7 @@ public class LifecycleEventHandler {
 					methodDetails,
 					PostUpsert.class,
 					CallbackType.POST_UPSERT,
-					descriptors
+					lifecycleEventHandlers
 			);
 			applyTargetedAnnotatedCallback(
 					listenerClassDetails,
@@ -632,7 +518,7 @@ public class LifecycleEventHandler {
 					methodDetails,
 					PreDelete.class,
 					CallbackType.PRE_DELETE,
-					descriptors
+					lifecycleEventHandlers
 			);
 			applyTargetedAnnotatedCallback(
 					listenerClassDetails,
@@ -640,7 +526,7 @@ public class LifecycleEventHandler {
 					methodDetails,
 					PostDelete.class,
 					CallbackType.POST_DELETE,
-					descriptors
+					lifecycleEventHandlers
 			);
 			applyTargetedAnnotatedCallback(
 					listenerClassDetails,
@@ -648,16 +534,16 @@ public class LifecycleEventHandler {
 					methodDetails,
 					PostLoad.class,
 					CallbackType.POST_LOAD,
-					descriptors
+					lifecycleEventHandlers
 			);
 		} );
 
-		if ( errorIfEmpty && descriptors.isEmpty() ) {
+		if ( errorIfEmpty && lifecycleEventHandlers.isEmpty() ) {
 			throw new ModelsException( "Mapping for entity listener '"
 										+ listenerClassDetails.getClassName()
 										+ "' specified no callback methods" );
 		}
-		return descriptors;
+		return lifecycleEventHandlers;
 	}
 
 	private static void applyAnnotatedCallback(
@@ -685,7 +571,7 @@ public class LifecycleEventHandler {
 			MethodDetails methodDetails,
 			Class<? extends Annotation> callbackAnnotation,
 			CallbackType callbackType,
-			List<LifecycleEventHandler> descriptors) {
+			List<LifecycleEventHandler> lifecycleEventHandlers) {
 		if ( methodDetails.hasDirectAnnotationUsage( callbackAnnotation ) ) {
 			if ( !matchesSignature( JpaEventListenerStyle.LISTENER, methodDetails ) ) {
 				throw new ModelsException( "Callback method '"
@@ -696,7 +582,7 @@ public class LifecycleEventHandler {
 			}
 			if ( firstParameterType( methodDetails )
 					.isAssignableFrom( targetClassDetails.toJavaClass() ) ) {
-				addIfAbsent( listenerClassDetails, callbackType, methodDetails, descriptors );
+				addIfAbsent( listenerClassDetails, callbackType, methodDetails, lifecycleEventHandlers );
 			}
 		}
 	}
@@ -705,8 +591,8 @@ public class LifecycleEventHandler {
 			ClassDetails listenerClassDetails,
 			CallbackType callbackType,
 			MethodDetails methodDetails,
-			List<LifecycleEventHandler> descriptors) {
-		for ( var existing : descriptors ) {
+			List<LifecycleEventHandler> lifecycleEventHandlers) {
+		for ( var existing : lifecycleEventHandlers ) {
 			final var existingMethod = existing.getCallbackMethod( callbackType );
 			if ( existingMethod != null && existingMethod != methodDetails
 					&& Objects.equals( firstParameterType( existingMethod ), firstParameterType( methodDetails ) ) ) {
@@ -717,7 +603,7 @@ public class LifecycleEventHandler {
 						+ "' in listener class '" + listenerClassDetails.getClassName() + "'" );
 			}
 		}
-		descriptors.add( withCallbackMethod( listenerClassDetails, callbackType, methodDetails ) );
+		lifecycleEventHandlers.add( withCallbackMethod( listenerClassDetails, callbackType, methodDetails ) );
 	}
 
 	private static Class<?> firstParameterType(MethodDetails first) {
@@ -731,30 +617,6 @@ public class LifecycleEventHandler {
 		final EnumMap<CallbackType, MethodDetails> callbackMethods = new EnumMap<>( CallbackType.class );
 		callbackMethods.put( callbackType, methodDetails );
 		return new LifecycleEventHandler( JpaEventListenerStyle.LISTENER, listenerClassDetails, callbackMethods );
-	}
-
-	private static boolean setXmlCallbackMethod(
-			JpaEventListenerStyle consumerType,
-			ClassDetails listenerClassDetails,
-			Class<? extends Annotation> callbackAnnotation,
-			CallbackType callbackType,
-			MethodDetails methodDetails,
-			Map<CallbackType, MethodDetails> callbackMethods) {
-		if ( !matchesSignature( consumerType, methodDetails ) ) {
-			return false;
-		}
-		else {
-			setCallbackMethod(
-					consumerType,
-					listenerClassDetails,
-					callbackAnnotation,
-					callbackType,
-					methodDetails,
-					callbackMethods,
-					"specified"
-			);
-			return true;
-		}
 	}
 
 	private static void setAnnotationCallbackMethod(

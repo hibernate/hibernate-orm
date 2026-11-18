@@ -55,6 +55,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbGenericIdGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIdClassImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbIndexImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinColumnImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerCallbackContainer;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbLifecycleCallback;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbLifecycleCallbackContainer;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbLobImpl;
@@ -1761,12 +1762,7 @@ public class XmlAnnotationHelper {
 		for ( int i = 0; i < entityListenerContainer.getEntityListeners().size(); i++ ) {
 			final JaxbEntityListenerImpl jaxbEntityListener = entityListenerContainer.getEntityListeners().get( i );
 			final MutableClassDetails entityListenerClass = xmlDocumentContext.resolveJavaType( jaxbEntityListener.getClazz() );
-			applyLifecycleCallbacks(
-					jaxbEntityListener,
-					JpaEventListenerStyle.LISTENER,
-					entityListenerClass,
-					xmlDocumentContext
-			);
+			applyEntityListenerCallbacks( jaxbEntityListener, entityListenerClass, xmlDocumentContext );
 
 			// todo (7.0) : need to make sure we look up the ClassDetails later when applying listeners; the *Class* won't be correct
 			listeners[i] = entityListenerClass.toJavaClass();
@@ -1792,6 +1788,56 @@ public class XmlAnnotationHelper {
 		applyLifecycleCallback( lifecycleCallbackContainer.getPostUpsert(), callbackType, JpaAnnotations.POST_UPSERT, classDetails, xmlDocumentContext );
 		applyLifecycleCallback( lifecycleCallbackContainer.getPreDelete(), callbackType, JpaAnnotations.PRE_DELETE, classDetails, xmlDocumentContext );
 		applyLifecycleCallback( lifecycleCallbackContainer.getPostDelete(), callbackType, JpaAnnotations.POST_DELETE, classDetails, xmlDocumentContext );
+	}
+
+	static void applyEntityListenerCallbacks(
+			JaxbEntityListenerCallbackContainer container,
+			MutableClassDetails classDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		applyListenerCallbacks( container.getPrePersist(), JpaAnnotations.PRE_PERSIST, classDetails, xmlDocumentContext );
+		applyListenerCallbacks( container.getPostPersist(), JpaAnnotations.POST_PERSIST, classDetails, xmlDocumentContext );
+		applyListenerCallbacks( container.getPreRemove(), JpaAnnotations.PRE_REMOVE, classDetails, xmlDocumentContext );
+		applyListenerCallbacks( container.getPostRemove(), JpaAnnotations.POST_REMOVE, classDetails, xmlDocumentContext );
+		applyListenerCallbacks( container.getPreUpdate(), JpaAnnotations.PRE_UPDATE, classDetails, xmlDocumentContext );
+		applyListenerCallbacks( container.getPostUpdate(), JpaAnnotations.POST_UPDATE, classDetails, xmlDocumentContext );
+		applyListenerCallbacks( container.getPostLoad(), JpaAnnotations.POST_LOAD, classDetails, xmlDocumentContext );
+		applyListenerCallbacks( container.getPreMerge(), JpaAnnotations.PRE_MERGE, classDetails, xmlDocumentContext );
+		applyListenerCallbacks( container.getPreInsert(), JpaAnnotations.PRE_INSERT, classDetails, xmlDocumentContext );
+		applyListenerCallbacks( container.getPostInsert(), JpaAnnotations.POST_INSERT, classDetails, xmlDocumentContext );
+		applyListenerCallbacks( container.getPreUpsert(), JpaAnnotations.PRE_UPSERT, classDetails, xmlDocumentContext );
+		applyListenerCallbacks( container.getPostUpsert(), JpaAnnotations.POST_UPSERT, classDetails, xmlDocumentContext );
+		applyListenerCallbacks( container.getPreDelete(), JpaAnnotations.PRE_DELETE, classDetails, xmlDocumentContext );
+		applyListenerCallbacks( container.getPostDelete(), JpaAnnotations.POST_DELETE, classDetails, xmlDocumentContext );
+	}
+
+	/// Entity listeners may overload a callback method name with different parameter
+	/// types, so every same-named method with a valid signature is annotated; the
+	/// one-per-event-and-parameter-type rule is enforced when the handler is built.
+	private static <A extends Annotation> void applyListenerCallbacks(
+			List<? extends JaxbLifecycleCallback> lifecycleCallbacks,
+			AnnotationDescriptor<A> annotationDescriptor,
+			MutableClassDetails classDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		for ( var lifecycleCallback : lifecycleCallbacks ) {
+			boolean applied = false;
+			for ( MethodDetails method : classDetails.getMethods() ) {
+				if ( method.getName().equals( lifecycleCallback.getMethodName() )
+					&& LifecycleEventHandler.matchesSignature( JpaEventListenerStyle.LISTENER, method ) ) {
+					( (MutableMemberDetails) method ).applyAnnotationUsage(
+							annotationDescriptor,
+							xmlDocumentContext.getModelBuildingContext()
+					);
+					applied = true;
+				}
+			}
+			if ( !applied ) {
+				throw new AnnotationException( String.format(
+						"Lifecycle callback method not found - %s (%s)",
+						lifecycleCallback.getMethodName(),
+						classDetails.getName()
+				) );
+			}
+		}
 	}
 
 	private static <A extends Annotation> void applyLifecycleCallback(

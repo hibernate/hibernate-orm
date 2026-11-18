@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entity-mappings xmlns="https://www.hibernate.org/xsd/orm/mapping" version="8.0">
+	<access>FIELD</access>
+
+	<entity class="org.hibernate.orm.test.jpa.callbacks.jpa4.EntityListenerXmlMultipleCallbackTests$MultiElementEntity"
+			name="XmlMultiElementEntity" metadata-complete="true">
+		<entity-listeners>
+			<entity-listener class="org.hibernate.orm.test.jpa.callbacks.jpa4.EntityListenerXmlMultipleCallbackTests$MultiElementListener">
+				<post-persist method-name="anyPersisted"/>
+				<post-persist method-name="typedPersisted"/>
+			</entity-listener>
+		</entity-listeners>
+		<attributes>
+			<id name="id"/>
+			<basic name="name"/>
+		</attributes>
+	</entity>
+
+	<entity class="org.hibernate.orm.test.jpa.callbacks.jpa4.EntityListenerXmlMultipleCallbackTests$OverloadedEntity"
+			name="XmlOverloadedEntity" metadata-complete="true">
+		<entity-listeners>
+			<entity-listener class="org.hibernate.orm.test.jpa.callbacks.jpa4.EntityListenerXmlMultipleCallbackTests$OverloadedListener">
+				<pre-persist method-name="onPersist"/>
+			</entity-listener>
+		</entity-listeners>
+		<attributes>
+			<id name="id"/>
+			<basic name="name"/>
+		</attributes>
+	</entity>
+</entity-mappings>

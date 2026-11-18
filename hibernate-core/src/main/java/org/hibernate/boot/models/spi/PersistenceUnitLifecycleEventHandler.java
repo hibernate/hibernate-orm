@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbLifecycleCallback;
@@ -100,8 +99,8 @@ public class PersistenceUnitLifecycleEventHandler {
 	}
 
 	public static boolean hasExplicitXmlCallbackMappings(@Nonnull JaxbEntityListenerImpl jaxbMapping) {
-		return jaxbMapping.getPostCreate() != null
-			|| jaxbMapping.getPreClose() != null;
+		return !jaxbMapping.getPostCreate().isEmpty()
+			|| !jaxbMapping.getPreClose().isEmpty();
 	}
 
 	private static void applyAnnotatedCallback(
@@ -119,30 +118,58 @@ public class PersistenceUnitLifecycleEventHandler {
 
 	private static void applyXmlCallback(
 			@Nonnull ClassDetails listenerClassDetails,
-			@Nullable JaxbLifecycleCallback lifecycleCallback,
+			@Nonnull List<? extends JaxbLifecycleCallback> lifecycleCallbacks,
 			@Nonnull Class<? extends Annotation> callbackAnnotation,
 			@Nonnull PersistenceUnitCallbackType callbackType,
 			@Nonnull List<CallbackMethod> callbackMethods) {
-		if ( lifecycleCallback != null ) {
-			MethodDetails namedMethod = null;
-			for ( var methodDetails : listenerClassDetails.getMethods() ) {
-				if ( methodDetails.getName().equals( lifecycleCallback.getMethodName() ) ) {
-					namedMethod = methodDetails;
-					if ( hasValidSignature( methodDetails ) ) {
-						checkDuplicate( listenerClassDetails, methodDetails, callbackType, callbackMethods );
-						callbackMethods.add( new CallbackMethod( callbackType, methodDetails ) );
-						return;
-					}
+		for ( var lifecycleCallback : lifecycleCallbacks ) {
+			applyXmlCallback( listenerClassDetails, lifecycleCallback, callbackAnnotation, callbackType, callbackMethods );
+		}
+	}
+
+	/// Registers every same-named method with a valid signature, so that overloads
+	/// accepting different parameter types are all bound by a single XML element.
+	private static void applyXmlCallback(
+			@Nonnull ClassDetails listenerClassDetails,
+			@Nonnull JaxbLifecycleCallback lifecycleCallback,
+			@Nonnull Class<? extends Annotation> callbackAnnotation,
+			@Nonnull PersistenceUnitCallbackType callbackType,
+			@Nonnull List<CallbackMethod> callbackMethods) {
+		MethodDetails namedMethod = null;
+		boolean registered = false;
+		for ( var methodDetails : listenerClassDetails.getMethods() ) {
+			if ( methodDetails.getName().equals( lifecycleCallback.getMethodName() ) ) {
+				namedMethod = methodDetails;
+				if ( hasValidSignature( methodDetails ) && !isRegistered( methodDetails, callbackType, callbackMethods ) ) {
+					checkDuplicate( listenerClassDetails, methodDetails, callbackType, callbackMethods );
+					callbackMethods.add( new CallbackMethod( callbackType, methodDetails ) );
+					registered = true;
 				}
 			}
+		}
 
+		if ( !registered ) {
 			if ( namedMethod != null ) {
 				validateSignature( listenerClassDetails, namedMethod, callbackAnnotation );
 			}
-			throw new ModelsException( "Persistence unit lifecycle callback method not found: "
-										+ lifecycleCallback.getMethodName()
-										+ " (" + listenerClassDetails.getClassName() + ")" );
+			else {
+				throw new ModelsException( "Persistence unit lifecycle callback method not found: "
+											+ lifecycleCallback.getMethodName()
+											+ " (" + listenerClassDetails.getClassName() + ")" );
+			}
 		}
+	}
+
+	private static boolean isRegistered(
+			@Nonnull MethodDetails methodDetails,
+			@Nonnull PersistenceUnitCallbackType callbackType,
+			@Nonnull List<CallbackMethod> callbackMethods) {
+		for ( var callbackMethod : callbackMethods ) {
+			if ( callbackMethod.callbackType == callbackType && callbackMethod.methodDetails == methodDetails ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private static void validateSignature(

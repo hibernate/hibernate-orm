@@ -223,7 +223,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 	}
 
 	protected void initialize(EntitySelectFetchInitializerData data) {
-		if ( !isAssociationKeyVisible( data, false ) ) {
+		if ( !isAssociationKeyVisible( data ) ) {
 			return;
 		}
 		final var rowProcessingState = data.getRowProcessingState();
@@ -233,9 +233,9 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 		initialize( data, persistenceContext.getEntityHolder( entityKey ), session, persistenceContext );
 	}
 
-	protected boolean isAssociationKeyVisible(EntitySelectFetchInitializerData data, boolean byUniqueKey) {
+	protected boolean isAssociationKeyVisible(EntitySelectFetchInitializerData data) {
 		if ( !(keyAssembler instanceof RestrictedForeignKeyResult.Assembler<?>)
-				&& !toOneMapping.isAssociationKeyVisible( data.entityIdentifier, byUniqueKey,
+				&& !toOneMapping.isAssociationKeyVisible( data.entityIdentifier,
 						data.getRowProcessingState().getJdbcValuesSourceProcessingState() ) ) {
 			data.setInstance( null );
 			data.setState( State.INITIALIZED );

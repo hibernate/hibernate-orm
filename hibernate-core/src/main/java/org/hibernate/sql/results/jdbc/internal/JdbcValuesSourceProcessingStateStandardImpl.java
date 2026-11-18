@@ -172,6 +172,9 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 		if ( completion != null ) {
 			completion.finishLogicalResult();
 		}
+		if ( toOneVisibilityPlanCache != null ) {
+			toOneVisibilityPlanCache.finishUp();
+		}
 	}
 
 	@Override

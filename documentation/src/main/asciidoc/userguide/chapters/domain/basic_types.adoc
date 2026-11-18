@@ -935,6 +935,8 @@ The ranges are narrower than what these databases are able to store, for the fol
 * On SQL Server, an `OffsetDateTime`, `ZonedDateTime` or `OffsetTime` stored in a single column is written with its own offset, and a `DATETIMEOFFSET` column holds no offset beyond fourteen hours.
   A value with a greater offset is rejected when it is bound. For the same reason the range of an `OffsetDateTime` or `ZonedDateTime` in a single column ends fourteen hours early,
   so that its date in its own offset does not pass the year 9999. Stored in two columns, the first is written at UTC, and neither restriction applies.
+* On SQL Server, a `LocalTime` is preserved only when the connection property `sendTimeAsDatetime` is `false`, which Hibernate cannot check.
+  See link:{doc-dialect-url}#required-driver-settings[Required JDBC driver settings].
 * On HSQLDB, dates before 15 October 1582 are excluded because HSQLDB uses the Julian calendar for them.
   A `LocalDate` or `LocalDateTime` from before then is moved to that calendar as it is written, and is not moved back as it is read.
   An `OffsetDateTime` in a single column is written with its own offset, in which its date may fall before 15 October 1582 while its date at UTC does not, so it is excluded before the year 1583.

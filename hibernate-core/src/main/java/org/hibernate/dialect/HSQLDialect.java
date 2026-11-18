@@ -407,6 +407,11 @@ public class HSQLDialect extends Dialect implements CurrentTemporalSupport, Temp
 	}
 
 	@Override
+	public String currentUtcTimestamp() {
+		return "current_timestamp at time zone interval '0:00' hour to minute";
+	}
+
+	@Override
 	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {

@@ -924,6 +924,11 @@ public class MySQLDialect extends Dialect implements CurrentTemporalSupport, Tem
 		return "current_timestamp(6)";
 	}
 
+	@Override
+	public String currentUtcTimestamp() {
+		return "utc_timestamp(6)";
+	}
+
 	// for consistency, we could do this: but I decided not to
 	// because it seems to me that fractional seconds can't possibly
 	// be meaningful in a time, as opposed to a timestamp

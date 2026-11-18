@@ -150,6 +150,17 @@ public class SequenceStructure implements DatabaseStructure {
 			@Override
 			public long[] getNextValues(int count) {
 				final Dialect dialect = session.getDialect();
+				if ( parameterizedSql != null ) {
+					final int max = dialect.getSequenceSupport().maxSequenceBatchSize();
+					if ( count > max ) {
+						final long[] values = new long[count];
+						for ( int offset = 0; offset < count; offset += max ) {
+							final long[] chunk = getNextValues( Math.min( max, count - offset ) );
+							System.arraycopy( chunk, 0, values, offset, chunk.length );
+						}
+						return values;
+					}
+				}
 				if ( parameterizedSql == null && !dialect.getSetOperationSupport().supports( SetOperator.UNION_ALL ) ) {
 					final long[] values = new long[count];
 					for ( int i = 0; i < count; i++ ) {
@@ -192,12 +203,16 @@ public class SequenceStructure implements DatabaseStructure {
 									if ( JDBC_LOGGER.isTraceEnabled() ) {
 										JDBC_LOGGER.sequenceValueRetrievedFromDatabase( value );
 									}
-									assert i < values.length
-											: "SQL statement returned more sequence values than were requested";
+									if ( i >= values.length ) {
+										throw new org.hibernate.id.IdentifierGenerationException(
+												"SQL statement returned more sequence values than the " + count + " requested" );
+									}
 									values[i++] = value;
 								}
-								assert i == values.length
-										: "SQL statement returned fewer sequence values than were requested";
+								if ( i != values.length ) {
+									throw new org.hibernate.id.IdentifierGenerationException(
+											"SQL statement returned " + i + " sequence values but " + count + " were requested" );
+								}
 								return values;
 							}
 							finally {

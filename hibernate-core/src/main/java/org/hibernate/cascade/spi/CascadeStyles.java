@@ -287,6 +287,19 @@ public final class CascadeStyles {
 			return super.containsStyle( style );
 		}
 
+		/**
+		 * Would any of the styles, other than the implicit {@link #MAPS_ID} one,
+		 * cascade the given action?
+		 */
+		public boolean doCascadeExcludingMapsId(CascadingAction<?> action) {
+			for ( CascadeStyle style : styles ) {
+				if ( style != MAPS_ID && style.doCascade( action ) ) {
+					return true;
+				}
+			}
+			return false;
+		}
+
 		@Override
 		public String toString() {
 			return ArrayHelper.toString( styles );

@@ -474,13 +474,22 @@ public class StatelessSessionImpl
 		}
 		else {
 			generatedIds = new Object[entities.size()];
-			for ( var entry : indexByIdGenerator.entrySet() ) {
+			// Generate in dependency order (e.g. @MapsId parents first) and assign each
+			// identifier right away, so that dependent generators can observe it
+			final var metamodel = getFactory().getMappingMetamodel();
+			final var ordered = new ArrayList<>( indexByIdGenerator.entrySet() );
+			ordered.sort( java.util.Comparator.comparingInt( e -> metamodel.getGeneratorOrder( e.getKey() ) ) );
+			for ( var entry : ordered ) {
 				final var generator = entry.getKey();
 				final var indexes = entry.getValue();
 				final Object[] ids = generator.generateBatch( this,
 						new InsertGenerationRequests( entities, indexes, persisters, states, true ), INSERT );
 				for ( int i = 0; i < indexes.size(); i++ ) {
-					generatedIds[indexes.get( i )] = ids[i];
+					final int index = indexes.get( i );
+					generatedIds[index] = ids[i];
+					if ( ids[i] != null ) {
+						persisters[index].setIdentifier( entities.get( index ), ids[i], this );
+					}
 				}
 			}
 		}

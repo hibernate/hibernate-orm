@@ -31,6 +31,12 @@ public class TiDBSequenceSupport implements SequenceSupport {
 	}
 
 	@Override
+	public int maxSequenceBatchSize() {
+		// the recursive CTE is limited by cte_max_recursion_depth (default 1000)
+		return 1000;
+	}
+
+	@Override
 	public boolean sometimesNeedsStartingValue() {
 		return true;
 	}

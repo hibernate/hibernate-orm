@@ -257,6 +257,10 @@ public class MappingMetamodelImpl
 	}
 
 	private IdentityHashMap<Generator, Integer> buildGeneratorOrder(RuntimeModelCreationContext context) {
+		if ( !context.getSessionFactoryOptions().isIdBatchGenerationEnabled() ) {
+			// the order is only relevant for batch generation
+			return null;
+		}
 		final var depGraph = new IdentityHashMap<BeforeExecutionGenerator, List<BeforeExecutionGenerator>>();
 		final var visited = new HashSet<String>();
 		for ( var persister : entityPersisterMap.values() ) {
@@ -275,8 +279,15 @@ public class MappingMetamodelImpl
 		}
 		final var order = new IdentityHashMap<Generator, Integer>();
 		final var computing = new IdentityHashMap<Generator, Boolean>();
-		for ( var gen : depGraph.keySet() ) {
-			computeDepth( gen, depGraph, order, computing );
+		try {
+			for ( var gen : depGraph.keySet() ) {
+				computeDepth( gen, depGraph, order, computing );
+			}
+		}
+		catch (CircularGeneratorDependencyException e) {
+			// A cycle (e.g. a self-referencing @MapsId) can't be ordered,
+			// so don't order generators at all rather than failing startup
+			return null;
 		}
 		return order;
 	}
@@ -291,7 +302,7 @@ public class MappingMetamodelImpl
 			return existing;
 		}
 		if ( computing.put( gen, Boolean.TRUE ) != null ) {
-			throw new HibernateException( "Circular generator dependency detected" );
+			throw new CircularGeneratorDependencyException();
 		}
 		final List<BeforeExecutionGenerator> deps = depGraph.get( gen );
 		int maxDep = 0;
@@ -304,6 +315,12 @@ public class MappingMetamodelImpl
 		order.put( gen, depth );
 		computing.remove( gen );
 		return depth;
+	}
+
+	private static class CircularGeneratorDependencyException extends RuntimeException {
+		CircularGeneratorDependencyException() {
+			super( "Circular generator dependency detected", null, false, false );
+		}
 	}
 
 	@Override

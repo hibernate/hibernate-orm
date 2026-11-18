@@ -25,7 +25,7 @@ public final class HANASequenceSupport extends NextvalSequenceSupport {
 
 	@Override
 	public @Nullable String getFromGenerateSeries() {
-		return " from series_generate_integer(1,1,?)";
+		return " from series_generate_integer(1,1,?+1)";
 	}
 
 	@Override

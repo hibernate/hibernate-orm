@@ -1,6 +1,7 @@
 package org.hibernate.cascade.spi;
 
 import jakarta.annotation.Nullable;
+import org.hibernate.action.internal.DelayedPostInsertIdentifier;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.TransientPropertyValueException;
@@ -28,7 +29,6 @@ import java.util.List;
 import static java.util.Collections.emptyIterator;
 import static org.hibernate.engine.internal.ForeignKeys.isTransient;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
-import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 
 /**
  * @author Steve Ebersole
@@ -198,17 +198,14 @@ public class CascadingActions {
 				boolean isMapsId)
 				throws HibernateException {
 			if ( isMapsId ) {
-				if ( context.containsKey( child ) && context.isOperatedOn( child ) ) {
-					EVENT_LISTENER_LOGGER.alreadyInMergeProcess();
-				}
-				else if ( isTransient( childEntityName, child, null, session ) ) {
-					// A transient @MapsId parent must be persisted first, so that
-					// its identifier is available for the derived id of the child
+				// Implicit @MapsId cascade (no explicit cascade=MERGE): only a transient parent
+				// must be persisted first, so that its identifier is available for the derived
+				// id of the child. A detached or persistent parent must not be merged,
+				// since that would overwrite its state.
+				if ( session.getFactory().getSessionFactoryOptions().isIdBatchGenerationEnabled()
+						&& !( context.containsKey( child ) && context.isOperatedOn( child ) )
+						&& isTransient( childEntityName, child, null, session ) ) {
 					session.persist( childEntityName, child );
-				}
-				else {
-					// A detached or already persistent parent is merged as usual
-					session.merge( childEntityName, child, context );
 				}
 			}
 			else {
@@ -253,6 +250,10 @@ public class CascadingActions {
 				boolean isCascadeDeleteEnabled,
 				boolean isMapsId)
 				throws HibernateException {
+			if ( isMapsId && !session.getFactory().getSessionFactoryOptions().isIdBatchGenerationEnabled() ) {
+				// implicit @MapsId cascade only exists to support batch generation
+				return;
+			}
 			session.persist( childEntityName, child, context );
 		}
 
@@ -305,8 +306,17 @@ public class CascadingActions {
 				boolean isMapsId)
 				throws HibernateException {
 			if ( isMapsId ) {
+				if ( !session.getFactory().getSessionFactoryOptions().isIdBatchGenerationEnabled() ) {
+					return;
+				}
 				final var persister = session.getEntityPersister( childEntityName, child );
-				final var entityKey = session.generateEntityKey( persister.getIdentifier( child ), persister );
+				final Object childId = persister.getIdentifier( child );
+				if ( childId == null || childId instanceof DelayedPostInsertIdentifier ) {
+					// transient parent whose id isn't assigned yet
+					session.persistOnFlush( childEntityName, child, context );
+					return;
+				}
+				final var entityKey = session.generateEntityKey( childId, persister );
 				final var entityHolder = session.getPersistenceContextInternal().getEntityHolder( entityKey );
 				if ( entityHolder == null || entityHolder.getEntity() == child ) {
 					session.persistOnFlush( childEntityName, child, context );

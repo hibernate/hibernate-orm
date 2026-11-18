@@ -54,6 +54,15 @@ public interface SequenceSupport {
 		return supportsSequences();
 	}
 
+	/// The maximum number of values which can be fetched by one statement
+	/// returned from {@link #getSequenceNextValParameterizedString(String)}.
+	/// Callers needing more values must issue several statements.
+	///
+	/// @return the maximum number of values per statement
+	default int maxSequenceBatchSize() {
+		return Integer.MAX_VALUE;
+	}
+
 	/// Render the expression which obtains the next value inside another SQL
 	/// statement. Do not include a surrounding `select` statement.
 	///

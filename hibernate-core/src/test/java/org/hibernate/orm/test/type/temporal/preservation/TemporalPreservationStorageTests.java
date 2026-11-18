@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.hibernate.TemporalPreservationException;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.QuerySettings;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -69,7 +70,8 @@ class TemporalPreservationStorageTests {
 	@RequiresDialect(MySQLDialect.class)
 	@RequiresDialect(SQLServerDialect.class)
 	@RequiresDialect(OracleDialect.class)
-	@DomainModel(annotatedClasses = { WithLocalDate.class, WithLocalDateTime.class, WithInstant.class })
+	@RequiresDialect(value = DB2Dialect.class, matchSubTypes = false)
+	@DomainModel(annotatedClasses = { WithLocalDate.class, WithInstant.class })
 	@SessionFactory
 	class DatesAndInstants {
 		@AfterEach
@@ -89,7 +91,9 @@ class TemporalPreservationStorageTests {
 					LocalDate.of( 2024, 2, 29 ),
 					LocalDate.of( 9999, 12, 31 )
 			} ) {
-				assertStoredAsWritten( scope, WithLocalDate.class, "tp_local_date", value, dateLiteral( scope, value ) );
+				if ( !value.isBefore( first ) ) {
+					assertStoredAsWritten( scope, WithLocalDate.class, "tp_local_date", value, dateLiteral( scope, value ) );
+				}
 			}
 			if ( first.isBefore( StandardTemporalPreservations.GREGORIAN_START ) ) {
 				// dates which exist only in the proleptic Gregorian calendar,
@@ -105,57 +109,17 @@ class TemporalPreservationStorageTests {
 			}
 		}
 
+		/// A date is not changed by the default time zone of the JVM.
 		@Test
-		void localDateOutsideRangeIsRejected(SessionFactoryScope scope) {
-			final LocalDate first = firstDay( scope );
-			assertRejected( scope, WithLocalDate.class, first.minusDays( 1 ) );
-			assertRejected( scope, WithLocalDate.class, LocalDate.of( 10000, 1, 1 ) );
-			assertRejected( scope, WithLocalDate.class, LocalDate.of( -1, 6, 15 ) );
-			assertReadRejected( scope, "tp_local_date", outsideRangeDateLiteral( scope ) );
-		}
-
-		@Test
-		void localDateTime(SessionFactoryScope scope) {
-			final LocalDate first = firstDay( scope );
-			for ( var value : new LocalDateTime[] {
-					first.atStartOfDay(),
-					LocalDateTime.of( 1970, 1, 1, 0, 0, 0 ),
-					LocalDateTime.of( 2021, 3, 14, 2, 30, 0, 123_456_000 ),
-					LocalDateTime.of( 2021, 11, 7, 1, 30, 0 ),
-					LocalDateTime.of( 9999, 12, 31, 23, 59, 59, 999_999_000 )
-			} ) {
-				assertStoredAsWritten(
-						scope,
-						WithLocalDateTime.class,
-						"tp_local_date_time",
-						value,
-						TemporalPreservationSql.dateTimeLiteral( dialect( scope ), DATE_TIME.format( value ) )
-				);
-			}
-		}
-
-		/// 02:30 on 2021-03-14 does not exist in New York, and 01:30 on
-		/// 2021-11-07 occurs twice. Neither may be changed by the default
-		/// time zone of the JVM.
-		@Test
-		void localDateTimeIgnoresTheDefaultTimeZone(SessionFactoryScope scope) {
+		void localDateIgnoresTheDefaultTimeZone(SessionFactoryScope scope) {
 			final TimeZone original = TimeZone.getDefault();
-			TimeZone.setDefault( TimeZone.getTimeZone( "America/New_York" ) );
 			try {
-				for ( var value : new LocalDateTime[] {
-						LocalDateTime.of( 2021, 3, 14, 2, 30, 0 ),
-						LocalDateTime.of( 2021, 11, 7, 1, 30, 0 )
-				} ) {
-					assertStoredAsWritten(
-							scope,
-							WithLocalDateTime.class,
-							"tp_local_date_time",
-							value,
-							TemporalPreservationSql.dateTimeLiteral( dialect( scope ), DATE_TIME.format( value ) )
-					);
+				for ( var zone : new String[] { "America/New_York", "Asia/Tokyo", "Pacific/Chatham" } ) {
+					TimeZone.setDefault( TimeZone.getTimeZone( zone ) );
+					for ( var date : new LocalDate[] { LocalDate.of( 2021, 3, 14 ), LocalDate.of( 1985, 12, 31 ) } ) {
+						assertStoredAsWritten( scope, WithLocalDate.class, "tp_local_date", date, dateLiteral( scope, date ) );
+					}
 				}
-				final LocalDate date = LocalDate.of( 2021, 3, 14 );
-				assertStoredAsWritten( scope, WithLocalDate.class, "tp_local_date", date, dateLiteral( scope, date ) );
 			}
 			finally {
 				TimeZone.setDefault( original );
@@ -163,19 +127,18 @@ class TemporalPreservationStorageTests {
 		}
 
 		@Test
-		void localDateTimeOutsideRangeIsRejected(SessionFactoryScope scope) {
+		void nulls(SessionFactoryScope scope) {
+			assertNullIsStored( scope, WithLocalDate.class );
+			assertNullIsStored( scope, WithInstant.class );
+		}
+
+		@Test
+		void localDateOutsideRangeIsRejected(SessionFactoryScope scope) {
 			final LocalDate first = firstDay( scope );
-			assertRejected( scope, WithLocalDateTime.class, first.atStartOfDay().minusSeconds( 1 ) );
-			assertRejected( scope, WithLocalDateTime.class, LocalDateTime.of( 10000, 1, 1, 0, 0 ) );
-			assertReadRejected(
-					scope,
-					"tp_local_date_time",
-					"cast(" + outsideRangeDateLiteral( scope ) + " as "
-						+ ( dialect( scope ) instanceof MySQLDialect
-								? "datetime"
-								: dialect( scope ) instanceof SQLServerDialect ? "datetime2" : "timestamp" )
-						+ ")"
-			);
+			assertRejected( scope, WithLocalDate.class, first.minusDays( 1 ) );
+			assertRejected( scope, WithLocalDate.class, LocalDate.of( 10000, 1, 1 ) );
+			assertRejected( scope, WithLocalDate.class, LocalDate.of( -1, 6, 15 ) );
+			assertReadRejected( scope, "tp_local_date", outsideRangeDateLiteral( scope ) );
 		}
 
 		@Test
@@ -245,6 +208,7 @@ class TemporalPreservationStorageTests {
 		}
 	}
 
+	/// Not on DB2, where a `LocalDateTime` is not supported.
 	@Nested
 	@ServiceRegistry(settings = {
 			@Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "true"),
@@ -255,6 +219,91 @@ class TemporalPreservationStorageTests {
 	@RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
 	@RequiresDialect(MySQLDialect.class)
 	@RequiresDialect(SQLServerDialect.class)
+	@RequiresDialect(OracleDialect.class)
+	@DomainModel(annotatedClasses = { WithLocalDate.class, WithLocalDateTime.class })
+	@SessionFactory
+	class DateTimes {
+		@AfterEach
+		void cleanup(SessionFactoryScope scope) {
+			scope.dropData();
+		}
+
+		@Test
+		void localDateTime(SessionFactoryScope scope) {
+			final LocalDate first = firstDay( scope );
+			for ( var value : new LocalDateTime[] {
+					first.atStartOfDay(),
+					LocalDateTime.of( 1970, 1, 1, 0, 0, 0 ),
+					LocalDateTime.of( 2021, 3, 14, 2, 30, 0, 123_456_000 ),
+					LocalDateTime.of( 2021, 11, 7, 1, 30, 0 ),
+					LocalDateTime.of( 9999, 12, 31, 23, 59, 59, 999_999_000 )
+			} ) {
+				assertStoredAsWritten(
+						scope,
+						WithLocalDateTime.class,
+						"tp_local_date_time",
+						value,
+						TemporalPreservationSql.dateTimeLiteral( dialect( scope ), DATE_TIME.format( value ) )
+				);
+			}
+		}
+
+		/// 02:30 on 2021-03-14 does not exist in New York, and 01:30 on
+		/// 2021-11-07 occurs twice. Neither may be changed by the default
+		/// time zone of the JVM.
+		@Test
+		void localDateTimeIgnoresTheDefaultTimeZone(SessionFactoryScope scope) {
+			final TimeZone original = TimeZone.getDefault();
+			TimeZone.setDefault( TimeZone.getTimeZone( "America/New_York" ) );
+			try {
+				for ( var value : new LocalDateTime[] {
+						LocalDateTime.of( 2021, 3, 14, 2, 30, 0 ),
+						LocalDateTime.of( 2021, 11, 7, 1, 30, 0 )
+				} ) {
+					assertStoredAsWritten(
+							scope,
+							WithLocalDateTime.class,
+							"tp_local_date_time",
+							value,
+							TemporalPreservationSql.dateTimeLiteral( dialect( scope ), DATE_TIME.format( value ) )
+					);
+				}
+				final LocalDate date = LocalDate.of( 2021, 3, 14 );
+				assertStoredAsWritten( scope, WithLocalDate.class, "tp_local_date", date, dateLiteral( scope, date ) );
+			}
+			finally {
+				TimeZone.setDefault( original );
+			}
+		}
+
+		@Test
+		void localDateTimeOutsideRangeIsRejected(SessionFactoryScope scope) {
+			final LocalDate first = firstDay( scope );
+			assertRejected( scope, WithLocalDateTime.class, first.atStartOfDay().minusSeconds( 1 ) );
+			assertRejected( scope, WithLocalDateTime.class, LocalDateTime.of( 10000, 1, 1, 0, 0 ) );
+			assertReadRejected(
+					scope,
+					"tp_local_date_time",
+					"cast(" + outsideRangeDateLiteral( scope ) + " as "
+						+ ( dialect( scope ) instanceof MySQLDialect
+								? "datetime"
+								: dialect( scope ) instanceof SQLServerDialect ? "datetime2" : "timestamp" )
+						+ ")"
+			);
+		}
+	}
+
+	@Nested
+	@ServiceRegistry(settings = {
+			@Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "true"),
+			@Setting(name = QuerySettings.CRITERIA_VALUE_HANDLING_MODE, value = "inline")
+	})
+	@RequiresDialect(H2Dialect.class)
+	@RequiresDialect(HSQLDialect.class)
+	@RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
+	@RequiresDialect(MySQLDialect.class)
+	@RequiresDialect(SQLServerDialect.class)
+	@RequiresDialect(value = DB2Dialect.class, matchSubTypes = false)
 	@DomainModel(annotatedClasses = WithLocalTime.class)
 	@SessionFactory
 	class Times {
@@ -264,23 +313,30 @@ class TemporalPreservationStorageTests {
 		}
 
 		@Test
+		void nullTime(SessionFactoryScope scope) {
+			assertNullIsStored( scope, WithLocalTime.class );
+		}
+
+		@Test
 		void localTime(SessionFactoryScope scope) {
 			final TimeZone original = TimeZone.getDefault();
-			TimeZone.setDefault( TimeZone.getTimeZone( "America/New_York" ) );
 			try {
-				for ( var value : new LocalTime[] {
-						LocalTime.MIDNIGHT,
-						LocalTime.of( 2, 30, 15 ),
-						LocalTime.NOON,
-						LocalTime.of( 23, 59, 59 )
-				} ) {
-					assertStoredAsWritten(
-							scope,
-							WithLocalTime.class,
-							"tp_local_time",
-							value,
-							TemporalPreservationSql.timeLiteral( dialect( scope ), TIME.format( value ) )
-					);
+				for ( var zone : new String[] { "America/New_York", "Asia/Tokyo", "Pacific/Chatham" } ) {
+					TimeZone.setDefault( TimeZone.getTimeZone( zone ) );
+					for ( var value : new LocalTime[] {
+							LocalTime.MIDNIGHT,
+							LocalTime.of( 2, 30, 15 ),
+							LocalTime.NOON,
+							LocalTime.of( 23, 59, 59 )
+					} ) {
+						assertStoredAsWritten(
+								scope,
+								WithLocalTime.class,
+								"tp_local_time",
+								value,
+								TemporalPreservationSql.timeLiteral( dialect( scope ), TIME.format( value ) )
+						);
+					}
 				}
 			}
 			finally {
@@ -291,6 +347,24 @@ class TemporalPreservationStorageTests {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Assertions
+
+	/// A null is written and read as a null, which not every JDBC driver
+	/// manages when it is asked for a Java Time value directly.
+	private static void assertNullIsStored(SessionFactoryScope scope, Class<?> entityClass) {
+		final int id = IDS.incrementAndGet();
+		scope.inTransaction( session -> session.persist( newEntity( entityClass, id, null ) ) );
+		scope.inTransaction( session -> {
+			assertThat( count( session.createNativeQuery(
+					"select count(*) from " + tableOf( entityClass ) + " where id = " + id + " and theValue is null",
+					Object.class
+			).getSingleResult() ) ).isEqualTo( 1 );
+			assertThat( session.createQuery(
+					"select e.theValue from " + entityClass.getSimpleName() + " e where e.id = :id",
+					Object.class
+			).setParameter( "id", id ).getSingleResult() ).isNull();
+			assertThat( session.find( entityClass, id ) ).isNotNull();
+		} );
+	}
 
 	/// @param literal the value as a literal in the database's own syntax
 	private static <T> void assertStoredAsWritten(
@@ -429,6 +503,9 @@ class TemporalPreservationStorageTests {
 		else if ( dialect( scope ) instanceof HSQLDialect ) {
 			expression = TemporalPreservationSql.hsqlEpoch( false );
 		}
+		else if ( dialect( scope ) instanceof DB2Dialect ) {
+			expression = TemporalPreservationSql.DB2_EPOCH;
+		}
 		else {
 			expression = "extract(epoch from theValue)";
 		}
@@ -481,6 +558,9 @@ class TemporalPreservationStorageTests {
 		else if ( dialect( scope ) instanceof MySQLDialect ) {
 			return StandardTemporalPreservations.MYSQL_SUPPORTED_START;
 		}
+		else if ( dialect( scope ) instanceof DB2Dialect ) {
+			return StandardTemporalPreservations.TIMESTAMP_READ_SAFE_START;
+		}
 		else {
 			return StandardTemporalPreservations.COMMON_ERA_START;
 		}
@@ -493,7 +573,8 @@ class TemporalPreservationStorageTests {
 		}
 		else if ( dialect( scope ) instanceof PostgreSQLDialect
 				|| dialect( scope ) instanceof MySQLDialect
-				|| dialect( scope ) instanceof SQLServerDialect ) {
+				|| dialect( scope ) instanceof SQLServerDialect
+				|| dialect( scope ) instanceof DB2Dialect ) {
 			firstDay = StandardTemporalPreservations.TIMESTAMP_READ_SAFE_START;
 		}
 		else {
@@ -508,7 +589,9 @@ class TemporalPreservationStorageTests {
 
 	/// A date outside the supported range which the database can store.
 	private static String outsideRangeDateLiteral(SessionFactoryScope scope) {
-		if ( dialect( scope ) instanceof OracleDialect || dialect( scope ) instanceof HSQLDialect ) {
+		if ( dialect( scope ) instanceof OracleDialect
+				|| dialect( scope ) instanceof HSQLDialect
+				|| dialect( scope ) instanceof DB2Dialect ) {
 			return "date '1582-10-04'";
 		}
 		else if ( dialect( scope ) instanceof SQLServerDialect ) {
@@ -528,7 +611,7 @@ class TemporalPreservationStorageTests {
 		if ( dialect( scope ) instanceof OracleDialect ) {
 			return "timestamp '" + fields + " +00:00'";
 		}
-		else if ( dialect( scope ) instanceof MySQLDialect ) {
+		else if ( dialect( scope ) instanceof MySQLDialect || dialect( scope ) instanceof DB2Dialect ) {
 			// the column holds the date and time at UTC
 			return "timestamp '" + fields + "'";
 		}

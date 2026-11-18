@@ -231,6 +231,24 @@ public class NotFoundIgnoreManyToOneTest {
 		} );
 	}
 
+	@Test
+	void testCorrelatedAssociationNullness(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.persist( new Coin( 3, "No currency", null ) );
+
+			// Coin 1 has a dangling foreign key, coin 2 has a currency, and coin 3 has a null foreign key.
+			assertThat( session.createSelectionQuery( """
+					select c.id from Coin c
+					where exists (select 1 from Currency u where c.currency is null)
+					order by c.id
+					""", Integer.class ).getResultList() ).containsExactly( 1, 3 );
+			assertThat( session.createSelectionQuery( """
+					select c.id from Coin c
+					where exists (select 1 from Currency u where c.currency is not null)
+					""", Integer.class ).getResultList() ).containsExactly( 2 );
+		} );
+	}
+
 	@BeforeEach
 	protected void prepareTestData(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {

@@ -34,14 +34,22 @@ public class EntitySelectFetchByUniqueKeyInitializer
 
 	@Override
 	protected void initialize(EntitySelectFetchInitializerData data) {
-		if ( !isAssociationKeyVisible( data, true ) ) {
+		final var processingState = data.getRowProcessingState().getJdbcValuesSourceProcessingState();
+		final var session = processingState.getSession();
+		final var persistenceContext = session.getPersistenceContextInternal();
+		if ( !(keyAssembler instanceof RestrictedForeignKeyResult.Assembler<?>)
+				&& ( fetchedAttribute.hasAssociationSqlRestriction()
+						|| fetchedAttribute.isAffectedByAssociationFilters( session.getLoadQueryInfluencers() ) ) ) {
+			// The owner SQL could not apply the association restrictions, so the key is not
+			// resolved by the persistence context, but loaded through the association.
+			final Object instance = withFetchOptions( session,
+					() -> fetchedAttribute.loadAssociationTarget( data.entityIdentifier, processingState ) );
+			// The physical key is kept in any case, so that a filtered null does not erase the reference.
+			data.setInstance( instance == null ? null : persistenceContext.proxyFor( instance ) );
 			return;
 		}
 		final String entityName = concreteDescriptor.getEntityName();
 		final String uniqueKeyPropertyName = fetchedAttribute.getReferencedPropertyName();
-
-		final var session = data.getRowProcessingState().getSession();
-		final var persistenceContext = session.getPersistenceContextInternal();
 
 		final var entityUniqueKey =
 				new EntityUniqueKey(

@@ -22,6 +22,7 @@ import org.hibernate.event.spi.ManagedOperationContext;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.IdentifierGenerationException;
+import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
@@ -127,9 +128,12 @@ public abstract class AbstractSaveEventListener<C extends ManagedOperationContex
 					// Delaying and batching requires the use of the new graph based action queue.
 					// We could maybe also support the old implementation, but it might not be worth it,
 					// given we will remove it sooner or later
-					&& source.getActionQueue() instanceof GraphBasedActionQueue ) {
-//					&& source.getActionQueue() instanceof GraphBasedActionQueue
-//					&& generator.requiresGeneration( persister.getIdentifier( entity, source ), source ) ) {
+					&& source.getActionQueue() instanceof GraphBasedActionQueue
+					// The @PrePersist callback must run before the entity state is captured
+					// and checked for nullability, but must also see the generated identifier.
+					// Batching would defer the generation until after state capture,
+					// so we generate the identifier eagerly when such a callback exists
+					&& !persister.getEntityCallbacks().hasRegisteredCallbacks( CallbackType.PRE_PERSIST ) ) {
 				generatedId = null;
 			}
 			else {
@@ -241,9 +245,8 @@ public abstract class AbstractSaveEventListener<C extends ManagedOperationContex
 
 		// call this after generation of an id,
 		// but before we retrieve an assigned id
-		if ( !delayedIdGeneration || !delayInsert || !(persister.getGenerator() instanceof BeforeExecutionGenerator) ) {
-			source.runEntityLifecycleCallback( () -> persister.getEntityCallbacks().preCreate( entity ) );
-		}
+		// and before the entity state is captured
+		source.runEntityLifecycleCallback( () -> persister.getEntityCallbacks().preCreate( entity ) );
 
 		processIfSelfDirtinessTracker( entity, SelfDirtinessTracker::$$_hibernate_clearDirtyAttributes );
 		processIfManagedEntity( entity, managedEntity -> managedEntity.$$_hibernate_setUseTracker( true ) );

@@ -389,7 +389,6 @@ public class DelayableEntityInsertAction extends AbstractEntityInsertAction impl
 	@Override
 	public void consumeGeneratedValue(Object generatedValue, SharedSessionContractImplementor session) {
 		getPersister().setIdentifier( getInstance(), generatedValue, session );
-		session.runEntityLifecycleCallback( () -> getPersister().getEntityCallbacks().preCreate( getInstance() ) );
 		setGeneratedId( generatedValue );
 		final var entityKey = session.generateEntityKey( generatedValue, getPersister() );
 		setEntityKey( entityKey );

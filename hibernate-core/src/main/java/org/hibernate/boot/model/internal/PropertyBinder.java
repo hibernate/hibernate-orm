@@ -872,6 +872,13 @@ public class PropertyBinder {
 						? memberDetails.getType()
 						: inferredData.getClassOrElementType();
 
+		if ( memberDetails.hasDirectAnnotationUsage( Cache.class ) && !isCollection( memberDetails ) ) {
+			// only a collection has a second-level cache of its own
+			throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData )
+					+ "' is annotated '@Cache' but is not a collection"
+					+ " (only a root entity class or a collection may be annotated '@Cache')" );
+		}
+
 		final var propertyBinder = propertyBinder(
 				propertyHolder,
 				inferredData,
@@ -950,12 +957,6 @@ public class PropertyBinder {
 			ClassDetails returnedClass,
 			ColumnsBuilder columnsBuilder) {
 		final var property = inferredData.getAttributeMember();
-		if ( property.hasDirectAnnotationUsage( Cache.class ) && !isCollection( property ) ) {
-			// only a collection has a second-level cache of its own
-			throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData )
-					+ "' is annotated '@Cache' but is not a collection"
-					+ " (only a root entity class or a collection may be annotated '@Cache')" );
-		}
 		if ( isVersion( property ) ) {
 			bindVersionProperty(
 					propertyHolder,

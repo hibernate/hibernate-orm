@@ -206,4 +206,9 @@ public class DB2iDialect extends DB2Dialect {
 			org.hibernate.type.descriptor.jdbc.JdbcType jdbcType) {
 		return org.hibernate.dialect.type.spi.TemporalPreservation.unknown();
 	}
+
+	@Override
+	public org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
+		return org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports.none();
+	}
 }

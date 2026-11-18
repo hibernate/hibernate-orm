@@ -15,6 +15,8 @@ import org.hibernate.dialect.type.spi.StandardDdlTypes;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
 
+import org.hibernate.dialect.type.internal.DB2LocalTimeJdbcType;
+import org.hibernate.dialect.type.internal.DB2TimeUtcJdbcType;
 import org.hibernate.dialect.type.internal.StandardTemporalPreservations;
 import org.hibernate.dialect.type.spi.TemporalPreservation;
 import org.hibernate.dialect.type.spi.TypeSizingProfile;
@@ -129,16 +131,17 @@ import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.LocalTimeJavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullResolvingJdbcType;
-import org.hibernate.type.descriptor.jdbc.TimeUtcAsLocalTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.LocalTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
@@ -193,7 +196,8 @@ public class DB2Dialect extends Dialect implements CurrentTemporalSupport, Tempo
 
 	@Override
 	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
-		return DirectJavaTimeJdbcSupports.none();
+		// the driver accepts and returns a LocalTime, and has not been established to do so for anything else
+		return DirectJavaTimeJdbcSupports.of( LocalTime.class );
 	}
 
 	/// What has been established for Db2 for Linux, UNIX and Windows with
@@ -214,10 +218,14 @@ public class DB2Dialect extends Dialect implements CurrentTemporalSupport, Tempo
 	/// are qualified. The time of an `OffsetTime` at UTC is exchanged as a
 	/// `LocalTime`.
 	///
-	/// Nothing is established for a `LocalTime`. A `LocalDateTime` is
-	/// exchanged as a [java.sql.Timestamp] in the default time zone of the
-	/// JVM, which cannot express a time skipped as clocks are set forward
-	/// there, so it is not preserved.
+	/// A `LocalTime` is exchanged with the driver directly, which involves no
+	/// time zone. The driver accepts one passed to `setObject()` on its own,
+	/// and rejects one passed together with a SQL type.
+	///
+	/// A `LocalDateTime` is not preserved. Exchanged as a [java.sql.Timestamp]
+	/// it is in the default time zone of the JVM, which cannot express a time
+	/// skipped as clocks are set forward there. The driver rejects one passed
+	/// directly, and reads one requested directly through that same time zone.
 	@Override
 	@SPI({ IMPLEMENT, SUPPLY })
 	public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
@@ -226,6 +234,15 @@ public class DB2Dialect extends Dialect implements CurrentTemporalSupport, Tempo
 				jdbcType,
 				StandardTemporalPreservations.TIMESTAMP_READ_SAFE_START
 		);
+		if ( preservation == TemporalPreservation.unknown()
+				&& StandardTemporalPreservations.isPair(
+						javaType,
+						jdbcType,
+						LocalTimeJavaType.class,
+						DB2LocalTimeJdbcType.class
+				) ) {
+			preservation = TemporalPreservation.ofTime();
+		}
 		if ( preservation == TemporalPreservation.unknown() ) {
 			preservation = StandardTemporalPreservations.instant(
 					javaType,
@@ -251,7 +268,7 @@ public class DB2Dialect extends Dialect implements CurrentTemporalSupport, Tempo
 			preservation = StandardTemporalPreservations.offsetTime(
 					javaType,
 					jdbcType,
-					TimeUtcAsLocalTimeJdbcType.class,
+					DB2TimeUtcJdbcType.class,
 					TemporalPreservation.Level.UNSUPPORTED
 			);
 		}
@@ -1090,7 +1107,7 @@ public class DB2Dialect extends Dialect implements CurrentTemporalSupport, Tempo
 			// The time of an OffsetTime at UTC is exchanged with the driver as a LocalTime.
 			// Passing through a java.sql.Time stores a time which depends on the default
 			// time zone of the JVM, which is left as it is when preservation is disabled.
-			jdbcTypeRegistry.addDescriptor( TimeUtcAsLocalTimeJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( DB2TimeUtcJdbcType.INSTANCE );
 		}
 
 		// DB2 requires a custom binder for binding untyped nulls that resolves the type through the statement

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiFunction;
 
@@ -58,16 +59,21 @@ public final class ToOneVisibilityLoader {
 		// The persistence context resolves a unique key regardless of the
 		// association restrictions and of the current filter arguments.
 		final var targets = cache.getTargets( this, plan );
-		final var persister = association.getEntityMappingType().getEntityPersister();
-		final String propertyName = association.getReferencedPropertyName();
-		final var uniqueKey = new EntityUniqueKey( persister.getEntityName(), propertyName, key,
-				persister.getPropertyType( propertyName ), session.getFactory() );
+		final var uniqueKey = uniqueKey( key, session );
 		if ( targets.containsKey( uniqueKey ) ) {
 			return targets.get( uniqueKey );
 		}
 		final Object target = plan.load( key, session );
-		targets.put( uniqueKey, target );
+		// Keep the lookup key from escaping, allowing its allocation to be eliminated on cache hits.
+		targets.put( uniqueKey( key, session ), target );
 		return target;
+	}
+
+	private EntityUniqueKey uniqueKey(Object key, SharedSessionContractImplementor session) {
+		final var persister = association.getEntityMappingType().getEntityPersister();
+		final String propertyName = association.getReferencedPropertyName();
+		return new EntityUniqueKey( persister.getEntityName(), propertyName, key,
+				persister.getPropertyType( propertyName ), session.getFactory() );
 	}
 
 	private Plan getPlan(boolean byUniqueKey, JdbcValuesSourceProcessingState processingState) {
@@ -170,7 +176,7 @@ public final class ToOneVisibilityLoader {
 
 		boolean matches(LoadQueryInfluencers influencers) {
 			return filters != null && filters.matches( influencers )
-				&& ( fetches == null || fetches.equals( FetchState.capture( influencers ) ) );
+				&& ( fetches == null || fetches.matches( influencers ) );
 		}
 	}
 
@@ -179,22 +185,46 @@ public final class ToOneVisibilityLoader {
 	 * A plan selecting only an identifier does not depend on them.
 	 */
 	private record FetchState(
-			Set<String> profiles, @Nullable RootGraphImplementor<?> graph, @Nullable GraphSemantic graphSemantic,
+			String[] profiles, @Nullable RootGraphImplementor<?> graph, @Nullable GraphSemantic graphSemantic,
 			@Nullable CascadingFetchProfile cascadingProfile, int batchSize, boolean batchSizeOverride,
 			boolean subselectFetch, @Nullable Object temporalIdentifier) {
 		static FetchState capture(LoadQueryInfluencers influencers) {
 			final var graph = influencers.getEffectiveEntityGraph();
-			return new FetchState( Set.copyOf( influencers.getEnabledFetchProfileNames() ),
+			return new FetchState( influencers.getEnabledFetchProfileNames().toArray( String[]::new ),
 					graph.getGraph(), graph.getSemantic(), influencers.getEnabledCascadingFetchProfile(),
 					influencers.getBatchSize(), influencers.hasBatchSizeOverride(),
 					influencers.getSubselectFetchEnabled(), influencers.getTemporalIdentifier() );
+		}
+
+		boolean matches(LoadQueryInfluencers influencers) {
+			final var effectiveGraph = influencers.getEffectiveEntityGraph();
+			return sameNames( profiles, influencers.getEnabledFetchProfileNames() )
+				&& Objects.equals( graph, effectiveGraph.getGraph() )
+				&& graphSemantic == effectiveGraph.getSemantic()
+				&& cascadingProfile == influencers.getEnabledCascadingFetchProfile()
+				&& batchSize == influencers.getBatchSize()
+				&& batchSizeOverride == influencers.hasBatchSizeOverride()
+				&& subselectFetch == influencers.getSubselectFetchEnabled()
+				&& Objects.equals( temporalIdentifier, influencers.getTemporalIdentifier() );
 		}
 	}
 
 	private record Targets(Plan plan, Map<EntityUniqueKey, Object> byKey) {
 	}
 
-	private record FilterState(Set<String> enabledNames, List<Parameter> parameters) {
+	private static boolean sameNames(String[] snapshot, Set<String> names) {
+		if ( snapshot.length != names.size() ) {
+			return false;
+		}
+		for ( String name : snapshot ) {
+			if ( !names.contains( name ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private record FilterState(String[] enabledNames, List<Parameter> parameters) {
 		static FilterState capture(SelectStatement select, LoadQueryInfluencers influencers) {
 			final List<Parameter> parameters = new ArrayList<>();
 			select.accept( new AbstractSqlAstWalker() {
@@ -209,13 +239,13 @@ public final class ToOneVisibilityLoader {
 					}
 				}
 			} );
-			return new FilterState( Set.copyOf( influencers.getEnabledFilterNames() ), parameters );
+			return new FilterState( influencers.getEnabledFilterNames().toArray( String[]::new ), parameters );
 		}
 
 		boolean matches(LoadQueryInfluencers influencers) {
 			// Enablement changes may introduce predicates absent from the previous AST,
 			// including parameterless filters. Arguments of unused filters do not matter.
-			if ( !enabledNames.equals( influencers.getEnabledFilterNames() ) ) {
+			if ( !sameNames( enabledNames, influencers.getEnabledFilterNames() ) ) {
 				return false;
 			}
 			for ( var parameter : parameters ) {

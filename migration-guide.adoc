@@ -71,7 +71,7 @@ This section describes changes in behavior that applications should be aware of.
 [[timezone-storage-property-access]]
 === Timezone column storage with property access
 
-`@TimeZoneStorage(COLUMN)` on property-access attributes now maps and persists both the temporal value and timezone.
+`@TimeZoneStorage(COLUMN)` on property-access attributes now maps and persists both the temporal value and UTC offset.
 Previously, these columns could be omitted and values silently lost for `OffsetDateTime`, `OffsetTime`, and `ZonedDateTime`.
 Applications affected by this bug must ensure the required columns exist before upgrading.
 Values that were never stored by earlier versions cannot be recovered automatically.

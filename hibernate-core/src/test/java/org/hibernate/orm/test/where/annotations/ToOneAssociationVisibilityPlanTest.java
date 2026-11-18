@@ -5,7 +5,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.function.Supplier;
 
+import org.hibernate.Hibernate;
 import org.hibernate.ScrollMode;
+import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
@@ -15,6 +18,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -25,13 +29,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DomainModel(annotatedClasses = { ToOneAssociationVisibilityPlanTest.Target.class,
+		ToOneAssociationVisibilityPlanTest.Detail.class,
 		ToOneAssociationVisibilityPlanTest.IdOwner.class, ToOneAssociationVisibilityPlanTest.CodeOwner.class })
-@SessionFactory
+@SessionFactory(useCollectingStatementInspector = true)
 class ToOneAssociationVisibilityPlanTest {
 	@BeforeEach
 	void prepare(SessionFactoryScope scope) {
@@ -183,6 +189,57 @@ class ToOneAssociationVisibilityPlanTest {
 		} );
 	}
 
+	@ParameterizedTest
+	@ValueSource(booleans = { false, true })
+	void scrollingDetectsFetchProfiles(boolean uniqueKey, SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.enableFilter( "visibilitySegments" ).setParameterList( "segments", List.of( 0, 1 ) );
+			try ( var rows = session.createNativeQuery( sql( uniqueKey ), type( uniqueKey ) ).scroll( ScrollMode.FORWARD_ONLY ) ) {
+				for ( int id = 1; id <= 8; id++ ) {
+					if ( id == 3 ) {
+						session.enableFetchProfile( "visibilityDetails" );
+					}
+					else if ( id == 5 ) {
+						session.disableFetchProfile( "visibilityDetails" );
+					}
+					assertThat( rows.next() ).isTrue();
+					assertThat( Hibernate.isInitialized( rows.get().target().details ) ).isEqualTo( id == 3 || id == 4 );
+				}
+			}
+		} );
+	}
+
+	@Test
+	void nativeQueryLoadsARepeatedUniqueKeyOnce(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			for ( long id = 9; id <= 14; id++ ) {
+				final var owner = new CodeOwner();
+				owner.id = id;
+				owner.target = session.find( Target.class, id <= 11 ? 2L : 1L );
+				session.persist( owner );
+			}
+		} );
+		scope.inTransaction( session -> {
+			session.enableFilter( "visibilitySegments" ).setParameterList( "segments", List.of( 0 ) );
+			final var inspector = scope.getCollectingStatementInspector();
+			inspector.clear();
+			final var owners = session.createNativeQuery(
+					"select * from visibility_code_owner where id > 8 order by id", CodeOwner.class ).getResultList();
+			assertThat( owners ).hasSize( 6 );
+			for ( var owner : owners ) {
+				if ( owner.id <= 11 ) {
+					assertThat( owner.target.id ).isEqualTo( 2L );
+					assertThat( owner.target ).isSameAs( owners.get( 0 ).target );
+				}
+				else {
+					assertThat( owner.target ).isNull();
+				}
+			}
+			// The owners, then one select for the visible target and one for the hidden target
+			assertThat( inspector.getSqlQueries() ).hasSize( 3 );
+		} );
+	}
+
 	private static String sql(boolean uniqueKey) {
 		return "select * from " + (uniqueKey ? "visibility_code_owner" : "visibility_id_owner") + " order by id";
 	}
@@ -201,11 +258,21 @@ class ToOneAssociationVisibilityPlanTest {
 			parameters = @ParamDef(name = "upper", type = Long.class, resolver = UpperBound.class))
 	@FilterDef(name = "visibilityUnused", parameters = @ParamDef(name = "value", type = Integer.class))
 	@Filter(name = "visibilityTarget")
+	@FetchProfile(name = "visibilityDetails", fetchOverrides = @FetchProfile.FetchOverride(
+			entity = Target.class, association = "details", mode = FetchMode.JOIN))
 	static class Target {
 		@Id Long id;
 		@Column(unique = true) String code;
 		@Column(name = "`segment`") int segment;
 		Date stamp;
+		@OneToMany(mappedBy = "target") List<Detail> details = new ArrayList<>();
+	}
+
+	@Entity(name = "VisibilityDetail")
+	@Table(name = "visibility_detail")
+	static class Detail {
+		@Id Long id;
+		@ManyToOne(fetch = FetchType.LAZY) Target target;
 	}
 
 	public static class UpperBound implements Supplier<Long> {

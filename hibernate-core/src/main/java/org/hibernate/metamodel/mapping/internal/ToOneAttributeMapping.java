@@ -1989,16 +1989,26 @@ public class ToOneAttributeMapping
 	}
 
 	public boolean isAssociationKeyVisible(
-			Object key, boolean byUniqueKey, JdbcValuesSourceProcessingState processingState) {
+			Object identifier, JdbcValuesSourceProcessingState processingState) {
 		final var session = processingState.getSession();
 		if ( !restrictions.hasSqlRestriction() && !restrictions.isAffectedByFilters( session.getLoadQueryInfluencers() ) ) {
 			return true;
 		}
+		return getVisibilityLoader().isVisible( identifier, processingState );
+	}
+
+	/** Loads the target with the given unique key which satisfies the association restrictions, if any. */
+	public @Nullable Object loadAssociationTarget(
+			Object uniqueKey, JdbcValuesSourceProcessingState processingState) {
+		return getVisibilityLoader().loadByUniqueKey( uniqueKey, processingState );
+	}
+
+	private ToOneVisibilityLoader getVisibilityLoader() {
 		var loader = visibilityLoader;
 		if ( loader == null ) {
 			visibilityLoader = loader = new ToOneVisibilityLoader( this );
 		}
-		return loader.isVisible( key, byUniqueKey, processingState );
+		return loader;
 	}
 
 	public void applyAssociationRestrictions(

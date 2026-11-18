@@ -78,6 +78,25 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 		jdbcSelect = getJdbcSelect( factory, sqlAst, JdbcParameterBindings.NO_BINDINGS );
 	}
 
+	/**
+	 * Loads using the given select, which restricts the unique key, and possibly more.
+	 */
+	SingleUniqueKeyEntityLoaderStandard(
+			@Nonnull EntityMappingType entityDescriptor,
+			@Nonnull SingularAttributeMapping uniqueKeyMapping,
+			@Nonnull SelectStatement sqlAst,
+			@Nonnull JdbcParametersList jdbcParameters) {
+		this.entityDescriptor = entityDescriptor;
+		this.jdbcParameters = jdbcParameters;
+		uniqueKeyAttributePath = getAttributePath( uniqueKeyMapping );
+		uniqueKeyAttribute =
+				uniqueKeyMapping instanceof ToOneAttributeMapping toOneAttributeMapping
+						? toOneAttributeMapping.getForeignKeyDescriptor()
+						: uniqueKeyMapping;
+		jdbcSelect = getJdbcSelect( entityDescriptor.getEntityPersister().getFactory(), sqlAst,
+				JdbcParameterBindings.NO_BINDINGS );
+	}
+
 	@Nonnull
 	private static String getAttributePath(@Nonnull AttributeMapping attribute) {
 		ManagedMappingType declaringType = attribute.getDeclaringType();

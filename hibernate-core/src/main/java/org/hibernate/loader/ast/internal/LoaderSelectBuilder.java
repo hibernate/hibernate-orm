@@ -141,6 +141,21 @@ public class LoaderSelectBuilder {
 	}
 
 	/**
+	 * Like {@link #createSelectByUniqueKey}, but also applies the restrictions of the given association.
+	 */
+	static SelectStatement createAssociationTargetSelect(
+			ToOneAttributeMapping association,
+			ModelPart restrictedPart, LoadQueryInfluencers influencers,
+			Consumer<JdbcParameter> parameterConsumer) {
+		final var factory = influencers.getSessionFactory();
+		final var builder = new LoaderSelectBuilder( factory.getSqlTranslationEngine(),
+				association.getEntityMappingType(), null, singletonList( restrictedPart ), null, 1, influencers,
+				new LockOptions(), determineGraphTraversalState( influencers, factory.getJpaMetamodel() ), true,
+				parameterConsumer, new SqlAliasBaseManager() );
+		return builder.generateSelect( association );
+	}
+
+	/**
 	 * Create a select-statement (SQL AST) for loading by multiple keys using a single SQL ARRAY parameter
 	 */
 	@Nonnull

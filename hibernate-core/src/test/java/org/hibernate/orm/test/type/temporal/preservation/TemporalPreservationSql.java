@@ -33,6 +33,33 @@ final class TemporalPreservationSql {
 		return "cast('" + fields + " +00:00' as datetimeoffset)";
 	}
 
+	/// An instant, given as its date and time at UTC, for HSQLDB: for a
+	/// column which holds an instant with an offset, or for one which holds
+	/// the date and time at UTC and knows of no time zone.
+	static String hsqlInstantLiteral(String fields, boolean withTimeZone) {
+		return "timestamp '" + fields + ( withTimeZone ? "+00:00'" : "'" );
+	}
+
+	/// The seconds from the epoch to the instant in the column `theValue`, for HSQLDB.
+	static String hsqlEpoch(boolean withTimeZone) {
+		final String epoch = hsqlInstantLiteral( "1970-01-01 00:00:00", withTimeZone );
+		return "datediff('second', " + epoch + ", theValue)"
+			+ " - (case when theValue < " + epoch
+			+ " and extract(second from theValue) <> floor(extract(second from theValue)) then 1 else 0 end)";
+	}
+
+	/// The statement which sets the time zone of a session of HSQLDB, which
+	/// knows offsets and no regions, to the offset the zone has in winter.
+	static String hsqlSessionZone(String zone) {
+		final String offset = switch ( zone ) {
+			case "Asia/Kathmandu" -> "+5:45";
+			case "America/New_York" -> "-5:00";
+			case "Asia/Manila" -> "+8:00";
+			default -> throw new IllegalArgumentException( zone );
+		};
+		return "set time zone interval '" + offset + "' hour to minute";
+	}
+
 	/// The seconds from the epoch to the instant in the column `theValue`, for SQL Server.
 	static final String SQL_SERVER_EPOCH =
 			"datediff_big(second, cast('1970-01-01 00:00:00 +00:00' as datetimeoffset), theValue)";

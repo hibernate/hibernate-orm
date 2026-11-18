@@ -103,6 +103,8 @@ jobs:
             "runs-on": "runs-on/fleet=linux-standard/env=commonhaus" },
           { "name": "Temporal preservation - h2",
             "gradle-args": "-PtemporalPreservation" },
+          { "name": "Temporal preservation - hsqldb", "rdbms": "hsqldb",
+            "gradle-args": "-PtemporalPreservation" },
           { "name": "Temporal preservation - postgresql", "rdbms": "postgresql",
             "gradle-args": "-PtemporalPreservation",
             "runs-on": "runs-on/fleet=linux-standard/env=ibm" },

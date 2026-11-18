@@ -30,6 +30,7 @@ import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.QuerySettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -66,6 +67,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 ///
 /// @author Steve Ebersole
 @RequiresDialect(H2Dialect.class)
+@RequiresDialect(HSQLDialect.class)
 @RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
 @RequiresDialect(MySQLDialect.class)
 @RequiresDialect(SQLServerDialect.class)
@@ -166,7 +168,7 @@ class TemporalPreservationOffsetTests {
 					session.clear();
 
 					// the database holds the instant in one column and the offset or zone in the other
-					final String literal = instantLiteral( dialect, instant );
+					final String literal = instantLiteral( dialect, instant, true );
 					assertThat( ( (Number) session.createNativeQuery(
 							"select count(*) from " + table + " where id = " + id + " and theValue = " + literal
 								+ " and theCompanion = " + companion,
@@ -218,7 +220,7 @@ class TemporalPreservationOffsetTests {
 
 			final long day = 86_400;
 			// The ten days before 1582-10-15 do not exist in Oracle's calendar.
-			final long[] secondsEarlier = dialect instanceof OracleDialect
+			final long[] secondsEarlier = dialect instanceof OracleDialect || dialect instanceof HSQLDialect
 					? new long[] { 90 * day, 400 * day }
 					: new long[] { 1, 16 * 3600, day, 10 * day, 78 * day, 79 * day, 90 * day, 400 * day };
 			for ( long seconds : secondsEarlier ) {
@@ -281,6 +283,9 @@ class TemporalPreservationOffsetTests {
 		else if ( dialect instanceof SQLServerDialect ) {
 			epoch = TemporalPreservationSql.SQL_SERVER_EPOCH;
 		}
+		else if ( dialect instanceof HSQLDialect ) {
+			epoch = TemporalPreservationSql.hsqlEpoch( true );
+		}
 		else {
 			epoch = "extract(epoch from theValue)";
 		}
@@ -329,7 +334,9 @@ class TemporalPreservationOffsetTests {
 			// PostgreSQL and Oracle refuse a literal with an offset of sixteen hours
 			// or more outright, which would end the transaction this check runs in
 		}
-		else if ( offsetSeconds % 60 == 0 && localYear >= 1 && localYear <= 9999 ) {
+		else if ( offsetSeconds % 60 == 0 && localYear >= 1 && localYear <= 9999
+				// HSQLDB renders no offset in a literal, which is therefore rejected
+				&& !( dialect instanceof HSQLDialect ) ) {
 			assertThat( session.createQuery( criteria ).getSingleResult() )
 					.as( "literal rendered for %s", value )
 					.isEqualTo( 1L );
@@ -395,6 +402,12 @@ class TemporalPreservationOffsetTests {
 	private static org.hibernate.type.descriptor.jdbc.JdbcType offsetDateTimeJdbcType;
 
 	private static String instantLiteral(Dialect dialect, Instant value) {
+		return instantLiteral( dialect, value, false );
+	}
+
+	/// @param inTwoColumns whether the literal is for the first of two columns,
+	///        as opposed to a single column which holds the whole value
+	private static String instantLiteral(Dialect dialect, Instant value, boolean inTwoColumns) {
 		final String fields = DATE_TIME.format( value.atOffset( ZoneOffset.UTC ) );
 		if ( dialect instanceof OracleDialect ) {
 			return "timestamp '" + fields + " +00:00'";
@@ -405,6 +418,10 @@ class TemporalPreservationOffsetTests {
 		}
 		else if ( dialect instanceof SQLServerDialect ) {
 			return TemporalPreservationSql.sqlServerInstantLiteral( fields );
+		}
+		else if ( dialect instanceof HSQLDialect ) {
+			// a single column holds an instant with its offset, and the first of two the date and time at UTC
+			return TemporalPreservationSql.hsqlInstantLiteral( fields, !inTwoColumns );
 		}
 		else {
 			return "timestamp with time zone '" + fields + "+00:00'";
@@ -615,6 +632,10 @@ class TemporalPreservationOffsetTests {
 		else if ( dialect instanceof SQLServerDialect ) {
 			// a session of SQL Server has no time zone
 			return null;
+		}
+		else if ( dialect instanceof HSQLDialect ) {
+			execute( connection, TemporalPreservationSql.hsqlSessionZone( zone ) );
+			return "set time zone local";
 		}
 		else {
 			execute( connection, "set time zone '" + zone + "'" );

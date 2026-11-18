@@ -21,6 +21,7 @@ import org.hibernate.annotations.TimeZoneRepresentation;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -50,6 +51,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 ///
 /// @author Steve Ebersole
 @RequiresDialect(H2Dialect.class)
+@RequiresDialect(HSQLDialect.class)
 @RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
 @RequiresDialect(MySQLDialect.class)
 @RequiresDialect(SQLServerDialect.class)
@@ -78,7 +80,9 @@ class TemporalPreservationOffsetTimeTests {
 	void wholeValueIsPreservedByDefault() {
 		// one column where it keeps the offset to the second, and two where it does not
 		assertThat( valueOf( WithOffsetTime.class ) ).isInstanceOf(
-				DialectContext.getDialect() instanceof H2Dialect ? BasicValue.class : Component.class
+				DialectContext.getDialect() instanceof H2Dialect || DialectContext.getDialect() instanceof HSQLDialect
+						? BasicValue.class
+						: Component.class
 		);
 		checkRoundTrip( WithOffsetTime.class, false );
 	}

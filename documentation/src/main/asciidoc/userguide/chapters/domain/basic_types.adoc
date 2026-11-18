@@ -884,7 +884,7 @@ Enabling temporal preservation has three effects.
 [[basic-temporal-preservation-support]]
 ====== What is supported
 
-Temporal preservation is supported on H2, PostgreSQL, Oracle, MySQL, MariaDB and SQL Server, for `LocalDate`, `LocalTime`, `LocalDateTime`, `Instant`,
+Temporal preservation is supported on H2, HSQLDB, PostgreSQL, Oracle, MySQL, MariaDB and SQL Server, for `LocalDate`, `LocalTime`, `LocalDateTime`, `Instant`,
 `OffsetTime`, `OffsetDateTime` and `ZonedDateTime`. The last three are described further under <<basic-temporal-preservation-policy>>.
 On every other database, a mapped value is rejected.
 So is a `LocalTime` on Oracle, which has no `TIME` type: the value is stored in a `TIMESTAMP` column,
@@ -907,7 +907,7 @@ include::{core-project-dir}/src/test/resources/org/hibernate/orm/test/type/tempo
 |===
 
 The table is verified against each listed database by Hibernate's own test suite.
-It was established with H2 2.5.252, with PostgreSQL 18.6 and version 42.7.14 of its JDBC driver,
+It was established with H2 2.5.252, with HSQLDB 2.7.4, with PostgreSQL 18.6 and version 42.7.14 of its JDBC driver,
 with Oracle Database 23.26 and version 23.26.4 of its JDBC driver,
 with MySQL 26.10 and version 26.10.0 of MySQL Connector/J,
 with MariaDB 13.0 and version 4.0.0 of MariaDB Connector/J,
@@ -935,6 +935,9 @@ The ranges are narrower than what these databases are able to store, for the fol
 * On SQL Server, an `OffsetDateTime`, `ZonedDateTime` or `OffsetTime` stored in a single column is written with its own offset, and a `DATETIMEOFFSET` column holds no offset beyond fourteen hours.
   A value with a greater offset is rejected when it is bound. For the same reason the range of an `OffsetDateTime` or `ZonedDateTime` in a single column ends fourteen hours early,
   so that its date in its own offset does not pass the year 9999. Stored in two columns, the first is written at UTC, and neither restriction applies.
+* On HSQLDB, dates before 15 October 1582 are excluded because HSQLDB uses the Julian calendar for them.
+  A `LocalDate` or `LocalDateTime` from before then is moved to that calendar as it is written, and is not moved back as it is read.
+  An `OffsetDateTime` in a single column is written with its own offset, in which its date may fall before 15 October 1582 while its date at UTC does not, so it is excluded before the year 1583.
 * On Oracle, an `OffsetDateTime` or `ZonedDateTime` before the year 1583 is excluded, to keep clear of values
   whose date in their own offset falls before 15 October 1582 while their date in UTC does not, or the reverse.
 
@@ -950,7 +953,7 @@ Few databases can store all of that in one column:
 [cols="1,1,1,1",options="header"]
 |===
 |Database |Instant |Offset |Zone
-|H2 |Kept |Kept |Lost
+|H2, HSQLDB |Kept |Kept |Lost
 |PostgreSQL |Kept |Lost: every value is read back at UTC |Lost
 |Oracle |Kept |Kept only to the minute, so an offset with seconds is lost |Lost
 |MySQL, MariaDB |Kept, as its date and time at UTC |Lost: every value is read back at UTC |Lost
@@ -963,7 +966,7 @@ and stores it in a single column where that column keeps the whole value, and in
 
 [cols="1,1,2",options="header"]
 |===
-|Type |H2 |PostgreSQL, Oracle, MySQL, MariaDB, SQL Server
+|Type |H2, HSQLDB |PostgreSQL, Oracle, MySQL, MariaDB, SQL Server
 |`OffsetDateTime` |One column |Instant, and offset
 |`ZonedDateTime` |Instant, and zone |Instant, and zone
 |===
@@ -999,6 +1002,7 @@ If those rules are later changed for a date in the future, a value stored for th
 In a query, a value stored in two columns can be selected, ordered by, and compared.
 Compared with a parameter, both columns are compared.
 Compared with anything which occupies a single column, such as a literal, it is compared by its instant.
+A literal is then rendered as a literal for that instant, in the form which the column holding the instant needs.
 That holds for the comparison operators, for `between`, and for `in` with a list of values.
 Within one `between` or `in`, parameters and values which occupy a single column cannot be mixed, since a parameter stands for both columns.
 `in` with a subquery which selects a single column is rejected.
@@ -1026,7 +1030,7 @@ Whether a single column keeps the whole value again depends on the database:
 [cols="1,2,2",options="header"]
 |===
 |Database |Stored in a single column |By default
-|H2 |The time and the offset are kept |One column
+|H2, HSQLDB |The time and the offset are kept |One column
 |PostgreSQL, MySQL, MariaDB |The time at UTC is kept, and the offset is lost |Time at UTC, and offset
 |SQL Server |The time at UTC is kept, and the offset only to the minute and within fourteen hours of UTC |Time at UTC, and offset
 |Oracle |The time at UTC is kept, and the offset only to the minute |Time at UTC, and offset
@@ -1083,7 +1087,7 @@ hibernate.type.temporal_preservation_policy.zoned_datetime=normalized
 
 A policy states a requirement and nothing more.
 It does not make an unsupported mapping supported: a mapping which does not meet it is rejected when the `SessionFactory` is built.
-What is read back with the `NORMALIZED` policy depends on the database: at UTC on PostgreSQL, MySQL and MariaDB, and with the offset which was written on H2, Oracle and SQL Server.
+What is read back with the `NORMALIZED` policy depends on the database: at UTC on PostgreSQL, MySQL and MariaDB, and with the offset which was written on H2, HSQLDB, Oracle and SQL Server.
 
 The policy governs what a mapped attribute must preserve.
 A value which is not being written to or read from a mapped attribute, such as a query parameter compared with a column,
@@ -1198,7 +1202,8 @@ With temporal preservation enabled, the following are always rejected.
 |When the `SessionFactory` is built
 
 |A SQL literal for a value with an offset, when the offset has seconds, or when the year of the date in that offset is before 1 or after 9999.
-Also a SQL literal for an `OffsetTime` on Oracle and SQL Server, where the column which holds one is not of a type for a time of day.
+Also a SQL literal for an `OffsetTime` on Oracle and SQL Server, where the column which holds one is not of a type for a time of day,
+and a SQL literal for an `OffsetTime` or `OffsetDateTime` on HSQLDB, which renders no offset in a literal.
 Such a value can be bound as a parameter
 |When the literal is rendered
 
@@ -1276,9 +1281,9 @@ or on <<basic-datetime-time-zone,`hibernate.jdbc.time_zone`>>, whether configure
 
 * A `LocalDate`, `LocalTime` or `LocalDateTime` is exchanged with the driver as its fields, with no time zone involved.
 * An `Instant` is exchanged in a form which fixes it to UTC: as an `Instant` on H2, as an `OffsetDateTime` at UTC on Oracle,
-  and on PostgreSQL, MySQL, MariaDB and SQL Server as a `java.sql.Timestamp` with a UTC calendar, which is not replaced by the configured JDBC time zone.
+  and on HSQLDB, PostgreSQL, MySQL, MariaDB and SQL Server as a `java.sql.Timestamp` with a UTC calendar, which is not replaced by the configured JDBC time zone.
 * An `Instant` rendered as a SQL literal carries an explicit UTC offset.
-  On MySQL and MariaDB, where the column holds the date and time at UTC and knows of no time zone, the literal for an `Instant`,
+  On HSQLDB, MySQL and MariaDB, where the column holds the date and time at UTC and knows of no time zone, the literal for an `Instant`,
   `OffsetDateTime` or `ZonedDateTime` is its date and time at UTC without an offset, since the database would convert a literal with an offset to the time zone of its session.
 
 `hibernate.jdbc.time_zone` keeps its meaning for everything outside temporal preservation, such as `java.util.Date` attributes mapped in the same application.

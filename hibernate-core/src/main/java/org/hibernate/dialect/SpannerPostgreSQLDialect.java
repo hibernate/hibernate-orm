@@ -196,6 +196,11 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect implements Curre
 	public CurrentTemporalSupport getCurrentTemporalSupport() {
 		return this;
 	}
+	private final CteSupport cteSupport = CteSupport.builder( super.getCteSupport() )
+			.placement( CteSupport.Placement.TOP_LEVEL )
+			.recursiveFeatures()
+			.supportsCteHeaderColumnList( false )
+			.build();
 	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
 			.maxVarcharLength( 2_621_440 )
 			.maxNVarcharLength( 2_621_440 ).maxNVarcharCapacity( 2_621_440 )
@@ -928,11 +933,7 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect implements Curre
 
 	@Override
 	public CteSupport getCteSupport() {
-		return CteSupport.builder( super.getCteSupport() )
-				.placement( CteSupport.Placement.TOP_LEVEL )
-				.recursiveFeatures()
-				.supportsCteHeaderColumnList( false )
-				.build();
+		return cteSupport;
 	}
 
 	@Override

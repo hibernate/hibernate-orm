@@ -287,6 +287,16 @@ public class OracleDialect extends Dialect implements CurrentTemporalSupport, Te
 					supportsTypeIfExists() ? ExistenceCheckPlacement.BEFORE_NAME : ExistenceCheckPlacement.NONE
 			)
 	);
+	private final CteSupport cteSupport = CteSupport.builder()
+			.placement( CteSupport.Placement.TOP_LEVEL )
+			.recursiveFeatures(
+					CteSupport.RecursiveFeature.RECURSIVE,
+					CteSupport.RecursiveFeature.SEARCH,
+					CteSupport.RecursiveFeature.CYCLE
+			)
+			.requiresRecursiveKeyword( false )
+			.build();
+	private final MutationSyntaxSupport mutationSyntaxSupport = MutationSyntaxSupport.of( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE );
 	private final UniqueDelegate uniqueDelegate = UniqueDelegates.createTable( this );
 	private final SequenceSupport oracleSequenceSupport = OracleSequenceSupport.getInstance(this);
 	private final StandardTableExporter oracleTableExporter = new StandardTableExporter( this ) {
@@ -1518,15 +1528,7 @@ public class OracleDialect extends Dialect implements CurrentTemporalSupport, Te
 
 	@Override
 	public CteSupport getCteSupport() {
-		return CteSupport.builder()
-				.placement( CteSupport.Placement.TOP_LEVEL )
-				.recursiveFeatures(
-						CteSupport.RecursiveFeature.RECURSIVE,
-						CteSupport.RecursiveFeature.SEARCH,
-						CteSupport.RecursiveFeature.CYCLE
-				)
-				.requiresRecursiveKeyword( false )
-				.build();
+		return cteSupport;
 	}
 
 	@Override
@@ -1753,7 +1755,7 @@ public class OracleDialect extends Dialect implements CurrentTemporalSupport, Te
 
 	@Override
 	public MutationSyntaxSupport getMutationSyntaxSupport() {
-		return MutationSyntaxSupport.of( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE );
+		return mutationSyntaxSupport;
 	}
 
 	public int getDriverMajorVersion() {

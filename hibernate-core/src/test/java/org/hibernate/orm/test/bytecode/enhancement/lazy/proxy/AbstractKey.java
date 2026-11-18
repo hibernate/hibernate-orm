@@ -11,13 +11,11 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
 
 import org.hibernate.annotations.LazyGroup;
 
 @Entity
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-@Table(name = "PP_DCKey")
 public abstract class AbstractKey extends ModelEntity
 		implements Serializable {
 

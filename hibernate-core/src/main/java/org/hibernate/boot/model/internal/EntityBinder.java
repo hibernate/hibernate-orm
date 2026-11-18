@@ -966,8 +966,7 @@ public class EntityBinder {
 	}
 
 	private void checkNoOnDelete(ClassDetails annotatedClass) {
-		if ( annotatedClass.hasAnnotationUsage( PrimaryKeyJoinColumns.class, modelsContext() )
-				|| annotatedClass.hasAnnotationUsage( PrimaryKeyJoinColumn.class, modelsContext() ) ) {
+		if ( annotatedClass.hasAnnotationUsage( OnDelete.class, modelsContext() ) ) {
 			throw new AnnotationException( "Entity class '" + annotatedClass.getName() + "' may not be annotated '@OnDelete'" );
 		}
 	}

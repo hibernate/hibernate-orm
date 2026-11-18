@@ -144,6 +144,11 @@ public class HSQLDialect extends Dialect implements CurrentTemporalSupport, Temp
 
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 2, 7, 4 );
 	private final UniqueDelegate uniqueDelegate = UniqueDelegates.createTable( this );
+	private final CteSupport cteSupport = CteSupport.builder()
+			.placement( CteSupport.Placement.TOP_LEVEL )
+			.recursiveFeatures( CteSupport.RecursiveFeature.RECURSIVE )
+			.supportsRecursiveClauseArrayAndRowEmulation( false )
+			.build();
 
 	public HSQLDialect(DialectResolutionInfo info) {
 		super( info );
@@ -667,11 +672,7 @@ public class HSQLDialect extends Dialect implements CurrentTemporalSupport, Temp
 
 	@Override
 	public CteSupport getCteSupport() {
-		return CteSupport.builder()
-				.placement( CteSupport.Placement.TOP_LEVEL )
-				.recursiveFeature( CteSupport.RecursiveFeature.RECURSIVE, true )
-				.supportsRecursiveClauseArrayAndRowEmulation( false )
-				.build();
+		return cteSupport;
 	}
 
 	@Override

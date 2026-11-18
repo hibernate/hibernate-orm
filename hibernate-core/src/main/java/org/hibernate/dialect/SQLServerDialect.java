@@ -220,6 +220,16 @@ public class SQLServerDialect extends AbstractTransactSQLDialect implements Curr
 	public CurrentTemporalSupport getCurrentTemporalSupport() {
 		return this;
 	}
+	private final CteSupport cteSupport = CteSupport.builder()
+			.placement( CteSupport.Placement.TOP_LEVEL )
+			.recursiveFeatures( CteSupport.RecursiveFeature.RECURSIVE )
+			.mutationFeatures( CteSupport.MutationFeature.NON_QUERY )
+			.requiresRecursiveKeyword( false )
+			.build();
+	private final MutationSyntaxSupport mutationSyntaxSupport = MutationSyntaxSupport.builder()
+			.capability( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE )
+			.capability( MutationKind.DELETE, MutationSyntaxCapability.JOIN )
+			.build();
 	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
 			.defaultTimestampPrecision( 7 )
 			.maxTimestampPrecision( 7 )
@@ -810,12 +820,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect implements Curr
 
 	@Override
 	public CteSupport getCteSupport() {
-		return CteSupport.builder()
-				.placement( CteSupport.Placement.TOP_LEVEL )
-				.recursiveFeatures( CteSupport.RecursiveFeature.RECURSIVE )
-				.mutationFeatures( CteSupport.MutationFeature.NON_QUERY )
-				.requiresRecursiveKeyword( false )
-				.build();
+		return cteSupport;
 	}
 
 	@Override
@@ -1318,10 +1323,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect implements Curr
 
 	@Override
 	public MutationSyntaxSupport getMutationSyntaxSupport() {
-		return MutationSyntaxSupport.builder()
-				.capability( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE )
-				.capability( MutationKind.DELETE, MutationSyntaxCapability.JOIN )
-				.build();
+		return mutationSyntaxSupport;
 	}
 
 	@Override

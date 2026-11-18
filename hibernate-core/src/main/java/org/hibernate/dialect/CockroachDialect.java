@@ -211,6 +211,14 @@ public class CockroachDialect extends Dialect implements CurrentTemporalSupport,
 	public CurrentTemporalSupport getCurrentTemporalSupport() {
 		return this;
 	}
+	private final CteSupport cteSupport = CteSupport.builder()
+			.recursiveFeatures( CteSupport.RecursiveFeature.RECURSIVE )
+			.mutationFeatures(
+					CteSupport.MutationFeature.NON_QUERY,
+					CteSupport.MutationFeature.INSERT_CONFLICT
+			)
+			.build();
+	private final MutationSyntaxSupport mutationSyntaxSupport = MutationSyntaxSupport.of( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE );
 	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
 			.defaultIntervalSecondScale( 6 )
 			.build();
@@ -724,13 +732,7 @@ public class CockroachDialect extends Dialect implements CurrentTemporalSupport,
 
 	@Override
 	public CteSupport getCteSupport() {
-		return CteSupport.builder()
-				.recursiveFeatures( CteSupport.RecursiveFeature.RECURSIVE )
-				.mutationFeatures(
-						CteSupport.MutationFeature.NON_QUERY,
-						CteSupport.MutationFeature.INSERT_CONFLICT
-				)
-				.build();
+		return cteSupport;
 	}
 
 	@Override
@@ -1221,7 +1223,7 @@ public class CockroachDialect extends Dialect implements CurrentTemporalSupport,
 
 	@Override
 	public MutationSyntaxSupport getMutationSyntaxSupport() {
-		return MutationSyntaxSupport.of( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE );
+		return mutationSyntaxSupport;
 	}
 
 	@Override

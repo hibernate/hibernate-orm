@@ -23,6 +23,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.QuerySettings;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -38,6 +39,7 @@ import org.hibernate.orm.test.type.temporal.preservation.TemporalPreservationBoo
 
 import org.hibernate.type.descriptor.java.InstantJavaType;
 
+import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
@@ -59,7 +61,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 ///
 /// This covers both kinds of access. A `LocalDate`, `LocalTime` or
 /// `LocalDateTime` is passed to the JDBC driver directly, with no time zone
-/// involved. An `Instant` is converted on PostgreSQL to a `java.sql.Timestamp`
+/// involved, apart from a `LocalDate` on DB2, which passes through a
+/// `java.sql.Date`. An `Instant` is converted on PostgreSQL to a `java.sql.Timestamp`
 /// with a fixed UTC calendar, and on Oracle to an `OffsetDateTime` at UTC;
 /// neither may be swayed by a configured JDBC time zone.
 ///
@@ -70,6 +73,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @RequiresDialect(MySQLDialect.class)
 @RequiresDialect(SQLServerDialect.class)
 @RequiresDialect(OracleDialect.class)
+@RequiresDialect(value = DB2Dialect.class, matchSubTypes = false)
 class TemporalPreservationTimeZoneTests {
 	private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern( "uuuu-MM-dd" );
 	private static final DateTimeFormatter DATE_TIME = DateTimeFormatter.ofPattern( "uuuu-MM-dd HH:mm:ss.SSSSSS" );
@@ -214,7 +218,7 @@ class TemporalPreservationTimeZoneTests {
 		if ( dialect instanceof OracleDialect ) {
 			return "timestamp '" + fields + " +00:00'";
 		}
-		else if ( dialect instanceof MySQLDialect ) {
+		else if ( dialect instanceof MySQLDialect || dialect instanceof DB2Dialect ) {
 			// the column holds the date and time at UTC
 			return "timestamp '" + fields + "'";
 		}
@@ -262,6 +266,9 @@ class TemporalPreservationTimeZoneTests {
 			}
 			else if ( dialect instanceof HSQLDialect ) {
 				epoch = TemporalPreservationSql.hsqlEpoch( false );
+			}
+			else if ( dialect instanceof DB2Dialect ) {
+				epoch = TemporalPreservationSql.DB2_EPOCH;
 			}
 			else {
 				epoch = "extract(epoch from theValue)";
@@ -321,12 +328,15 @@ class TemporalPreservationTimeZoneTests {
 		for ( var value : new LocalDate[] { LocalDate.of( 2021, 3, 14 ), LocalDate.of( 1985, 12, 31 ) } ) {
 			samples.put( value, TemporalPreservationSql.dateLiteral( dialect, DATE.format( value ) ) );
 		}
-		for ( var value : new LocalDateTime[] {
-				LocalDateTime.of( 2021, 3, 14, 2, 30, 0 ),
-				LocalDateTime.of( 2021, 11, 7, 1, 30, 0 ),
-				LocalDateTime.of( 1985, 12, 31, 23, 59, 59, 123_456_000 )
-		} ) {
-			samples.put( value, TemporalPreservationSql.dateTimeLiteral( dialect, DATE_TIME.format( value ) ) );
+		if ( !( dialect instanceof DB2Dialect ) ) {
+			// a LocalDateTime is not supported on DB2
+			for ( var value : new LocalDateTime[] {
+					LocalDateTime.of( 2021, 3, 14, 2, 30, 0 ),
+					LocalDateTime.of( 2021, 11, 7, 1, 30, 0 ),
+					LocalDateTime.of( 1985, 12, 31, 23, 59, 59, 123_456_000 )
+			} ) {
+				samples.put( value, TemporalPreservationSql.dateTimeLiteral( dialect, DATE_TIME.format( value ) ) );
+			}
 		}
 		if ( !( dialect instanceof OracleDialect ) ) {
 			for ( var value : new LocalTime[] { LocalTime.of( 2, 30, 15 ), LocalTime.MIDNIGHT } ) {
@@ -392,8 +402,8 @@ class TemporalPreservationTimeZoneTests {
 			execute( connection, "set time_zone = '" + zone + "'" );
 			return "set time_zone = @@global.time_zone";
 		}
-		else if ( dialect instanceof SQLServerDialect ) {
-			// a session of SQL Server has no time zone
+		else if ( dialect instanceof SQLServerDialect || dialect instanceof DB2Dialect ) {
+			// a session of SQL Server or of DB2 has no time zone which bears on what is stored
 			return null;
 		}
 		else if ( dialect instanceof HSQLDialect ) {
@@ -427,32 +437,21 @@ class TemporalPreservationTimeZoneTests {
 		if ( jdbcZone != null ) {
 			registryBuilder.applySetting( JdbcSettings.JDBC_TIME_ZONE, jdbcZone );
 		}
+		final Dialect dialect = DialectContext.getDialect();
 		try ( var registry = registryBuilder.build() ) {
 			final var sources = new MetadataSources( registry )
 					.addAnnotatedClass( WithLocalDate.class )
-					.addAnnotatedClass( WithLocalDateTime.class )
 					.addAnnotatedClass( WithInstant.class );
-			final var metadata = sources.buildMetadata();
-			if ( !( metadata.getDatabase().getDialect() instanceof OracleDialect ) ) {
-				// a LocalTime is not supported on Oracle
-				try ( var withTime = ServiceRegistryUtil.serviceRegistryBuilder()
-						.applySettings( registry.getService( org.hibernate.engine.config.spi.ConfigurationService.class ).getSettings() )
-						.build() ) {
-					try ( var factory = (SessionFactoryImplementor) new MetadataSources( withTime )
-							.addAnnotatedClass( WithLocalDate.class )
-							.addAnnotatedClass( WithLocalDateTime.class )
-							.addAnnotatedClass( WithInstant.class )
-							.addAnnotatedClass( WithLocalTime.class )
-							.buildMetadata()
-							.buildSessionFactory() ) {
-						action.accept( factory );
-					}
-				}
+			if ( !( dialect instanceof DB2Dialect ) ) {
+				// a LocalDateTime is not supported on DB2
+				sources.addAnnotatedClass( WithLocalDateTime.class );
 			}
-			else {
-				try ( var factory = (SessionFactoryImplementor) metadata.buildSessionFactory() ) {
-					action.accept( factory );
-				}
+			if ( !( dialect instanceof OracleDialect ) ) {
+				// a LocalTime is not supported on Oracle
+				sources.addAnnotatedClass( WithLocalTime.class );
+			}
+			try ( var factory = (SessionFactoryImplementor) sources.buildMetadata().buildSessionFactory() ) {
+				action.accept( factory );
 			}
 		}
 	}

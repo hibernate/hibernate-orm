@@ -60,6 +60,11 @@ final class TemporalPreservationSql {
 		return "set time zone interval '" + offset + "' hour to minute";
 	}
 
+	/// The seconds from the epoch to the instant in the column `theValue`, for
+	/// DB2, where the column holds the date and time at UTC.
+	static final String DB2_EPOCH =
+			"cast(days(theValue) - days(date '1970-01-01') as bigint) * 86400 + midnight_seconds(theValue)";
+
 	/// The seconds from the epoch to the instant in the column `theValue`, for SQL Server.
 	static final String SQL_SERVER_EPOCH =
 			"datediff_big(second, cast('1970-01-01 00:00:00 +00:00' as datetimeoffset), theValue)";

@@ -67,6 +67,16 @@ def extractTckSources = tasks.register('extractTckSources', Copy) {
         exclude '**/_AsciiCharacter.java'
     }
     into layout.buildDirectory.dir("tck-sources")
+    doLast {
+        // HHH-21113: the TCK has a @Column annotation on the @Embedded attribute Country.capital,
+        // which Hibernate rejects. Remove this once the TCK includes jakartaee/data#1642.
+        def country = layout.buildDirectory
+                .file("tck-sources/ee/jakarta/tck/data/framework/read/only/Country.java").get().asFile
+        country.text = country.text.replaceFirst(
+                /@jakarta\.persistence\.Column\(nullable = false\)\s+(@jakarta\.persistence\.Embedded)/,
+                '$1'
+        )
+    }
 }
 
 // Add extracted TCK sources as a test source directory

@@ -88,8 +88,10 @@ public final class StandardTemporalPreservations {
 	/// Report for a [LocalDate] exchanged with the JDBC driver as a
 	/// [java.sql.Date], with dates preserved from the given first day through
 	/// the year 9999. Only for a driver which has been established to store
-	/// the same date whatever the default time zone of the JVM. Answers
-	/// [TemporalPreservation#unknown()] for anything else.
+	/// the same date whatever the default time zone of the JVM. A day which
+	/// that zone skipped altogether is the exception, which no driver can
+	/// help: such a day is rejected as it is written, and the day after it
+	/// as it is read. Answers [TemporalPreservation#unknown()] for anything else.
 	public static TemporalPreservation localDateAsJdbcDate(JavaType<?> javaType, JdbcType jdbcType, LocalDate firstDay) {
 		return isPair( javaType, jdbcType, LocalDateJavaType.class, DateJdbcType.class )
 				? TemporalPreservation.ofDate( firstDay, FOUR_DIGIT_YEAR_END )

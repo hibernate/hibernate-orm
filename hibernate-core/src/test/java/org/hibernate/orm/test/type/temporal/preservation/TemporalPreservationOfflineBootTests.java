@@ -3,11 +3,13 @@ package org.hibernate.orm.test.type.temporal.preservation;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.TimeZone;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import org.hibernate.MappingException;
+import org.hibernate.TemporalPreservationException;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.cfg.MappingSettings;
@@ -19,12 +21,16 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.type.descriptor.jdbc.DateJdbcType;
+import org.hibernate.type.descriptor.jdbc.internal.TemporalPreservationGuard;
 
 import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -52,6 +58,64 @@ class TemporalPreservationOfflineBootTests {
 				.isInstanceOf( MappingException.class )
 				.hasMessageContaining( "WithArray.theValues" )
 				.hasMessageContaining( MappingSettings.TEMPORAL_PRESERVATION );
+	}
+
+	/// On DB2 a `LocalDate` is exchanged as a `java.sql.Date`, which passes
+	/// through the default time zone of the JVM. A day which that zone
+	/// skipped cannot be written, and the day after it cannot be read. This
+	/// needs no database, so it is verified whatever the database under test.
+	@Test
+	void daySkippedByTheZoneOfTheJvmIsRejectedOnDb2() {
+		final var original = TimeZone.getDefault();
+		final var registryBuilder = ServiceRegistryUtil.serviceRegistryBuilder();
+		registryBuilder.applySetting( MappingSettings.TEMPORAL_PRESERVATION, true );
+		registryBuilder.applySetting( JdbcSettings.ALLOW_METADATA_ON_BOOT, false );
+		registryBuilder.applySetting( JdbcSettings.DIALECT, DB2Dialect.class.getName() );
+		registryBuilder.applySetting( JdbcSettings.CONNECTION_PROVIDER, new NoConnections() );
+		registryBuilder.applySetting( "hibernate.hbm2ddl.auto", "none" );
+		try ( var registry = registryBuilder.build();
+				var factory = (SessionFactoryImplementor) new MetadataSources( registry )
+						.addAnnotatedClass( WithLocalDate.class )
+						.buildMetadata()
+						.buildSessionFactory() ) {
+			final var mapping = factory.getMappingMetamodel()
+					.getEntityDescriptor( WithLocalDate.class )
+					.findAttributeMapping( "theValue" )
+					.getSingleJdbcMapping();
+			assertThat( mapping.getJdbcType() ).isInstanceOf( DateJdbcType.class );
+			final var options = factory.getWrapperOptions();
+			final LocalDate skipped = LocalDate.of( 2011, 12, 30 );
+			final LocalDate next = skipped.plusDays( 1 );
+
+			// Samoa moved across the date line at the end of 29 December 2011
+			TimeZone.setDefault( TimeZone.getTimeZone( "Pacific/Apia" ) );
+			assertThatThrownBy( () -> TemporalPreservationGuard.checkBind(
+					skipped, mapping.getJdbcJavaType(), mapping.getJdbcType(), options ) )
+					.isInstanceOf( TemporalPreservationException.class )
+					.hasMessageContaining( "does not exist" )
+					.hasMessageContaining( "Pacific/Apia" );
+			assertThatThrownBy( () -> TemporalPreservationGuard.checkExtracted(
+					next, mapping.getJdbcJavaType(), mapping.getJdbcType(), options ) )
+					.isInstanceOf( TemporalPreservationException.class )
+					.hasMessageContaining( "cannot be told" );
+			// the day after can be written, and the days around them written and read
+			assertThatCode( () -> {
+				TemporalPreservationGuard.checkBind( next, mapping.getJdbcJavaType(), mapping.getJdbcType(), options );
+				TemporalPreservationGuard.checkBind( skipped.minusDays( 1 ), mapping.getJdbcJavaType(), mapping.getJdbcType(), options );
+				TemporalPreservationGuard.checkExtracted( skipped.minusDays( 1 ), mapping.getJdbcJavaType(), mapping.getJdbcType(), options );
+				TemporalPreservationGuard.checkExtracted( next.plusDays( 1 ), mapping.getJdbcJavaType(), mapping.getJdbcType(), options );
+			} ).doesNotThrowAnyException();
+
+			// a zone which skipped no day
+			TimeZone.setDefault( TimeZone.getTimeZone( "America/New_York" ) );
+			assertThatCode( () -> {
+				TemporalPreservationGuard.checkBind( skipped, mapping.getJdbcJavaType(), mapping.getJdbcType(), options );
+				TemporalPreservationGuard.checkExtracted( next, mapping.getJdbcJavaType(), mapping.getJdbcType(), options );
+			} ).doesNotThrowAnyException();
+		}
+		finally {
+			TimeZone.setDefault( original );
+		}
 	}
 
 	private static void boot(Class<?> entityClass) {

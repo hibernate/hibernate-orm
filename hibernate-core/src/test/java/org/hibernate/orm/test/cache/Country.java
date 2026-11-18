@@ -47,7 +47,6 @@ public class Country {
 	}
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 	public Continent getContinent() {
 		return continent;
 	}

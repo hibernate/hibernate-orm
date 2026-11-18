@@ -147,7 +147,7 @@ public final class AggregateComponentBinder {
 		return struct == null ? null : struct.attributes();
 	}
 
-	private static boolean isAggregate(MemberDetails property, ClassDetails returnedClass) {
+	static boolean isAggregate(MemberDetails property, ClassDetails returnedClass) {
 		if ( property != null ) {
 			if ( property.hasDirectAnnotationUsage( Struct.class ) ) {
 				return true;

@@ -889,10 +889,10 @@ Temporal preservation is supported on H2, HSQLDB, PostgreSQL, Oracle, MySQL, Mar
 On every other database, a mapped value is rejected.
 So is a `LocalTime` on Oracle, which has no `TIME` type: the value is stored in a `TIMESTAMP` column,
 and what is stored there depends on the default time zone of the JVM.
-On Db2, a `LocalDateTime` and a `LocalTime` are rejected for now.
-A `LocalDateTime` is exchanged with the JDBC driver as a `java.sql.Timestamp` in the default time zone of the JVM,
+On Db2, a `LocalDateTime` is rejected.
+It is exchanged with the JDBC driver as a `java.sql.Timestamp` in the default time zone of the JVM,
 which cannot express a time skipped there as clocks are set forward, and stores the time an hour later instead.
-For a `LocalTime`, nothing has been established yet.
+The driver does not accept a `LocalDateTime` directly, and reads one requested directly through that same time zone.
 
 The following table lists every combination which has been assessed.
 An `Outcome` of `QUALIFIED` means that the mapping is accepted, and `REJECTED` that the `SessionFactory` cannot be built with such an attribute.
@@ -1299,6 +1299,7 @@ or on <<basic-datetime-time-zone,`hibernate.jdbc.time_zone`>>, whether configure
 
 * A `LocalDate`, `LocalTime` or `LocalDateTime` is exchanged with the driver as its fields, with no time zone involved.
   The exception is a `LocalDate` on Db2, which is exchanged as a `java.sql.Date`. The driver was established to store the same date whatever the default time zone of the JVM.
+  A `LocalTime` on Db2 is exchanged directly, as elsewhere.
 * An `Instant` is exchanged in a form which fixes it to UTC: as an `Instant` on H2, as an `OffsetDateTime` at UTC on Oracle,
   and on HSQLDB, PostgreSQL, MySQL, MariaDB, SQL Server and Db2 as a `java.sql.Timestamp` with a UTC calendar, which is not replaced by the configured JDBC time zone.
 * An `Instant` rendered as a SQL literal carries an explicit UTC offset.

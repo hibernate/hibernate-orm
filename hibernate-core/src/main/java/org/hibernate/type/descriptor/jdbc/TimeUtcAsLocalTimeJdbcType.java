@@ -85,7 +85,7 @@ public class TimeUtcAsLocalTimeJdbcType extends TimeUtcAsJdbcTimeJdbcType {
 		return new BasicExtractor<>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return javaType.wrap( fromUtcTime( rs.getObject( paramIndex, LocalTime.class ) ), options );
+				return javaType.wrap( fromUtcTime( getLocalTime( rs, paramIndex ) ), options );
 			}
 
 			@Override
@@ -98,6 +98,12 @@ public class TimeUtcAsLocalTimeJdbcType extends TimeUtcAsJdbcTimeJdbcType {
 				return javaType.wrap( fromUtcTime( statement.getObject( name, LocalTime.class ) ), options );
 			}
 		};
+	}
+
+	/// Read the time of day at UTC from the result. A descriptor for a
+	/// driver which needs care in doing so overrides this.
+	protected LocalTime getLocalTime(ResultSet rs, int index) throws SQLException {
+		return rs.getObject( index, LocalTime.class );
 	}
 
 	private static LocalTime toUtcTime(OffsetTime value) {

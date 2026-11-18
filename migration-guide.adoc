@@ -1811,6 +1811,14 @@ A `@Cache` annotation on a field or property which is not a collection, for exam
 is now rejected with an `AnnotationException` when the metadata is built. Previously the annotation was silently ignored.
 To cache the entity which is the target of an association, annotate its root entity class `@Cache`.
 
+[[table-on-abstract-table-per-class-entity]]
+=== `@Table` on an abstract entity class in a `TABLE_PER_CLASS` hierarchy
+
+In a `TABLE_PER_CLASS` hierarchy, an abstract entity class with entity subclasses is not mapped to a table.
+A `@Table` annotation on such a class is now rejected with an `AnnotationException` when the metadata is built.
+Previously the annotation was silently ignored, along with any indexes or constraints it declared.
+Indexes and constraints should instead be declared by the `@Table` annotation of each concrete subclass.
+
 [[on-delete-on-entity-class]]
 === `@OnDelete` on an entity class which is not a `JOINED` subclass
 

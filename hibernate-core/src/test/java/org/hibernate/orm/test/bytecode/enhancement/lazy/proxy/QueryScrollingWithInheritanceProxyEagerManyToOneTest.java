@@ -194,7 +194,6 @@ public class QueryScrollingWithInheritanceProxyEagerManyToOneTest {
 	}
 
 	@Entity(name = "EmployeeParent")
-	@Table(name = "EmployeeParent")
 	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 	public static abstract class EmployeeParent {
 

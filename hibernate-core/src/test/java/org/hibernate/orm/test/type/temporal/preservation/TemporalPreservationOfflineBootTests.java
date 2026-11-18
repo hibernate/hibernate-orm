@@ -11,6 +11,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.cfg.MappingSettings;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -40,6 +41,7 @@ class TemporalPreservationOfflineBootTests {
 	@RequiresDialect(MySQLDialect.class)
 	@RequiresDialect(SQLServerDialect.class)
 	@RequiresDialect(OracleDialect.class)
+	@RequiresDialect(value = DB2Dialect.class, matchSubTypes = false)
 	void supportedMappingIsAcceptedWithoutAConnection() {
 		assertThatCode( () -> boot( WithLocalDate.class ) ).doesNotThrowAnyException();
 	}

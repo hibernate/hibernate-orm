@@ -242,4 +242,13 @@ public class DB2zDialect extends DB2Dialect implements TemporalOperationSupport 
 		// DB2 z/OS has a VALUES statement, but that doesn't support multiple values
 		return ValuesListSupport.INSERT_ONLY;
 	}
+
+	/// Nothing has been assessed for Db2 for z/OS, which is a different database than
+	/// Db2 for Linux, UNIX and Windows.
+	@Override
+	public org.hibernate.dialect.type.spi.TemporalPreservation getTemporalPreservation(
+			org.hibernate.type.descriptor.java.JavaType<?> javaType,
+			org.hibernate.type.descriptor.jdbc.JdbcType jdbcType) {
+		return org.hibernate.dialect.type.spi.TemporalPreservation.unknown();
+	}
 }

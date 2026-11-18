@@ -405,7 +405,9 @@ import org.hibernate.usertype.UserVersionType;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.OffsetTime;
+import java.time.ZonedDateTime;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8318,6 +8320,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		else {
 			handleTypeComparison( lhs, rhs, sqmOperator == ComparisonOperator.EQUAL );
+			checkInstantsAreComparable( lhs, rhs );
 			return new ComparisonPredicate( lhs, sqmOperator, rhs, getBooleanType() );
 		}
 	}
@@ -8681,6 +8684,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			inferrableTypeAccessStack.pop();
 		}
 
+		checkInstantsAreComparable( expression, lowerBound, upperBound );
 		return new BetweenPredicate(
 				expression,
 				lowerBound,
@@ -8803,7 +8807,86 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			inferrableTypeAccessStack.pop();
 		}
 		handleTypeComparison( inPredicate );
+		final List<Expression> compared = new ArrayList<>( inPredicate.getListExpressions() );
+		compared.add( testExpression );
+		checkInstantsAreComparable( compared.toArray( new Expression[0] ) );
 		return inPredicate;
+	}
+
+	/// With temporal preservation enabled, reject a comparison between an
+	/// instant held as its date and time at UTC, in a column which knows of
+	/// no time zone, and an instant held in a column which itself denotes
+	/// one, or produced by an expression of such a type. The database would
+	/// read the first in the time zone of its session, so the result would
+	/// depend on that time zone. The elements of tuples are checked in pairs.
+	private void checkInstantsAreComparable(Expression... operands) {
+		if ( !creationContext.getSessionFactory().getSessionFactoryOptions().isTemporalPreservationEnabled() ) {
+			return;
+		}
+		checkInstantBases( List.of( operands ) );
+	}
+
+	private void checkInstantBases(List<? extends Expression> operands) {
+		// tuples are compared element by element
+		final List<SqlTuple> tuples = new ArrayList<>();
+		for ( var operand : operands ) {
+			final var tuple = SqlTupleContainer.getSqlTuple( operand );
+			if ( tuple != null ) {
+				tuples.add( tuple );
+			}
+		}
+		if ( !tuples.isEmpty() ) {
+			final int size = tuples.get( 0 ).getExpressions().size();
+			for ( int i = 0; i < size; i++ ) {
+				final List<Expression> elements = new ArrayList<>( tuples.size() );
+				for ( var tuple : tuples ) {
+					if ( tuple.getExpressions().size() == size ) {
+						elements.add( tuple.getExpressions().get( i ) );
+					}
+				}
+				checkInstantBases( elements );
+			}
+			return;
+		}
+		org.hibernate.dialect.type.spi.TemporalPreservation.InstantBasis first = null;
+		for ( var operand : operands ) {
+			final var type = operand.getExpressionType();
+			// only a single value; a tuple type cannot even say how many it has
+			final JdbcMapping jdbcMapping;
+			if ( type instanceof JdbcMapping mapping ) {
+				jdbcMapping = mapping;
+			}
+			else if ( type instanceof BasicValuedMapping basicValued ) {
+				jdbcMapping = basicValued.getJdbcMapping();
+			}
+			else {
+				continue;
+			}
+			final var javaClass = jdbcMapping.getJdbcJavaType().getJavaTypeClass();
+			if ( javaClass != Instant.class && javaClass != OffsetDateTime.class && javaClass != ZonedDateTime.class ) {
+				continue;
+			}
+			final var basis = org.hibernate.type.descriptor.jdbc.internal.TemporalPreservationGuard.preservation(
+					getDialect(),
+					jdbcMapping.getJdbcJavaType(),
+					jdbcMapping.getJdbcType()
+			).instantBasis();
+			if ( basis == null ) {
+				continue;
+			}
+			if ( first == null ) {
+				first = basis;
+			}
+			else if ( first != basis ) {
+				throw new SemanticException(
+						"Cannot compare an instant stored as its date and time at UTC with an instant of a type"
+						+ " which has a time zone: with '" + org.hibernate.cfg.MappingSettings.TEMPORAL_PRESERVATION
+						+ "' enabled the first is stored in a column which knows of no time zone, and the database"
+						+ " would compare the two in the time zone of its session; compare with a parameter or a"
+						+ " literal instead"
+				);
+			}
+		}
 	}
 
 	private void handleTypeComparison(InListPredicate inPredicate) {

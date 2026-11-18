@@ -45,6 +45,7 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyCompositeUse
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.type.BasicType;
 import org.hibernate.usertype.CompositeUserType;
+import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -54,6 +55,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import static org.hibernate.boot.model.internal.AggregateComponentBinder.isAggregate;
 import static org.hibernate.boot.model.internal.AggregateComponentBinder.processAggregate;
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN_NAME;
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.buildDiscriminatorColumn;
@@ -466,6 +468,9 @@ public class EmbeddableBinder {
 			embeddable.setTypeName( compositeUserTypeClass.getName() );
 			returnedClassOrElement = context.getBootstrapContext().getModelsContext().getClassDetailsRegistry().resolveClassDetails( compositeUserType.embeddable().getName() );
 		}
+		if ( columns != null ) {
+			checkColumnAnnotation( propertyHolder, inferredData, returnedClassOrElement, compositeUserTypeClass );
+		}
 		processAggregate(
 				embeddable,
 				propertyHolder,
@@ -569,6 +574,35 @@ public class EmbeddableBinder {
 		}
 
 		return embeddable;
+	}
+
+	/**
+	 * A {@link Column} annotation on a composite attribute is only meaningful
+	 * when it specifies the column of an aggregate, or the timestamp column of
+	 * a temporal attribute which stores its time zone in a separate column.
+	 * Otherwise, the columns are specified using {@code @AttributeOverride},
+	 * and a {@code @Column} annotation would be silently ignored.
+	 */
+	private static void checkColumnAnnotation(
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			ClassDetails returnedClassOrElement,
+			Class<? extends CompositeUserType<?>> compositeUserTypeClass) {
+		final var memberDetails = inferredData.getAttributeMember();
+		if ( memberDetails != null
+				&& memberDetails.hasDirectAnnotationUsage( Column.class )
+				&& !isAggregate( memberDetails, returnedClassOrElement )
+				&& !isTimeZoneStorageCompositeUserType( compositeUserTypeClass ) ) {
+			throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData )
+					+ "' is a composite attribute and may not be annotated '@Column'"
+					+ " (use '@AttributeOverride' to specify the column mapped by an attribute of the composite type)" );
+		}
+	}
+
+	private static boolean isTimeZoneStorageCompositeUserType(
+			Class<? extends CompositeUserType<?>> compositeUserTypeClass) {
+		return compositeUserTypeClass != null
+			&& AbstractTimeZoneStorageCompositeUserType.class.isAssignableFrom( compositeUserTypeClass );
 	}
 
 	private static void processGeneratorAnnotations(

@@ -1787,6 +1787,23 @@ single-column aggregate mapping (such as a struct), matching registration by Jav
 An embeddable without such a mapping is rejected with an `IllegalArgumentException` at registration,
 since multi-column callable parameters and returns are not supported. Previously the registration was accepted.
 
+[[column-on-composite-attribute]]
+=== `@Column` on an embedded attribute
+
+A `@Column` annotation placed directly on an embedded attribute, that is, on a field or property whose type is
+an `@Embeddable` class, or which is mapped with `@CompositeType`, is now rejected with an `AnnotationException`
+when the metadata is built. For example, the following mapping is rejected:
+
+[source,java]
+----
+@Embedded
+@Column(name = "home_address")
+Address homeAddress;
+----
+
+Previously the annotation was silently ignored, and the columns were named after the fields of the embeddable class.
+Such mappings must use `@AttributeOverride` to specify the column mapped by each field of the embeddable class.
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // XSD changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

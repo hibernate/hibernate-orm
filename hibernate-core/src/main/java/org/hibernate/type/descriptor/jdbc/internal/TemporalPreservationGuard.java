@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
@@ -31,6 +32,7 @@ import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
+import org.hibernate.type.descriptor.jdbc.DateJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.TemporalJdbcType;
 
@@ -81,6 +83,9 @@ public final class TemporalPreservationGuard {
 			&& appliesTo( plural.getElementJavaType() );
 	}
 
+	private static final String BIND = "bind";
+	private static final String READ = "read";
+
 	/// Whether temporal preservation is enabled for the operation.
 	public static boolean isEnabled(@Nullable WrapperOptions options) {
 		if ( options == null ) {
@@ -97,7 +102,7 @@ public final class TemporalPreservationGuard {
 			JavaType<?> javaType,
 			JdbcType jdbcType,
 			WrapperOptions options) {
-		check( value, javaType, jdbcType, options, "bind" );
+		check( value, javaType, jdbcType, options, BIND );
 	}
 
 	/// Check a non-null value extracted from a JDBC result or output parameter.
@@ -106,7 +111,7 @@ public final class TemporalPreservationGuard {
 			JavaType<?> javaType,
 			JdbcType jdbcType,
 			WrapperOptions options) {
-		check( value, javaType, jdbcType, options, "read" );
+		check( value, javaType, jdbcType, options, READ );
 	}
 
 	/// Reject the extraction of an output parameter of a stored procedure or
@@ -438,6 +443,45 @@ public final class TemporalPreservationGuard {
 					+ " to " + bound( preservation.maximum() )
 			);
 		}
+		if ( value instanceof LocalDate date && jdbcType.getClass() == DateJdbcType.class ) {
+			checkDayExists( date, javaType, dialect, jdbcType, operation );
+		}
+	}
+
+	/// A `LocalDate` exchanged as a [java.sql.Date] passes through the default
+	/// time zone of the JVM. Where that zone skipped a whole day, as
+	/// `Pacific/Apia` skipped 30 December 2011, a `java.sql.Date` cannot
+	/// express that day and stands for the next one instead. So the skipped
+	/// day cannot be written, and the day after it cannot be read, since it
+	/// may stand for either. A literal does not pass through a `java.sql.Date`.
+	private static void checkDayExists(
+			LocalDate date,
+			JavaType<?> javaType,
+			Dialect dialect,
+			JdbcType jdbcType,
+			String operation) {
+		final var zone = ZoneId.systemDefault();
+		final String problem;
+		if ( BIND.equals( operation ) && isSkipped( date, zone ) ) {
+			problem = "that day does not exist in the default time zone of the JVM, " + zone.getId()
+					+ ", and would be stored as the next day";
+		}
+		else if ( READ.equals( operation ) && isSkipped( date.minusDays( 1 ), zone ) ) {
+			problem = "the day before it does not exist in the default time zone of the JVM, " + zone.getId()
+					+ ", and would be read as this day, so the stored date cannot be told";
+		}
+		else {
+			return;
+		}
+		throw new TemporalPreservationException(
+				"Cannot " + operation + " the value '" + date + "' of type '" + javaType.getTypeName()
+				+ "': with '" + TEMPORAL_PRESERVATION + "' enabled, " + describe( dialect, jdbcType )
+				+ " exchanges it as a java.sql.Date, and " + problem
+		);
+	}
+
+	private static boolean isSkipped(LocalDate date, ZoneId zone) {
+		return !date.atStartOfDay( zone ).toLocalDate().equals( date );
 	}
 
 	/// Explain why the combination does not preserve every part which makes

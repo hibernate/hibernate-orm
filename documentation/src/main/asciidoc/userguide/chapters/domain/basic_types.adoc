@@ -1300,6 +1300,8 @@ or on <<basic-datetime-time-zone,`hibernate.jdbc.time_zone`>>, whether configure
 * A `LocalDate`, `LocalTime` or `LocalDateTime` is exchanged with the driver as its fields, with no time zone involved.
   The exception is a `LocalDate` on Db2, which is exchanged as a `java.sql.Date`. The driver was established to store the same date whatever the default time zone of the JVM.
   A `LocalTime` on Db2 is exchanged directly, as elsewhere.
+  A `java.sql.Date` cannot express a day which the default time zone of the JVM skipped altogether, as `Pacific/Apia` skipped 30 December 2011, and stands for the next day instead.
+  On Db2, in a JVM with such a time zone, a `LocalDate` on the skipped day is therefore rejected when it is written, and one on the day after it is rejected when it is read, since it may stand for either day.
 * An `Instant` is exchanged in a form which fixes it to UTC: as an `Instant` on H2, as an `OffsetDateTime` at UTC on Oracle,
   and on HSQLDB, PostgreSQL, MySQL, MariaDB, SQL Server and Db2 as a `java.sql.Timestamp` with a UTC calendar, which is not replaced by the configured JDBC time zone.
 * An `Instant` rendered as a SQL literal carries an explicit UTC offset.

@@ -1,8 +1,5 @@
 package org.hibernate.orm.test.bytecode.enhancement.lazy.HHH_10708;
 
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -68,7 +65,6 @@ public class UnexpectedDeleteTest1 {
 		Long id;
 
 		@ManyToOne
-		@Cache( usage = CacheConcurrencyStrategy.READ_WRITE )
 		Foo foo;
 	}
 

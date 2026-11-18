@@ -12,6 +12,7 @@ import java.util.function.BiFunction;
 import jakarta.annotation.Nullable;
 
 import org.hibernate.LockOptions;
+import org.hibernate.engine.internal.FilterParameterSnapshot;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -25,7 +26,6 @@ import org.hibernate.sql.ast.spi.query.predicate.FilterPredicate;
 import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
-import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Applies the restrictions of a to-one association when the owner SQL could not. Checks that
@@ -219,16 +219,18 @@ public final class ToOneVisibilityLoader {
 		return true;
 	}
 
-	private record FilterState(String[] enabledNames, List<Parameter> parameters) {
+	private record FilterState(String[] enabledNames, List<FilterParameterSnapshot> parameters) {
 		static FilterState capture(SelectStatement select, LoadQueryInfluencers influencers) {
-			final List<Parameter> parameters = new ArrayList<>();
+			final List<FilterParameterSnapshot> parameters = new ArrayList<>();
 			select.accept( new AbstractSqlAstWalker() {
 				@Override
 				public void visitFilterPredicate(FilterPredicate predicate) {
 					for ( var fragment : predicate.getFragments() ) {
 						if ( fragment.getParameters() != null ) {
 							for ( var parameter : fragment.getParameters() ) {
-								parameters.add( Parameter.capture( parameter ) );
+								parameters.add( FilterParameterSnapshot.capture(
+										parameter.getFilterName(), parameter.getParameterName(),
+										parameter.getValueMapping().getJavaTypeDescriptor(), parameter.getValue() ) );
 							}
 						}
 					}
@@ -244,54 +246,12 @@ public final class ToOneVisibilityLoader {
 				return false;
 			}
 			for ( var parameter : parameters ) {
-				final var filter = influencers.getEnabledFilter( parameter.filterName );
-				if ( filter == null || !parameter.matches( filter.getParameterValue( parameter.name ) ) ) {
+				final var filter = influencers.getEnabledFilter( parameter.filterName() );
+				if ( filter == null || !parameter.matches( filter.getParameterValue( parameter.parameterName() ) ) ) {
 					return false;
 				}
 			}
 			return true;
-		}
-	}
-
-	private record Parameter(String filterName, String name, JavaType<Object> javaType, Object value, boolean plural) {
-		@SuppressWarnings("unchecked")
-		static Parameter capture(FilterPredicate.FilterFragmentParameter parameter) {
-			final var javaType = (JavaType<Object>) parameter.getValueMapping().getJavaTypeDescriptor();
-			final Object value = parameter.getValue();
-			final boolean plural = isPlural( value, javaType );
-			final Object snapshot;
-			if ( plural ) {
-				final List<Object> elements = new ArrayList<>();
-				for ( Object element : (Iterable<?>) value ) {
-					elements.add( javaType.getMutabilityPlan().deepCopy( element ) );
-				}
-				snapshot = elements;
-			}
-			else {
-				snapshot = javaType.getMutabilityPlan().deepCopy( value );
-			}
-			return new Parameter( parameter.getFilterName(), parameter.getParameterName(), javaType, snapshot, plural );
-		}
-
-		boolean matches(Object current) {
-			if ( plural != isPlural( current, javaType ) ) {
-				return false;
-			}
-			if ( !plural ) {
-				return javaType.areEqual( value, current );
-			}
-			final var previous = ((Iterable<?>) value).iterator();
-			final var next = ((Iterable<?>) current).iterator();
-			while ( previous.hasNext() && next.hasNext() ) {
-				if ( !javaType.areEqual( previous.next(), next.next() ) ) {
-					return false;
-				}
-			}
-			return !previous.hasNext() && !next.hasNext();
-		}
-
-		private static boolean isPlural(Object value, JavaType<?> javaType) {
-			return value instanceof Iterable<?> && !javaType.isInstance( value );
 		}
 	}
 }

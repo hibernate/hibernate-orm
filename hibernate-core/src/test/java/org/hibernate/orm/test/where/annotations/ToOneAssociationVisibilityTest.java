@@ -156,7 +156,14 @@ class ToOneAssociationVisibilityTest {
 			session.enableFilter( "roleActive" ).setParameter( "active", 1 );
 			final var account = session.find( Account.class, 2L );
 			final Profile loaded = switch ( loading ) {
-				case "find" -> session.find( Profile.class, 2L );
+				case "find" -> {
+					final var observer = scope.getCollectingStatementObserver();
+					observer.clear();
+					final var profile = session.find( Profile.class, 2L );
+					// Filters on the inverse accounts do not restrict their owning references back to Profile.
+					observer.assertQuery( 0 ).doesNotContain( "join role_profile " );
+					yield profile;
+				}
 				case "circular" -> session.createQuery( "from Account a join fetch a.profile where a.id=2", Account.class )
 						.getSingleResult().profile;
 				case "native" -> session.createNativeQuery( "select p.*, j.account_id from role_profile p "

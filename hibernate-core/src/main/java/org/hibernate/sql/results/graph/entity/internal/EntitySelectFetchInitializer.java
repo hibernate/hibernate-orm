@@ -39,6 +39,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 	private final NavigablePath navigablePath;
 	private final boolean isPartOfKey;
 	private final boolean isEnhancedForLazyLoading;
+	private final boolean targetIdResolved;
 
 	protected final EntityPersister concreteDescriptor;
 	protected final DomainResultAssembler<?> keyAssembler;
@@ -86,6 +87,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 
 		isPartOfKey = Initializer.isPartOfKey( fetchedNavigable, parent );
 		keyAssembler = keyResult.createResultAssembler( this, creationState );
+		targetIdResolved = keyResult instanceof RestrictedToOneIdentifierResult<?>;
 		isEnhancedForLazyLoading =
 				concreteDescriptor.getBytecodeEnhancementMetadata()
 						.isEnhancedForLazyLoading();
@@ -110,7 +112,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 
 	@Override
 	public Object getFilteredAssociationKey(RowProcessingState rowProcessingState) {
-		return keyAssembler instanceof RestrictedForeignKeyResult.Assembler<?> assembler
+		return keyAssembler instanceof RestrictedToOneIdentifierResult.Assembler<?> assembler
 				? assembler.getFilteredKey( rowProcessingState )
 				: isAffectedByRestrictions( rowProcessingState ) && getData( rowProcessingState ).getInstance() == null
 						? getData( rowProcessingState ).entityIdentifier : null;
@@ -234,7 +236,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 	}
 
 	protected boolean isAssociationKeyVisible(EntitySelectFetchInitializerData data) {
-		if ( !(keyAssembler instanceof RestrictedForeignKeyResult.Assembler<?>)
+		if ( !targetIdResolved
 				&& !toOneMapping.isAssociationKeyVisible( data.entityIdentifier,
 						data.getRowProcessingState().getJdbcValuesSourceProcessingState() ) ) {
 			data.setInstance( null );
@@ -351,7 +353,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 
 	@Override
 	protected void forEachSubInitializer(BiConsumer<Initializer<?>, RowProcessingState> consumer, InitializerData data) {
-		if ( keyAssembler instanceof RestrictedForeignKeyResult.Assembler<?> assembler ) {
+		if ( keyAssembler instanceof RestrictedToOneIdentifierResult.Assembler<?> assembler ) {
 			assembler.forEachInitializer( consumer, data.getRowProcessingState() );
 		}
 		else {

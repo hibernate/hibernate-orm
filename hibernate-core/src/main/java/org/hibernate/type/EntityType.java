@@ -328,14 +328,15 @@ public abstract class EntityType extends AbstractType implements AssociationType
 				}
 			}
 			else {
-				final Object id = getIdentifierEvenIfTransient( original, session );
+				// Merge copies a reference to the same persistent entity, even when the
+				// foreign key references a property shared by several possible targets.
+				final Object id = getEntityIdentifier( associatedEntityName, original, session );
 				if ( id == null ) {
 					throw new AssertionFailure( "non-transient entity has a null id: " + original.getClass().getName() );
 				}
 				final Object replaced =
-						getIdentifierOrUniqueKeyType( session.getFactory().getRuntimeMetamodels() )
-								.replace( id, null, session, owner, copyCache );
-				return resolve( replaced, session, owner );
+						getIdentifierType( session ).replace( id, null, session, owner, copyCache );
+				return replaced == null || isNull( owner, session ) ? null : resolveIdentifier( replaced, session );
 			}
 		}
 	}

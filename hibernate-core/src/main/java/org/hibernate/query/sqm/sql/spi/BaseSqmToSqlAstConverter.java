@@ -4277,12 +4277,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				queryNodeProcessingState.getFromClause().addRoot( tableGroup );
 			}
 			else {
-				final boolean mappedByOrNotFoundToOne = isMappedByOrNotFoundToOne( joinProducer );
+				// Nullness tests need a left join when restrictions can exclude the target.
+				final boolean needsLeftJoin = isMappedByOrNotFoundToOne( joinProducer )
+						|| allowLeftJoins && joinProducer instanceof ToOneAttributeMapping toOne
+								&& toOne.isAffectedByRestrictions( getLoadQueryInfluencers() );
 				final var compatibleLeftJoin =
-						mappedByOrNotFoundToOne
+						needsLeftJoin
 								? parentTableGroup.findCompatibleJoin( joinProducer, SqlAstJoinType.LEFT )
 								: null;
-				final var sqlAstJoinType = mappedByOrNotFoundToOne ? SqlAstJoinType.LEFT : null;
+				final var sqlAstJoinType = needsLeftJoin ? SqlAstJoinType.LEFT : null;
 				final var compatibleTableGroup =
 						compatibleLeftJoin != null
 								? compatibleLeftJoin.getJoinedGroup()

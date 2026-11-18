@@ -1804,6 +1804,13 @@ Address homeAddress;
 Previously the annotation was silently ignored, and the columns were named after the fields of the embeddable class.
 Such mappings must use `@AttributeOverride` to specify the column mapped by each field of the embeddable class.
 
+[[cache-on-attribute]]
+=== `@Cache` on an attribute which is not a collection
+
+A `@Cache` annotation on a field or property which is not a collection, for example, on a `@ManyToOne` association,
+is now rejected with an `AnnotationException` when the metadata is built. Previously the annotation was silently ignored.
+To cache the entity which is the target of an association, annotate its root entity class `@Cache`.
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // XSD changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

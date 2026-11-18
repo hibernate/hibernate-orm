@@ -42,7 +42,7 @@ public class JdbcLiteralFormatterTemporal<T> extends BasicJdbcLiteralFormatter<T
 				TemporalPreservationGuard.checkLiteral( value, getJavaType(), options );
 				TemporalPreservationGuard.checkLiteralOffset( value, getJavaType() );
 				if ( precision == TemporalType.TIME ) {
-					TemporalPreservationGuard.checkTimeLiteral( value, getJavaType(), dialect );
+					TemporalPreservationGuard.checkTimeLiteral( value, getJavaType(), dialect, options );
 				}
 				if ( precision == TemporalType.TIMESTAMP ) {
 					final Instant instant = TemporalPreservationGuard.instantOf( value );

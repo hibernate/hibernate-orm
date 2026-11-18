@@ -94,3 +94,22 @@ MariaDBDialect,ZonedDateTime (NORMALIZED),TimestampUtcAsJdbcTimestampJdbcType,da
 MariaDBDialect,OffsetTime (ADJUSTED),TimeUtcAsLocalTimeJdbcType,time(0),TIME,,,,QUALIFIED
 MariaDBDialect,OffsetDateTime (ADJUSTED),TimestampUtcAsJdbcTimestampJdbcType,datetime(6),INSTANT,UTC_CONVENTION,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
 MariaDBDialect,ZonedDateTime (ADJUSTED),TimestampUtcAsJdbcTimestampJdbcType,datetime(6),INSTANT,UTC_CONVENTION,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+SQLServerDialect,LocalDate,LocalDateJdbcType,date,DATE,,1582-10-15,9999-12-31,QUALIFIED
+SQLServerDialect,LocalTime,LocalTimeJdbcType,time,TIME,,,,QUALIFIED
+SQLServerDialect,LocalDateTime,LocalDateTimeJdbcType,datetime2(7),DATE+TIME,,1582-10-15T00:00,9999-12-31T23:59:59.999999999,QUALIFIED
+SQLServerDialect,Instant,TimestampUtcAsJdbcTimestampJdbcType,datetimeoffset(7),INSTANT,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+SQLServerDialect,OffsetTime,OffsetTimeJdbcType + IntegerJdbcType,datetimeoffset(0) + int,TIME+OFFSET,,,,QUALIFIED
+SQLServerDialect,OffsetDateTime,TimestampUtcAsJdbcTimestampJdbcType + IntegerJdbcType,datetimeoffset(7) + int,INSTANT+OFFSET,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+SQLServerDialect,ZonedDateTime,TimestampUtcAsJdbcTimestampJdbcType + VarcharJdbcType,datetimeoffset(7) + varchar(255),INSTANT+OFFSET+ZONE_ID,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+SQLServerDialect,OffsetTime (INLINE),OffsetTimeJdbcType,datetimeoffset(0),,,,,REJECTED
+SQLServerDialect,OffsetDateTime (INLINE),OffsetDateTimeJdbcType,datetimeoffset(7),,,,,REJECTED
+SQLServerDialect,ZonedDateTime (INLINE),OffsetDateTimeJdbcType,datetimeoffset(7),,,,,REJECTED
+SQLServerDialect,OffsetTime (COLUMN),OffsetTimeJdbcType + IntegerJdbcType,datetimeoffset(0) + int,TIME+OFFSET,,,,QUALIFIED
+SQLServerDialect,OffsetDateTime (COLUMN),TimestampUtcAsJdbcTimestampJdbcType + IntegerJdbcType,datetimeoffset(7) + int,INSTANT+OFFSET,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+SQLServerDialect,ZonedDateTime (COLUMN),TimestampUtcAsJdbcTimestampJdbcType + VarcharJdbcType,datetimeoffset(7) + varchar(255),INSTANT+OFFSET+ZONE_ID,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+SQLServerDialect,OffsetTime (NORMALIZED),OffsetTimeJdbcType,datetimeoffset(0),TIME,,,,QUALIFIED
+SQLServerDialect,OffsetDateTime (NORMALIZED),OffsetDateTimeJdbcType,datetimeoffset(7),INSTANT,NATIVE,1583-01-01T00:00:00Z,9999-12-31T09:59:59.999999999Z,QUALIFIED
+SQLServerDialect,ZonedDateTime (NORMALIZED),OffsetDateTimeJdbcType,datetimeoffset(7),INSTANT,NATIVE,1583-01-01T00:00:00Z,9999-12-31T09:59:59.999999999Z,QUALIFIED
+SQLServerDialect,OffsetTime (ADJUSTED),OffsetTimeJdbcType,datetimeoffset(0),TIME,,,,QUALIFIED
+SQLServerDialect,OffsetDateTime (ADJUSTED),OffsetDateTimeJdbcType,datetimeoffset(7),INSTANT,NATIVE,1583-01-01T00:00:00Z,9999-12-31T09:59:59.999999999Z,QUALIFIED
+SQLServerDialect,ZonedDateTime (ADJUSTED),OffsetDateTimeJdbcType,datetimeoffset(7),INSTANT,NATIVE,1583-01-01T00:00:00Z,9999-12-31T09:59:59.999999999Z,QUALIFIED

@@ -24,6 +24,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
@@ -51,6 +52,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @RequiresDialect(H2Dialect.class)
 @RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
 @RequiresDialect(MySQLDialect.class)
+@RequiresDialect(SQLServerDialect.class)
 @RequiresDialect(OracleDialect.class)
 class TemporalPreservationOffsetTimeTests {
 	private static final String[] DATABASE_SESSION_ZONES = { null, "Asia/Kathmandu", "America/New_York" };
@@ -116,8 +118,9 @@ class TemporalPreservationOffsetTimeTests {
 						builder.equal( root.get( "theValue" ), builder.literal( sameTime ) )
 				);
 				final var dialect = factory.getJdbcServices().getDialect();
-				// where the time at UTC is stored without an offset, so is the literal rendered
-				if ( dialect.getTemporalValueSemantics().supportsLiteralOffset()
+				// On H2 the column keeps the offset, and a literal with one is comparable with it.
+				// Where the time at UTC is stored in a plain time column, so is the literal rendered.
+				if ( dialect instanceof H2Dialect
 						|| dialect instanceof PostgreSQLDialect
 						|| dialect instanceof MySQLDialect ) {
 					assertThat( session.createQuery( query ).getSingleResult() ).isEqualTo( 1L );
@@ -214,8 +217,15 @@ class TemporalPreservationOffsetTimeTests {
 					final Holder entity = newInstance( entityClass );
 					entity.setId( ids.incrementAndGet() );
 					entity.setValue( value );
-					session.persist( entity );
-					written.add( entity );
+					if ( exceedsColumn( factory, entityClass, value ) ) {
+						// the value would be written with its own offset, which the column cannot hold
+						assertThatThrownBy( () -> factory.inTransaction( other -> other.persist( entity ) ) )
+								.isInstanceOf( TemporalPreservationException.class );
+					}
+					else {
+						session.persist( entity );
+						written.add( entity );
+					}
 				}
 				session.getTransaction().commit();
 				session.beginTransaction();
@@ -239,6 +249,15 @@ class TemporalPreservationOffsetTimeTests {
 			} );
 			TimeZone.setDefault( writerZone );
 		} );
+	}
+
+	/// A single column of SQL Server holds no offset beyond fourteen hours.
+	/// In two columns the first holds the time at UTC, whatever the offset.
+	private static boolean exceedsColumn(SessionFactoryImplementor factory, Class<?> entityClass, OffsetTime value) {
+		return factory.getJdbcServices().getDialect() instanceof SQLServerDialect
+			&& Math.abs( value.getOffset().getTotalSeconds() ) > 14 * 3600
+			&& factory.getMappingMetamodel().getEntityDescriptor( entityClass )
+					.findAttributeMapping( "theValue" ).getJdbcTypeCount() == 1;
 	}
 
 	private static Holder newInstance(Class<? extends Holder> entityClass) {

@@ -75,7 +75,7 @@ pipeline {
                                         sh "./docker_db.sh oracle"
                                         break;
                                     case "postgresql":
-                                        docker.image('postgis/postgis:16-3.4').pull()
+                                        docker.image('docker.io/postgis/postgis:18-3.7@sha256:fe440a27c6567aefa932e988962e5827bb2c29e4b97dac2ca5268f5eafe10262').pull()
                                         sh "./docker_db.sh postgresql"
                                         break;
                                     case "db2":

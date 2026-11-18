@@ -12,6 +12,7 @@ import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
 import org.hibernate.models.spi.ModelsContext;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.PostDelete;
 import jakarta.persistence.PostInsert;
 import jakarta.persistence.PostLoad;
@@ -159,6 +160,11 @@ public class LifecycleEventHandler {
 			ModelsContext modelsContext,
 			boolean errorIfEmpty) {
 		if ( isImplicitMethodMappings( jaxbMapping ) ) {
+			if ( consumerType == JpaEventListenerStyle.LISTENER ) {
+				// a listener class may have several callback methods for the same event,
+				// provided they accept different parameter types
+				return listenersForTarget( listenerClassDetails, null, errorIfEmpty );
+			}
 			final var handler = from( consumerType, listenerClassDetails, errorIfEmpty );
 			return handler.hasCallbackMethods() ? List.of( handler ) : List.of();
 		}
@@ -416,10 +422,11 @@ public class LifecycleEventHandler {
 		return descriptor;
 	}
 
-	/// Create a listener handler from annotations, selecting only methods applicable to the callback target type.
+	/// Create listener handlers from annotations, one per callback method, selecting only methods
+	/// applicable to the callback target type, or all callback methods if the target type is `null`.
 	public static List<LifecycleEventHandler> listenersForTarget(
 			ClassDetails listenerClassDetails,
-			ClassDetails targetClassDetails,
+			@Nullable ClassDetails targetClassDetails,
 			boolean errorIfEmpty) {
 		final List<LifecycleEventHandler> lifecycleEventHandlers = new ArrayList<>();
 
@@ -567,7 +574,7 @@ public class LifecycleEventHandler {
 
 	private static void applyTargetedAnnotatedCallback(
 			ClassDetails listenerClassDetails,
-			ClassDetails targetClassDetails,
+			@Nullable ClassDetails targetClassDetails,
 			MethodDetails methodDetails,
 			Class<? extends Annotation> callbackAnnotation,
 			CallbackType callbackType,
@@ -580,8 +587,8 @@ public class LifecycleEventHandler {
 						+ listenerClassDetails.getClassName() + "'"
 						+ signatureRequirement( JpaEventListenerStyle.LISTENER ) );
 			}
-			if ( firstParameterType( methodDetails )
-					.isAssignableFrom( targetClassDetails.toJavaClass() ) ) {
+			if ( targetClassDetails == null
+					|| firstParameterType( methodDetails ).isAssignableFrom( targetClassDetails.toJavaClass() ) ) {
 				addIfAbsent( listenerClassDetails, callbackType, methodDetails, lifecycleEventHandlers );
 			}
 		}

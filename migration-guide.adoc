@@ -1811,6 +1811,12 @@ A `@Cache` annotation on a field or property which is not a collection, for exam
 is now rejected with an `AnnotationException` when the metadata is built. Previously the annotation was silently ignored.
 To cache the entity which is the target of an association, annotate its root entity class `@Cache`.
 
+[[on-delete-on-entity-class]]
+=== `@OnDelete` on an entity class which is not a `JOINED` subclass
+
+An `@OnDelete` annotation on an entity class which is not a subclass in a `JOINED` hierarchy is now rejected with
+an `AnnotationException` when the metadata is built. Previously the annotation was silently ignored.
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // XSD changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

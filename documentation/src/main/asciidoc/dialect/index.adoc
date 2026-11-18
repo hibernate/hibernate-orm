@@ -28,6 +28,22 @@ Below is a list of supported dialects and the minimum required version of the da
 
 include::{generated-report-dir}/dialect/dialect-table.adoc[]
 
+[[required-driver-settings]]
+=== Required JDBC driver settings
+
+Some JDBC drivers have a default setting with which a value is not stored as it was given.
+Hibernate cannot see or change the settings of a connection, so each setting listed here has to be made in the JDBC URL or in the properties of the data source.
+
+[cols="a,a,a", options="header"]
+|===
+|Database |Setting |Reason
+|SQL Server
+|`sendTimeAsDatetime=false`
+|With the default of the driver, which is `true`, a time of day is sent as a `DATETIME`, which holds fractional seconds only in steps of 1/300 of a second.
+A fraction of a second is then altered whatever the precision of the `TIME` column, and a time in the last milliseconds of the day is stored as midnight.
+Times in whole seconds are not affected.
+|===
+
 [[third-party-dialects]]
 == Third-party dialects
 

@@ -714,7 +714,6 @@ public class LazyToOnesProxyMergeWithSubclassesTest {
 	}
 
 	@Entity(name = "Animal")
-	@Table(name = "Animal")
 	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 	public static abstract class Animal {
 

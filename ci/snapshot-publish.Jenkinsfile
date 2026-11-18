@@ -45,8 +45,7 @@ pipeline {
                             usernamePassword(credentialsId: 'central.sonatype.com', passwordVariable: 'ORG_GRADLE_PROJECT_snapshotsPassword', usernameVariable: 'ORG_GRADLE_PROJECT_snapshotsUsername'),
                             string(credentialsId: 'Hibernate-CI.github.com', variable: 'JRELEASER_GITHUB_TOKEN'),
                             // https://docs.gradle.org/current/userguide/publishing_gradle_plugins.html#account_setup
-                            usernamePassword(credentialsId: 'gradle-plugin-portal-api-key', passwordVariable: 'GRADLE_PUBLISH_SECRET', usernameVariable: 'GRADLE_PUBLISH_KEY'),
-                            gitUsernamePassword(credentialsId: 'username-and-token.Hibernate-CI.github.com', gitToolName: 'Default')
+                            usernamePassword(credentialsId: 'gradle-plugin-portal-api-key', passwordVariable: 'GRADLE_PUBLISH_SECRET', usernameVariable: 'GRADLE_PUBLISH_KEY')
                     ]) {
                         withEnv([
                                 "DISABLE_REMOTE_GRADLE_CACHE=true"

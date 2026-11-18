@@ -273,7 +273,7 @@ postgresql_17() {
 
 postgresql_18() {
     $CONTAINER_CLI rm -f postgres || true
-    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /var/lib/postgresql -d ${DB_IMAGE_POSTGRESQL_17:-docker.io/postgis/postgis:18-3.6} \
+    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /var/lib/postgresql -d ${DB_IMAGE_POSTGRESQL_18:-docker.io/postgis/postgis:18-3.7} \
       -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c shared_buffers=256MB -c maintenance_work_mem=256MB -c max_wal_size=1GB -c checkpoint_timeout=1d
     $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-18-pgvector'
     postgresql_setup

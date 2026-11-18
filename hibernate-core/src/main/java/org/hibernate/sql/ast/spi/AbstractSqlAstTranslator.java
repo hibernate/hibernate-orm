@@ -484,6 +484,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	@Override
+	public void appendLiteral(String value) {
+		dialect.appendLiteral( this, value );
+	}
+
+	@Override
+	public void appendLiteralContent(String value) {
+		dialect.appendLiteralContent( this, value );
+	}
+
+	@Override
 	public Appendable append(CharSequence csq) {
 		sqlBuffer.append( csq );
 		return this;

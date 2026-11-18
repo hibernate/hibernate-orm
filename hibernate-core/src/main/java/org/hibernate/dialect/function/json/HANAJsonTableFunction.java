@@ -4,7 +4,7 @@
  */
 package org.hibernate.dialect.function.json;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -105,7 +105,7 @@ public class HANAJsonTableFunction extends JsonTableFunction {
 				final String jsonPath = "$.v" + rawJsonPath.substring( 1 );
 
 				sqlAppender.appendSql( "nested path " );
-				sqlAppender.appendSingleQuoteEscapedString( jsonPath );
+				sqlAppender.appendLiteral( jsonPath );
 				sqlAppender.appendSql( " columns" );
 			}
 			else {

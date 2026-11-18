@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
@@ -27,8 +28,6 @@ import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
 import org.hibernate.sql.ast.tree.expression.JsonValueEmptyBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonValueErrorBehavior;
 import org.hibernate.type.spi.TypeConfiguration;
-
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.ANY;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.IMPLICIT_JSON;
@@ -100,10 +99,7 @@ public class JsonValueFunction extends AbstractSqmSelfRenderingFunctionDescripto
 				arguments.jsonPath().accept( walker );
 			}
 			else {
-				walker.getSessionFactory().getJdbcServices().getDialect().appendLiteral(
-						sqlAppender,
-						walker.getLiteralValue( arguments.jsonPath() )
-				);
+				sqlAppender.appendLiteral( walker.getLiteralValue( arguments.jsonPath() ) );
 			}
 			if ( passingClause != null ) {
 				sqlAppender.appendSql( " passing " );

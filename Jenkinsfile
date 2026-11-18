@@ -4,9 +4,6 @@
  */
 
 import groovy.transform.Field
-import io.jenkins.blueocean.rest.impl.pipeline.PipelineNodeGraphVisitor
-import io.jenkins.blueocean.rest.impl.pipeline.FlowNodeWrapper
-import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 
 /*
  * See https://github.com/hibernate/hibernate-jenkins-pipeline-helpers
@@ -68,7 +65,7 @@ stage('Configure') {
 			this.environments.add( new BuildEnvironment( dbName: 'sybase_jconn' ) )
 		}
 		if ( pullRequest.labels.contains( 'tidb' ) ) {
-			this.environments.add( new BuildEnvironment( dbName: 'tidb', node: 'tidb', notificationRecipients: 'tidb_hibernate@pingcap.com' ) )
+			this.environments.add( new BuildEnvironment( dbName: 'tidb', node: 'tidb' ) )
 		}
 	}
 
@@ -201,10 +198,6 @@ stage('Build') {
 						if ( state[buildEnv.tag]['containerName'] != null ) {
 							sh "docker rm -f ${state[buildEnv.tag]['containerName']}"
 						}
-						// Skip this for PRs
-						if ( !env.CHANGE_ID && buildEnv.notificationRecipients != null ) {
-							handleNotifications(currentBuild, buildEnv)
-						}
 					})
 				}
 			}
@@ -229,7 +222,6 @@ class BuildEnvironment {
 	String dbLockableResource
 	boolean dbLockResourceAsHost
 	String additionalOptions
-	String notificationRecipients
 	boolean longRunning
 
 	String toString() { getTag() }
@@ -294,71 +286,6 @@ void pruneDockerContainers() {
 		sh 'docker network prune -f || true'
 		sh 'docker volume prune -f || true'
 	}
-}
-
-void handleNotifications(currentBuild, buildEnv) {
-	def currentResult = getParallelResult(currentBuild, buildEnv.tag)
-	boolean success = currentResult == 'SUCCESS' || currentResult == 'UNKNOWN'
-	def previousResult = currentBuild.previousBuild == null ? null : getParallelResult(currentBuild.previousBuild, buildEnv.tag)
-
-	// Ignore success after success
-	if ( !( success && previousResult == 'SUCCESS' ) ) {
-		def subject
-		def body
-		if ( success ) {
-			if ( previousResult != 'SUCCESS' && previousResult != null ) {
-				subject = "${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Fixed"
-				body = """<p>${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Fixed:</p>
-					<p>Check console output at <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a> to view the results.</p>"""
-			}
-			else {
-				subject = "${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Success"
-				body = """<p>${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Success:</p>
-					<p>Check console output at <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a> to view the results.</p>"""
-			}
-		}
-		else if (currentBuild.rawBuild.getActions(jenkins.model.InterruptedBuildAction.class).isEmpty()) {
-			// If there are interrupted build actions, this means the build was cancelled, probably superseded
-			// Thanks to https://issues.jenkins.io/browse/JENKINS-43339 for the "hack" to determine this
-			if ( currentResult == 'FAILURE' ) {
-				if ( previousResult != null && previousResult == "FAILURE" ) {
-					subject = "${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Still failing"
-					body = """<p>${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Still failing:</p>
-						<p>Check console output at <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a> to view the results.</p>"""
-				}
-				else {
-					subject = "${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Failure"
-					body = """<p>${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - Failure:</p>
-						<p>Check console output at <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a> to view the results.</p>"""
-				}
-			}
-			else {
-				subject = "${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - ${currentResult}"
-				body = """<p>${env.JOB_NAME} - Build ${env.BUILD_NUMBER} - ${currentResult}:</p>
-					<p>Check console output at <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a> to view the results.</p>"""
-			}
-		}
-
-		emailext(
-				subject: subject,
-				body: body,
-				to: buildEnv.notificationRecipients
-		)
-	}
-}
-
-@NonCPS
-String getParallelResult( RunWrapper build, String parallelBranchName ) {
-    def visitor = new PipelineNodeGraphVisitor( build.rawBuild )
-    def branch = visitor.pipelineNodes.find{ it.type == FlowNodeWrapper.NodeType.PARALLEL && parallelBranchName == it.displayName }
-    if ( branch == null ) {
-    	echo "Couldn't find parallel branch name '$parallelBranchName'. Available parallel branch names:"
-		visitor.pipelineNodes.findAll{ it.type == FlowNodeWrapper.NodeType.PARALLEL }.each{
-			echo " - ${it.displayName}"
-		}
-    	return null;
-    }
-    return branch.status.result
 }
 
 // try-finally construct that properly suppresses exceptions thrown in the finally block.

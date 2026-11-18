@@ -6,7 +6,7 @@ package org.hibernate.dialect.function.json;
 
 import java.util.Map;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.annotation.Nullable;
 import org.hibernate.QueryException;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -112,7 +112,7 @@ public class PostgreSQLJsonValueFunction extends JsonValueFunction {
 			char separator = '(';
 			for ( Map.Entry<String, Expression> entry : passingClause.getPassingExpressions().entrySet() ) {
 				sqlAppender.append( separator );
-				sqlAppender.appendSingleQuoteEscapedString( entry.getKey() );
+				sqlAppender.appendLiteral( entry.getKey() );
 				sqlAppender.append( ',' );
 				entry.getValue().accept( walker );
 				separator = ',';

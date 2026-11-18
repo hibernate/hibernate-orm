@@ -288,7 +288,7 @@ public class ClassificationMetadataJsonTests {
 				)
 		);
 		assertTrue(
-				((IndexerTask) index).getArtifactFileReferenceAccess().get().getAsFile().toPath().endsWith(
+				((IndexerTask) index).getArtifactFile().get().getAsFile().toPath().endsWith(
 						"target/orm/reports/indexing/artifacts.txt"
 				)
 		);

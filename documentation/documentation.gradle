@@ -291,16 +291,16 @@ def aggregateJavadocsTask = tasks.register( "javadoc", Javadoc ) {
 //			)
 
 		// Display version of Java tools
-		doFirst {
-			if ( javadocTool.present ) {
-				logger.lifecycle "Building aggregated javadoc with '${javadocTool.get().metadata.installationPath}'"
+		doFirst { javadocTask ->
+			if ( javadocTask.javadocTool.present ) {
+				javadocTask.logger.lifecycle "Building aggregated javadoc with '${javadocTask.javadocTool.get().metadata.installationPath}'"
 			}
 		}
 	}
 
-	doFirst {
-		def javaLanguageVersion = javadocTool.present
-				? javadocTool.get().metadata.languageVersion
+	doFirst { javadocTask ->
+		def javaLanguageVersion = javadocTask.javadocTool.present
+				? javadocTask.javadocTool.get().metadata.languageVersion
 				: JavaLanguageVersion.of( JavaVersion.current().name )
 
 		if ( javaLanguageVersion.asInt() != 25 ) {
@@ -1104,6 +1104,7 @@ def buildDocsForPublishingTask = tasks.register( 'buildDocsForPublishing' ) { ta
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 tasks.withType(AsciidoctorTask).configureEach {
+    notCompatibleWithConfigurationCache( "Classic AsciiDoctor tasks are not CC compatible even in v5; only the new model5 is, migrate to remove this" )
     baseDirFollowsSourceDir()
     outputOptions {
         separateOutputDirs = false
@@ -1118,6 +1119,7 @@ tasks.withType(AsciidoctorTask).configureEach {
 }
 
 tasks.withType(AsciidoctorPdfTask).configureEach {
+    notCompatibleWithConfigurationCache( "Classic AsciiDoctor tasks are not CC compatible even in v5; only the new model5 is, migrate to remove this" )
     // See https://docs.asciidoctor.org/gradle-plugin/latest/common-task-configuration/#choosing-an-execution-mode-for-asciidoctorj
     executionMode = ExecutionMode.JAVA_EXEC
 

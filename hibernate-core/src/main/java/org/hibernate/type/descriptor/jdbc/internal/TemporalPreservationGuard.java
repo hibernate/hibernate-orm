@@ -305,17 +305,38 @@ public final class TemporalPreservationGuard {
 	/// literal, with temporal preservation known to be enabled. Where the
 	/// Dialect renders a time literal without an offset, the offset of the
 	/// value would be dropped, and the literal would denote another time.
-	public static void checkTimeLiteral(Object value, JavaType<?> javaType, Dialect dialect) {
-		if ( value instanceof TemporalAccessor temporal
-				&& temporal.isSupported( ChronoField.OFFSET_SECONDS )
-				&& !dialect.getTemporalValueSemantics().supportsLiteralOffset() ) {
+	/// Where the column which holds such a value does not keep the offset,
+	/// it is not a column of a time of day at all, and the literal would
+	/// not be comparable with it.
+	public static void checkTimeLiteral(Object value, JavaType<?> javaType, Dialect dialect, WrapperOptions options) {
+		if ( value instanceof TemporalAccessor temporal && temporal.isSupported( ChronoField.OFFSET_SECONDS ) ) {
+			final String problem;
+			if ( !dialect.getTemporalValueSemantics().supportsLiteralOffset() ) {
+				problem = "where it would be rendered without its offset";
+			}
+			else if ( !keepsOffset( javaType, options ) ) {
+				// such a column is not of a type for a time of day, which the literal is
+				problem = "where the column a time with an offset is stored in does not keep the offset";
+			}
+			else {
+				return;
+			}
 			throw new TemporalPreservationException(
 					"Cannot render as a SQL literal the value '" + value + "' of type '" + javaType.getTypeName()
 					+ "': with '" + TEMPORAL_PRESERVATION + "' enabled, a literal for a time with an offset is"
-					+ " not supported on " + dialect.getClass().getSimpleName()
-					+ ", where it would be rendered without its offset; bind the value as a parameter instead"
+					+ " not supported on " + dialect.getClass().getSimpleName() + ", " + problem
+					+ "; bind the value as a parameter instead"
 			);
 		}
+	}
+
+	/// Whether the default mapping of the Java type on the Dialect keeps the offset of a value.
+	private static boolean keepsOffset(JavaType<?> javaType, WrapperOptions options) {
+		final var jdbcType = javaType.getRecommendedJdbcType(
+				options.getTypeConfiguration().getCurrentBaseSqlTypeIndicators()
+		);
+		return preservation( options.getDialect(), javaType, jdbcType ).level( Part.OFFSET )
+			== TemporalPreservation.Level.SUPPORTED;
 	}
 
 	private static void check(
@@ -351,6 +372,18 @@ public final class TemporalPreservationGuard {
 		if ( problem != null ) {
 			throw new TemporalPreservationException(
 					"Cannot " + operation + " a value of type '" + javaType.getTypeName() + "': " + problem
+			);
+		}
+		final var greatestOffset = preservation.greatestOffset();
+		if ( greatestOffset != null
+				&& value instanceof TemporalAccessor temporal
+				&& temporal.isSupported( ChronoField.OFFSET_SECONDS )
+				&& Math.abs( temporal.get( ChronoField.OFFSET_SECONDS ) ) > Math.abs( greatestOffset.getTotalSeconds() ) ) {
+			throw new TemporalPreservationException(
+					"Cannot " + operation + " the value '" + value + "' of type '" + javaType.getTypeName()
+					+ "': with '" + TEMPORAL_PRESERVATION + "' enabled, " + describe( dialect, jdbcType )
+					+ " accepts only values whose offset from UTC is within " + greatestOffset
+					+ " in either direction"
 			);
 		}
 		if ( isBefore( value, preservation.minimum() ) || isAfter( value, preservation.maximum() ) ) {

@@ -33,6 +33,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.orm.test.type.temporal.preservation.TemporalPreservationBootMatrix.WithOffsetDateTime;
 import org.hibernate.orm.test.type.temporal.preservation.TemporalPreservationBootMatrix.WithZonedDateTime;
@@ -67,6 +68,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 @RequiresDialect(H2Dialect.class)
 @RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
 @RequiresDialect(MySQLDialect.class)
+@RequiresDialect(SQLServerDialect.class)
 @RequiresDialect(OracleDialect.class)
 class TemporalPreservationOffsetTests {
 	private static final DateTimeFormatter DATE_TIME = DateTimeFormatter.ofPattern( "uuuu-MM-dd HH:mm:ss.SSSSSS" );
@@ -83,7 +85,25 @@ class TemporalPreservationOffsetTests {
 			for ( var value : samples( first ) ) {
 				for ( var entityClass : new Class<?>[] { WithOffsetDateTime.class, WithZonedDateTime.class } ) {
 					final Object typed = entityClass == WithOffsetDateTime.class ? value : value.toZonedDateTime();
-					environment.accept( session -> checkStored( session, dialect, entityClass, typed, false ) );
+					final var reported = dialect.getTemporalPreservation(
+							OffsetDateTimeJavaType.INSTANCE,
+							TemporalPreservationOffsetTests.offsetDateTimeJdbcType
+					);
+					if ( reported.greatestOffset() != null
+							&& Math.abs( value.getOffset().getTotalSeconds() )
+									> reported.greatestOffset().getTotalSeconds()
+							|| value.toInstant().isAfter( (Instant) reported.maximum() ) ) {
+						// A single column of SQL Server is written with the offset of the value,
+						// and holds no offset beyond fourteen hours, nor a date after the year 9999,
+						// for which the range of its instants ends fourteen hours early.
+						environment.accept( session -> assertThatThrownBy( () -> {
+							session.persist( newEntity( entityClass, ids.incrementAndGet(), typed ) );
+							session.flush();
+						} ).as( "insert of %s", typed ).isInstanceOf( TemporalPreservationException.class ) );
+					}
+					else {
+						environment.accept( session -> checkStored( session, dialect, entityClass, typed, false ) );
+					}
 				}
 			}
 			for ( var zoned : zonedSamples() ) {
@@ -258,6 +278,9 @@ class TemporalPreservationOffsetTests {
 			epoch = "timestampdiff(second, timestamp '1970-01-01 00:00:00', theValue)"
 					+ " - (case when theValue < timestamp '1970-01-01 00:00:00' and microsecond(theValue) <> 0 then 1 else 0 end)";
 		}
+		else if ( dialect instanceof SQLServerDialect ) {
+			epoch = TemporalPreservationSql.SQL_SERVER_EPOCH;
+		}
 		else {
 			epoch = "extract(epoch from theValue)";
 		}
@@ -379,6 +402,9 @@ class TemporalPreservationOffsetTests {
 		else if ( dialect instanceof MySQLDialect ) {
 			// the column holds the date and time at UTC
 			return "timestamp '" + fields + "'";
+		}
+		else if ( dialect instanceof SQLServerDialect ) {
+			return TemporalPreservationSql.sqlServerInstantLiteral( fields );
 		}
 		else {
 			return "timestamp with time zone '" + fields + "+00:00'";
@@ -585,6 +611,10 @@ class TemporalPreservationOffsetTests {
 			// MySQL and MariaDB
 			execute( connection, "set time_zone = '" + zone + "'" );
 			return "set time_zone = @@global.time_zone";
+		}
+		else if ( dialect instanceof SQLServerDialect ) {
+			// a session of SQL Server has no time zone
+			return null;
 		}
 		else {
 			execute( connection, "set time zone '" + zone + "'" );

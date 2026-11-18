@@ -28,6 +28,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.orm.test.type.temporal.preservation.TemporalPreservationBootMatrix.WithInstant;
 import org.hibernate.orm.test.type.temporal.preservation.TemporalPreservationBootMatrix.WithLocalDate;
@@ -65,6 +66,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @RequiresDialect(H2Dialect.class)
 @RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
 @RequiresDialect(MySQLDialect.class)
+@RequiresDialect(SQLServerDialect.class)
 @RequiresDialect(OracleDialect.class)
 class TemporalPreservationTimeZoneTests {
 	private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern( "uuuu-MM-dd" );
@@ -214,6 +216,9 @@ class TemporalPreservationTimeZoneTests {
 			// the column holds the date and time at UTC
 			return "timestamp '" + fields + "'";
 		}
+		else if ( dialect instanceof SQLServerDialect ) {
+			return TemporalPreservationSql.sqlServerInstantLiteral( fields );
+		}
 		else {
 			return "timestamp with time zone '" + fields + "+00:00'";
 		}
@@ -245,6 +250,9 @@ class TemporalPreservationTimeZoneTests {
 				// the column holds the date and time at UTC
 				epoch = "timestampdiff(second, timestamp '1970-01-01 00:00:00', theValue)"
 					+ " - (case when theValue < timestamp '1970-01-01 00:00:00' and microsecond(theValue) <> 0 then 1 else 0 end)";
+			}
+			else if ( dialect instanceof SQLServerDialect ) {
+				epoch = TemporalPreservationSql.SQL_SERVER_EPOCH;
 			}
 			else {
 				epoch = "extract(epoch from theValue)";
@@ -302,18 +310,18 @@ class TemporalPreservationTimeZoneTests {
 	private static Map<Object, String> samples(Dialect dialect) {
 		final Map<Object, String> samples = new LinkedHashMap<>();
 		for ( var value : new LocalDate[] { LocalDate.of( 2021, 3, 14 ), LocalDate.of( 1985, 12, 31 ) } ) {
-			samples.put( value, "date '" + DATE.format( value ) + "'" );
+			samples.put( value, TemporalPreservationSql.dateLiteral( dialect, DATE.format( value ) ) );
 		}
 		for ( var value : new LocalDateTime[] {
 				LocalDateTime.of( 2021, 3, 14, 2, 30, 0 ),
 				LocalDateTime.of( 2021, 11, 7, 1, 30, 0 ),
 				LocalDateTime.of( 1985, 12, 31, 23, 59, 59, 123_456_000 )
 		} ) {
-			samples.put( value, "timestamp '" + DATE_TIME.format( value ) + "'" );
+			samples.put( value, TemporalPreservationSql.dateTimeLiteral( dialect, DATE_TIME.format( value ) ) );
 		}
 		if ( !( dialect instanceof OracleDialect ) ) {
 			for ( var value : new LocalTime[] { LocalTime.of( 2, 30, 15 ), LocalTime.MIDNIGHT } ) {
-				samples.put( value, "time '" + TIME.format( value ) + "'" );
+				samples.put( value, TemporalPreservationSql.timeLiteral( dialect, TIME.format( value ) ) );
 			}
 		}
 		for ( var value : new Instant[] {
@@ -374,6 +382,10 @@ class TemporalPreservationTimeZoneTests {
 			// MySQL and MariaDB
 			execute( connection, "set time_zone = '" + zone + "'" );
 			return "set time_zone = @@global.time_zone";
+		}
+		else if ( dialect instanceof SQLServerDialect ) {
+			// a session of SQL Server has no time zone
+			return null;
 		}
 		else {
 			execute( connection, "set time zone '" + zone + "'" );

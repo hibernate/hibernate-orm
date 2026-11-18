@@ -19,6 +19,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.type.internal.StandardTemporalPreservations;
 import org.hibernate.orm.test.type.temporal.preservation.TemporalPreservationBootMatrix.WithInstant;
 import org.hibernate.orm.test.type.temporal.preservation.TemporalPreservationBootMatrix.WithLocalDate;
@@ -64,6 +65,7 @@ class TemporalPreservationStorageTests {
 	@RequiresDialect(H2Dialect.class)
 	@RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
 	@RequiresDialect(MySQLDialect.class)
+	@RequiresDialect(SQLServerDialect.class)
 	@RequiresDialect(OracleDialect.class)
 	@DomainModel(annotatedClasses = { WithLocalDate.class, WithLocalDateTime.class, WithInstant.class })
 	@SessionFactory
@@ -85,7 +87,7 @@ class TemporalPreservationStorageTests {
 					LocalDate.of( 2024, 2, 29 ),
 					LocalDate.of( 9999, 12, 31 )
 			} ) {
-				assertStoredAsWritten( scope, WithLocalDate.class, "tp_local_date", value, dateLiteral( value ) );
+				assertStoredAsWritten( scope, WithLocalDate.class, "tp_local_date", value, dateLiteral( scope, value ) );
 			}
 			if ( first.isBefore( StandardTemporalPreservations.GREGORIAN_START ) ) {
 				// dates which exist only in the proleptic Gregorian calendar,
@@ -96,7 +98,7 @@ class TemporalPreservationStorageTests {
 						LocalDate.of( 1500, 2, 28 ),
 						LocalDate.of( 1000, 6, 15 )
 				} ) {
-					assertStoredAsWritten( scope, WithLocalDate.class, "tp_local_date", value, dateLiteral( value ) );
+					assertStoredAsWritten( scope, WithLocalDate.class, "tp_local_date", value, dateLiteral( scope, value ) );
 				}
 			}
 		}
@@ -125,7 +127,7 @@ class TemporalPreservationStorageTests {
 						WithLocalDateTime.class,
 						"tp_local_date_time",
 						value,
-						"timestamp '" + DATE_TIME.format( value ) + "'"
+						TemporalPreservationSql.dateTimeLiteral( dialect( scope ), DATE_TIME.format( value ) )
 				);
 			}
 		}
@@ -147,11 +149,11 @@ class TemporalPreservationStorageTests {
 							WithLocalDateTime.class,
 							"tp_local_date_time",
 							value,
-							"timestamp '" + DATE_TIME.format( value ) + "'"
+							TemporalPreservationSql.dateTimeLiteral( dialect( scope ), DATE_TIME.format( value ) )
 					);
 				}
 				final LocalDate date = LocalDate.of( 2021, 3, 14 );
-				assertStoredAsWritten( scope, WithLocalDate.class, "tp_local_date", date, dateLiteral( date ) );
+				assertStoredAsWritten( scope, WithLocalDate.class, "tp_local_date", date, dateLiteral( scope, date ) );
 			}
 			finally {
 				TimeZone.setDefault( original );
@@ -167,7 +169,10 @@ class TemporalPreservationStorageTests {
 					scope,
 					"tp_local_date_time",
 					"cast(" + outsideRangeDateLiteral( scope ) + " as "
-						+ ( dialect( scope ) instanceof MySQLDialect ? "datetime" : "timestamp" ) + ")"
+						+ ( dialect( scope ) instanceof MySQLDialect
+								? "datetime"
+								: dialect( scope ) instanceof SQLServerDialect ? "datetime2" : "timestamp" )
+						+ ")"
 			);
 		}
 
@@ -246,6 +251,7 @@ class TemporalPreservationStorageTests {
 	@RequiresDialect(H2Dialect.class)
 	@RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
 	@RequiresDialect(MySQLDialect.class)
+	@RequiresDialect(SQLServerDialect.class)
 	@DomainModel(annotatedClasses = WithLocalTime.class)
 	@SessionFactory
 	class Times {
@@ -270,7 +276,7 @@ class TemporalPreservationStorageTests {
 							WithLocalTime.class,
 							"tp_local_time",
 							value,
-							"time '" + TIME.format( value ) + "'"
+							TemporalPreservationSql.timeLiteral( dialect( scope ), TIME.format( value ) )
 					);
 				}
 			}
@@ -414,6 +420,9 @@ class TemporalPreservationStorageTests {
 			expression = "timestampdiff(second, timestamp '1970-01-01 00:00:00', theValue)"
 					+ " - (case when theValue < timestamp '1970-01-01 00:00:00' and microsecond(theValue) <> 0 then 1 else 0 end)";
 		}
+		else if ( dialect( scope ) instanceof SQLServerDialect ) {
+			expression = TemporalPreservationSql.SQL_SERVER_EPOCH;
+		}
 		else {
 			expression = "extract(epoch from theValue)";
 		}
@@ -458,7 +467,7 @@ class TemporalPreservationStorageTests {
 	}
 
 	private static LocalDate firstDay(SessionFactoryScope scope) {
-		if ( dialect( scope ) instanceof OracleDialect ) {
+		if ( dialect( scope ) instanceof OracleDialect || dialect( scope ) instanceof SQLServerDialect ) {
 			return StandardTemporalPreservations.GREGORIAN_START;
 		}
 		else if ( dialect( scope ) instanceof MySQLDialect ) {
@@ -474,7 +483,9 @@ class TemporalPreservationStorageTests {
 		if ( dialect( scope ) instanceof H2Dialect ) {
 			firstDay = StandardTemporalPreservations.COMMON_ERA_START;
 		}
-		else if ( dialect( scope ) instanceof PostgreSQLDialect || dialect( scope ) instanceof MySQLDialect ) {
+		else if ( dialect( scope ) instanceof PostgreSQLDialect
+				|| dialect( scope ) instanceof MySQLDialect
+				|| dialect( scope ) instanceof SQLServerDialect ) {
 			firstDay = StandardTemporalPreservations.TIMESTAMP_READ_SAFE_START;
 		}
 		else {
@@ -483,14 +494,17 @@ class TemporalPreservationStorageTests {
 		return firstDay.atStartOfDay().toInstant( ZoneOffset.UTC );
 	}
 
-	private static String dateLiteral(LocalDate value) {
-		return "date '" + DATE.format( value ) + "'";
+	private static String dateLiteral(SessionFactoryScope scope, LocalDate value) {
+		return TemporalPreservationSql.dateLiteral( dialect( scope ), DATE.format( value ) );
 	}
 
 	/// A date outside the supported range which the database can store.
 	private static String outsideRangeDateLiteral(SessionFactoryScope scope) {
 		if ( dialect( scope ) instanceof OracleDialect ) {
 			return "date '1582-10-04'";
+		}
+		else if ( dialect( scope ) instanceof SQLServerDialect ) {
+			return "cast('1582-10-04' as date)";
 		}
 		else if ( dialect( scope ) instanceof MySQLDialect ) {
 			// MySQL and MariaDB do not store a date after the year 9999, and do store one before the year 1000
@@ -509,6 +523,9 @@ class TemporalPreservationStorageTests {
 		else if ( dialect( scope ) instanceof MySQLDialect ) {
 			// the column holds the date and time at UTC
 			return "timestamp '" + fields + "'";
+		}
+		else if ( dialect( scope ) instanceof SQLServerDialect ) {
+			return TemporalPreservationSql.sqlServerInstantLiteral( fields );
 		}
 		else {
 			return "timestamp with time zone '" + fields + "+00:00'";

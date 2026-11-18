@@ -28,6 +28,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.orm.test.type.temporal.preservation.TemporalPreservationMappingTests.OffsetDateTimeToString;
@@ -48,6 +49,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @RequiresDialect(H2Dialect.class)
 @RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
 @RequiresDialect(MySQLDialect.class)
+@RequiresDialect(SQLServerDialect.class)
 @RequiresDialect(OracleDialect.class)
 class TemporalPreservationAdjustmentTests {
 	private static final Map<String, Object> ENABLED = Map.of( MappingSettings.TEMPORAL_PRESERVATION, true );

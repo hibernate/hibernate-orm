@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
 import java.util.Set;
@@ -41,6 +42,10 @@ import static org.hibernate.SPI.Role.USE;
 ///        values of the assessed Java type, or `null` when every value the Java
 ///        class can represent is preserved at the low end
 /// @param maximum the greatest preserved value, or `null` likewise
+/// @param greatestOffset the greatest offset from UTC, in either direction,
+///        which a value may have to be exchanged at all, or `null` when every
+///        offset is. It restricts the values which are accepted, whether or
+///        not the offset itself is preserved
 ///
 /// @see org.hibernate.dialect.Dialect#getTemporalPreservation
 /// @see org.hibernate.cfg.MappingSettings#TEMPORAL_PRESERVATION
@@ -57,7 +62,8 @@ public record TemporalPreservation(
 		Level zoneId,
 		@Nullable InstantBasis instantBasis,
 		@Nullable Temporal minimum,
-		@Nullable Temporal maximum) {
+		@Nullable Temporal maximum,
+		@Nullable ZoneOffset greatestOffset) {
 
 	private static final TemporalPreservation UNKNOWN = new TemporalPreservation(
 			Level.UNKNOWN,
@@ -69,6 +75,27 @@ public record TemporalPreservation(
 			null,
 			null
 	);
+
+	/// A report with no restriction on the offset of a value.
+	public TemporalPreservation(
+			Level date,
+			Level time,
+			Level instant,
+			Level offset,
+			Level zoneId,
+			@Nullable InstantBasis instantBasis,
+			@Nullable Temporal minimum,
+			@Nullable Temporal maximum) {
+		this( date, time, instant, offset, zoneId, instantBasis, minimum, maximum, null );
+	}
+
+	/// This report, restricted to values whose offset from UTC is no
+	/// greater than the given one in either direction.
+	public TemporalPreservation withGreatestOffset(ZoneOffset greatestOffset) {
+		return new TemporalPreservation(
+				date, time, instant, offset, zoneId, instantBasis, minimum, maximum, greatestOffset
+		);
+	}
 
 	public TemporalPreservation {
 		if ( date == null || time == null || instant == null || offset == null || zoneId == null ) {

@@ -15,6 +15,8 @@ import org.hibernate.dialect.type.spi.StandardDdlTypes;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
 
+import org.hibernate.dialect.type.internal.StandardTemporalPreservations;
+import org.hibernate.dialect.type.spi.TemporalPreservation;
 import org.hibernate.dialect.type.spi.TypeSizingProfile;
 import org.hibernate.dialect.type.spi.UserDefinedTypeDdlSupport;
 import org.hibernate.dialect.rowid.spi.RowIdSupport;
@@ -53,6 +55,7 @@ import jakarta.annotation.Nullable;
 import org.hibernate.SPI;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.aggregate.spi.AggregateSupport;
 import org.hibernate.dialect.aggregate.internal.DB2AggregateSupport;
 import org.hibernate.dialect.function.CastingConcatFunction;
@@ -125,9 +128,12 @@ import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullResolvingJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimeUtcAsLocalTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -188,6 +194,68 @@ public class DB2Dialect extends Dialect implements CurrentTemporalSupport, Tempo
 	@Override
 	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
 		return DirectJavaTimeJdbcSupports.none();
+	}
+
+	/// What has been established for Db2 for Linux, UNIX and Windows with
+	/// the IBM Data Server Driver for JDBC and SQLJ.
+	///
+	/// A `LocalDate` is exchanged with the driver as a [java.sql.Date], which
+	/// stores the same date whatever the default time zone of the JVM. The
+	/// driver moves a date in the ten days before 15 October 1582 ten days
+	/// forward as it writes it, and reads a stored date in those ten days as
+	/// the date ten days later, so only dates from 1583 are qualified.
+	///
+	/// There is no column type which denotes an instant. An `Instant`, and
+	/// the instant of an `OffsetDateTime` or `ZonedDateTime`, is stored in a
+	/// TIMESTAMP column as its date and time at UTC, by convention. It passes
+	/// through a [java.sql.Timestamp], which stores the date of the Julian
+	/// calendar before 15 October 1582, and reads a stored date in the ten
+	/// days before then as the date ten days later, so only values from 1583
+	/// are qualified. The time of an `OffsetTime` at UTC is exchanged as a
+	/// `LocalTime`.
+	///
+	/// Nothing is established for a `LocalTime`. A `LocalDateTime` is
+	/// exchanged as a [java.sql.Timestamp] in the default time zone of the
+	/// JVM, which cannot express a time skipped as clocks are set forward
+	/// there, so it is not preserved.
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
+		var preservation = StandardTemporalPreservations.localDateAsJdbcDate(
+				javaType,
+				jdbcType,
+				StandardTemporalPreservations.TIMESTAMP_READ_SAFE_START
+		);
+		if ( preservation == TemporalPreservation.unknown() ) {
+			preservation = StandardTemporalPreservations.instant(
+					javaType,
+					jdbcType,
+					TimestampUtcAsJdbcTimestampJdbcType.class,
+					TemporalPreservation.InstantBasis.UTC_CONVENTION,
+					StandardTemporalPreservations.TIMESTAMP_READ_SAFE_START
+			);
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			// stored the way an Instant is: the column keeps the instant and nothing else
+			preservation = StandardTemporalPreservations.offsetOrZoned(
+					javaType,
+					jdbcType,
+					TimestampUtcAsJdbcTimestampJdbcType.class,
+					TemporalPreservation.Level.UNSUPPORTED,
+					TemporalPreservation.InstantBasis.UTC_CONVENTION,
+					StandardTemporalPreservations.TIMESTAMP_READ_SAFE_START
+			);
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			// stored as its time of day at UTC, in a column which keeps nothing else
+			preservation = StandardTemporalPreservations.offsetTime(
+					javaType,
+					jdbcType,
+					TimeUtcAsLocalTimeJdbcType.class,
+					TemporalPreservation.Level.UNSUPPORTED
+			);
+		}
+		return preservation;
 	}
 	private IfExistsSupport ifExistsSupport;
 	private SchemaDropSupport schemaDropSupport;
@@ -1017,6 +1085,13 @@ public class DB2Dialect extends Dialect implements CurrentTemporalSupport, Tempo
 
 		jdbcTypeRegistry.addDescriptor( XmlJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( DB2JdbcTypes.struct() );
+
+		if ( serviceRegistry != null && MetadataBuildingContext.isTemporalPreservationEnabled( serviceRegistry ) ) {
+			// The time of an OffsetTime at UTC is exchanged with the driver as a LocalTime.
+			// Passing through a java.sql.Time stores a time which depends on the default
+			// time zone of the JVM, which is left as it is when preservation is disabled.
+			jdbcTypeRegistry.addDescriptor( TimeUtcAsLocalTimeJdbcType.INSTANCE );
+		}
 
 		// DB2 requires a custom binder for binding untyped nulls that resolves the type through the statement
 		typeContributions.contributeJdbcType( ObjectNullResolvingJdbcType.INSTANCE );

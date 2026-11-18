@@ -16,6 +16,7 @@ import org.hibernate.type.descriptor.java.LocalTimeJavaType;
 import org.hibernate.type.descriptor.java.OffsetDateTimeJavaType;
 import org.hibernate.type.descriptor.java.OffsetTimeJavaType;
 import org.hibernate.type.descriptor.java.ZonedDateTimeJavaType;
+import org.hibernate.type.descriptor.jdbc.DateJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalDateJdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalDateTimeJdbcType;
@@ -82,6 +83,17 @@ public final class StandardTemporalPreservations {
 		else {
 			return TemporalPreservation.unknown();
 		}
+	}
+
+	/// Report for a [LocalDate] exchanged with the JDBC driver as a
+	/// [java.sql.Date], with dates preserved from the given first day through
+	/// the year 9999. Only for a driver which has been established to store
+	/// the same date whatever the default time zone of the JVM. Answers
+	/// [TemporalPreservation#unknown()] for anything else.
+	public static TemporalPreservation localDateAsJdbcDate(JavaType<?> javaType, JdbcType jdbcType, LocalDate firstDay) {
+		return isPair( javaType, jdbcType, LocalDateJavaType.class, DateJdbcType.class )
+				? TemporalPreservation.ofDate( firstDay, FOUR_DIGIT_YEAR_END )
+				: TemporalPreservation.unknown();
 	}
 
 	/// Report for a [LocalTime] passed to and requested from the JDBC driver

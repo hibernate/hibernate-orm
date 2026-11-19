@@ -20,6 +20,7 @@ import org.hibernate.sql.ast.spi.SqlAstNode;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
@@ -241,8 +242,8 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 	private static boolean isCompatible(FunctionParameterType type, JdbcType jdbcType, Type javaType) {
 		return switch (type) {
 			case COMPARABLE -> jdbcType.isComparable();
-			case STRING -> jdbcType.isStringLikeExcludingClob();
-			case STRING_OR_CLOB -> jdbcType.isStringLike();
+			case STRING -> jdbcType.isStringLikeExcludingClob() || isLongString( jdbcType );
+			case STRING_OR_CLOB -> jdbcType.isStringLike() || isLongString( jdbcType );
 			case NUMERIC -> jdbcType.isNumber();
 			case INTEGER -> jdbcType.isInteger();
 			case BOOLEAN -> jdbcType.isBoolean()
@@ -261,6 +262,11 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 			case ENUM -> javaType instanceof Class<?> clz && clz.isEnum();
 			default -> true; // TODO: should we throw here?
 		};
+	}
+
+	private static boolean isLongString(JdbcType jdbcType) {
+		final int sqlTypeCode = jdbcType.getDefaultSqlTypeCode();
+		return sqlTypeCode == SqlTypes.LONG32VARCHAR || sqlTypeCode == SqlTypes.LONG32NVARCHAR;
 	}
 
 	private static void throwError(

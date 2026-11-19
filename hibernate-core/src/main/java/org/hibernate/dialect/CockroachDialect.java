@@ -518,6 +518,7 @@ public class CockroachDialect extends Dialect implements CurrentTemporalSupport,
 
 		final var functionFactory = new CommonFunctionFactory( functionContributions );
 
+		functionFactory.lowerUpper_clob();
 		functionFactory.ascii();
 		functionFactory.char_chr();
 		functionFactory.overlay();

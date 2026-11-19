@@ -555,6 +555,7 @@ public class SpannerDialect extends Dialect implements CurrentTemporalSupport, T
 		functionFactory.substr();
 		functionFactory.substring_substr();
 		functionFactory.octetLength();
+		functionFactory.lowerUpper_clob();
 		functionFactory.bitLength_pattern( "(octet_length(?1) * 8)" );
 		functionRegistry.namedDescriptorBuilder( "byte_length" )
 				.setInvariantType( longType )

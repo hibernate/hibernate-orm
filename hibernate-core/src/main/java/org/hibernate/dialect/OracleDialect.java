@@ -405,6 +405,7 @@ public class OracleDialect extends Dialect implements CurrentTemporalSupport, Te
 		final var functionFactory = new CommonFunctionFactory( functionContributions );
 		final var functionRegistry = functionContributions.getFunctionRegistry();
 
+		functionFactory.lowerUpper_clob();
 		functionFactory.ascii();
 		functionFactory.char_chr();
 		functionFactory.cosh();

@@ -244,6 +244,7 @@ public class HSQLDialect extends Dialect implements CurrentTemporalSupport, Temp
 		functionFactory.localtimeLocaltimestamp();
 		functionFactory.bitLength();
 		functionFactory.octetLength();
+		functionFactory.lowerUpper_clob();
 		functionFactory.ascii();
 		functionFactory.chr_char();
 		functionFactory.instr();

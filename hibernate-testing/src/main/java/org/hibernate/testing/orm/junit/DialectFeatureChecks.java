@@ -62,6 +62,7 @@ import org.hibernate.dialect.identifier.spi.IdentifierHelperBuildRequest;
 import org.hibernate.dialect.sql.ast.spi.CteSupport;
 import org.hibernate.dialect.sql.ast.spi.ValuesListSupport;
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.DB2zDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
@@ -1644,6 +1645,38 @@ abstract public class DialectFeatureChecks {
 		@Override
 		public boolean apply(Dialect dialect) {
 			return dialect.getNationalizationSupport() == NationalizationSupport.EXPLICIT;
+		}
+	}
+
+	/**
+	 * Dialect families using CommonFunctionFactory.lowerUpper_clob().
+	 * Does not imply support in every SQL context.
+	 */
+	public static class SupportsClobCaseConversion implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return dialect instanceof CockroachDialect
+				|| dialect instanceof DerbyDialect
+				|| dialect instanceof H2Dialect
+				|| dialect instanceof HSQLDialect
+				|| dialect instanceof MySQLDialect
+				|| dialect instanceof OracleDialect
+				|| dialect instanceof SQLServerDialect
+				|| dialect instanceof SpannerDialect;
+		}
+	}
+
+	/**
+	 * Whether lower()/upper() support LONG32 strings without narrowing to a bounded VARCHAR.
+	 */
+	public static class SupportsLong32CaseConversion implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			// These mappings use TEXT/UNITEXT or CLOB columns which native case conversion
+			// cannot consume without a length-limited conversion.
+			return !(dialect instanceof InformixDialect)
+					&& !(dialect instanceof SybaseDialect)
+					&& !(dialect instanceof DB2zDialect);
 		}
 	}
 

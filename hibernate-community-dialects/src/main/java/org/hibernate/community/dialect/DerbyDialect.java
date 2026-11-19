@@ -105,6 +105,7 @@ import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.BigDecimalJavaType;
+import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullResolvingJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -332,6 +333,7 @@ public class DerbyDialect extends Dialect implements CurrentTemporalSupport, Tem
 		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
 		final DdlTypeRegistry ddlTypeRegistry = functionContributions.getTypeConfiguration().getDdlTypeRegistry();
 		final CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		functionFactory.lowerUpper_clob();
 
 		// Derby needs an actual argument type for aggregates like SUM, AVG, MIN, MAX to determine the result type
 		functionFactory.aggregates( this, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
@@ -657,6 +659,7 @@ public class DerbyDialect extends Dialect implements CurrentTemporalSupport, Tem
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
 		jdbcTypeRegistry.addDescriptor( Types.TIMESTAMP_WITH_TIMEZONE, TimestampJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( LONG32VARBINARY, BlobJdbcType.MATERIALIZED );
 
 		// Derby requires a custom binder for binding untyped nulls that resolves the type through the statement
 		typeContributions.contributeJdbcType( ObjectNullResolvingJdbcType.INSTANCE );

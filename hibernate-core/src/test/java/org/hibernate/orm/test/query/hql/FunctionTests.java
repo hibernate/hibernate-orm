@@ -29,6 +29,7 @@ import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.engine.jdbc.proxy.ClobProxy;
+import org.hibernate.orm.test.length.WithLongTypeStrings;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.sql.exec.ExecutionException;
 
@@ -87,7 +88,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /**
  * @author Gavin King
  */
-@DomainModel( standardModels = StandardDomainModel.GAMBIT )
+@DomainModel( standardModels = StandardDomainModel.GAMBIT, annotatedClasses = WithLongTypeStrings.class )
 @SessionFactory
 public class FunctionTests {
 
@@ -677,18 +678,55 @@ public class FunctionTests {
 
 	@Test
 	@JiraKey("HHH-18954")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsClobCaseConversion.class)
 	public void testLowerUpperFunctionsWithClob(SessionFactoryScope scope) {
+		final String text = "Abc Àà ".repeat( 10000 ) + "End";
 		scope.inTransaction( session -> {
+			final var entity = session.find( EntityOfBasics.class, 123 );
+			entity.setTheClob( session.getLobHelper().createClob( text ) );
 			assertThat(
 					session.createQuery( "select lower(e.theClob) from EntityOfBasics e", String.class )
 							.getSingleResult(),
-					is( "some clob text" )
+					is( text.toLowerCase( Locale.ROOT ) )
 			);
 			assertThat(
 					session.createQuery( "select upper(e.theClob) from EntityOfBasics e", String.class )
 							.getSingleResult(),
-					is( "SOME CLOB TEXT" )
+					is( text.toUpperCase( Locale.ROOT ) )
 			);
+			entity.setTheClob( null );
+			assertThat( session.createQuery( "select lower(e.theClob) from EntityOfBasics e", String.class )
+					.getSingleResult(), nullValue() );
+			assertThat( session.createQuery( "select upper(e.theClob) from EntityOfBasics e", String.class )
+					.getSingleResult(), nullValue() );
+		} );
+	}
+
+	@Test
+	@JiraKey("HHH-18954")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsLong32CaseConversion.class)
+	public void testLowerUpperFunctionsWithLong32Varchar(SessionFactoryScope scope) {
+		final String text = "Abc Àà ".repeat( 10000 ) + "End";
+		final var entity = new WithLongTypeStrings();
+		entity.long32 = text;
+		final var nullEntity = new WithLongTypeStrings();
+		scope.inTransaction( session -> {
+			session.persist( entity );
+			session.persist( nullEntity );
+		} );
+		scope.inTransaction( session -> {
+			assertThat( session.createQuery(
+					"select lower(e.long32) from WithLongTypeStrings e where e.id = :id", String.class
+			).setParameter( "id", entity.id ).getSingleResult(), is( text.toLowerCase( Locale.ROOT ) ) );
+			assertThat( session.createQuery(
+					"select upper(e.long32) from WithLongTypeStrings e where e.id = :id", String.class
+			).setParameter( "id", entity.id ).getSingleResult(), is( text.toUpperCase( Locale.ROOT ) ) );
+			assertThat( session.createQuery(
+					"select lower(e.long32) from WithLongTypeStrings e where e.id = :id", String.class
+			).setParameter( "id", nullEntity.id ).getSingleResult(), nullValue() );
+			assertThat( session.createQuery(
+					"select upper(e.long32) from WithLongTypeStrings e where e.id = :id", String.class
+			).setParameter( "id", nullEntity.id ).getSingleResult(), nullValue() );
 		} );
 	}
 

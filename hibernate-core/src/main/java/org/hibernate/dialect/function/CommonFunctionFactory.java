@@ -2043,19 +2043,34 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
-	public void lowerUpper() {
+	private void lowerUpper(FunctionParameterType parameterType) {
 		functionRegistry.namedDescriptorBuilder( "lower" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(STRING_OR_CLOB)
-				.setArgumentListSignature( "(STRING_OR_CLOB string)" )
+				.setParameterTypes( parameterType )
+				.setArgumentListSignature( "(" + parameterType + " string)" )
 				.register();
 		functionRegistry.namedDescriptorBuilder( "upper" )
-				.setInvariantType(stringType)
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 1 )
-				.setParameterTypes(STRING_OR_CLOB)
-				.setArgumentListSignature( "(STRING_OR_CLOB string)" )
+				.setParameterTypes( parameterType )
+				.setArgumentListSignature( "(" + parameterType + " string)" )
 				.register();
+	}
+
+	/**
+	 * Default registration of lower()/upper(), accepting string-like arguments but excluding CLOBs.
+	 */
+	public void lowerUpper() {
+		lowerUpper( STRING );
+	}
+
+	/**
+	 * Oracle, SQL Server, MySQL, H2, HSQL, CockroachDB, Spanner and Derby.
+	 * Unlike the default registration, lower()/upper() also accept CLOBs.
+	 */
+	public void lowerUpper_clob() {
+		lowerUpper( STRING_OR_CLOB );
 	}
 
 	/**

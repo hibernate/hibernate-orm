@@ -486,6 +486,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect implements Curr
 		functionFactory.everyAny_minMaxIif();
 		functionFactory.octetLength_pattern( "datalength(?1)" );
 		functionFactory.bitLength_pattern( "datalength(?1)*8" );
+		functionFactory.lowerUpper_clob();
 
 		functionFactory.locate_charindex();
 		functionFactory.stddevPopSamp_stdevp();

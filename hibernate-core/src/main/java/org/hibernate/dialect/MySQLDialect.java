@@ -678,6 +678,7 @@ public class MySQLDialect extends Dialect implements CurrentTemporalSupport, Tem
 		functionFactory.sha2();
 		functionFactory.bitLength();
 		functionFactory.octetLength();
+		functionFactory.lowerUpper_clob();
 		functionFactory.ascii();
 		functionFactory.instr();
 		functionFactory.substr();

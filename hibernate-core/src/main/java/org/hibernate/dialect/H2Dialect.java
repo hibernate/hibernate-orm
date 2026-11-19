@@ -404,6 +404,7 @@ public class H2Dialect extends Dialect implements CurrentTemporalSupport, Tempor
 		functionFactory.dateTrunc();
 		functionFactory.bitLength();
 		functionFactory.octetLength();
+		functionFactory.lowerUpper_clob();
 		functionFactory.ascii();
 		functionFactory.octetLength();
 		functionFactory.space();

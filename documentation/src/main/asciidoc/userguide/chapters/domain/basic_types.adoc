@@ -1048,6 +1048,7 @@ Two attributes which hold instants can be compared with each other in a query, w
 On HSQLDB an `Instant`, and the instant of a value stored in two columns, is held as its date and time at UTC in a column which knows of no time zone,
 while an `OffsetDateTime` or `ZonedDateTime` stored in a single column is held in a column with a time zone.
 HSQLDB would compare the two in the time zone of its session, so a comparison between them is rejected. Compare each with a parameter or a literal instead.
+This applies equally where one of the two is what a subquery selects.
 
 *`OffsetTime`*
 
@@ -1254,6 +1255,9 @@ An example is a `LocalDate` mapped with `@JdbcTypeCode(Types.DATE)`, which conve
 |When the query is translated
 
 |A value stored in two columns which a query tests with `in` against a subquery selecting a single column
+|When the query is translated
+
+|Two instants which a query compares, also through a subquery, where one is held as its date and time at UTC and the other in a column with a time zone, as on HSQLDB
 |When the query is translated
 
 |A `java.time` value mapped to a JDBC type whose binder or extractor does not pass through `BasicBinder` and `BasicExtractor`

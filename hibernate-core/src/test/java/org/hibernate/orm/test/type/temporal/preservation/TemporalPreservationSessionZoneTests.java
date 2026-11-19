@@ -171,7 +171,12 @@ class TemporalPreservationSessionZoneTests {
 					"e.instant in (e.normalized)",
 					// tuples are compared element by element
 					"(e.id, e.instant) = (e.id, e.normalized)",
-					"(e.id, e.instant) in ((e.id, e.normalized))"
+					"(e.id, e.instant) in ((e.id, e.normalized))",
+					// as is what a subquery selects
+					"e.instant = (select o.normalized from Compared o where o.id = e.id)",
+					"e.instant in (select o.normalized from Compared o)",
+					"e.instant = any (select o.normalized from Compared o)",
+					"(e.id, e.instant) in (select o.id, o.normalized from Compared o)"
 			} ) {
 				final String query = "select count(e) from Compared e where " + predicate;
 				if ( rejected ) {
@@ -181,6 +186,22 @@ class TemporalPreservationSessionZoneTests {
 				}
 				else {
 					assertThat( session.createQuery( query, Long.class ).getSingleResult() ).as( predicate ).isEqualTo( 1L );
+				}
+			}
+			if ( rejected ) {
+				// forms which not every database accepts
+				for ( String predicate : new String[] {
+						// a tuple within a tuple
+						"(e.id, (e.id, e.instant)) = (e.id, (e.id, e.normalized))",
+						// every branch of a union
+						"e.instant = (select x.instant from Compared x where 1 = 0"
+								+ " union all select y.normalized from Compared y)",
+						"e.instant in (select x.instant from Compared x union all select y.normalized from Compared y)"
+				} ) {
+					final String query = "select count(e) from Compared e where " + predicate;
+					assertThatThrownBy( () -> session.createQuery( query, Long.class ).getSingleResult() )
+							.as( predicate )
+							.hasStackTraceContaining( "in the time zone of its session" );
 				}
 			}
 			// both hold the date and time at UTC, or both denote an instant

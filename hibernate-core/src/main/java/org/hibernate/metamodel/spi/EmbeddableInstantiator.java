@@ -1,5 +1,8 @@
 package org.hibernate.metamodel.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Incubating;
 import org.hibernate.SPI;
 
@@ -26,5 +29,6 @@ public interface EmbeddableInstantiator extends Instantiator {
 	/**
 	 * Create an instance of the embeddable
 	 */
-	Object instantiate(ValueAccess valueAccess);
+	@Nullable
+	Object instantiate(@Nonnull ValueAccess valueAccess);
 }

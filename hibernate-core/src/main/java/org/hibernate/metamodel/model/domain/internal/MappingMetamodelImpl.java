@@ -12,6 +12,7 @@ import java.util.function.Function;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.UnknownEntityTypeException;
@@ -180,7 +181,9 @@ public class MappingMetamodelImpl
 		//		- building insert and update generation delegates
 		for ( var persister : entityPersisters ) {
 			persister.initializeCacheRestrictions( bootModel );
-			persister.postInstantiate( bootModel.getEntityBinding( persister.getEntityName() ) );
+			final var binding = bootModel.getEntityBinding( persister.getEntityName() );
+			assert binding != null;
+			persister.postInstantiate( binding );
 			registerEntityNameResolvers( persister, entityNameResolvers );
 		}
 
@@ -662,21 +665,25 @@ public class MappingMetamodelImpl
 	}
 
 	@Override
-	public Set<String> getCollectionRolesByEntityParticipant(String entityName) {
+	@Nullable
+	public Set<String> getCollectionRolesByEntityParticipant(@Nonnull String entityName) {
 		return collectionRolesByEntityParticipant.get( entityName );
 	}
 
 	@Override
+	@Nonnull
 	public java.util.Collection<EntityNameResolver> getEntityNameResolvers() {
 		return entityNameResolvers;
 	}
 
 	@Override
+	@Nonnull
 	public String[] getAllEntityNames() {
 		return entityNames;
 	}
 
 	@Override
+	@Nonnull
 	public String[] getAllCollectionRoles() {
 		return toStringArray( collectionPersisterMap.keySet() );
 	}

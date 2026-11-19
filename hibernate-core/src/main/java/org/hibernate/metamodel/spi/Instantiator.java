@@ -1,5 +1,8 @@
 package org.hibernate.metamodel.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Incubating;
 
 /**
@@ -14,10 +17,10 @@ public interface Instantiator {
 	 * instance of managed structure
 	 * @see Class#isInstance
 	 */
-	boolean isInstance(Object object);
+	boolean isInstance(@Nullable Object object);
 
 	/**
 	 * @see Class#equals
 	 */
-	boolean isSameClass(Object object);
+	boolean isSameClass(@Nonnull Object object);
 }

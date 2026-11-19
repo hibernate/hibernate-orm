@@ -1,5 +1,7 @@
 package org.hibernate.metamodel.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.lang.reflect.Constructor;
 
 import org.hibernate.InstantiationException;
@@ -16,13 +18,14 @@ public class EmbeddableInstantiatorRecordStandard extends AbstractPojoInstantiat
 
 	protected final Constructor<?> constructor;
 
-	public EmbeddableInstantiatorRecordStandard(Class<?> javaType) {
+	public EmbeddableInstantiatorRecordStandard(@Nonnull Class<?> javaType) {
 		super( javaType );
 		constructor = getConstructorOrNull( javaType, getRecordComponentTypes( javaType ) );
 	}
 
 	@Override
-	public Object instantiate(ValueAccess valuesAccess) {
+	@Nonnull
+	public Object instantiate(@Nonnull ValueAccess valuesAccess) {
 		if ( constructor == null ) {
 			throw new InstantiationException( "Unable to locate constructor for embeddable", getMappedPojoClass() );
 		}

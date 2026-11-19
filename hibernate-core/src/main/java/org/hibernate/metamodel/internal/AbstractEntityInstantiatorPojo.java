@@ -1,5 +1,7 @@
 package org.hibernate.metamodel.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor.EntityRelatedState;
@@ -23,9 +25,9 @@ public abstract class AbstractEntityInstantiatorPojo extends AbstractPojoInstant
 	private final EntityRelatedState loadingInterceptorState;
 
 	public AbstractEntityInstantiatorPojo(
-			EntityPersister persister,
-			PersistentClass persistentClass,
-			JavaType<?> javaType) {
+			@Nonnull EntityPersister persister,
+			@Nonnull PersistentClass persistentClass,
+			@Nonnull JavaType<?> javaType) {
 		super( javaType.getJavaTypeClass() );
 		proxyInterface = persistentClass.getProxyInterface();
 		//TODO this PojoEntityInstantiator appears to not be reused ?!
@@ -42,7 +44,8 @@ public abstract class AbstractEntityInstantiatorPojo extends AbstractPojoInstant
 						: null;
 	}
 
-	protected Object applyInterception(Object entity) {
+	@Nonnull
+	protected Object applyInterception(@Nonnull Object entity) {
 		if ( applyBytecodeInterception ) {
 			asPersistentAttributeInterceptable( entity )
 					.$$_hibernate_setInterceptor( new LazyAttributeLoadingInterceptor(
@@ -55,7 +58,7 @@ public abstract class AbstractEntityInstantiatorPojo extends AbstractPojoInstant
 	}
 
 	@Override
-	public boolean isInstance(Object object) {
+	public boolean isInstance(@Nullable Object object) {
 		return super.isInstance( object )
 			// this one needed only for guessEntityMode()
 			|| proxyInterface!=null && proxyInterface.isInstance(object);
@@ -71,6 +74,7 @@ public abstract class AbstractEntityInstantiatorPojo extends AbstractPojoInstant
 	/*
 	 * Used by Hibernate Reactive
 	 */
+	@Nullable
 	protected LazyAttributeLoadingInterceptor.EntityRelatedState getLoadingInterceptorState() {
 		return loadingInterceptorState;
 	}

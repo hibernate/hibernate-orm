@@ -1,5 +1,7 @@
 package org.hibernate.metamodel.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.function.Supplier;
 
 import org.hibernate.mapping.Component;
@@ -17,14 +19,15 @@ public class EmbeddableInstantiatorDynamicMap
 	private final Supplier<EmbeddableMappingType> runtimeDescriptorAccess;
 
 	public EmbeddableInstantiatorDynamicMap(
-			Component bootDescriptor,
-			Supplier<EmbeddableMappingType> runtimeDescriptorAccess) {
+			@Nonnull Component bootDescriptor,
+			@Nonnull Supplier<EmbeddableMappingType> runtimeDescriptorAccess) {
 		super( bootDescriptor.getRoleName() );
 		this.runtimeDescriptorAccess = runtimeDescriptorAccess;
 	}
 
 	@Override
-	public Object instantiate(ValueAccess valuesAccess) {
+	@Nonnull
+	public Object instantiate(@Nonnull ValueAccess valuesAccess) {
 		final var dataMap = generateDataMap();
 		final var values = valuesAccess == null ? null : valuesAccess.getValues();
 		if ( values != null ) {

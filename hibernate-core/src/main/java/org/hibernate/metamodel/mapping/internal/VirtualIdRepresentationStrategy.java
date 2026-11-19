@@ -1,5 +1,6 @@
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
@@ -29,10 +30,10 @@ public class VirtualIdRepresentationStrategy implements EmbeddableRepresentation
 	private final EmbeddableInstantiator instantiator;
 
 	public VirtualIdRepresentationStrategy(
-			VirtualIdEmbeddable virtualIdEmbeddable,
-			EntityMappingType entityMappingType,
-			Component bootDescriptor,
-			RuntimeModelCreationContext creationContext) {
+			@Nonnull VirtualIdEmbeddable virtualIdEmbeddable,
+			@Nonnull EntityMappingType entityMappingType,
+			@Nonnull Component bootDescriptor,
+			@Nonnull RuntimeModelCreationContext creationContext) {
 		this.entityMappingType = entityMappingType;
 		if ( bootDescriptor.getComponentClassName() != null
 				&& isAbstractClass( bootDescriptor.getComponentClass() ) ) {
@@ -50,11 +51,13 @@ public class VirtualIdRepresentationStrategy implements EmbeddableRepresentation
 	}
 
 	@Override
+	@Nonnull
 	public EmbeddableInstantiator getInstantiator() {
 		return instantiator;
 	}
 
 	@Override
+	@Nonnull
 	public RepresentationMode getMode() {
 		return RepresentationMode.POJO;
 	}
@@ -72,12 +75,14 @@ public class VirtualIdRepresentationStrategy implements EmbeddableRepresentation
 	}
 
 	@Override
+	@Nonnull
 	public JavaType<?> getMappedJavaType() {
 		return entityMappingType.getMappedJavaType();
 	}
 
 	@Override
-	public PropertyAccess resolvePropertyAccess(Property bootAttributeDescriptor) {
+	@Nullable
+	public PropertyAccess resolvePropertyAccess(@Nonnull Property bootAttributeDescriptor) {
 		return entityMappingType.getRepresentationStrategy().resolvePropertyAccess( bootAttributeDescriptor );
 	}
 
@@ -85,13 +90,14 @@ public class VirtualIdRepresentationStrategy implements EmbeddableRepresentation
 		private final VirtualIdEmbeddable virtualIdEmbeddable;
 		private final EntityInstantiator entityInstantiator;
 
-		public InstantiatorAdapter(VirtualIdEmbeddable virtualIdEmbeddable, EntityMappingType entityMappingType) {
+		public InstantiatorAdapter(@Nonnull VirtualIdEmbeddable virtualIdEmbeddable, @Nonnull EntityMappingType entityMappingType) {
 			this.virtualIdEmbeddable = virtualIdEmbeddable;
 			entityInstantiator = entityMappingType.getRepresentationStrategy().getInstantiator();
 		}
 
 		@Override
-		public Object instantiate(ValueAccess valuesAccess) {
+		@Nonnull
+		public Object instantiate(@Nonnull ValueAccess valuesAccess) {
 			final Object instantiated = entityInstantiator.instantiate();
 			if ( valuesAccess != null ) {
 				final var values = valuesAccess.getValues();
@@ -103,12 +109,12 @@ public class VirtualIdRepresentationStrategy implements EmbeddableRepresentation
 		}
 
 		@Override
-		public boolean isInstance(Object object) {
+		public boolean isInstance(@Nullable Object object) {
 			return entityInstantiator.isInstance( object );
 		}
 
 		@Override
-		public boolean isSameClass(Object object) {
+		public boolean isSameClass(@Nonnull Object object) {
 			return entityInstantiator.isSameClass( object );
 		}
 	}

@@ -228,6 +228,16 @@ public class CorrelationRenderingTest {
 	}
 
 	@Test
+	public void entityJoinReferringToSecondCorrelatedRoot(SessionFactoryScope scope) {
+		scope.inSession( session -> assertRendersItself( session, List.of( 2 ), """
+				select p.id from Parent p, Parent q where p.id <> q.id and exists (
+					select 1 from p.items i join q.items j join Item y on y.id = j.id
+					where i.name = 'y' and y.name = 'x'
+				)
+				""" ) );
+	}
+
+	@Test
 	public void correlatedJoinInCriteriaCopy(SessionFactoryScope scope) {
 		scope.inSession( session -> {
 			final var criteria = session.getCriteriaBuilder().createQuery( CORRELATED_JOIN, Integer.class );

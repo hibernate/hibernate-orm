@@ -3,6 +3,9 @@ package org.hibernate.metamodel.internal;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.mapping.PersistentClass;
@@ -32,8 +35,8 @@ public class EntityRepresentationStrategyMap implements EntityRepresentationStra
 	private final EntityInstantiatorDynamicMap instantiator;
 
 	public EntityRepresentationStrategyMap(
-			PersistentClass bootType,
-			RuntimeModelCreationContext creationContext) {
+			@Nonnull PersistentClass bootType,
+			@Nonnull RuntimeModelCreationContext creationContext) {
 		mapJavaType =
 				creationContext.getTypeConfiguration().getJavaTypeRegistry()
 						.getDescriptor( Map.class );
@@ -44,7 +47,8 @@ public class EntityRepresentationStrategyMap implements EntityRepresentationStra
 		createProxyFactory( bootType );
 	}
 
-	private static ProxyFactory createProxyFactory(PersistentClass bootType) {
+	@Nullable
+	private static ProxyFactory createProxyFactory(@Nonnull PersistentClass bootType) {
 		try {
 			final var proxyFactory = new MapProxyFactory();
 			proxyFactory.postInstantiate(
@@ -64,22 +68,26 @@ public class EntityRepresentationStrategyMap implements EntityRepresentationStra
 	}
 
 	@Override
+	@Nonnull
 	public RepresentationMode getMode() {
 		return RepresentationMode.MAP;
 	}
 
 	@Override
+	@Nullable
 	public MultiValueReader getMultiValueReader() {
 		return null;
 	}
 
 	@Override
+	@Nullable
 	public MultiValueWriter getMultiValueWriter() {
 		return null;
 	}
 
 	@Override
-	public PropertyAccess resolvePropertyAccess(Property bootAttributeDescriptor) {
+	@Nonnull
+	public PropertyAccess resolvePropertyAccess(@Nonnull Property bootAttributeDescriptor) {
 		return PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess(
 				null, // because Maps don't get a service
 				null,
@@ -87,27 +95,31 @@ public class EntityRepresentationStrategyMap implements EntityRepresentationStra
 	}
 
 	@Override
+	@Nonnull
 	public EntityInstantiator getInstantiator() {
 		return instantiator;
 	}
 
 	@Override
+	@Nullable
 	public ProxyFactory getProxyFactory() {
 		return proxyFactory;
 	}
 
 	@Override
+	@Nonnull
 	public JavaType<?> getMappedJavaType() {
 		return mapJavaType;
 	}
 
 	@Override
+	@Nullable
 	public JavaType<?> getProxyJavaType() {
 		return null;
 	}
 
 	@Override
-	public void visitEntityNameResolvers(Consumer<EntityNameResolver> consumer) {
+	public void visitEntityNameResolvers(@Nonnull Consumer<EntityNameResolver> consumer) {
 		consumer.accept( EntityInstantiatorDynamicMap.ENTITY_NAME_RESOLVER );
 	}
 }

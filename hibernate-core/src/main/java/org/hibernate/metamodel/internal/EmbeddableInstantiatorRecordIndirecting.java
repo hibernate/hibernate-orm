@@ -1,5 +1,7 @@
 package org.hibernate.metamodel.internal;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.InstantiationException;
 import org.hibernate.metamodel.spi.ValueAccess;
 
@@ -12,12 +14,13 @@ public class EmbeddableInstantiatorRecordIndirecting extends EmbeddableInstantia
 
 	protected final int[] index;
 
-	public EmbeddableInstantiatorRecordIndirecting(Class<?> javaType, int[] index) {
+	public EmbeddableInstantiatorRecordIndirecting(@Nonnull Class<?> javaType, @Nonnull int[] index) {
 		super( javaType );
 		this.index = index;
 	}
 
-	public static EmbeddableInstantiatorRecordIndirecting of(Class<?> javaType, String[] propertyNames) {
+	@Nonnull
+	public static EmbeddableInstantiatorRecordIndirecting of(@Nonnull Class<?> javaType, @Nonnull String[] propertyNames) {
 		final var componentNames = getRecordComponentNames( javaType );
 		final var index = new int[componentNames.length];
 		return EmbeddableHelper.resolveIndex( propertyNames, componentNames, index )
@@ -26,7 +29,8 @@ public class EmbeddableInstantiatorRecordIndirecting extends EmbeddableInstantia
 	}
 
 	@Override
-	public Object instantiate(ValueAccess valuesAccess) {
+	@Nonnull
+	public Object instantiate(@Nonnull ValueAccess valuesAccess) {
 		if ( constructor == null ) {
 			throw new InstantiationException( "Unable to locate constructor for embeddable", getMappedPojoClass() );
 		}
@@ -48,12 +52,13 @@ public class EmbeddableInstantiatorRecordIndirecting extends EmbeddableInstantia
 	private static class EmbeddableInstantiatorRecordIndirectingWithGap
 			extends EmbeddableInstantiatorRecordIndirecting {
 
-		public EmbeddableInstantiatorRecordIndirectingWithGap(Class<?> javaType, int[] index) {
+		public EmbeddableInstantiatorRecordIndirectingWithGap(@Nonnull Class<?> javaType, @Nonnull int[] index) {
 			super( javaType, index );
 		}
 
 		@Override
-		public Object instantiate(ValueAccess valuesAccess) {
+		@Nonnull
+		public Object instantiate(@Nonnull ValueAccess valuesAccess) {
 			if ( constructor == null ) {
 				throw new InstantiationException( "Unable to locate constructor for embeddable", getMappedPojoClass() );
 			}

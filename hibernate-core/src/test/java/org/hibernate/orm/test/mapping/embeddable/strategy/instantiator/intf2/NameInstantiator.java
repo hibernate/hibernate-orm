@@ -2,6 +2,7 @@ package org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.intf2;
 
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.ValueAccess;
+import org.jspecify.annotations.NonNull;
 
 /**
  * @author Steve Ebersole
@@ -10,7 +11,7 @@ public class NameInstantiator implements EmbeddableInstantiator {
 	public static int callCount = 0;
 
 	@Override
-	public Object instantiate(ValueAccess valueAccess) {
+	public Object instantiate(@NonNull ValueAccess valueAccess) {
 		callCount++;
 		// alphabetical
 		final String first = valueAccess.getValue( 0, String.class );
@@ -24,7 +25,7 @@ public class NameInstantiator implements EmbeddableInstantiator {
 	}
 
 	@Override
-	public boolean isSameClass(Object object) {
+	public boolean isSameClass(@NonNull Object object) {
 		return object.getClass().equals( Name.class );
 	}
 }

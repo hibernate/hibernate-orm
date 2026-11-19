@@ -12,6 +12,8 @@ import org.hibernate.annotations.TemporalPreservationPolicy;
 import org.hibernate.annotations.TimeZoneRepresentation;
 import org.hibernate.annotations.TimeZoneStorage;
 import org.hibernate.annotations.TimeZoneStorageType;
+import org.hibernate.boot.model.internal.AuditHelper;
+import org.hibernate.boot.model.internal.TemporalHelper;
 import org.hibernate.boot.model.internal.TemporalPolicyResolver;
 import org.hibernate.boot.model.internal.TimeZoneStorageHelper;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -19,6 +21,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.type.spi.TemporalPreservation.Part;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.mapping.AggregateColumn;
+import org.hibernate.mapping.AuxiliaryTableHolder;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
@@ -26,6 +29,7 @@ import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.SoftDeletable;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.ModelsContext;
@@ -60,7 +64,8 @@ import static org.hibernate.cfg.MappingSettings.TIMEZONE_DEFAULT_STORAGE;
 /// [TemporalPreservationPolicy]; every other type must preserve all of its parts.
 ///
 /// Covers identifiers, versions, basic attributes, members of embeddables,
-/// and the keys, indexes and elements of collections. Java Time values which
+/// the keys, indexes and elements of collections, and the columns which
+/// Hibernate adds for temporal tables, audit tables and soft deletes. Java Time values which
 /// are members of an embeddable aggregated into a single column, such as a
 /// `STRUCT`, JSON or XML column, or of an array or collection of such
 /// embeddables, are always rejected, as are arrays and collections of Java
@@ -110,6 +115,27 @@ final class TemporalPreservationValidator {
 		}
 		for ( var collectionBinding : metadata.getCollectionBindings() ) {
 			validator.validateValue( collectionBinding, collectionBinding.getRole(), null, null, false );
+			validator.validateAuxiliaryColumns( collectionBinding, collectionBinding.getRole() );
+		}
+	}
+
+	/// The columns which Hibernate itself adds to a table: the row start and
+	/// row end of a temporal table, the changesets of an audit table, and the
+	/// timestamp of a soft delete.
+	private static final String[] AUXILIARY_COLUMNS = {
+			TemporalHelper.ROW_START,
+			TemporalHelper.ROW_END,
+			AuditHelper.CHANGESET_ID,
+			AuditHelper.INVALIDATING_CHANGESET_ID,
+			SoftDeletable.INDICATOR
+	};
+
+	private void validateAuxiliaryColumns(AuxiliaryTableHolder holder, String role) {
+		for ( String name : AUXILIARY_COLUMNS ) {
+			final var column = holder.getAuxiliaryColumn( name );
+			if ( column != null && column.getValue() instanceof BasicValue basicValue && visited.add( basicValue ) ) {
+				validateBasicValue( basicValue, role + ".<" + name + ">", false );
+			}
 		}
 	}
 
@@ -136,7 +162,9 @@ final class TemporalPreservationValidator {
 			for ( var property : join.getProperties() ) {
 				validateProperty( property, entityName, className, false );
 			}
+			validateAuxiliaryColumns( join, entityName );
 		}
+		validateAuxiliaryColumns( entityBinding, entityName );
 	}
 
 	private void validateProperty(Property property, String ownerRole, String ownerClassName, boolean aggregated) {

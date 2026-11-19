@@ -677,7 +677,7 @@ public final class AuditHelper {
 		final var database = context.getMetadataCollector().getDatabase();
 		setColumnName( columnName, column, database,
 				context.getBuildingOptions().getPhysicalNamingStrategy() );
-		setTemporalColumnType( column, database, javaType );
+		setTemporalColumnType( column, database, javaType, context );
 
 		return column;
 	}
@@ -685,11 +685,19 @@ public final class AuditHelper {
 	private static void setTemporalColumnType(
 			Column column,
 			Database database,
-			Class<?> javaType) {
+			Class<?> javaType,
+			MetadataBuildingContext context) {
 		if ( Instant.class.equals( javaType ) ) {
 			final var temporalTableSupport = database.getDialect().getTemporalTableSupport();
 			column.setTemporalPrecision( temporalTableSupport.getTemporalColumnPrecision() );
-			column.setSqlTypeCode( temporalTableSupport.getTemporalColumnType() );
+			// with temporal preservation enabled, the changeset is stored as any
+			// other Instant is, since that is the mapping established to preserve it,
+			// where the database allows a column of that type in a primary key
+			if ( !temporalTableSupport.supportsPreservedInstantAsTemporalColumn()
+					|| !MetadataBuildingContext.isTemporalPreservationEnabled(
+							context.getBootstrapContext().getServiceRegistry() ) ) {
+				column.setSqlTypeCode( temporalTableSupport.getTemporalColumnType() );
+			}
 		}
 	}
 

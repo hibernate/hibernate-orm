@@ -30,6 +30,13 @@ public class OracleTemporalTableSupport extends DefaultTemporalTableSupport {
 		return false;
 	}
 
+	/// An `Instant` is stored in a `timestamp with time zone` column, which
+	/// Oracle does not allow in a primary key.
+	@Override
+	public boolean supportsPreservedInstantAsTemporalColumn() {
+		return false;
+	}
+
 	@Override
 	public String getExtraTemporalTableDeclarations(TemporalTableDdlRequest request) {
 		return "period for system_time (" + request.rowStartColumnName() + ", "

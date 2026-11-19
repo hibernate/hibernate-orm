@@ -74,6 +74,7 @@ import org.hibernate.dialect.function.CastStrEmulation;
 import org.hibernate.dialect.function.CoalesceIfnullEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CurrentFunction;
+import org.hibernate.dialect.function.CurrentInstantFunction;
 import org.hibernate.dialect.function.ExtractFunction;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
 import org.hibernate.dialect.function.LocatePositionEmulation;
@@ -1227,7 +1228,7 @@ public abstract class Dialect implements ConversionContext, AlterTableSupport,
 		);
 		functionRegistry.register(
 				"offset_datetime",
-				new CurrentFunction(
+				new CurrentInstantFunction(
 						"offset_datetime",
 						currentTemporalSupport.currentTimestampWithTimeZone(),
 						offsetDateTimeType
@@ -1240,7 +1241,7 @@ public abstract class Dialect implements ConversionContext, AlterTableSupport,
 
 		functionRegistry.register(
 				"instant",
-				new CurrentFunction(
+				new CurrentInstantFunction(
 						"instant",
 						currentTemporalSupport.currentTimestampWithTimeZone(),
 						instantType

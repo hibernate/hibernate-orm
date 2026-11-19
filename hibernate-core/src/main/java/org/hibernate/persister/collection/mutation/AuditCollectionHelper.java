@@ -79,7 +79,12 @@ public final class AuditCollectionHelper {
 				sessionFactory.getChangesetCoordinator()
 						.useServerTimestamp( dialect );
 		this.currentTimestampFunctionName = useServerTransactionTimestamps
-				? dialect.getCurrentTemporalSupport().currentTimestamp()
+				? org.hibernate.type.descriptor.jdbc.internal.TemporalPreservationGuard.currentInstantExpression(
+						dialect,
+						changesetIdMapping.getJdbcMapping(),
+						sessionFactory.getSessionFactoryOptions().isTemporalPreservationEnabled(),
+						"the changeset of " + collectionTableName
+				)
 				: null;
 	}
 

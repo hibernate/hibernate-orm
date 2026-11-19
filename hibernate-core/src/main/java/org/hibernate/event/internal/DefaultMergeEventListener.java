@@ -76,6 +76,7 @@ public class DefaultMergeEventListener
 		final var mergeContext = new MergeContext( session, entityCopyObserver );
 		try {
 			onMerge( event, mergeContext );
+			mergeContext.resolveBatchGenerators( session );
 			entityCopyObserver.topLevelMergeComplete( session );
 		}
 		finally {
@@ -158,24 +159,31 @@ public class DefaultMergeEventListener
 					// this is needed in case of a composite id containing an association with a generated identifier
 					// in such a case, generating the EntityKey will cause NPE when evaluating the hashcode of the null id
 					copiedId = copyCompositeTypeId( originalId, compositeId, source, copiedAlready );
-					entityKey = source.generateEntityKey( copiedId, persister );
+					entityKey = persister.getGenerator().requiresGeneration( entity, originalId, source )
+							? null : source.generateEntityKey( copiedId, persister );
 				}
 				else {
 					copiedId = null;
 					entityKey = source.generateEntityKey( originalId, persister );
 				}
-				final Object managedEntity = persistenceContext.getEntity( entityKey );
-				entry = persistenceContext.getEntry( managedEntity );
-				if ( entry != null ) {
-					// we have a special case of a detached entity from the
-					// perspective of the merge operation. Specifically, we have
-					// an incoming entity instance which has a corresponding
-					// entry in the current persistence context, but registered
-					// under a different entity instance
-					entityState = EntityState.DETACHED;
+				if ( entityKey != null ) {
+					final Object managedEntity = persistenceContext.getEntity( entityKey );
+					entry = persistenceContext.getEntry( managedEntity );
+					if ( entry != null ) {
+						// we have a special case of a detached entity from the
+						// perspective of the merge operation. Specifically, we have
+						// an incoming entity instance which has a corresponding
+						// entry in the current persistence context, but registered
+						// under a different entity instance
+						entityState = EntityState.DETACHED;
+					}
+					else {
+						entityState = getEntityState( entity, entityName, entry, source, false );
+					}
 				}
 				else {
-					entityState = getEntityState( entity, entityName, entry, source, false );
+					// a special case of a composite id with a foreign generator inside
+					entityState = EntityState.TRANSIENT;
 				}
 			}
 			else {
@@ -360,9 +368,11 @@ public class DefaultMergeEventListener
 		// (copyValues uses ForeignKeyDirection.FROM_PARENT) then the PC may contain a wrong
 		// collection snapshot, the CollectionVisitor realigns the collection snapshot values
 		// with the final copy
+		final Object[] insertValues = persister.getPropertyValuesToInsert( target, getMergeMap( copyCache ), session );
+		registerBackRefPatchTargets( insertValues, persister, copyCache );
 		new CollectionVisitor( target, id, session )
 				.processEntityPropertyValues(
-						persister.getPropertyValuesToInsert( target, getMergeMap( copyCache ), session ),
+						insertValues,
 						persister.getPropertyTypes()
 				);
 

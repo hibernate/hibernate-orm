@@ -329,8 +329,11 @@ public class ToOneBinder {
 
 		final var joinColumn = property.getDirectAnnotationUsage( JoinColumn.class );
 		final var joinColumns = property.getDirectAnnotationUsage( JoinColumns.class );
-		propertyBinder.makePropertyAndBind()
-				.setOptional( optional && isNullable( joinColumns, joinColumn ) );
+		final var prop = propertyBinder.makePropertyAndBind();
+		prop.setOptional( optional && isNullable( joinColumns, joinColumn ) );
+		if ( property.hasDirectAnnotationUsage( MapsId.class ) ) {
+			prop.setMapsId( true );
+		}
 	}
 
 	private static boolean isNullable(JoinColumns joinColumns, JoinColumn joinColumn) {
@@ -657,6 +660,9 @@ public class ToOneBinder {
 
 		final var property = binder.makeProperty();
 		property.setOptional( optional );
+		if ( memberDetails.hasDirectAnnotationUsage( MapsId.class ) ) {
+			property.setMapsId( true );
+		}
 		propertyHolder.addProperty( property, inferredData.getAttributeMember(), inferredData.getDeclaringClass() );
 
 		final var secondPass = new OneToOneSecondPass(

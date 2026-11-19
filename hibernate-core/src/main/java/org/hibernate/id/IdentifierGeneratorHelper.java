@@ -8,16 +8,18 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.Internal;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
-import org.hibernate.TransientObjectException;
+import org.hibernate.action.internal.DelayedPostInsertIdentifier;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.GenerationRequests;
 import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
 import org.hibernate.id.enhanced.StandardNamingStrategy;
 import org.hibernate.persister.entity.EntityPersister;
@@ -25,11 +27,13 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.EntityType;
 
 import static org.hibernate.cfg.MappingSettings.ID_DB_STRUCTURE_NAMING_STRATEGY;
-import static org.hibernate.engine.internal.ForeignKeys.getEntityIdentifierIfNotUnsaved;
+import static org.hibernate.engine.internal.ForeignKeys.getEntityIdentifier;
+import static org.hibernate.engine.internal.ForeignKeys.isTransient;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.log.IncubationLogger.INCUBATION_LOGGER;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 import static org.hibernate.spi.NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
 
 /**
@@ -109,6 +113,69 @@ public final class IdentifierGeneratorHelper {
 		}
 	}
 
+	public static Object[] getForeignIds(
+			@Nonnull String entityName,
+			@Nonnull String propertyName,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull GenerationRequests requests) {
+		final var persister = session.getFactory().getMappingMetamodel().getEntityDescriptor( entityName );
+		final var entityType = entityType( propertyName, persister );
+		final Object[] result = new Object[requests.size()];
+		for ( int i = 0; i < requests.size(); i++ ) {
+			final Object object = requests.get( i ).owner();
+			if ( isManaged( object, session ) ) {
+				//abort the save (the object is already saved by a circular cascade)
+				result[i] = IdentifierGeneratorHelper.SHORT_CIRCUIT_INDICATOR;
+				//throw new IdentifierGenerationException("save associated object first, or disable cascade for inverse association");
+			}
+			else {
+				final Object associatedObject = persister.getPropertyValue( object, propertyName );
+				if ( associatedObject == null ) {
+					throw new IdentifierGenerationException(
+							"Could not assign id from null association '" + propertyName
+							+ "' of entity '" + entityName + "'" );
+				}
+				result[i] = identifier( session, entityType, associatedObject );
+			}
+		}
+		return result;
+	}
+
+	/// A copy of {@link org.hibernate.internal.SessionImpl#isManaged(Object)} which additionally checks if the entity
+	/// entry identifier is a {@link DelayedPostInsertIdentifier}, and if so, considers the entity not managed.
+	/// Contrary to the single generation version, this is needed for batch generation, because of the timing when
+	/// the code runs. For single generation, code runs in order and only registers cascaded entities in the persistence
+	/// context after generation, whereas in batch generation, all entities are cascaded and registered first, before
+	/// calling the batch generation code.
+	private static boolean isManaged(Object entity, SharedSessionContractImplementor session) {
+		final var lazyInitializer = extractLazyInitializer( entity );
+		if ( lazyInitializer != null ) {
+			//do not use proxiesByKey, since not all
+			//proxies that point to this session's
+			//instances are in that collection!
+			if ( lazyInitializer.isUninitialized() ) {
+				//if it is an uninitialized proxy, pointing
+				//with this session, then when it is accessed,
+				//the underlying instance will be "contained"
+				return lazyInitializer.getSession() == session;
+			}
+			else {
+				//if it is initialized, see if the underlying
+				//instance is contained, since we need to
+				//account for the fact that it might have been
+				//evicted
+				entity = lazyInitializer.getImplementation();
+			}
+		}
+		// A session is considered to contain an entity only if the entity has
+		// an entry in the session's persistence context and the entry reports
+		// that the entity has not been removed
+		final var entry = session.getPersistenceContextInternal().getEntry( entity );
+		return entry != null && !entry.getStatus().isDeletedOrGone()
+				&& entry.getId() != null
+				&& !(entry.getId() instanceof DelayedPostInsertIdentifier);
+	}
+
 	private static Object associatedEntity(
 			String entityName, String propertyName, Object object, EntityPersister entityDescriptor) {
 		final Object associatedObject = entityDescriptor.getPropertyValue( object, propertyName );
@@ -123,11 +190,12 @@ public final class IdentifierGeneratorHelper {
 			SharedSessionContractImplementor session,
 			EntityType foreignValueSourceType,
 			Object associatedEntity) {
-		final String associatedEntityName = foreignValueSourceType.getAssociatedEntityName();
-		try {
-			return getEntityIdentifierIfNotUnsaved( associatedEntityName, associatedEntity, session );
+		if ( associatedEntity == null ) {
+			return null;
 		}
-		catch (TransientObjectException toe) {
+		final String associatedEntityName = foreignValueSourceType.getAssociatedEntityName();
+		final Object identifier = getEntityIdentifier( associatedEntityName, associatedEntity, session );
+		if ( identifier == null && isTransient( associatedEntityName, associatedEntity, Boolean.FALSE, session ) ) {
 			if ( session instanceof Session statefulSession ) {
 				statefulSession.persist( associatedEntityName, associatedEntity );
 				return session.getContextEntityIdentifier( associatedEntity );
@@ -138,6 +206,9 @@ public final class IdentifierGeneratorHelper {
 			else {
 				throw new IdentifierGenerationException("sessionImplementor is neither Session nor StatelessSession");
 			}
+		}
+		else {
+			return identifier;
 		}
 	}
 

@@ -124,6 +124,8 @@ abstract class BaseEntityPersister implements Serializable {
 
 	@Nullable
 	private final int[] naturalIdPropertyNumbers;
+	@Nullable
+	private final int[] backRefPropertyIndices;
 	private final boolean hasImmutableNaturalId;
 //	private final boolean hasCacheableNaturalId;
 
@@ -205,6 +207,7 @@ abstract class BaseEntityPersister implements Serializable {
 
 		propertySpan = persistentClass.getPropertyClosureSpan();
 		List<Integer> naturalIdNumbers = new ArrayList<>();
+		List<Integer> backRefNumbers = new ArrayList<>();
 		// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		propertyNames = new String[propertySpan];
 		propertyTypes = new Type[propertySpan];
@@ -258,6 +261,10 @@ abstract class BaseEntityPersister implements Serializable {
 				if ( property.isUpdatable() ) {
 					foundUpdateableNaturalIdProperty = true;
 				}
+			}
+
+			if ( property.isBackRef() ) {
+				backRefNumbers.add( i );
 			}
 
 			if ( "id".equals( property.getName() ) ) {
@@ -430,6 +437,8 @@ abstract class BaseEntityPersister implements Serializable {
 			hasImmutableNaturalId = !foundUpdateableNaturalIdProperty;
 //			hasCacheableNaturalId = persistentClass.getNaturalIdCacheRegionName() != null;
 		}
+
+		backRefPropertyIndices = backRefNumbers.isEmpty() ? null : toIntArray( backRefNumbers );
 
 		hasPreInsertGeneratedValues = foundPreInsertGeneratedValues;
 		hasPreUpdateGeneratedValues = foundPreUpdateGeneratedValues;
@@ -760,6 +769,11 @@ abstract class BaseEntityPersister implements Serializable {
 
 	public boolean hasNaturalIdentifier() {
 		return naturalIdPropertyNumbers!=null;
+	}
+
+	@Nullable
+	public int[] getBackRefPropertyIndices() {
+		return backRefPropertyIndices;
 	}
 
 //	public boolean isNaturalIdentifierCached() {

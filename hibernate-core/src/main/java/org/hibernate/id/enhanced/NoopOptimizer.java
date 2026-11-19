@@ -40,6 +40,17 @@ public final class NoopOptimizer extends AbstractOptimizer {
 	}
 
 	@Override
+	public Serializable[] generateBatch(int count, AccessCallback callback) {
+		final long[] values = callback.getNextValues( count );
+		lastSourceValue = values[values.length - 1];
+		final Serializable[] result = new Serializable[count];
+		for ( int i = 0; i < result.length; i++ ) {
+			result[i] = makeIntegralValue( values[i], returnClass );
+		}
+		return result;
+	}
+
+	@Override
 	public Long getLastSourceValue() {
 		return lastSourceValue;
 	}

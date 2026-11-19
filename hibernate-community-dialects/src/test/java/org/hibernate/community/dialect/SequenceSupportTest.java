@@ -56,4 +56,17 @@ public class SequenceSupportTest {
 		assertThat( new SQLServerLegacyDialect( DatabaseVersion.make( 16 ) ).getSequenceSupport() )
 				.isSameAs( CommunitySequenceSupports.sqlServer16() );
 	}
+
+	@Test
+	void derbyDoesNotUseRecursiveCteForBatchedFetch() {
+		final SequenceSupport derby = new DerbyDialect().getSequenceSupport();
+		assertThat( derby.supportsSelectNextValParameterized() ).isFalse();
+		assertThat( derby.getSequenceNextValParameterizedString( "seq" ) ).isNull();
+	}
+
+	@Test
+	void tidbCapsBatchedFetchBelowCteRecursionLimit() {
+		final SequenceSupport tidb = new TiDBDialect().getSequenceSupport();
+		assertThat( tidb.maxSequenceBatchSize() ).isLessThanOrEqualTo( 1000 );
+	}
 }

@@ -49,4 +49,8 @@ public interface CascadeStyle extends Serializable {
 	 *         operations; false otherwise.
 	 */
 	boolean hasOrphanDelete();
+
+	default boolean containsStyle(CascadeStyle style) {
+		return this == style;
+	}
 }

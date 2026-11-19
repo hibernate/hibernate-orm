@@ -102,6 +102,25 @@ public final class CascadeStyles {
 	};
 
 	/**
+	 * Implicit cascade for {@link jakarta.persistence.MapsId} associations.
+	 * Ensures the referenced entity is cascade-persisted during the cascade phase
+	 * so its identifier is available for batch generation of the derived id.
+	 */
+	public static final CascadeStyle MAPS_ID = new BaseCascadeStyle() {
+		@Override
+		public boolean doCascade(CascadingAction<?> action) {
+			return action == CascadingActions.PERSIST
+				|| action == CascadingActions.PERSIST_ON_FLUSH
+				|| action == CascadingActions.MERGE;
+		}
+
+		@Override
+		public String toString() {
+			return "STYLE_MAPS_ID";
+		}
+	};
+
+	/**
 	 * create
 	 */
 	public static final CascadeStyle PERSIST = new BaseCascadeStyle() {
@@ -252,6 +271,29 @@ public final class CascadeStyles {
 		public boolean hasOrphanDelete() {
 			for ( CascadeStyle style : styles ) {
 				if ( style.hasOrphanDelete() ) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		@Override
+		public boolean containsStyle(CascadeStyle style) {
+			for ( CascadeStyle style2 : styles ) {
+				if ( style2.containsStyle( style ) ) {
+					return true;
+				}
+			}
+			return super.containsStyle( style );
+		}
+
+		/**
+		 * Would any of the styles, other than the implicit {@link #MAPS_ID} one,
+		 * cascade the given action?
+		 */
+		public boolean doCascadeExcludingMapsId(CascadingAction<?> action) {
+			for ( CascadeStyle style : styles ) {
+				if ( style != MAPS_ID && style.doCascade( action ) ) {
 					return true;
 				}
 			}

@@ -4,12 +4,14 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.EnumSet;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
+import org.hibernate.generator.GenerationRequests;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -253,6 +255,14 @@ public class SequenceOrAssignedGeneratorTest {
 		public Object generate(SharedSessionContractImplementor session, Object owner) throws HibernateException {
 			final Long id = owner instanceof MyEntity myEntity ? myEntity.getId() : null;
 			return id == null ? super.generate( session, owner ) : id;
+		}
+
+		@Override
+		public @Nonnull Object[] generateBatch(
+				@Nonnull SharedSessionContractImplementor session,
+				@Nonnull GenerationRequests requests,
+				@Nonnull EventType eventType) {
+			return BeforeExecutionGenerator.generateBatch( this, session, requests, eventType );
 		}
 
 		@Override

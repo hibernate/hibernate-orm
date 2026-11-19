@@ -20,4 +20,9 @@ public final class H2V2SequenceSupport extends ANSISequenceSupport {
 	public String getDropSequenceString(String sequenceName) {
 		return "drop sequence if exists " + sequenceName;
 	}
+
+	@Override
+	public String getFromGenerateSeries() {
+		return " from system_range(1,?)";
+	}
 }

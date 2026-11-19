@@ -4,8 +4,10 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
-import org.hibernate.action.internal.EntityIdentityInsertAction;
+import org.hibernate.action.internal.DelayableEntityInsertAction;
+import org.hibernate.action.internal.DelayedPostInsertIdentifier;
 import org.hibernate.action.internal.EntityInsertAction;
+import org.hibernate.action.queue.internal.GraphBasedActionQueue;
 import org.hibernate.cascade.internal.Cascade;
 import org.hibernate.cascade.spi.CascadePoint;
 import org.hibernate.cascade.spi.CascadingAction;
@@ -14,10 +16,13 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.event.spi.BatchGenerationContext;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.spi.ManagedOperationContext;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.IdentifierGenerationException;
+import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
@@ -42,7 +47,7 @@ import jakarta.annotation.Nullable;
  *
  * @author Steve Ebersole.
  */
-public abstract class AbstractSaveEventListener<C> {
+public abstract class AbstractSaveEventListener<C extends ManagedOperationContext> {
 
 	/**
 	 * Prepares the persist call using the given requested id.
@@ -64,7 +69,7 @@ public abstract class AbstractSaveEventListener<C> {
 			@Nonnull C context,
 			@Nonnull EventSource source) {
 		final var persister = source.getEntityPersister( entityName, entity );
-		return performSave( entity, requestedId, persister, false, context, source, false );
+		return performSave( entity, requestedId, persister, false, false, context, source );
 	}
 
 	/**
@@ -117,25 +122,44 @@ public abstract class AbstractSaveEventListener<C> {
 			generatedId = null;
 		}
 		else if ( generatedBeforeExecution ) {
-			// go ahead and generate id, and then set it to
-			// the entity instance, so it will be available
-			// to the entity in the @PrePersist callback
-			generatedId = generateId( entity, source, (BeforeExecutionGenerator) generator, persister );
-			if ( generatedId == SHORT_CIRCUIT_INDICATOR ) {
-				return source.getIdentifier( entity );
+			if ( generator instanceof BeforeExecutionGenerator beforeExecutionGenerator
+					&& beforeExecutionGenerator.supportsBatchGeneration()
+					&& source.getFactory().getSessionFactoryOptions().isIdBatchGenerationEnabled()
+					// Delaying and batching requires the use of the new graph based action queue.
+					// We could maybe also support the old implementation, but it might not be worth it,
+					// given we will remove it sooner or later
+					&& source.getActionQueue() instanceof GraphBasedActionQueue
+					// The @PrePersist callback must run before the entity state is captured
+					// and checked for nullability, but must also see the generated identifier.
+					// Batching would defer the generation until after state capture,
+					// so we generate the identifier eagerly when such a callback exists
+					&& !persister.getEntityCallbacks().hasRegisteredCallbacks( CallbackType.PRE_PERSIST ) ) {
+				generatedId = null;
 			}
-			persister.setIdentifier( entity, generatedId, source );
+			else {
+				// go ahead and generate id, and then set it to
+				// the entity instance, so it will be available
+				// to the entity in the @PrePersist callback
+				generatedId = generateId( entity, source, (BeforeExecutionGenerator) generator, persister );
+				if ( generatedId == SHORT_CIRCUIT_INDICATOR ) {
+					return source.getIdentifier( entity );
+				}
+				persister.setIdentifier( entity, generatedId, source );
+			}
 		}
 		else {
 			// the generator is refusing to generate anything
 			// so use the identifier currently assigned
 			generatedId = persister.getIdentifier( entity, source );
 		}
-		final boolean delayIdentityInserts =
+		final boolean delayInsert =
 				!source.isTransactionInProgress()
 						&& !requiresImmediateIdAccess
-						&& generatedOnExecution;
-		return performSave( entity, generatedId, persister, generatedOnExecution, context, source, delayIdentityInserts );
+						&& generatedOnExecution
+				|| !generatedOnExecution && generatedBeforeExecution && generatedId == null;
+		final boolean delayedIdGeneration =
+				generatedOnExecution || generatedBeforeExecution && generatedId == null;
+		return performSave( entity, generatedId, persister, delayedIdGeneration, delayInsert, context, source );
 	}
 
 	/**
@@ -186,7 +210,9 @@ public abstract class AbstractSaveEventListener<C> {
 	 *
 	 * @return The id used to persist the entity; may be null depending on the
 	 *         type of id generator used and on delayIdentityInserts
+	 * @deprecated Use {@link #performSave(Object, Object, EntityPersister, boolean, boolean, ManagedOperationContext, EventSource)} instead
 	 */
+	@Deprecated(forRemoval = true, since = "8.0")
 	@Nullable
 	protected Object performSave(
 			@Nonnull Object entity,
@@ -196,9 +222,30 @@ public abstract class AbstractSaveEventListener<C> {
 			@Nonnull C context,
 			@Nonnull EventSource source,
 			boolean delayIdentityInserts) {
+		return performSave(
+				entity,
+				id,
+				persister,
+				useIdentityColumn,
+				delayIdentityInserts,
+				context,
+				source
+		);
+	}
+
+	@Nullable
+	protected Object performSave(
+			@Nonnull Object entity,
+			@Nullable Object id,
+			@Nonnull EntityPersister persister,
+			boolean delayedIdGeneration,
+			boolean delayInsert,
+			@Nonnull C context,
+			@Nonnull EventSource source) {
 
 		// call this after generation of an id,
 		// but before we retrieve an assigned id
+		// and before the entity state is captured
 		source.runEntityLifecycleCallback( () -> persister.getEntityCallbacks().preCreate( entity ) );
 
 		processIfSelfDirtinessTracker( entity, SelfDirtinessTracker::$$_hibernate_clearDirtyAttributes );
@@ -221,14 +268,14 @@ public abstract class AbstractSaveEventListener<C> {
 		}
 
 		final EntityKey key;
-		if ( useIdentityColumn ) {
+		if ( delayedIdGeneration ) {
 			key = null;
 		}
 		else {
 			assert id != null;
 			key = entityKey( id, persister, source );
 		}
-		return performSaveOrReplicate( entity, key, persister, useIdentityColumn, context, source, delayIdentityInserts );
+		return performSaveOrReplicate( entity, key, persister, delayedIdGeneration, delayInsert, context, source );
 	}
 
 	@Nonnull
@@ -264,8 +311,10 @@ public abstract class AbstractSaveEventListener<C> {
 	 *
 	 * @return The id used to persist the entity; may be null depending on the
 	 *         type of id generator used and the requiresImmediateIdAccess value
+	 * @deprecated Use {@link #performSaveOrReplicate(Object, EntityKey, EntityPersister, boolean, boolean, ManagedOperationContext, EventSource)} instead
 	 */
 	@Nullable
+	@Deprecated(forRemoval = true, since = "8.0")
 	protected Object performSaveOrReplicate(
 			@Nonnull Object entity,
 			@Nullable EntityKey key,
@@ -274,6 +323,41 @@ public abstract class AbstractSaveEventListener<C> {
 			@Nonnull C context,
 			@Nonnull EventSource source,
 			boolean delayIdentityInserts) {
+		return performSaveOrReplicate(
+				entity,
+				key,
+				persister,
+				useIdentityColumn,
+				delayIdentityInserts,
+				context,
+				source
+		);
+	}
+
+	/**
+	 * Performs all the actual work needed to persist an entity
+	 * (well to get the persist action moved to the execution queue).
+	 *
+	 * @param entity The entity to be persisted
+	 * @param key The id to be used for saving the entity (or null, in the case of identity columns)
+	 * @param persister The persister for the entity
+	 * @param delayedIdGeneration Should the id generation be delayed?
+	 * @param delayInsert Should the insert be delayed?
+	 * @param context Generally cascade-specific information
+	 * @param source The session which is the source of the current event
+	 *
+	 * @return The id used to persist the entity; may be null depending on the
+	 *         type of id generator used and the requiresImmediateIdAccess value
+	 */
+	@Nullable
+	protected Object performSaveOrReplicate(
+			@Nonnull Object entity,
+			@Nullable EntityKey key,
+			@Nonnull EntityPersister persister,
+			boolean delayedIdGeneration,
+			boolean delayInsert,
+			@Nonnull C context,
+			@Nonnull EventSource source) {
 
 		final Object id = key == null ? null : key.getIdentifier();
 
@@ -290,7 +374,7 @@ public abstract class AbstractSaveEventListener<C> {
 				id,
 				null,
 				LockMode.WRITE,
-				useIdentityColumn,
+				delayedIdGeneration,
 				persister
 		);
 		if ( original.getLoadedState() != null ) {
@@ -300,7 +384,10 @@ public abstract class AbstractSaveEventListener<C> {
 			}
 			holder.setEntityEntry( original );
 		}
-
+		final var generatorSlot = delayInsert && persister.getGenerator() instanceof BeforeExecutionGenerator generator
+					&& !generator.generatedOnExecution() && generator.supportsBatchGeneration()
+				? context.getBatchGenerationContext().reserveGeneratorSlot( generator, INSERT )
+				: null;
 		cascadeBeforeSave( source, persister, entity, context );
 
 		final var insert = addInsertAction(
@@ -308,16 +395,18 @@ public abstract class AbstractSaveEventListener<C> {
 				id,
 				entity,
 				persister,
-				useIdentityColumn,
+				delayedIdGeneration,
+				delayInsert,
+				generatorSlot,
 				source,
-				delayIdentityInserts
+				context
 		);
 
 		// postpone initializing id in case the insert has non-nullable transient
 		// dependencies that are not resolved until cascadeAfterSave() is executed
 		cascadeAfterSave( source, persister, entity, context );
 
-		final Object finalId = handleGeneratedId( useIdentityColumn, id, insert );
+		final Object finalId = handleGeneratedId( delayedIdGeneration, id, insert );
 
 		final var newEntry = persistenceContext.getEntry( entity );
 		if ( newEntry != original ) {
@@ -332,12 +421,12 @@ public abstract class AbstractSaveEventListener<C> {
 
 	@Nullable
 	private static Object handleGeneratedId(
-			boolean useIdentityColumn,
+			boolean delayedIdGeneration,
 			@Nullable Object id,
 			@Nonnull AbstractEntityInsertAction insert) {
-		if ( useIdentityColumn && insert.isEarlyInsert() ) {
-			if ( insert instanceof EntityIdentityInsertAction entityIdentityInsertAction ) {
-				final Object generatedId = entityIdentityInsertAction.getGeneratedId();
+		if ( delayedIdGeneration && insert.isEarlyInsert() ) {
+			if ( insert instanceof DelayableEntityInsertAction delayableEntityInsertAction ) {
+				final Object generatedId = delayableEntityInsertAction.getGeneratedId();
 				insert.handleNaturalIdPostSaveNotifications( generatedId );
 				return generatedId;
 			}
@@ -361,6 +450,7 @@ public abstract class AbstractSaveEventListener<C> {
 			@Nonnull EventSource source,
 			@Nullable Object id) {
 		final Object[] values = persister.getPropertyValuesToInsert( entity, getMergeMap( context ), source );
+		registerBackRefPatchTargets( values, persister, context );
 		final Type[] types = persister.getPropertyTypes();
 
 		boolean substitute = substituteValuesIfNecessary( entity, id, values, persister, source );
@@ -382,25 +472,47 @@ public abstract class AbstractSaveEventListener<C> {
 		return values;
 	}
 
+	protected static void registerBackRefPatchTargets(
+			@Nonnull Object[] values,
+			@Nonnull EntityPersister persister,
+			@Nonnull ManagedOperationContext context) {
+		final int[] backRefIndices = persister.getBackRefPropertyIndices();
+		if ( backRefIndices != null ) {
+			for ( int index : backRefIndices ) {
+				if ( values[index] instanceof DelayedPostInsertIdentifier ) {
+					context.getBatchGenerationContext()
+							.registerBackRefPatchTarget( values[index], values, index );
+				}
+			}
+		}
+	}
+
 	@Nonnull
 	private AbstractEntityInsertAction addInsertAction(
 			@Nonnull Object[] values,
 			@Nullable Object id,
 			@Nonnull Object entity,
 			@Nonnull EntityPersister persister,
-			boolean useIdentityColumn,
+			boolean delayedIdGeneration,
+			boolean delayInsert,
+			@Nullable BatchGenerationContext.GeneratorSlot generatorSlot,
 			@Nonnull EventSource source,
-			boolean delayIdentityInserts) {
-		if ( useIdentityColumn ) {
+			C context) {
+		if ( delayedIdGeneration ) {
 			assert id == null;
-			final var insert = new EntityIdentityInsertAction(
+			final var insert = new DelayableEntityInsertAction(
 					values,
 					entity,
+					getVersion( values, persister ),
 					persister,
 					source,
-					delayIdentityInserts
+					delayInsert
 			);
 			source.getActionQueue().addAction( insert );
+			if ( generatorSlot != null && persister.getGenerator() instanceof BeforeExecutionGenerator generator ) {
+				final Object currentValue = generator.allowAssignedIdentifiers() ? persister.getIdentifier( entity ) : null;
+				generatorSlot.setGenerationTarget( insert, entity, currentValue, persister );
+			}
 			return insert;
 		}
 		else {

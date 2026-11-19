@@ -802,6 +802,19 @@ public final class Cascade {
 	}
 
 	/**
+	 * Is the cascade caused only by the implicit {@link CascadeStyles#MAPS_ID} style,
+	 * i.e. not requested explicitly through the mapping's cascade settings?
+	 */
+	private static boolean isImplicitMapsIdCascade(CascadeStyle style, CascadingAction<?> action) {
+		if ( style == CascadeStyles.MAPS_ID ) {
+			return true;
+		}
+		return style instanceof CascadeStyles.MultipleCascadeStyle multiple
+			&& multiple.containsStyle( CascadeStyles.MAPS_ID )
+			&& !multiple.doCascadeExcludingMapsId( action );
+	}
+
+	/**
 	 * Cascade an action to a to-one association or any type
 	 */
 	private static <T> void cascadeToOne(
@@ -843,7 +856,8 @@ public final class Cascade {
 						context.currentPropertyName(),
 						context.path(),
 						context.actionContext(),
-						isCascadeDeleteEnabled
+						isCascadeDeleteEnabled,
+						isImplicitMapsIdCascade( style, action )
 				);
 			}
 			finally {

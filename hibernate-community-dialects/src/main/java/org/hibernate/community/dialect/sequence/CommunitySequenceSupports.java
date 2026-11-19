@@ -128,6 +128,12 @@ public final class CommunitySequenceSupports {
 			return "select convert(varchar(200),current_value) from sys.sequences where name='"
 					+ sequenceName + "'";
 		}
+
+		@Override
+		public boolean supportsSelectNextValParameterized() {
+			// `next value for` is not allowed in set operations and there is no generate_series() before 2022
+			return false;
+		}
 	};
 
 	private static final SequenceSupport SQL_SERVER_16 = new ANSISequenceSupport() {
@@ -139,6 +145,11 @@ public final class CommunitySequenceSupports {
 		@Override
 		public String getDropSequenceString(String sequenceName) {
 			return "drop sequence if exists " + sequenceName;
+		}
+
+		@Override
+		public String getFromGenerateSeries() {
+			return " from generate_series(1,?)";
 		}
 	};
 

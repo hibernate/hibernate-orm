@@ -47,6 +47,12 @@ public class PropertyAccessStrategyResolverStandardImpl implements PropertyAcces
 		}
 
 		if ( isNotEmpty( explicitAccessStrategyName ) ) {
+			if ( representationMode == RepresentationMode.MAP
+				&& ( BASIC.getExternalName().equals( explicitAccessStrategyName )
+					|| FIELD.getExternalName().equals( explicitAccessStrategyName )
+					|| MIXED.getExternalName().equals( explicitAccessStrategyName )) ) {
+				return MAP.getStrategy();
+			}
 			return resolveExplicitlyNamedPropertyAccessStrategy( explicitAccessStrategyName );
 		}
 		else if ( representationMode == RepresentationMode.MAP ) {

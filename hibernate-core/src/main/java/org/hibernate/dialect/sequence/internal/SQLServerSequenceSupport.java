@@ -22,4 +22,11 @@ public class SQLServerSequenceSupport extends ANSISequenceSupport {
 	public String getSequencePreviousValString(String sequenceName) throws MappingException {
 		return "select convert(varchar(200),current_value) from sys.sequences where name='" + sequenceName + "'";
 	}
+
+	/// SQL Server does not allow `next value for` in a set operation and
+	/// has no table function to generate rows before SQL Server 2022.
+	@Override
+	public boolean supportsSelectNextValParameterized() {
+		return false;
+	}
 }

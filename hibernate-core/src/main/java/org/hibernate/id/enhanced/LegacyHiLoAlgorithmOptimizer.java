@@ -2,6 +2,8 @@ package org.hibernate.id.enhanced;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.MathHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
@@ -11,6 +13,7 @@ import static org.hibernate.id.IdentifierGeneratorHelper.makeIntegralValue;
 import static org.hibernate.id.enhanced.OptimizerLogger.OPTIMIZER_MESSAGE_LOGGER;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
@@ -33,6 +36,16 @@ public class LegacyHiLoAlgorithmOptimizer extends AbstractOptimizer {
 
 		private Long lastSourceValue;
 		private long value;
+
+		void setLastSourceValue(long lastSourceValue) {
+			this.lastSourceValue = lastSourceValue;
+			lo = lastSourceValue == 0 ? 1 : 0;
+			hi = lastSourceValue * ( maxLo + 1 );
+		}
+
+		static long determineValue(long lastSourceValue, int maxLo) {
+			return (lastSourceValue * ( maxLo + 1 )) + (lastSourceValue == 0 ? 1 : 0);
+		}
 	}
 
 	/**
@@ -56,9 +69,7 @@ public class LegacyHiLoAlgorithmOptimizer extends AbstractOptimizer {
 		try {
 			final var generationState = locateGenerationState( callback.getTenantIdentifier() );
 			if ( generationState.lo > generationState.maxLo ) {
-				generationState.lastSourceValue = callback.getNextValue();
-				generationState.lo = generationState.lastSourceValue == 0 ? 1 : 0;
-				generationState.hi = generationState.lastSourceValue * ( generationState.maxLo + 1 );
+				generationState.setLastSourceValue( callback.getNextValue() );
 			}
 			generationState.value = generationState.hi + generationState.lo++;
 			return makeIntegralValue( generationState.value, returnClass );
@@ -66,6 +77,73 @@ public class LegacyHiLoAlgorithmOptimizer extends AbstractOptimizer {
 		finally {
 			lock.unlock();
 		}
+	}
+
+	@Override
+	public Serializable[] generateBatch(int count, AccessCallback callback) {
+		final long[] buckets;
+		final int availableValues;
+		final long baseValue;
+		lock.lock();
+		try {
+			final var generationState = locateGenerationState( callback.getTenantIdentifier() );
+			final int available = Math.min( count, (int) Math.max( generationState.maxLo - generationState.lo + 1, 0L ) );
+			baseValue = generationState.hi + generationState.lo;
+			generationState.lo += available;
+			final int neededValues = count - available;
+			if ( neededValues > 0 ) {
+				buckets = fetchBuckets( neededValues, callback );
+				int previousValues = 0;
+				for ( int i = 0; i < buckets.length - 1; i++ ) {
+					previousValues += bucketSize( buckets[i] );
+				}
+				generationState.setLastSourceValue( buckets[buckets.length - 1] );
+				generationState.lo += neededValues - previousValues;
+			}
+			else {
+				buckets = ArrayHelper.EMPTY_LONG_ARRAY;
+			}
+			availableValues = available;
+			generationState.value = generationState.hi + generationState.lo - 1;
+		}
+		finally {
+			lock.unlock();
+		}
+		final Serializable[] result = new Serializable[count];
+		for ( int i = 0; i < availableValues; i++ ) {
+			result[i] = makeIntegralValue( baseValue + i, returnClass );
+		}
+		int position = availableValues;
+		for ( long bucket : buckets ) {
+			final long start = GenerationState.determineValue( bucket, incrementSize );
+			final int size = bucketSize( bucket );
+			for ( int j = 0; j < size && position < count; j++ ) {
+				result[position++] = makeIntegralValue( start + j, returnClass );
+			}
+		}
+		return result;
+	}
+
+	// a bucket holds incrementSize + 1 values, except for source value 0 which holds incrementSize
+	private int bucketSize(long sourceValue) {
+		return sourceValue == 0 ? incrementSize : incrementSize + 1;
+	}
+
+	private long[] fetchBuckets(int neededValues, AccessCallback callback) {
+		// a bucket never holds more than incrementSize + 1 values, so fetching ceil(remaining / (incrementSize + 1))
+		// buckets at a time never retrieves more source values than repeated singular generation would
+		long[] buckets = ArrayHelper.EMPTY_LONG_ARRAY;
+		int remaining = neededValues;
+		while ( remaining > 0 ) {
+			final long[] newBuckets = callback.getNextValues( MathHelper.ceilDiv( remaining, incrementSize + 1 ) );
+			final int previous = buckets.length;
+			buckets = Arrays.copyOf( buckets, previous + newBuckets.length );
+			System.arraycopy( newBuckets, 0, buckets, previous, newBuckets.length );
+			for ( long newBucket : newBuckets ) {
+				remaining -= bucketSize( newBucket );
+			}
+		}
+		return buckets;
 	}
 
 	/**

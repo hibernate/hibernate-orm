@@ -1,5 +1,6 @@
 package org.hibernate.dialect.sequence.internal;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.dialect.sequence.spi.SequenceSupport;
 
 import org.hibernate.MappingException;
@@ -14,5 +15,15 @@ public class SQLServer16SequenceSupport extends SQLServerSequenceSupport{
 	@Override
 	public String getDropSequenceString(String sequenceName) throws MappingException {
 		return "drop sequence if exists " + sequenceName;
+	}
+
+	@Override
+	public boolean supportsSelectNextValParameterized() {
+		return true;
+	}
+
+	@Override
+	public @Nullable String getFromGenerateSeries() {
+		return " from generate_series(1,?)";
 	}
 }

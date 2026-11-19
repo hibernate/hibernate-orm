@@ -4,6 +4,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import static org.hibernate.id.IdentifierGeneratorHelper.makeIntegralValue;
 import static org.hibernate.id.enhanced.OptimizerLogger.OPTIMIZER_MESSAGE_LOGGER;
+
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 
 import java.io.Serializable;
@@ -41,8 +43,54 @@ public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 
 	@Override
 	public Serializable generate(AccessCallback callback) {
-		return locateGenerationState( callback.getTenantIdentifier() )
-				.generate( callback, incrementSize, returnClass );
+		final var generationState = locateGenerationState( callback.getTenantIdentifier() );
+		if ( generationState.lastSourceValue == null || generationState.value >= generationState.upperLimitValue ) {
+			generationState.setLastSourceValue( callback.getNextValue(), incrementSize );
+		}
+		return makeIntegralValue( generationState.value++, returnClass );
+	}
+
+	@Override
+	public Serializable[] generateBatch(int count, AccessCallback callback) {
+		final long[] buckets;
+		final int availableValues;
+		final long baseValue;
+		final GenerationState generationState = locateGenerationState( callback.getTenantIdentifier() );
+		int available = 0;
+		long base = 0;
+		if ( generationState.lastSourceValue != null ) {
+			available = Math.min( count, (int) Math.max( generationState.upperLimitValue - generationState.value, 0L ) );
+			base = generationState.value;
+			generationState.value += available;
+		}
+		final int neededValues = count - available;
+		if ( neededValues > 0 ) {
+			buckets = PooledLoOptimizer.fetchBuckets( neededValues, incrementSize, callback );
+			int previousValues = 0;
+			for ( int i = 0; i < buckets.length - 1; i++ ) {
+				previousValues += PooledLoOptimizer.bucketSize( buckets[i], incrementSize );
+			}
+			generationState.setLastSourceValue( buckets[buckets.length - 1], incrementSize );
+			generationState.value += neededValues - previousValues;
+		}
+		else {
+			buckets = ArrayHelper.EMPTY_LONG_ARRAY;
+		}
+		availableValues = available;
+		baseValue = base;
+		final Serializable[] result = new Serializable[count];
+		for ( int i = 0; i < availableValues; i++ ) {
+			result[i] = makeIntegralValue( baseValue + i, returnClass );
+		}
+		int position = availableValues;
+		for ( long bucket : buckets ) {
+			final long start = GenerationState.determineValue( bucket, incrementSize );
+			final int size = PooledLoOptimizer.bucketSize( bucket, incrementSize );
+			for ( int j = 0; j < size && position < count; j++ ) {
+				result[position++] = makeIntegralValue( start + j, returnClass );
+			}
+		}
+		return result;
 	}
 
 	private GenerationState locateGenerationState(String tenantIdentifier) {
@@ -94,17 +142,15 @@ public class PooledLoThreadLocalOptimizer extends AbstractOptimizer {
 		// the value at which we'll hit the db again
 		private long upperLimitValue;
 
-		private Serializable generate(AccessCallback callback, int incrementSize, Class<?> returnClass) {
-			if ( lastSourceValue == null || value >= upperLimitValue ) {
-				lastSourceValue = callback.getNextValue();
-				upperLimitValue = lastSourceValue + incrementSize;
-				value = lastSourceValue;
-				// handle cases where initial-value is less that one (hsqldb for instance).
-				while ( value < 1 ) {
-					value++;
-				}
-			}
-			return makeIntegralValue( value++, returnClass );
+		void setLastSourceValue(long lastSourceValue, int incrementSize) {
+			this.lastSourceValue = lastSourceValue;
+			upperLimitValue = lastSourceValue + incrementSize;
+			// handle cases where initial-value is less that one (hsqldb for instance).
+			value = Math.max( lastSourceValue, 1L );
+		}
+
+		static long determineValue(long lastSourceValue, int incrementSize) {
+			return Math.max( lastSourceValue, 1L );
 		}
 	}
 

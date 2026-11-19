@@ -1,12 +1,22 @@
 package org.hibernate.id;
 
+import java.util.List;
 import java.util.Properties;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.GenerationRequests;
 import org.hibernate.generator.GeneratorCreationContext;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.spi.NavigablePath;
 
 import static org.hibernate.id.IdentifierGeneratorHelper.getForeignId;
+import static org.hibernate.id.IdentifierGeneratorHelper.getForeignIds;
 
 /**
  * The legacy id generator named {@code foreign}.
@@ -79,6 +89,43 @@ public class ForeignGenerator implements IdentifierGenerator {
 	@Override
 	public Object generate(SharedSessionContractImplementor sessionImplementor, Object object) {
 		return getForeignId( entityName, propertyName, sessionImplementor, object );
+	}
+
+	@Override
+	public boolean supportsBatchGeneration() {
+		return true;
+	}
+
+	@Override
+	public List<BeforeExecutionGenerator> resolveGenerationDependencies(RuntimeModelCreationContext context) {
+		final EntityPersister persister = context.getDomainModel().getEntityDescriptor( entityName );
+		final var attributeMapping = persister.findAttributeMapping( propertyName );
+		final EntityMappingType entityMappingType;
+		if ( attributeMapping != null
+			&& attributeMapping.getPartMappingType() instanceof EntityMappingType entity ) {
+			entityMappingType = entity;
+		}
+		else {
+			final var identifierMapper =
+					persister.findAttributeMapping( NavigablePath.IDENTIFIER_MAPPER_PROPERTY );
+			assert identifierMapper != null;
+			entityMappingType = (EntityMappingType) identifierMapper.asEmbeddedAttributeMapping()
+					.getEmbeddableTypeDescriptor()
+					.findAttributeMapping( propertyName )
+					.getPartMappingType();
+		}
+		final var referencedGenerator = entityMappingType.getEntityPersister().getGenerator();
+		return referencedGenerator instanceof BeforeExecutionGenerator beforeExecutionGenerator
+				? List.of( beforeExecutionGenerator )
+				: List.of();
+	}
+
+	@Override
+	public @Nonnull Object[] generateBatch(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull GenerationRequests requests,
+			@Nonnull EventType eventType) {
+		return getForeignIds( entityName, propertyName, session, requests );
 	}
 
 	@Override

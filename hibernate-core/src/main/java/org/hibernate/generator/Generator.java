@@ -223,4 +223,14 @@ public interface Generator extends Serializable {
 	default boolean requiresIdentityColumn() {
 		return false;
 	}
+
+	/**
+	 * Does this generator require an identity (autoincrement) column.
+	 *
+	 * @since 8.0
+	 */
+	@Incubating(since = "8.0")
+	default boolean requiresGeneration(Object entity, Object currentValue, SharedSessionContractImplementor session) {
+		return currentValue == null;
+	}
 }

@@ -71,6 +71,12 @@ public class SpannerSequenceSupport implements SequenceSupport {
 		return "select " + getSelectSequenceNextValString(sequenceName);
 	}
 
+	// Spanner documents the function, but doesn't really support it
+	@Override
+	public String getFromGenerateSeries() {
+		return " from unnest(generate_array(1,?))";
+	}
+
 	@Override
 	public String getSelectSequenceNextValString(String sequenceName) {
 		var nextValString = "get_next_sequence_value(sequence " + sequenceName + ")";

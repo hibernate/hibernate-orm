@@ -130,6 +130,20 @@ Indexes and constraints should instead be declared by the `@Table` annotation of
 An `@OnDelete` annotation on an entity class which is not a subclass in a `JOINED` hierarchy is now rejected with
 an `AnnotationException` when the metadata is built. Previously the annotation was silently ignored.
 
+[[id-on-entity-subclass]]
+=== `@Id` on an entity subclass
+
+The identifier of an entity hierarchy is declared by the root entity class or by one of its mapped superclasses.
+An `@Id` or `@EmbeddedId` annotation on a field or property of an entity subclass, or of a mapped superclass which
+extends an entity class, is now rejected with an `AnnotationException` when the metadata is built.
+
+Previously, if the annotated attribute had the same name as the identifier of the root entity, the annotation was
+silently ignored, along with any `@GeneratedValue` or `@Column` annotation of the attribute.
+The redundant attribute should be removed from the subclass.
+
+An `@Id` annotation on a getter of the subclass did have the side effect of switching the subclass to property-based
+access. A subclass which depends on this should now be annotated `@Access(AccessType.PROPERTY)`.
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // XSD changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

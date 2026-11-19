@@ -537,10 +537,6 @@ public class ForeignKeyConstraintTest {
 	@Entity(name = "Task")
 	@SecondaryTable( name = "Task" )
 	public class Task extends PlanItem {
-		@Id
-		@GeneratedValue(strategy=GenerationType.AUTO)
-		private Integer id;
-
 		@ElementCollection
 		@CollectionTable(
 				name = "task_properties",
@@ -566,16 +562,6 @@ public class ForeignKeyConstraintTest {
 				)
 		)
 		private Set<String> attributes;
-
-		@Override
-		public Integer getId() {
-			return id;
-		}
-
-		@Override
-		public void setId(Integer id) {
-			this.id = id;
-		}
 
 		public Set<String> getProperties() {
 			return properties;

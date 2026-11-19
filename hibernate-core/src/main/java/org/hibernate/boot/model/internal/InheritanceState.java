@@ -240,7 +240,18 @@ public class InheritanceState {
 				final var container = new PropertyContainer( classToProcessForMappedSuperclass, classDetails, defaultAccessType );
 				idPropertyCount = addElementsOfClass( elements, container, buildingContext, idPropertyCount );
 			}
-			if ( idPropertyCount == 0 && !inheritanceState.hasParents() ) {
+			if ( inheritanceState.hasParents() ) {
+				if ( idPropertyCount > 0 ) {
+					// id properties are always at the front of the list
+					final var idMember = elements.get( 0 ).getAttributeMember();
+					throw new AnnotationException( "Entity '" + classDetails.getName()
+							+ "' is a subclass in an entity hierarchy and may not declare an identifier, but attribute '"
+							+ idMember.resolveAttributeName() + "' of '" + idMember.getDeclaringType().getName()
+							+ "' is annotated '" + ( isEmbeddedId( idMember ) ? "@EmbeddedId" : "@Id" )
+							+ "' (the identifier is inherited from the root entity '" + getRootEntity().getName() + "')" );
+				}
+			}
+			else if ( idPropertyCount == 0 ) {
 				throw new AnnotationException( "Entity '" + classDetails.getName() + "' has no identifier"
 						+ " (every '@Entity' class must declare or inherit at least one '@Id' or '@EmbeddedId' property)" );
 			}

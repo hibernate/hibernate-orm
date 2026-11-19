@@ -89,10 +89,6 @@ class ManyToOneWithAnyAndSecondaryTable {
 	@Entity(name = "contact")
 	@SecondaryTable(name = "TPERSONNEPHYSIQUE")
 	public static class Contact extends Actor {
-		@Id
-		@GeneratedValue
-		private Long id;
-
 		@Any(fetch = LAZY)
 		@AnyKeyJavaClass(Long.class)
 		@JoinColumn(name = "OBJETMAITRE_ID", table = "TPERSONNEPHYSIQUE")

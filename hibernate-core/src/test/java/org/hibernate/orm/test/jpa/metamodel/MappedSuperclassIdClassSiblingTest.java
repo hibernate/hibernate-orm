@@ -3,6 +3,7 @@ package org.hibernate.orm.test.jpa.metamodel;
 import java.io.Serializable;
 import java.util.Objects;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -52,7 +53,7 @@ public class MappedSuperclassIdClassSiblingTest {
 					.addAnnotatedClass( ParentEntity.class )
 					.addAnnotatedClass( ChildEntityWithId.class );
 
-			assertThrows( RuntimeException.class, metadataSources::buildMetadata );
+			assertThrows( AnnotationException.class, metadataSources::buildMetadata );
 		}
 	}
 

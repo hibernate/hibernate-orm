@@ -102,11 +102,6 @@ public class JoinedSubclassSubQueryTest {
 
 	@Entity(name = "Employee")
 	public static class Employee extends Person {
-		@Id
-		@GeneratedValue
-		@Column
-		private Long id;
-
 		private int employeeNumber;
 
 		@ManyToOne(optional = false)

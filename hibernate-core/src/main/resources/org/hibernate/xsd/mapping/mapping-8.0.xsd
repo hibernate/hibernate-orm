@@ -730,11 +730,12 @@
                 <xsd:element name="enumerated" type="orm:enumerated" minOccurs="0"/>
                 <xsd:element name="convert" type="orm:convert" minOccurs="0"/>
                 <xsd:element name="nationalized" type="orm:nationalized" minOccurs="0"/>
-
-                <xsd:element name="generated" minOccurs="0" type="orm:basic-generation-timing-type"/>
-
-                <xsd:group ref="orm:basic-type-group" />
             </xsd:choice>
+
+            <xsd:element name="generated" minOccurs="0" type="orm:basic-generation-timing-type"/>
+
+            <xsd:group ref="orm:basic-type-group" />
+
             <xsd:element name="update-timestamp" type="orm:update-timestamp" minOccurs="0"/>
             <xsd:element name="exclude-from-versioning" type="orm:emptyType"
                          minOccurs="0"/>

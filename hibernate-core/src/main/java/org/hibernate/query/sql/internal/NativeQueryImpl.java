@@ -657,7 +657,7 @@ public class NativeQueryImpl<R>
 	@Override
 	@Nonnull
 	public NativeQueryImplementor<R> asMutationQuery() {
-		errorIfNotSelectForSure();
+		errorIfSelectForSure();
 		return this;
 	}
 
@@ -773,7 +773,7 @@ public class NativeQueryImpl<R>
 	private void errorIfSelectForSure() {
 		if ( isSelectQuery() == Boolean.TRUE ) {
 			// we unequivocally know it IS a select query
-			throw new IllegalSelectQueryException( "Not a mutation query", sqlString );
+			throw new IllegalMutationQueryException( "Not a mutation query", sqlString );
 		}
 	}
 

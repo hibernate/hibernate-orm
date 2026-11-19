@@ -66,7 +66,7 @@ public final class ToOneEntityLoader {
 
 	/**
 	 * Creates Hibernate proxy or retrieves the complete object of an entity if proxy is not
-	 * allowed (e.g. @Proxy(lazy=false), final class).
+	 * allowed (e.g. @Proxy(lazy=false), final class, abstract root of a @ConcreteProxy hierarchy).
 	 */
 	public static Object createProxyOrLoadImmediate(
 			AuditReaderImplementor versionsReader,
@@ -81,7 +81,8 @@ public final class ToOneEntityLoader {
 				.getFactory()
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityName );
-		if ( persister.hasProxy() ) {
+		// The abstract root of a @ConcreteProxy hierarchy is lazy but has no proxy factory
+		if ( persister.hasProxy() && persister.getRepresentationStrategy().getProxyFactory() != null ) {
 			return createProxy( versionsReader, entityClass, entityName, entityId, revision, removed, enversService, isTargetNotAudited );
 		}
 		return loadImmediate( versionsReader, entityClass, entityName, entityId, revision, removed, enversService, isTargetNotAudited );

@@ -222,10 +222,10 @@ jobs:
       # Install test/build JDKs first (if needed), capture their homes,
       # then install the default JDK (GRADLE_JAVA_VERSION) which becomes JAVA_HOME for the Gradle daemon.
       - name: Set up test JDK ${{ matrix.java-test-version }}
-        if: ${{ matrix.java-test-version && matrix.java-test-version != env.GRADLE_JAVA_VERSION && matrix.java-test-from != 'jdk.java.net' }}
+        if: ${{ matrix.java-test-version && (matrix.java-test-version != env.GRADLE_JAVA_VERSION || matrix.java-test-distribution) && matrix.java-test-from != 'jdk.java.net' }}
         uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
-          distribution: 'temurin'
+          distribution: ${{ matrix.java-test-distribution || 'temurin' }}
           java-version: ${{ matrix.java-test-version }}
       - name: Set up test JDK ${{ matrix.java-test-version }} (EA from jdk.java.net)
         if: ${{ matrix.java-test-from == 'jdk.java.net' }}
@@ -234,7 +234,7 @@ jobs:
           website: jdk.java.net
           release: ${{ matrix.java-test-version }}
       - name: Capture test JDK home
-        if: ${{ matrix.java-test-version && matrix.java-test-version != env.GRADLE_JAVA_VERSION }}
+        if: ${{ matrix.java-test-version && (matrix.java-test-version != env.GRADLE_JAVA_VERSION || matrix.java-test-distribution) }}
         run: echo "TEST_JDK_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
       - name: Set up build JDK ${{ matrix.java-build-version }}
         if: ${{ matrix.java-build-version && matrix.java-build-version != env.GRADLE_JAVA_VERSION }}

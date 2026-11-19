@@ -56,6 +56,9 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.EmbeddableAggregateJavaType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
+import org.hibernate.usertype.internal.OffsetDateTimeCompositeUserType;
+import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
+import org.hibernate.usertype.internal.ZonedDateTimeCompositeUserType;
 
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToOne;
@@ -130,8 +133,26 @@ public class AttributeFactory {
 				false,
 				false,
 				property.isOptional(),
-				property.isGeneric()
+				property.isGeneric(),
+				isTimeZoneStorageComposite( valueContext )
 		);
+	}
+
+	/**
+	 * Is this a temporal value whose offset or zone is stored in a
+	 * separate column, according to the {@code TimeZoneStorageType}?
+	 */
+	private static boolean isTimeZoneStorageComposite(ValueContext valueContext) {
+		if ( valueContext.getValueClassification() == ValueClassification.EMBEDDABLE
+				&& valueContext.getHibernateValue() instanceof Component component ) {
+			final String typeName = component.getTypeName();
+			return OffsetDateTimeCompositeUserType.class.getName().equals( typeName )
+				|| ZonedDateTimeCompositeUserType.class.getName().equals( typeName )
+				|| OffsetTimeCompositeUserType.class.getName().equals( typeName );
+		}
+		else {
+			return false;
+		}
 	}
 
 	private static <X> AttributeContext<X> wrap(final ManagedDomainType<X> ownerType, final Property property) {
@@ -201,6 +222,7 @@ public class AttributeFactory {
 				attributeMetadata.getMember(),
 				false,
 				true,
+				false,
 				false,
 				false
 		);

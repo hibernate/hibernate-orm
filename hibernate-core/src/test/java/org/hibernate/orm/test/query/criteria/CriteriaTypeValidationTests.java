@@ -3,6 +3,7 @@ package org.hibernate.orm.test.query.criteria;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.query.QueryTypeMismatchException;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -78,7 +79,7 @@ public class CriteriaTypeValidationTests {
 					final Subquery<Parent> subquery = cq.subquery( Parent.class );
 					final Root<Parent> subRoot = subquery.from( Parent.class );
 					assertThrows(
-							IllegalArgumentException.class,
+							QueryTypeMismatchException.class,
 							() -> subquery.select( subRoot.get( "id" ) )
 					);
 				}

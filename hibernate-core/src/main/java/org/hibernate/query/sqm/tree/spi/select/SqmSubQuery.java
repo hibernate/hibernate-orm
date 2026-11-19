@@ -79,6 +79,7 @@ import java.util.function.Function;
 
 import static java.util.Collections.emptySet;
 import static java.util.Collections.newSetFromMap;
+import static org.hibernate.query.sqm.internal.SqmUtil.validateQueryReturnType;
 
 /**
  * @author Steve Ebersole
@@ -268,6 +269,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	public SqmSubQuery<T> select(@Nonnull Expression<T> expression) {
 		//noinspection unchecked
 		getQuerySpec().setSelection( (JpaSelection<T>) expression );
+		validateQueryReturnType( getQueryPart(), getResultType() );
 //		applyInferableType( (Class<T>) querySpec.getSelection().getJavaType() );
 		return this;
 	}

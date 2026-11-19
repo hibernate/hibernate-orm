@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping SYSTEM "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd" >
+
+<hibernate-mapping package="org.hibernate.orm.test.entityname">
+
+    <class name="Customer" entity-name="Customer" table="customers">
+        <id name="id" type="long">
+            <generator class="increment"/>
+        </id>
+        <property name="code" type="string"/>
+    </class>
+
+</hibernate-mapping>

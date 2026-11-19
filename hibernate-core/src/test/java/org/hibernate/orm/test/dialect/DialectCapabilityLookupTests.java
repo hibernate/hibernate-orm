@@ -18,6 +18,7 @@ import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.orm.test.dialect.resolver.TestingDialectResolutionInfo;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -65,12 +66,13 @@ class DialectCapabilityLookupTests {
 	}
 
 	@Test
-	void hsqlRecursiveCteSupportDependsOnTheDatabaseVersion() {
-		final var before = new HSQLDialect( DatabaseVersion.make( 1, 8 ) );
-		final var after = new HSQLDialect();
+	void hsqlCteSupportFromDatabaseMetadata() {
+		final var dialect = new HSQLDialect( TestingDialectResolutionInfo.forDatabaseInfo( "HSQL Database Engine", 2, 7 ) );
+		final var support = dialect.getCteSupport();
 
-		assertThat( before.getCteSupport().supports( RECURSIVE ) ).isFalse();
-		assertThat( after.getCteSupport().supports( RECURSIVE ) ).isTrue();
+		assertThat( support.supports( RECURSIVE ) ).isTrue();
+		assertThat( support.getPlacement() ).isEqualTo( TOP_LEVEL );
+		assertThat( support ).isSameAs( dialect.getCteSupport() );
 	}
 
 	@Test

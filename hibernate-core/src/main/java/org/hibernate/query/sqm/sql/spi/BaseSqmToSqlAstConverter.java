@@ -8813,12 +8813,41 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return inPredicate;
 	}
 
+	private static @Nullable JdbcMapping singleJdbcMapping(Expression operand) {
+		// only a single value; a tuple type cannot even say how many it has
+		final var type = operand.getExpressionType();
+		if ( type instanceof JdbcMapping mapping ) {
+			return mapping;
+		}
+		else if ( type instanceof BasicValuedMapping basicValued ) {
+			return basicValued.getJdbcMapping();
+		}
+		else {
+			return null;
+		}
+	}
+
+	/// How the instant of an `Instant`, `OffsetDateTime` or `ZonedDateTime`
+	/// is held, or `null` for anything else.
+	private @Nullable org.hibernate.dialect.type.spi.TemporalPreservation.InstantBasis instantBasis(JdbcMapping jdbcMapping) {
+		final var javaClass = jdbcMapping.getJdbcJavaType().getJavaTypeClass();
+		if ( javaClass != Instant.class && javaClass != OffsetDateTime.class && javaClass != ZonedDateTime.class ) {
+			return null;
+		}
+		return org.hibernate.type.descriptor.jdbc.internal.TemporalPreservationGuard.preservation(
+				getDialect(),
+				jdbcMapping.getJdbcJavaType(),
+				jdbcMapping.getJdbcType()
+		).instantBasis();
+	}
+
 	/// With temporal preservation enabled, reject a comparison between an
 	/// instant held as its date and time at UTC, in a column which knows of
 	/// no time zone, and an instant held in a column which itself denotes
 	/// one, or produced by an expression of such a type. The database would
 	/// read the first in the time zone of its session, so the result would
-	/// depend on that time zone. The elements of tuples are checked in pairs.
+	/// depend on that time zone. The elements of tuples, and what a subquery
+	/// selects, are checked in pairs.
 	private void checkInstantsAreComparable(Expression... operands) {
 		if ( !creationContext.getSessionFactory().getSessionFactoryOptions().isTemporalPreservationEnabled() ) {
 			return;
@@ -8827,50 +8856,78 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private void checkInstantBases(List<? extends Expression> operands) {
-		// tuples are compared element by element
-		final List<SqlTuple> tuples = new ArrayList<>();
+		// tuples and subqueries are compared element by element
+		final List<List<Expression>> rows = new ArrayList<>( operands.size() );
+		int size = 1;
 		for ( var operand : operands ) {
-			final var tuple = SqlTupleContainer.getSqlTuple( operand );
-			if ( tuple != null ) {
-				tuples.add( tuple );
+			for ( var row : comparedRows( operand ) ) {
+				rows.add( row );
+				size = Math.max( size, row.size() );
 			}
 		}
-		if ( !tuples.isEmpty() ) {
-			final int size = tuples.get( 0 ).getExpressions().size();
-			for ( int i = 0; i < size; i++ ) {
-				final List<Expression> elements = new ArrayList<>( tuples.size() );
-				for ( var tuple : tuples ) {
-					if ( tuple.getExpressions().size() == size ) {
-						elements.add( tuple.getExpressions().get( i ) );
-					}
+		for ( int i = 0; i < size; i++ ) {
+			final List<Expression> elements = new ArrayList<>( rows.size() );
+			for ( var row : rows ) {
+				if ( row.size() == size ) {
+					elements.add( row.get( i ) );
 				}
-				checkInstantBases( elements );
 			}
-			return;
+			checkInstantBasesOfValues( elements );
 		}
+	}
+
+	/// What is compared of an operand, as rows of single values: the
+	/// elements of a tuple, also of a tuple within it, what each branch of
+	/// a subquery selects, or else the operand itself.
+	private static List<List<Expression>> comparedRows(Expression operand) {
+		final SelectStatement subquery;
+		if ( operand instanceof Any any ) {
+			subquery = any.getSubquery();
+		}
+		else if ( operand instanceof Every every ) {
+			subquery = every.getSubquery();
+		}
+		else if ( operand instanceof SelectStatement statement ) {
+			subquery = statement;
+		}
+		else {
+			final List<Expression> row = new ArrayList<>();
+			addComparedValues( operand, row );
+			return List.of( row );
+		}
+		// a union, intersection or difference selects from each of its branches
+		final List<List<Expression>> rows = new ArrayList<>();
+		subquery.getQueryPart().visitQuerySpecs( querySpec -> {
+			final List<Expression> row = new ArrayList<>();
+			for ( var selection : querySpec.getSelectClause().getSqlSelections() ) {
+				addComparedValues( selection.getExpression(), row );
+			}
+			rows.add( row );
+		} );
+		return rows;
+	}
+
+	private static void addComparedValues(Expression expression, List<Expression> values) {
+		final var tuple = SqlTupleContainer.getSqlTuple( expression );
+		if ( tuple == null
+				|| tuple.getExpressions().size() == 1 && tuple.getExpressions().get( 0 ) == expression ) {
+			values.add( expression );
+		}
+		else {
+			for ( var element : tuple.getExpressions() ) {
+				addComparedValues( element, values );
+			}
+		}
+	}
+
+	private void checkInstantBasesOfValues(List<? extends Expression> operands) {
 		org.hibernate.dialect.type.spi.TemporalPreservation.InstantBasis first = null;
 		for ( var operand : operands ) {
-			final var type = operand.getExpressionType();
-			// only a single value; a tuple type cannot even say how many it has
-			final JdbcMapping jdbcMapping;
-			if ( type instanceof JdbcMapping mapping ) {
-				jdbcMapping = mapping;
-			}
-			else if ( type instanceof BasicValuedMapping basicValued ) {
-				jdbcMapping = basicValued.getJdbcMapping();
-			}
-			else {
+			final var jdbcMapping = singleJdbcMapping( operand );
+			if ( jdbcMapping == null ) {
 				continue;
 			}
-			final var javaClass = jdbcMapping.getJdbcJavaType().getJavaTypeClass();
-			if ( javaClass != Instant.class && javaClass != OffsetDateTime.class && javaClass != ZonedDateTime.class ) {
-				continue;
-			}
-			final var basis = org.hibernate.type.descriptor.jdbc.internal.TemporalPreservationGuard.preservation(
-					getDialect(),
-					jdbcMapping.getJdbcJavaType(),
-					jdbcMapping.getJdbcType()
-			).instantBasis();
+			final var basis = instantBasis( jdbcMapping );
 			if ( basis == null ) {
 				continue;
 			}
@@ -8999,12 +9056,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					+ " in the subquery instead"
 			);
 		}
-		return new InSubQueryPredicate(
+		final var inSubQueryPredicate = new InSubQueryPredicate(
 				visitWithInferredType( testExpression, subQueryExpression ),
 				visitWithInferredType( subQueryExpression, testExpression ),
 				predicate.isNegated(),
 				getBooleanType()
 		);
+		checkInstantsAreComparable( inSubQueryPredicate.getTestExpression(), inSubQueryPredicate.getSubQuery() );
+		return inSubQueryPredicate;
 	}
 
 	private BasicType<Boolean> getBooleanType() {

@@ -3,12 +3,9 @@ package org.hibernate.orm.test.bytecode.foreignpackage;
 import org.hibernate.orm.test.bytecode.SuperclassEntity;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 
 @Entity
 public class ConcreteEntity extends SuperclassEntity {
-	@Id
-	protected long id;
 	protected String bname;
 
 	public long getId() {

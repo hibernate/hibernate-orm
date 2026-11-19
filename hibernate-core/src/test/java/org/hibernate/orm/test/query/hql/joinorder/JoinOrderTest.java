@@ -35,8 +35,6 @@ public class JoinOrderTest {
 
 	@Entity(name = "TaskLocation")
 	public class TaskLocation extends Location {
-		@Id @GeneratedValue Long id;
-
 		@OneToOne(mappedBy = "taskLocation")
 		private Task task;
 

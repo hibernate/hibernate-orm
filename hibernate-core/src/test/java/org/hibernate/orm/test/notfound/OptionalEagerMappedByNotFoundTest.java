@@ -197,21 +197,10 @@ public class OptionalEagerMappedByNotFoundTest {
 	@Entity
 	@Table(name = "PersonOneToOneJoinIgnore")
 	public static class PersonOneToOneJoinIgnore extends Person {
-		@Id
-		private Long id;
-
 		@OneToOne(mappedBy = "person", cascade = CascadeType.PERSIST)
 		@NotFound(action = NotFoundAction.IGNORE)
 		@Fetch(FetchMode.JOIN)
 		private Employment employment;
-
-		public Long getId() {
-			return id;
-		}
-
-		public void setId(Long id) {
-			this.id = id;
-		}
 
 		public Employment getEmployment() {
 			return employment;
@@ -226,21 +215,10 @@ public class OptionalEagerMappedByNotFoundTest {
 	@Entity
 	@Table(name = "PersonOneToOneSelectException")
 	public static class PersonOneToOneSelectException extends Person {
-		@Id
-		private Long id;
-
 		@OneToOne(mappedBy = "person", cascade = CascadeType.PERSIST)
 		@NotFound(action = NotFoundAction.EXCEPTION)
 		@Fetch(FetchMode.SELECT)
 		private Employment employment;
-
-		public Long getId() {
-			return id;
-		}
-
-		public void setId(Long id) {
-			this.id = id;
-		}
 
 		public Employment getEmployment() {
 			return employment;
@@ -255,21 +233,10 @@ public class OptionalEagerMappedByNotFoundTest {
 	@Entity
 	@Table(name = "PersonOneToOneSelectIgnore")
 	public static class PersonOneToOneSelectIgnore extends Person {
-		@Id
-		private Long id;
-
 		@OneToOne(mappedBy = "person", cascade = CascadeType.PERSIST)
 		@NotFound(action = NotFoundAction.IGNORE)
 		@Fetch(FetchMode.SELECT)
 		private Employment employment;
-
-		public Long getId() {
-			return id;
-		}
-
-		public void setId(Long id) {
-			this.id = id;
-		}
 
 		public Employment getEmployment() {
 			return employment;

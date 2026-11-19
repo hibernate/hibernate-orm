@@ -379,9 +379,6 @@ public class NewGraphTest {
 
 	@Entity(name = "Aa")
 	static class Aa extends A {
-		@Id @GeneratedValue
-		Long id;
-
 		@OneToMany(mappedBy = "aa")
 		Set<B> bss;
 	}

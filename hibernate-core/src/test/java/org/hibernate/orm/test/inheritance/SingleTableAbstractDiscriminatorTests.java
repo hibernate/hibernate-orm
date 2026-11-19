@@ -79,8 +79,6 @@ public class SingleTableAbstractDiscriminatorTests {
 	@Entity
 	@DiscriminatorValue( "b" )
 	public static class Branch extends Trunk {
-		@Id
-		private Integer id;
 		private String name;
 	}
 }

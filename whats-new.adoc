@@ -57,3 +57,16 @@ Map<String, Child> children;
 The `<map-key-formula>` element of mapping XML, which was previously ignored, now has the same effect.
 Mappings which declare it no longer fall back to the default `<attribute>_KEY` column.
 See the link:{userGuideBase}#collections-map-key-formula[user guide] for details and examples.
+
+[[embeddable-patterns]]
+== Embeddable patterns in HQL
+
+An embedded attribute may now be explicitly destructured to a tuple by listing the names of fields of the embeddable class:
+
+[source,hql]
+----
+from Person p
+where p.address(street, city, zip) = (:street, :city, :zip)
+----
+
+Unlike a direct comparison of an embedded attribute with a tuple, the result of this comparison does not depend on the order in which the fields of the embeddable class are enumerated.

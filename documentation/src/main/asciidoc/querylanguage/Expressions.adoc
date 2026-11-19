@@ -537,6 +537,27 @@ from Person
 where address = ('1600 Pennsylvania Avenue, NW', 'Washington', 'DC', 20500, 'USA')
 ----
 
+But such a comparison depends on the order in which the fields of the embeddable class are enumerated, which is not well-defined.
+It's much better to explicitly destructure the embedded field using an _embeddable pattern_:
+
+[[embeddable-pattern]]
+[source,hql]
+----
+from Person
+where address(street, city, state, zip, country)
+        = ('1600 Pennsylvania Avenue, NW', 'Washington', 'DC', 20500, 'USA')
+----
+
+An embeddable pattern is just an abbreviation for a tuple.
+For example, `address(city, zip)` means `(address.city, address.zip)`.
+The pattern is not required to mention every field of the embeddable class.
+
+[NOTE]
+====
+Syntactically, an embeddable pattern looks just like a function invocation.
+If an unqualified field name collides with the name of a function, the function wins, and the pattern must be qualified by an identification variable, for example, `p.address(city, zip)`.
+====
+
 [[exp-functions]]
 === Functions
 

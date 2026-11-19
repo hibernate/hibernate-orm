@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entity-mappings xmlns="https://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+    <package>org.hibernate.orm.test.boot.models.xml.attr</package>
+    <access>FIELD</access>
+
+    <entity class="ManyToOnePropertyRefTests$Parent" metadata-complete="true">
+        <attributes>
+            <id name="id"/>
+            <basic name="code">
+                <column unique="true" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="ManyToOnePropertyRefTests$Child" metadata-complete="true">
+        <attributes>
+            <id name="id"/>
+            <many-to-one name="parent" optional="false">
+                <join-column name="id" insertable="false" updatable="false"/>
+                <property-ref name="code"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+</entity-mappings>

@@ -21,6 +21,7 @@ import java.util.EnumSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.MappingException;
+import jakarta.persistence.QueryFlushMode;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.CurrentTimestamp;
@@ -94,6 +95,10 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 	/// The expression which generates the value in the database, where it
 	/// is not the current timestamp of the Dialect.
 	private final @Nullable String databaseExpression;
+	/// With temporal preservation enabled, the query which asks the database
+	/// for a version of a Java Time class, or `null` to read the current
+	/// timestamp of the Dialect as a `java.sql.Timestamp`.
+	private final @Nullable String versionQuery;
 
 	private static final ConcurrentHashMap<Key, GeneratorDelegate> GENERATOR_DELEGATES = new ConcurrentHashMap<>();
 
@@ -103,6 +108,7 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 		propertyType = getPropertyType( context );
 		version = isVersion( context );
 		databaseExpression = delegate == null ? databaseExpression( context ) : null;
+		versionQuery = delegate == null && version ? versionQuery( context ) : null;
 		if ( eventTypes.contains( EventType.INSERT ) ) {
 			notNull( context );
 		}
@@ -114,6 +120,7 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 		propertyType = getPropertyType( context );
 		version = isVersion( context );
 		databaseExpression = delegate == null ? databaseExpression( context ) : null;
+		versionQuery = delegate == null && version ? versionQuery( context ) : null;
 		notNull( context );
 	}
 
@@ -123,6 +130,7 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 		propertyType = getPropertyType( context );
 		version = isVersion( context );
 		databaseExpression = delegate == null ? databaseExpression( context ) : null;
+		versionQuery = delegate == null && version ? versionQuery( context ) : null;
 		notNull( context );
 	}
 
@@ -239,6 +247,33 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 		);
 	}
 
+	/// With temporal preservation enabled, the query for a version of a Java
+	/// Time class which the database generates. The version is selected
+	/// before the row is written. Read as a `java.sql.Timestamp`, it would
+	/// pass through the default time zone of the JVM, and the current
+	/// timestamp of most Dialects is in the time zone of the session, which
+	/// is the current instant only where the two agree. The functions of HQL
+	/// are read as their own types are, and those for the current instant do
+	/// not depend on the time zone of the session.
+	private static @Nullable String versionQuery(GeneratorCreationContext context) {
+		if ( !MetadataBuildingContext.isTemporalPreservationEnabled( context.getServiceRegistry() ) ) {
+			return null;
+		}
+		final var javaClass = context.getProperty().getType().getReturnedClass();
+		if ( javaClass == Instant.class ) {
+			return "select instant";
+		}
+		else if ( javaClass == OffsetDateTime.class || javaClass == ZonedDateTime.class ) {
+			return "select offset datetime";
+		}
+		else if ( javaClass == LocalDateTime.class ) {
+			return "select local datetime";
+		}
+		else {
+			return null;
+		}
+	}
+
 	private static Clock getBaseClock(GeneratorCreationContext context) {
 		return context.getServiceRegistry().requireService( ConfigurationService.class )
 				.getSetting( CLOCK_SETTING_NAME, value -> (Clock) value );
@@ -274,7 +309,15 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 			if ( !version && eventType != EventType.FORCE_INCREMENT ) {
 				throw new UnsupportedOperationException( "CurrentTimestampGeneration.generate() should not have been called" );
 			}
-			return propertyType.wrap( getCurrentTimestamp( session ), session );
+			return versionQuery != null
+					// the query touches no table, and this is called while flushing
+					? propertyType.wrap(
+							session.createSelectionQuery( versionQuery, Object.class )
+									.setQueryFlushMode( QueryFlushMode.NO_FLUSH )
+									.getSingleResult(),
+							session
+					)
+					: propertyType.wrap( getCurrentTimestamp( session ), session );
 		}
 		else {
 			return delegate.generate();

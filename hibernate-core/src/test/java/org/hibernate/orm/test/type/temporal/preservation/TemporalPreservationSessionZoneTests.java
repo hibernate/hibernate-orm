@@ -9,6 +9,7 @@ import java.util.function.Consumer;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Version;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.CurrentTimestamp;
@@ -71,6 +72,56 @@ class TemporalPreservationSessionZoneTests {
 			assertThat( Duration.between( Instant.now(), read.normalizedAt.toInstant() ).abs() )
 					.isLessThan( Duration.ofMinutes( 5 ) );
 		} );
+	}
+
+	/// A version which the database generates is the current instant. It
+	/// is retrieved by a query of its own, before the row is written, and
+	/// is read as the type of its column is, and not as a
+	/// `java.sql.Timestamp`. The row is then found by that version.
+	@Test
+	void generatedVersionIsTheCurrentInstant() {
+		final var builder = ServiceRegistryUtil.serviceRegistryBuilder();
+		builder.applySetting( "hibernate.hbm2ddl.auto", "create-drop" );
+		builder.applySetting( MappingSettings.TEMPORAL_PRESERVATION, true );
+		try ( var registry = builder.build();
+				var factory = (SessionFactoryImplementor) new MetadataSources( registry )
+						.addAnnotatedClass( WithGeneratedVersion.class )
+						.addAnnotatedClass( WithGeneratedOffsetVersion.class )
+						.buildMetadata()
+						.buildSessionFactory() ) {
+			for ( String zone : DATABASE_SESSION_ZONES ) {
+				TemporalPreservationOffsetTests.inSession( factory, null, zone, session -> {
+					final var entity = new WithGeneratedVersion();
+					entity.id = 1;
+					final var offset = new WithGeneratedOffsetVersion();
+					offset.id = 1;
+					session.persist( entity );
+					session.persist( offset );
+					session.flush();
+					assertThat( Duration.between( Instant.now(), entity.version ).abs() ).isLessThan( Duration.ofMinutes( 5 ) );
+					assertThat( Duration.between( Instant.now(), offset.version.toInstant() ).abs() )
+							.isLessThan( Duration.ofMinutes( 5 ) );
+					final Instant first = entity.version;
+					session.clear();
+
+					// what is stored is what was generated
+					final var read = session.find( WithGeneratedVersion.class, 1 );
+					assertThat( read.version ).isEqualTo( first );
+					final var readOffset = session.find( WithGeneratedOffsetVersion.class, 1 );
+					assertThat( readOffset.version.toInstant() ).isEqualTo( offset.version.toInstant() );
+
+					// the row is updated where its version is the one which was read
+					read.name = "changed";
+					readOffset.name = "changed";
+					session.flush();
+					assertThat( read.version ).isAfterOrEqualTo( first );
+					assertThat( Duration.between( Instant.now(), read.version ).abs() ).isLessThan( Duration.ofMinutes( 5 ) );
+					session.clear();
+					assertThat( session.find( WithGeneratedVersion.class, 1 ).name ).isEqualTo( "changed" );
+					assertThat( session.find( WithGeneratedOffsetVersion.class, 1 ).name ).isEqualTo( "changed" );
+				} );
+			}
+		}
 	}
 
 	/// The current instant which a query asks the database for is the
@@ -351,6 +402,28 @@ class TemporalPreservationSessionZoneTests {
 		@TimeZoneRepresentation(TimeZoneRepresentation.Type.INLINE)
 		@TemporalPreservationPolicy(TemporalPreservationPolicy.Type.NORMALIZED)
 		OffsetDateTime normalizedAt;
+	}
+
+	@Entity(name = "WithGeneratedVersion")
+	static class WithGeneratedVersion {
+		@Id
+		Integer id;
+		String name;
+		@Version
+		@CurrentTimestamp(source = SourceType.DB)
+		Instant version;
+	}
+
+	@Entity(name = "WithGeneratedOffsetVersion")
+	static class WithGeneratedOffsetVersion {
+		@Id
+		Integer id;
+		String name;
+		@Version
+		@CurrentTimestamp(source = SourceType.DB)
+		@TimeZoneRepresentation(TimeZoneRepresentation.Type.INLINE)
+		@TemporalPreservationPolicy(TemporalPreservationPolicy.Type.NORMALIZED)
+		OffsetDateTime version;
 	}
 
 	@Entity(name = "SoftDeleted")

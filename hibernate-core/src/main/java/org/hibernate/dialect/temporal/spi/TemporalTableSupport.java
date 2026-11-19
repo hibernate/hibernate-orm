@@ -46,6 +46,18 @@ public interface TemporalTableSupport {
 		return preferredType;
 	}
 
+	/// Whether a temporal effectivity column, which is part of a primary key,
+	/// may have the type of column in which the Dialect stores an `Instant`
+	/// with temporal preservation enabled. Where it may not, the column keeps
+	/// the type of [#getTemporalColumnType()], and with temporal preservation
+	/// enabled the mapping is rejected unless that type is established to
+	/// preserve an `Instant`.
+	///
+	/// @since 8.1
+	default boolean supportsPreservedInstantAsTemporalColumn() {
+		return true;
+	}
+
 	/// Render the trailing table options for the supplied table. Use every name
 	/// in the request verbatim and return `null` when no options are needed.
 	@Nullable String getTemporalTableOptions(TemporalTableDdlRequest request);

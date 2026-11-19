@@ -11,11 +11,15 @@ import jakarta.persistence.Id;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.CurrentTimestamp;
+import org.hibernate.annotations.SoftDelete;
+import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.annotations.SourceType;
+import org.hibernate.annotations.Temporal;
 import org.hibernate.annotations.TemporalPreservationPolicy;
 import org.hibernate.annotations.TimeZoneRepresentation;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.MappingSettings;
+import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -34,8 +38,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /// Verifies against a live database that, with temporal preservation
 /// enabled, what the database itself computes for an instant does not depend
-/// on the time zone of its session: a timestamp it generates, and a
-/// comparison between two of its columns.
+/// on the time zone of its session: a timestamp it generates, also for a
+/// temporal table or a soft delete, and a comparison between two of its
+/// columns.
 ///
 /// @author Steve Ebersole
 @RequiresDialect(H2Dialect.class)
@@ -63,6 +68,84 @@ class TemporalPreservationSessionZoneTests {
 			assertThat( Duration.between( Instant.now(), read.normalizedAt.toInstant() ).abs() )
 					.isLessThan( Duration.ofMinutes( 5 ) );
 		} );
+	}
+
+	/// The current instant which a query asks the database for is the
+	/// current instant, as an `Instant` and as an `OffsetDateTime`.
+	@Test
+	void currentInstantOfAQueryIsTheCurrentInstant() {
+		inEverySessionZone( session -> {
+			final var entity = new Compared();
+			entity.id = 1;
+			session.persist( entity );
+			session.flush();
+			final Instant instant = session.createQuery( "select instant from Compared", Instant.class )
+					.getSingleResult();
+			assertThat( Duration.between( Instant.now(), instant ).abs() ).isLessThan( Duration.ofMinutes( 5 ) );
+			final OffsetDateTime dateTime = session.createQuery( "select offset datetime from Compared", OffsetDateTime.class )
+					.getSingleResult();
+			assertThat( Duration.between( Instant.now(), dateTime.toInstant() ).abs() ).isLessThan( Duration.ofMinutes( 5 ) );
+		} );
+	}
+
+	/// The row start of a temporal table and the timestamp of a soft delete
+	/// are the current instant, whether the timestamps of transactions come
+	/// from the JVM or from the database.
+	@Test
+	void timestampsOfTemporalTablesAndSoftDeletesAreTheCurrentInstant() {
+		for ( boolean fromDatabase : new boolean[] { false, true } ) {
+			final var builder = ServiceRegistryUtil.serviceRegistryBuilder();
+			builder.applySetting( "hibernate.hbm2ddl.auto", "create-drop" );
+			builder.applySetting( MappingSettings.TEMPORAL_PRESERVATION, true );
+			builder.applySetting( StateManagementSettings.TEMPORAL_TABLE_STRATEGY, "SINGLE_TABLE" );
+			builder.applySetting( StateManagementSettings.USE_SERVER_TRANSACTION_TIMESTAMPS, fromDatabase );
+			// Oracle allows no column with a time zone in a primary key, so the
+			// row start of a temporal table cannot be stored as an Instant is
+			final boolean temporalTables = !( DialectContext.getDialect() instanceof OracleDialect );
+			try ( var registry = builder.build();
+					var factory = (SessionFactoryImplementor) new MetadataSources( registry )
+							.addAnnotatedClasses( temporalTables
+									? new Class<?>[] { SoftDeleted.class, WithHistory.class }
+									: new Class<?>[] { SoftDeleted.class } )
+							.buildMetadata()
+							.buildSessionFactory() ) {
+				final int[] ids = { 0 };
+				for ( String zone : DATABASE_SESSION_ZONES ) {
+					TemporalPreservationOffsetTests.inSession( factory, null, zone, session -> {
+						final int id = ++ids[0];
+						final var deleted = new SoftDeleted();
+						deleted.id = id;
+						session.persist( deleted );
+						if ( temporalTables ) {
+							final var withHistory = new WithHistory();
+							withHistory.id = id;
+							session.persist( withHistory );
+						}
+						session.flush();
+						session.remove( deleted );
+						session.flush();
+						session.clear();
+
+						// the current row is found by comparison with its row start
+						if ( temporalTables ) {
+							assertThat( session.find( WithHistory.class, id ) ).isNotNull();
+						}
+						assertThat( session.find( SoftDeleted.class, id ) ).isNull();
+						for ( String query : temporalTables
+								? new String[] {
+										"select effective_from from WithHistory where id = " + id,
+										"select deleted from SoftDeleted where id = " + id
+								}
+								: new String[] { "select deleted from SoftDeleted where id = " + id } ) {
+							final Instant stored = session.createNativeQuery( query, Instant.class ).getSingleResult();
+							assertThat( Duration.between( Instant.now(), stored ).abs() )
+									.as( query + ", timestamps from database: " + fromDatabase )
+									.isLessThan( Duration.ofMinutes( 5 ) );
+						}
+					} );
+				}
+			}
+		}
 	}
 
 	/// Two columns which hold the same instant compare as equal. Where one
@@ -132,6 +215,20 @@ class TemporalPreservationSessionZoneTests {
 		@TimeZoneRepresentation(TimeZoneRepresentation.Type.INLINE)
 		@TemporalPreservationPolicy(TemporalPreservationPolicy.Type.NORMALIZED)
 		OffsetDateTime normalizedAt;
+	}
+
+	@Entity(name = "SoftDeleted")
+	@SoftDelete(strategy = SoftDeleteType.TIMESTAMP)
+	static class SoftDeleted {
+		@Id
+		Integer id;
+	}
+
+	@Temporal(rowStart = "effective_from", rowEnd = "effective_to")
+	@Entity(name = "WithHistory")
+	static class WithHistory {
+		@Id
+		Integer id;
 	}
 
 	@Entity(name = "Compared")

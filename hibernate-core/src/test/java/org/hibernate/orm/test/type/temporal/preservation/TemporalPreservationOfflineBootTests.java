@@ -60,6 +60,28 @@ class TemporalPreservationOfflineBootTests {
 				.hasMessageContaining( MappingSettings.TEMPORAL_PRESERVATION );
 	}
 
+	/// The timestamp of a soft delete is always computed by the database. Its
+	/// column on DB2 holds the date and time at UTC, for which DB2Dialect has
+	/// no expression, so the mapping is rejected.
+	@Test
+	void timestampOfSoftDeleteIsRejectedOnDb2() {
+		final var registryBuilder = ServiceRegistryUtil.serviceRegistryBuilder();
+		registryBuilder.applySetting( MappingSettings.TEMPORAL_PRESERVATION, true );
+		registryBuilder.applySetting( JdbcSettings.ALLOW_METADATA_ON_BOOT, false );
+		registryBuilder.applySetting( JdbcSettings.DIALECT, DB2Dialect.class.getName() );
+		registryBuilder.applySetting( JdbcSettings.CONNECTION_PROVIDER, new NoConnections() );
+		registryBuilder.applySetting( "hibernate.hbm2ddl.auto", "none" );
+		try ( var registry = registryBuilder.build() ) {
+			assertThatThrownBy( () -> new MetadataSources( registry )
+					.addAnnotatedClass( SoftDeleted.class )
+					.buildMetadata()
+					.buildSessionFactory()
+					.close() )
+					.hasStackTraceContaining( MappingSettings.TEMPORAL_PRESERVATION )
+					.hasStackTraceContaining( "has no expression for the current date and time at UTC" );
+		}
+	}
+
 	/// On DB2 a `LocalDate` is exchanged as a `java.sql.Date`, which passes
 	/// through the default time zone of the JVM. A day which that zone
 	/// skipped cannot be written, and the day after it cannot be read. This
@@ -169,5 +191,12 @@ class TemporalPreservationOfflineBootTests {
 		public <T> T unwrap(Class<T> unwrapType) {
 			throw new UnsupportedOperationException();
 		}
+	}
+
+	@Entity(name = "SoftDeleted")
+	@org.hibernate.annotations.SoftDelete(strategy = org.hibernate.annotations.SoftDeleteType.TIMESTAMP)
+	static class SoftDeleted {
+		@Id
+		Integer id;
 	}
 }

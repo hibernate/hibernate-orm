@@ -1,5 +1,6 @@
 package org.hibernate.metamodel.model.domain.internal;
 
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -52,12 +53,17 @@ public final class EntityPersisterConcurrentMap {
 		final var newKeys = new String[size];
 		int i = 0;
 		for ( var entry : map.entrySet() ) {
-			newValues[i] = entry.getValue().entityPersister;
-			newKeys[i] = entry.getKey();
-			i++;
+			final var entityPersister = entry.getValue().entityPersister;
+			final String name = entry.getKey();
+			// skip the extra entries registered under the class name
+			if ( name.equals( entityPersister.getEntityName() ) ) {
+				newValues[i] = entityPersister;
+				newKeys[i] = name;
+				i++;
+			}
 		}
-		values = newValues;
-		keys = newKeys;
+		values = Arrays.copyOf( newValues, i );
+		keys = Arrays.copyOf( newKeys, i );
 	}
 
 	/**

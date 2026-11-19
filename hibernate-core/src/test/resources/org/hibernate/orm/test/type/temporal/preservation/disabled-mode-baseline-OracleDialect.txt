@@ -53,7 +53,7 @@ BaselineOffsetTime jdbcType=TimeWithTimeZoneJdbcType column=timestamp(0) with ti
   06:30+02:00 -> stored= 1970-01-01 04:30:00.000000000 +02:00 read=06:30+02:00 parameter=1 literal=0
   23:59:59+02:00 -> stored= 1970-01-01 21:59:59.000000000 +02:00 read=23:59:59+02:00 parameter=1 literal=0
 BaselineOffsetDateTime jdbcType=TimestampWithTimeZoneJdbcType column=timestamp(9) with time zone
-  0001-01-01T00:00+02:00 -> stored=-0001-12-31 22:00:00.000000000 +02:00 read=0001-01-01T00:00+02:00 parameter=1 literal=1
+  0001-01-01T00:00+02:00 -> stored=-0001-12-31 22:00:00.000000000 +02:00 read=0001-01-01T00:00+02:00 parameter=1 literal=varies
   1500-03-01T12:00+02:00 -> stored= 1500-03-01 10:00:00.000000000 +02:00 read=1500-03-01T12:00+02:00 parameter=1 literal=1
   1582-10-10T12:00+02:00 -> stored= 1582-10-10 10:00:00.000000000 +02:00 read=1582-10-10T12:00+02:00 parameter=1 literal=0
   1582-10-15T00:00+02:00 -> stored= 1582-10-14 22:00:00.000000000 +02:00 read=1582-10-15T00:00+02:00 parameter=1 literal=0

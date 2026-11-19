@@ -43,7 +43,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 /// For each Java Time class the test records the JDBC type and column type
 /// which are selected and, for a list of values chosen to be sensitive to how
 /// they are converted, what the database stores, what is read back, and
-/// whether a literal rendered by Hibernate matches. The record is compared
+/// whether a literal rendered by Hibernate matches, unless that differs between
+/// versions of the database. The record is compared
 /// with `disabled-mode-baseline-<Dialect>.txt` or `direct-jdbc-baseline-<Dialect>.txt`, which was produced by running
 /// this same class, unchanged, against the `main` branch. Because the handling
 /// being verified depends on the default time zone of the JVM, the comparison
@@ -206,6 +207,9 @@ class DisabledModeBaselineTests {
 				catch (RuntimeException e) {
 					matchedByLiteral = e.getClass().getSimpleName();
 				}
+				if ( literalMatchVariesByVersion( dialect, sample ) ) {
+					matchedByLiteral = "varies";
+				}
 				return "stored=" + stored + " read=" + read
 					+ " parameter=" + matchedByParameter + " literal=" + matchedByLiteral;
 			} );
@@ -213,6 +217,17 @@ class DisabledModeBaselineTests {
 		catch (RuntimeException e) {
 			return e.getClass().getSimpleName();
 		}
+	}
+
+	/// Whether the database decides differently, from one of its versions to
+	/// another, if a literal for the value equals what is stored. Oracle 26ai
+	/// matches the literal of an `OffsetDateTime` whose date and time at UTC
+	/// fall before the year 1, and Oracle 19c and 21c do not. The value
+	/// is stored and read back alike on all of them.
+	private static boolean literalMatchVariesByVersion(Dialect dialect, Object sample) {
+		return dialect.getClass().getSimpleName().startsWith( "Oracle" )
+			&& sample instanceof OffsetDateTime
+			&& ( (OffsetDateTime) sample ).toInstant().isBefore( Instant.parse( "0001-01-01T00:00:00Z" ) );
 	}
 
 	/// The stored value as text, as the database itself renders it.

@@ -21,6 +21,7 @@ public final class Constants {
 	public static final String ID_CLASS = "jakarta.persistence.IdClass";
 	public static final String EMBEDDED_ID = "jakarta.persistence.EmbeddedId";
 	public static final String NATURAL_ID = "org.hibernate.annotations.NaturalId";
+	public static final String COMPOSITE_TYPE = "org.hibernate.annotations.CompositeType";
 	public static final String TRANSIENT = "jakarta.persistence.Transient";
 	public static final String BASIC = "jakarta.persistence.Basic";
 	public static final String ONE_TO_ONE = "jakarta.persistence.OneToOne";

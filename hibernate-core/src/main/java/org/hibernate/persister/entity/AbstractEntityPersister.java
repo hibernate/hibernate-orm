@@ -2647,6 +2647,16 @@ public abstract class AbstractEntityPersister
 			}
 		}
 
+		// A seeded version may be reported dirty even though it is already in the snapshot.
+		final int versionIndex = getVersionPropertyIndex();
+		if ( isVersioned()
+				&& previousState != null
+				&& currentState[versionIndex] != LazyPropertyInitializer.UNFETCHED_PROPERTY
+				&& previousState[versionIndex] != LazyPropertyInitializer.UNFETCHED_PROPERTY
+				&& !getVersionType().isDirty( previousState[versionIndex], currentState[versionIndex], session ) ) {
+			fields.remove( Integer.valueOf( versionIndex ) );
+		}
+
 		return toIntArray( fields );
 	}
 

@@ -101,6 +101,9 @@ import org.hibernate.dialect.temptable.spi.TemporaryTableStrategies;
 import org.hibernate.dialect.temptable.spi.StandardGlobalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.spi.TemporaryTableStrategy;
 import org.hibernate.dialect.type.spi.OracleJdbcTypes;
+import org.hibernate.dialect.type.internal.OracleLocalTimeJdbcType;
+import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.type.descriptor.java.LocalTimeJavaType;
 import org.hibernate.dialect.unique.spi.UniqueDelegates;
 import org.hibernate.dialect.unique.spi.UniqueDelegate;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -999,6 +1002,18 @@ public class OracleDialect extends Dialect implements CurrentTemporalSupport, Te
 				jdbcType,
 				StandardTemporalPreservations.GREGORIAN_START
 		);
+		if ( preservation == TemporalPreservation.unknown()
+				&& StandardTemporalPreservations.isPair(
+						javaType,
+						jdbcType,
+						LocalTimeJavaType.class,
+						OracleLocalTimeJdbcType.class
+				) ) {
+			// Stored in a TIMESTAMP column, on the first day of 1970, and exchanged
+			// with the driver as a LocalDateTime. A LocalTime exchanged as such is not
+			// preserved: what is stored depends on the default time zone of the JVM.
+			preservation = TemporalPreservation.ofTime();
+		}
 		if ( preservation == TemporalPreservation.unknown() ) {
 			preservation = StandardTemporalPreservations.instant(
 					javaType,
@@ -1169,6 +1184,11 @@ public class OracleDialect extends Dialect implements CurrentTemporalSupport, Te
 		useValueLOB = configurationService.getSetting( ORACLE_VALUE_LOB_ENABLED, StandardConverters.BOOLEAN, true );
 
 		super.contributeTypes( typeContributions, serviceRegistry );
+		if ( MetadataBuildingContext.isTemporalPreservationEnabled( serviceRegistry ) ) {
+			// A LocalTime is exchanged with the driver as a LocalDateTime, since what the
+			// driver stores for a LocalTime depends on the default time zone of the JVM.
+			typeContributions.contributeJdbcType( OracleLocalTimeJdbcType.INSTANCE );
+		}
 		if ( ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( serviceRegistry, this ) == BIT ) {
 			typeContributions.contributeJdbcType( OracleJdbcTypes.booleanType() );
 		}

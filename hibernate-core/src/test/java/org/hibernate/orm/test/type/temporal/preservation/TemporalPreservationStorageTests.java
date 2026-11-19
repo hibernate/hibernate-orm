@@ -304,6 +304,7 @@ class TemporalPreservationStorageTests {
 	@RequiresDialect(MySQLDialect.class)
 	@RequiresDialect(SQLServerDialect.class)
 	@RequiresDialect(value = DB2Dialect.class, matchSubTypes = false)
+	@RequiresDialect(OracleDialect.class)
 	@DomainModel(annotatedClasses = WithLocalTime.class)
 	@SessionFactory
 	class Times {

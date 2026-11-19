@@ -1,5 +1,11 @@
 package org.hibernate.orm.test.type.temporal.preservation;
 
+import org.hibernate.orm.test.type.temporal.preservation.TemporalPreservationBootMatrix.WithLocalTime;
+import org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
+import org.hibernate.sql.spi.StringBuilderSqlAppender;
+import org.hibernate.dialect.type.internal.OracleLocalTimeJdbcType;
+import java.time.LocalTime;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -58,6 +64,49 @@ class TemporalPreservationOfflineBootTests {
 				.isInstanceOf( MappingException.class )
 				.hasMessageContaining( "WithArray.theValues" )
 				.hasMessageContaining( MappingSettings.TEMPORAL_PRESERVATION );
+	}
+
+	/// Oracle has no type for a time of day. With temporal preservation
+	/// enabled a `LocalTime` is exchanged as a date and time on the first day
+	/// of 1970, and a literal is rendered as one; without it nothing changes.
+	/// This needs no database, so it is verified whatever the database under test.
+	@Test
+	@SuppressWarnings("unchecked")
+	void localTimeOnOracleIsExchangedAsADateTime() {
+		for ( boolean enabled : new boolean[] { true, false } ) {
+			final var registryBuilder = ServiceRegistryUtil.serviceRegistryBuilder();
+			registryBuilder.applySetting( MappingSettings.TEMPORAL_PRESERVATION, enabled );
+			registryBuilder.applySetting( MappingSettings.JAVA_TIME_USE_DIRECT_JDBC, true );
+			registryBuilder.applySetting( JdbcSettings.ALLOW_METADATA_ON_BOOT, false );
+			registryBuilder.applySetting( JdbcSettings.DIALECT, OracleDialect.class.getName() );
+			registryBuilder.applySetting( JdbcSettings.CONNECTION_PROVIDER, new NoConnections() );
+			registryBuilder.applySetting( "hibernate.hbm2ddl.auto", "none" );
+			try ( var registry = registryBuilder.build();
+					var factory = (SessionFactoryImplementor) new MetadataSources( registry )
+							.addAnnotatedClass( WithLocalTime.class )
+							.buildMetadata()
+							.buildSessionFactory() ) {
+				final var mapping = factory.getMappingMetamodel()
+						.getEntityDescriptor( WithLocalTime.class )
+						.findAttributeMapping( "theValue" )
+						.getSingleJdbcMapping();
+				final var literal = new StringBuilder();
+				( (JdbcLiteralFormatter<Object>) mapping.getJdbcLiteralFormatter() ).appendJdbcLiteral(
+						new StringBuilderSqlAppender( literal ),
+						LocalTime.of( 12, 34, 56 ),
+						factory.getJdbcServices().getDialect(),
+						factory.getWrapperOptions()
+				);
+				if ( enabled ) {
+					assertThat( mapping.getJdbcType() ).isInstanceOf( OracleLocalTimeJdbcType.class );
+					assertThat( literal.toString() ).contains( "1970-01-01 12:34:56" );
+				}
+				else {
+					assertThat( mapping.getJdbcType() ).isExactlyInstanceOf( LocalTimeJdbcType.class );
+					assertThat( literal.toString() ).isEqualTo( "{t '12:34:56'}" );
+				}
+			}
+		}
 	}
 
 	/// The timestamp of a soft delete is always computed by the database. Its

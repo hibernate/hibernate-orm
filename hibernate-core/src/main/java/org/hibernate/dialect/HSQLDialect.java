@@ -408,7 +408,10 @@ public class HSQLDialect extends Dialect implements CurrentTemporalSupport, Temp
 
 	@Override
 	public String currentUtcTimestamp() {
-		return "current_timestamp at time zone interval '0:00' hour to minute";
+		// cast to a timestamp without a time zone, which is what it is compared with:
+		// left with its time zone, the column it is compared with would be read in
+		// the time zone of the session
+		return "cast(current_timestamp at time zone interval '0:00' hour to minute as timestamp)";
 	}
 
 	@Override

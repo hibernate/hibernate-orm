@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/orm/hbm"
+                   package="org.hibernate.orm.test.boot.models.hbm.onetoone"
+                   default-access="field">
+    <class name="ConstrainedOneToOneTests$Parent" table="parent_t">
+        <id name="id"/>
+    </class>
+    <class name="ConstrainedOneToOneTests$Child" table="child_t">
+        <id name="id"/>
+        <one-to-one name="parent" class="ConstrainedOneToOneTests$Parent"
+                    constrained="true" on-delete="cascade"/>
+    </class>
+</hibernate-mapping>

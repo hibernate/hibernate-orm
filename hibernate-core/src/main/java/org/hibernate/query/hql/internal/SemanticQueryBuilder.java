@@ -43,6 +43,7 @@ import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.internal.AnyKeyPart;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
+import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -4640,6 +4641,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public Object visitGenericFunction(HqlParser.GenericFunctionContext ctx) {
+		final var nameContext = ctx.genericFunctionName();
+		if ( getFunctionDescriptor( visitGenericFunctionName( nameContext ).toLowerCase() ) == null
+				&& isEmbeddableValuedPath( nameContext.simplePath() ) ) {
+			// not a function at all, but an embeddable pattern
+			return embeddablePattern( ctx );
+		}
+
 		final var functionTemplate = getFunctionTemplate(  ctx );
 		final var functionArguments = getFunctionArguments( ctx );
 		final var filterExpression = getFilterExpression( ctx );
@@ -4674,6 +4682,148 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			);
 		};
 		return applyOverClause( ctx.overClause(), function );
+	}
+
+	/**
+	 * Determine if the given path, which occurs in the position of a function
+	 * name, refers to something of embeddable type, without actually resolving
+	 * the path, since that could result in the creation of implicit joins.
+	 */
+	private boolean isEmbeddableValuedPath(HqlParser.SimplePathContext pathContext) {
+		final String base = visitIdentifier( pathContext.identifier() );
+		final var continuations = pathContext.simplePathElement();
+		final var fromByAlias = findFromByAlias( base );
+		if ( fromByAlias != null ) {
+			return isEmbeddableValuedPath( fromByAlias.getReferencedPathSource(), continuations );
+		}
+		else {
+			// an ambiguous unqualified attribute reference is not an error here,
+			// since this might just be a function with the same name; if it could
+			// be an embeddable, the ambiguity is reported when the path is resolved
+			final var fromsExposing =
+					processingStateStack.getCurrent().getPathRegistry()
+							.findAllFromExposing( base );
+			for ( var fromExposing : fromsExposing ) {
+				final var pathSource = findSingularSubPathSource( fromExposing.getReferencedPathSource(), base );
+				if ( isEmbeddableValuedPath( pathSource, continuations ) ) {
+					return true;
+				}
+			}
+			return false;
+		}
+	}
+
+	private boolean isEmbeddableValuedPath(
+			@Nullable SqmPathSource<?> pathSource,
+			List<HqlParser.SimplePathElementContext> continuations) {
+		for ( var continuation : continuations ) {
+			if ( pathSource == null ) {
+				return false;
+			}
+			pathSource = findSingularSubPathSource( pathSource, visitIdentifier( continuation.identifier() ) );
+		}
+		return pathSource != null
+			&& pathSource.getPathType() instanceof EmbeddableDomainType;
+	}
+
+	/**
+	 * Find a from element with the given alias in the current query or in
+	 * a parent query, but without creating a correlation.
+	 */
+	private @Nullable SqmFrom<?, ?> findFromByAlias(String alias) {
+		for ( var processingState = processingStateStack.getCurrent();
+				processingState != null;
+				processingState = processingState.getParentProcessingState() ) {
+			final SqmFrom<?, ?> from =
+					processingState.getPathRegistry()
+							.findFromByAlias( alias, false );
+			if ( from != null ) {
+				return from;
+			}
+		}
+		return null;
+	}
+
+	private static @Nullable SqmPathSource<?> findSingularSubPathSource(SqmPathSource<?> pathSource, String name) {
+		if ( pathSource.getPathType() instanceof ManagedDomainType ) {
+			final var subPathSource = pathSource.findSubPathSource( name, true );
+			return subPathSource instanceof PluralPersistentAttribute ? null : subPathSource;
+		}
+		else {
+			return null;
+		}
+	}
+
+	/**
+	 * An <em>embeddable pattern</em> like {@code address(street, city, zip)}
+	 * destructures an embeddable-valued path to a tuple of its attributes,
+	 * here {@code (address.street, address.city, address.zip)}.
+	 * <p>
+	 * Syntactically, this is indistinguishable from a function invocation.
+	 */
+	private SqmExpression<?> embeddablePattern(HqlParser.GenericFunctionContext ctx) {
+		if ( creationOptions.useStrictJpaCompliance() ) {
+			throw new StrictJpaComplianceViolation(
+					StrictJpaComplianceViolation.Type.TUPLES
+			);
+		}
+		final var pathContext = ctx.genericFunctionName().simplePath();
+		final var argumentsContext = ctx.genericFunctionArguments();
+		if ( argumentsContext == null
+				|| argumentsContext.DISTINCT() != null
+				|| ctx.nthSideClause() != null
+				|| ctx.nullsClause() != null
+				|| ctx.withinGroupClause() != null
+				|| ctx.filterClause() != null
+				|| ctx.overClause() != null ) {
+			throw illegalEmbeddablePattern( pathContext );
+		}
+		final var embeddablePath = consumeDomainPath( pathContext );
+		final var argumentContexts = argumentsContext.expressionOrPredicate();
+		final List<SqmExpression<?>> attributePaths = new ArrayList<>( argumentContexts.size() + 1 );
+		final var datetimeFieldContext = argumentsContext.datetimeField();
+		if ( datetimeFieldContext != null ) {
+			// an attribute which happens to have the same name as a datetime field
+			attributePaths.add( resolveAttribute( embeddablePath, datetimeFieldContext.getText() ) );
+		}
+		for ( var argumentContext : argumentContexts ) {
+			final var attributeName = attributeName( argumentContext );
+			if ( attributeName == null ) {
+				throw illegalEmbeddablePattern( pathContext );
+			}
+			attributePaths.add( resolveAttribute( embeddablePath, attributeName ) );
+		}
+		// just as (x) is not a tuple, a pattern with a single attribute is not a tuple
+		return attributePaths.size() == 1
+				? attributePaths.get( 0 )
+				: new SqmTuple<>( attributePaths, nodeBuilder() );
+	}
+
+	private SqmExpression<?> resolveAttribute(SqmPath<?> embeddablePath, String attributeName) {
+		return (SqmExpression<?>) embeddablePath.resolvePathPart( attributeName, true, this );
+	}
+
+	/**
+	 * If the given argument is syntactically just an identifier, return it.
+	 */
+	private @Nullable String attributeName(HqlParser.ExpressionOrPredicateContext argumentContext) {
+		if ( argumentContext.expression() instanceof HqlParser.BarePrimaryExpressionContext expressionContext
+				&& expressionContext.primaryExpression() instanceof HqlParser.GeneralPathExpressionContext generalPathContext ) {
+			final var fragmentContext = generalPathContext.generalPathFragment();
+			final var simplePathContext = fragmentContext.simplePath();
+			if ( fragmentContext.indexedPathAccessFragment() == null
+					&& simplePathContext.simplePathElement().isEmpty() ) {
+				return visitIdentifier( simplePathContext.identifier() );
+			}
+		}
+		return null;
+	}
+
+	private SemanticException illegalEmbeddablePattern(HqlParser.SimplePathContext pathContext) {
+		final String path = pathContext.getText();
+		return new SemanticException( "Path '" + path + "' is of embeddable type, and so '"
+				+ path + "(...)' must be a list of names of attributes of the embeddable",
+				query );
 	}
 
 	private SqmFunctionDescriptor getFunctionTemplate(HqlParser.GenericFunctionContext ctx) {

@@ -1,5 +1,6 @@
 package org.hibernate.query.hql.spi;
 
+import java.util.List;
 import java.util.function.Function;
 
 import jakarta.annotation.Nullable;
@@ -70,6 +71,16 @@ public interface SqmPathRegistry {
 	 * @return matching SqmFrom or {@code null}
 	 */
 	<X extends SqmFrom<?, ?>> @Nullable X findFromExposing(String navigableName);
+
+	/**
+	 * Find every SqmFrom which exposes a Navigable by the given name.  Will search
+	 * any parent contexts if there is none in this context.  Unlike
+	 * {@link #findFromExposing(String)}, this operation never fails when the given
+	 * name is ambiguous.
+	 *
+	 * @return the matching SqmFroms, or an empty list
+	 */
+	List<SqmFrom<?, ?>> findAllFromExposing(String navigableName);
 
 	/**
 	 * Similar to {@link #findFromByPath}, but accepting a producer to be used

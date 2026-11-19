@@ -1300,8 +1300,8 @@ Name the type, as in `createNativeQuery(sql, LocalDateTime.class)` or with `addS
 |A query parameter or query result of a `java.time` type which is not supported
 |When the value is bound or read
 
-|An output parameter of a stored procedure or function which has a `java.time` type
-|When the output is read
+|An output parameter of a stored procedure or function which has a `java.time` type, whether `OUT` or `INOUT`
+|When the procedure is called, before it is executed
 |===
 
 The following are outside temporal preservation.

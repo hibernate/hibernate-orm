@@ -1,8 +1,11 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -158,8 +161,21 @@ public class MappingMetamodelImpl
 				persisterFactory,
 				context
 		);
-		entityPersisters = entityPersisterMap.values().toArray( EntityPersister[]::new );
-		entityNames = entityPersisterMap.keySet().toArray( String[]::new );
+
+		final List<EntityPersister> list = new ArrayList<>();
+		final List<String> result = new ArrayList<>();
+		for ( var entry : entityPersisterMap.entrySet() ) {
+			// skip the extra entries registered under the class name
+			final var entityPersister = entry.getValue();
+			final String entityName = entityPersister.getEntityName();
+			if ( entry.getKey().equals( entityName ) ) {
+				list.add( entityPersister );
+				result.add( entityName );
+			}
+		}
+		entityPersisters = list.toArray( EntityPersister[]::new );
+		entityNames = result.toArray( String[]::new );
+
 		processBootCollections(
 				bootModel.getCollectionBindings(),
 				cache,

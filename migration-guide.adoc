@@ -147,7 +147,7 @@ extends an entity class, is now rejected with an `AnnotationException` when the 
 
 Previously, if the annotated attribute had the same name as the identifier of the root entity, the annotation was
 silently ignored, along with any `@GeneratedValue` or `@Column` annotation of the attribute.
-The redundant attribute should be removed from the subclass.
+The redundant annotation should be removed from the subclass.
 
 An `@Id` annotation on a getter of the subclass did have the side effect of switching the subclass to property-based
 access. A subclass which depends on this should now be annotated `@Access(AccessType.PROPERTY)`.

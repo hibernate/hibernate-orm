@@ -22,6 +22,9 @@ import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
 import org.jboss.logging.Logger;
+import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
@@ -44,11 +47,14 @@ import java.util.function.Function;
 /// @implNote Leverages the [domain model][DomainModelScope] defined using the [DomainModelExtension].
 ///
 /// @author Steve Ebersole
+/// @author inpink
 public class SessionFactoryExtension
-		implements TestInstancePostProcessor, BeforeEachCallback, TestExecutionExceptionHandler {
+		implements TestInstancePostProcessor, BeforeAllCallback, BeforeEachCallback,
+		AfterEachCallback, AfterAllCallback, TestExecutionExceptionHandler {
 
 	private static final Logger log = Logger.getLogger( SessionFactoryExtension.class );
 	private static final String SESSION_FACTORY_KEY = SessionFactoryScope.class.getName();
+	private static final String DROP_DATA_TIMING_KEY = "DROP_DATA_TIMING";
 
 	/**
 	 * Intended for use from external consumers.  Will never create a scope, just
@@ -77,12 +83,18 @@ public class SessionFactoryExtension
 				|| SessionFactoryProducer.class.isAssignableFrom( context.getRequiredTestClass() ) ) {
 			final DomainModelScope domainModelScope = DomainModelExtension.getOrCreateDomainModelScope( testInstance, context );
 			final SessionFactoryScope created = createSessionFactoryScope( testInstance, sfAnnRef, domainModelScope, context );
-			locateExtensionStore( testInstance, context ).put( SESSION_FACTORY_KEY, created );
+			final ExtensionContext.Store store = locateExtensionStore( testInstance, context );
+			store.put( SESSION_FACTORY_KEY, created );
+
+			final DropDataTiming[] dropDataTimings = resolveDropDataTimings( testInstance, sfAnnRef );
+			store.put( DROP_DATA_TIMING_KEY, dropDataTimings );
 		}
 	}
 
 	@Override
 	public void beforeEach(ExtensionContext context) {
+		handleDropData(context, DropDataTiming.BEFORE_EACH);
+
 		final Optional<SessionFactory> sfAnnRef = AnnotationSupport.findAnnotation(
 				context.getRequiredTestMethod(),
 				SessionFactory.class
@@ -97,6 +109,8 @@ public class SessionFactoryExtension
 		final DomainModelScope domainModelScope = DomainModelExtension.resolveForMethodLevelSessionFactoryScope( context );
 		final SessionFactoryScope created = createSessionFactoryScope( context.getRequiredTestInstance(), sfAnnRef, domainModelScope, context );
 		final ExtensionContext.Store extensionStore = locateExtensionStore( context.getRequiredTestInstance(), context );
+		final DropDataTiming[] dropDataTimings = resolveDropDataTimings( context.getRequiredTestInstance(), sfAnnRef );
+		extensionStore.put( DROP_DATA_TIMING_KEY, dropDataTimings );
 		extensionStore.put( SESSION_FACTORY_KEY, created );
 	}
 
@@ -176,6 +190,20 @@ public class SessionFactoryExtension
 		return sfScope;
 	}
 
+	private static DropDataTiming[] resolveDropDataTimings(
+			Object testInstance,
+			Optional<SessionFactory> sfAnnRef) {
+		if ( testInstance instanceof SessionFactoryProducer ) {
+			return ((SessionFactoryProducer) testInstance).dropTestData();
+		}
+		else if ( sfAnnRef.isPresent() ) {
+			return sfAnnRef.get().dropTestData();
+		}
+		else {
+			return new DropDataTiming[]{};
+		}
+	}
+
 	private static void prepareSchemaExport(
 			SessionFactoryImplementor sessionFactory,
 			MetadataImplementor model,
@@ -231,6 +259,42 @@ public class SessionFactoryExtension
 		}
 
 		throw throwable;
+	}
+
+	@Override
+	public void beforeAll(ExtensionContext context) throws Exception {
+		handleDropData(context, DropDataTiming.BEFORE_ALL);
+	}
+
+	@Override
+	public void afterEach(ExtensionContext context) throws Exception {
+		handleDropData(context, DropDataTiming.AFTER_EACH);
+	}
+
+	@Override
+	public void afterAll(ExtensionContext context) throws Exception {
+		handleDropData(context, DropDataTiming.AFTER_ALL);
+	}
+
+	private void handleDropData(ExtensionContext context, DropDataTiming timing) {
+		try {
+			final Object testInstance = context.getRequiredTestInstance();
+			final ExtensionContext.Store store = locateExtensionStore(testInstance, context);
+
+			final DropDataTiming[] configuredTimings = (DropDataTiming[]) store.get( DROP_DATA_TIMING_KEY );
+
+			for (DropDataTiming configuredTiming : configuredTimings) {
+				if (configuredTiming == timing) {
+					final SessionFactoryScope scope = findSessionFactoryScope(testInstance, context);
+					scope.dropData();
+					log.debugf("Dropped data at timing %s for %s", timing, context.getDisplayName());
+					break;
+				}
+			}
+		}
+		catch (Exception e) {
+			log.warnf("Failed to drop data at timing %s: %s", timing, e);
+		}
 	}
 
 	private static class SessionFactoryScopeImpl implements SessionFactoryScope, AutoCloseable {

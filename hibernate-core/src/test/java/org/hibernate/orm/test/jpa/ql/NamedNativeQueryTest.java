@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.query.IllegalMutationQueryException;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -15,7 +16,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -51,6 +54,26 @@ public class NamedNativeQueryTest {
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
 		scope.inTransaction( session -> scope.dropData() );
+	}
+
+	@Test
+	public void testNativeSelectCannotBecomeMutationQuery(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			var query = session.createNativeQuery( "select id from destination_entity" );
+			assertThrows( IllegalMutationQueryException.class, query::asMutationQuery );
+		} );
+	}
+
+	@Test
+	public void testMappedNativeSelectCannotBecomeStatement(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			var query = session.createNativeQuery(
+					"/* mapped native query */ select id, from_id, fullNameFrom from destination_entity",
+					DestinationEntity.class
+			);
+			var exception = assertThrows( IllegalStateException.class, query::asStatement );
+			assertInstanceOf( IllegalMutationQueryException.class, exception.getCause() );
+		} );
 	}
 
 	@Test

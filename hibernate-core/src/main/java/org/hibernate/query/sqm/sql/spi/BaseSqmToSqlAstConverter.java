@@ -1208,6 +1208,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						getCurrentClauseStack()::getCurrent
 				)
 		);
+		final var insertProcessingState = getCurrentProcessingState();
+		final var insertFromClauseIndex = getFromClauseIndex();
 		currentClauseStack.push( Clause.INSERT );
 		final InsertSelectStatement insertStatement;
 		final AdditionalInsertValues additionalInsertValues;
@@ -1240,8 +1242,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			if ( hasJoins( rootTableGroup ) ) {
 				throw new SemanticException( "Not expecting multiple table references for an SQM INSERT-SELECT" );
 			}
-
-			insertStatement.setConflictClause( visitConflictClause( sqmStatement.getConflictClause() ) );
 		}
 		finally {
 			popProcessingStateStack();
@@ -1261,6 +1261,22 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					assert !appliedRowNumber;
 				}
 		);
+
+		if ( sqmStatement.getConflictClause() != null ) {
+			final var selectProcessingState = lastPoppedProcessingState;
+			final var selectFromClauseIndex = lastPoppedFromClauseIndex;
+			pushProcessingState( insertProcessingState, insertFromClauseIndex );
+			try {
+				currentClauseStack.push( Clause.CONFLICT );
+				insertStatement.setConflictClause( visitConflictClause( sqmStatement.getConflictClause() ) );
+			}
+			finally {
+				popProcessingStateStack();
+				currentClauseStack.pop();
+				lastPoppedProcessingState = selectProcessingState;
+				lastPoppedFromClauseIndex = selectFromClauseIndex;
+			}
+		}
 
 		this.currentSqmStatement = oldSqmStatement;
 		this.cteContainer = oldCteContainer;

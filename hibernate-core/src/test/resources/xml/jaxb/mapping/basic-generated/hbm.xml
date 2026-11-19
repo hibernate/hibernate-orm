@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/orm/hbm"
+                   package="org.hibernate.orm.test.boot.jaxb.mapping"
+                   default-access="field">
+    <class name="GeneratedBasicEntity" table="generated_basic">
+        <id name="id"/>
+        <property name="name"/>
+        <property name="lastUpdated" generated="always"/>
+    </class>
+</hibernate-mapping>

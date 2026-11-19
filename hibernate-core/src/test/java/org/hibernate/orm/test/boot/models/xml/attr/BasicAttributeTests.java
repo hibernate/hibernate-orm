@@ -3,17 +3,22 @@ package org.hibernate.orm.test.boot.models.xml.attr;
 import java.util.Date;
 
 import jakarta.persistence.Version;
+import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.generator.EventType;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.type.SqlTypes;
 
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
@@ -99,6 +104,33 @@ public class BasicAttributeTests {
 		assertThat( updateTimestamp.source() ).isEqualTo( SourceType.DB );
 	}
 
+	@Test
+	@JiraKey("HHH-21206")
+	@SuppressWarnings("JUnitMalformedDeclaration")
+	void testGeneratedWithExplicitType(ServiceRegistryScope scope) {
+		final StandardServiceRegistry serviceRegistry = scope.getRegistry();
+		final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder()
+				.addXmlMappings( "mappings/models/attr/basic/generated-with-type.xml" )
+				.build();
+
+		final ModelsContext modelsContext = createBuildingContext( managedResources, serviceRegistry );
+		final ClassDetailsRegistry classDetailsRegistry = modelsContext.getClassDetailsRegistry();
+
+		final ClassDetails classDetails = classDetailsRegistry.getClassDetails( GeneratedEntity.class.getName() );
+
+		final FieldDetails lastUpdatedField = classDetails.findFieldByName( "lastUpdated" );
+		final Generated generated = lastUpdatedField.getDirectAnnotationUsage( Generated.class );
+		assertThat( generated )
+				.as( "<basic> with <generated> and an explicit type should have @Generated" )
+				.isNotNull();
+		assertThat( generated.event() ).contains( EventType.INSERT, EventType.UPDATE );
+		final JdbcTypeCode jdbcTypeCode = lastUpdatedField.getDirectAnnotationUsage( JdbcTypeCode.class );
+		assertThat( jdbcTypeCode )
+				.as( "<basic> with <generated> and an explicit type should have @JdbcTypeCode" )
+				.isNotNull();
+		assertThat( jdbcTypeCode.value() ).isEqualTo( SqlTypes.TIMESTAMP );
+	}
+
 	@SuppressWarnings("unused")
 	@Entity(name = "SimpleEntity")
 	@Table(name = "SimpleEntity")
@@ -131,5 +163,14 @@ public class BasicAttributeTests {
 		private Integer id;
 		private Date lastModified;
 		private String name;
+	}
+
+	@SuppressWarnings("unused")
+	@Entity(name = "GeneratedEntity")
+	@Table(name = "GeneratedEntity")
+	public static class GeneratedEntity {
+		@Id
+		private Integer id;
+		private Date lastUpdated;
 	}
 }

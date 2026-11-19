@@ -1,9 +1,11 @@
 package org.hibernate.orm.test.boot.jaxb.mapping;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -93,6 +95,23 @@ public class HbmTransformationJaxbTests {
 				assertThat( roundTrip.getEntities().get( 0 ).getClazz() )
 						.isEqualTo( transformed.getEntities().get( 0 ).getClazz() );
 			} ).doesNotThrowAnyException();
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-21206" )
+	public void testBasicAttributeIsValidWhenSerialized(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/basic-generated/hbm.xml", scope, transformed -> {
+			final var writer = new StringWriter();
+			assertThatCode( () -> JAXBContext.newInstance( JaxbEntityMappingsImpl.class ).createMarshaller()
+					.marshal( transformed, writer ) ).doesNotThrowAnyException();
+			// reading the serialized mapping back validates it against the schema
+			final var metadata = new MetadataSources( scope.getRegistry() )
+					.addInputStream( new ByteArrayInputStream( writer.toString().getBytes( StandardCharsets.UTF_8 ) ) )
+					.buildMetadata();
+			final var entity = metadata.getEntityBinding( GeneratedBasicEntity.class.getName() );
+			assertThat( entity.getProperty( "name" ) ).isNotNull();
+			assertThat( entity.getProperty( "lastUpdated" ).getValueGeneratorCreator() ).isNotNull();
 		} );
 	}
 

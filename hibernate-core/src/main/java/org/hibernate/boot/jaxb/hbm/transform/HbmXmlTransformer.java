@@ -2677,6 +2677,15 @@ public class HbmXmlTransformer {
 
 
 	private void transferOneToOne(JaxbHbmOneToOneType hbmOneToOne, PropertyInfo propertyInfo, JaxbAttributesContainer attributes) {
+		if ( isNotEmpty( hbmOneToOne.getPropertyRef() )
+				&& hbmOneToOne.getFormula().isEmpty()
+				&& propertyInfo.bootModelProperty().getValue() instanceof OneToOne oneToOneValue
+				&& !isPropertyRefBackReference( hbmOneToOne, propertyInfo ) ) {
+			attributes.getManyToOneAttributes()
+					.add( transformOneToOneAsManyToOne( hbmOneToOne, oneToOneValue, propertyInfo ) );
+			return;
+		}
+
 		final var oneToOne = new JaxbOneToOneImpl();
 		transferAccess(
 				hbmOneToOne.getAccess(),
@@ -2686,8 +2695,6 @@ public class HbmXmlTransformer {
 		oneToOne.setOptional( propertyInfo.bootModelProperty().isOptional() );
 		oneToOne.setCascade( convertCascadeType( hbmOneToOne.getCascade() ) );
 		oneToOne.setOrphanRemoval( isOrphanRemoval( hbmOneToOne.getCascade() ) );
-		oneToOne.setForeignKey( new JaxbForeignKeyImpl() );
-		oneToOne.getForeignKey().setName( hbmOneToOne.getForeignKey() );
 		if ( isNotEmpty( hbmOneToOne.getPropertyRef() ) ) {
 			if ( isPropertyRefBackReference( hbmOneToOne, propertyInfo ) ) {
 				oneToOne.setMappedBy( hbmOneToOne.getPropertyRef() );
@@ -2717,14 +2724,20 @@ public class HbmXmlTransformer {
 				}
 			}
 		}
-		if ( oneToOne.getMappedBy() == null && hbmOneToOne.getFormula().isEmpty() ) {
-			final Value value = propertyInfo.bootModelProperty().getValue();
-			if ( value instanceof OneToOne ) {
-				oneToOne.getPrimaryKeyJoinColumn().add( new JaxbPrimaryKeyJoinColumnImpl() );
+		final var foreignKey = new JaxbForeignKeyImpl();
+		foreignKey.setName( hbmOneToOne.getForeignKey() );
+		if ( oneToOne.getMappedBy() == null
+				&& hbmOneToOne.getFormula().isEmpty()
+				&& propertyInfo.bootModelProperty().getValue() instanceof OneToOne ) {
+			// a join on the primary key, which cannot be combined with <foreign-key/>
+			oneToOne.getPrimaryKeyJoinColumn().add( new JaxbPrimaryKeyJoinColumnImpl() );
+			oneToOne.setPrimaryKeyForeignKey( foreignKey );
+			if ( hbmOneToOne.getOnDelete() == JaxbHbmOnDeleteEnum.CASCADE ) {
+				oneToOne.setOnDelete( OnDeleteAction.CASCADE );
 			}
 		}
-		if ( hbmOneToOne.getOnDelete() == JaxbHbmOnDeleteEnum.CASCADE ) {
-			oneToOne.setOnDelete( OnDeleteAction.CASCADE );
+		else {
+			oneToOne.setForeignKey( foreignKey );
 		}
 		for ( String formula : hbmOneToOne.getFormula() ) {
 			oneToOne.getJoinColumnOrJoinFormula().add( formula );
@@ -2735,6 +2748,60 @@ public class HbmXmlTransformer {
 		transferFetchable( hbmOneToOne.getLazy(), hbmOneToOne.getFetch(), hbmOneToOne.getOuterJoin(), hbmOneToOne.isConstrained(), oneToOne );
 
 		attributes.getOneToOneAttributes().add( oneToOne );
+	}
+
+	/**
+	 * Transforms a {@code <one-to-one/>} with a {@code property-ref} which is not an
+	 * association back to its owner. It joins the primary key of its owner to a unique
+	 * key of the target, that is, the primary key columns hold a foreign key, and so it
+	 * is a many-to-one with read-only join columns.
+	 */
+	private JaxbManyToOneImpl transformOneToOneAsManyToOne(
+			JaxbHbmOneToOneType hbmOneToOne,
+			OneToOne oneToOneValue,
+			PropertyInfo propertyInfo) {
+		if ( isOrphanRemoval( hbmOneToOne.getCascade() ) ) {
+			handleUnsupported(
+					"Orphan removal is not supported for <one-to-one/> '%s' with a property-ref which is not an association (%s)",
+					hbmOneToOne.getName(),
+					origin()
+			);
+		}
+
+		final var manyToOne = new JaxbManyToOneImpl();
+		manyToOne.setName( hbmOneToOne.getName() );
+		manyToOne.setTargetEntity( determineOneToOneTargetEntityName( hbmOneToOne, propertyInfo ) );
+		manyToOne.setOptional( propertyInfo.bootModelProperty().isOptional() );
+		transferAccess(
+				hbmOneToOne.getAccess(),
+				manyToOne::setAccess,
+				manyToOne::setAttributeAccessor
+		);
+		manyToOne.setCascade( convertCascadeType( hbmOneToOne.getCascade() ) );
+		transferFetchable( hbmOneToOne.getLazy(), hbmOneToOne.getFetch(), hbmOneToOne.getOuterJoin(), hbmOneToOne.isConstrained(), manyToOne );
+
+		for ( var column : oneToOneValue.getConstraintColumns() ) {
+			final var joinColumn = new JaxbJoinColumnImpl();
+			joinColumn.setName( column.getQuotedName() );
+			joinColumn.setInsertable( false );
+			joinColumn.setUpdatable( false );
+			manyToOne.getJoinColumnOrJoinFormula().add( joinColumn );
+		}
+		final var propertyRef = new JaxbPropertyRefImpl();
+		propertyRef.setName( hbmOneToOne.getPropertyRef() );
+		manyToOne.setPropertyRef( propertyRef );
+
+		if ( hbmOneToOne.isConstrained() ) {
+			manyToOne.setForeignKey( transformForeignKey( hbmOneToOne.getForeignKey() ) );
+			if ( hbmOneToOne.getOnDelete() == JaxbHbmOnDeleteEnum.CASCADE ) {
+				manyToOne.setOnDelete( OnDeleteAction.CASCADE );
+			}
+		}
+		else {
+			// there need not be a matching row of the target
+			manyToOne.setNotFound( NotFoundAction.IGNORE );
+		}
+		return manyToOne;
 	}
 
 	/**

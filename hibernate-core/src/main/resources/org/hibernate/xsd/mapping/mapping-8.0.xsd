@@ -2011,7 +2011,7 @@
         <xsd:sequence>
             <xsd:choice>
                 <xsd:sequence>
-                    <xsd:choice>
+                    <xsd:sequence>
                         <xsd:sequence>
                             <xsd:sequence>
                                 <xsd:choice maxOccurs="unbounded">
@@ -2021,8 +2021,8 @@
                             </xsd:sequence>
                             <xsd:element name="foreign-key" type="orm:foreign-key" minOccurs="0"/>
                         </xsd:sequence>
-                        <xsd:element name="property-ref" type="orm:property-ref"/>
-                    </xsd:choice>
+                        <xsd:element name="property-ref" type="orm:property-ref" minOccurs="0"/>
+                    </xsd:sequence>
                 </xsd:sequence>
                 <xsd:element name="join-table" type="orm:join-table" minOccurs="0"/>
             </xsd:choice>

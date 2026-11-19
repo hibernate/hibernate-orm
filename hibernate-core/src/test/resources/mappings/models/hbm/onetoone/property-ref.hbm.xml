@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/orm/hbm"
+                   package="org.hibernate.orm.test.boot.models.hbm.onetoone"
+                   default-access="field">
+    <class name="ConstrainedOneToOneTests$CodedParent" table="coded_parent_t">
+        <id name="id"/>
+        <property name="code" unique="true" not-null="true"/>
+    </class>
+    <class name="ConstrainedOneToOneTests$ConstrainedRefChild" table="constrained_ref_child_t">
+        <id name="id"/>
+        <one-to-one name="parent" class="ConstrainedOneToOneTests$CodedParent"
+                    constrained="true" property-ref="code"/>
+    </class>
+    <class name="ConstrainedOneToOneTests$RefChild" table="ref_child_t">
+        <id name="id"/>
+        <one-to-one name="parent" class="ConstrainedOneToOneTests$CodedParent"
+                    property-ref="code"/>
+    </class>
+</hibernate-mapping>

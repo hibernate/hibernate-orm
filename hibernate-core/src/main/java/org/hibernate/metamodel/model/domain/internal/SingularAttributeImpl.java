@@ -20,6 +20,7 @@ import org.hibernate.query.sqm.spi.SqmBindableType;
 import org.hibernate.query.sqm.spi.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.tree.spi.SqmJoinType;
+import org.hibernate.query.sqm.tree.spi.domain.SqmEmbeddedTemporalValuedSimplePath;
 import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
 import org.hibernate.query.sqm.tree.spi.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.spi.domain.SqmSingularPersistentAttribute;
@@ -96,8 +97,11 @@ public class SingularAttributeImpl<D,J>
 			boolean isIdentifier,
 			boolean isVersion,
 			boolean isOptional,
-			boolean isGeneric) {
-		if ( !( attributeType instanceof BasicDomainType<?> ) ) {
+			boolean isGeneric,
+			boolean isCompositeTemporal) {
+		// a temporal value mapped as a composite, for example,
+		// via @TimeZoneStorage(COLUMN), is still a TemporalAttribute
+		if ( !( attributeType instanceof BasicDomainType<?> ) && !isCompositeTemporal ) {
 			return new SingularAttributeImpl<>(
 					declaringType,
 					name,
@@ -497,6 +501,14 @@ public class SingularAttributeImpl<D,J>
 					isOptional,
 					isGeneric
 			);
+		}
+
+		@Override
+		public SqmPath<J> createSqmPath(SqmPath<?> lhs, @Nullable SqmPathSource<?> intermediatePathSource) {
+			// a temporal value mapped as a composite, for example, via @TimeZoneStorage(COLUMN)
+			return getSqmPathSource() instanceof EmbeddedSqmPathSource<?>
+					? new SqmEmbeddedTemporalValuedSimplePath<>( createNavigablePath( lhs, null ), this, lhs, lhs.nodeBuilder() )
+					: super.createSqmPath( lhs, intermediatePathSource );
 		}
 	}
 

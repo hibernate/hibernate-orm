@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.TimeZone;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -34,6 +35,8 @@ import org.hibernate.type.descriptor.jdbc.internal.TemporalPreservationGuard;
 import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -42,10 +45,22 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /// Tests that mappings are accepted and rejected at boot without a
 /// connection to the database: what is supported is a matter of the Dialect
-/// alone, and nothing is asked of the driver or the database.
+/// alone, and nothing is asked of the driver or the database. Every attempt
+/// to open a connection is counted, and each test ends with none, so that an
+/// attempt whose failure was caught along the way does not go unnoticed.
 ///
 /// @author Steve Ebersole
 class TemporalPreservationOfflineBootTests {
+	@BeforeEach
+	void forgetConnectionAttempts() {
+		NoConnections.ATTEMPTS.set( 0 );
+	}
+
+	@AfterEach
+	void noConnectionWasAttempted() {
+		assertThat( NoConnections.ATTEMPTS.get() ).as( "attempts to open a connection" ).isZero();
+	}
+
 	@Test
 	@RequiresDialect(H2Dialect.class)
 	@RequiresDialect(HSQLDialect.class)
@@ -260,8 +275,12 @@ class TemporalPreservationOfflineBootTests {
 	}
 
 	public static class NoConnections implements ConnectionProvider {
+		/// How often a connection was asked for, whatever became of the failure.
+		static final AtomicInteger ATTEMPTS = new AtomicInteger();
+
 		@Override
 		public Connection getConnection() throws SQLException {
+			ATTEMPTS.incrementAndGet();
 			throw new SQLException( "No connection may be opened by this test" );
 		}
 

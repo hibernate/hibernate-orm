@@ -52,7 +52,7 @@ public class DefaultPostLoadEventListener implements PostLoadEventListener, Call
 						break;
 					case OPTIMISTIC_FORCE_INCREMENT:
 						session.getActionQueue()
-								.registerCallback( new EntityIncrementVersionProcess( entity ) );
+								.registerCallback( new EntityIncrementVersionProcess( entity, entry.getVersion() ) );
 						break;
 					case OPTIMISTIC:
 						session.getActionQueue()

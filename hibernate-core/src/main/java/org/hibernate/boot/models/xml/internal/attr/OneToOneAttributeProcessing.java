@@ -23,6 +23,7 @@ import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcess
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyAttributeAccessor;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyExcludeFromVersioning;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyFetching;
+import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyOnDelete;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyOptimisticLock;
 import static org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing.applyOptionality;
 import static org.hibernate.internal.util.NullnessHelper.coalesce;
@@ -55,6 +56,7 @@ public class OneToOneAttributeProcessing {
 		applyMappedBy( memberDetails, jaxbOneToOne, oneToOneAnn, xmlDocumentContext );
 		applyTarget( memberDetails, jaxbOneToOne, oneToOneAnn, xmlDocumentContext );
 		applyCascading( jaxbOneToOne.getCascade(), oneToOneAnn, xmlDocumentContext );
+		applyOnDelete( jaxbOneToOne.getOnDelete(), memberDetails, xmlDocumentContext );
 
 		TableProcessing.transformJoinTable( jaxbOneToOne.getJoinTable(), memberDetails, xmlDocumentContext );
 		JoinColumnProcessing.applyJoinColumnsOrFormulas( jaxbOneToOne.getJoinColumnOrJoinFormula(), memberDetails, xmlDocumentContext );

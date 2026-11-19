@@ -2719,9 +2719,12 @@ public class HbmXmlTransformer {
 		}
 		if ( oneToOne.getMappedBy() == null && hbmOneToOne.getFormula().isEmpty() ) {
 			final Value value = propertyInfo.bootModelProperty().getValue();
-			if ( value instanceof OneToOne oneToOneValue && !oneToOneValue.isConstrained() ) {
+			if ( value instanceof OneToOne ) {
 				oneToOne.getPrimaryKeyJoinColumn().add( new JaxbPrimaryKeyJoinColumnImpl() );
 			}
+		}
+		if ( hbmOneToOne.getOnDelete() == JaxbHbmOnDeleteEnum.CASCADE ) {
+			oneToOne.setOnDelete( OnDeleteAction.CASCADE );
 		}
 		for ( String formula : hbmOneToOne.getFormula() ) {
 			oneToOne.getJoinColumnOrJoinFormula().add( formula );

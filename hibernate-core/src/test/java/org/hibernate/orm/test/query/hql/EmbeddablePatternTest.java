@@ -96,6 +96,52 @@ public class EmbeddablePatternTest {
 	}
 
 	@Test
+	public void testSingleAttribute(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			// just like (p.address.zip), a pattern with one attribute is not a tuple
+			assertThat( session.createSelectionQuery(
+							"select p.id from Person p where p.address(zip) = ('54321')",
+							Long.class )
+					.getResultList() )
+					.containsExactly( 2L );
+			assertThat( session.createSelectionQuery(
+							"select p.id from Person p where p.address(zip) in ('54321', '00000')",
+							Long.class )
+					.getResultList() )
+					.containsExactly( 2L );
+			assertThat( session.createSelectionQuery(
+							"select p.address(year) from Person p where p.id = 2",
+							Integer.class )
+					.getSingleResult() )
+					.isEqualTo( 2005 );
+		} );
+	}
+
+	@Test
+	public void testAmbiguousAttribute(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			// an ambiguous attribute which is not of embeddable type
+			// doesn't get in the way of an unregistered function
+			assertThat( session.createSelectionQuery(
+							"select name(p.id) from Person p, Person q",
+							Object.class )
+					.getQueryString() )
+					.isNotNull();
+			assertThat( session.createSelectionQuery(
+							"select name.fun(p.id) from Person p, Person q",
+							Object.class )
+					.getQueryString() )
+					.isNotNull();
+			// but an ambiguous pattern is an error
+			assertThatThrownBy( () -> session.createSelectionQuery(
+					"select p.id from Person p, Person q where address(zip, city) = ('12345', 'Springfield')",
+					Long.class ) )
+					.isInstanceOf( SemanticException.class )
+					.hasMessageContaining( "Ambiguous unqualified attribute reference 'address'" );
+		} );
+	}
+
+	@Test
 	public void testJoinAlias(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			assertThat( session.createSelectionQuery(

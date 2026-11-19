@@ -271,6 +271,23 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 	}
 
 	@Override
+	public List<SqmFrom<?, ?>> findAllFromExposing(String navigableName) {
+		final List<SqmFrom<?, ?>> found = new ArrayList<>();
+		for ( var fromElement : sqmFromByPath.values() ) {
+			if ( definesAttribute( fromElement.getReferencedPathSource(), navigableName ) ) {
+				found.add( fromElement );
+			}
+		}
+		if ( found.isEmpty() ) {
+			final var processingState = associatedProcessingState.getParentProcessingState();
+			if ( processingState != null ) {
+				return processingState.getPathRegistry().findAllFromExposing( navigableName );
+			}
+		}
+		return found;
+	}
+
+	@Override
 	public <X extends SqmFrom<?, ?>> X resolveFrom(NavigablePath navigablePath, Function<NavigablePath, SqmFrom<?, ?>> creator) {
 		final var existing = sqmFromByPath.get( navigablePath );
 		if ( existing != null ) {

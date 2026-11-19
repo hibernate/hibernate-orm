@@ -4691,25 +4691,36 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	 */
 	private boolean isEmbeddableValuedPath(HqlParser.SimplePathContext pathContext) {
 		final String base = visitIdentifier( pathContext.identifier() );
-		SqmPathSource<?> pathSource;
+		final var continuations = pathContext.simplePathElement();
 		final var fromByAlias = findFromByAlias( base );
 		if ( fromByAlias != null ) {
-			pathSource = fromByAlias.getReferencedPathSource();
+			return isEmbeddableValuedPath( fromByAlias.getReferencedPathSource(), continuations );
 		}
 		else {
-			final SqmFrom<?, ?> fromExposing =
+			// an ambiguous unqualified attribute reference is not an error here,
+			// since this might just be a function with the same name; if it could
+			// be an embeddable, the ambiguity is reported when the path is resolved
+			final var fromsExposing =
 					processingStateStack.getCurrent().getPathRegistry()
-							.findFromExposing( base );
-			if ( fromExposing == null ) {
-				return false;
+							.findAllFromExposing( base );
+			for ( var fromExposing : fromsExposing ) {
+				final var pathSource = findSingularSubPathSource( fromExposing.getReferencedPathSource(), base );
+				if ( isEmbeddableValuedPath( pathSource, continuations ) ) {
+					return true;
+				}
 			}
-			pathSource = findSingularSubPathSource( fromExposing.getReferencedPathSource(), base );
+			return false;
 		}
-		for ( var element : pathContext.simplePathElement() ) {
+	}
+
+	private boolean isEmbeddableValuedPath(
+			@Nullable SqmPathSource<?> pathSource,
+			List<HqlParser.SimplePathElementContext> continuations) {
+		for ( var continuation : continuations ) {
 			if ( pathSource == null ) {
 				return false;
 			}
-			pathSource = findSingularSubPathSource( pathSource, visitIdentifier( element.identifier() ) );
+			pathSource = findSingularSubPathSource( pathSource, visitIdentifier( continuation.identifier() ) );
 		}
 		return pathSource != null
 			&& pathSource.getPathType() instanceof EmbeddableDomainType;
@@ -4750,7 +4761,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	 * <p>
 	 * Syntactically, this is indistinguishable from a function invocation.
 	 */
-	private SqmTuple<?> embeddablePattern(HqlParser.GenericFunctionContext ctx) {
+	private SqmExpression<?> embeddablePattern(HqlParser.GenericFunctionContext ctx) {
 		if ( creationOptions.useStrictJpaCompliance() ) {
 			throw new StrictJpaComplianceViolation(
 					StrictJpaComplianceViolation.Type.TUPLES
@@ -4782,7 +4793,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			}
 			attributePaths.add( resolveAttribute( embeddablePath, attributeName ) );
 		}
-		return new SqmTuple<>( attributePaths, nodeBuilder() );
+		// just as (x) is not a tuple, a pattern with a single attribute is not a tuple
+		return attributePaths.size() == 1
+				? attributePaths.get( 0 )
+				: new SqmTuple<>( attributePaths, nodeBuilder() );
 	}
 
 	private SqmExpression<?> resolveAttribute(SqmPath<?> embeddablePath, String attributeName) {

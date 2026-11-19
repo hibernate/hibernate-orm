@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.function.Consumer;
 
 import jakarta.persistence.Entity;
@@ -20,6 +21,7 @@ import org.hibernate.annotations.TimeZoneRepresentation;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.StateManagementSettings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -27,6 +29,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.type.SqlTypes;
 
 import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -39,8 +42,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /// Verifies against a live database that, with temporal preservation
 /// enabled, what the database itself computes for an instant does not depend
 /// on the time zone of its session: a timestamp it generates, also for a
-/// temporal table or a soft delete, and a comparison between two of its
-/// columns.
+/// temporal table or a soft delete, a comparison between two of its
+/// columns, and a comparison with its current date and time.
 ///
 /// @author Steve Ebersole
 @RequiresDialect(H2Dialect.class)
@@ -208,6 +211,118 @@ class TemporalPreservationSessionZoneTests {
 			assertThat( session.createQuery( "select count(e) from Compared e where e.inTwoColumns = e.instant", Long.class )
 					.getSingleResult() ).isEqualTo( 1L );
 		} );
+	}
+
+	/// A stored instant is compared with the current instant by its
+	/// instant, also where the column holds the date and time at UTC and
+	/// the current timestamp of the database is in the time zone of its
+	/// session. Compared with an instant, `current_timestamp` and
+	/// `local datetime` stand for the current instant, also as what a date
+	/// and time is computed from.
+	@Test
+	void storedInstantIsComparedWithTheCurrentInstant() {
+		inEverySessionZone( session -> {
+			persistAnHourAgoAndAnHourAhead( session );
+			for ( String attribute : new String[] { "instant", "inTwoColumns", "normalized" } ) {
+				// on HSQLDB a date-time in a single column has a time zone, and the others have none
+				final String current = DialectContext.getDialect() instanceof HSQLDialect && attribute.equals( "normalized" )
+						? "offset datetime"
+						: "instant";
+				for ( String predicate : new String[] {
+						"e.# < " + current,
+						"e.# < current_timestamp",
+						"e.# < current timestamp",
+						"e.# < local datetime",
+						"local datetime > e.#",
+						"e.# between current_timestamp - 2 hour and current_timestamp",
+						"e.# between local datetime - 2 hour and local datetime + 30 minute",
+						"e.# > local datetime - 1 day and e.# < current_timestamp"
+				} ) {
+					final String query = "select e.id from Compared e where " + predicate.replace( "#", attribute );
+					assertThat( session.createQuery( query, Integer.class ).getResultList() ).as( query )
+							.containsExactly( 1 );
+				}
+			}
+			assertThat( session.createQuery(
+					"select e.id from Compared e where current_timestamp between e.instant and e.instant + 2 hour",
+					Integer.class
+			).getResultList() ).containsExactly( 1 );
+		} );
+	}
+
+	/// The current date of the database is in the time zone of its session,
+	/// or of the server. Compared with an instant which the column holds as
+	/// its date and time at UTC, the result would depend on that time zone,
+	/// so the comparison is rejected. The same holds on SQL Server, which
+	/// reads a date and time without a time zone as being at UTC.
+	@Test
+	void comparisonWithTheCurrentDateIsRejectedWhereItWouldBeWrong() {
+		final Dialect dialect = DialectContext.getDialect();
+		inEverySessionZone( session -> {
+			persistAnHourAgoAndAnHourAhead( session );
+			for ( String attribute : new String[] { "instant", "inTwoColumns", "normalized" } ) {
+				// on HSQLDB a date-time in a single column has a time zone
+				final boolean rejected = dialect instanceof MySQLDialect
+						|| dialect instanceof SQLServerDialect
+						|| dialect instanceof HSQLDialect && !attribute.equals( "normalized" );
+				for ( String current : new String[] { "current_date", "local date", "local date + 1 day" } ) {
+					final String query = "select e.id from Compared e where e." + attribute + " < " + current;
+					if ( rejected ) {
+						assertThatThrownBy( () -> session.createQuery( query, Integer.class ).getResultList() )
+								.as( query )
+								.hasStackTraceContaining( "the result would depend on that time zone" );
+					}
+					else {
+						// the database reads the date in the time zone of its session
+						session.createQuery( query, Integer.class ).getResultList();
+					}
+				}
+			}
+		} );
+	}
+
+	/// The current time of the database is in the time zone of its session.
+	/// Compared with an `OffsetTime` which the column holds as its time at
+	/// UTC, the result would depend on that time zone, so the comparison is
+	/// rejected.
+	@Test
+	void comparisonOfATimeHeldAtUtcWithTheCurrentTimeIsRejected() {
+		final var builder = ServiceRegistryUtil.serviceRegistryBuilder();
+		builder.applySetting( "hibernate.hbm2ddl.auto", "create-drop" );
+		builder.applySetting( MappingSettings.TEMPORAL_PRESERVATION, true );
+		try ( var registry = builder.build();
+				var factory = (SessionFactoryImplementor) new MetadataSources( registry )
+						.addAnnotatedClass( TemporalPreservationOffsetTimeTests.WithNormalizedOffsetTime.class )
+						.buildMetadata()
+						.buildSessionFactory() ) {
+			// with the NORMALIZED policy the column holds the time at UTC, and has no time zone
+			assertThat( factory.getMappingMetamodel()
+					.getEntityDescriptor( TemporalPreservationOffsetTimeTests.WithNormalizedOffsetTime.class )
+					.findAttributeMapping( "theValue" )
+					.getSingleJdbcMapping()
+					.getJdbcType()
+					.getDefaultSqlTypeCode() ).isNotEqualTo( SqlTypes.TIME_WITH_TIMEZONE );
+			for ( String current : new String[] { "local time", "current_time", "current time" } ) {
+				final String query = "select e.id from WithNormalizedOffsetTime e where e.theValue < " + current;
+				factory.inTransaction( session -> assertThatThrownBy(
+						() -> session.createQuery( query, Integer.class ).getResultList() )
+						.as( query )
+						.hasStackTraceContaining( "the result would depend on that time zone" ) );
+			}
+		}
+	}
+
+	private static void persistAnHourAgoAndAnHourAhead(Session session) {
+		final Instant now = Instant.now().truncatedTo( ChronoUnit.SECONDS );
+		for ( int id = 1; id <= 2; id++ ) {
+			final var entity = new Compared();
+			entity.id = id;
+			entity.instant = id == 1 ? now.minus( 1, ChronoUnit.HOURS ) : now.plus( 1, ChronoUnit.HOURS );
+			entity.inTwoColumns = entity.instant.atOffset( ZoneOffset.ofHours( 2 ) );
+			entity.normalized = entity.inTwoColumns;
+			session.persist( entity );
+		}
+		session.flush();
 	}
 
 	private static void inEverySessionZone(Consumer<Session> action) {

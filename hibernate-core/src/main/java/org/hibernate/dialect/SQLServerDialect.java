@@ -812,6 +812,13 @@ public class SQLServerDialect extends AbstractTransactSQLDialect implements Curr
 	}
 
 	@Override
+	public boolean isLocalDateTimeReadInTimeZoneOfCurrentTimestamp() {
+		// a datetime2 converted to a datetimeoffset is given the offset +00:00,
+		// whereas sysdatetime() is in the time zone of the server
+		return false;
+	}
+
+	@Override
 	public LimitHandler getLimitHandler() {
 		return SQLServer2012LimitHandler.INSTANCE;
 	}

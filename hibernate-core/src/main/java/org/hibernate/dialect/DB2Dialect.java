@@ -61,6 +61,7 @@ import org.hibernate.dialect.function.spi.WindowFunctionSupport;
 import org.hibernate.dialect.function.spi.ExpressionCoercionSupport;
 import org.hibernate.dialect.function.spi.TupleCountSupport;
 import org.hibernate.dialect.function.CountFunction;
+import org.hibernate.dialect.function.DB2CaseConversionFunction;
 import org.hibernate.dialect.function.DB2FormatEmulation;
 import org.hibernate.dialect.function.DB2SubstringFunction;
 import org.hibernate.dialect.function.TrimFunction;
@@ -490,6 +491,11 @@ public class DB2Dialect extends Dialect implements CurrentTemporalSupport, Tempo
 		functionFactory.concat_pipeOperator();
 		functionFactory.octetLength();
 		functionFactory.ascii();
+		for ( String name : new String[] {"lower", "upper"} ) {
+			functionContributions.getFunctionRegistry().register(
+					name, new DB2CaseConversionFunction( name, functionContributions.getTypeConfiguration() )
+			);
+		}
 		functionFactory.char_chr();
 		functionFactory.insert();
 		functionFactory.characterLength_length( SqlAstNodeRenderingMode.DEFAULT );

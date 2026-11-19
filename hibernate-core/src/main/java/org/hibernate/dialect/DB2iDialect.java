@@ -10,6 +10,7 @@ import static org.hibernate.SPI.Role.USE;
 import static org.hibernate.SPI.Role.SUPPLY;
 
 import org.hibernate.boot.model.FunctionContributions;
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.DB2SubstringFunction;
 import org.hibernate.dialect.generated.spi.GeneratedValuesSupport;
 import org.hibernate.dialect.identity.internal.DB2IdentityColumnSupport;
@@ -88,6 +89,8 @@ public class DB2iDialect extends DB2Dialect {
 	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry( functionContributions );
+		final var functionFactory = new CommonFunctionFactory( functionContributions );
+		functionFactory.lowerUpper();
 		// DB2 for i doesn't allow code units: https://www.ibm.com/docs/en/i/7.1.0?topic=functions-substring
 		functionContributions.getFunctionRegistry().register(
 				"substring",

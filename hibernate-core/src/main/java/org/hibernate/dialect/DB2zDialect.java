@@ -7,6 +7,8 @@ import org.hibernate.dialect.rowid.spi.RowIdSupport;
 import org.hibernate.dialect.rowid.spi.RowIdSupports;
 
 import org.hibernate.SPI;
+import org.hibernate.boot.model.FunctionContributions;
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import static org.hibernate.SPI.Role.USE;
 
 import static org.hibernate.SPI.Role.IMPLEMENT;
@@ -113,6 +115,14 @@ public class DB2zDialect extends DB2Dialect implements TemporalOperationSupport 
 	@Override
 	public DatabaseVersion getDB2Version() {
 		return DB2_LUW_VERSION;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry( functionContributions );
+		final var functionFactory = new CommonFunctionFactory( functionContributions );
+		functionFactory.lowerUpper();
 	}
 
 	@Override

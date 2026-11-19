@@ -20,7 +20,10 @@ import javax.tools.Diagnostic;
 
 import static org.hibernate.processor.util.Constants.BOOLEAN_ATTRIBUTE;
 import static org.hibernate.processor.util.Constants.COMPARABLE_ATTRIBUTE;
+import static org.hibernate.processor.util.Constants.COMPOSITE_TYPE;
 import static org.hibernate.processor.util.Constants.EMBEDDABLE;
+import static org.hibernate.processor.util.Constants.EMBEDDED;
+import static org.hibernate.processor.util.Constants.EMBEDDED_ID;
 import static org.hibernate.processor.util.Constants.ELEMENT_COLLECTION;
 import static org.hibernate.processor.util.Constants.ENTITY;
 import static org.hibernate.processor.util.Constants.LIST_ATTRIBUTE;
@@ -110,9 +113,32 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<Annotatio
 			final var type = targetEntity != null ? targetEntity
 					: extractClosestRealTypeAsString( declaredType, context );
 			return targetEntity != null || isManagedType( returnedElement )
+						|| isCompositeValued( element )
 					? new AnnotationMetaSingleAttribute( entity, element, type )
 					: singleAttribute( element, declaredType, type );
 		}
+	}
+
+	/**
+	 * Is the attribute mapped as a composite value even though its type
+	 * is not an {@code @Embeddable} class? Such an attribute is a plain
+	 * {@code SingularAttribute} at runtime, whatever its Java type.
+	 */
+	private static boolean isCompositeValued(Element element) {
+		return hasAnnotation( element, EMBEDDED, EMBEDDED_ID )
+			|| hasCompositeType( element );
+	}
+
+	private static boolean hasCompositeType(Element element) {
+		if ( hasAnnotation( element, COMPOSITE_TYPE ) ) {
+			return true;
+		}
+		for ( var annotation : element.getAnnotationMirrors() ) {
+			if ( hasAnnotation( annotation.getAnnotationType().asElement(), COMPOSITE_TYPE ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private AnnotationMetaAttribute createMetaCollectionAttribute(

@@ -381,3 +381,12 @@ tasks.sourcesJar.dependsOn ':hibernate-core:generateHqlParser'
 tasks.sourcesJar.dependsOn ':hibernate-core:generateSqlScriptParser'
 tasks.sourcesJar.dependsOn ':hibernate-core:generateOrderingParser'
 tasks.sourcesJar.dependsOn ':hibernate-core:generateSqlFormatterParser'
+
+// TEMPORARY: copy the output of the carrier probes to the build log
+tasks.withType( Test ).configureEach {
+	onOutput { descriptor, event ->
+		if ( event.message.contains( 'TP-PROBE|' ) ) {
+			logger.lifecycle( event.message.trim() )
+		}
+	}
+}

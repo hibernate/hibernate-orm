@@ -121,6 +121,8 @@ jobs:
           { "name": "Temporal preservation - db2", "rdbms": "db2",
             "gradle-args": "-PtemporalPreservation",
             "runs-on": "runs-on/fleet=linux-standard/env=ibm" },
+          { "name": "TEMPORARY probe - db2 away from UTC", "rdbms": "db2_tz",
+            "runs-on": "runs-on/fleet=linux-standard/env=ibm" },
           { "name": "Persistence TCK - postgresql", "rdbms": "postgresql",
             "build-script": "ci/build-tck-github.sh",
             "runs-on": "runs-on/fleet=linux-standard/env=ibm" },

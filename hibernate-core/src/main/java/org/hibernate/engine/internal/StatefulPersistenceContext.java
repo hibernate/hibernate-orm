@@ -1282,7 +1282,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public Map<EntityKey, EntityHolder> getEntityHoldersByKey() {
 		//noinspection unchecked,rawtypes
-		return (Map) entitiesByKey;
+		return entitiesByKey == null ? emptyMap() : (Map) entitiesByKey;
 	}
 
 	@Override

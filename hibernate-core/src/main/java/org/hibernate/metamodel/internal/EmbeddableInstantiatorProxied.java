@@ -1,5 +1,8 @@
 package org.hibernate.metamodel.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.function.Supplier;
 
 import org.hibernate.bytecode.spi.BasicProxyFactory;
@@ -15,16 +18,17 @@ public class EmbeddableInstantiatorProxied implements StandardEmbeddableInstanti
 	private final BasicProxyFactory factory;
 
 	public EmbeddableInstantiatorProxied(
-			Class<?> proxiedClass,
-			Supplier<EmbeddableMappingType> embeddableMappingAccess,
-			BasicProxyFactory factory) {
+			@Nonnull Class<?> proxiedClass,
+			@Nonnull Supplier<EmbeddableMappingType> embeddableMappingAccess,
+			@Nonnull BasicProxyFactory factory) {
 		this.proxiedClass = proxiedClass;
 		this.embeddableMappingAccess = embeddableMappingAccess;
 		this.factory = factory;
 	}
 
 	@Override
-	public Object instantiate(ValueAccess valuesAccess) {
+	@Nonnull
+	public Object instantiate(@Nonnull ValueAccess valuesAccess) {
 		final Object proxy = factory.getProxy();
 		final var values = valuesAccess == null ? null : valuesAccess.getValues();
 		if ( values != null ) {
@@ -34,12 +38,12 @@ public class EmbeddableInstantiatorProxied implements StandardEmbeddableInstanti
 	}
 
 	@Override
-	public boolean isInstance(Object object) {
+	public boolean isInstance(@Nullable Object object) {
 		return proxiedClass.isInstance( object );
 	}
 
 	@Override
-	public boolean isSameClass(Object object) {
+	public boolean isSameClass(@Nonnull Object object) {
 		return object.getClass() == proxiedClass;
 	}
 }

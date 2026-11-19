@@ -2,6 +2,7 @@ package org.hibernate.metamodel.spi;
 
 import java.util.function.Supplier;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
@@ -20,16 +21,18 @@ public interface ManagedTypeRepresentationResolver {
 	/**
 	 * Resolve the strategy to use for the given entity
 	 */
+	@Nonnull
 	EntityRepresentationStrategy resolveStrategy(
-			PersistentClass bootDescriptor,
-			EntityPersister runtimeDescriptor,
-			RuntimeModelCreationContext creationContext);
+			@Nonnull PersistentClass bootDescriptor,
+			@Nonnull EntityPersister runtimeDescriptor,
+			@Nonnull RuntimeModelCreationContext creationContext);
 
 	/**
 	 * Resolve the strategy to use for the given embeddable
 	 */
+	@Nonnull
 	EmbeddableRepresentationStrategy resolveStrategy(
-			Component bootDescriptor,
-			Supplier<EmbeddableMappingType> runtimeDescriptor,
-			RuntimeModelCreationContext creationContext);
+			@Nonnull Component bootDescriptor,
+			@Nonnull Supplier<EmbeddableMappingType> runtimeDescriptor,
+			@Nonnull RuntimeModelCreationContext creationContext);
 }

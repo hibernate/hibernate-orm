@@ -1,5 +1,6 @@
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
 import java.util.Locale;
@@ -30,11 +31,11 @@ public class IdClassRepresentationStrategy implements EmbeddableRepresentationSt
 	private final PropertyAccessorService propertyAccessorService;
 
 	public IdClassRepresentationStrategy(
-			PropertyAccessorService propertyAccessorService,
-			IdClassEmbeddable idClassEmbeddable,
-			Component idClassSource,
+			@Nonnull PropertyAccessorService propertyAccessorService,
+			@Nonnull IdClassEmbeddable idClassEmbeddable,
+			@Nonnull Component idClassSource,
 			boolean simplePropertyOrder,
-			Supplier<String[]> attributeNamesAccess) {
+			@Nonnull Supplier<String[]> attributeNamesAccess) {
 		idClassType = idClassEmbeddable.getMappedJavaType();
 		final var javaTypeClass = idClassType.getJavaTypeClass();
 		if ( javaTypeClass.isRecord() ) {
@@ -60,20 +61,22 @@ public class IdClassRepresentationStrategy implements EmbeddableRepresentationSt
 	}
 
 	IdClassRepresentationStrategy(
-			PropertyAccessorService propertyAccessorService,
-			IdClassEmbeddable idClassEmbeddable,
-			EmbeddableInstantiator instantiator) {
+			@Nonnull PropertyAccessorService propertyAccessorService,
+			@Nonnull IdClassEmbeddable idClassEmbeddable,
+			@Nonnull EmbeddableInstantiator instantiator) {
 		this.idClassType = idClassEmbeddable.getMappedJavaType();
 		this.instantiator = instantiator;
 		this.propertyAccessorService = propertyAccessorService;
 	}
 
 	@Override
+	@Nonnull
 	public EmbeddableInstantiator getInstantiator() {
 		return instantiator;
 	}
 
 	@Override
+	@Nonnull
 	public RepresentationMode getMode() {
 		return RepresentationMode.POJO;
 	}
@@ -91,12 +94,14 @@ public class IdClassRepresentationStrategy implements EmbeddableRepresentationSt
 	}
 
 	@Override
+	@Nonnull
 	public JavaType<?> getMappedJavaType() {
 		return idClassType;
 	}
 
 	@Override
-	public PropertyAccess resolvePropertyAccess(Property bootAttributeDescriptor) {
+	@Nonnull
+	public PropertyAccess resolvePropertyAccess(@Nonnull Property bootAttributeDescriptor) {
 		final var strategy = bootAttributeDescriptor.getPropertyAccessStrategy( idClassType.getJavaTypeClass() );
 
 		if ( strategy == null ) {

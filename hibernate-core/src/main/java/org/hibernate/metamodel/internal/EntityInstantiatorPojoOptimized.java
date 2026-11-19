@@ -1,5 +1,7 @@
 package org.hibernate.metamodel.internal;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.accessor.Instantiator;
 import org.hibernate.persister.entity.EntityPersister;
@@ -15,15 +17,16 @@ public class EntityInstantiatorPojoOptimized extends AbstractEntityInstantiatorP
 	private final Instantiator<?> instantiator;
 
 	public EntityInstantiatorPojoOptimized(
-			EntityPersister persister,
-			PersistentClass persistentClass,
-			JavaType<?> javaType,
-			Instantiator<?> instantiator) {
+			@Nonnull EntityPersister persister,
+			@Nonnull PersistentClass persistentClass,
+			@Nonnull JavaType<?> javaType,
+			@Nonnull Instantiator<?> instantiator) {
 		super( persister, persistentClass, javaType );
 		this.instantiator = instantiator;
 	}
 
 	@Override
+	@Nonnull
 	public Object instantiate() {
 		return applyInterception( instantiator.create() );
 	}

@@ -3,6 +3,9 @@ package org.hibernate.metamodel.internal;
 
 import java.util.function.Supplier;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -25,10 +28,11 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 	public static final ManagedTypeRepresentationResolverStandard INSTANCE = new ManagedTypeRepresentationResolverStandard();
 
 	@Override
+	@Nonnull
 	public EntityRepresentationStrategy resolveStrategy(
-			PersistentClass bootDescriptor,
-			EntityPersister runtimeDescriptor,
-			RuntimeModelCreationContext creationContext) {
+			@Nonnull PersistentClass bootDescriptor,
+			@Nonnull EntityPersister runtimeDescriptor,
+			@Nonnull RuntimeModelCreationContext creationContext) {
 		if ( bootDescriptor.getMappedClass() == null ) { // i.e. RepresentationMode.MAP;
 			return new EntityRepresentationStrategyMap( bootDescriptor, creationContext );
 		}
@@ -44,10 +48,11 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 	}
 
 	@Override
+	@Nonnull
 	public EmbeddableRepresentationStrategy resolveStrategy(
-			Component bootDescriptor,
-			Supplier<EmbeddableMappingType> runtimeDescriptorAccess,
-			RuntimeModelCreationContext creationContext) {
+			@Nonnull Component bootDescriptor,
+			@Nonnull Supplier<EmbeddableMappingType> runtimeDescriptorAccess,
+			@Nonnull RuntimeModelCreationContext creationContext) {
 
 		final var compositeUserType = getCompositeUserType( bootDescriptor, creationContext );
 		final var customInstantiator =
@@ -79,8 +84,9 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 		}
 	}
 
+	@Nullable
 	private static CompositeUserType<?> getCompositeUserType(
-			Component bootDescriptor, RuntimeModelCreationContext creationContext) {
+			@Nonnull Component bootDescriptor, @Nonnull RuntimeModelCreationContext creationContext) {
 		if ( bootDescriptor.getTypeName() != null ) {
 			return beanInstance( creationContext,
 					creationContext.getBootstrapContext().getClassLoaderAccess()
@@ -91,8 +97,9 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 		}
 	}
 
+	@Nullable
 	private static EmbeddableInstantiator getCustomInstantiator(
-			Component bootDescriptor, RuntimeModelCreationContext creationContext, CompositeUserType<?> compositeUserType) {
+			@Nonnull Component bootDescriptor, @Nonnull RuntimeModelCreationContext creationContext, @Nullable CompositeUserType<?> compositeUserType) {
 		if ( bootDescriptor.getCustomInstantiator() != null ) {
 			return beanInstance( creationContext, bootDescriptor.getCustomInstantiator() );
 		}
@@ -124,13 +131,15 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 		}
 	}
 
-	private static <T> T beanInstance(RuntimeModelCreationContext creationContext, Class<T> userTypeClass) {
+	@Nonnull
+	private static <T> T beanInstance(@Nonnull RuntimeModelCreationContext creationContext, @Nonnull Class<T> userTypeClass) {
 		return creationContext.getBootModel().getMetadataBuildingOptions().isAllowExtensionsInCdi()
 				? getBeanInstance( creationContext, userTypeClass )
 				: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( userTypeClass );
 	}
 
-	private static <T> T getBeanInstance(RuntimeModelCreationContext creationContext, Class<T> userTypeClass) {
+	@Nonnull
+	private static <T> T getBeanInstance(@Nonnull RuntimeModelCreationContext creationContext, @Nonnull Class<T> userTypeClass) {
 		return creationContext.getBootstrapContext().getManagedBeanRegistry()
 				.getBean( userTypeClass )
 				.getBeanInstance();

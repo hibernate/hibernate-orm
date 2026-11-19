@@ -9,6 +9,7 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Embeddable;
@@ -72,12 +73,12 @@ public class EmbeddableInstantiatorTest {
 			}
 
 			@Override
-			public boolean isSameClass(Object object) {
+			public boolean isSameClass(@NonNull Object object) {
 				return MyRecord.class.equals( object.getClass() );
 			}
 
 			@Override
-			public Object instantiate(ValueAccess valueAccess) {
+			public Object instantiate(@NonNull ValueAccess valueAccess) {
 				return new MyRecord( valueAccess.getValue( 2, Integer.class ), valueAccess.getValue( 1, String.class ),
 									valueAccess.getValue( 0, LocalDate.class )
 				);

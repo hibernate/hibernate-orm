@@ -1,5 +1,8 @@
 package org.hibernate.metamodel.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -19,7 +22,7 @@ public class EntityInstantiatorDynamicMap
 		implements EntityInstantiator {
 	private final Set<String> entityRoleNames = new HashSet<>();
 
-	public EntityInstantiatorDynamicMap(PersistentClass bootDescriptor) {
+	public EntityInstantiatorDynamicMap(@Nonnull PersistentClass bootDescriptor) {
 		super( bootDescriptor.getEntityName() );
 		entityRoleNames.add( getRoleName() );
 		if ( bootDescriptor.hasSubclasses() ) {
@@ -30,23 +33,25 @@ public class EntityInstantiatorDynamicMap
 	}
 
 	@Override
+	@Nonnull
 	public Object instantiate() {
 		return generateDataMap();
 	}
 
 	@Override
-	protected boolean isSameRole(String type) {
+	protected boolean isSameRole(@Nullable String type) {
 		return super.isSameRole( type ) || isPartOfHierarchy( type );
 	}
 
-	private boolean isPartOfHierarchy(String type) {
+	private boolean isPartOfHierarchy(@Nullable String type) {
 		return entityRoleNames.contains( type );
 	}
 
 	public static final EntityNameResolver ENTITY_NAME_RESOLVER =
 			entity -> entity instanceof Map<?, ?> map ? extractEmbeddedEntityName( map ) : null;
 
-	public static String extractEmbeddedEntityName(Map<?,?> entity) {
+	@Nonnull
+	public static String extractEmbeddedEntityName(@Nonnull Map<?,?> entity) {
 		if ( entity == null ) {
 			throw new HibernateException( "Could not determine type of dynamic map entity" );
 		}

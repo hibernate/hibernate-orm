@@ -1645,11 +1645,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		private final PlanningOptions graphPlanningOptions;
 
 		private ModelCreationContext(
-				BootstrapContext bootstrapContext,
-				MetadataImplementor bootMetamodel,
-				MappingMetamodelImplementor mappingMetamodel,
-				TypeConfiguration typeConfiguration,
-				PlanningOptions graphPlanningOptions) {
+				@Nonnull BootstrapContext bootstrapContext,
+				@Nonnull MetadataImplementor bootMetamodel,
+				@Nonnull MappingMetamodelImplementor mappingMetamodel,
+				@Nonnull TypeConfiguration typeConfiguration,
+				@Nonnull PlanningOptions graphPlanningOptions) {
 			this.bootstrapContext = bootstrapContext;
 			this.bootMetamodel = bootMetamodel;
 			this.mappingMetamodel = mappingMetamodel;
@@ -1659,97 +1659,116 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		@Override
+		@Nonnull
 		public BootstrapContext getBootstrapContext() {
 			return bootstrapContext;
 		}
 
 		@Override
+		@Nonnull
 		public SessionFactoryImplementor getSessionFactory() {
 			// this is bad, we're not yet fully-initialized
 			return SessionFactoryImpl.this;
 		}
 
 		@Override
+		@Nonnull
 		public MetadataImplementor getBootModel() {
 			return bootMetamodel;
 		}
 
 		@Override
+		@Nonnull
 		public MappingMetamodelImplementor getDomainModel() {
 			return mappingMetamodel;
 		}
 
 		@Override
+		@Nonnull
 		public CacheImplementor getCache() {
 			return cacheAccess;
 		}
 
+		@Nonnull
 		public PlanningOptions getGraphPlanningOptions() {
 			return graphPlanningOptions;
 		}
 
 		@Override
+		@Nonnull
 		public Map<String, Object> getSettings() {
 			return settings;
 		}
 
 		@Override
+		@Nonnull
 		public Dialect getDialect() {
 			return jdbcServices.getDialect();
 		}
 
 		@Override
+		@Nonnull
 		public SqmFunctionRegistry getFunctionRegistry() {
 			return queryEngine.getSqmFunctionRegistry();
 		}
 
 		@Override
+		@Nonnull
 		public TypeConfiguration getTypeConfiguration() {
 			return typeConfiguration;
 		}
 
 		@Override
+		@Nonnull
 		public SessionFactoryOptions getSessionFactoryOptions() {
 			return sessionFactoryOptions;
 		}
 
 		@Override
+		@Nonnull
 		public JdbcServices getJdbcServices() {
 			return jdbcServices;
 		}
 
 		@Override
+		@Nonnull
 		public ServiceRegistry getServiceRegistry() {
 			return serviceRegistry;
 		}
 
 		@Override
+		@Nonnull
 		public Map<String, Generator> getGenerators() {
 			return generators;
 		}
 
 		@Override
+		@Nonnull
 		public GeneratorSettings getGeneratorSettings() {
 			return this;
 		}
 
 		@Override
+		@Nullable
 		public String getDefaultCatalog() {
 			return sessionFactoryOptions.getDefaultCatalog();
 		}
 
 		@Override
+		@Nullable
 		public String getDefaultSchema() {
 			return sessionFactoryOptions.getDefaultSchema();
 		}
 
 		@Override
+		@Nonnull
 		public SqlStringGenerationContext getSqlStringGenerationContext() {
 			return sqlStringGenerationContext;
 		}
 
 		@Override
-		public Generator getOrCreateIdGenerator(String rootName, PersistentClass persistentClass) {
+		@Nullable
+		public Generator getOrCreateIdGenerator(@Nonnull String rootName, @Nonnull PersistentClass persistentClass) {
 			final var existing = getGenerators().get( rootName );
 			if ( existing != null ) {
 				return existing;

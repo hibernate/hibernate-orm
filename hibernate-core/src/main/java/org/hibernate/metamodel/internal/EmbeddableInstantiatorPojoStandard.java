@@ -1,5 +1,8 @@
 package org.hibernate.metamodel.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.lang.reflect.Constructor;
 import java.util.function.Supplier;
 
@@ -22,14 +25,15 @@ public class EmbeddableInstantiatorPojoStandard
 	private final Constructor<?> constructor;
 
 	public EmbeddableInstantiatorPojoStandard(
-			Class<?> embeddableClass,
-			Supplier<EmbeddableMappingType> embeddableMappingAccess) {
+			@Nonnull Class<?> embeddableClass,
+			@Nonnull Supplier<EmbeddableMappingType> embeddableMappingAccess) {
 		super( embeddableClass );
 		this.embeddableMappingAccess = embeddableMappingAccess;
 		this.constructor = resolveConstructor( embeddableClass );
 	}
 
-	protected static Constructor<?> resolveConstructor(Class<?> mappedPojoClass) {
+	@Nullable
+	protected static Constructor<?> resolveConstructor(@Nonnull Class<?> mappedPojoClass) {
 		try {
 			return getDefaultConstructor( mappedPojoClass );
 		}
@@ -40,7 +44,8 @@ public class EmbeddableInstantiatorPojoStandard
 	}
 
 	@Override
-	public Object instantiate(ValueAccess valuesAccess) {
+	@Nonnull
+	public Object instantiate(@Nonnull ValueAccess valuesAccess) {
 		if ( isAbstract() ) {
 			throw new InstantiationException(
 					"Cannot instantiate abstract class or interface", getMappedPojoClass()

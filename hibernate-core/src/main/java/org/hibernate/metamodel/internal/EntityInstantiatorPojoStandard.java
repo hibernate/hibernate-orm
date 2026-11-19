@@ -1,5 +1,8 @@
 package org.hibernate.metamodel.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.lang.reflect.Constructor;
 
 import org.hibernate.InstantiationException;
@@ -25,9 +28,9 @@ public class EntityInstantiatorPojoStandard extends AbstractEntityInstantiatorPo
 	private final Constructor<?> constructor;
 
 	public EntityInstantiatorPojoStandard(
-			EntityPersister persister,
-			PersistentClass persistentClass,
-			JavaType<?> javaType) {
+			@Nonnull EntityPersister persister,
+			@Nonnull PersistentClass persistentClass,
+			@Nonnull JavaType<?> javaType) {
 		super( persister, persistentClass, javaType );
 		proxyInterface = persistentClass.getProxyInterface();
 		constructor = isAbstract() ? null : resolveConstructor( getMappedPojoClass() );
@@ -45,7 +48,8 @@ public class EntityInstantiatorPojoStandard extends AbstractEntityInstantiatorPo
 		}
 	}
 
-	protected static Constructor<?> resolveConstructor(Class<?> mappedPojoClass) {
+	@Nullable
+	protected static Constructor<?> resolveConstructor(@Nonnull Class<?> mappedPojoClass) {
 		try {
 			return getDefaultConstructor( mappedPojoClass);
 		}
@@ -61,7 +65,8 @@ public class EntityInstantiatorPojoStandard extends AbstractEntityInstantiatorPo
 	}
 
 	@Override
-	protected Object applyInterception(Object entity) {
+	@Nonnull
+	protected Object applyInterception(@Nonnull Object entity) {
 		if ( applyBytecodeInterception ) {
 			asPersistentAttributeInterceptable( entity )
 					.$$_hibernate_setInterceptor( new LazyAttributeLoadingInterceptor(
@@ -75,13 +80,14 @@ public class EntityInstantiatorPojoStandard extends AbstractEntityInstantiatorPo
 	}
 
 	@Override
-	public boolean isInstance(Object object) {
+	public boolean isInstance(@Nullable Object object) {
 		return super.isInstance( object )
 			// this one needed only for guessEntityMode()
 			|| proxyInterface != null && proxyInterface.isInstance( object );
 	}
 
 	@Override
+	@Nonnull
 	public Object instantiate() {
 		if ( isAbstract() ) {
 			throw new InstantiationException( "Cannot instantiate abstract class or interface", getMappedPojoClass() );

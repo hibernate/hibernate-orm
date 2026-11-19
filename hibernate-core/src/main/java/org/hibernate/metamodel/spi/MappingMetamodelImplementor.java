@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Set;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.EntityNameResolver;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
@@ -21,12 +24,14 @@ public interface MappingMetamodelImplementor extends MappingMetamodel, QueryPara
 	 *
 	 * @return set of all the collection roles in which the given entityName participates.
 	 */
-	Set<String> getCollectionRolesByEntityParticipant(String entityName);
+	@Nullable
+	Set<String> getCollectionRolesByEntityParticipant(@Nonnull String entityName);
 
 	/**
 	 * Access to the EntityNameResolver instance that Hibernate is configured to
 	 * use for determining the entity descriptor from an instance of an entity
 	 */
+	@Nonnull
 	Collection<EntityNameResolver> getEntityNameResolvers();
 
 	/**
@@ -34,6 +39,7 @@ public interface MappingMetamodelImplementor extends MappingMetamodel, QueryPara
 	 *
 	 * @return All the entity names
 	 */
+	@Nonnull
 	default String[] getAllEntityNames() {
 		final var entityNames = new ArrayList<String>();
 		forEachEntityDescriptor( entityPersister -> entityNames.add( entityPersister.getEntityName() ) );
@@ -45,6 +51,7 @@ public interface MappingMetamodelImplementor extends MappingMetamodel, QueryPara
 	 *
 	 * @return All the entity names
 	 */
+	@Nonnull
 	default String[] getAllCollectionRoles() {
 		final var collectionRoles = new ArrayList<String>();
 		forEachCollectionDescriptor( collectionPersister -> collectionRoles.add( collectionPersister.getRole() ) );

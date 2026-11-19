@@ -1,5 +1,8 @@
 package org.hibernate.metamodel.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Incubating;
 
 /**
@@ -14,6 +17,7 @@ public interface ValueAccess {
 	/**
 	 * The complete set of values.
 	 */
+	@Nullable
 	Object[] getValues();
 
 	/**
@@ -23,13 +27,15 @@ public interface ValueAccess {
 	 * sorted alphabetically.  So the values here will be in alphabetically
 	 * order according to the names of the corresponding attribute
 	 */
-	default <T> T getValue(int i, Class<T> clazz) {
+	@Nullable
+	default <T> T getValue(int i, @Nonnull Class<T> clazz) {
 		return clazz.cast( getValues()[i] );
 	}
 
 	/**
 	 * Access to the owner of the instance being instantiated
 	 */
+	@Nullable
 	default Object getOwner() {
 		return null;
 	}

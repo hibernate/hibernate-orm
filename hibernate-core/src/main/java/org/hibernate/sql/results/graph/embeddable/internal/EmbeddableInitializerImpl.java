@@ -1,5 +1,7 @@
 package org.hibernate.sql.results.graph.embeddable.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.Arrays;
 import java.util.function.BiConsumer;
 
@@ -64,23 +66,28 @@ public class EmbeddableInitializerImpl
 		protected final Object[] rowState;
 		protected EmbeddableMappingType.ConcreteEmbeddableType concreteEmbeddableType;
 
-		public EmbeddableInitializerData(EmbeddableInitializerImpl initializer, RowProcessingState rowProcessingState) {
+		public EmbeddableInitializerData(
+				@Nonnull EmbeddableInitializerImpl initializer,
+				@Nonnull RowProcessingState rowProcessingState) {
 			super( rowProcessingState );
 			parentData = initializer.parent == null ? null : initializer.parent.getData( rowProcessingState );
 			rowState = new Object[ initializer.embeddableMappingType.getNumberOfFetchables() ];
 		}
 
 		@Override
+		@Nullable
 		public Object[] getValues() {
 			return getState() == State.MISSING ? null : rowState;
 		}
 
 		@Override
-		public <T> T getValue(int i, Class<T> clazz) {
+		@Nullable
+		public <T> T getValue(int i, @Nonnull Class<T> clazz) {
 			return getState() == State.MISSING ? null : clazz.cast( rowState[i] );
 		}
 
 		@Override
+		@Nullable
 		public Object getOwner() {
 			return parentData == null ? null : parentData.getInstance();
 		}

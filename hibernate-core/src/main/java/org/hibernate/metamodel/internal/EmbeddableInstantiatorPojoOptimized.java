@@ -1,5 +1,7 @@
 package org.hibernate.metamodel.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.function.Supplier;
 
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -17,16 +19,17 @@ public class EmbeddableInstantiatorPojoOptimized
 	private final Instantiator<?> instantiator;
 
 	public EmbeddableInstantiatorPojoOptimized(
-			Class<?> embeddableClass,
-			Supplier<EmbeddableMappingType> embeddableMappingAccess,
-			Instantiator<?> instantiator) {
+			@Nonnull Class<?> embeddableClass,
+			@Nonnull Supplier<EmbeddableMappingType> embeddableMappingAccess,
+			@Nonnull Instantiator<?> instantiator) {
 		super( embeddableClass );
 		this.embeddableMappingAccess = embeddableMappingAccess;
 		this.instantiator = instantiator;
 	}
 
 	@Override
-	public Object instantiate(ValueAccess valuesAccess) {
+	@Nonnull
+	public Object instantiate(@Nonnull ValueAccess valuesAccess) {
 		final Object embeddable = instantiator.create();
 		final var embeddableMapping = embeddableMappingAccess.get();
 		final var values = valuesAccess.getValues();

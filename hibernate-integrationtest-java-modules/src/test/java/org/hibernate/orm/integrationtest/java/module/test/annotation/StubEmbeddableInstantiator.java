@@ -2,10 +2,11 @@ package org.hibernate.orm.integrationtest.java.module.test.annotation;
 
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.ValueAccess;
+import org.jspecify.annotations.NonNull;
 
 public class StubEmbeddableInstantiator implements EmbeddableInstantiator {
 	@Override
-	public Object instantiate(ValueAccess valueAccess) {
+	public Object instantiate(@NonNull ValueAccess valueAccess) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -15,7 +16,7 @@ public class StubEmbeddableInstantiator implements EmbeddableInstantiator {
 	}
 
 	@Override
-	public boolean isSameClass(Object object) {
+	public boolean isSameClass(@NonNull Object object) {
 		return StubEmbeddable.class.equals( object.getClass() );
 	}
 }

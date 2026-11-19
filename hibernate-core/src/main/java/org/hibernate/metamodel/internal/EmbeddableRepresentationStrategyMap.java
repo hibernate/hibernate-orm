@@ -3,6 +3,9 @@ package org.hibernate.metamodel.internal;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
@@ -24,10 +27,10 @@ public class EmbeddableRepresentationStrategyMap implements EmbeddableRepresenta
 	private final EmbeddableInstantiator instantiator;
 
 	public EmbeddableRepresentationStrategyMap(
-			Component bootDescriptor,
-			Supplier<EmbeddableMappingType> runtimeDescriptorAccess,
-			EmbeddableInstantiator customInstantiator,
-			RuntimeModelCreationContext creationContext) {
+			@Nonnull Component bootDescriptor,
+			@Nonnull Supplier<EmbeddableMappingType> runtimeDescriptorAccess,
+			@Nullable EmbeddableInstantiator customInstantiator,
+			@Nonnull RuntimeModelCreationContext creationContext) {
 		mapJavaType =
 				creationContext.getTypeConfiguration().getJavaTypeRegistry()
 						.getDescriptor( Map.class );
@@ -38,27 +41,32 @@ public class EmbeddableRepresentationStrategyMap implements EmbeddableRepresenta
 	}
 
 	@Override
+	@Nonnull
 	public RepresentationMode getMode() {
 		return RepresentationMode.MAP;
 	}
 
 	@Override
+	@Nullable
 	public MultiValueReader getMultiValueReader() {
 		return null;
 	}
 
 	@Override
+	@Nullable
 	public MultiValueWriter getMultiValueWriter() {
 		return null;
 	}
 
 	@Override
+	@Nonnull
 	public JavaType<?> getMappedJavaType() {
 		return mapJavaType;
 	}
 
 	@Override
-	public PropertyAccess resolvePropertyAccess(Property bootAttributeDescriptor) {
+	@Nonnull
+	public PropertyAccess resolvePropertyAccess(@Nonnull Property bootAttributeDescriptor) {
 		return PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess(
 				null, // because Maps don't get a service
 				null,
@@ -66,6 +74,7 @@ public class EmbeddableRepresentationStrategyMap implements EmbeddableRepresenta
 	}
 
 	@Override
+	@Nonnull
 	public EmbeddableInstantiator getInstantiator() {
 		return instantiator;
 	}

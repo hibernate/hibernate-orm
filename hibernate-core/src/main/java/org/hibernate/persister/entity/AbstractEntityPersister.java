@@ -474,6 +474,8 @@ public abstract class AbstractEntityPersister
 	private String identitySelectString;
 
 	private final JavaType<?> javaType;
+
+	@Nonnull
 	private final EntityRepresentationStrategy representationStrategy;
 
 	@Nullable

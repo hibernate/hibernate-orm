@@ -1,5 +1,6 @@
 package org.hibernate.orm.test;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -125,66 +126,79 @@ public class LocalTemporaryTableMutationStrategyNoDropTest {
 		}
 
 		@Override
+		@Nonnull
 		public SessionFactoryImplementor getSessionFactory() {
 			return sessionFactory;
 		}
 
 		@Override
+		@Nonnull
 		public BootstrapContext getBootstrapContext() {
-			return null;
+			throw new UnsupportedOperationException();
 		}
 
 		@Override
+		@Nonnull
 		public TypeConfiguration getTypeConfiguration() {
 			return sessionFactory.getTypeConfiguration();
 		}
 
 		@Override
+		@Nonnull
 		public PlanningOptions getGraphPlanningOptions() {
 			return sessionFactory.getGraphPlanningOptions();
 		}
 
 		@Override
+		@Nonnull
 		public MetadataImplementor getBootModel() {
 			return scope.getMetadataImplementor();
 		}
 
 		@Override
+		@Nonnull
 		public MappingMetamodelImplementor getDomainModel() {
-			return null;
+			throw new UnsupportedOperationException();
 		}
 
 		@Override
+		@Nonnull
 		public SqmFunctionRegistry getFunctionRegistry() {
-			return null;
+			throw new UnsupportedOperationException();
 		}
 
 		@Override
+		@Nonnull
 		public Map<String, Object> getSettings() {
 			return sessionFactory.getProperties();
 		}
 
 		@Override
+		@Nonnull
 		public Dialect getDialect() {
 			return jdbcServices.getDialect();
 		}
 
 		@Override
+		@Nonnull
 		public CacheImplementor getCache() {
-			return null;
+			throw new UnsupportedOperationException();
 		}
 
 		@Override
+		@Nonnull
 		public SessionFactoryOptions getSessionFactoryOptions() {
 			return sessionFactory.getSessionFactoryOptions();
 		}
 
 		@Override
+		@Nonnull
 		public JdbcServices getJdbcServices() {
 			return jdbcServices;
 		}
 
 		@Override
+		@Nonnull
 		public SqlStringGenerationContext getSqlStringGenerationContext() {
 			return SqlStringGenerationContextImpl.fromExplicit(
 					jdbcServices.getJdbcEnvironment(),
@@ -195,11 +209,13 @@ public class LocalTemporaryTableMutationStrategyNoDropTest {
 		}
 
 		@Override
+		@Nonnull
 		public org.hibernate.service.ServiceRegistry getServiceRegistry() {
 			return sessionFactory.getServiceRegistry();
 		}
 
 		@Override
+		@Nonnull
 		public Map<String, Generator> getGenerators() {
 			return emptyMap();
 		}
@@ -215,12 +231,13 @@ public class LocalTemporaryTableMutationStrategyNoDropTest {
 		}
 
 		@Override
+		@Nonnull
 		public GeneratorSettings getGeneratorSettings() {
 			return this;
 		}
 
 		@Override
-		public Generator getOrCreateIdGenerator(String rootName, PersistentClass persistentClass) {
+		public Generator getOrCreateIdGenerator(@Nonnull String rootName, @Nonnull PersistentClass persistentClass) {
 			return null;
 		}
 	}

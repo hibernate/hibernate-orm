@@ -1,5 +1,7 @@
 package org.hibernate.metamodel.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.lang.reflect.Constructor;
 
 import org.hibernate.InstantiationException;
@@ -15,16 +17,17 @@ public class EmbeddableInstantiatorPojoIndirecting
 	protected final Constructor<?> constructor;
 	protected final int[] index;
 
-	protected EmbeddableInstantiatorPojoIndirecting(Constructor<?> constructor, int[] index) {
+	protected EmbeddableInstantiatorPojoIndirecting(@Nonnull Constructor<?> constructor, @Nonnull int[] index) {
 		super( constructor.getDeclaringClass() );
 		this.constructor = constructor;
 		this.index = index;
 	}
 
+	@Nonnull
 	public static EmbeddableInstantiatorPojoIndirecting of(
-			String[] propertyNames,
-			Constructor<?> constructor,
-			String[] componentNames) {
+			@Nonnull String[] propertyNames,
+			@Nonnull Constructor<?> constructor,
+			@Nonnull String[] componentNames) {
 		if ( componentNames == null ) {
 			throw new IllegalArgumentException( "Can't determine field assignment for constructor: " + constructor );
 		}
@@ -35,7 +38,8 @@ public class EmbeddableInstantiatorPojoIndirecting
 	}
 
 	@Override
-	public Object instantiate(ValueAccess valuesAccess) {
+	@Nonnull
+	public Object instantiate(@Nonnull ValueAccess valuesAccess) {
 		try {
 			final var originalValues = valuesAccess.getValues();
 			final var values = new Object[originalValues.length];
@@ -52,12 +56,13 @@ public class EmbeddableInstantiatorPojoIndirecting
 	// Handles gaps, by leaving the value null for that index
 	private static class EmbeddableInstantiatorPojoIndirectingWithGap extends EmbeddableInstantiatorPojoIndirecting {
 
-		public EmbeddableInstantiatorPojoIndirectingWithGap(Constructor<?> constructor, int[] index) {
+		public EmbeddableInstantiatorPojoIndirectingWithGap(@Nonnull Constructor<?> constructor, @Nonnull int[] index) {
 			super( constructor, index );
 		}
 
 		@Override
-		public Object instantiate(ValueAccess valuesAccess) {
+		@Nonnull
+		public Object instantiate(@Nonnull ValueAccess valuesAccess) {
 			try {
 				final var originalValues = valuesAccess.getValues();
 				final var values = new Object[index.length];

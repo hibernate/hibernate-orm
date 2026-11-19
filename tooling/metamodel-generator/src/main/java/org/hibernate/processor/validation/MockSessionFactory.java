@@ -5,6 +5,7 @@ import org.hibernate.Internal;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.metamodel.Bindable;
 import jakarta.annotation.Nullable;
+
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Internal;
@@ -743,6 +744,7 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	@Nonnull
 	public Dialect getDialect() {
 		return getJdbcServices().getDialect();
 	}
@@ -826,6 +828,7 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
+		@Nonnull
 		public JpaMetamodelImplementor getJpaMetamodel() {
 			return new MockJpaMetamodelImpl();
 		}
@@ -842,26 +845,31 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	@Nonnull
 	public SessionFactoryImplementor getSessionFactory() {
 		return MockSessionFactory.this;
 	}
 
 	@Override
+	@Nonnull
 	public BootstrapContext getBootstrapContext() {
 		return this;
 	}
 
 	@Override
+	@Nonnull
 	public MetadataImplementor getBootModel() {
 		return bootModel;
 	}
 
 	@Override
+	@Nonnull
 	public MappingMetamodelImplementor getDomainModel() {
 		return metamodel;
 	}
 
 	@Override
+	@Nonnull
 	public SqmFunctionRegistry getFunctionRegistry() {
 		return functionRegistry;
 	}
@@ -884,6 +892,7 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	@Nonnull
 	public Map<String, Object> getSettings() {
 		return emptyMap();
 	}

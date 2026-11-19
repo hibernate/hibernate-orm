@@ -5,13 +5,14 @@ import java.util.Currency;
 
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.ValueAccess;
+import org.jspecify.annotations.NonNull;
 
 /**
  * @author Steve Ebersole
  */
 public class MonetaryAmountInstantiator implements EmbeddableInstantiator {
 	@Override
-	public Object instantiate(ValueAccess valueAccess) {
+	public Object instantiate(@NonNull ValueAccess valueAccess) {
 		final BigDecimal amount = valueAccess.getValue(0, BigDecimal.class);
 		final Currency currency = valueAccess.getValue(1, Currency.class);
 
@@ -28,7 +29,7 @@ public class MonetaryAmountInstantiator implements EmbeddableInstantiator {
 	}
 
 	@Override
-	public boolean isSameClass(Object object) {
+	public boolean isSameClass(@NonNull Object object) {
 		return MonetaryAmount.class.equals( object.getClass() );
 	}
 }

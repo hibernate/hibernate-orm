@@ -1,5 +1,8 @@
 package org.hibernate.metamodel.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.action.queue.spi.PlanningOptions;
 import org.hibernate.Remove;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -25,47 +28,66 @@ import java.util.Map;
  */
 public interface RuntimeModelCreationContext {
 	@Remove
+	@Nonnull
 	SessionFactoryImplementor getSessionFactory();
 
 	@Remove
+	@Nonnull
 	BootstrapContext getBootstrapContext();
 
+	@Nonnull
 	MetadataImplementor getBootModel();
 
+	@Nonnull
 	MappingMetamodelImplementor getDomainModel();
 
+	@Nonnull
 	TypeConfiguration getTypeConfiguration();
 
+	@Nonnull
 	PlanningOptions getGraphPlanningOptions();
 
+	@Nonnull
 	default JavaTypeRegistry getJavaTypeRegistry() {
 		return getTypeConfiguration().getJavaTypeRegistry();
 	}
 
+	@Nonnull
 	default MetadataImplementor getMetadata() {
 		return getBootModel();
 	}
 
+	@Nonnull
 	SqmFunctionRegistry getFunctionRegistry();
 
+	@Nonnull
 	Map<String, Object> getSettings();
 
+	@Nonnull
 	Dialect getDialect();
 
+	@Nonnull
 	CacheImplementor getCache();
 
+	@Nonnull
 	SessionFactoryOptions getSessionFactoryOptions();
 
+	@Nonnull
 	JdbcServices getJdbcServices();
 
+	@Nonnull
 	SqlStringGenerationContext getSqlStringGenerationContext();
 
+	@Nonnull
 	ServiceRegistry getServiceRegistry();
 
+	@Nonnull
 	Map<String, Generator> getGenerators();
 
+	@Nonnull
 	GeneratorSettings getGeneratorSettings();
 
 	// For Hibernate Reactive
-	Generator getOrCreateIdGenerator(String rootName, PersistentClass persistentClass);
+	@Nullable
+	Generator getOrCreateIdGenerator(@Nonnull String rootName, @Nonnull PersistentClass persistentClass);
 }

@@ -1,5 +1,8 @@
 package org.hibernate.metamodel.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.MappingException;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
@@ -16,46 +19,52 @@ public class RuntimeMetamodelsImpl implements RuntimeMetamodelsImplementor {
 	private JpaMetamodelImplementor jpaMetamodel;
 	private MappingMetamodelImplementor mappingMetamodel;
 
-	public RuntimeMetamodelsImpl(TypeConfiguration typeConfiguration) {
+	public RuntimeMetamodelsImpl(@Nonnull TypeConfiguration typeConfiguration) {
 		this.typeConfiguration = typeConfiguration;
 	}
 
 	@Override
+	@Nonnull
 	public TypeConfiguration getTypeConfiguration() {
 		return typeConfiguration;
 	}
 
 	@Override
+	@Nonnull
 	public JpaMetamodelImplementor getJpaMetamodel() {
 		return jpaMetamodel;
 	}
 
 	@Override
+	@Nonnull
 	public MappingMetamodelImplementor getMappingMetamodel() {
 		return mappingMetamodel;
 	}
 
 	@Override
-	public Type getIdentifierType(String className) throws MappingException {
+	@Nonnull
+	public Type getIdentifierType(@Nonnull String className) throws MappingException {
 		return mappingMetamodel.getEntityDescriptor( className ).getIdentifierType();
 	}
 
 	@Override
-	public String getIdentifierPropertyName(String className) throws MappingException {
+	@Nullable
+	public String getIdentifierPropertyName(@Nonnull String className) throws MappingException {
 		return mappingMetamodel.getEntityDescriptor( className ).getIdentifierPropertyName();
 	}
 
 	@Override
-	public Type getReferencedPropertyType(String className, String propertyName) throws MappingException {
+	@Nonnull
+	public Type getReferencedPropertyType(@Nonnull String className, @Nonnull String propertyName) throws MappingException {
 		return mappingMetamodel.getEntityDescriptor( className ).getPropertyType( propertyName );
 	}
 
 
-	public void setMappingMetamodel(MappingMetamodelImplementor mappingMetamodel) {
+	public void setMappingMetamodel(@Nonnull MappingMetamodelImplementor mappingMetamodel) {
 		this.mappingMetamodel = mappingMetamodel;
 	}
 
-	public void setJpaMetamodel(JpaMetamodelImplementor jpaMetamodel) {
+	public void setJpaMetamodel(@Nonnull JpaMetamodelImplementor jpaMetamodel) {
 		this.jpaMetamodel = jpaMetamodel;
 	}
 }

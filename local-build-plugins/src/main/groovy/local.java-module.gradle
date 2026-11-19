@@ -75,7 +75,9 @@ dependencies {
     testRuntimeOnly libs.jdbc.derby
     testRuntimeOnly libs.jdbc.derbyTools
     testRuntimeOnly libs.jdbc.hsqldb
-    testRuntimeOnly libs.jdbc.postgresql
+    if ( !db.startsWith( 'gaussdb' ) ) {
+        testRuntimeOnly libs.jdbc.postgresql
+    }
     testRuntimeOnly libs.jdbc.edb
     testRuntimeOnly libs.jdbc.mssql
     testRuntimeOnly libs.jdbc.informix

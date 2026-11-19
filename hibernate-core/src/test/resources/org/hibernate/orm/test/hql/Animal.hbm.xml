@@ -54,8 +54,8 @@
 				<property name="heightInches">
 					<column name="height_centimeters" 
 						not-null="true" 
-						read="height_centimeters / 2.54E0"
-						write="? * 2.54E0"/>
+						read="height_centimeters / 2.54"
+						write="? * 2.54"/>
 				</property>   
 				<property name="intValue"/>
 				<property name="floatValue"/>

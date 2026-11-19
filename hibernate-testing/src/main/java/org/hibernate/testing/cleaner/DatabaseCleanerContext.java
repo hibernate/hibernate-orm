@@ -22,6 +22,8 @@ public final class DatabaseCleanerContext {
 							new MySQL8DatabaseCleaner(),
 							new MariaDBDatabaseCleaner(),
 							new OracleDatabaseCleaner(),
+							new GaussDBMModeDatabaseCleaner(),
+							new GaussDBDatabaseCleaner(),
 							new PostgreSQLDatabaseCleaner()
 					};
 					for ( DatabaseCleaner cleaner : cleaners ) {

@@ -835,7 +835,10 @@ public class NativeSQLQueriesTest {
 	@Test @JiraKey( "HHH-15102" )
 	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true)
 	public void testCommentInSQLQuery(SessionFactoryScope scope) {
-		scope.inTransaction( s -> s.createNativeQuery( "select sum(1) --count(*), effectively\nfrom ORGANIZATION" ).getSingleResult() );
+		// MySQL requires whitespace after "--" for a line comment (GaussDBDialect is not a
+		// MySQLDialect subtype, so the class-level skip does not apply to it, but its M mode
+		// behaves the same); use "-- " with a following space, which every dialect accepts.
+		scope.inTransaction( s -> s.createNativeQuery( "select sum(1) -- count(*), effectively\nfrom ORGANIZATION" ).getSingleResult() );
 	}
 
 	@Test

@@ -131,6 +131,42 @@ class TemporalPreservationOfflineBootTests {
 		}
 	}
 
+	/// Compared with an instant, `current_timestamp` stands for the current
+	/// instant. The column of an `Instant` on DB2 holds the date and time at
+	/// UTC, for which DB2Dialect has no expression, so the comparison is
+	/// rejected, as is one with the current date. This is decided when the
+	/// query is translated, before any connection is needed.
+	@Test
+	void comparisonWithTheCurrentTimestampIsRejectedOnDb2() {
+		final var registryBuilder = ServiceRegistryUtil.serviceRegistryBuilder();
+		registryBuilder.applySetting( MappingSettings.TEMPORAL_PRESERVATION, true );
+		registryBuilder.applySetting( JdbcSettings.ALLOW_METADATA_ON_BOOT, false );
+		registryBuilder.applySetting( JdbcSettings.DIALECT, DB2Dialect.class.getName() );
+		registryBuilder.applySetting( JdbcSettings.CONNECTION_PROVIDER, new NoConnections() );
+		registryBuilder.applySetting( "hibernate.hbm2ddl.auto", "none" );
+		try ( var registry = registryBuilder.build();
+				var factory = (SessionFactoryImplementor) new MetadataSources( registry )
+						.addAnnotatedClass( WithInstant.class )
+						.buildMetadata()
+						.buildSessionFactory();
+				var session = factory.openSession() ) {
+			for ( String current : new String[] { "current_timestamp", "local datetime", "local datetime - 1 day" } ) {
+				assertThatThrownBy( () -> session.createQuery(
+						"select e.id from WithInstant e where e.theValue < " + current,
+						Integer.class
+				).getResultList() )
+						.as( current )
+						.hasStackTraceContaining( MappingSettings.TEMPORAL_PRESERVATION )
+						.hasStackTraceContaining( "has no expression for the current date and time at UTC" );
+			}
+			assertThatThrownBy( () -> session.createQuery(
+					"select e.id from WithInstant e where e.theValue < current_date",
+					Integer.class
+			).getResultList() )
+					.hasStackTraceContaining( "the result would depend on that time zone" );
+		}
+	}
+
 	/// On DB2 a `LocalDate` is exchanged as a `java.sql.Date`, which passes
 	/// through the default time zone of the JVM. A day which that zone
 	/// skipped cannot be written, and the day after it cannot be read. This
@@ -207,6 +243,13 @@ class TemporalPreservationOfflineBootTests {
 		@Id
 		Integer id;
 		LocalDate theValue;
+	}
+
+	@Entity(name = "WithInstant")
+	static class WithInstant {
+		@Id
+		Integer id;
+		java.time.Instant theValue;
 	}
 
 	@Entity(name = "WithArray")

@@ -1050,6 +1050,24 @@ while an `OffsetDateTime` or `ZonedDateTime` stored in a single column is held i
 HSQLDB would compare the two in the time zone of its session, so a comparison between them is rejected. Compare each with a parameter or a literal instead.
 This applies equally where one of the two is what a subquery selects.
 
+The functions `current_timestamp` and `local datetime` return the date and time in the time zone of the database session, or of the server.
+Compared with an `Instant`, `OffsetDateTime` or `ZonedDateTime`, they stand for the current instant instead, exactly as `instant` and `offset datetime` do,
+also where a date and time is computed from them:
+
+[source,hql]
+----
+from Token t where t.expiresAt < current_timestamp
+from Token t where t.issuedAt > local datetime - 7 day
+----
+
+On MySQL, MariaDB and HSQLDB the database is then asked for its current date and time at UTC where the column holds that, and on Db2, which has no such expression, the comparison is rejected.
+Selected, or compared with anything else, the two functions mean what they always did.
+
+The current date and the current time of the database, as `current_date`, `local date`, `current_time` and `local time`, cannot be given such a meaning.
+A comparison of one of them with a value which the column holds at UTC is rejected on MySQL, MariaDB, HSQLDB and Db2, since its result would depend on the time zone of the session,
+and on SQL Server, which reads a date without a time zone as being at UTC while its current date is that of the server.
+Compare with a parameter instead.
+
 *`OffsetTime`*
 
 An `OffsetTime` is a time of day together with an offset from UTC, and is handled the same way.
@@ -1258,6 +1276,12 @@ An example is a `LocalDate` mapped with `@JdbcTypeCode(Types.DATE)`, which conve
 |When the query is translated
 
 |Two instants which a query compares, also through a subquery, where one is held as its date and time at UTC and the other in a column with a time zone, as on HSQLDB
+|When the query is translated
+
+|`current_timestamp` or `local datetime` which a query compares with an instant held as its date and time at UTC, where the Dialect has no expression for the current date and time at UTC, as on Db2
+|When the query is translated
+
+|`current_date`, `local date`, `current_time` or `local time` which a query compares with a value held at UTC, and on SQL Server with any instant
 |When the query is translated
 
 |A `java.time` value mapped to a JDBC type whose binder or extractor does not pass through `BasicBinder` and `BasicExtractor`

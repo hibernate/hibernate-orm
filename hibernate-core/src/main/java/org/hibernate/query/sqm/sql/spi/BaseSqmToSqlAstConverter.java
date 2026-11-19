@@ -8320,8 +8320,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		else {
 			handleTypeComparison( lhs, rhs, sqmOperator == ComparisonOperator.EQUAL );
-			checkInstantsAreComparable( lhs, rhs );
-			return new ComparisonPredicate( lhs, sqmOperator, rhs, getBooleanType() );
+			final Expression[] operands = asCurrentInstants( lhs, rhs );
+			checkInstantsAreComparable( operands );
+			return new ComparisonPredicate( operands[0], sqmOperator, operands[1], getBooleanType() );
 		}
 	}
 
@@ -8684,11 +8685,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			inferrableTypeAccessStack.pop();
 		}
 
-		checkInstantsAreComparable( expression, lowerBound, upperBound );
+		final Expression[] compared = asCurrentInstants( expression, lowerBound, upperBound );
+		checkInstantsAreComparable( compared );
 		return new BetweenPredicate(
-				expression,
-				lowerBound,
-				upperBound,
+				compared[0],
+				compared[1],
+				compared[2],
 				predicate.isNegated(),
 				getBooleanType()
 		);
@@ -8813,6 +8815,85 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return inPredicate;
 	}
 
+	/// With temporal preservation enabled, `current_timestamp` and
+	/// `local datetime` compared with an instant stand for the current
+	/// instant, in the form which the column holding that instant needs.
+	/// What the database itself returns for them is in the time zone of its
+	/// session, or of the server, and would be compared with the stored
+	/// value as if it were at UTC wherever the column holds the date and
+	/// time at UTC.
+	private Expression[] asCurrentInstants(Expression... operands) {
+		if ( !creationContext.getSessionFactory().getSessionFactoryOptions().isTemporalPreservationEnabled() ) {
+			return operands;
+		}
+		JdbcMapping instant = null;
+		for ( var operand : operands ) {
+			final var jdbcMapping = singleJdbcMapping( operand );
+			if ( jdbcMapping != null && instantBasis( jdbcMapping ) != null ) {
+				instant = jdbcMapping;
+				break;
+			}
+		}
+		if ( instant != null ) {
+			for ( int i = 0; i < operands.length; i++ ) {
+				operands[i] = asCurrentInstant( operands[i], instant );
+			}
+		}
+		return operands;
+	}
+
+	/// Replace `current_timestamp` and `local datetime`, also as what a date
+	/// and time is computed from, by the current instant.
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	private Expression asCurrentInstant(Expression expression, JdbcMapping instant) {
+		if ( expression instanceof SelfRenderingFunctionSqlAstExpression<?> function ) {
+			if ( isFunctionRegisteredAs( function, "current_timestamp", "local_datetime" ) ) {
+				return new org.hibernate.sql.ast.spi.query.expression.SelfRenderingSqlFragmentExpression(
+						org.hibernate.type.descriptor.jdbc.internal.TemporalPreservationGuard.currentInstantExpression(
+								getDialect(),
+								instant,
+								true,
+								"the result of the function '" + function.getFunctionName() + "'"
+						),
+						instant
+				);
+			}
+			// not an aggregate or a window function, which have more than their arguments
+			if ( function.getClass() == SelfRenderingFunctionSqlAstExpression.class ) {
+				final var arguments = function.getArguments();
+				final List<org.hibernate.sql.ast.spi.SqlAstNode> replaced = new ArrayList<>( arguments.size() );
+				boolean changed = false;
+				for ( var argument : arguments ) {
+					if ( argument instanceof Expression argumentExpression ) {
+						final var replacement = asCurrentInstant( argumentExpression, instant );
+						changed = changed || replacement != argumentExpression;
+						replaced.add( replacement );
+					}
+					else {
+						replaced.add( argument );
+					}
+				}
+				if ( changed ) {
+					return new SelfRenderingFunctionSqlAstExpression(
+							function.getFunctionName(),
+							function.getFunctionRenderer(),
+							replaced,
+							function.getType(),
+							function.getExpressible()
+					);
+				}
+			}
+		}
+		else if ( expression instanceof BinaryArithmeticExpression arithmetic ) {
+			final var left = asCurrentInstant( arithmetic.getLeftHandOperand(), instant );
+			final var right = asCurrentInstant( arithmetic.getRightHandOperand(), instant );
+			if ( left != arithmetic.getLeftHandOperand() || right != arithmetic.getRightHandOperand() ) {
+				return new BinaryArithmeticExpression( left, arithmetic.getOperator(), right, arithmetic.getExpressionType() );
+			}
+		}
+		return expression;
+	}
+
 	private static @Nullable JdbcMapping singleJdbcMapping(Expression operand) {
 		// only a single value; a tuple type cannot even say how many it has
 		final var type = operand.getExpressionType();
@@ -8841,13 +8922,66 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		).instantBasis();
 	}
 
-	/// With temporal preservation enabled, reject a comparison between an
-	/// instant held as its date and time at UTC, in a column which knows of
-	/// no time zone, and an instant held in a column which itself denotes
-	/// one, or produced by an expression of such a type. The database would
-	/// read the first in the time zone of its session, so the result would
-	/// depend on that time zone. The elements of tuples, and what a subquery
-	/// selects, are checked in pairs.
+	/// Whether the function is one which the Dialect registered under any of
+	/// the given names, which it may have done under a name of its own.
+	private boolean isFunctionRegisteredAs(SelfRenderingFunctionSqlAstExpression<?> function, String... registeredAs) {
+		final var registry = creationContext.getSessionFactory().getQueryEngine().getSqmFunctionRegistry();
+		for ( String key : registeredAs ) {
+			final var descriptor = registry.findFunctionDescriptor( key );
+			final String name = descriptor instanceof org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor named
+					? named.getName()
+					: key;
+			if ( name.equals( function.getFunctionName() ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/// Whether the expression is, or computes with, the current date or
+	/// time of the database without a time zone.
+	private boolean hasCurrentDateOrTimeWithoutZone(org.hibernate.sql.ast.spi.SqlAstNode expression) {
+		if ( expression instanceof SelfRenderingFunctionSqlAstExpression<?> function ) {
+			if ( isFunctionRegisteredAs(
+					function,
+					"current_timestamp", "current_date", "current_time", "local_datetime", "local_date", "local_time"
+			) ) {
+				return true;
+			}
+			for ( var argument : function.getArguments() ) {
+				if ( hasCurrentDateOrTimeWithoutZone( argument ) ) {
+					return true;
+				}
+			}
+			return false;
+		}
+		else if ( expression instanceof BinaryArithmeticExpression arithmetic ) {
+			return hasCurrentDateOrTimeWithoutZone( arithmetic.getLeftHandOperand() )
+				|| hasCurrentDateOrTimeWithoutZone( arithmetic.getRightHandOperand() );
+		}
+		else {
+			return false;
+		}
+	}
+
+	/// With temporal preservation enabled, reject a comparison which is known
+	/// to give a result depending on the time zone of the database session,
+	/// or of the server:
+	///
+	/// - between an instant held as its date and time at UTC, in a column
+	///   which knows of no time zone, and an instant held in a column which
+	///   itself denotes one, or produced by an expression of such a type,
+	///   since the database would read the first in the time zone of its
+	///   session;
+	/// - between a value held at UTC and the current date or time of the
+	///   database, which is in the time zone of its session, where
+	///   [#asCurrentInstants] has not replaced it: the current date, the
+	///   current time, and anything computed from them. The same is rejected
+	///   where the database reads a date and time without a time zone as
+	///   being at UTC although its current timestamp is not.
+	///
+	/// The elements of tuples, and what a subquery selects, are checked in
+	/// pairs.
 	private void checkInstantsAreComparable(Expression... operands) {
 		if ( !creationContext.getSessionFactory().getSessionFactoryOptions().isTemporalPreservationEnabled() ) {
 			return;
@@ -8922,15 +9056,30 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private void checkInstantBasesOfValues(List<? extends Expression> operands) {
 		org.hibernate.dialect.type.spi.TemporalPreservation.InstantBasis first = null;
+		boolean anyAtUtc = false;
+		boolean anyInstant = false;
+		boolean anyCurrentWithoutZone = false;
 		for ( var operand : operands ) {
+			if ( hasCurrentDateOrTimeWithoutZone( operand ) ) {
+				anyCurrentWithoutZone = true;
+				continue;
+			}
 			final var jdbcMapping = singleJdbcMapping( operand );
 			if ( jdbcMapping == null ) {
+				continue;
+			}
+			if ( jdbcMapping.getJdbcJavaType().getJavaTypeClass() == OffsetTime.class ) {
+				// held as its time at UTC unless the column has a time zone
+				anyAtUtc = anyAtUtc || jdbcMapping.getJdbcType().getDefaultSqlTypeCode() != SqlTypes.TIME_WITH_TIMEZONE;
 				continue;
 			}
 			final var basis = instantBasis( jdbcMapping );
 			if ( basis == null ) {
 				continue;
 			}
+			anyInstant = true;
+			anyAtUtc = anyAtUtc
+					|| basis == org.hibernate.dialect.type.spi.TemporalPreservation.InstantBasis.UTC_CONVENTION;
 			if ( first == null ) {
 				first = basis;
 			}
@@ -8943,6 +9092,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						+ " literal instead"
 				);
 			}
+		}
+		if ( anyCurrentWithoutZone
+				&& ( anyAtUtc
+					|| anyInstant && !getDialect().getCurrentTemporalSupport()
+							.isLocalDateTimeReadInTimeZoneOfCurrentTimestamp() ) ) {
+			throw new SemanticException(
+					"Cannot compare a value stored at UTC with the current date or time of the database, which is"
+					+ " in the time zone of its session: with '" + org.hibernate.cfg.MappingSettings.TEMPORAL_PRESERVATION
+					+ "' enabled the result would depend on that time zone; compare with 'instant' or"
+					+ " 'offset datetime', or with a parameter, instead"
+			);
 		}
 	}
 

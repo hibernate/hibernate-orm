@@ -67,6 +67,19 @@ public interface CurrentTemporalSupport {
 		return null;
 	}
 
+	/// Whether the database, comparing a date and time without a time zone
+	/// with one which has a time zone, reads the first in the time zone in
+	/// which [#currentTimestamp()] and [#currentDate()] are expressed, so
+	/// that the current date and time compares as the current instant.
+	/// SQL Server reads it as being at UTC, whereas its current timestamp is
+	/// in the time zone of the server. With temporal preservation enabled,
+	/// a comparison which would depend on this is rejected.
+	///
+	/// @since 8.1
+	default boolean isLocalDateTimeReadInTimeZoneOfCurrentTimestamp() {
+		return true;
+	}
+
 	/// Select the JDBC command used for database-side current timestamp retrieval,
 	/// or return `null` when the database offers no supported command.
 	///

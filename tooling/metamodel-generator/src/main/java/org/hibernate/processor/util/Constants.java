@@ -141,7 +141,6 @@ public final class Constants {
 	public static final String JD_TEMPORAL_ATTRIBUTE = "jakarta.data.metamodel.TemporalAttribute";
 	public static final String JD_TEXT_ATTRIBUTE = "jakarta.data.metamodel.TextAttribute";
 
-	public static final String JD_LIFECYCLE_EVENT = "jakarta.data.event.LifecycleEvent";
 
 	public static final String HIB_ORDER = "org.hibernate.query.Order";
 	public static final String HIB_PAGE = "org.hibernate.query.Page";
@@ -173,7 +172,6 @@ public final class Constants {
 	public static final String TUPLE = "jakarta.persistence.Tuple";
 
 	public static final String INJECT = "jakarta.inject.Inject";
-	public static final String TYPE_LITERAL = "jakarta.enterprise.util.TypeLiteral";
 	public static final String EVENT = "jakarta.enterprise.event.Event";
 
 	public static final String UNI = "io.smallrye.mutiny.Uni";

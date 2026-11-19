@@ -117,7 +117,7 @@ public class DataAnnotationMetaAttribute implements MetaAttribute {
 				.toString();
 	}
 
-	private String fieldName() {
+	String fieldName() {
 		return getUpperUnderscoreCaseFromLowerCamelCase(getPropertyName().replace('.', '_'));
 	}
 

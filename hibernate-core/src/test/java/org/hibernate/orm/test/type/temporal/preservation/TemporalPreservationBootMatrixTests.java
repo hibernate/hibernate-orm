@@ -90,9 +90,11 @@ class TemporalPreservationBootMatrixTests {
 		for ( int i = 0; i < direct.size(); i++ ) {
 			final String javaClass = direct.get( i ).javaClass();
 			// where the offset or zone is stored is decided differently with preservation enabled
+			// and a LocalTime on Oracle is exchanged with the driver differently
 			if ( !javaClass.equals( "OffsetTime" )
 					&& !javaClass.equals( "OffsetDateTime" )
-					&& !javaClass.equals( "ZonedDateTime" ) ) {
+					&& !javaClass.equals( "ZonedDateTime" )
+					&& !( javaClass.equals( "LocalTime" ) && direct.get( i ).dialect().equals( "OracleDialect" ) ) ) {
 				assertThat( direct.get( i ).jdbcType() ).as( javaClass ).isEqualTo( preserving.get( i ).jdbcType() );
 				assertThat( direct.get( i ).columnType() ).as( javaClass ).isEqualTo( preserving.get( i ).columnType() );
 			}

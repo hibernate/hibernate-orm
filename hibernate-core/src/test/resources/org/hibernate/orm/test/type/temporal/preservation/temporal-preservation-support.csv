@@ -38,7 +38,7 @@ PostgreSQLDialect,OffsetTime (ADJUSTED),TimeUtcAsLocalTimeJdbcType,time(0),TIME,
 PostgreSQLDialect,OffsetDateTime (ADJUSTED),TimestampUtcAsJdbcTimestampJdbcType,timestamp(6) with time zone,INSTANT,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
 PostgreSQLDialect,ZonedDateTime (ADJUSTED),TimestampUtcAsJdbcTimestampJdbcType,timestamp(6) with time zone,INSTANT,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
 OracleDialect,LocalDate,LocalDateJdbcType,date,DATE,,1582-10-15,9999-12-31,QUALIFIED
-OracleDialect,LocalTime,LocalTimeJdbcType,timestamp(0),,,,,REJECTED
+OracleDialect,LocalTime,OracleLocalTimeJdbcType,timestamp(0),TIME,,,,QUALIFIED
 OracleDialect,LocalDateTime,LocalDateTimeJdbcType,timestamp(9),DATE+TIME,,1582-10-15T00:00,9999-12-31T23:59:59.999999999,QUALIFIED
 OracleDialect,Instant,TimestampUtcAsOffsetDateTimeJdbcType,timestamp(9) with time zone,INSTANT,NATIVE,1582-10-15T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
 OracleDialect,OffsetTime,OffsetTimeJdbcType + IntegerJdbcType,"timestamp(0) with time zone + number(10,0)",TIME+OFFSET,,,,QUALIFIED

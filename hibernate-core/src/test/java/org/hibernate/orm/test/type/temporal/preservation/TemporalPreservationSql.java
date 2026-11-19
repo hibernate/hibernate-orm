@@ -1,6 +1,7 @@
 package org.hibernate.orm.test.type.temporal.preservation;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
 
 /// The literals of the database's own SQL which the tests use to write and
@@ -25,6 +26,10 @@ final class TemporalPreservationSql {
 
 	/// A time of day, given as `HH:mm:ss` with any fraction.
 	static String timeLiteral(Dialect dialect, String fields) {
+		if ( dialect instanceof OracleDialect ) {
+			// Oracle has no type for a time of day: the time is held on the first day of 1970
+			return "timestamp '1970-01-01 " + fields + "'";
+		}
 		return dialect instanceof SQLServerDialect ? "cast('" + fields + "' as time)" : "time '" + fields + "'";
 	}
 

@@ -887,8 +887,6 @@ Enabling temporal preservation has three effects.
 Temporal preservation is supported on H2, HSQLDB, PostgreSQL, Oracle, MySQL, MariaDB, SQL Server and Db2, for `LocalDate`, `LocalTime`, `LocalDateTime`, `Instant`,
 `OffsetTime`, `OffsetDateTime` and `ZonedDateTime`. The last three are described further under <<basic-temporal-preservation-policy>>.
 On every other database, a mapped value is rejected.
-So is a `LocalTime` on Oracle, which has no `TIME` type: the value is stored in a `TIMESTAMP` column,
-and what is stored there depends on the default time zone of the JVM.
 On Db2, a `LocalDateTime` is rejected.
 It is exchanged with the JDBC driver as a `java.sql.Timestamp` in the default time zone of the JVM,
 which cannot express a time skipped there as clocks are set forward, and stores the time an hour later instead.
@@ -1041,10 +1039,10 @@ the row start and row end of a temporal table and the changeset of an audit tabl
 On Db2 a soft delete by timestamp is therefore rejected, as are those functions and timestamps of transactions which come from the database.
 
 The row start and row end of a temporal table, and a changeset of an audit table which is an `Instant`, are stored as any other `Instant` is, in a column of the same type.
-The same holds on Oracle, which does not allow a column with a time zone in a primary key:
-a temporal table, and an audit table whose changeset is an `Instant`, are rejected there.
 The exception is a temporal table which the database maintains itself, with `TemporalTableStrategy.NATIVE`: its columns have the type which the database requires,
 and the mapping is rejected when that type has not been established to preserve an `Instant`.
+The same holds on Oracle, which does not allow a column with a time zone in a primary key:
+a temporal table, and an audit table whose changeset is an `Instant`, are rejected there.
 
 Two attributes which hold instants can be compared with each other in a query, with one exception.
 On HSQLDB an `Instant`, and the instant of a value stored in two columns, is held as its date and time at UTC in a column which knows of no time zone,
@@ -1311,6 +1309,9 @@ or on <<basic-datetime-time-zone,`hibernate.jdbc.time_zone`>>, whether configure
 * A `LocalDate`, `LocalTime` or `LocalDateTime` is exchanged with the driver as its fields, with no time zone involved.
   The exception is a `LocalDate` on Db2, which is exchanged as a `java.sql.Date`. The driver was established to store the same date whatever the default time zone of the JVM.
   A `LocalTime` on Db2 is exchanged directly, as elsewhere.
+  Oracle has no `TIME` type, so a `LocalTime` is stored there in a `TIMESTAMP` column, on the first day of 1970, and is exchanged with the driver as a `LocalDateTime` on that day.
+  What the driver stores for a `LocalTime` passed as such depends on the default time zone of the JVM, which is how the value is exchanged when temporal preservation is not enabled.
+  Times stored that way may therefore be on another day and at another hour; a value read back is the time of whatever date is stored.
   A `java.sql.Date` cannot express a day which the default time zone of the JVM skipped altogether, as `Pacific/Apia` skipped 30 December 2011, and stands for the next day instead.
   On Db2, in a JVM with such a time zone, a `LocalDate` on the skipped day is therefore rejected when it is written, and one on the day after it is rejected when it is read, since it may stand for either day.
 * An `Instant` is exchanged in a form which fixes it to UTC: as an `Instant` on H2, as an `OffsetDateTime` at UTC on Oracle,

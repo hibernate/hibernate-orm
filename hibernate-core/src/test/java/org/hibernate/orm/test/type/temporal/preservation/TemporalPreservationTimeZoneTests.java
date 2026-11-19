@@ -338,10 +338,8 @@ class TemporalPreservationTimeZoneTests {
 				samples.put( value, TemporalPreservationSql.dateTimeLiteral( dialect, DATE_TIME.format( value ) ) );
 			}
 		}
-		if ( !( dialect instanceof OracleDialect ) ) {
-			for ( var value : new LocalTime[] { LocalTime.of( 2, 30, 15 ), LocalTime.MIDNIGHT } ) {
-				samples.put( value, TemporalPreservationSql.timeLiteral( dialect, TIME.format( value ) ) );
-			}
+		for ( var value : new LocalTime[] { LocalTime.of( 2, 30, 15 ), LocalTime.MIDNIGHT } ) {
+			samples.put( value, TemporalPreservationSql.timeLiteral( dialect, TIME.format( value ) ) );
 		}
 		for ( var value : new Instant[] {
 				Instant.parse( "2021-03-14T07:30:00.123456Z" ),
@@ -446,10 +444,7 @@ class TemporalPreservationTimeZoneTests {
 				// a LocalDateTime is not supported on DB2
 				sources.addAnnotatedClass( WithLocalDateTime.class );
 			}
-			if ( !( dialect instanceof OracleDialect ) ) {
-				// a LocalTime is not supported on Oracle
-				sources.addAnnotatedClass( WithLocalTime.class );
-			}
+			sources.addAnnotatedClass( WithLocalTime.class );
 			try ( var factory = (SessionFactoryImplementor) sources.buildMetadata().buildSessionFactory() ) {
 				action.accept( factory );
 			}

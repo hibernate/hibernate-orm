@@ -1,5 +1,7 @@
 package org.hibernate.sql.results.graph.embeddable.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -59,8 +61,8 @@ public class NonAggregatedIdentifierMappingInitializer
 		protected final Object[] idClassState;
 
 		public NonAggregatedIdentifierMappingInitializerData(
-				NonAggregatedIdentifierMappingInitializer initializer,
-				RowProcessingState rowProcessingState) {
+				@Nonnull NonAggregatedIdentifierMappingInitializer initializer,
+				@Nonnull RowProcessingState rowProcessingState) {
 			super( rowProcessingState );
 			isFindByIdLookup = isIsFindByIdLookup( initializer, rowProcessingState );
 			parentData = initializer.parent == null ? null : initializer.parent.getData( rowProcessingState );
@@ -71,8 +73,8 @@ public class NonAggregatedIdentifierMappingInitializer
 		}
 
 		private boolean isIsFindByIdLookup(
-				NonAggregatedIdentifierMappingInitializer initializer,
-				RowProcessingState rowProcessingState) {
+				@Nonnull NonAggregatedIdentifierMappingInitializer initializer,
+				@Nonnull RowProcessingState rowProcessingState) {
 			return !initializer.hasIdClass
 				&& rowProcessingState.getEntityId() != null
 				&& initializer.navigablePath.getParent().getParent() == null
@@ -80,18 +82,21 @@ public class NonAggregatedIdentifierMappingInitializer
 		}
 
 		@Override
+		@Nonnull
 		public Object[] getValues() {
 			assert getState() == State.RESOLVED;
 			return idClassState;
 		}
 
 		@Override
-		public <T> T getValue(int i, Class<T> clazz) {
+		@Nullable
+		public <T> T getValue(int i, @Nonnull Class<T> clazz) {
 			assert getState() == State.RESOLVED;
 			return clazz.cast( idClassState[i] );
 		}
 
 		@Override
+		@Nullable
 		public Object getOwner() {
 			return parentData == null ? null : parentData.getInstance();
 		}

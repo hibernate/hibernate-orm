@@ -1,5 +1,8 @@
 package org.hibernate.metamodel.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.SPI;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -22,10 +25,18 @@ public interface ImplicitDiscriminatorStrategy {
 	/**
 	 * Determine the discriminator value to use for the given {@code entityMapping}.
 	 */
-	Object toDiscriminatorValue(EntityMappingType entityMapping, NavigableRole discriminatorRole, MappingMetamodelImplementor mappingModel);
+	@Nonnull
+	Object toDiscriminatorValue(
+			@Nonnull EntityMappingType entityMapping,
+			@Nonnull NavigableRole discriminatorRole,
+			@Nonnull MappingMetamodelImplementor mappingModel);
 
 	/**
 	 * Determine the entity-mapping which matches the given {@code discriminatorValue}.
 	 */
-	EntityMappingType toEntityMapping(Object discriminatorValue, NavigableRole discriminatorRole, MappingMetamodelImplementor mappingModel);
+	@Nullable
+	EntityMappingType toEntityMapping(
+			@Nonnull Object discriminatorValue,
+			@Nonnull NavigableRole discriminatorRole,
+			@Nonnull MappingMetamodelImplementor mappingModel);
 }

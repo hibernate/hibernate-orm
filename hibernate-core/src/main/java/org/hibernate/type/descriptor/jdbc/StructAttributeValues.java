@@ -1,5 +1,8 @@
 package org.hibernate.type.descriptor.jdbc;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.metamodel.spi.ValueAccess;
 
 /**
@@ -10,7 +13,7 @@ public class StructAttributeValues implements ValueAccess {
 	private final int size;
 	private Object discriminator;
 
-	public StructAttributeValues(int size, Object[] rawJdbcValues) {
+	public StructAttributeValues(int size, @Nullable Object[] rawJdbcValues) {
 		this.size = size;
 		if ( rawJdbcValues == null || size != rawJdbcValues.length) {
 			attributeValues = new Object[size];
@@ -21,11 +24,12 @@ public class StructAttributeValues implements ValueAccess {
 	}
 
 	@Override
+	@Nonnull
 	public Object[] getValues() {
 		return attributeValues;
 	}
 
-	public void setAttributeValue(int index, Object value) {
+	public void setAttributeValue(int index, @Nullable Object value) {
 		if ( index == size ) {
 			discriminator = value;
 		}
@@ -34,6 +38,7 @@ public class StructAttributeValues implements ValueAccess {
 		}
 	}
 
+	@Nullable
 	public Object getDiscriminator() {
 		return discriminator;
 	}

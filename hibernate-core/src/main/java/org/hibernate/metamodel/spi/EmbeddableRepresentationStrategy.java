@@ -1,5 +1,8 @@
 package org.hibernate.metamodel.spi;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Incubating;
 
 /**
@@ -12,13 +15,16 @@ public interface EmbeddableRepresentationStrategy extends ManagedTypeRepresentat
 	/**
 	 * Create a delegate capable of instantiating instances of the represented type.
 	 */
+	@Nonnull
 	EmbeddableInstantiator getInstantiator();
 
-	default EmbeddableInstantiator getInstantiatorForDiscriminator(Object discriminatorValue) {
+	@Nullable
+	default EmbeddableInstantiator getInstantiatorForDiscriminator(@Nullable Object discriminatorValue) {
 		return getInstantiator();
 	}
 
-	default EmbeddableInstantiator getInstantiatorForClass(String className) {
+	@Nullable
+	default EmbeddableInstantiator getInstantiatorForClass(@Nonnull String className) {
 		return getInstantiator();
 	}
 }

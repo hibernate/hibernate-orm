@@ -1,5 +1,6 @@
 package org.hibernate.metamodel.spi;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
 import org.hibernate.Incubating;
@@ -22,6 +23,7 @@ public interface ManagedTypeRepresentationStrategy {
 	/**
 	 * The mode represented
 	 */
+	@Nonnull
 	RepresentationMode getMode();
 
 	/**
@@ -38,10 +40,12 @@ public interface ManagedTypeRepresentationStrategy {
 	 * The Java type descriptor for the concrete type.  For dynamic-map models
 	 * this will return the JTD for java.util.Map
 	 */
+	@Nonnull
 	JavaType<?> getMappedJavaType();
 
 	/**
 	 * Create the property accessor object for the specified attribute
 	 */
-	PropertyAccess resolvePropertyAccess(Property bootAttributeDescriptor);
+	@Nullable
+	PropertyAccess resolvePropertyAccess(@Nonnull Property bootAttributeDescriptor);
 }

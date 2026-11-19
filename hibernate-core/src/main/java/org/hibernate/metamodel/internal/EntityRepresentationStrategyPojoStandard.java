@@ -10,6 +10,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
 import org.hibernate.HibernateException;
@@ -65,9 +66,9 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 	private final EmbeddableRepresentationStrategyPojo mapsIdRepresentationStrategy;
 
 	public EntityRepresentationStrategyPojoStandard(
-			PersistentClass bootDescriptor,
-			EntityPersister runtimeDescriptor,
-			RuntimeModelCreationContext creationContext) {
+			@Nonnull PersistentClass bootDescriptor,
+			@Nonnull EntityPersister runtimeDescriptor,
+			@Nonnull RuntimeModelCreationContext creationContext) {
 		final var registry = creationContext.getTypeConfiguration().getJavaTypeRegistry();
 
 		final var mappedJavaType = bootDescriptor.getMappedClass();
@@ -148,12 +149,13 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		instantiator = determineInstantiator( bootDescriptor, runtimeDescriptor );
 	}
 
+	@Nullable
 	private ProxyFactory resolveProxyFactory(
-			PersistentClass bootDescriptor,
-			EntityPersister entityPersister,
-			JavaType<?> proxyJavaType,
-			BytecodeProvider bytecodeProvider,
-			RuntimeModelCreationContext creationContext) {
+			@Nonnull PersistentClass bootDescriptor,
+			@Nonnull EntityPersister entityPersister,
+			@Nullable JavaType<?> proxyJavaType,
+			@Nonnull BytecodeProvider bytecodeProvider,
+			@Nonnull RuntimeModelCreationContext creationContext) {
 		if ( entityPersister.isAbstract() && bootDescriptor.isConcreteProxy() && !bootDescriptor.getMappedClass().isSealed() ) {
 			// For abstract non-sealed @ConcreteProxy entities, we still need to create a ProxyFactory
 			// to support lazy associations. Even though the entity class is abstract,
@@ -185,11 +187,12 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		}
 	}
 
+	@Nonnull
 	private Map<String, PropertyAccess> buildPropertyAccessMap(
-			PropertyAccessorService propertyAccessorService,
-			PersistentClass bootDescriptor,
-			StrategySelector strategySelector,
-			CheckHandling finalFieldsHandling) {
+			@Nonnull PropertyAccessorService propertyAccessorService,
+			@Nonnull PersistentClass bootDescriptor,
+			@Nonnull StrategySelector strategySelector,
+			@Nonnull CheckHandling finalFieldsHandling) {
 		final Map<String, PropertyAccess> propertyAccessMap = new LinkedHashMap<>();
 		var finalFields = new ArrayList<String>();
 		for ( var property : bootDescriptor.getAllPropertyClosure() ) {
@@ -209,7 +212,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		return propertyAccessMap;
 	}
 
-	private void warnOnFinalFields(List<String> finalFields, CheckHandling handling) {
+	private void warnOnFinalFields(@Nonnull List<String> finalFields, @Nonnull CheckHandling handling) {
 		if ( handling == CheckHandling.IGNORE || finalFields.isEmpty() ) {
 			return;
 		}
@@ -228,7 +231,10 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 	/*
 	 * Used by Hibernate Reactive
 	 */
-	protected EntityInstantiator determineInstantiator(PersistentClass bootDescriptor, EntityPersister persister) {
+	@Nonnull
+	protected EntityInstantiator determineInstantiator(
+			@Nonnull PersistentClass bootDescriptor,
+			@Nonnull EntityPersister persister) {
 		final var accessorService = persister.getFactory().getServiceRegistry()
 				.requireService( PropertyAccessorService.class );
 		final var mappedClass = mappedJtd.getJavaTypeClass();
@@ -247,10 +253,11 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		}
 	}
 
+	@Nullable
 	private ProxyFactory createProxyFactory(
-			PersistentClass bootDescriptor,
-			BytecodeProvider bytecodeProvider,
-			RuntimeModelCreationContext creationContext) {
+			@Nonnull PersistentClass bootDescriptor,
+			@Nonnull BytecodeProvider bytecodeProvider,
+			@Nonnull RuntimeModelCreationContext creationContext) {
 
 		final var mappedClass = mappedJtd.getJavaTypeClass();
 		final var proxyInterface = proxyJtd == null ? null : proxyJtd.getJavaTypeClass();
@@ -301,10 +308,11 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		);
 	}
 
+	@Nonnull
 	private static Set<Class<?>> proxyInterfaces(
-			PersistentClass bootDescriptor,
-			Class<?> proxyInterface,
-			Class<?> mappedClass) {
+			@Nonnull PersistentClass bootDescriptor,
+			@Nullable Class<?> proxyInterface,
+			@Nonnull Class<?> mappedClass) {
 		// HHH-17578 - We need to preserve the order of the interfaces to ensure
 		// that the most general @Proxy declared interface at the top of a class
 		// hierarchy will be used first when a HibernateProxy decides what it
@@ -341,14 +349,15 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		return proxyInterfaces;
 	}
 
+	@Nullable
 	private static ProxyFactory instantiateProxyFactory(
-			PersistentClass bootDescriptor,
-			BytecodeProvider bytecodeProvider,
-			RuntimeModelCreationContext creationContext,
-			Method proxyGetIdentifierMethod,
-			Method proxySetIdentifierMethod,
-			Class<?> mappedClass,
-			Set<Class<?>> proxyInterfaces) {
+			@Nonnull PersistentClass bootDescriptor,
+			@Nonnull BytecodeProvider bytecodeProvider,
+			@Nonnull RuntimeModelCreationContext creationContext,
+			@Nullable Method proxyGetIdentifierMethod,
+			@Nullable Method proxySetIdentifierMethod,
+			@Nonnull Class<?> mappedClass,
+			@Nonnull Set<Class<?>> proxyInterfaces) {
 		final String entityName = bootDescriptor.getEntityName();
 		if ( isMissingProxyableConstructor( mappedClass, entityName ) && proxyInterfaces.size() <= 1 ) {
 			return new InaccessibleConstructorProxyFactory( entityName );
@@ -376,7 +385,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		return proxyFactory;
 	}
 
-	private static boolean isMissingProxyableConstructor(Class<?> mappedClass, String entityName) {
+	private static boolean isMissingProxyableConstructor(@Nonnull Class<?> mappedClass, @Nonnull String entityName) {
 		// We do not support proxying inner (non-static) classes...
 		if ( mappedClass.getEnclosingClass() != null ) {
 			if ( !Modifier.isStatic(  mappedClass.getModifiers() ) ) {
@@ -397,7 +406,11 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		return false;
 	}
 
-	private PropertyAccess makePropertyAccess(PropertyAccessorService propertyAccessorService, Property bootAttributeDescriptor, StrategySelector strategySelector) {
+	@Nonnull
+	private PropertyAccess makePropertyAccess(
+			@Nonnull PropertyAccessorService propertyAccessorService,
+			@Nonnull Property bootAttributeDescriptor,
+			@Nonnull StrategySelector strategySelector) {
 		final var mappedClass = mappedJtd.getJavaTypeClass();
 		final String descriptorName = bootAttributeDescriptor.getName();
 		final var strategy = propertyAccessStrategy( bootAttributeDescriptor, mappedClass, strategySelector );
@@ -415,6 +428,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 	}
 
 	@Override
+	@Nonnull
 	public RepresentationMode getMode() {
 		return RepresentationMode.POJO;
 	}
@@ -430,11 +444,13 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 	}
 
 	@Override
+	@Nonnull
 	public EntityInstantiator getInstantiator() {
 		return instantiator;
 	}
 
 	@Override
+	@Nullable
 	public ProxyFactory getProxyFactory() {
 		return proxyFactory;
 	}
@@ -445,17 +461,20 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 	}
 
 	@Override
+	@Nonnull
 	public JavaType<?> getMappedJavaType() {
 		return mappedJtd;
 	}
 
 	@Override
+	@Nullable
 	public JavaType<?> getProxyJavaType() {
 		return proxyJtd;
 	}
 
 	@Override
-	public PropertyAccess resolvePropertyAccess(Property bootAttributeDescriptor) {
+	@Nullable
+	public PropertyAccess resolvePropertyAccess(@Nonnull Property bootAttributeDescriptor) {
 		if ( bootAttributeDescriptor.getName().equals( identifierPropertyName ) ) {
 			return identifierPropertyAccess;
 		}
@@ -474,7 +493,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 	}
 
 
-	private static void validateGetterSetterMethodProxyability(String getterOrSetter, Method method ) {
+	private static void validateGetterSetterMethodProxyability(@Nonnull String getterOrSetter, @Nullable Method method ) {
 		if ( method != null && isFinal( method.getModifiers() ) ) {
 			throw new HibernateException(
 					String.format(

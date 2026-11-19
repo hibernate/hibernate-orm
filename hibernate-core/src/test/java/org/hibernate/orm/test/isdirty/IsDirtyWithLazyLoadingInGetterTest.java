@@ -18,7 +18,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -66,10 +65,7 @@ public class IsDirtyWithLazyLoadingInGetterTest extends BaseSessionFactoryFuncti
 					"ReferenceData should not be initialized yet"
 			);
 
-			assertDoesNotThrow( () -> session.isDirty() );
-
-			boolean dirty = session.isDirty();
-			assertFalse( dirty, "Session should not be dirty" );
+			assertFalse( session.isDirty(), "Session should not be dirty" );
 
 			assertTrue(
 					Hibernate.isInitialized( document.getReferenceData() ),
@@ -122,7 +118,6 @@ public class IsDirtyWithLazyLoadingInGetterTest extends BaseSessionFactoryFuncti
 			assertFalse( Hibernate.isInitialized( doc1.getReferenceData() ) );
 			assertFalse( Hibernate.isInitialized( doc2.getReferenceData() ) );
 
-			assertDoesNotThrow( () -> session.isDirty() );
 			assertFalse( session.isDirty(), "Session should not be dirty" );
 
 			assertTrue( Hibernate.isInitialized( doc1.getReferenceData() ) );

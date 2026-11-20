@@ -184,6 +184,24 @@ public interface PersistenceSettings {
 	String BIDIRECTIONALITY_MANAGEMENT = "hibernate.bidirectionality_management";
 
 	/**
+	 * Specifies whether state which is only needed while binding the boot
+	 * model (the {@link org.hibernate.models.spi.ModelsContext}, along with
+	 * the annotation binders and reflection details it references) should
+	 * be released once the {@link org.hibernate.SessionFactory} is created.
+	 * <p>
+	 * The {@link org.hibernate.boot.Metadata} itself remains usable for
+	 * schema management after the release. Disabling this setting is only
+	 * useful for integrations which access the {@code ModelsContext} after
+	 * the {@code SessionFactory} has been created.
+	 *
+	 * @settingDefault {@code true}
+	 *
+	 * @since 8.1
+	 */
+	@Incubating(since = "8.1")
+	String RELEASE_BOOT_BINDING_STATE = "hibernate.boot.release_binding_state";
+
+	/**
 	 * Specifies a class which implements {@link org.hibernate.SessionFactoryObserver} and has
 	 * a constructor with no parameters.
 	 *

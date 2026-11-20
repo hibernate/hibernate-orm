@@ -14,12 +14,14 @@ import org.hibernate.Incubating;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.spi.IndexedConsumer;
 import org.hibernate.loader.ast.spi.Loadable;
+import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.spi.OrderByFragment;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.creation.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.spi.query.from.PluralTableGroup;
 import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.ast.spi.query.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.spi.query.predicate.Predicate;
@@ -69,11 +71,11 @@ public interface PluralAttributeMapping
 			@Nonnull LoadQueryInfluencers influencers,
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator);
 
-	/// Apply the restrictions of a collection join or a correlated collection subquery.
+	/// Apply the row restrictions shared by collection loads, joins and subqueries.
 	/// Joins collect auxiliary restrictions separately to recognize joins eligible for a fetch.
 	/// Subqueries apply both kinds directly to their where clause.
 	default void applyCollectionRestrictions(
-			@Nonnull TableGroup ownerTableGroup,
+			@Nullable TableGroup ownerTableGroup,
 			@Nonnull TableGroup tableGroup,
 			@Nonnull Consumer<Predicate> restrictionConsumer,
 			@Nonnull Consumer<Predicate> auxiliaryRestrictionConsumer,
@@ -82,6 +84,11 @@ public interface PluralAttributeMapping
 		final var filters = influencers.getEnabledFilters();
 		applyBaseRestrictions( restrictionConsumer, tableGroup, true, filters, false, null, creationState );
 		applyBaseManyToManyRestrictions( restrictionConsumer, tableGroup, true, filters, null, creationState );
+		if ( getIndexDescriptor() instanceof EntityCollectionPart index ) {
+			final var keyGroup = ((PluralTableGroup) tableGroup).getIndexTableGroup();
+			index.getAssociatedEntityMappingType().applyBaseRestrictions( restrictionConsumer, keyGroup, true,
+					filters, false, null, creationState );
+		}
 		applyAuxiliaryRestrictions( tableGroup, auxiliaryRestrictionConsumer::accept, influencers,
 				creationState.getSqlAliasBaseGenerator(), ownerTableGroup );
 	}

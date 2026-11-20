@@ -3040,24 +3040,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		else {
 			final EntityPersister entityDescriptor = resolveEntityPersister( sqmRoot.getModel() );
-			tableGroup = entityDescriptor.createRootTableGroup(
-					true,
-					sqmRoot.getNavigablePath(),
-					sqmRoot.getExplicitAlias(),
-					null,
-					() -> predicate -> additionalRestrictions = combinePredicates( additionalRestrictions, predicate ),
-					this
-			);
-
-			entityDescriptor.applyBaseRestrictions(
-					currentQueryNodeProcessingState::applyPredicate,
-					tableGroup,
-					true,
-					getLoadQueryInfluencers().getEnabledFilters(),
-					false,
-					null,
-					this
-			);
+			tableGroup = createEntityRoot( entityDescriptor, sqmRoot );
 		}
 
 //		LOG.tracef( "Resolved SqmRoot [%s] to new TableGroup [%s]", sqmRoot, tableGroup );
@@ -3819,17 +3802,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 	}
 
+	private TableGroup createEntityRoot(EntityPersister descriptor, SqmFrom<?, ?> from) {
+		final var tableGroup = descriptor.createRootTableGroup(
+				true, from.getNavigablePath(), from.getExplicitAlias(), null,
+				() -> predicate -> additionalRestrictions = combinePredicates( additionalRestrictions, predicate ), this );
+		descriptor.applyBaseRestrictions( currentQueryNodeProcessingState()::applyPredicate, tableGroup,
+				true, getLoadQueryInfluencers().getEnabledFilters(), false, null, this );
+		return tableGroup;
+	}
+
 	private TableGroup consumeCrossJoin(SqmCrossJoin<?, ?> sqmJoin, TableGroup lhsTableGroup, boolean transitive) {
-		final var tableGroup =
-				resolveEntityPersister( sqmJoin.getReferencedPathSource() )
-						.createRootTableGroup(
-								true,
-								sqmJoin.getNavigablePath(),
-								sqmJoin.getExplicitAlias(),
-								null,
-								() -> predicate -> additionalRestrictions = combinePredicates( additionalRestrictions, predicate ),
-								this
-						);
+		final var tableGroup = createEntityRoot( resolveEntityPersister( sqmJoin.getReferencedPathSource() ), sqmJoin );
 		final var tableGroupJoin = new TableGroupJoin(
 				sqmJoin.getNavigablePath(),
 				SqlAstJoinType.CROSS,

@@ -7,6 +7,7 @@ import org.hibernate.annotations.Audited;
 import org.hibernate.audit.AuditLog;
 import org.hibernate.audit.AuditLogFactory;
 import org.hibernate.cfg.StateManagementSettings;
+import org.hibernate.Hibernate;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -187,6 +188,15 @@ class AuditManyToManyTest {
 	}
 
 	@Test
+	void testRightJoinAtOwnerRevision(SessionFactoryScope scope) {
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
+			assertEquals( List.of( "Math" ), session.createSelectionQuery(
+					"select c.name from Student s right join s.courses c where s.id = 1 and changesetId(s) = :revision",
+					String.class ).setParameter( "revision", revCreate ).list() );
+		}
+	}
+
+	@Test
 	void testSizeAtEachChangeset(SessionFactoryScope scope) {
 		try (var session = scope.getSessionFactory().withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
 			final var revisions = session.createSelectionQuery(
@@ -195,6 +205,7 @@ class AuditManyToManyTest {
 			assertEquals( 4, revisions.size() );
 			for ( var revision : revisions ) {
 				final var student = (Student) revision[0];
+				assertEquals( revision[1], Hibernate.size( student.courses ) );
 				assertEquals( student.courses.size(), revision[1] );
 			}
 			assertEquals( List.of( 2, 2 ), session.createSelectionQuery(

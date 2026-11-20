@@ -73,15 +73,6 @@ public class CollectionBatchLoaderInPredicate
 				sessionFactory
 		);
 
-		final var querySpec = sqlAst.getQueryPart().getFirstQuerySpec();
-		final var tableGroup = querySpec.getFromClause().getRoots().get( 0 );
-		attributeMapping.applyAuxiliaryRestrictions(
-				tableGroup,
-				querySpec::applyPredicate,
-				influencers,
-				sqlAliasBaseGenerator
-		);
-
 		jdbcParameters = jdbcParametersBuilder.build();
 		assert jdbcParameters.size() == sqlBatchSize * keyColumnCount;
 

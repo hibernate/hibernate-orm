@@ -175,6 +175,12 @@ public interface AuxiliaryMapping {
 		return true;
 	}
 
+	/// Whether an association must join the target table to observe this mapping's row visibility.
+	/// Native temporal tables may restrict rows without contributing a predicate.
+	default boolean requiresTargetTable(@Nonnull LoadQueryInfluencers influencers) {
+		return hasRowRestriction( influencers ) || isAffectedByInfluencers( influencers );
+	}
+
 	/// Whether this mapping should use its auxiliary table for the supplied
 	/// query influencers.
 	///

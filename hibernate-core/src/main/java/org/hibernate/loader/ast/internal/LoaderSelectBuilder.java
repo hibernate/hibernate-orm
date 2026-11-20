@@ -33,11 +33,15 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.Restrictable;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.spi.OrderByFragment;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.sqm.function.FunctionRenderer;
+import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpression;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
@@ -50,7 +54,9 @@ import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.expression.QueryLiteral;
 import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
+import org.hibernate.sql.ast.spi.query.expression.Star;
 import org.hibernate.sql.ast.spi.query.from.PluralTableGroup;
 import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.ast.spi.query.from.TableGroupJoinProducer;
@@ -69,6 +75,7 @@ import org.hibernate.sql.results.graph.EntityGraphTraversalState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.collection.internal.CollectionDomainResult;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
@@ -569,6 +576,48 @@ public class LoaderSelectBuilder {
 		return null;
 	}
 
+	/** Select a collection size or test membership without fetching the collection. */
+	@Nonnull
+	static SelectStatement createCollectionScalarSelect(
+			PluralAttributeMapping collection, @Nullable CollectionPart match, boolean maxIndex,
+			LoadQueryInfluencers influencers, Consumer<JdbcParameter> parameters, SessionFactoryImplementor factory) {
+		final var key = collection.getKeyDescriptor();
+		final var builder = new LoaderSelectBuilder( factory.getSqlTranslationEngine(), collection, null,
+				List.of( key ), null, 1, influencers, new LockOptions(), parameters, new SqlAliasBaseManager() );
+		final var path = new NavigablePath( collection.getRootPathName() );
+		final var query = new QuerySpec( true );
+		final var state = builder.createSqlAstCreationState( query );
+		final var group = builder.buildRootTableGroup( path, query, state );
+		builder.applyRestriction( query, path, group, key, key.getJdbcTypeCount(), parameters, state );
+		builder.applyFiltering( query, group, collection, state );
+
+		final var integerType = factory.getTypeConfiguration().getBasicTypeForJavaType( Integer.class );
+		final Expression selection;
+		if ( match != null ) {
+			builder.applyRestriction( query, path, group, match, match.getJdbcTypeCount(), parameters, state );
+			final var one = new QueryLiteral<>( 1, integerType );
+			selection = one;
+			query.setFetchClauseExpression( one, FetchClauseType.ROWS_ONLY );
+		}
+		else {
+			final String functionName = maxIndex ? "max" : "count";
+			final Expression argument;
+			if ( maxIndex ) {
+				final var index = collection.getIndexDescriptor().getSelectable( 0 );
+				argument = state.getSqlExpressionResolver().resolveSqlExpression(
+						group.resolveTableReference( path, index.getContainingTableExpression() ), index );
+			}
+			else {
+				argument = Star.INSTANCE;
+			}
+			final var function = factory.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( functionName );
+			selection = new SelfRenderingAggregateFunctionSqlAstExpression<>( functionName, (FunctionRenderer) function,
+					List.of( argument ), null, integerType, integerType );
+		}
+		query.getSelectClause().addSqlSelection( new SqlSelectionImpl( 0, selection ) );
+		return new SelectStatement( query, List.of( new BasicResult<>( 0, null, integerType ) ) );
+	}
+
 	@Nonnull
 	private SelectStatement generateSelect() {
 		return generateSelect( null );
@@ -635,7 +684,11 @@ public class LoaderSelectBuilder {
 		for ( var part : partsToSelect ) {
 			final var navigablePath = rootNavigablePath.append( part.getPartName() );
 			final TableGroup tableGroup;
-			if ( part instanceof TableGroupJoinProducer tableGroupJoinProducer ) {
+			final var registeredGroup = sqlAstCreationState.getFromClauseAccess().findTableGroup( navigablePath );
+			if ( registeredGroup != null ) {
+				tableGroup = registeredGroup;
+			}
+			else if ( part instanceof TableGroupJoinProducer tableGroupJoinProducer ) {
 				final var tableGroupJoin = tableGroupJoinProducer.createTableGroupJoin(
 						navigablePath,
 						rootTableGroup,
@@ -706,6 +759,13 @@ public class LoaderSelectBuilder {
 			int numberColumns,
 			@Nonnull Consumer<JdbcParameter> jdbcParameterConsumer,
 			@Nonnull LoaderSqlAstCreationState sqlAstCreationState) {
+		if ( restrictedPart instanceof EntityCollectionPart part && rootTableGroup instanceof PluralTableGroup pluralGroup ) {
+			final var identifier = part.getAssociatedEntityMappingType().getIdentifierMapping();
+			final var partGroup = pluralGroup.getTableGroup( part.getNature() );
+			applyRestriction( rootQuerySpec, partGroup.getNavigablePath(), partGroup, identifier,
+					identifier.getJdbcTypeCount(), jdbcParameterConsumer, sqlAstCreationState );
+			return;
+		}
 		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		final var navigablePath =
 				rootNavigablePath.append( restrictedPart.getNavigableRole().getNavigableName() );
@@ -782,23 +842,8 @@ public class LoaderSelectBuilder {
 		// because for table group joins the restriction is applied
 		// via PluralAttributeMappingImpl.createTableGroupJoin
 		assert tableGroup.getNavigablePath().getParent() == null;
-		pluralAttributeMapping.applyBaseRestrictions(
-				querySpec::applyPredicate,
-				tableGroup,
-				true,
-				loadQueryInfluencers.getEnabledFilters(),
-				false,
-				null,
-				astCreationState
-		);
-		pluralAttributeMapping.applyBaseManyToManyRestrictions(
-				querySpec::applyPredicate,
-				tableGroup,
-				true,
-				loadQueryInfluencers.getEnabledFilters(),
-				null,
-				astCreationState
-		);
+		pluralAttributeMapping.applyCollectionRestrictions( null, tableGroup, querySpec::applyPredicate,
+				querySpec::applyPredicate, astCreationState );
 	}
 
 	private void applyFiltering(

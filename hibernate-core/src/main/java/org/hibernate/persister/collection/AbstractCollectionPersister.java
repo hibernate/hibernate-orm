@@ -4,7 +4,6 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
-import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
@@ -41,6 +40,8 @@ import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.Generator;
 import org.hibernate.jdbc.Expectation;
+import org.hibernate.loader.ast.internal.CollectionScalarLoader;
+import org.hibernate.loader.ast.internal.CollectionScalarLoader.Operation;
 import org.hibernate.loader.ast.internal.CollectionElementLoaderByIndex;
 import org.hibernate.loader.ast.internal.CollectionLoaderNamedQuery;
 import org.hibernate.loader.ast.internal.CollectionLoaderSingleKey;
@@ -58,9 +59,9 @@ import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
@@ -85,7 +86,6 @@ import org.hibernate.query.named.spi.NamedQueryMemento;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.Alias;
-import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.creation.SimpleFromClauseAccessImpl;
@@ -118,7 +118,6 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -128,6 +127,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 
@@ -140,7 +140,6 @@ import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.jdbc.Expectations.createExpectation;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getTableIdentifierExpression;
-import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 import static org.hibernate.sql.Template.renderWhereStringTemplate;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 import static org.hibernate.temporal.TemporalTableStrategy.HISTORY_TABLE;
@@ -165,13 +164,7 @@ public abstract class AbstractCollectionPersister
 
 	protected final String qualifiedTableName;
 	private final CollectionTableMapping tableMapping;
-
-	@SuppressWarnings("NullAway.Init") // Initialized during mapping model creation.
-	private String sqlSelectSizeString;
-	@Nullable
-	private String sqlDetectRowByIndexString;
-	@SuppressWarnings("NullAway.Init") // Initialized during mapping model creation.
-	private String sqlDetectRowByElementString;
+	private final Map<Operation, CollectionScalarLoader> scalarLoaders = new ConcurrentHashMap<>();
 
 	protected boolean hasWhere;
 	@Nullable
@@ -616,7 +609,6 @@ public abstract class AbstractCollectionPersister
 									bootCollectionDescriptor,
 									creationContext
 							);
-							buildStaticWhereFragmentSensitiveSql();
 							return true;
 						}
 				);
@@ -631,7 +623,6 @@ public abstract class AbstractCollectionPersister
 					renderWhereStringTemplate( sqlWhereString, dialect,
 							creationContext.getTypeConfiguration() );
 		}
-		buildStaticWhereFragmentSensitiveSql();
 	}
 
 	private void delayedWhereFragmentProcessing(
@@ -675,16 +666,6 @@ public abstract class AbstractCollectionPersister
 		else {
 			return collectionBootDescriptor.getWhere();
 		}
-	}
-
-	private void buildStaticWhereFragmentSensitiveSql() {
-		sqlSelectSizeString = generateSelectSizeString( hasIndex() && !isMap() );
-		sqlDetectRowByIndexString = generateDetectRowByIndexString();
-		sqlDetectRowByElementString = generateDetectRowByElementString();
-	}
-
-	private boolean isMap() {
-		return collectionSemantics.getCollectionClassification().toJpaClassification() == PluralAttribute.CollectionType.MAP;
 	}
 
 	@Nullable
@@ -866,7 +847,7 @@ public abstract class AbstractCollectionPersister
 					return subSelectLoader;
 				}
 			}
-			return attributeMapping.isAffectedByInfluencers( influencers, true )
+			return attributeMapping.isAffectedByInfluencers( influencers, false )
 					? createCollectionLoader( influencers )
 					: getCollectionLoader();
 		}
@@ -1085,52 +1066,6 @@ public abstract class AbstractCollectionPersister
 		return new SqlSelectionImpl( sqlSelections.get( i ).getValuesArrayPosition(),
 				new AliasedExpression( sqlSelections.get( i ).getExpression(),
 						keyAlias + columnSuffix ) );
-	}
-
-	@Nonnull
-	protected String generateSelectSizeString(boolean isIntegerIndexed) {
-		final String selectValue = isIntegerIndexed
-				? "max(" + castNonNull( getIndexColumnNames() )[0] + ") + 1"  // lists, arrays
-				: "count(" + getElementColumnNames()[0] + ")"; // sets, maps, bags
-		return new SimpleSelect( getFactory() )
-				.setTableName( getTableName() )
-				.addRestriction( getKeyColumnNames() )
-				.addRestriction( keyFormulas )
-				.addWhereToken( sqlWhereString )
-				.addColumn( selectValue )
-				.toStatementString();
-	}
-
-	@Nullable
-	protected String generateDetectRowByIndexString() {
-		if ( !hasIndex() ) {
-			return null;
-		}
-		else {
-			return new SimpleSelect( getFactory() )
-					.setTableName( getTableName() )
-					.addRestriction( getKeyColumnNames() )
-					.addRestriction( getKeyFormulas() )
-					.addRestriction( getIndexColumnNames() )
-					.addRestriction( getIndexFormulas() )
-					.addWhereToken( sqlWhereString )
-					.addColumn( "1" )
-					.toStatementString();
-		}
-	}
-
-
-	@Nonnull
-	protected String generateDetectRowByElementString() {
-		return new SimpleSelect( getFactory() )
-				.setTableName( getTableName() )
-				.addRestriction( getKeyColumnNames() )
-				.addRestriction( getKeyFormulas() )
-				.addRestriction( getElementColumnNames() )
-				.addRestriction( getElementFormulas() )
-				.addWhereToken( sqlWhereString )
-				.addColumn( "1" )
-				.toStatementString();
 	}
 
 	@Nullable
@@ -1516,84 +1451,35 @@ public abstract class AbstractCollectionPersister
 		}
 	}
 
-	int baseIndex() {
-		final int listIndexBase = getAttributeMapping().getIndexMetadata().getListIndexBase();
-		//noinspection ManualMinMaxCalculation
-		return listIndexBase < 0 ? 0 : listIndexBase;
+	private CollectionScalarLoader scalarLoader(Operation operation, SharedSessionContractImplementor session) {
+		final var influencers = session.getLoadQueryInfluencers();
+		return attributeMapping.isAffectedByInfluencers( influencers, false )
+				? new CollectionScalarLoader( attributeMapping, operation, influencers )
+				: scalarLoaders.computeIfAbsent( operation,
+						op -> new CollectionScalarLoader( attributeMapping, op, new LoadQueryInfluencers( factory ) ) );
 	}
 
 	@Override
 	public int getSize(@Nonnull Object key, @Nonnull SharedSessionContractImplementor session) {
-		try {
-			final var jdbcCoordinator = session.getJdbcCoordinator();
-			final var statement = jdbcCoordinator.getStatementPreparer().prepareStatement( sqlSelectSizeString );
-			final var resourceRegistry = jdbcCoordinator.getLogicalConnection().getResourceRegistry();
-			try {
-				getKeyType().nullSafeSet( statement, key, 1, session );
-				final var resultSet = jdbcCoordinator.getResultSetReturn().extract( statement, sqlSelectSizeString );
-				try {
-					return resultSet.next() ? resultSet.getInt( 1 ) - baseIndex() : 0;
-				}
-				finally {
-					resourceRegistry.release( resultSet, statement );
-				}
-			}
-			finally {
-				resourceRegistry.release( statement );
-				jdbcCoordinator.afterStatementExecution();
-			}
-		}
-		catch ( SQLException sqle ) {
-			throw getSQLExceptionHelper().convert(
-					sqle,
-					"could not retrieve collection size: " +
-							collectionInfoString( this, key, getFactory() ),
-					sqlSelectSizeString
-			);
-		}
+		return scalarLoader( Operation.SIZE, session ).select( key, null, session );
 	}
 
 	@Override
 	public boolean indexExists(@Nonnull Object key, @Nonnull Object index, @Nonnull SharedSessionContractImplementor session) {
-		return exists( key, incrementIndexByBase( index ), castNonNull( getIndexType() ), castNonNull( sqlDetectRowByIndexString ), session );
+		return exists( Operation.INDEX_EXISTS, key, incrementIndexByBase( index ), session );
 	}
 
 	@Override
 	public boolean elementExists(@Nonnull Object key, @Nullable Object element, @Nonnull SharedSessionContractImplementor session) {
-		return exists( key, element, getElementType(), sqlDetectRowByElementString, session );
+		return exists( Operation.ELEMENT_EXISTS, key, element, session );
 	}
 
-	private boolean exists(@Nonnull Object key, @Nullable Object indexOrElement, @Nonnull Type indexOrElementType, @Nonnull String sql, @Nonnull SharedSessionContractImplementor session) {
+	private boolean exists(Operation operation, Object key, @Nullable Object value, SharedSessionContractImplementor session) {
 		try {
-			final var jdbcCoordinator = session.getJdbcCoordinator();
-			final var statement = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
-			final var resourceRegistry = jdbcCoordinator.getLogicalConnection().getResourceRegistry();
-			try {
-				getKeyType().nullSafeSet( statement, key, 1, session );
-				indexOrElementType.nullSafeSet( statement, indexOrElement, keyColumnNames.length + 1, session );
-				final var resultSet = jdbcCoordinator.getResultSetReturn().extract( statement, sql );
-				try {
-					return resultSet.next();
-				}
-				finally {
-					resourceRegistry.release( resultSet, statement );
-				}
-			}
-			catch ( TransientObjectException e ) {
-				return false;
-			}
-			finally {
-				resourceRegistry.release( statement );
-				jdbcCoordinator.afterStatementExecution();
-			}
+			return scalarLoader( operation, session ).select( key, value, session ) != 0;
 		}
-		catch ( SQLException sqle ) {
-			throw getSQLExceptionHelper().convert(
-					sqle,
-					"could not check row existence: " +
-							collectionInfoString( this, key, getFactory() ),
-					sqlSelectSizeString
-			);
+		catch ( TransientObjectException e ) {
+			return false;
 		}
 	}
 
@@ -1601,8 +1487,7 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public Object getElementByIndex(@Nonnull Object key, @Nonnull Object index, @Nonnull SharedSessionContractImplementor session, @Nullable Object owner) {
 		final var influencers = session.getLoadQueryInfluencers();
-		if ( influencers.hasEnabledFilters()
-			&& isAffectedByFilters( new HashSet<>(), attributeMapping.getElementDescriptor(), influencers, true ) ) {
+		if ( attributeMapping.isAffectedByInfluencers( influencers, false ) ) {
 			return new CollectionElementLoaderByIndex( attributeMapping, influencers, factory )
 					.load( key, index, session );
 		}

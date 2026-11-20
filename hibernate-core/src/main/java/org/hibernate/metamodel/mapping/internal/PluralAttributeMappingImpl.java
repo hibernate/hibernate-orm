@@ -1,7 +1,6 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import jakarta.annotation.Nonnull;
-
 import jakarta.annotation.Nullable;
 import org.hibernate.MappingException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
@@ -55,12 +54,18 @@ import org.hibernate.sql.ast.spi.creation.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.creation.SqlAliasBase;
 import org.hibernate.sql.ast.spi.creation.SqlAliasStemHelper;
 import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.QueryLiteral;
 import org.hibernate.sql.ast.spi.query.from.CollectionTableGroup;
 import org.hibernate.sql.ast.spi.query.from.AuxiliaryTableReference;
 import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
 import org.hibernate.sql.ast.spi.query.from.OneToManyTableGroup;
+import org.hibernate.sql.ast.spi.query.from.PluralTableGroup;
+import org.hibernate.sql.ast.spi.query.from.QueryPartTableGroup;
 import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.ast.spi.query.from.TableGroupJoin;
 import org.hibernate.sql.ast.spi.query.from.TableGroupJoinProducer;
@@ -76,6 +81,7 @@ import org.hibernate.sql.results.graph.collection.internal.CollectionDomainResul
 import org.hibernate.sql.results.graph.collection.internal.DelayedCollectionFetch;
 import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.sql.results.graph.collection.internal.SelectEagerCollectionFetch;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -85,6 +91,7 @@ import java.util.function.Supplier;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static java.util.Locale.ROOT;
+import static org.hibernate.sql.ast.internal.ColumnQualifierCollectorSqlAstWalker.determineColumnQualifiers;
 import static org.hibernate.internal.util.StringHelper.subStringNullIfEmpty;
 
 
@@ -598,14 +605,11 @@ public class PluralAttributeMappingImpl
 		final var ownerRevision = ownerTableGroup != null && influencers.isAllRevisions()
 				? getOwnerRevision( ownerTableGroup )
 				: null;
-		if ( elementDescriptor instanceof EntityCollectionPart element ) {
-			final var associatedEntity = element.getAssociatedEntityMappingType();
-			final var mapping = associatedEntity.getAuxiliaryMapping();
-			if ( mapping != null ) {
-				mapping.applyPredicate( associatedEntity, predicateConsumer::applyPredicate, tableGroup,
-						sqlAliasBaseGenerator, influencers, ownerRevision );
-			}
-		}
+		final var pluralGroup = (PluralTableGroup) tableGroup;
+		applyPartRestriction( elementDescriptor, pluralGroup.getElementTableGroup(), predicateConsumer,
+				influencers, sqlAliasBaseGenerator, ownerRevision );
+		applyPartRestriction( indexDescriptor, pluralGroup.getIndexTableGroup(), predicateConsumer,
+				influencers, sqlAliasBaseGenerator, ownerRevision );
 
 		final var auxiliaryMapping = getAuxiliaryMapping();
 		if ( auxiliaryMapping != null ) {
@@ -620,7 +624,26 @@ public class PluralAttributeMappingImpl
 		}
 	}
 
-	private @Nullable Expression getOwnerRevision(TableGroup ownerTableGroup) {
+	private static void applyPartRestriction(
+			@Nullable CollectionPart part, @Nullable TableGroup group, PredicateConsumer consumer,
+			LoadQueryInfluencers influencers, SqlAliasBaseGenerator aliases, @Nullable Expression ownerRevision) {
+		if ( part instanceof EntityCollectionPart entityPart ) {
+			final var entity = entityPart.getAssociatedEntityMappingType();
+			final var auxiliary = entity.getAuxiliaryMapping();
+			if ( auxiliary != null ) {
+				final var partGroup = castNonNull( group );
+				if ( !partGroup.isInitialized() && auxiliary.isAffectedByInfluencers( influencers )
+						&& !auxiliary.hasRowRestriction( influencers ) ) {
+					// Native temporal tables restrict rows in the table expression itself.
+					partGroup.getPrimaryTableReference();
+				}
+				auxiliary.applyPredicate( entity, consumer::applyPredicate, partGroup,
+						aliases, influencers, ownerRevision );
+			}
+		}
+	}
+
+	private @Nullable ColumnReference getOwnerRevision(TableGroup ownerTableGroup) {
 		final var owner = collectionDescriptor.getOwnerEntityPersister();
 		final var auditMapping = owner.getAuditMapping();
 		return auditMapping == null ? null : auditMapping.getChangesetIdColumn( owner, ownerTableGroup );
@@ -952,8 +975,20 @@ public class PluralAttributeMappingImpl
 		);
 		final var restrictionCollector = new PredicateCollector();
 		final var auxiliaryRestrictionCollector = new PredicateCollector();
+		final boolean preserveCollection = requestedJoinType == SqlAstJoinType.RIGHT || requestedJoinType == SqlAstJoinType.FULL;
+		final var ownerRevision = preserveCollection && creationState.getLoadQueryInfluencers().isAllRevisions()
+				? getOwnerRevision( lhs )
+				: null;
 		applyCollectionRestrictions( lhs, tableGroup, restrictionCollector::applyPredicate,
-				auxiliaryRestrictionCollector::applyPredicate, creationState );
+				predicate -> {
+					if ( ownerRevision != null && determineColumnQualifiers( predicate ).contains( ownerRevision.getQualifier() ) ) {
+						// A comparison with the owner's revision belongs to the join to the owner.
+						keyPredicateCollector.applyPredicate( predicate );
+					}
+					else {
+						auxiliaryRestrictionCollector.applyPredicate( predicate );
+					}
+				}, creationState );
 
 		if ( fetched ) {
 			if ( orderByFragment != null ) {
@@ -969,6 +1004,13 @@ public class PluralAttributeMappingImpl
 		final var auxiliaryRestrictions = auxiliaryRestrictionCollector.getPredicate();
 		final Predicate joinPredicate;
 		if ( restrictions == null && auxiliaryRestrictions == null ) {
+			joinPredicate = keyPredicateCollector.getPredicate();
+		}
+		else if ( preserveCollection ) {
+			// Restrict the preserved operand before joining it to the owner.
+			final var join = joinInsideCollection( tableGroup, creationState );
+			join.applyPredicate( restrictions );
+			join.applyPredicate( auxiliaryRestrictions );
 			joinPredicate = keyPredicateCollector.getPredicate();
 		}
 		else {
@@ -1071,6 +1113,30 @@ public class PluralAttributeMappingImpl
 		}
 	}
 
+	private TableGroupJoin joinInsideCollection(TableGroup group, SqlAstCreationState state) {
+		final var nested = group.getNestedTableGroupJoins();
+		for ( int i = nested.size() - 1; i >= 0; i-- ) {
+			final var join = nested.get( i );
+			if ( join.getJoinType() == SqlAstJoinType.INNER && join.getJoinedGroup().isInitialized()
+					&& !join.getJoinedGroup().isVirtual() ) {
+				return join;
+			}
+		}
+		// A basic collection (or an uninitialized element join) has no inner
+		// join on which to put the predicate. Joining a single row preserves multiplicity.
+		final var factory = state.getCreationContext().getSessionFactory();
+		final var path = group.getNavigablePath().append( "restriction" );
+		final var alias = state.getSqlAliasBaseGenerator().createSqlAliasBase( "r" ).generateNewAlias();
+		final var query = new QuerySpec( false );
+		final var one = new QueryLiteral<>( 1, factory.getTypeConfiguration().getBasicTypeForJavaType( Integer.class ) );
+		query.getSelectClause().addSqlSelection( new SqlSelectionImpl( one ) );
+		final var singleRow = new QueryPartTableGroup( path, this, new SelectStatement( query ), alias,
+				java.util.List.of( "n" ), false, true, factory );
+		final var join = new TableGroupJoin( path, SqlAstJoinType.INNER, singleRow );
+		group.addNestedTableGroupJoin( join );
+		return join;
+	}
+
 	private boolean hasSoftDelete() {
 		// NOTE: this needs to be done lazily because the associated entity mapping (if one)
 		// does not know its SoftDeleteMapping yet when this is created
@@ -1080,14 +1146,8 @@ public class PluralAttributeMappingImpl
 	}
 
 	public SqlAstJoinType determineSqlJoinType(TableGroup lhs, @Nullable SqlAstJoinType requestedJoinType, boolean fetched) {
-		if ( hasSoftDelete()
-				&& ( fetched || requestedJoinType != null && requestedJoinType != SqlAstJoinType.INNER ) ) {
-			// The restriction which hides the soft-deleted elements is part of the
-			// join predicate. A left join keeps the owner when every element is
-			// hidden, as a fetch requires. A right or full join would bring back
-			// the hidden elements, so it is rendered as a left join too. Only an
-			// inner join which is not a fetch keeps its type, whether it is
-			// explicit or implied by a path, where no join type is requested.
+		if ( fetched && hasSoftDelete() && requestedJoinType != SqlAstJoinType.RIGHT && requestedJoinType != SqlAstJoinType.FULL ) {
+			// A fetch keeps the owner when all its elements have been deleted.
 			return SqlAstJoinType.LEFT;
 		}
 		else if ( requestedJoinType == null ) {
@@ -1235,29 +1295,37 @@ public class PluralAttributeMappingImpl
 						.getSessionFactory()
 		);
 		if ( indexDescriptor instanceof TableGroupJoinProducer tableGroupJoinProducer ) {
+			final boolean nested = isNestedJoin( joinType, addsPredicate, creationState );
 			final var tableGroupJoin = tableGroupJoinProducer.createTableGroupJoin(
 					navigablePath.append( CollectionPart.Nature.INDEX.getName() ),
 					tableGroup,
 					null,
 					sqlAliasBase,
-					joinType,
+					nested ? SqlAstJoinType.INNER : joinType,
 					fetched,
 					false,
 					creationState
 			);
-			tableGroup.registerIndexTableGroup( tableGroupJoin,
-					isNestedJoin( joinType, addsPredicate, creationState ) );
+			tableGroup.registerIndexTableGroup( tableGroupJoin, nested );
 		}
 
 		return tableGroup;
 	}
 
 	private boolean hasAuxiliaryRestriction(LoadQueryInfluencers influencers) {
-		final var elementMapping = elementDescriptor instanceof EntityCollectionPart element
-				? element.getAssociatedEntityMappingType().getAuxiliaryMapping()
-				: null;
 		return auxiliaryMapping != null && auxiliaryMapping.hasRowRestriction( influencers )
-			|| elementMapping != null && elementMapping.hasRowRestriction( influencers );
+			|| hasPartRestriction( elementDescriptor, influencers )
+			|| hasPartRestriction( indexDescriptor, influencers );
+	}
+
+	private static boolean hasPartRestriction(@Nullable CollectionPart part, LoadQueryInfluencers influencers) {
+		if ( part instanceof EntityCollectionPart entityPart ) {
+			final var entity = entityPart.getAssociatedEntityMappingType();
+			final var auxiliary = entity.getAuxiliaryMapping();
+			return auxiliary != null && auxiliary.requiresTargetTable( influencers )
+				|| entity.hasWhereRestrictions();
+		}
+		return false;
 	}
 
 	private boolean isNestedJoin(SqlAstJoinType joinType, boolean addsPredicate, SqlAstCreationState creationState) {
@@ -1396,19 +1464,16 @@ public class PluralAttributeMappingImpl
 
 	@Override
 	public boolean isAffectedByInfluencers(@Nonnull LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
-		if ( PluralAttributeMapping.super.isAffectedByInfluencers( influencers, onlyApplyForLoadByKeyFilters )
-				|| auxiliaryMapping != null && auxiliaryMapping.isAffectedByInfluencers( influencers )) {
-			return true;
-		}
-		else {
-			final var descriptor = getCollectionDescriptor();
-			if ( descriptor.isOneToMany() || descriptor.isManyToMany() ) {
-				final var elementDescriptor = (EntityCollectionPart) getElementDescriptor();
-				return elementDescriptor.getAssociatedEntityMappingType()
-						.isAffectedByInfluencers( influencers, onlyApplyForLoadByKeyFilters );
-			}
-			return false;
-		}
+		return PluralAttributeMapping.super.isAffectedByInfluencers( influencers, onlyApplyForLoadByKeyFilters )
+			|| auxiliaryMapping != null && auxiliaryMapping.isAffectedByInfluencers( influencers )
+			|| isPartAffectedByInfluencers( elementDescriptor, influencers, onlyApplyForLoadByKeyFilters )
+			|| isPartAffectedByInfluencers( indexDescriptor, influencers, onlyApplyForLoadByKeyFilters );
+	}
+
+	private static boolean isPartAffectedByInfluencers(
+			@Nullable CollectionPart part, LoadQueryInfluencers influencers, boolean onlyApplyForLoadByKeyFilters) {
+		return part instanceof EntityCollectionPart entityPart && entityPart.getAssociatedEntityMappingType()
+				.isAffectedByInfluencers( influencers, onlyApplyForLoadByKeyFilters );
 	}
 
 	@Override

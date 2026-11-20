@@ -4,6 +4,7 @@ import org.hibernate.orm.test.type.temporal.preservation.TemporalPreservationBoo
 import org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.sql.spi.StringBuilderSqlAppender;
+import org.hibernate.dialect.type.internal.OracleInstantAtUtcJdbcType;
 import org.hibernate.dialect.type.internal.OracleLocalTimeJdbcType;
 import java.time.LocalTime;
 import java.sql.Connection;
@@ -134,6 +135,8 @@ class TemporalPreservationOfflineBootTests {
 	void timestampOfSoftDeleteNeedsAnExpressionForTheTimeAtUtc() {
 		assertThat( new DB2Dialect().getCurrentTemporalSupport().currentUtcTimestamp() )
 				.isEqualTo( "(current timestamp - current timezone)" );
+		assertThat( new OracleDialect().getCurrentTemporalSupport().currentUtcTimestamp() )
+				.isEqualTo( "sys_extract_utc(systimestamp)" );
 		for ( Class<? extends DB2Dialect> dialectClass : List.of( DB2Dialect.class, Db2WithoutTheTimeAtUtc.class ) ) {
 			final var registryBuilder = ServiceRegistryUtil.serviceRegistryBuilder();
 			registryBuilder.applySetting( MappingSettings.TEMPORAL_PRESERVATION, true );
@@ -192,6 +195,39 @@ class TemporalPreservationOfflineBootTests {
 					Integer.class
 			).getResultList() )
 					.hasStackTraceContaining( "the result would depend on that time zone" );
+		}
+	}
+
+	/// Oracle does not allow a column with a time zone in a primary key, which
+	/// the row start of a temporal table is part of. It is held there as its
+	/// date and time at UTC in a plain timestamp, by a descriptor of its own,
+	/// while an ordinary `Instant` keeps its column with a time zone.
+	@Test
+	void rowStartOfATemporalTableOnOracleIsHeldAtUtc() {
+		final var registryBuilder = ServiceRegistryUtil.serviceRegistryBuilder();
+		registryBuilder.applySetting( MappingSettings.TEMPORAL_PRESERVATION, true );
+		registryBuilder.applySetting( JdbcSettings.ALLOW_METADATA_ON_BOOT, false );
+		registryBuilder.applySetting( JdbcSettings.DIALECT, OracleDialect.class.getName() );
+		registryBuilder.applySetting( JdbcSettings.CONNECTION_PROVIDER, new NoConnections() );
+		registryBuilder.applySetting( org.hibernate.cfg.StateManagementSettings.TEMPORAL_TABLE_STRATEGY, "SINGLE_TABLE" );
+		registryBuilder.applySetting( "hibernate.hbm2ddl.auto", "none" );
+		try ( var registry = registryBuilder.build() ) {
+			final var metadata = (org.hibernate.boot.spi.MetadataImplementor) new MetadataSources( registry )
+					.addAnnotatedClass( WithHistory.class )
+					.buildMetadata();
+			try ( var factory = (SessionFactoryImplementor) metadata.buildSessionFactory() ) {
+				final var table = metadata.getEntityBinding( WithHistory.class.getName() ).getTable();
+				final var rowStart = table.getColumn( org.hibernate.boot.model.naming.Identifier.toIdentifier( "effective_from" ) );
+				assertThat( rowStart ).isNotNull();
+				assertThat( rowStart.getSqlType( metadata ) ).startsWith( "timestamp" ).doesNotContain( "time zone" );
+				final var rowStartValue = (org.hibernate.mapping.BasicValue) rowStart.getValue();
+				assertThat( rowStartValue.resolve().getJdbcType() ).isInstanceOf( OracleInstantAtUtcJdbcType.class );
+				final var ordinary = factory.getMappingMetamodel()
+						.getEntityDescriptor( WithHistory.class )
+						.findAttributeMapping( "recordedAt" )
+						.getSingleJdbcMapping();
+				assertThat( ordinary.getJdbcType() ).isNotInstanceOf( OracleInstantAtUtcJdbcType.class );
+			}
 		}
 	}
 
@@ -278,6 +314,14 @@ class TemporalPreservationOfflineBootTests {
 		@Id
 		Integer id;
 		java.time.Instant theValue;
+	}
+
+	@org.hibernate.annotations.Temporal(rowStart = "effective_from", rowEnd = "effective_to")
+	@Entity(name = "WithHistory")
+	static class WithHistory {
+		@Id
+		Integer id;
+		java.time.Instant recordedAt;
 	}
 
 	/// DB2Dialect as it was before it had an expression for the current date and time at UTC.

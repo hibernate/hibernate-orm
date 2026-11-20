@@ -17,12 +17,15 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hibernate.cfg.MappingSettings.TEMPORAL_PRESERVATION;
 
 /// A temporal or audited entity or collection may not have custom SQL.
-@ServiceRegistry
+// with temporal preservation enabled, a dialect which does not preserve an Instant rejects the mapping first
+@ServiceRegistry(settings = @Setting(name = TEMPORAL_PRESERVATION, value = "false"))
 class CustomSqlValidationTest {
 
 	@Test

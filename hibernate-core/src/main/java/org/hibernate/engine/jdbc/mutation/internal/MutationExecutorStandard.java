@@ -167,7 +167,7 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 		);
 
 		if ( isNotEmpty( nonBatchedJdbcMutations ) || isNotEmpty( selfExecutingMutations ) ) {
-			prepareForNonBatchedWork( batchKey, session );
+			prepareForNonBatchedWork( batch == null ? null : batchKey, session );
 		}
 	}
 

@@ -34,6 +34,7 @@ import java.io.ObjectOutputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 import static org.hibernate.ConnectionReleaseMode.AFTER_STATEMENT;
@@ -56,6 +57,8 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	private transient final @Nonnull JdbcServices jdbcServices;
 
 	private transient @Nullable Batch currentBatch;
+
+	private transient @Nullable Integer currentBatchSize;
 
 	private transient long transactionTimeOutInstant = -1;
 
@@ -160,6 +163,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 				JDBC_LOGGER.closingUnreleasedBatch( hashCode() );
 				currentBatch.release();
 				currentBatch = null;
+				currentBatchSize = null;
 			}
 		}
 		finally {
@@ -176,6 +180,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			@Nonnull Supplier<PreparedStatementGroup> statementGroupSupplier) {
 		return getBatch(
 				key,
+				batchSize,
 				GroupedBatch.class,
 				() -> owner.getJdbcSessionContext().getBatchBuilder()
 						.buildGroupedBatch( key, batchSize, statementGroupSupplier, this )
@@ -185,10 +190,12 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Nonnull
 	private <B extends Batch> B getBatch(
 			@Nonnull BatchKey key,
+			@Nullable Integer batchSize,
 			@Nonnull Class<B> batchType,
 			@Nonnull Supplier<B> batchSupplier) {
 		if ( currentBatch != null ) {
-			if ( currentBatch.getKey().equals( key ) && batchType.isInstance( currentBatch ) ) {
+			if ( currentBatch.getKey().equals( key ) && batchType.isInstance( currentBatch )
+				&& Objects.equals( currentBatchSize, batchSize ) ) {
 				return batchType.cast( currentBatch );
 			}
 			else {
@@ -205,6 +212,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		}
 
 		currentBatch = batchSupplier.get();
+		currentBatchSize = batchSize;
 		return batchType.cast( currentBatch );
 	}
 
@@ -230,6 +238,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			@Nonnull PreparableMutationOperation mutationOperation) {
 		return getBatch(
 				key,
+				batchSize,
 				SingleStatementBatch.class,
 				() -> owner.getJdbcSessionContext().getBatchBuilder()
 						.buildSingleStatementBatch( key, batchSize, mutationOperation, this )
@@ -246,6 +255,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 				if ( currentBatch != null ) { // abortBatch() might have been called
 					currentBatch.release();
 					currentBatch = null;
+					currentBatchSize = null;
 				}
 			}
 		}
@@ -265,6 +275,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 				if ( currentBatch != null ) { // abortBatch() might have been called
 					currentBatch.release();
 					currentBatch = null;
+					currentBatchSize = null;
 				}
 			}
 		}
@@ -279,6 +290,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			}
 			currentBatch.release();
 			currentBatch = null;
+			currentBatchSize = null;
 		}
 	}
 

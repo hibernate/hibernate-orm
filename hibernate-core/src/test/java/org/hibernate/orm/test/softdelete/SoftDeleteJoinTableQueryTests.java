@@ -139,7 +139,7 @@ public class SoftDeleteJoinTableQueryTests {
 	}
 
 	@ParameterizedTest
-	@ValueSource(strings = {TAGS, LABELS, MARKS, KEYED})
+	@ValueSource(strings = {TAGS, LABELS, MARKS, KEYED, NOTES})
 	public void leftJoinElement(String collection, SessionFactoryScope scope) {
 		assertEquals( singletonList( null ),
 				ids( scope, "select e.id from Owner o left join o." + collection + " e where o.id = 1" ) );
@@ -205,7 +205,7 @@ public class SoftDeleteJoinTableQueryTests {
 	}
 
 	@ParameterizedTest
-	@ValueSource(strings = {TAGS, LABELS, MARKS, KEYED})
+	@ValueSource(strings = {TAGS, LABELS, MARKS, KEYED, NOTES})
 	public void elementFunction(String collection, SessionFactoryScope scope) {
 		assertEquals( List.of( 2 ),
 				ids( scope, "select o.id from Owner o where element(o." + collection + ") is not null order by o.id" ) );

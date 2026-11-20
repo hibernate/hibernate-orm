@@ -64,6 +64,7 @@ import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.ast.spi.query.from.TableGroupJoin;
 import org.hibernate.sql.ast.spi.query.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.predicate.Junction;
 import org.hibernate.sql.ast.spi.query.predicate.PredicateCollector;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -923,7 +924,7 @@ public class PluralAttributeMappingImpl
 			boolean fetched,
 			boolean addsPredicate,
 			SqlAstCreationState creationState) {
-		final var collectionPredicateCollector = new PredicateCollector();
+		final var keyPredicateCollector = new PredicateCollector();
 		final var tableGroup = createRootTableGroupJoin(
 				navigablePath,
 				lhs,
@@ -932,17 +933,13 @@ public class PluralAttributeMappingImpl
 				requestedJoinType,
 				fetched,
 				addsPredicate,
-				collectionPredicateCollector::applyPredicate,
+				keyPredicateCollector::applyPredicate,
 				creationState
 		);
-		final var predicateCollector =
-				tableGroup.getNestedTableGroupJoins().isEmpty()
-						// No nested table group joins means that the predicate has to be pushed to the last join
-						? new PredicateCollector()
-						: collectionPredicateCollector;
+		final var restrictionCollector = new PredicateCollector();
 
 		getCollectionDescriptor().applyBaseRestrictions(
-				predicateCollector::applyPredicate,
+				restrictionCollector::applyPredicate,
 				tableGroup,
 				true,
 				creationState.getLoadQueryInfluencers().getEnabledFilters(),
@@ -952,7 +949,7 @@ public class PluralAttributeMappingImpl
 		);
 
 		getCollectionDescriptor().applyBaseManyToManyRestrictions(
-				predicateCollector::applyPredicate,
+				restrictionCollector::applyPredicate,
 				tableGroup,
 				true,
 				creationState.getLoadQueryInfluencers().getEnabledFilters(),
@@ -962,7 +959,7 @@ public class PluralAttributeMappingImpl
 
 		applyAuxiliaryRestrictions(
 				tableGroup,
-				predicateCollector::applyPredicate,
+				restrictionCollector::applyPredicate,
 				creationState.getLoadQueryInfluencers(),
 				creationState.getSqlAliasBaseGenerator()
 		);
@@ -977,39 +974,81 @@ public class PluralAttributeMappingImpl
 			}
 		}
 
-		final var tableGroupJoin = new TableGroupJoin(
+		final var keyPredicate = keyPredicateCollector.getPredicate();
+		final var restrictions = restrictionCollector.getPredicate();
+		final var joinForRestrictions =
+				restrictions == null ? null : determineJoinForRestrictions( tableGroup );
+		if ( joinForRestrictions != null ) {
+			joinForRestrictions.applyPredicate( restrictions );
+		}
+		return new TableGroupJoin(
 				navigablePath,
 				determineSqlJoinType( lhs, requestedJoinType, fetched ),
 				tableGroup,
-				collectionPredicateCollector.getPredicate()
+				restrictions == null || joinForRestrictions != null
+						? keyPredicate
+						: restrictedJoinPredicate( keyPredicate, restrictions )
 		);
-		if ( predicateCollector != collectionPredicateCollector ) {
-			determineJoinForRestrictions( tableGroupJoin )
-					.applyPredicate( predicateCollector.getPredicate() );
-		}
-		return tableGroupJoin;
 	}
 
 	/**
-	 * Determine the join to which the restrictions of the collection are applied
-	 * when the joins of its element and index tables are not nested.
+	 * Determine the join of the element or index table to which the restrictions
+	 * of the collection are applied, or {@code null} if they belong to the join of
+	 * the collection table itself.
 	 * <p>
-	 * A restriction which refers to the table of the element or index initialized
+	 * When the joins of the element and index tables are nested, every table is
+	 * in scope of the predicate of the join of the collection table. Otherwise,
+	 * a restriction which refers to the table of the element or index initialized
 	 * the lazy table group of that table, and so it belongs to that join, or to a
 	 * later one. A restriction which refers to the collection table alone stays
 	 * on the join of the collection table, since a join of a table group which is
 	 * never initialized is never rendered, and would take the restriction with it.
 	 */
-	private static TableGroupJoin determineJoinForRestrictions(TableGroupJoin collectionTableGroupJoin) {
-		final var tableGroupJoins = collectionTableGroupJoin.getJoinedGroup().getTableGroupJoins();
-		for ( int i = tableGroupJoins.size() - 1; i >= 0; i-- ) {
-			final var tableGroupJoin = tableGroupJoins.get( i );
-			final var joinedGroup = tableGroupJoin.getJoinedGroup();
-			if ( joinedGroup.isInitialized() && !joinedGroup.isVirtual() ) {
-				return tableGroupJoin;
+	private static @Nullable TableGroupJoin determineJoinForRestrictions(TableGroup collectionTableGroup) {
+		if ( collectionTableGroup.getNestedTableGroupJoins().isEmpty() ) {
+			final var tableGroupJoins = collectionTableGroup.getTableGroupJoins();
+			for ( int i = tableGroupJoins.size() - 1; i >= 0; i-- ) {
+				final var tableGroupJoin = tableGroupJoins.get( i );
+				final var joinedGroup = tableGroupJoin.getJoinedGroup();
+				if ( joinedGroup.isInitialized() && !joinedGroup.isVirtual() ) {
+					return tableGroupJoin;
+				}
 			}
 		}
-		return collectionTableGroupJoin;
+		return null;
+	}
+
+	/**
+	 * The predicate of a join of the collection table which carries the
+	 * restrictions of the mapping. The restrictions are kept apart from
+	 * the key predicate, and from anything added to the predicate later,
+	 * so that {@link #isDefaultJoinPredicate} is able to recognize them.
+	 */
+	private static Predicate restrictedJoinPredicate(Predicate keyPredicate, Predicate restrictions) {
+		final var predicate = new Junction( Junction.Nature.CONJUNCTION );
+		predicate.add( keyPredicate );
+		predicate.add( new MappingRestrictions( restrictions ) );
+		return predicate;
+	}
+
+	@Override
+	public boolean isDefaultJoinPredicate(Predicate predicate) {
+		return isSimpleJoinPredicate( predicate )
+			|| predicate instanceof Junction junction
+				&& junction.getNature() == Junction.Nature.CONJUNCTION
+				&& junction.getPredicates().size() == 2
+				&& isSimpleJoinPredicate( junction.getPredicates().get( 0 ) )
+				&& junction.getPredicates().get( 1 ) instanceof MappingRestrictions;
+	}
+
+	/**
+	 * The restrictions of the mapping, in the predicate of a join of the collection table.
+	 */
+	private static final class MappingRestrictions extends Junction {
+		private MappingRestrictions(Predicate restrictions) {
+			super( Nature.CONJUNCTION );
+			add( restrictions );
+		}
 	}
 
 	private boolean hasSoftDelete() {
@@ -1194,8 +1233,11 @@ public class PluralAttributeMappingImpl
 	private boolean isNestedJoin(SqlAstJoinType joinType, boolean addsPredicate, SqlAstCreationState creationState) {
 		// For inner joins we never need join nesting
 		return joinType != SqlAstJoinType.INNER
-			// For outer joins we need nesting if there might be an on-condition that refers to the element table
+			// For outer joins we need nesting if there might be an on-condition that refers to the element table.
+			// A restriction which hides an element hides the whole row of the collection table, along with the
+			// key of the element or index which is read from it, and the index of a hidden element of a map.
 			&& ( addsPredicate
+					|| hasSoftDelete()
 					|| collectionDescriptor.hasWhereRestrictions()
 					|| isAffectedByEnabledFilters( creationState.getLoadQueryInfluencers(),
 							creationState.applyOnlyLoadByKeyFilters() ) );

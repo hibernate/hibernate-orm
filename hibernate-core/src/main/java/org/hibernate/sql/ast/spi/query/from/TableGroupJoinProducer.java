@@ -24,6 +24,16 @@ public interface TableGroupJoinProducer extends TableGroupProducer {
 	boolean isSimpleJoinPredicate(Predicate predicate);
 
 	/**
+	 * Returns whether the given predicate is the predicate with which this attribute itself joins,
+	 * that is, the FK related predicate along with any restriction which belongs to the mapping
+	 * of the attribute, and nothing else. A join with such a predicate may stand in for any other
+	 * join of the attribute with the same join type.
+	 */
+	default boolean isDefaultJoinPredicate(Predicate predicate) {
+		return isSimpleJoinPredicate( predicate );
+	}
+
+	/**
 	 * Create a TableGroupJoin.
 	 *
 	 * @param navigablePath The NavigablePath to the join

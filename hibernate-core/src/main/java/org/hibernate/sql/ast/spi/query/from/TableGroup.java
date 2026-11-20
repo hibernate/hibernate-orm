@@ -175,8 +175,9 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, PathIn
 					&& ( requestedJoinType == joinType || requestedJoinType == SqlAstJoinType.LEFT && joinType == SqlAstJoinType.INNER ) ) {
 				// If there is an existing inner join, we can always use that as a new join can never produce results
 				// regardless of the join type or predicate since the LHS is the same table group
-				// If this is a left join though, we have to check if the predicate is simply the association predicate
-				if ( joinType == SqlAstJoinType.INNER || joinProducer.isSimpleJoinPredicate( join.getPredicate() ) ) {
+				// If this is a left join though, we have to check if the predicate is simply the association predicate,
+				// along with the restrictions which belong to the mapping of the association
+				if ( joinType == SqlAstJoinType.INNER || joinProducer.isDefaultJoinPredicate( join.getPredicate() ) ) {
 					return join;
 				}
 			}

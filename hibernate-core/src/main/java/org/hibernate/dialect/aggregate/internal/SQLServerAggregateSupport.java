@@ -220,7 +220,13 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumnTypeCode );
 	}
 
-	private String jsonCustomWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping) {
+	private String jsonCustomWriteExpression(String customWriteExpression, SelectableMapping column) {
+		final var jdbcMapping = column.getJdbcMapping();
+		if ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() == TIME && column.getTemporalPrecision() != null
+				&& column.getTemporalPrecision() > 0 ) {
+			return "convert(varchar(16),cast(" + customWriteExpression + " as time("
+					+ column.getTemporalPrecision() + ")))";
+		}
 		StringBuilderSqlAppender sqlAppender = new StringBuilderSqlAppender();
 		appendJsonWriteExpression( sqlAppender, () -> sqlAppender.appendSql( customWriteExpression ), jdbcMapping );
 		return sqlAppender.toString();
@@ -365,10 +371,7 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 						parts[parts.length - 1].getSelectableName(),
 						new BasicJsonWriteExpression(
 								column,
-								aggregateSupport.jsonCustomWriteExpression(
-										customWriteExpression,
-										column.getJdbcMapping()
-								)
+								aggregateSupport.jsonCustomWriteExpression( customWriteExpression, column )
 						)
 				);
 			}

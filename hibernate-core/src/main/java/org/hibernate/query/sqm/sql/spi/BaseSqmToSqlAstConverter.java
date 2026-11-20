@@ -6427,6 +6427,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final var mappingModelExpressible =
 					resolveMappingModelExpressible( sqmExpression, domainModel,
 							fromClauseIndex::findTableGroup );
+			if ( sqmExpression instanceof SqmJoin<?, ?> sqmJoin ) {
+				final var modelPart = mappingModelExpressible instanceof PluralAttributeMapping pluralAttributeMapping
+						? pluralAttributeMapping.getElementDescriptor()
+						: mappingModelExpressible;
+				if ( modelPart instanceof ManyToManyCollectionPart collectionPart
+						&& !isFkOptimizationAllowed( sqmJoin, collectionPart ) ) {
+					// Both operands must use the identifier when the join semantics rule out the collection FK.
+					return collectionPart.getAssociatedEntityMappingType();
+				}
+			}
 			if ( mappingModelExpressible != null ) {
 				return mappingModelExpressible;
 			}

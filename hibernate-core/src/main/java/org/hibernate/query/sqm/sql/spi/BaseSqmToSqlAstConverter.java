@@ -5365,14 +5365,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		final int jdbcTypeCount = modelPart.getJdbcTypeCount();
 		final String pathName = functionName + ( index ? "_index" : "_element" );
-		final String identifierVariable =
-				parentTableGroup.getPrimaryTableReference().getIdentificationVariable()
-						+ "_" + pathName;
-		final var queryPath =
-				new NavigablePath( parentTableGroup.getNavigablePath(),
-						pathName, identifierVariable );
+		// The path of the plural part is specific to the collection and to the function,
+		// so each collection of the parent gets a lateral join of its own
+		final var queryPath = pluralPartPath.getNavigablePath().append( pathName );
 		TableGroup lateralTableGroup = parentFromClauseAccess.findTableGroup( queryPath );
 		if ( lateralTableGroup == null ) {
+			final String identifierVariable =
+					getSqlAliasBaseGenerator()
+							.createSqlAliasBase( pluralAttributeMapping.getSqlAliasStem() )
+							.generateNewAlias()
+							+ "_" + pathName;
 			final var subQuerySpec = new QuerySpec( false );
 			pushProcessingState(
 					new SqlAstQueryPartProcessingStateImpl(
@@ -5561,6 +5563,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final var tableReference =
 				(QueryPartTableReference)
 						lateralTableGroup.getPrimaryTableReference();
+		final String identifierVariable = tableReference.getIdentificationVariable();
 		if ( jdbcTypeCount == 1 ) {
 			final var sqlSelections =
 					tableReference.getQueryPart().getFirstQuerySpec()

@@ -58,9 +58,20 @@ public class ScriptSourceInputFromFile extends AbstractScriptSourceInput {
 
 		try {
 			final var fileInputStream = new FileInputStream( file );
-			return charsetName != null
-					? new InputStreamReader( fileInputStream, charsetName )
-					: new InputStreamReader( fileInputStream );
+			try {
+				return charsetName != null
+						? new InputStreamReader( fileInputStream, charsetName )
+						: new InputStreamReader( fileInputStream );
+			}
+			catch (IOException e) {
+				try {
+					fileInputStream.close();
+				}
+				catch (IOException closeError) {
+					e.addSuppressed( closeError );
+				}
+				throw e;
+			}
 		}
 		catch (IOException e) {
 			throw new SchemaManagementException(

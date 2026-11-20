@@ -96,9 +96,20 @@ public class ScriptTargetOutputToFile extends AbstractScriptTargetOutput impleme
 		}
 		try {
 			final var outputStream = new FileOutputStream( file, append );
-			return charsetName != null
-					? new OutputStreamWriter( outputStream, charsetName )
-					: new OutputStreamWriter( outputStream );
+			try {
+				return charsetName != null
+						? new OutputStreamWriter( outputStream, charsetName )
+						: new OutputStreamWriter( outputStream );
+			}
+			catch (IOException e) {
+				try {
+					outputStream.close();
+				}
+				catch (IOException closeError) {
+					e.addSuppressed( closeError );
+				}
+				throw e;
+			}
 		}
 		catch (IOException e) {
 			throw new SchemaManagementException( "Unable to open specified script target file for writing : " + file, e );

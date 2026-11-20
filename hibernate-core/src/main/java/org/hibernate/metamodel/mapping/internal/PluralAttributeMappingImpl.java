@@ -957,9 +957,10 @@ public class PluralAttributeMappingImpl
 				creationState
 		);
 
+		final var auxiliaryRestrictionCollector = new PredicateCollector();
 		applyAuxiliaryRestrictions(
 				tableGroup,
-				restrictionCollector::applyPredicate,
+				auxiliaryRestrictionCollector::applyPredicate,
 				creationState.getLoadQueryInfluencers(),
 				creationState.getSqlAliasBaseGenerator()
 		);
@@ -974,20 +975,36 @@ public class PluralAttributeMappingImpl
 			}
 		}
 
-		final var keyPredicate = keyPredicateCollector.getPredicate();
 		final var restrictions = restrictionCollector.getPredicate();
-		final var joinForRestrictions =
-				restrictions == null ? null : determineJoinForRestrictions( tableGroup );
-		if ( joinForRestrictions != null ) {
-			joinForRestrictions.applyPredicate( restrictions );
+		final var auxiliaryRestrictions = auxiliaryRestrictionCollector.getPredicate();
+		final Predicate joinPredicate;
+		if ( restrictions == null && auxiliaryRestrictions == null ) {
+			joinPredicate = keyPredicateCollector.getPredicate();
+		}
+		else {
+			final var joinForRestrictions = determineJoinForRestrictions( tableGroup );
+			if ( joinForRestrictions != null ) {
+				joinForRestrictions.applyPredicate( restrictions );
+				joinForRestrictions.applyPredicate( auxiliaryRestrictions );
+				joinPredicate = keyPredicateCollector.getPredicate();
+			}
+			else if ( restrictions == null ) {
+				final var junction = new Junction( Junction.Nature.CONJUNCTION );
+				junction.add( keyPredicateCollector.getPredicate() );
+				junction.add( new AuxiliaryRestrictions( auxiliaryRestrictions ) );
+				joinPredicate = junction;
+			}
+			else {
+				keyPredicateCollector.applyPredicate( restrictions );
+				keyPredicateCollector.applyPredicate( auxiliaryRestrictions );
+				joinPredicate = keyPredicateCollector.getPredicate();
+			}
 		}
 		return new TableGroupJoin(
 				navigablePath,
 				determineSqlJoinType( lhs, requestedJoinType, fetched ),
 				tableGroup,
-				restrictions == null || joinForRestrictions != null
-						? keyPredicate
-						: restrictedJoinPredicate( keyPredicate, restrictions )
+				joinPredicate
 		);
 	}
 
@@ -1019,18 +1036,12 @@ public class PluralAttributeMappingImpl
 	}
 
 	/**
-	 * The predicate of a join of the collection table which carries the
-	 * restrictions of the mapping. The restrictions are kept apart from
-	 * the key predicate, and from anything added to the predicate later,
-	 * so that {@link #isDefaultJoinPredicate} is able to recognize them.
+	 * A join of the collection with only the restriction of an auxiliary mapping,
+	 * for example soft delete, added to its key predicate is a join which a fetch
+	 * may use, just as it was when that restriction belonged to the join of the
+	 * element table. A join with a where restriction or a filter is not, and nor
+	 * is a join to which anything else was added.
 	 */
-	private static Predicate restrictedJoinPredicate(Predicate keyPredicate, Predicate restrictions) {
-		final var predicate = new Junction( Junction.Nature.CONJUNCTION );
-		predicate.add( keyPredicate );
-		predicate.add( new MappingRestrictions( restrictions ) );
-		return predicate;
-	}
-
 	@Override
 	public boolean isDefaultJoinPredicate(Predicate predicate) {
 		return isSimpleJoinPredicate( predicate )
@@ -1038,14 +1049,16 @@ public class PluralAttributeMappingImpl
 				&& junction.getNature() == Junction.Nature.CONJUNCTION
 				&& junction.getPredicates().size() == 2
 				&& isSimpleJoinPredicate( junction.getPredicates().get( 0 ) )
-				&& junction.getPredicates().get( 1 ) instanceof MappingRestrictions;
+				&& junction.getPredicates().get( 1 ) instanceof AuxiliaryRestrictions;
 	}
 
 	/**
-	 * The restrictions of the mapping, in the predicate of a join of the collection table.
+	 * The restrictions of the auxiliary mappings, in the predicate of a join of
+	 * the collection table, kept apart from the key predicate and from anything
+	 * added to the predicate later, so that they can be recognized.
 	 */
-	private static final class MappingRestrictions extends Junction {
-		private MappingRestrictions(Predicate restrictions) {
+	private static final class AuxiliaryRestrictions extends Junction {
+		private AuxiliaryRestrictions(Predicate restrictions) {
 			super( Nature.CONJUNCTION );
 			add( restrictions );
 		}

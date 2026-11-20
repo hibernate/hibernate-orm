@@ -29,13 +29,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * A join of a collection which is restricted only by its own mapping is
- * the join which a fetch of the collection uses, and a restriction which
- * hides an element of a map hides its key too.
+ * A join of a collection which is restricted only by soft delete is the
+ * join which a fetch of the collection uses, a left join of a collection
+ * with a where restriction is not, and a restriction which hides an
+ * element of a map hides its key too.
  */
 @DomainModel(annotatedClasses = {
 		RestrictedCollectionFetchTests.Owner.class,
@@ -84,9 +86,9 @@ public class RestrictedCollectionFetchTests {
 	@ParameterizedTest
 	@CsvSource({
 			"tags, left join", "tags, join",
-			"labels, left join", "labels, join",
 			"plain, left join", "plain, join",
-			"children, left join", "children, join"
+			"labels, join",
+			"children, join"
 	})
 	public void fetchGraphDoesNotDuplicateElements(String collection, String join, SessionFactoryScope scope) {
 		scope.inSession( session -> {
@@ -104,6 +106,24 @@ public class RestrictedCollectionFetchTests {
 				case "plain" -> owner.plain;
 				default -> owner.children;
 			};
+			assertThat( Hibernate.isInitialized( elements ) ).isTrue();
+			assertThat( elements ).hasSize( 2 );
+		} );
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {"labels", "children"})
+	public void laterJoinDoesNotTruncateFetchedCollection(String collection, SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			final var graph = session.createEntityGraph( Owner.class );
+			graph.addAttributeNodes( collection );
+			// the join of the collection is restricted by a later join, so it is not the join the fetch uses
+			final Owner owner = session.createSelectionQuery(
+							"select o from Owner o left join o." + collection + " e"
+									+ " join Tag t on t.id = e.id and t.id = 11", Owner.class )
+					.setHint( "jakarta.persistence.fetchgraph", graph )
+					.getSingleResult();
+			final List<?> elements = "labels".equals( collection ) ? owner.labels : owner.children;
 			assertThat( Hibernate.isInitialized( elements ) ).isTrue();
 			assertThat( elements ).hasSize( 2 );
 		} );

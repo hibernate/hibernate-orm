@@ -226,6 +226,20 @@ public abstract class AbstractConcreteProxyTest extends BaseNonConfigCoreFunctio
 			assertThat( Hibernate.isInitialized( proxy2 ), is( false ) );
 			inspector.assertExecutedCount( 1 );
 			inspector.assertNumberOfOccurrenceInQuery( 0, "union", 3 );
+			inspector.clear();
+			// Test getReference on leaf entity (HHH-20798)
+			final UnionChild2 proxy3 = session.getReference( UnionChild2.class, 2L );
+			assertThat( proxy3, instanceOf( UnionChild2.class ) );
+			assertThat( Hibernate.isInitialized( proxy3 ), is( false ) );
+			// No query should be executed for leaf entities as the concrete type is known
+			inspector.assertExecutedCount( 0 );
+			inspector.clear();
+			// Test getReference on another leaf entity (UnionSubChild1)
+			final UnionSubChild1 proxy4 = session.getReference( UnionSubChild1.class, 1L );
+			assertThat( proxy4, instanceOf( UnionSubChild1.class ) );
+			assertThat( Hibernate.isInitialized( proxy4 ), is( false ) );
+			// No query should be executed for leaf entities as the concrete type is known
+			inspector.assertExecutedCount( 0 );
 		} );
 	}
 

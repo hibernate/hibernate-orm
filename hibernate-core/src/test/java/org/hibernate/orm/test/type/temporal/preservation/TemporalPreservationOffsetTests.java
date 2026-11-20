@@ -28,6 +28,7 @@ import org.hibernate.annotations.TimeZoneRepresentation;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.QuerySettings;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -631,8 +632,8 @@ class TemporalPreservationOffsetTests {
 			execute( connection, "set time_zone = '" + zone + "'" );
 			return "set time_zone = @@global.time_zone";
 		}
-		else if ( dialect instanceof SQLServerDialect ) {
-			// a session of SQL Server has no time zone
+		else if ( dialect instanceof SQLServerDialect || dialect instanceof DB2Dialect ) {
+			// a session of SQL Server or of Db2 has no time zone: it is that of the server
 			return null;
 		}
 		else if ( dialect instanceof HSQLDialect ) {

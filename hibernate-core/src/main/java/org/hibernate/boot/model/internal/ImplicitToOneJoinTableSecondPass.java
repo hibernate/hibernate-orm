@@ -17,6 +17,7 @@ import org.hibernate.mapping.Table;
 
 import jakarta.persistence.JoinTable;
 
+import static org.hibernate.boot.model.internal.DefaultSchemaHelper.defaultSchema;
 import static org.hibernate.boot.model.internal.ToOneBinder.getReferenceEntityName;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotBlank;
@@ -85,7 +86,7 @@ public class ImplicitToOneJoinTableSecondPass implements SecondPass {
 		final var tableBinder = new TableBinder();
 		tableBinder.setBuildingContext( context );
 
-		final String schema = joinTable.schema();
+		final String schema = defaultSchema( joinTable.schema(), inferredData.getAttributeMember(), context );
 		if ( isNotBlank( schema ) ) {
 			tableBinder.setSchema( schema );
 		}

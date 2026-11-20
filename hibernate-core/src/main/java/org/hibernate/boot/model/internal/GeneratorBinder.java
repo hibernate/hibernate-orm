@@ -311,9 +311,9 @@ public class GeneratorBinder {
 			MetadataBuildingContext buildingContext) {
 		final var modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 		annotatedElement.forEachAnnotationUsage( TableGenerator.class, modelsContext,
-				usage -> consumer.accept( buildTableIdGenerator( usage ) ) );
+				usage -> consumer.accept( buildTableIdGenerator( usage, annotatedElement, buildingContext ) ) );
 		annotatedElement.forEachAnnotationUsage( SequenceGenerator.class, modelsContext,
-				usage -> consumer.accept( buildSequenceIdGenerator( usage ) ) );
+				usage -> consumer.accept( buildSequenceIdGenerator( usage, annotatedElement, buildingContext ) ) );
 		annotatedElement.forEachAnnotationUsage( GenericGenerator.class, modelsContext,
 				usage -> consumer.accept( buildIdGenerator( usage ) ) );
 	}
@@ -357,8 +357,15 @@ public class GeneratorBinder {
 	}
 
 	private static IdentifierGeneratorDefinition buildSequenceIdGenerator(SequenceGenerator generatorAnnotation) {
+		return buildSequenceIdGenerator( generatorAnnotation, null, null );
+	}
+
+	private static IdentifierGeneratorDefinition buildSequenceIdGenerator(
+			SequenceGenerator generatorAnnotation,
+			AnnotationTarget annotatedElement,
+			MetadataBuildingContext buildingContext) {
 		final var definitionBuilder = new IdentifierGeneratorDefinition.Builder();
-		interpretSequenceGenerator( generatorAnnotation, definitionBuilder );
+		interpretSequenceGenerator( generatorAnnotation, definitionBuilder, annotatedElement, buildingContext );
 		if ( BOOT_LOGGER.isTraceEnabled() ) {
 			BOOT_LOGGER.addedSequenceGenerator( definitionBuilder.getName() );
 		}
@@ -366,8 +373,15 @@ public class GeneratorBinder {
 	}
 
 	private static IdentifierGeneratorDefinition buildTableIdGenerator(TableGenerator generatorAnnotation) {
+		return buildTableIdGenerator( generatorAnnotation, null, null );
+	}
+
+	private static IdentifierGeneratorDefinition buildTableIdGenerator(
+			TableGenerator generatorAnnotation,
+			AnnotationTarget annotatedElement,
+			MetadataBuildingContext buildingContext) {
 		final var definitionBuilder = new IdentifierGeneratorDefinition.Builder();
-		interpretTableGenerator( generatorAnnotation, definitionBuilder );
+		interpretTableGenerator( generatorAnnotation, definitionBuilder, annotatedElement, buildingContext );
 		if ( BOOT_LOGGER.isTraceEnabled() ) {
 			BOOT_LOGGER.addedTableGenerator( definitionBuilder.getName() );
 		}

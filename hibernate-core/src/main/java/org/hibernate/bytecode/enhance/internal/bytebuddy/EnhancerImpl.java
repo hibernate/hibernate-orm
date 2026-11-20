@@ -353,13 +353,15 @@ public class EnhancerImpl implements Enhancer {
 					)
 							.withParameters( String.class, CompositeOwner.class )
 							.intercept( constants.implementationSetOwner )
+							.annotateMethod( constants.GENERATED_ANNOTATION )
 					.defineMethod(
 							TRACKER_COMPOSITE_CLEAR_OWNER,
 							constants.TypeVoid,
 							constants.modifierPUBLIC
 					)
 							.withParameter( constants.TypeString )
-							.intercept( constants.implementationClearOwner );
+							.intercept( constants.implementationClearOwner )
+							.annotateMethod( constants.GENERATED_ANNOTATION );
 		}
 		else {
 			return builder;
@@ -374,7 +376,8 @@ public class EnhancerImpl implements Enhancer {
 		builder = builder
 				.implement( constants.INTERFACES_for_ManagedEntity )
 				.defineMethod( ENTITY_INSTANCE_GETTER_NAME, constants.TypeObject, constants.modifierPUBLIC )
-				.intercept( FixedValue.self() );
+				.intercept( FixedValue.self() )
+				.annotateMethod( constants.GENERATED_ANNOTATION );
 
 		builder = addFieldWithGetterAndSetter(
 				builder,
@@ -449,17 +452,23 @@ public class EnhancerImpl implements Enhancer {
 				.defineMethod( TRACKER_CHANGER_NAME, constants.TypeVoid, constants.modifierPUBLIC )
 						.withParameter( constants.TypeString )
 						.intercept( constants.implementationTrackChange )
+						.annotateMethod( constants.GENERATED_ANNOTATION )
 				.defineMethod( TRACKER_GET_NAME, constants.Type_Array_String, constants.modifierPUBLIC )
 						.intercept( constants.implementationGetDirtyAttributes )
+						.annotateMethod( constants.GENERATED_ANNOTATION )
 				.defineMethod( TRACKER_HAS_CHANGED_NAME, constants.TypeBooleanPrimitive, constants.modifierPUBLIC )
 						.intercept( constants.implementationAreFieldsDirty )
+						.annotateMethod( constants.GENERATED_ANNOTATION )
 				.defineMethod( TRACKER_CLEAR_NAME, constants.TypeVoid, constants.modifierPUBLIC )
 						.intercept( constants.implementationClearDirtyAttributes )
+						.annotateMethod( constants.GENERATED_ANNOTATION )
 				.defineMethod( TRACKER_SUSPEND_NAME, constants.TypeVoid, constants.modifierPUBLIC )
 						.withParameter( constants.TypeBooleanPrimitive )
 						.intercept( constants.implementationSuspendDirtyTracking )
+						.annotateMethod( constants.GENERATED_ANNOTATION )
 				.defineMethod( TRACKER_COLLECTION_GET_NAME, constants.TypeCollectionTracker, constants.modifierPUBLIC )
-						.intercept( FieldAccessor.ofField( TRACKER_COLLECTION_NAME ) );
+						.intercept( FieldAccessor.ofField( TRACKER_COLLECTION_NAME ) )
+						.annotateMethod( constants.GENERATED_ANNOTATION );
 	}
 
 	private DynamicType.Builder<?> implementSelfDirtinessTracker(DynamicType.Builder<?> builder) {
@@ -469,17 +478,23 @@ public class EnhancerImpl implements Enhancer {
 				.defineMethod( TRACKER_CHANGER_NAME, constants.TypeVoid, constants.modifierPUBLIC )
 						.withParameter( constants.TypeString )
 						.intercept( constants.implementationTrackChange )
+						.annotateMethod( constants.GENERATED_ANNOTATION )
 				.defineMethod( TRACKER_GET_NAME, constants.Type_Array_String, constants.modifierPUBLIC )
 						.intercept( constants.implementationGetDirtyAttributesWithoutCollections )
+						.annotateMethod( constants.GENERATED_ANNOTATION )
 				.defineMethod( TRACKER_HAS_CHANGED_NAME, constants.TypeBooleanPrimitive, constants.modifierPUBLIC )
 						.intercept( constants.implementationAreFieldsDirtyWithoutCollections )
+						.annotateMethod( constants.GENERATED_ANNOTATION )
 				.defineMethod( TRACKER_CLEAR_NAME, constants.TypeVoid, constants.modifierPUBLIC )
 						.intercept( constants.implementationClearDirtyAttributesWithoutCollections )
+						.annotateMethod( constants.GENERATED_ANNOTATION )
 				.defineMethod( TRACKER_SUSPEND_NAME, constants.TypeVoid, constants.modifierPUBLIC )
 						.withParameter( constants.TypeBooleanPrimitive )
 						.intercept( constants.implementationSuspendDirtyTracking )
+						.annotateMethod( constants.GENERATED_ANNOTATION )
 				.defineMethod( TRACKER_COLLECTION_GET_NAME, constants.TypeCollectionTracker, constants.modifierPUBLIC )
-						.intercept( constants.implementationGetCollectionTrackerWithoutCollections );
+						.intercept( constants.implementationGetCollectionTrackerWithoutCollections )
+						.annotateMethod( constants.GENERATED_ANNOTATION );
 	}
 
 	private DynamicType.Builder<?> enhanceCollectionFields(
@@ -548,16 +563,20 @@ public class EnhancerImpl implements Enhancer {
 
 		return builder.defineMethod( TRACKER_COLLECTION_CHANGED_NAME, constants.TypeBooleanPrimitive, constants.modifierPUBLIC )
 				.intercept( isDirty )
+				.annotateMethod( constants.GENERATED_ANNOTATION )
 				.defineMethod( TRACKER_COLLECTION_CHANGED_FIELD_NAME, constants.TypeVoid, constants.modifierPUBLIC )
 						.withParameter( constants.DirtyTrackerTypeDescription )
 						.intercept( getDirtyNames )
+						.annotateMethod( constants.GENERATED_ANNOTATION )
 				.defineMethod( TRACKER_COLLECTION_CLEAR_NAME, constants.TypeVoid, constants.modifierPUBLIC )
 						.intercept( Advice.withCustomMapping()
 						.to( CodeTemplates.ClearDirtyCollectionNames.class, constants.adviceLocator )
 						.wrap( StubMethod.INSTANCE ) )
+						.annotateMethod( constants.GENERATED_ANNOTATION )
 				.defineMethod( REMOVE_DIRTY_FIELDS_NAME, constants.TypeVoid, constants.modifierPUBLIC )
 						.withParameter( constants.TypeLazyAttributeLoadingInterceptor )
-						.intercept( clearDirtyNames );
+						.intercept( clearDirtyNames )
+						.annotateMethod( constants.GENERATED_ANNOTATION );
 	}
 
 	private void verifyReEnhancement(
@@ -865,9 +884,11 @@ public class EnhancerImpl implements Enhancer {
 						.annotateField( constants.TRANSIENT_ANNOTATION )
 				.defineMethod( getterName, type, constants.modifierPUBLIC )
 						.intercept( FieldAccessor.ofField( fieldName ) )
+						.annotateMethod( constants.GENERATED_ANNOTATION )
 				.defineMethod( setterName, constants.TypeVoid, constants.modifierPUBLIC )
 						.withParameter( type )
-						.intercept( FieldAccessor.ofField( fieldName ) );
+						.intercept( FieldAccessor.ofField( fieldName ) )
+						.annotateMethod( constants.GENERATED_ANNOTATION );
 	}
 
 	private DynamicType.Builder<?> addSetPersistenceInfoMethod(
@@ -880,7 +901,8 @@ public class EnhancerImpl implements Enhancer {
 				.defineMethod( PERSISTENCE_INFO_SETTER_NAME, entityEntryType, constants.modifierPUBLIC )
 				// previous, next, instance-id
 				.withParameters( entityEntryType, managedEntityType, managedEntityType, intType )
-				.intercept( constants.implementationSetPersistenceInfo );
+				.intercept( constants.implementationSetPersistenceInfo )
+				.annotateMethod( constants.GENERATED_ANNOTATION );
 	}
 
 	private List<AnnotatedFieldDescription> collectCollectionFields(TypeDescription managedCtClass) {

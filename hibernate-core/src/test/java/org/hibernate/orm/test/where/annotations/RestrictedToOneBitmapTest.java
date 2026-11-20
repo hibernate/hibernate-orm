@@ -10,6 +10,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -37,9 +38,19 @@ class RestrictedToOneBitmapTest {
 		scope.getSessionFactory().getCache().evictAllRegions();
 	}
 
-	@ParameterizedTest
-	@ValueSource(booleans = { false, true })
-	void nestedReferencesAndSharedJoinRowsNeedNoKeys(boolean emptyComponent, SessionFactoryScope scope) {
+	@Test
+	void correlatedNullnessThroughNestedEmbeddables(SessionFactoryScope scope) {
+		persistOwner( false, scope );
+		scope.inTransaction( session -> {
+			RestrictedToOneTest.enable( session );
+			assertThat( session.createSelectionQuery(
+					"select o.id from BitmapOwner o where exists (select 1 from BitmapOwner i where i.id=o.id"
+							+ " and o.details.links.sql is null and o.details.links.filter is null)", Long.class )
+					.getResultList() ).containsExactly( 1L );
+		} );
+	}
+
+	private static void persistOwner(boolean emptyComponent, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final var sql = new RestrictedToOneTest.SqlTarget();
 			sql.id = 2L;
@@ -61,6 +72,12 @@ class RestrictedToOneBitmapTest {
 			owner.linkNote = "original";
 			session.persist( owner );
 		} );
+	}
+
+	@ParameterizedTest
+	@ValueSource(booleans = { false, true })
+	void nestedReferencesAndSharedJoinRowsNeedNoKeys(boolean emptyComponent, SessionFactoryScope scope) {
+		persistOwner( emptyComponent, scope );
 		final var inspector = scope.getCollectingStatementObserver();
 		final Owner detached = scope.fromTransaction( session -> {
 			RestrictedToOneTest.enable( session );

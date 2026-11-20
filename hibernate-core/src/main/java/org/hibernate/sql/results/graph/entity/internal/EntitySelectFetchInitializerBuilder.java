@@ -44,7 +44,7 @@ public class EntitySelectFetchInitializerBuilder {
 		if ( !parent.isEntityInitializer() && parent.findOwningEntityInitializer() == null
 				// Native SQL cannot supply the additional visibility selection. Resolve it before
 				// storing the owning entity's nullness information and cache entry.
-				|| affectedByFilter && !(keyResult instanceof RestrictedForeignKeyResult<?>) ) {
+				|| affectedByFilter && !(keyResult instanceof RestrictedToOneIdentifierResult<?>) ) {
 			// Batch initializers require an owning parent initializer
 			return new EntitySelectFetchInitializer<>(
 					parent,

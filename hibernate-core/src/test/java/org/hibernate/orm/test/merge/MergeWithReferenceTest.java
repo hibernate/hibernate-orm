@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.merge;
 
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
@@ -68,6 +69,47 @@ public class MergeWithReferenceTest {
 					assertThat( reference.getName() ).isEqualTo( "Davide" );
 				}
 		);
+	}
+
+	@Test
+	void mergePreservesTargetIdentityWhenDetachedKeyChanges(SessionFactoryScope scope) {
+		var original = new Bar( "original" );
+		var other = new Bar( "other" );
+		var foo = new Foo( original );
+		scope.inTransaction( session -> {
+			session.persist( foo );
+			session.persist( other );
+		} );
+
+		original.setKey( other.getKey() );
+		scope.inTransaction( session -> {
+			var merged = session.merge( foo );
+			assertThat( merged.getBar().getId() ).isEqualTo( original.getId() );
+		} );
+		scope.inTransaction( session -> {
+			var reloaded = session.find( Foo.class, foo.getId() );
+			assertThat( reloaded.getBar().getId() ).isEqualTo( original.getId() );
+			assertThat( reloaded.getBar().getKey() ).isEqualTo( "original" );
+		} );
+	}
+
+	@Test
+	void mergeWithDetachedProxyForUniqueKeyReference(SessionFactoryScope scope) {
+		var other = new Bar( "other" );
+		var foo = new Foo( new Bar( "original" ) );
+		scope.inTransaction( session -> {
+			session.persist( foo );
+			session.persist( other );
+		} );
+
+		var reference = scope.fromTransaction( session -> session.getReference( Bar.class, other.getId() ) );
+		assertThat( Hibernate.isInitialized( reference ) ).isFalse();
+		foo.setBar( reference );
+		scope.inTransaction( session -> session.merge( foo ) );
+		scope.inTransaction( session -> {
+			var reloaded = session.find( Foo.class, foo.getId() );
+			assertThat( reloaded.getBar().getId() ).isEqualTo( other.getId() );
+		} );
 	}
 
 	@Entity(name = "Foo")

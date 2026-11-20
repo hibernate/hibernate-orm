@@ -7,16 +7,18 @@ import jakarta.persistence.OneToOne;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Jpa(annotatedClasses = {QueryOneToOneFKIsNullTest.Parent.class,
 						QueryOneToOneFKIsNullTest.Child.class})
 @JiraKey("HHH-12712")
 public class QueryOneToOneFKIsNullTest {
-	@Test
-	public void test(EntityManagerFactoryScope scope) {
+	@BeforeAll
+	public void setUp(EntityManagerFactoryScope scope) {
 		scope.inTransaction(entityManager -> {
 			var parent1 = new Parent(1);
 			new Child(3, parent1);
@@ -24,13 +26,30 @@ public class QueryOneToOneFKIsNullTest {
 			var parent2 = new Parent(2);
 			entityManager.persist(parent2);
 		});
+	}
 
+	@Test
+	public void test(EntityManagerFactoryScope scope) {
 		scope.inTransaction(entityManager -> {
 			var query = entityManager.createQuery("from Parent p where p.child is null", Parent.class);
 			var parents = query.getResultList();
 			assertEquals(1, parents.size());
 			assertEquals(2L, parents.get(0).getId());
 		});
+	}
+
+	@Test
+	void testCorrelatedAssociationNullness(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			assertThat( entityManager.createQuery( """
+					select p.id from Parent p
+					where exists (select 1 from Child c where p.child is null)
+					""", Long.class ).getResultList() ).containsExactly( 2L );
+			assertThat( entityManager.createQuery( """
+					select p.id from Parent p
+					where exists (select 1 from Child c where p.child is not null)
+					""", Long.class ).getResultList() ).containsExactly( 1L );
+		} );
 	}
 
 	@Entity(name = "Parent")

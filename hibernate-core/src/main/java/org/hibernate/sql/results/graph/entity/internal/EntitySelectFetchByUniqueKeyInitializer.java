@@ -37,7 +37,7 @@ public class EntitySelectFetchByUniqueKeyInitializer
 		final var processingState = data.getRowProcessingState().getJdbcValuesSourceProcessingState();
 		final var session = processingState.getSession();
 		final var persistenceContext = session.getPersistenceContextInternal();
-		if ( !(keyAssembler instanceof RestrictedForeignKeyResult.Assembler<?>)
+		if ( !(keyAssembler instanceof RestrictedToOneIdentifierResult.Assembler<?>)
 				&& ( fetchedAttribute.hasAssociationSqlRestriction()
 						|| fetchedAttribute.isAffectedByAssociationFilters( session.getLoadQueryInfluencers() ) ) ) {
 			// The owner SQL could not apply the association restrictions, so the key is not

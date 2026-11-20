@@ -1430,6 +1430,12 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	boolean hasFilterForLoadByKey();
 
+	/** Whether an enabled filter on the entity itself can exclude a row loaded by key. */
+	@Internal
+	default boolean hasEnabledFilterForLoadByKey(LoadQueryInfluencers influencers) {
+		return hasFilterForLoadByKey() && isAffectedByEnabledFilters( influencers, true );
+	}
+
 	/**
 	 * @return Metadata for each unique key defined
 	 */

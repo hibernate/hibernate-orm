@@ -132,7 +132,12 @@ public class EntityAuditSupport {
 		this.useServerTransactionTimestamps =
 				factory.getChangesetCoordinator().useServerTimestamp( factory.getJdbcServices().getDialect() );
 		this.currentTimestampFunctionName = useServerTransactionTimestamps
-				? factory.getJdbcServices().getDialect().getCurrentTemporalSupport().currentTimestamp()
+				? org.hibernate.type.descriptor.jdbc.internal.TemporalPreservationGuard.currentInstantExpression(
+						factory.getJdbcServices().getDialect(),
+						auditMapping.getJdbcMapping(),
+						factory.getSessionFactoryOptions().isTemporalPreservationEnabled(),
+						"the changeset of " + entityPersister.getEntityName()
+				)
 				: null;
 		this.staticAuditInsertMutationGroup = entityPersister.isDynamicInsert()
 				? null

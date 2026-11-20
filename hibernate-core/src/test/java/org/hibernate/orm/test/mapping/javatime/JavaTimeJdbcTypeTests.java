@@ -50,7 +50,10 @@ import static org.hibernate.type.descriptor.DateTimeUtils.adjustToPrecision;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @ServiceRegistry(
-		settings = @Setting(name = MappingSettings.JAVA_TIME_USE_DIRECT_JDBC, value = "false")
+		settings = {
+				@Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
+				@Setting(name = MappingSettings.JAVA_TIME_USE_DIRECT_JDBC, value = "false")
+		}
 )
 @DomainModel( annotatedClasses = JavaTimeJdbcTypeTests.EntityWithJavaTimeValues.class )
 @SessionFactory

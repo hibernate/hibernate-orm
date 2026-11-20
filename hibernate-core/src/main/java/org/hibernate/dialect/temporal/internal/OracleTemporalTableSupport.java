@@ -3,6 +3,8 @@ package org.hibernate.dialect.temporal.internal;
 import java.util.List;
 
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.type.internal.OracleInstantAtUtcJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.dialect.temporal.spi.TemporalRestrictionRequest;
 import org.hibernate.dialect.temporal.spi.TemporalTableAuxiliaryObject;
 import org.hibernate.dialect.temporal.spi.TemporalTableDdlRequest;
@@ -28,6 +30,20 @@ public class OracleTemporalTableSupport extends DefaultTemporalTableSupport {
 	@Override
 	public boolean createTemporalTableCheckConstraint(TemporalTableStrategy strategy) {
 		return false;
+	}
+
+	/// An `Instant` is stored in a `timestamp with time zone` column, which
+	/// Oracle does not allow in a primary key.
+	@Override
+	public boolean supportsPreservedInstantAsTemporalColumn() {
+		return false;
+	}
+
+	/// Held as its date and time at UTC in the plain `TIMESTAMP` of the column,
+	/// which Oracle does allow in a primary key.
+	@Override
+	public JdbcType getPreservedInstantJdbcTypeForTemporalColumn() {
+		return OracleInstantAtUtcJdbcType.INSTANCE;
 	}
 
 	@Override

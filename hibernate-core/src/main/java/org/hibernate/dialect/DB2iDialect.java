@@ -197,4 +197,18 @@ public class DB2iDialect extends DB2Dialect {
 
 
 
+
+	/// Nothing has been assessed for Db2 for i, which is a different database than
+	/// Db2 for Linux, UNIX and Windows.
+	@Override
+	public org.hibernate.dialect.type.spi.TemporalPreservation getTemporalPreservation(
+			org.hibernate.type.descriptor.java.JavaType<?> javaType,
+			org.hibernate.type.descriptor.jdbc.JdbcType jdbcType) {
+		return org.hibernate.dialect.type.spi.TemporalPreservation.unknown();
+	}
+
+	@Override
+	public org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
+		return org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports.none();
+	}
 }

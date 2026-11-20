@@ -730,6 +730,16 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	boolean isPreferJavaTimeJdbcTypesEnabled();
 
 	/**
+	 * Whether temporal preservation is enabled.
+	 *
+	 * @since 8.1
+	 * @see org.hibernate.cfg.MappingSettings#TEMPORAL_PRESERVATION
+	 */
+	default boolean isTemporalPreservationEnabled() {
+		return MetadataBuildingContext.isTemporalPreservationEnabled( getServiceRegistry() );
+	}
+
+	/**
 	 * @see org.hibernate.cfg.MappingSettings#PREFER_NATIVE_ENUM_TYPES
 	 */
 	boolean isPreferNativeEnumTypesEnabled();

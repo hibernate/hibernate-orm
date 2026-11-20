@@ -321,6 +321,17 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 				isNationalized = isNationalized( memberDetails );
 			}
 
+			if ( converterDescriptor == null
+					&& typeDetails != null
+					&& ( kind == Kind.ATTRIBUTE || kind == Kind.COLLECTION_ELEMENT ) ) {
+				// the zone declared with @TimeZoneAdjustment is applied as a conversion
+				converterDescriptor = TimeZoneStorageHelper.timeZoneAdjustmentConverter(
+						memberDetails,
+						typeDetails.getName(),
+						buildingContext
+				);
+			}
+
 			final boolean customType;
 			if ( converterDescriptor != null ) {
 				applyJpaConverter( memberDetails, converterDescriptor );

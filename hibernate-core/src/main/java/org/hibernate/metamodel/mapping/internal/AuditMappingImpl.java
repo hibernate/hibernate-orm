@@ -51,6 +51,7 @@ import org.hibernate.type.BasicType;
 
 import jakarta.annotation.Nullable;
 
+import static org.hibernate.type.descriptor.jdbc.internal.TemporalPreservationGuard.currentInstantExpression;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static java.util.Collections.singletonList;
 import static org.hibernate.audit.AuditStrategy.VALIDITY;
@@ -111,7 +112,12 @@ public class AuditMappingImpl implements AuditMapping {
 		final var dialect = sessionFactory.getJdbcServices().getDialect();
 		currentTimestampFunctionName =
 				sessionFactory.getChangesetCoordinator().useServerTimestamp( dialect )
-						? dialect.getCurrentTemporalSupport().currentTimestamp()
+						? currentInstantExpression(
+								dialect,
+								jdbcMapping,
+								sessionFactory.getSessionFactoryOptions().isTemporalPreservationEnabled(),
+								"the changeset of " + entityMappingType.getEntityName()
+						)
 						: null;
 
 		maxFunctionDescriptor = resolveMaxFunction( sessionFactory );

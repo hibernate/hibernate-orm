@@ -1,10 +1,12 @@
 package org.hibernate.query.sqm.tree.spi.expression;
 
 import jakarta.annotation.Nullable;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.query.sqm.spi.SqmPathSource;
 import org.hibernate.type.BindableType;
 import org.hibernate.type.BindingContext;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
@@ -113,6 +115,17 @@ public class SqmExpressionHelper {
 	public static SqmExpression<?> getOffsetAdjustedExpression(SqmExpression<?> expression) {
 		if ( isCompositeTemporal( expression ) ) {
 			final SqmPath<?> compositePath = (SqmPath<?>) expression;
+			if ( compositePath.getReferencedPathSource()
+					.findSubPathSource( AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME ) == null ) {
+				// a ZonedDateTime stored as its instant and the identifier of its zone
+				throw new SemanticException(
+						"Cannot determine the local date, time or offset of '"
+						+ compositePath.getNavigablePath().getFullPath()
+						+ "' in a query: with '" + MappingSettings.TEMPORAL_PRESERVATION
+						+ "' enabled its zone is stored as a zone identifier, from which the database"
+						+ " would have to derive them, and that is not yet supported"
+				);
+			}
 			final SqmPath<?> temporalPath =
 					castNonNull( expression.getJavaTypeDescriptor() ).getJavaTypeClass() == OffsetTime.class
 							? get( compositePath, OffsetTimeCompositeUserType.LOCAL_TIME_NAME )

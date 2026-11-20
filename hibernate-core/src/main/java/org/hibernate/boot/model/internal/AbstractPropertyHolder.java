@@ -23,6 +23,7 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
+import org.hibernate.usertype.internal.ZonedDateTimeZoneIdCompositeUserType;
 import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
 
 import jakarta.persistence.AssociationOverride;
@@ -38,6 +39,7 @@ import static org.hibernate.boot.model.internal.PropertyBinder.isManyToOne;
 import static org.hibernate.boot.model.internal.PropertyBinder.isOneToOne;
 import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.isOffsetTimeClass;
 import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.useColumnForTimeZoneStorage;
+import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.usesZoneIdColumn;
 import static org.hibernate.boot.models.annotations.internal.AssociationOverrideJpaAnnotation.DEFAULT_JOIN_TABLE;
 import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.StringHelper.qualify;
@@ -529,7 +531,9 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			}
 			final var offsetColumn = createTimeZoneColumn( element, column, context );
 			columnOverrideMap.put(
-					path + "." + AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME,
+					path + "." + ( usesZoneIdColumn( element, context )
+							? ZonedDateTimeZoneIdCompositeUserType.ZONE_ID_NAME
+							: AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME ),
 					List.of( offsetColumn )
 			);
 		}
@@ -547,10 +551,17 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		final var timeZoneColumn = element.getDirectAnnotationUsage( TimeZoneColumn.class );
 		final var created =
 				JpaAnnotations.COLUMN.createUsage( context.getBootstrapContext().getModelsContext() );
-		final String columnName =
-				timeZoneColumn != null
-						? timeZoneColumn.name()
-						: column.name() + "_tz";
+		final String columnName;
+		if ( timeZoneColumn != null ) {
+			columnName = timeZoneColumn.name();
+		}
+		else if ( MetadataBuildingContext.isTemporalPreservationEnabled(
+				context.getBootstrapContext().getServiceRegistry() ) ) {
+			columnName = withSuffix( column.name(), "_tz" );
+		}
+		else {
+			columnName = column.name() + "_tz";
+		}
 		created.name( columnName );
 		created.nullable( column.nullable() );
 
@@ -572,6 +583,19 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		}
 
 		return created;
+	}
+
+	/// The name with the suffix appended, inside its quotes when it is quoted.
+	private static String withSuffix(String name, String suffix) {
+		final int last = name.length() - 1;
+		if ( last > 0 ) {
+			final char open = name.charAt( 0 );
+			final char close = name.charAt( last );
+			if ( open == '`' && close == '`' || open == '"' && close == '"' || open == '[' && close == ']' ) {
+				return name.substring( 0, last ) + suffix + close;
+			}
+		}
+		return name + suffix;
 	}
 
 	private static Column createTemporalColumn(

@@ -56,6 +56,12 @@ jobs:
       # Nightly JDK versions are included with the 'jdk' label (all) or
       # 'jdk-<version>' labels (specific versions).
       #
+      # --- Temporal preservation ---
+      # The "Temporal preservation" entries run the hibernate-core tests with
+      # hibernate.type.temporal_preservation enabled for every test, on each
+      # database for which that setting is supported (-PtemporalPreservation).
+      # Every other entry runs with the setting unset, which is its default.
+      #
       # --- JDKs ---
       # We generally build with JDK 25, but our baseline is Java 17,
       # so we test with JDK 17, to be sure everything works.
@@ -95,6 +101,28 @@ jobs:
           { "name": "JDK 17 build", "java-build-version": "17",
             "gradle-args": "-PskipErrorProne=true -x test",
             "runs-on": "runs-on/fleet=linux-standard/env=commonhaus" },
+          { "name": "Temporal preservation - h2",
+            "gradle-args": "-PtemporalPreservation" },
+          { "name": "Temporal preservation - hsqldb", "rdbms": "hsqldb",
+            "gradle-args": "-PtemporalPreservation" },
+          { "name": "Temporal preservation - postgresql", "rdbms": "postgresql",
+            "gradle-args": "-PtemporalPreservation",
+            "runs-on": "runs-on/fleet=linux-standard/env=ibm" },
+          { "name": "Temporal preservation - oracle", "rdbms": "oracle",
+            "gradle-args": "-PtemporalPreservation",
+            "runs-on": "runs-on/fleet=linux-standard/env=ibm" },
+          { "name": "Temporal preservation - mysql", "rdbms": "mysql",
+            "gradle-args": "-PtemporalPreservation" },
+          { "name": "Temporal preservation - mariadb", "rdbms": "mariadb",
+            "gradle-args": "-PtemporalPreservation" },
+          { "name": "Temporal preservation - mssql", "rdbms": "mssql",
+            "gradle-args": "-PtemporalPreservation",
+            "runs-on": "runs-on/fleet=linux-standard/env=ibm" },
+          { "name": "Temporal preservation - db2", "rdbms": "db2",
+            "gradle-args": "-PtemporalPreservation",
+            "runs-on": "runs-on/fleet=linux-standard/env=ibm" },
+          { "name": "TEMPORARY probe - db2 away from UTC", "rdbms": "db2_tz",
+            "runs-on": "runs-on/fleet=linux-standard/env=ibm" },
           { "name": "Persistence TCK - postgresql", "rdbms": "postgresql",
             "build-script": "ci/build-tck-github.sh",
             "runs-on": "runs-on/fleet=linux-standard/env=ibm" },

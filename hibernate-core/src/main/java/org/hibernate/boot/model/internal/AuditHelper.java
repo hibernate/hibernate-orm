@@ -677,7 +677,20 @@ public final class AuditHelper {
 		final var database = context.getMetadataCollector().getDatabase();
 		setColumnName( columnName, column, database,
 				context.getBuildingOptions().getPhysicalNamingStrategy() );
-		setTemporalColumnType( column, database, javaType );
+		setTemporalColumnType( column, database, javaType, context );
+		if ( Instant.class.equals( javaType )
+				&& MetadataBuildingContext.isTemporalPreservationEnabled(
+						context.getBootstrapContext().getServiceRegistry() ) ) {
+			final var temporalTableSupport = database.getDialect().getTemporalTableSupport();
+			// where the column cannot have the type an Instant is otherwise stored in,
+			// the Dialect may name the descriptor which preserves it in this one
+			final var preserving = temporalTableSupport.supportsPreservedInstantAsTemporalColumn()
+					? null
+					: temporalTableSupport.getPreservedInstantJdbcTypeForTemporalColumn();
+			if ( preserving != null ) {
+				basicValue.setExplicitJdbcTypeAccess( typeConfiguration -> preserving );
+			}
+		}
 
 		return column;
 	}
@@ -685,11 +698,19 @@ public final class AuditHelper {
 	private static void setTemporalColumnType(
 			Column column,
 			Database database,
-			Class<?> javaType) {
+			Class<?> javaType,
+			MetadataBuildingContext context) {
 		if ( Instant.class.equals( javaType ) ) {
 			final var temporalTableSupport = database.getDialect().getTemporalTableSupport();
 			column.setTemporalPrecision( temporalTableSupport.getTemporalColumnPrecision() );
-			column.setSqlTypeCode( temporalTableSupport.getTemporalColumnType() );
+			// with temporal preservation enabled, the changeset is stored as any
+			// other Instant is, since that is the mapping established to preserve it,
+			// where the database allows a column of that type in a primary key
+			if ( !temporalTableSupport.supportsPreservedInstantAsTemporalColumn()
+					|| !MetadataBuildingContext.isTemporalPreservationEnabled(
+							context.getBootstrapContext().getServiceRegistry() ) ) {
+				column.setSqlTypeCode( temporalTableSupport.getTemporalColumnType() );
+			}
 		}
 	}
 

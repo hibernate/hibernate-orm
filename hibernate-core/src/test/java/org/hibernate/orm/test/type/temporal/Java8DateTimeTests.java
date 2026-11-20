@@ -15,6 +15,7 @@ import org.hibernate.type.SerializableType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -36,6 +37,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @SessionFactory
 public class Java8DateTimeTests {
 	@Test
+	@DisabledIfSystemProperty(
+			named = "hibernate.type.temporal_preservation",
+			matches = "true",
+			disabledReason = "Asserts the single-column mapping of types which temporal preservation may store in two columns"
+	)
 	public void test(DomainModelScope modelScope, SessionFactoryScope factoryScope) {
 		var entityBinding = modelScope.getDomainModel().getEntityBinding( TheEntity.class.getName() );
 		for ( Property propertyBinding : entityBinding.getPropertyClosure() ) {

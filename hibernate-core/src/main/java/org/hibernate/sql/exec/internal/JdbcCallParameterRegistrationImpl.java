@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.OutputableType;
+import org.hibernate.type.descriptor.jdbc.internal.TemporalPreservationGuard;
 import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
@@ -104,6 +105,13 @@ public class JdbcCallParameterRegistrationImpl implements JdbcCallParameterRegis
 			CallableStatement callableStatement,
 			SharedSessionContractImplementor session) {
 		final var sqlTypeDescriptor = ormType.getJdbcType();
+		// with temporal preservation enabled, an output parameter of a Java Time
+		// class cannot be read: reject it before the procedure is executed, and
+		// before the driver is asked to register a type it may not know
+		if ( ormType instanceof org.hibernate.metamodel.mapping.JdbcMapping jdbcMapping
+				&& TemporalPreservationGuard.appliesTo( jdbcMapping.getJdbcJavaType() ) ) {
+			TemporalPreservationGuard.rejectCallableOutput( jdbcMapping.getJdbcJavaType(), session );
+		}
 		try {
 			sqlTypeDescriptor.registerOutParameter( callableStatement, jdbcParameterPositionStart );
 		}

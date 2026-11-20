@@ -1,5 +1,10 @@
 package org.hibernate.dialect;
 
+import org.hibernate.type.descriptor.jdbc.TimeUtcAsLocalTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.dialect.type.spi.TemporalPreservation;
+import org.hibernate.dialect.type.internal.StandardTemporalPreservations;
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
@@ -69,6 +74,7 @@ import org.hibernate.QueryTimeoutException;
 import org.hibernate.SPI;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.aggregate.spi.AggregateSupport;
 import org.hibernate.dialect.aggregate.internal.PostgreSQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -224,6 +230,56 @@ import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering
 public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
 
 	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 15 );
+
+	/// Assessed for PostgreSQL with the PostgreSQL JDBC driver. PostgreSQL uses
+	/// the proleptic Gregorian calendar, as does the driver when given Java Time
+	/// values directly. An `Instant` is stored in a `timestamp with time zone`
+	/// column by way of a [java.sql.Timestamp], for which the driver uses the
+	/// Julian calendar before 1582-10-15. An earlier instant would be stored
+	/// as a different one, and a stored instant from before that date, as seen
+	/// in the time zone of the database session, is read as one ten days
+	/// later. Hence the first day, the start of 1583, below which a value is
+	/// rejected both when written and when read.
+	@Override
+	public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
+		var preservation = StandardTemporalPreservations.directLocal(
+				javaType,
+				jdbcType,
+				StandardTemporalPreservations.COMMON_ERA_START
+		);
+		if ( preservation == TemporalPreservation.unknown() ) {
+			preservation = StandardTemporalPreservations.directLocalTime( javaType, jdbcType );
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			preservation = StandardTemporalPreservations.instant(
+					javaType,
+					jdbcType,
+					TimestampUtcAsJdbcTimestampJdbcType.class,
+					TemporalPreservation.InstantBasis.NATIVE,
+					StandardTemporalPreservations.TIMESTAMP_READ_SAFE_START
+			);
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			// stored the way an Instant is: the column keeps the instant and nothing else
+			preservation = StandardTemporalPreservations.offsetOrZoned(
+					javaType,
+					jdbcType,
+					TimestampUtcAsJdbcTimestampJdbcType.class,
+					TemporalPreservation.Level.UNSUPPORTED,
+					StandardTemporalPreservations.TIMESTAMP_READ_SAFE_START
+			);
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			// stored as its time of day at UTC, in a column which keeps nothing else
+			preservation = StandardTemporalPreservations.offsetTime(
+					javaType,
+					jdbcType,
+					TimeUtcAsLocalTimeJdbcType.class,
+					TemporalPreservation.Level.UNSUPPORTED
+			);
+		}
+		return preservation;
+	}
 
 	@Override
 	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
@@ -1432,6 +1488,12 @@ public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport
 	protected void contributePostgreSQLTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final var jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
+		if ( serviceRegistry != null && MetadataBuildingContext.isTemporalPreservationEnabled( serviceRegistry ) ) {
+			// The time of an OffsetTime at UTC is exchanged with the driver as a LocalTime.
+			// Passing through a java.sql.Time stores a time which depends on the default
+			// time zone of the JVM, which is left as it is when preservation is disabled.
+			jdbcTypeRegistry.addDescriptor( TimeUtcAsLocalTimeJdbcType.INSTANCE );
+		}
 		// For discussion of BLOB support in Postgres, as of 8.4, see:
 		//     http://jdbc.postgresql.org/documentation/84/binary-data.html
 		// For how this affects Hibernate, see:

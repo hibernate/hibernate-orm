@@ -3,7 +3,6 @@ package org.hibernate.dialect.type.internal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
@@ -16,7 +15,6 @@ import org.hibernate.type.descriptor.jdbc.InstantJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalDateJdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalDateTimeJdbcType;
-import org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.OffsetDateTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.OffsetTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.ZonedDateTimeJdbcType;
@@ -39,12 +37,7 @@ public final class DB2TemporalJdbcTypes {
 			return new DB2GetObjectExtractor<>( javaType, this, LocalDate.class );
 		}
 	};
-	private static final JdbcType LOCAL_TIME = new LocalTimeJdbcType() {
-		@Override
-		public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
-			return new DB2GetObjectExtractor<>( javaType, this, LocalTime.class );
-		}
-	};
+	private static final JdbcType LOCAL_TIME = DB2LocalTimeJdbcType.INSTANCE;
 	private static final JdbcType LOCAL_DATE_TIME = new LocalDateTimeJdbcType() {
 		@Override
 		public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {

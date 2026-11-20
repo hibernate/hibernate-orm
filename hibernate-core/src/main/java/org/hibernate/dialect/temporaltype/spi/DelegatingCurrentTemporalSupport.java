@@ -27,5 +27,6 @@ public abstract class DelegatingCurrentTemporalSupport implements CurrentTempora
 	@Override public String currentLocalTimestamp() { return delegate.currentLocalTimestamp(); }
 	@Override public String currentTimestampWithTimeZone() { return delegate.currentTimestampWithTimeZone(); }
 	@Override public @Nullable CurrentTimestampSelection getCurrentTimestampSelection() { return delegate.getCurrentTimestampSelection(); }
+	@Override public boolean isLocalDateTimeReadInTimeZoneOfCurrentTimestamp() { return delegate.isLocalDateTimeReadInTimeZoneOfCurrentTimestamp(); }
 	@Override public boolean isCurrentTimestampStable() { return delegate.isCurrentTimestampStable(); }
 }

@@ -1,0 +1,1252 @@
+package org.hibernate.orm.test.type.temporal.preservation;
+
+import java.lang.reflect.Proxy;
+import java.sql.CallableStatement;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.sql.Types;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Convert;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Version;
+
+import org.hibernate.MappingException;
+import org.hibernate.TemporalPreservationException;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.CurrentTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.TemporalPreservationPolicy;
+import org.hibernate.annotations.TimeZoneRepresentation;
+import org.hibernate.annotations.TimeZoneStorage;
+import org.hibernate.annotations.TimeZoneStorageType;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.type.spi.TemporalPreservation;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.Component;
+import org.hibernate.mapping.Value;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.InstantJavaType;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.LocalDateJavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.LocalDateJdbcType;
+
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsInstantJdbcType;
+
+import org.hibernate.usertype.internal.ZonedDateTimeZoneIdCompositeUserType;
+
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+/// Tests which mappings and operations are accepted and which are rejected
+/// with temporal preservation enabled, and that nothing is rejected with it
+/// disabled.
+///
+/// @author Steve Ebersole
+@RequiresDialect(H2Dialect.class)
+class TemporalPreservationMappingTests {
+	private static final Map<String, Object> ENABLED = Map.of( MappingSettings.TEMPORAL_PRESERVATION, true );
+	private static final Map<String, Object> DISABLED = Map.of( MappingSettings.TEMPORAL_PRESERVATION, false );
+	private static final Map<String, Object> UNSET = Map.of();
+
+	@Test
+	void supportedRolesAreAccepted() {
+		assertAccepted( ENABLED, SupportedRoles.class );
+	}
+
+	/// With nothing declared, every part of the value is required, and the
+	/// storage is whatever the database needs to keep it.
+	@Test
+	void typesWithOffsetOrZoneArePreservedByDefault() {
+		assertAccepted( ENABLED, WithOffsetDateTime.class );
+		assertAccepted( ENABLED, WithZonedDateTime.class );
+		assertAccepted( ENABLED, WithOffsetTime.class );
+	}
+
+	/// H2 keeps the offset of an `OffsetDateTime` in a single column, but
+	/// not the zone of a `ZonedDateTime`, which therefore gets a second.
+	@Test
+	void defaultRepresentationIsWhatThePolicyNeeds() {
+		assertThat( valueOf( ENABLED, WithOffsetDateTime.class ) ).isInstanceOf( BasicValue.class );
+		assertThat( valueOf( ENABLED, WithZonedDateTime.class ) ).isInstanceOfSatisfying(
+				Component.class,
+				component -> assertThat( component.getTypeName() )
+						.isEqualTo( ZonedDateTimeZoneIdCompositeUserType.class.getName() )
+		);
+		// the instant alone fits in a single column
+		assertThat( valueOf( ENABLED, WithNormalizedZonedDateTime.class ) ).isInstanceOf( BasicValue.class );
+		// and an explicit choice is honored
+		assertThat( valueOf( ENABLED, WithOffsetColumn.class ) ).isInstanceOf( Component.class );
+		assertThat( valueOf( ENABLED, WithInlineZonedDateTime.class ) ).isInstanceOf( BasicValue.class );
+		// none of which applies when temporal preservation is disabled
+		assertThat( valueOf( DISABLED, WithZonedDateTime.class ) ).isInstanceOf( BasicValue.class );
+		assertThat( valueOf( DISABLED, WithOffsetColumn.class ) ).isInstanceOf( BasicValue.class );
+	}
+
+	/// A timestamp generated in the JVM can be stored in two columns. One
+	/// generated by the database cannot, since the database generates a single
+	/// value: it stays in a single column, and is held to its policy there.
+	@Test
+	void generatedTimestampsAreStoredWhereTheyCanBeGenerated() {
+		assertThat( valueOf( ENABLED, WithJvmTimestamp.class ) ).isInstanceOf( Component.class );
+		inFactory( ENABLED, WithJvmTimestamp.class, factory -> {
+			factory.inTransaction( session -> {
+				final var entity = new WithJvmTimestamp();
+				entity.id = 1;
+				session.persist( entity );
+			} );
+			factory.inTransaction( session -> {
+				final var entity = session.find( WithJvmTimestamp.class, 1 );
+				assertThat( entity.theValue ).isNotNull();
+				assertThat( entity.theValue.getZone() ).isEqualTo( java.time.ZoneId.systemDefault() );
+			} );
+		} );
+
+		assertThat( valueOf( ENABLED, WithDatabaseTimestamp.class ) ).isInstanceOf( BasicValue.class );
+		assertRejected(
+				ENABLED,
+				WithDatabaseTimestamp.class,
+				"WithDatabaseTimestamp.theValue",
+				"supported with the NORMALIZED policy"
+		);
+		assertAccepted( ENABLED, WithNormalizedDatabaseTimestamp.class );
+		// asking for both is contradictory
+		assertThatThrownBy( () -> assertAccepted( ENABLED, WithDatabaseTimestampInTwoColumns.class ) )
+				.hasStackTraceContaining( "generated by the database cannot be stored" );
+	}
+
+	/// The second column is mapped whether the entity is annotated on its
+	/// fields or on its accessor methods.
+	/// The second column is named after the first, inside its quotes when the
+	/// name of the first is quoted.
+	@Test
+	void secondColumnOfAQuotedColumnIsQuoted() {
+		final var component = (Component) valueOf( ENABLED, WithQuotedColumn.class );
+		final List<String> names = new ArrayList<>();
+		for ( var column : component.getColumns() ) {
+			names.add( column.getQuotedName() );
+		}
+		assertThat( names ).containsExactlyInAnyOrder( "`the Value`", "`the Value_tz`" );
+		inFactory( ENABLED, WithQuotedColumn.class, factory -> {
+			final var entity = new WithQuotedColumn();
+			entity.id = 1;
+			entity.theValue = ZonedDateTime.parse( "2021-03-14T12:00:00+01:00[Europe/Paris]" );
+			factory.inTransaction( session -> session.persist( entity ) );
+			factory.inTransaction( session -> assertThat( session.find( WithQuotedColumn.class, 1 ).theValue )
+					.isEqualTo( entity.theValue ) );
+		} );
+	}
+
+	@Test
+	void secondColumnIsMappedWithPropertyAccess() {
+		for ( var entityClass : new Class<?>[] { WithPropertyAccessZone.class, WithPropertyAccessOffset.class } ) {
+			final var value = valueOf( ENABLED, entityClass );
+			assertThat( value ).isInstanceOfSatisfying(
+					Component.class,
+					component -> assertThat( component.getPropertySpan() ).isEqualTo( 2 )
+			);
+		}
+		inFactory( ENABLED, WithPropertyAccessZone.class, factory -> {
+			final var written = ZonedDateTime.parse( "2021-03-14T12:00:00+01:00[Europe/Paris]" );
+			factory.inTransaction( session -> {
+				final var entity = new WithPropertyAccessZone();
+				entity.setId( 1 );
+				entity.setTheValue( written );
+				session.persist( entity );
+			} );
+			factory.inTransaction( session -> assertThat( session.find( WithPropertyAccessZone.class, 1 ).getTheValue() )
+					.isEqualTo( written ) );
+		} );
+		inFactory( ENABLED, WithPropertyAccessOffset.class, factory -> {
+			final var written = OffsetDateTime.parse( "2021-03-14T12:00:00+05:45" );
+			factory.inTransaction( session -> {
+				final var entity = new WithPropertyAccessOffset();
+				entity.setId( 1 );
+				entity.setTheValue( written );
+				session.persist( entity );
+			} );
+			factory.inTransaction( session -> assertThat( session.find( WithPropertyAccessOffset.class, 1 ).getTheValue() )
+					.isEqualTo( written ) );
+		} );
+	}
+
+	/// A `ZonedDateTime` stored with its zone can be compared in a query, by
+	/// its instant. Its local fields would have to be derived by the
+	/// database from the zone, which is not supported yet.
+	@Test
+	void zoneColumnValuesCanBeComparedButNotTakenApart() {
+		inFactory( ENABLED, WithZonedDateTime.class, factory -> factory.inTransaction( session -> {
+			final var entity = new WithZonedDateTime();
+			entity.id = 1;
+			entity.theValue = ZonedDateTime.parse( "2021-03-14T12:00:00+01:00[Europe/Paris]" );
+			session.persist( entity );
+			session.flush();
+			session.clear();
+			assertThat( session.createQuery(
+					"select e.theValue from WithZonedDateTime e where e.theValue = :theValue",
+					ZonedDateTime.class
+			).setParameter( "theValue", entity.theValue ).getSingleResult() ).isEqualTo( entity.theValue );
+			// with a literal, which occupies a single column, by instant
+			assertThat( session.createQuery(
+					"select count(e) from WithZonedDateTime e where e.theValue = {2021-03-14 11:00:00 +00:00}",
+					Long.class
+			).getSingleResult() ).isEqualTo( 1L );
+			assertThat( session.createQuery(
+					"select count(e) from WithZonedDateTime e where e.theValue < {2021-03-14 11:00:00 +00:00}",
+					Long.class
+			).getSingleResult() ).isEqualTo( 0L );
+			assertThatThrownBy( () -> session.createQuery(
+					"select extract(hour from e.theValue) from WithZonedDateTime e",
+					Integer.class
+			).getResultList() ).hasStackTraceContaining( "stored as a zone identifier" );
+		} ) );
+	}
+
+	@Test
+	void normalizedPolicyRequiresOnlyTheInstant() {
+		assertAccepted( ENABLED, WithNormalizedZonedDateTime.class );
+		// and says so when it would help
+		assertRejected(
+				ENABLED,
+				WithInlineZonedDateTime.class,
+				"WithInlineZonedDateTime.theValue",
+				"supported with the NORMALIZED policy"
+		);
+		// a policy does not make an unassessed mapping supported
+		assertRejected(
+				Map.of(
+						MappingSettings.TEMPORAL_PRESERVATION, true,
+						JdbcSettings.DIALECT, UnassessedDialect.class.getName()
+				),
+				WithNormalizedZonedDateTime.class,
+				"WithNormalizedZonedDateTime.theValue",
+				"has not been established to preserve the INSTANT"
+		);
+		// of an OffsetTime, only its time at UTC is then required
+		assertAccepted(
+				Map.of(
+						MappingSettings.TEMPORAL_PRESERVATION, true,
+						MappingSettings.TEMPORAL_PRESERVATION_POLICY_OFFSET_TIME, "normalized"
+				),
+				WithOffsetTime.class
+		);
+	}
+
+	@Test
+	void policyIsTakenFromTheNearestDeclaration() {
+		// the class declares NORMALIZED for ZonedDateTime
+		assertAccepted( ENABLED, WithClassPolicy.class );
+		// a member declaration wins over the class
+		assertRejected( ENABLED, WithMemberOverClassPolicy.class, "WithMemberOverClassPolicy.theValue", "ZONE_ID" );
+		// a declaration naming the type wins over one naming none, in either order
+		assertAccepted( ENABLED, WithTypedOverUntypedPolicy.class );
+		// a superclass is consulted after the declaring class
+		assertAccepted( ENABLED, WithInheritedPolicy.class );
+	}
+
+	@Test
+	void policyIsTakenFromSettingsLast() {
+		final Map<String, Object> general = Map.of(
+				MappingSettings.TEMPORAL_PRESERVATION, true,
+				MappingSettings.TEMPORAL_PRESERVATION_POLICY, "normalized"
+		);
+		assertThat( valueOf( general, WithZonedDateTime.class ) ).isInstanceOf( BasicValue.class );
+		assertAccepted( general, WithInlineZonedDateTime.class );
+		// an annotation wins over a setting
+		assertRejected( general, WithDomainValueZonedDateTime.class, "WithDomainValueZonedDateTime.theValue", "ZONE_ID" );
+
+		// the setting for the type wins over the general one
+		assertRejected(
+				Map.of(
+						MappingSettings.TEMPORAL_PRESERVATION, true,
+						MappingSettings.TEMPORAL_PRESERVATION_POLICY, "normalized",
+						MappingSettings.TEMPORAL_PRESERVATION_POLICY_ZONED_DATETIME, "VALUE"
+				),
+				WithInlineZonedDateTime.class,
+				"WithInlineZonedDateTime.theValue",
+				"setting 'hibernate.type.temporal_preservation_policy.zoned_datetime'"
+		);
+		assertAccepted(
+				Map.of(
+						MappingSettings.TEMPORAL_PRESERVATION, true,
+						MappingSettings.TEMPORAL_PRESERVATION_POLICY_ZONED_DATETIME,
+						TemporalPreservationPolicy.Type.NORMALIZED
+				),
+				WithInlineZonedDateTime.class
+		);
+		// and is not consulted for another type
+		assertRejected(
+				Map.of(
+						MappingSettings.TEMPORAL_PRESERVATION, true,
+						MappingSettings.TEMPORAL_PRESERVATION_POLICY_OFFSET_DATETIME, "normalized"
+				),
+				WithInlineZonedDateTime.class,
+				"WithInlineZonedDateTime.theValue",
+				"ZONE_ID"
+		);
+	}
+
+	@Test
+	void invalidPoliciesAreRejected() {
+		assertInvalid(
+				Map.of( MappingSettings.TEMPORAL_PRESERVATION, true, MappingSettings.TEMPORAL_PRESERVATION_POLICY, "utc" ),
+				WithZonedDateTime.class,
+				"expected 'value' or 'normalized'"
+		);
+		assertInvalid( ENABLED, WithTypesOnMember.class, "must not name types" );
+		assertInvalid( ENABLED, WithUnsupportedPolicyType.class, "is not OffsetTime, OffsetDateTime or ZonedDateTime" );
+		assertInvalid( ENABLED, WithDuplicatePolicyType.class, "named more than once" );
+		assertInvalid( ENABLED, WithTwoUntypedPolicies.class, "more than one declaration names no types" );
+	}
+
+	/// Policies are not consulted, and so not checked either, when temporal
+	/// preservation is disabled.
+	@Test
+	void policiesAreInertWhenDisabled() {
+		for ( var entityClass : new Class<?>[] {
+				WithNormalizedZonedDateTime.class,
+				WithClassPolicy.class,
+				WithTypesOnMember.class,
+				WithUnsupportedPolicyType.class
+		} ) {
+			assertAccepted( DISABLED, entityClass );
+		}
+		assertAccepted(
+				Map.of( MappingSettings.TEMPORAL_PRESERVATION, false, MappingSettings.TEMPORAL_PRESERVATION_POLICY, "utc" ),
+				WithZonedDateTime.class
+		);
+	}
+
+	/// With `@TimeZoneRepresentation(COLUMN)` the instant is stored in one
+	/// column, and the offset of an `OffsetDateTime` or the zone of a
+	/// `ZonedDateTime` in another, which keeps the whole value on every database.
+	@Test
+	void secondColumnPreservesTheOffsetOrZone() {
+		assertAccepted( ENABLED, WithOffsetColumn.class );
+		assertAccepted( ENABLED, WithZoneOffsetColumn.class );
+		assertAccepted( ENABLED, WithNormalizedZoneOffsetColumn.class );
+		// declared on the class, for every attribute it applies to
+		assertAccepted( ENABLED, WithClassRepresentation.class );
+		// the instant column is held to what the dialect reports for an Instant
+		assertRejected(
+				Map.of(
+						MappingSettings.TEMPORAL_PRESERVATION, true,
+						JdbcSettings.DIALECT, UnassessedDialect.class.getName()
+				),
+				WithOffsetColumn.class,
+				"WithOffsetColumn.theValue",
+				"for the column holding its instant"
+		);
+		// and is inert when temporal preservation is disabled
+		assertAccepted( DISABLED, WithOffsetColumn.class );
+	}
+
+	/// `@TimeZoneStorage` selects where the offset is stored, in what zone
+	/// values are expressed and which column type is used, all at once, and
+	/// leaves some of that to the dialect. With temporal preservation enabled
+	/// it is rejected in favor of `@TimeZoneRepresentation`.
+	@Test
+	void timeZoneStorageIsRejected() {
+		for ( var entityClass : new Class<?>[] {
+				WithTimeZoneStorageColumn.class,
+				WithTimeZoneStorageNative.class,
+				WithTimeZoneStorageNormalizeUtc.class
+		} ) {
+			assertRejected( ENABLED, entityClass, entityClass.getSimpleName() + ".theValue", "@TimeZoneStorage is not supported" );
+			assertAccepted( DISABLED, entityClass );
+		}
+		assertRejected(
+				Map.of( MappingSettings.TEMPORAL_PRESERVATION, true, MappingSettings.TIMEZONE_DEFAULT_STORAGE, "NORMALIZE_UTC" ),
+				WithOffsetDateTime.class,
+				"WithOffsetDateTime.theValue",
+				"'hibernate.timezone.default_storage' is not supported"
+		);
+		assertAccepted(
+				Map.of( MappingSettings.TEMPORAL_PRESERVATION, true, MappingSettings.TIMEZONE_DEFAULT_STORAGE, "DEFAULT" ),
+				WithOffsetDateTime.class
+		);
+	}
+
+	@Test
+	void arraysAreRejected() {
+		assertRejected( ENABLED, WithArray.class, "WithArray.theValues", "arrays and collections" );
+	}
+
+	@Test
+	void conversionThroughJavaSqlTypesIsRejected() {
+		assertRejected( ENABLED, WithJavaSqlDate.class, "WithJavaSqlDate.theValue", "DateJdbcType" );
+	}
+
+	@Test
+	void collectionElementsAreChecked() {
+		assertRejected( ENABLED, WithOffsetElements.class, "WithOffsetElements.theValues.<element>", "ZONE_ID" );
+	}
+
+	@Test
+	void embeddableMembersAreChecked() {
+		assertRejected( ENABLED, WithOffsetMember.class, "WithOffsetMember.embedded.theValue", "ZONE_ID" );
+	}
+
+	@Test
+	void membersOfAggregatedEmbeddablesAreRejected() {
+		assertRejected(
+				ENABLED,
+				WithAggregate.class,
+				"WithAggregate.aggregated.theMember",
+				"aggregated into a single column"
+		);
+		assertAccepted( DISABLED, WithAggregate.class );
+	}
+
+	@Test
+	void identifiersAndVersionsAreChecked() {
+		assertRejected( ENABLED, WithOffsetId.class, "WithOffsetId.<id>", "ZONE_ID" );
+		assertRejected( ENABLED, WithOffsetVersion.class, "WithOffsetVersion.version", "ZONE_ID" );
+	}
+
+	/// The value an attribute converter produces for the database is what is
+	/// stored. A converter producing something other than a Java Time value
+	/// takes the attribute out of temporal preservation altogether.
+	@Test
+	void convertedValuesAreCheckedByWhatIsStored() {
+		assertAccepted( ENABLED, WithConversionToString.class );
+		assertRejected(
+				ENABLED,
+				WithConversionToOffsetDateTime.class,
+				"WithConversionToOffsetDateTime.theValue",
+				"ZONE_ID"
+		);
+	}
+
+	@Test
+	void unassessedDialectIsRejected() {
+		final Map<String, Object> settings = Map.of(
+				MappingSettings.TEMPORAL_PRESERVATION, true,
+				JdbcSettings.DIALECT, UnassessedDialect.class.getName()
+		);
+		assertRejected( settings, WithLocalDate.class, "WithLocalDate.theValue", "has not been established" );
+	}
+
+	@Test
+	void knownLossIsRejected() {
+		final Map<String, Object> settings = Map.of(
+				MappingSettings.TEMPORAL_PRESERVATION, true,
+				JdbcSettings.DIALECT, LosingDialect.class.getName()
+		);
+		assertRejected( settings, WithLocalDate.class, "WithLocalDate.theValue", "is known to lose the DATE part" );
+	}
+
+	/// Asking for direct JDBC access is not asking for temporal preservation:
+	/// the same JDBC types are selected, and nothing is rejected.
+	@Test
+	void directJdbcSettingAloneRejectsNothing() {
+		final Map<String, Object> directOnly = Map.of(
+				MappingSettings.TEMPORAL_PRESERVATION, false,
+				MappingSettings.JAVA_TIME_USE_DIRECT_JDBC, true
+		);
+		for ( var entityClass : new Class<?>[] {
+				WithOffsetDateTime.class,
+				WithOffsetTime.class,
+				WithZonedDateTime.class,
+				WithArray.class,
+				WithAggregate.class
+		} ) {
+			assertAccepted( directOnly, entityClass );
+		}
+		assertAccepted(
+				Map.of(
+						MappingSettings.TEMPORAL_PRESERVATION, false,
+						MappingSettings.JAVA_TIME_USE_DIRECT_JDBC, true,
+						JdbcSettings.DIALECT, UnassessedDialect.class.getName()
+				),
+				WithLocalDate.class
+		);
+	}
+
+	/// The H2 descriptor for an `Instant` retries through a `java.sql.Timestamp`
+	/// when the driver fails on the `Instant` itself. That path has not been
+	/// assessed, so with temporal preservation enabled it is not taken.
+	@Test
+	void unassessedDriverFallbackIsNotTaken() {
+		final var binder = TimestampUtcAsInstantJdbcType.INSTANCE.getBinder( InstantJavaType.INSTANCE );
+		final var extractor = TimestampUtcAsInstantJdbcType.INSTANCE.getExtractor( InstantJavaType.INSTANCE );
+		final Instant value = Instant.parse( "2021-03-14T07:30:00Z" );
+		final List<String> calls = new ArrayList<>();
+		final var statement = (PreparedStatement) Proxy.newProxyInstance(
+				getClass().getClassLoader(),
+				new Class<?>[] { PreparedStatement.class },
+				(proxy, method, arguments) -> {
+					calls.add( method.getName() );
+					if ( method.getName().equals( "setObject" ) ) {
+						throw new SQLException( "not supported" );
+					}
+					return null;
+				}
+		);
+		final var resultSet = (ResultSet) Proxy.newProxyInstance(
+				getClass().getClassLoader(),
+				new Class<?>[] { ResultSet.class },
+				(proxy, method, arguments) -> switch ( method.getName() ) {
+					case "getObject" -> throw new SQLException( "not supported" );
+					case "getTimestamp" -> Timestamp.from( value );
+					case "wasNull" -> false;
+					default -> throw new UnsupportedOperationException( method.getName() );
+				}
+		);
+		inFactory( ENABLED, SupportedRoles.class, factory -> factory.inSession( session -> {
+			assertThatThrownBy( () -> binder.bind( statement, value, 1, options( session ) ) )
+					.isInstanceOf( TemporalPreservationException.class )
+					.hasCauseInstanceOf( SQLException.class );
+			assertThat( calls ).containsExactly( "setObject" );
+			assertThatThrownBy( () -> extractor.extract( resultSet, 1, options( session ) ) )
+					.isInstanceOf( TemporalPreservationException.class )
+					.hasCauseInstanceOf( SQLException.class );
+		} ) );
+		calls.clear();
+		inFactory( DISABLED, SupportedRoles.class, factory -> factory.inSession( session -> {
+			try {
+				binder.bind( statement, value, 1, options( session ) );
+				assertThat( calls ).containsExactly( "setObject", "setTimestamp" );
+				assertThat( extractor.extract( resultSet, 1, options( session ) ) ).isEqualTo( value );
+			}
+			catch (SQLException e) {
+				throw new AssertionError( e );
+			}
+		} ) );
+	}
+
+	@Test
+	@DisabledIfSystemProperty(
+		named = "hibernate.type.temporal_preservation",
+		matches = "true",
+		disabledReason = "Verifies the behavior with the setting left unset"
+	)
+	void nothingIsRejectedWhenDisabled() {
+		for ( var settings : new Map[] { UNSET, DISABLED } ) {
+			for ( var entityClass : new Class<?>[] {
+					SupportedRoles.class,
+					WithOffsetDateTime.class,
+					WithOffsetTime.class,
+					WithZonedDateTime.class,
+					WithArray.class,
+					WithJavaSqlDate.class,
+					WithOffsetElements.class,
+					WithOffsetMember.class,
+					WithOffsetVersion.class,
+					WithConversionToOffsetDateTime.class
+			} ) {
+				assertAccepted( settings, entityClass );
+			}
+		}
+		assertAccepted(
+				Map.of( JdbcSettings.DIALECT, UnassessedDialect.class.getName() ),
+				WithLocalDate.class
+		);
+	}
+
+	@Test
+	void unsupportedParameterIsRejectedWhenBound() {
+		inFactory( ENABLED, SupportedRoles.class, factory -> {
+			for ( var value : new Object[] {
+					// before the range which is preserved
+					LocalDate.of( -5, 1, 1 ),
+					new LocalDate[] { LocalDate.now() }
+			} ) {
+				assertThatThrownBy( () -> factory.inTransaction( session -> session.createNativeQuery(
+						"select count(*) from SupportedRoles where ? is not null",
+						Object.class
+				).setParameter( 1, value ).getSingleResult() ) )
+						.as( "parameter of %s", value.getClass() )
+						.isInstanceOf( TemporalPreservationException.class )
+						.hasMessageContaining( MappingSettings.TEMPORAL_PRESERVATION );
+			}
+		} );
+		inFactory( DISABLED, SupportedRoles.class, factory -> factory.inTransaction( session -> assertThat(
+				session.createNativeQuery( "select count(*) from SupportedRoles where ? is not null", Object.class )
+						.setParameter( 1, OffsetDateTime.now() )
+						.getSingleResult()
+		).isNotNull() ) );
+	}
+
+	@Test
+	void outputParametersAreRejected() {
+		final var extractor = LocalDateJdbcType.INSTANCE.getExtractor( LocalDateJavaType.INSTANCE );
+		final var statement = (CallableStatement) Proxy.newProxyInstance(
+				getClass().getClassLoader(),
+				new Class<?>[] { CallableStatement.class },
+				(proxy, method, arguments) -> switch ( method.getName() ) {
+					case "getObject" -> LocalDate.of( 2021, 3, 14 );
+					case "wasNull" -> false;
+					default -> throw new UnsupportedOperationException( method.getName() );
+				}
+		);
+		inFactory( ENABLED, SupportedRoles.class, factory -> factory.inSession( session -> {
+			assertThatThrownBy( () -> extractor.extract( statement, 1, options( session ) ) )
+					.isInstanceOf( TemporalPreservationException.class )
+					.hasMessageContaining( "output parameter" );
+			assertThatThrownBy( () -> extractor.extract( statement, "theValue", options( session ) ) )
+					.isInstanceOf( TemporalPreservationException.class )
+					.hasMessageContaining( "output parameter" );
+		} ) );
+		inFactory( DISABLED, SupportedRoles.class, factory -> factory.inSession( session -> {
+			try {
+				assertThat( extractor.extract( statement, 1, options( session ) ) ).isEqualTo( LocalDate.of( 2021, 3, 14 ) );
+			}
+			catch (java.sql.SQLException e) {
+				throw new AssertionError( e );
+			}
+		} ) );
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/// An array of embeddables aggregated into a single column is one basic
+	/// value in the boot model, and its members are checked all the same.
+	@Test
+	void membersOfArraysOfAggregatedEmbeddablesAreRejected() {
+		assertRejected(
+				ENABLED,
+				WithAggregateArray.class,
+				"WithAggregateArray.aggregated.<element>.theMember",
+				"aggregated into a single column"
+		);
+		assertRejected(
+				ENABLED,
+				WithNestedAggregateArray.class,
+				"WithNestedAggregateArray.aggregated.nested.<element>.theMember",
+				"aggregated into a single column"
+		);
+		assertAccepted( ENABLED, WithAggregateArrayOfOtherThings.class );
+		assertAccepted( DISABLED, WithAggregateArray.class );
+	}
+
+	/// A declaration which would be ignored is a mistake, and is reported.
+	@Test
+	void declarationsWhichDoNotApplyAreRejected() {
+		for ( var entityClass : new Class<?>[] {
+				WithPolicyOnLocalDate.class,
+				WithRepresentationOnInstant.class,
+				WithPolicyOnEmbedded.class,
+				WithPolicyOnConverted.class,
+				WithPolicyOnLocalElements.class
+		} ) {
+			assertRejected( ENABLED, entityClass, entityClass.getSimpleName() + ".theValue", "applies only to" );
+			assertAccepted( DISABLED, entityClass );
+		}
+		assertAccepted( ENABLED, WithPolicyOnElements.class );
+	}
+
+	/// A column of a native query result is read by the JDBC type of the
+	/// column unless the query names a Java type, and that pairing is not one
+	/// which has been assessed.
+	@Test
+	void nativeResultsNeedAJavaType() {
+		inFactory( ENABLED, SupportedRoles.class, factory -> factory.inTransaction( session -> {
+			final String sql = "select timestamp '2020-01-01 10:00:00'";
+			assertThatThrownBy( () -> session.createNativeQuery( sql, Object.class ).getSingleResult() )
+					.isInstanceOf( TemporalPreservationException.class )
+					.hasMessageContaining( MappingSettings.TEMPORAL_PRESERVATION );
+			assertThat( session.createNativeQuery( sql, LocalDateTime.class ).getSingleResult() )
+					.isEqualTo( LocalDateTime.of( 2020, 1, 1, 10, 0 ) );
+		} ) );
+		inFactory( DISABLED, SupportedRoles.class, factory -> factory.inTransaction( session -> assertThat(
+				session.createNativeQuery( "select timestamp '2020-01-01 10:00:00'", Object.class ).getSingleResult()
+		).isNotNull() ) );
+	}
+
+	private static WrapperOptions options(Object session) {
+		return (SharedSessionContractImplementor) session;
+	}
+
+	private static void assertAccepted(Map<String, Object> settings, Class<?> entityClass) {
+		inFactory( settings, entityClass, factory -> {
+		} );
+	}
+
+	private static void assertRejected(
+			Map<String, Object> settings,
+			Class<?> entityClass,
+			String role,
+			String reason) {
+		assertThatThrownBy( () -> assertAccepted( settings, entityClass ) )
+				.isInstanceOf( MappingException.class )
+				.hasMessageContaining( role )
+				.hasMessageContaining( reason )
+				.hasMessageContaining( MappingSettings.TEMPORAL_PRESERVATION );
+	}
+
+	/// The boot-model value of the attribute `theValue` of the entity.
+	private static Value valueOf(Map<String, Object> settings, Class<?> entityClass) {
+		final var registryBuilder = ServiceRegistryUtil.serviceRegistryBuilder();
+		settings.forEach( registryBuilder::applySetting );
+		try ( var registry = registryBuilder.build() ) {
+			return new MetadataSources( registry ).addAnnotatedClass( entityClass )
+					.buildMetadata()
+					.getEntityBinding( entityClass.getName() )
+					.getProperty( "theValue" )
+					.getValue();
+		}
+	}
+
+	private static void assertInvalid(Map<String, Object> settings, Class<?> entityClass, String problem) {
+		assertThatThrownBy( () -> assertAccepted( settings, entityClass ) )
+				.isInstanceOf( MappingException.class )
+				.hasMessageContaining( problem );
+	}
+
+	private static void inFactory(
+			Map<String, Object> settings,
+			Class<?> entityClass,
+			java.util.function.Consumer<SessionFactoryImplementor> action) {
+		final var registryBuilder = ServiceRegistryUtil.serviceRegistryBuilder();
+		registryBuilder.applySetting( "hibernate.hbm2ddl.auto", "create-drop" );
+		settings.forEach( registryBuilder::applySetting );
+		try ( var registry = registryBuilder.build() ) {
+			final var metadata = new MetadataSources( registry ).addAnnotatedClass( entityClass ).buildMetadata();
+			try ( var factory = (SessionFactoryImplementor) metadata.buildSessionFactory() ) {
+				action.accept( factory );
+			}
+		}
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Entity(name = "SupportedRoles")
+	static class SupportedRoles {
+		@Id
+		LocalDate id;
+		@Version
+		Instant version;
+		LocalDateTime basic;
+		@Embedded
+		LocalMember embedded;
+		@ElementCollection
+		Set<LocalDate> elements;
+		@ElementCollection
+		Map<LocalDate, Instant> entries;
+	}
+
+	@Embeddable
+	static class LocalMember {
+		LocalDate theMember;
+	}
+
+	@Entity(name = "WithLocalDate")
+	static class WithLocalDate {
+		@Id
+		Integer id;
+		LocalDate theValue;
+	}
+
+	@Entity(name = "WithOffsetDateTime")
+	static class WithOffsetDateTime {
+		@Id
+		Integer id;
+		OffsetDateTime theValue;
+	}
+
+	@Entity(name = "WithOffsetTime")
+	static class WithOffsetTime {
+		@Id
+		Integer id;
+		OffsetTime theValue;
+	}
+
+	@Entity(name = "WithZonedDateTime")
+	static class WithZonedDateTime {
+		@Id
+		Integer id;
+		ZonedDateTime theValue;
+	}
+
+	@Entity(name = "WithNormalizedZonedDateTime")
+	static class WithNormalizedZonedDateTime {
+		@Id
+		Integer id;
+		@TemporalPreservationPolicy(TemporalPreservationPolicy.Type.NORMALIZED)
+		ZonedDateTime theValue;
+	}
+
+	@Entity(name = "WithDomainValueZonedDateTime")
+	@TimeZoneRepresentation(TimeZoneRepresentation.Type.INLINE)
+	static class WithDomainValueZonedDateTime {
+		@Id
+		Integer id;
+		@TemporalPreservationPolicy(TemporalPreservationPolicy.Type.VALUE)
+		ZonedDateTime theValue;
+	}
+
+	@Entity(name = "WithClassPolicy")
+	@TimeZoneRepresentation(TimeZoneRepresentation.Type.INLINE)
+	@TemporalPreservationPolicy(value = TemporalPreservationPolicy.Type.NORMALIZED, types = ZonedDateTime.class)
+	static class WithClassPolicy {
+		@Id
+		Integer id;
+		ZonedDateTime theValue;
+		OffsetDateTime anotherValue;
+	}
+
+	@Entity(name = "WithMemberOverClassPolicy")
+	@TimeZoneRepresentation(TimeZoneRepresentation.Type.INLINE)
+	@TemporalPreservationPolicy(TemporalPreservationPolicy.Type.NORMALIZED)
+	static class WithMemberOverClassPolicy {
+		@Id
+		Integer id;
+		@TemporalPreservationPolicy(TemporalPreservationPolicy.Type.VALUE)
+		ZonedDateTime theValue;
+	}
+
+	@Entity(name = "WithTypedOverUntypedPolicy")
+	@TimeZoneRepresentation(TimeZoneRepresentation.Type.INLINE)
+	@TemporalPreservationPolicy(value = TemporalPreservationPolicy.Type.NORMALIZED, types = ZonedDateTime.class)
+	@TemporalPreservationPolicy(TemporalPreservationPolicy.Type.VALUE)
+	static class WithTypedOverUntypedPolicy {
+		@Id
+		Integer id;
+		ZonedDateTime theValue;
+	}
+
+	@MappedSuperclass
+	@TemporalPreservationPolicy(TemporalPreservationPolicy.Type.NORMALIZED)
+	static class NormalizedBase {
+		@Id
+		Integer id;
+	}
+
+	@Entity(name = "WithInheritedPolicy")
+	@TimeZoneRepresentation(TimeZoneRepresentation.Type.INLINE)
+	static class WithInheritedPolicy extends NormalizedBase {
+		ZonedDateTime theValue;
+	}
+
+	@Entity(name = "WithTypesOnMember")
+	static class WithTypesOnMember {
+		@Id
+		Integer id;
+		@TemporalPreservationPolicy(value = TemporalPreservationPolicy.Type.NORMALIZED, types = ZonedDateTime.class)
+		ZonedDateTime theValue;
+	}
+
+	@Entity(name = "WithUnsupportedPolicyType")
+	@TemporalPreservationPolicy(value = TemporalPreservationPolicy.Type.NORMALIZED, types = LocalDate.class)
+	static class WithUnsupportedPolicyType {
+		@Id
+		Integer id;
+		ZonedDateTime theValue;
+	}
+
+	@Entity(name = "WithDuplicatePolicyType")
+	@TemporalPreservationPolicy(
+			value = TemporalPreservationPolicy.Type.NORMALIZED,
+			types = { ZonedDateTime.class, ZonedDateTime.class }
+	)
+	static class WithDuplicatePolicyType {
+		@Id
+		Integer id;
+		ZonedDateTime theValue;
+	}
+
+	@Entity(name = "WithTwoUntypedPolicies")
+	@TemporalPreservationPolicy(TemporalPreservationPolicy.Type.NORMALIZED)
+	@TemporalPreservationPolicy(TemporalPreservationPolicy.Type.VALUE)
+	static class WithTwoUntypedPolicies {
+		@Id
+		Integer id;
+		ZonedDateTime theValue;
+	}
+
+	@Entity(name = "WithPropertyAccessZone")
+	public static class WithPropertyAccessZone {
+		private Integer id;
+		private ZonedDateTime theValue;
+
+		@Id
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public ZonedDateTime getTheValue() {
+			return theValue;
+		}
+
+		public void setTheValue(ZonedDateTime theValue) {
+			this.theValue = theValue;
+		}
+	}
+
+	@Entity(name = "WithPropertyAccessOffset")
+	public static class WithPropertyAccessOffset {
+		private Integer id;
+		private OffsetDateTime theValue;
+
+		@Id
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		@TimeZoneRepresentation(TimeZoneRepresentation.Type.COLUMN)
+		public OffsetDateTime getTheValue() {
+			return theValue;
+		}
+
+		public void setTheValue(OffsetDateTime theValue) {
+			this.theValue = theValue;
+		}
+	}
+
+	@Entity(name = "WithQuotedColumn")
+	static class WithQuotedColumn {
+		@Id
+		Integer id;
+		@jakarta.persistence.Column(name = "`the Value`")
+		ZonedDateTime theValue;
+	}
+
+	@Entity(name = "WithJvmTimestamp")
+	static class WithJvmTimestamp {
+		@Id
+		Integer id;
+		@CreationTimestamp
+		ZonedDateTime theValue;
+	}
+
+	@Entity(name = "WithDatabaseTimestamp")
+	static class WithDatabaseTimestamp {
+		@Id
+		Integer id;
+		@CurrentTimestamp
+		ZonedDateTime theValue;
+	}
+
+	@Entity(name = "WithNormalizedDatabaseTimestamp")
+	static class WithNormalizedDatabaseTimestamp {
+		@Id
+		Integer id;
+		@CurrentTimestamp
+		@TemporalPreservationPolicy(TemporalPreservationPolicy.Type.NORMALIZED)
+		ZonedDateTime theValue;
+	}
+
+	@Entity(name = "WithDatabaseTimestampInTwoColumns")
+	static class WithDatabaseTimestampInTwoColumns {
+		@Id
+		Integer id;
+		@CurrentTimestamp
+		@TimeZoneRepresentation(TimeZoneRepresentation.Type.COLUMN)
+		ZonedDateTime theValue;
+	}
+
+	@Entity(name = "WithInlineZonedDateTime")
+	static class WithInlineZonedDateTime {
+		@Id
+		Integer id;
+		@TimeZoneRepresentation(TimeZoneRepresentation.Type.INLINE)
+		ZonedDateTime theValue;
+	}
+
+	@Entity(name = "WithOffsetColumn")
+	static class WithOffsetColumn {
+		@Id
+		Integer id;
+		@TimeZoneRepresentation(TimeZoneRepresentation.Type.COLUMN)
+		OffsetDateTime theValue;
+	}
+
+	@Entity(name = "WithZoneOffsetColumn")
+	static class WithZoneOffsetColumn {
+		@Id
+		Integer id;
+		@TimeZoneRepresentation(TimeZoneRepresentation.Type.COLUMN)
+		ZonedDateTime theValue;
+	}
+
+	@Entity(name = "WithNormalizedZoneOffsetColumn")
+	static class WithNormalizedZoneOffsetColumn {
+		@Id
+		Integer id;
+		@TimeZoneRepresentation(TimeZoneRepresentation.Type.COLUMN)
+		@TemporalPreservationPolicy(TemporalPreservationPolicy.Type.NORMALIZED)
+		ZonedDateTime theValue;
+	}
+
+	@Entity(name = "WithClassRepresentation")
+	@TimeZoneRepresentation(TimeZoneRepresentation.Type.COLUMN)
+	static class WithClassRepresentation {
+		@Id
+		Integer id;
+		OffsetDateTime theValue;
+		@TimeZoneRepresentation(TimeZoneRepresentation.Type.INLINE)
+		OffsetDateTime anotherValue;
+		LocalDate aDate;
+	}
+
+	@Entity(name = "WithTimeZoneStorageColumn")
+	static class WithTimeZoneStorageColumn {
+		@Id
+		Integer id;
+		@TimeZoneStorage(TimeZoneStorageType.COLUMN)
+		OffsetDateTime theValue;
+	}
+
+	@Entity(name = "WithTimeZoneStorageNative")
+	static class WithTimeZoneStorageNative {
+		@Id
+		Integer id;
+		@TimeZoneStorage(TimeZoneStorageType.NATIVE)
+		OffsetDateTime theValue;
+	}
+
+	@Entity(name = "WithTimeZoneStorageNormalizeUtc")
+	static class WithTimeZoneStorageNormalizeUtc {
+		@Id
+		Integer id;
+		@TimeZoneStorage(TimeZoneStorageType.NORMALIZE_UTC)
+		OffsetDateTime theValue;
+	}
+
+	@Entity(name = "WithArray")
+	static class WithArray {
+		@Id
+		Integer id;
+		LocalDate[] theValues;
+	}
+
+	@Entity(name = "WithJavaSqlDate")
+	static class WithJavaSqlDate {
+		@Id
+		Integer id;
+		@JdbcTypeCode(Types.DATE)
+		LocalDate theValue;
+	}
+
+	@Entity(name = "WithOffsetElements")
+	static class WithOffsetElements {
+		@Id
+		Integer id;
+		@ElementCollection
+		Set<ZonedDateTime> theValues;
+	}
+
+	@Entity(name = "WithOffsetMember")
+	static class WithOffsetMember {
+		@Id
+		Integer id;
+		@Embedded
+		OffsetMember embedded;
+	}
+
+	@Embeddable
+	static class OffsetMember {
+		@TimeZoneRepresentation(TimeZoneRepresentation.Type.INLINE)
+		ZonedDateTime theValue;
+	}
+
+	@Entity(name = "WithAggregate")
+	static class WithAggregate {
+		@Id
+		Integer id;
+		@JdbcTypeCode(SqlTypes.JSON)
+		LocalMember aggregated;
+	}
+
+	@Entity(name = "WithAggregateArray")
+	static class WithAggregateArray {
+		@Id
+		Integer id;
+		@JdbcTypeCode(SqlTypes.JSON_ARRAY)
+		LocalMember[] aggregated;
+	}
+
+	@Entity(name = "WithNestedAggregateArray")
+	static class WithNestedAggregateArray {
+		@Id
+		Integer id;
+		@JdbcTypeCode(SqlTypes.JSON)
+		ArrayMember aggregated;
+	}
+
+	@Embeddable
+	static class ArrayMember {
+		@JdbcTypeCode(SqlTypes.JSON_ARRAY)
+		LocalMember[] nested;
+	}
+
+	@Entity(name = "WithAggregateArrayOfOtherThings")
+	static class WithAggregateArrayOfOtherThings {
+		@Id
+		Integer id;
+		@JdbcTypeCode(SqlTypes.JSON_ARRAY)
+		TextMember[] aggregated;
+	}
+
+	@Embeddable
+	static class TextMember {
+		String theMember;
+	}
+
+	@Entity(name = "WithPolicyOnLocalDate")
+	static class WithPolicyOnLocalDate {
+		@Id
+		Integer id;
+		@TemporalPreservationPolicy(TemporalPreservationPolicy.Type.NORMALIZED)
+		LocalDate theValue;
+	}
+
+	@Entity(name = "WithRepresentationOnInstant")
+	static class WithRepresentationOnInstant {
+		@Id
+		Integer id;
+		@TimeZoneRepresentation(TimeZoneRepresentation.Type.COLUMN)
+		Instant theValue;
+	}
+
+	@Entity(name = "WithPolicyOnEmbedded")
+	static class WithPolicyOnEmbedded {
+		@Id
+		Integer id;
+		@Embedded
+		@TemporalPreservationPolicy(TemporalPreservationPolicy.Type.NORMALIZED)
+		TextMember theValue;
+	}
+
+	@Entity(name = "WithPolicyOnConverted")
+	static class WithPolicyOnConverted {
+		@Id
+		Integer id;
+		@Convert(converter = OffsetDateTimeToString.class)
+		@TemporalPreservationPolicy(TemporalPreservationPolicy.Type.NORMALIZED)
+		OffsetDateTime theValue;
+	}
+
+	@Entity(name = "WithPolicyOnLocalElements")
+	static class WithPolicyOnLocalElements {
+		@Id
+		Integer id;
+		@ElementCollection
+		@TemporalPreservationPolicy(TemporalPreservationPolicy.Type.NORMALIZED)
+		Set<LocalDate> theValue;
+	}
+
+	@Entity(name = "WithPolicyOnElements")
+	static class WithPolicyOnElements {
+		@Id
+		Integer id;
+		@ElementCollection
+		@TemporalPreservationPolicy(TemporalPreservationPolicy.Type.NORMALIZED)
+		Set<OffsetDateTime> theValue;
+	}
+
+	@Entity(name = "WithOffsetId")
+	static class WithOffsetId {
+		@Id
+		ZonedDateTime id;
+	}
+
+	@Entity(name = "WithOffsetVersion")
+	static class WithOffsetVersion {
+		@Id
+		Integer id;
+		@Version
+		ZonedDateTime version;
+	}
+
+	@Entity(name = "WithConversionToString")
+	static class WithConversionToString {
+		@Id
+		Integer id;
+		@Convert(converter = OffsetDateTimeToString.class)
+		OffsetDateTime theValue;
+	}
+
+	@Entity(name = "WithConversionToOffsetDateTime")
+	static class WithConversionToOffsetDateTime {
+		@Id
+		Integer id;
+		@Convert(converter = StringToOffsetDateTime.class)
+		String theValue;
+	}
+
+	static class OffsetDateTimeToString implements AttributeConverter<OffsetDateTime, String> {
+		@Override
+		public String convertToDatabaseColumn(OffsetDateTime attribute) {
+			return attribute == null ? null : attribute.toString();
+		}
+
+		@Override
+		public OffsetDateTime convertToEntityAttribute(String dbData) {
+			return dbData == null ? null : OffsetDateTime.parse( dbData );
+		}
+	}
+
+	static class StringToOffsetDateTime implements AttributeConverter<String, ZonedDateTime> {
+		@Override
+		public ZonedDateTime convertToDatabaseColumn(String attribute) {
+			return attribute == null ? null : ZonedDateTime.parse( attribute );
+		}
+
+		@Override
+		public String convertToEntityAttribute(ZonedDateTime dbData) {
+			return dbData == null ? null : dbData.toString();
+		}
+	}
+
+	public static class UnassessedDialect extends H2Dialect {
+		@Override
+		public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
+			return TemporalPreservation.unknown();
+		}
+	}
+
+	public static class LosingDialect extends H2Dialect {
+		@Override
+		public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
+			return new TemporalPreservation(
+					TemporalPreservation.Level.UNSUPPORTED,
+					TemporalPreservation.Level.UNSUPPORTED,
+					TemporalPreservation.Level.UNSUPPORTED,
+					TemporalPreservation.Level.UNSUPPORTED,
+					TemporalPreservation.Level.UNSUPPORTED,
+					null,
+					null,
+					null
+			);
+		}
+	}
+}

@@ -42,6 +42,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -56,6 +57,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class JavaTimeFractionalSecondsTests {
 	@Test
 	@DomainModel(annotatedClasses = {TestEntity.class, TestEntity0.class, TestEntity3.class, TestEntity9.class} )
+	@DisabledIfSystemProperty(
+			named = "hibernate.type.temporal_preservation",
+			matches = "true",
+			disabledReason = "Asserts the single-column mapping of types which temporal preservation may store in two columns"
+	)
 	void testMapping(DomainModelScope scope) {
 		final MetadataImplementor domainModel = scope.getDomainModel();
 

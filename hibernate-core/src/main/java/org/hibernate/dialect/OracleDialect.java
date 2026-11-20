@@ -1,5 +1,11 @@
 package org.hibernate.dialect;
 
+import org.hibernate.type.descriptor.jdbc.OffsetDateTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.OffsetTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsOffsetDateTimeJdbcType;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.dialect.type.spi.TemporalPreservation;
+import org.hibernate.dialect.type.internal.StandardTemporalPreservations;
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
 
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
@@ -95,6 +101,10 @@ import org.hibernate.dialect.temptable.spi.TemporaryTableStrategies;
 import org.hibernate.dialect.temptable.spi.StandardGlobalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.spi.TemporaryTableStrategy;
 import org.hibernate.dialect.type.spi.OracleJdbcTypes;
+import org.hibernate.dialect.type.internal.OracleInstantAtUtcJdbcType;
+import org.hibernate.dialect.type.internal.OracleLocalTimeJdbcType;
+import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.type.descriptor.java.LocalTimeJavaType;
 import org.hibernate.dialect.unique.spi.UniqueDelegates;
 import org.hibernate.dialect.unique.spi.UniqueDelegate;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -596,6 +606,13 @@ public class OracleDialect extends Dialect implements CurrentTemporalSupport, Te
 		return currentTimestampWithTimeZone();
 	}
 
+	/// The current date and time at UTC as a `TIMESTAMP` without a time zone,
+	/// whatever the time zone of the session.
+	@Override
+	public String currentUtcTimestamp() {
+		return "sys_extract_utc(systimestamp)";
+	}
+
 	@Override
 	@SPI({ USE, IMPLEMENT })
 	public String currentLocalTime() {
@@ -983,6 +1000,75 @@ public class OracleDialect extends Dialect implements CurrentTemporalSupport, Te
 
 	}
 
+	/// Assessed for Oracle with the Oracle JDBC driver. Oracle uses the Julian
+	/// calendar before 1582-10-15, so that earlier dates keep their fields but
+	/// denote a different day in database arithmetic, hence the first day.
+	@Override
+	public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
+		var preservation = StandardTemporalPreservations.directLocal(
+				javaType,
+				jdbcType,
+				StandardTemporalPreservations.GREGORIAN_START
+		);
+		if ( preservation == TemporalPreservation.unknown()
+				&& StandardTemporalPreservations.isPair(
+						javaType,
+						jdbcType,
+						LocalTimeJavaType.class,
+						OracleLocalTimeJdbcType.class
+				) ) {
+			// Stored in a TIMESTAMP column, on the first day of 1970, and exchanged
+			// with the driver as a LocalDateTime. A LocalTime exchanged as such is not
+			// preserved: what is stored depends on the default time zone of the JVM.
+			preservation = TemporalPreservation.ofTime();
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			preservation = StandardTemporalPreservations.instant(
+					javaType,
+					jdbcType,
+					TimestampUtcAsOffsetDateTimeJdbcType.class,
+					TemporalPreservation.InstantBasis.NATIVE,
+					StandardTemporalPreservations.GREGORIAN_START
+			);
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			// Held as its date and time at UTC in a plain TIMESTAMP column, for the
+			// columns which are part of a primary key, where Oracle does not allow
+			// a TIMESTAMP WITH TIME ZONE. Exchanged with the driver as a LocalDateTime.
+			preservation = StandardTemporalPreservations.instant(
+					javaType,
+					jdbcType,
+					OracleInstantAtUtcJdbcType.class,
+					TemporalPreservation.InstantBasis.UTC_CONVENTION,
+					StandardTemporalPreservations.GREGORIAN_START
+			);
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			// The column keeps the instant, but the offset only to the minute, so
+			// an offset with seconds is lost. The later first day keeps clear of
+			// values whose date differs between UTC and their own offset around
+			// the start of the Gregorian calendar.
+			preservation = StandardTemporalPreservations.offsetOrZoned(
+					javaType,
+					jdbcType,
+					OffsetDateTimeJdbcType.class,
+					TemporalPreservation.Level.UNSUPPORTED,
+					StandardTemporalPreservations.TIMESTAMP_READ_SAFE_START
+			);
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			// Stored in a TIMESTAMP WITH TIME ZONE column, on the first day of 1970.
+			// The column keeps the time at UTC, but the offset only to the minute.
+			preservation = StandardTemporalPreservations.offsetTime(
+					javaType,
+					jdbcType,
+					OffsetTimeJdbcType.class,
+					TemporalPreservation.Level.UNSUPPORTED
+			);
+		}
+		return preservation;
+	}
+
 	@Override
 	@SPI({ IMPLEMENT, SUPPLY })
 	public TimeZoneSupport getTimeZoneSupport() {
@@ -1118,6 +1204,11 @@ public class OracleDialect extends Dialect implements CurrentTemporalSupport, Te
 		useValueLOB = configurationService.getSetting( ORACLE_VALUE_LOB_ENABLED, StandardConverters.BOOLEAN, true );
 
 		super.contributeTypes( typeContributions, serviceRegistry );
+		if ( MetadataBuildingContext.isTemporalPreservationEnabled( serviceRegistry ) ) {
+			// A LocalTime is exchanged with the driver as a LocalDateTime, since what the
+			// driver stores for a LocalTime depends on the default time zone of the JVM.
+			typeContributions.contributeJdbcType( OracleLocalTimeJdbcType.INSTANCE );
+		}
 		if ( ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( serviceRegistry, this ) == BIT ) {
 			typeContributions.contributeJdbcType( OracleJdbcTypes.booleanType() );
 		}

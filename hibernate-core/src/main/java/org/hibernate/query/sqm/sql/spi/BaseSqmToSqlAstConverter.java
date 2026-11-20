@@ -404,6 +404,10 @@ import org.hibernate.usertype.UserVersionType;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8282,8 +8286,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Predicate visitComparisonPredicate(SqmComparisonPredicate predicate) {
 		final var fromClauseIndex = fromClauseIndexStack.getCurrent();
-		final var left = predicate.getLeftHandExpression();
-		final var right = predicate.getRightHandExpression();
+		final var leftInstant = instantOfTemporalInTwoColumns(
+				predicate.getLeftHandExpression(),
+				predicate.getRightHandExpression()
+		);
+		final var rightInstant = instantOfTemporalInTwoColumns(
+				predicate.getRightHandExpression(),
+				predicate.getLeftHandExpression()
+		);
+		// a literal compared with the instant of such a date-time is a literal for that instant
+		final var left = rightInstant != predicate.getRightHandExpression()
+				? asLiteralOfInstant( leftInstant, rightInstant )
+				: leftInstant;
+		final var right = leftInstant != predicate.getLeftHandExpression()
+				? asLiteralOfInstant( rightInstant, leftInstant )
+				: rightInstant;
 		final Expression lhs;
 		final Expression rhs;
 		if ( left instanceof SqmParameter<?> && right instanceof SqmPath<?> rightPath
@@ -8311,8 +8328,105 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		else {
 			handleTypeComparison( lhs, rhs, sqmOperator == ComparisonOperator.EQUAL );
-			return new ComparisonPredicate( lhs, sqmOperator, rhs, getBooleanType() );
+			final Expression[] operands = asCurrentInstants( lhs, rhs );
+			checkInstantsAreComparable( operands );
+			return new ComparisonPredicate( operands[0], sqmOperator, operands[1], getBooleanType() );
 		}
+	}
+
+	/// A date-time stored as its instant in one column and its offset or zone
+	/// in a second is compared with a value occupying a single column, such
+	/// as a literal, by its instant. Compared with a value which also has
+	/// two parts, such as a parameter, it is left as it is.
+	private SqmExpression<?> instantOfTemporalInTwoColumns(SqmExpression<?> operand, SqmExpression<?> other) {
+		if ( SqmExpressionHelper.isCompositeTemporal( operand ) && !SqmExpressionHelper.isCompositeTemporal( other ) ) {
+			final Integer length = operand.getTupleLength();
+			final Integer otherLength = other.getTupleLength();
+			if ( length != null && otherLength != null && length.intValue() != otherLength.intValue() ) {
+				final var actual = SqmExpressionHelper.getActualExpression( operand );
+				if ( operand.getJavaTypeDescriptor() != null
+						&& operand.getJavaTypeDescriptor().getJavaTypeClass() == OffsetTime.class
+						&& creationContext.getSessionFactory().getSessionFactoryOptions().isTemporalPreservationEnabled() ) {
+					// its first column holds a time of day at UTC, in a column type which
+					// differs by database and which need not compare as a time with an offset
+					throw new SemanticException(
+							"Cannot compare '" + ( (SqmPath<?>) operand ).getNavigablePath().getFullPath()
+							+ "' with a value occupying a single column: with '"
+							+ org.hibernate.cfg.MappingSettings.TEMPORAL_PRESERVATION + "' enabled it is stored as its time at UTC"
+							+ " and its offset in two columns; compare it with a parameter instead"
+					);
+				}
+				return actual;
+			}
+		}
+		return operand;
+	}
+
+	/// With temporal preservation enabled, a literal for an `Instant`,
+	/// `OffsetDateTime` or `ZonedDateTime` which is compared with the instant
+	/// of a date-time stored in two columns is replaced by a literal for its
+	/// instant, of the type of the column which holds that instant, so that it
+	/// is rendered the way that column needs. Anything else is left as it is.
+	private SqmExpression<?> asLiteralOfInstant(SqmExpression<?> operand, SqmExpression<?> instantPath) {
+		if ( operand instanceof SqmLiteral<?> literal
+				&& instantPath.getJavaTypeDescriptor() != null
+				&& instantPath.getJavaTypeDescriptor().getJavaTypeClass() == Instant.class
+				&& instantPath.getExpressible() != null
+				&& creationContext.getSessionFactory().getSessionFactoryOptions().isTemporalPreservationEnabled() ) {
+			final Instant instant = org.hibernate.type.descriptor.jdbc.internal.TemporalPreservationGuard
+					.instantOf( literal.getLiteralValue() );
+			if ( instant != null ) {
+				//noinspection unchecked
+				return new SqmLiteral<>(
+						instant,
+						(SqmBindableType<Instant>) instantPath.getExpressible(),
+						literal.nodeBuilder()
+				);
+			}
+		}
+		return operand;
+	}
+
+	/// As [#instantOfTemporalInTwoColumns(SqmExpression, SqmExpression)], for
+	/// the operands of a predicate which has more than two, such as `between`
+	/// and `in`. Where any of them occupies a single column, every date-time
+	/// stored in two columns stands for its instant.
+	private List<SqmExpression<?>> instantsOfTemporalsInTwoColumns(List<? extends SqmExpression<?>> operands) {
+		SqmExpression<?> single = null;
+		boolean anyInTwoColumns = false;
+		for ( var operand : operands ) {
+			if ( SqmExpressionHelper.isCompositeTemporal( operand ) ) {
+				anyInTwoColumns = true;
+			}
+			else if ( single == null && Integer.valueOf( 1 ).equals( operand.getTupleLength() ) ) {
+				single = operand;
+			}
+		}
+		if ( !anyInTwoColumns || single == null ) {
+			return new ArrayList<>( operands );
+		}
+		final List<SqmExpression<?>> result = new ArrayList<>( operands.size() );
+		for ( var operand : operands ) {
+			if ( operand instanceof SqmParameter<?> ) {
+				// A parameter compared with a date-time stored in two columns stands
+				// for both of them, and cannot stand for the instant alone.
+				throw new SemanticException(
+						"Cannot compare a date-time stored in two columns with parameters and with values"
+						+ " occupying a single column, such as literals, in the same predicate;"
+						+ " use parameters for all of them, or for none"
+				);
+			}
+			result.add( instantOfTemporalInTwoColumns( operand, single ) );
+		}
+		// a literal compared with the instant of such a date-time is a literal for that instant
+		for ( int i = 0; i < result.size(); i++ ) {
+			if ( result.get( i ) != operands.get( i ) ) {
+				final var instantPath = result.get( i );
+				result.replaceAll( operand -> asLiteralOfInstant( operand, instantPath ) );
+				break;
+			}
+		}
+		return result;
 	}
 
 	private Expression interpretComparisonOperand(
@@ -8526,19 +8640,28 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public BetweenPredicate visitBetweenPredicate(SqmBetweenPredicate predicate) {
 		final var fromClauseIndex = fromClauseIndexStack.getCurrent();
+		// a date-time stored in two columns is compared with bounds occupying a single column by its instant
+		final var operands = instantsOfTemporalsInTwoColumns( List.of(
+				predicate.getExpression(),
+				predicate.getLowerBound(),
+				predicate.getUpperBound()
+		) );
+		final SqmExpression<?> sqmExpression = operands.get( 0 );
+		final SqmExpression<?> sqmLowerBound = operands.get( 1 );
+		final SqmExpression<?> sqmUpperBound = operands.get( 2 );
 		final Expression expression;
 		final Expression lowerBound;
 		final Expression upperBound;
 
 		inferrableTypeAccessStack.push(
 				() -> coalesceSuppliedValues(
-						() -> determineValueMapping( predicate.getLowerBound(), fromClauseIndex ),
-						() -> determineValueMapping( predicate.getUpperBound(), fromClauseIndex )
+						() -> determineValueMapping( sqmLowerBound, fromClauseIndex ),
+						() -> determineValueMapping( sqmUpperBound, fromClauseIndex )
 				)
 		);
 
 		try {
-			expression = (Expression) visitWithRequiredResult( predicate.getExpression() );
+			expression = (Expression) visitWithRequiredResult( sqmExpression );
 		}
 		finally {
 			inferrableTypeAccessStack.pop();
@@ -8546,12 +8669,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		inferrableTypeAccessStack.push(
 				() -> coalesceSuppliedValues(
-						() -> determineValueMapping( predicate.getExpression(), fromClauseIndex ),
-						() -> determineValueMapping( predicate.getUpperBound(), fromClauseIndex )
+						() -> determineValueMapping( sqmExpression, fromClauseIndex ),
+						() -> determineValueMapping( sqmUpperBound, fromClauseIndex )
 				)
 		);
 		try {
-			lowerBound = (Expression) visitWithRequiredResult( predicate.getLowerBound() );
+			lowerBound = (Expression) visitWithRequiredResult( sqmLowerBound );
 		}
 		finally {
 			inferrableTypeAccessStack.pop();
@@ -8559,21 +8682,23 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		inferrableTypeAccessStack.push(
 				() -> coalesceSuppliedValues(
-						() -> determineValueMapping( predicate.getExpression(), fromClauseIndex ),
-						() -> determineValueMapping( predicate.getLowerBound(), fromClauseIndex )
+						() -> determineValueMapping( sqmExpression, fromClauseIndex ),
+						() -> determineValueMapping( sqmLowerBound, fromClauseIndex )
 				)
 		);
 		try {
-			upperBound = (Expression) visitWithRequiredResult( predicate.getUpperBound() );
+			upperBound = (Expression) visitWithRequiredResult( sqmUpperBound );
 		}
 		finally {
 			inferrableTypeAccessStack.pop();
 		}
 
+		final Expression[] compared = asCurrentInstants( expression, lowerBound, upperBound );
+		checkInstantsAreComparable( compared );
 		return new BetweenPredicate(
-				expression,
-				lowerBound,
-				upperBound,
+				compared[0],
+				compared[1],
+				compared[2],
 				predicate.isNegated(),
 				getBooleanType()
 		);
@@ -8653,9 +8778,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		// otherwise - no special case...
 		final var fromClauseIndex = fromClauseIndexStack.getCurrent();
+		// a date-time stored in two columns is compared with values occupying a single column by its instant
+		final List<SqmExpression<?>> inOperands = new ArrayList<>( listExpressions.size() + 1 );
+		inOperands.add( predicate.getTestExpression() );
+		inOperands.addAll( listExpressions );
+		final var operands = instantsOfTemporalsInTwoColumns( inOperands );
+		final SqmExpression<?> sqmTestExpression = operands.get( 0 );
+		final List<SqmExpression<?>> sqmListExpressions = operands.subList( 1, operands.size() );
 		inferrableTypeAccessStack.push(
 				() -> {
-					for ( var listExpression : listExpressions ) {
+					for ( var listExpression : sqmListExpressions ) {
 						final var mapping = determineValueMapping( listExpression, fromClauseIndex );
 						if ( mapping != null ) {
 							return mapping;
@@ -8666,7 +8798,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 		final Expression testExpression;
 		try {
-			testExpression = (Expression) visitWithRequiredResult( predicate.getTestExpression() );
+			testExpression = (Expression) visitWithRequiredResult( sqmTestExpression );
 		}
 		finally {
 			inferrableTypeAccessStack.pop();
@@ -8674,10 +8806,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final var inPredicate = new InListPredicate( testExpression, predicate.isNegated(), getBooleanType() );
 
-		inferrableTypeAccessStack.push( () -> determineValueMapping( predicate.getTestExpression(), fromClauseIndex ) );
+		inferrableTypeAccessStack.push( () -> determineValueMapping( sqmTestExpression, fromClauseIndex ) );
 
 		try {
-			for ( var expression : listExpressions ) {
+			for ( var expression : sqmListExpressions ) {
 				inPredicate.addExpression( (Expression) visitWithRequiredResult( expression ) );
 			}
 		}
@@ -8685,7 +8817,301 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			inferrableTypeAccessStack.pop();
 		}
 		handleTypeComparison( inPredicate );
+		final List<Expression> compared = new ArrayList<>( inPredicate.getListExpressions() );
+		compared.add( testExpression );
+		checkInstantsAreComparable( compared.toArray( new Expression[0] ) );
 		return inPredicate;
+	}
+
+	/// With temporal preservation enabled, `current_timestamp` and
+	/// `local datetime` compared with an instant stand for the current
+	/// instant, in the form which the column holding that instant needs.
+	/// What the database itself returns for them is in the time zone of its
+	/// session, or of the server, and would be compared with the stored
+	/// value as if it were at UTC wherever the column holds the date and
+	/// time at UTC.
+	private Expression[] asCurrentInstants(Expression... operands) {
+		if ( !creationContext.getSessionFactory().getSessionFactoryOptions().isTemporalPreservationEnabled() ) {
+			return operands;
+		}
+		JdbcMapping instant = null;
+		for ( var operand : operands ) {
+			final var jdbcMapping = singleJdbcMapping( operand );
+			if ( jdbcMapping != null && instantBasis( jdbcMapping ) != null ) {
+				instant = jdbcMapping;
+				break;
+			}
+		}
+		if ( instant != null ) {
+			for ( int i = 0; i < operands.length; i++ ) {
+				operands[i] = asCurrentInstant( operands[i], instant );
+			}
+		}
+		return operands;
+	}
+
+	/// Replace `current_timestamp` and `local datetime`, also as what a date
+	/// and time is computed from, by the current instant.
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	private Expression asCurrentInstant(Expression expression, JdbcMapping instant) {
+		if ( expression instanceof SelfRenderingFunctionSqlAstExpression<?> function ) {
+			if ( isFunctionRegisteredAs( function, "current_timestamp", "local_datetime" ) ) {
+				return new org.hibernate.sql.ast.spi.query.expression.SelfRenderingSqlFragmentExpression(
+						org.hibernate.type.descriptor.jdbc.internal.TemporalPreservationGuard.currentInstantExpression(
+								getDialect(),
+								instant,
+								true,
+								"the result of the function '" + function.getFunctionName() + "'"
+						),
+						instant
+				);
+			}
+			// not an aggregate or a window function, which have more than their arguments
+			if ( function.getClass() == SelfRenderingFunctionSqlAstExpression.class ) {
+				final var arguments = function.getArguments();
+				final List<org.hibernate.sql.ast.spi.SqlAstNode> replaced = new ArrayList<>( arguments.size() );
+				boolean changed = false;
+				for ( var argument : arguments ) {
+					if ( argument instanceof Expression argumentExpression ) {
+						final var replacement = asCurrentInstant( argumentExpression, instant );
+						changed = changed || replacement != argumentExpression;
+						replaced.add( replacement );
+					}
+					else {
+						replaced.add( argument );
+					}
+				}
+				if ( changed ) {
+					return new SelfRenderingFunctionSqlAstExpression(
+							function.getFunctionName(),
+							function.getFunctionRenderer(),
+							replaced,
+							function.getType(),
+							function.getExpressible()
+					);
+				}
+			}
+		}
+		else if ( expression instanceof BinaryArithmeticExpression arithmetic ) {
+			final var left = asCurrentInstant( arithmetic.getLeftHandOperand(), instant );
+			final var right = asCurrentInstant( arithmetic.getRightHandOperand(), instant );
+			if ( left != arithmetic.getLeftHandOperand() || right != arithmetic.getRightHandOperand() ) {
+				return new BinaryArithmeticExpression( left, arithmetic.getOperator(), right, arithmetic.getExpressionType() );
+			}
+		}
+		return expression;
+	}
+
+	private static @Nullable JdbcMapping singleJdbcMapping(Expression operand) {
+		// only a single value; a tuple type cannot even say how many it has
+		final var type = operand.getExpressionType();
+		if ( type instanceof JdbcMapping mapping ) {
+			return mapping;
+		}
+		else if ( type instanceof BasicValuedMapping basicValued ) {
+			return basicValued.getJdbcMapping();
+		}
+		else {
+			return null;
+		}
+	}
+
+	/// How the instant of an `Instant`, `OffsetDateTime` or `ZonedDateTime`
+	/// is held, or `null` for anything else.
+	private @Nullable org.hibernate.dialect.type.spi.TemporalPreservation.InstantBasis instantBasis(JdbcMapping jdbcMapping) {
+		final var javaClass = jdbcMapping.getJdbcJavaType().getJavaTypeClass();
+		if ( javaClass != Instant.class && javaClass != OffsetDateTime.class && javaClass != ZonedDateTime.class ) {
+			return null;
+		}
+		return org.hibernate.type.descriptor.jdbc.internal.TemporalPreservationGuard.preservation(
+				getDialect(),
+				jdbcMapping.getJdbcJavaType(),
+				jdbcMapping.getJdbcType()
+		).instantBasis();
+	}
+
+	/// Whether the function is one which the Dialect registered under any of
+	/// the given names, which it may have done under a name of its own.
+	private boolean isFunctionRegisteredAs(SelfRenderingFunctionSqlAstExpression<?> function, String... registeredAs) {
+		final var registry = creationContext.getSessionFactory().getQueryEngine().getSqmFunctionRegistry();
+		for ( String key : registeredAs ) {
+			final var descriptor = registry.findFunctionDescriptor( key );
+			final String name = descriptor instanceof org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor named
+					? named.getName()
+					: key;
+			if ( name.equals( function.getFunctionName() ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/// Whether the expression is, or computes with, the current date or
+	/// time of the database without a time zone.
+	private boolean hasCurrentDateOrTimeWithoutZone(org.hibernate.sql.ast.spi.SqlAstNode expression) {
+		if ( expression instanceof SelfRenderingFunctionSqlAstExpression<?> function ) {
+			if ( isFunctionRegisteredAs(
+					function,
+					"current_timestamp", "current_date", "current_time", "local_datetime", "local_date", "local_time"
+			) ) {
+				return true;
+			}
+			for ( var argument : function.getArguments() ) {
+				if ( hasCurrentDateOrTimeWithoutZone( argument ) ) {
+					return true;
+				}
+			}
+			return false;
+		}
+		else if ( expression instanceof BinaryArithmeticExpression arithmetic ) {
+			return hasCurrentDateOrTimeWithoutZone( arithmetic.getLeftHandOperand() )
+				|| hasCurrentDateOrTimeWithoutZone( arithmetic.getRightHandOperand() );
+		}
+		else {
+			return false;
+		}
+	}
+
+	/// With temporal preservation enabled, reject a comparison which is known
+	/// to give a result depending on the time zone of the database session,
+	/// or of the server:
+	///
+	/// - between an instant held as its date and time at UTC, in a column
+	///   which knows of no time zone, and an instant held in a column which
+	///   itself denotes one, or produced by an expression of such a type,
+	///   since the database would read the first in the time zone of its
+	///   session;
+	/// - between a value held at UTC and the current date or time of the
+	///   database, which is in the time zone of its session, where
+	///   [#asCurrentInstants] has not replaced it: the current date, the
+	///   current time, and anything computed from them. The same is rejected
+	///   where the database reads a date and time without a time zone as
+	///   being at UTC although its current timestamp is not.
+	///
+	/// The elements of tuples, and what a subquery selects, are checked in
+	/// pairs.
+	private void checkInstantsAreComparable(Expression... operands) {
+		if ( !creationContext.getSessionFactory().getSessionFactoryOptions().isTemporalPreservationEnabled() ) {
+			return;
+		}
+		checkInstantBases( List.of( operands ) );
+	}
+
+	private void checkInstantBases(List<? extends Expression> operands) {
+		// tuples and subqueries are compared element by element
+		final List<List<Expression>> rows = new ArrayList<>( operands.size() );
+		int size = 1;
+		for ( var operand : operands ) {
+			for ( var row : comparedRows( operand ) ) {
+				rows.add( row );
+				size = Math.max( size, row.size() );
+			}
+		}
+		for ( int i = 0; i < size; i++ ) {
+			final List<Expression> elements = new ArrayList<>( rows.size() );
+			for ( var row : rows ) {
+				if ( row.size() == size ) {
+					elements.add( row.get( i ) );
+				}
+			}
+			checkInstantBasesOfValues( elements );
+		}
+	}
+
+	/// What is compared of an operand, as rows of single values: the
+	/// elements of a tuple, also of a tuple within it, what each branch of
+	/// a subquery selects, or else the operand itself.
+	private static List<List<Expression>> comparedRows(Expression operand) {
+		final SelectStatement subquery;
+		if ( operand instanceof Any any ) {
+			subquery = any.getSubquery();
+		}
+		else if ( operand instanceof Every every ) {
+			subquery = every.getSubquery();
+		}
+		else if ( operand instanceof SelectStatement statement ) {
+			subquery = statement;
+		}
+		else {
+			final List<Expression> row = new ArrayList<>();
+			addComparedValues( operand, row );
+			return List.of( row );
+		}
+		// a union, intersection or difference selects from each of its branches
+		final List<List<Expression>> rows = new ArrayList<>();
+		subquery.getQueryPart().visitQuerySpecs( querySpec -> {
+			final List<Expression> row = new ArrayList<>();
+			for ( var selection : querySpec.getSelectClause().getSqlSelections() ) {
+				addComparedValues( selection.getExpression(), row );
+			}
+			rows.add( row );
+		} );
+		return rows;
+	}
+
+	private static void addComparedValues(Expression expression, List<Expression> values) {
+		final var tuple = SqlTupleContainer.getSqlTuple( expression );
+		if ( tuple == null
+				|| tuple.getExpressions().size() == 1 && tuple.getExpressions().get( 0 ) == expression ) {
+			values.add( expression );
+		}
+		else {
+			for ( var element : tuple.getExpressions() ) {
+				addComparedValues( element, values );
+			}
+		}
+	}
+
+	private void checkInstantBasesOfValues(List<? extends Expression> operands) {
+		org.hibernate.dialect.type.spi.TemporalPreservation.InstantBasis first = null;
+		boolean anyAtUtc = false;
+		boolean anyInstant = false;
+		boolean anyCurrentWithoutZone = false;
+		for ( var operand : operands ) {
+			if ( hasCurrentDateOrTimeWithoutZone( operand ) ) {
+				anyCurrentWithoutZone = true;
+				continue;
+			}
+			final var jdbcMapping = singleJdbcMapping( operand );
+			if ( jdbcMapping == null ) {
+				continue;
+			}
+			if ( jdbcMapping.getJdbcJavaType().getJavaTypeClass() == OffsetTime.class ) {
+				// held as its time at UTC unless the column has a time zone
+				anyAtUtc = anyAtUtc || jdbcMapping.getJdbcType().getDefaultSqlTypeCode() != SqlTypes.TIME_WITH_TIMEZONE;
+				continue;
+			}
+			final var basis = instantBasis( jdbcMapping );
+			if ( basis == null ) {
+				continue;
+			}
+			anyInstant = true;
+			anyAtUtc = anyAtUtc
+					|| basis == org.hibernate.dialect.type.spi.TemporalPreservation.InstantBasis.UTC_CONVENTION;
+			if ( first == null ) {
+				first = basis;
+			}
+			else if ( first != basis ) {
+				throw new SemanticException(
+						"Cannot compare an instant stored as its date and time at UTC with an instant of a type"
+						+ " which has a time zone: with '" + org.hibernate.cfg.MappingSettings.TEMPORAL_PRESERVATION
+						+ "' enabled the first is stored in a column which knows of no time zone, and the database"
+						+ " would compare the two in the time zone of its session; compare with a parameter or a"
+						+ " literal instead"
+				);
+			}
+		}
+		if ( anyCurrentWithoutZone
+				&& ( anyAtUtc
+					|| anyInstant && !getDialect().getCurrentTemporalSupport()
+							.isLocalDateTimeReadInTimeZoneOfCurrentTimestamp() ) ) {
+			throw new SemanticException(
+					"Cannot compare a value stored at UTC with the current date or time of the database, which is"
+					+ " in the time zone of its session: with '" + org.hibernate.cfg.MappingSettings.TEMPORAL_PRESERVATION
+					+ "' enabled the result would depend on that time zone; compare with 'instant' or"
+					+ " 'offset datetime', or with a parameter, instead"
+			);
+		}
 	}
 
 	private void handleTypeComparison(InListPredicate inPredicate) {
@@ -8787,12 +9213,25 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public InSubQueryPredicate visitInSubQueryPredicate(SqmInSubQueryPredicate<?> predicate) {
 		final var testExpression = predicate.getTestExpression();
 		final var subQueryExpression = predicate.getSubQueryExpression();
-		return new InSubQueryPredicate(
+		final Integer selected = subQueryExpression.getTupleLength();
+		if ( SqmExpressionHelper.isCompositeTemporal( testExpression )
+				&& selected != null
+				&& !selected.equals( testExpression.getTupleLength() ) ) {
+			throw new SemanticException(
+					"Cannot compare '" + ( (SqmPath<?>) testExpression ).getNavigablePath().getFullPath()
+					+ "' with the result of a subquery: it is stored in two columns, and the subquery"
+					+ " selects " + selected + "; select a value stored the same way, or compare by a predicate"
+					+ " in the subquery instead"
+			);
+		}
+		final var inSubQueryPredicate = new InSubQueryPredicate(
 				visitWithInferredType( testExpression, subQueryExpression ),
 				visitWithInferredType( subQueryExpression, testExpression ),
 				predicate.isNegated(),
 				getBooleanType()
 		);
+		checkInstantsAreComparable( inSubQueryPredicate.getTestExpression(), inSubQueryPredicate.getSubQuery() );
+		return inSubQueryPredicate;
 	}
 
 	private BasicType<Boolean> getBooleanType() {

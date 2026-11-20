@@ -54,6 +54,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import static org.hibernate.type.descriptor.jdbc.internal.TemporalPreservationGuard.currentInstantExpression;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static java.util.Collections.emptyList;
 import static org.hibernate.query.sqm.ComparisonOperator.EQUAL;
@@ -106,7 +107,13 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping, LegacyAuxiliary
 		jdbcMapping = resolution.getJdbcMapping();
 
 		if ( bootMapping.getSoftDeleteStrategy() == SoftDeleteType.TIMESTAMP ) {
-			currentTimestampFunctionName = dialect.getCurrentTemporalSupport().currentTimestamp();
+			currentTimestampFunctionName = currentInstantExpression(
+					dialect,
+					jdbcMapping,
+					modelCreationProcess.getCreationContext().getSessionFactory()
+							.getSessionFactoryOptions().isTemporalPreservationEnabled(),
+					navigableRole.getFullPath()
+			);
 			final var currentTimestampFunctionType =
 					modelCreationProcess.getCreationContext().getTypeConfiguration()
 							.getBasicTypeForJavaType( Instant.class );

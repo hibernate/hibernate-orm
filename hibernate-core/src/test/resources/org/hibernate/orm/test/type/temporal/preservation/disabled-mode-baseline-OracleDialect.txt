@@ -1,0 +1,80 @@
+zone=UTC
+BaselineLocalDate jdbcType=DateJdbcType column=date
+  0001-01-01 -> stored= 0001-01-01 00:00:00 read=0001-01-01 parameter=1 literal=1
+  1500-03-01 -> stored= 1500-03-01 00:00:00 read=1500-03-01 parameter=1 literal=1
+  1582-10-10 -> stored= 1582-10-20 00:00:00 read=1582-10-20 parameter=1 literal=0
+  1582-10-15 -> stored= 1582-10-15 00:00:00 read=1582-10-15 parameter=1 literal=1
+  1883-11-18 -> stored= 1883-11-18 00:00:00 read=1883-11-18 parameter=1 literal=1
+  1900-01-01 -> stored= 1900-01-01 00:00:00 read=1900-01-01 parameter=1 literal=1
+  1970-01-01 -> stored= 1970-01-01 00:00:00 read=1970-01-01 parameter=1 literal=1
+  2021-03-14 -> stored= 2021-03-14 00:00:00 read=2021-03-14 parameter=1 literal=1
+  2021-11-07 -> stored= 2021-11-07 00:00:00 read=2021-11-07 parameter=1 literal=1
+  9999-12-31 -> stored= 9999-12-31 00:00:00 read=9999-12-31 parameter=1 literal=1
+BaselineLocalTime jdbcType=TimeJdbcType column=timestamp(0)
+  00:00 -> stored= 1970-01-01 00:00:00.000000000 read=00:00 parameter=1 literal=1
+  12:00 -> stored= 1970-01-01 12:00:00.000000000 read=12:00 parameter=1 literal=1
+  02:30 -> stored= 1970-01-01 02:30:00.000000000 read=02:30 parameter=1 literal=1
+  07:30 -> stored= 1970-01-01 07:30:00.000000000 read=07:30 parameter=1 literal=1
+  01:30 -> stored= 1970-01-01 01:30:00.000000000 read=01:30 parameter=1 literal=1
+  06:30 -> stored= 1970-01-01 06:30:00.000000000 read=06:30 parameter=1 literal=1
+  23:59:59 -> stored= 1970-01-01 23:59:59.000000000 read=23:59:59 parameter=1 literal=1
+BaselineLocalDateTime jdbcType=TimestampJdbcType column=timestamp(9)
+  0001-01-01T00:00 -> stored= 0001-01-01 00:00:00.000000000 read=0001-01-01T00:00 parameter=1 literal=1
+  1500-03-01T12:00 -> stored= 1500-03-01 12:00:00.000000000 read=1500-03-01T12:00 parameter=1 literal=1
+  1582-10-10T12:00 -> stored= 1582-10-20 12:00:00.000000000 read=1582-10-20T12:00 parameter=1 literal=0
+  1582-10-15T00:00 -> stored= 1582-10-15 00:00:00.000000000 read=1582-10-15T00:00 parameter=1 literal=1
+  1883-11-18T12:00 -> stored= 1883-11-18 12:00:00.000000000 read=1883-11-18T12:00 parameter=1 literal=1
+  1900-01-01T00:00 -> stored= 1900-01-01 00:00:00.000000000 read=1900-01-01T00:00 parameter=1 literal=1
+  1970-01-01T00:00 -> stored= 1970-01-01 00:00:00.000000000 read=1970-01-01T00:00 parameter=1 literal=1
+  2021-03-14T02:30 -> stored= 2021-03-14 02:30:00.000000000 read=2021-03-14T02:30 parameter=1 literal=1
+  2021-03-14T07:30:00.123456 -> stored= 2021-03-14 07:30:00.123456000 read=2021-03-14T07:30:00.123456 parameter=1 literal=1
+  2021-11-07T01:30 -> stored= 2021-11-07 01:30:00.000000000 read=2021-11-07T01:30 parameter=1 literal=1
+  2021-11-07T06:30 -> stored= 2021-11-07 06:30:00.000000000 read=2021-11-07T06:30 parameter=1 literal=1
+  9999-12-31T23:59:59 -> stored= 9999-12-31 23:59:59.000000000 read=9999-12-31T23:59:59 parameter=1 literal=1
+BaselineInstant jdbcType=TimestampUtcAsOffsetDateTimeJdbcType column=timestamp(9) with time zone
+  0001-01-01T00:00:00Z -> stored= 0001-01-01 00:00:00.000000000 +00:00 read=0001-01-01T00:00:00Z parameter=1 literal=1
+  1500-03-01T12:00:00Z -> stored= 1500-03-01 12:00:00.000000000 +00:00 read=1500-03-01T12:00:00Z parameter=1 literal=1
+  1582-10-10T12:00:00Z -> stored= 1582-10-10 12:00:00.000000000 +00:00 read=1582-10-10T12:00:00Z parameter=1 literal=0
+  1582-10-15T00:00:00Z -> stored= 1582-10-15 00:00:00.000000000 +00:00 read=1582-10-15T00:00:00Z parameter=1 literal=1
+  1883-11-18T12:00:00Z -> stored= 1883-11-18 12:00:00.000000000 +00:00 read=1883-11-18T12:00:00Z parameter=1 literal=1
+  1900-01-01T00:00:00Z -> stored= 1900-01-01 00:00:00.000000000 +00:00 read=1900-01-01T00:00:00Z parameter=1 literal=1
+  1970-01-01T00:00:00Z -> stored= 1970-01-01 00:00:00.000000000 +00:00 read=1970-01-01T00:00:00Z parameter=1 literal=1
+  2021-03-14T02:30:00Z -> stored= 2021-03-14 02:30:00.000000000 +00:00 read=2021-03-14T02:30:00Z parameter=1 literal=1
+  2021-03-14T07:30:00.123456Z -> stored= 2021-03-14 07:30:00.123456000 +00:00 read=2021-03-14T07:30:00.123456Z parameter=1 literal=1
+  2021-11-07T01:30:00Z -> stored= 2021-11-07 01:30:00.000000000 +00:00 read=2021-11-07T01:30:00Z parameter=1 literal=1
+  2021-11-07T06:30:00Z -> stored= 2021-11-07 06:30:00.000000000 +00:00 read=2021-11-07T06:30:00Z parameter=1 literal=1
+  9999-12-31T23:59:59Z -> stored= 9999-12-31 23:59:59.000000000 +00:00 read=9999-12-31T23:59:59Z parameter=1 literal=1
+BaselineOffsetTime jdbcType=TimeWithTimeZoneJdbcType column=timestamp(0) with time zone
+  00:00+02:00 -> stored= 1969-12-31 22:00:00.000000000 +02:00 read=00:00+02:00 parameter=1 literal=0
+  12:00+02:00 -> stored= 1970-01-01 10:00:00.000000000 +02:00 read=12:00+02:00 parameter=1 literal=0
+  02:30+02:00 -> stored= 1970-01-01 00:30:00.000000000 +02:00 read=02:30+02:00 parameter=1 literal=0
+  07:30+02:00 -> stored= 1970-01-01 05:30:00.000000000 +02:00 read=07:30+02:00 parameter=1 literal=0
+  01:30+02:00 -> stored= 1969-12-31 23:30:00.000000000 +02:00 read=01:30+02:00 parameter=1 literal=0
+  06:30+02:00 -> stored= 1970-01-01 04:30:00.000000000 +02:00 read=06:30+02:00 parameter=1 literal=0
+  23:59:59+02:00 -> stored= 1970-01-01 21:59:59.000000000 +02:00 read=23:59:59+02:00 parameter=1 literal=0
+BaselineOffsetDateTime jdbcType=TimestampWithTimeZoneJdbcType column=timestamp(9) with time zone
+  0001-01-01T00:00+02:00 -> stored=-0001-12-31 22:00:00.000000000 +02:00 read=0001-01-01T00:00+02:00 parameter=1 literal=varies
+  1500-03-01T12:00+02:00 -> stored= 1500-03-01 10:00:00.000000000 +02:00 read=1500-03-01T12:00+02:00 parameter=1 literal=1
+  1582-10-10T12:00+02:00 -> stored= 1582-10-10 10:00:00.000000000 +02:00 read=1582-10-10T12:00+02:00 parameter=1 literal=0
+  1582-10-15T00:00+02:00 -> stored= 1582-10-14 22:00:00.000000000 +02:00 read=1582-10-15T00:00+02:00 parameter=1 literal=0
+  1883-11-18T12:00+02:00 -> stored= 1883-11-18 10:00:00.000000000 +02:00 read=1883-11-18T12:00+02:00 parameter=1 literal=1
+  1900-01-01T00:00+02:00 -> stored= 1899-12-31 22:00:00.000000000 +02:00 read=1900-01-01T00:00+02:00 parameter=1 literal=1
+  1970-01-01T00:00+02:00 -> stored= 1969-12-31 22:00:00.000000000 +02:00 read=1970-01-01T00:00+02:00 parameter=1 literal=1
+  2021-03-14T02:30+02:00 -> stored= 2021-03-14 00:30:00.000000000 +02:00 read=2021-03-14T02:30+02:00 parameter=1 literal=1
+  2021-03-14T07:30:00.123456+02:00 -> stored= 2021-03-14 05:30:00.123456000 +02:00 read=2021-03-14T07:30:00.123456+02:00 parameter=1 literal=1
+  2021-11-07T01:30+02:00 -> stored= 2021-11-06 23:30:00.000000000 +02:00 read=2021-11-07T01:30+02:00 parameter=1 literal=1
+  2021-11-07T06:30+02:00 -> stored= 2021-11-07 04:30:00.000000000 +02:00 read=2021-11-07T06:30+02:00 parameter=1 literal=1
+  9999-12-31T23:59:59+02:00 -> stored= 9999-12-31 21:59:59.000000000 +02:00 read=9999-12-31T23:59:59+02:00 parameter=1 literal=1
+BaselineZonedDateTime jdbcType=TimestampWithTimeZoneJdbcType column=timestamp(9) with time zone
+  0001-01-01T00:00+00:09:21[Europe/Paris] -> stored=-0001-12-31 23:50:39.000000000 +00:09 read=0000-12-31T23:59:39+00:09 parameter=1 literal=0
+  1500-03-01T12:00+00:09:21[Europe/Paris] -> stored= 1500-03-01 11:50:39.000000000 +00:09 read=1500-03-01T11:59:39+00:09 parameter=1 literal=0
+  1582-10-10T12:00+00:09:21[Europe/Paris] -> stored= 1582-10-10 11:50:39.000000000 +00:09 read=1582-10-10T11:59:39+00:09 parameter=1 literal=0
+  1582-10-15T00:00+00:09:21[Europe/Paris] -> stored= 1582-10-14 23:50:39.000000000 +00:09 read=1582-10-14T23:59:39+00:09 parameter=1 literal=0
+  1883-11-18T12:00+00:09:21[Europe/Paris] -> stored= 1883-11-18 11:50:39.000000000 +00:09 read=1883-11-18T11:59:39+00:09 parameter=1 literal=0
+  1900-01-01T00:00+00:09:21[Europe/Paris] -> stored= 1899-12-31 23:50:39.000000000 +00:09 read=1899-12-31T23:59:39+00:09 parameter=1 literal=0
+  1970-01-01T00:00+01:00[Europe/Paris] -> stored= 1969-12-31 23:00:00.000000000 +01:00 read=1970-01-01T00:00+01:00 parameter=1 literal=1
+  2021-03-14T02:30+01:00[Europe/Paris] -> stored= 2021-03-14 01:30:00.000000000 +01:00 read=2021-03-14T02:30+01:00 parameter=1 literal=1
+  2021-03-14T07:30:00.123456+01:00[Europe/Paris] -> stored= 2021-03-14 06:30:00.123456000 +01:00 read=2021-03-14T07:30:00.123456+01:00 parameter=1 literal=1
+  2021-11-07T01:30+01:00[Europe/Paris] -> stored= 2021-11-07 00:30:00.000000000 +01:00 read=2021-11-07T01:30+01:00 parameter=1 literal=1
+  2021-11-07T06:30+01:00[Europe/Paris] -> stored= 2021-11-07 05:30:00.000000000 +01:00 read=2021-11-07T06:30+01:00 parameter=1 literal=1
+  9999-12-31T23:59:59+01:00[Europe/Paris] -> stored= 9999-12-31 22:59:59.000000000 +01:00 read=9999-12-31T23:59:59+01:00 parameter=1 literal=1

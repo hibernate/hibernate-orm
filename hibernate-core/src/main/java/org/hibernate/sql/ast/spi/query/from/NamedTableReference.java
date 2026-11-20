@@ -66,7 +66,13 @@ public class NamedTableReference extends AbstractTableReference {
 				// so we can use the server timestamp
 				asOfTransactionIdentifier =
 						new SelfRenderingSqlFragmentExpression(
-								dialect.getCurrentTemporalSupport().currentTimestamp(),
+								org.hibernate.type.descriptor.jdbc.internal.TemporalPreservationGuard.currentInstantExpression(
+										dialect,
+										mapping.getJdbcMapping(),
+										influencers.getSessionFactory().getSessionFactoryOptions()
+												.isTemporalPreservationEnabled(),
+										getTableExpression()
+								),
 								mapping.getJdbcMapping()
 						);
 			}

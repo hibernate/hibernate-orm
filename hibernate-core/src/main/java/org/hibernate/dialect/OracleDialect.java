@@ -101,6 +101,7 @@ import org.hibernate.dialect.temptable.spi.TemporaryTableStrategies;
 import org.hibernate.dialect.temptable.spi.StandardGlobalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.spi.TemporaryTableStrategy;
 import org.hibernate.dialect.type.spi.OracleJdbcTypes;
+import org.hibernate.dialect.type.internal.OracleInstantAtUtcJdbcType;
 import org.hibernate.dialect.type.internal.OracleLocalTimeJdbcType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.descriptor.java.LocalTimeJavaType;
@@ -605,6 +606,13 @@ public class OracleDialect extends Dialect implements CurrentTemporalSupport, Te
 		return currentTimestampWithTimeZone();
 	}
 
+	/// The current date and time at UTC as a `TIMESTAMP` without a time zone,
+	/// whatever the time zone of the session.
+	@Override
+	public String currentUtcTimestamp() {
+		return "sys_extract_utc(systimestamp)";
+	}
+
 	@Override
 	@SPI({ USE, IMPLEMENT })
 	public String currentLocalTime() {
@@ -1020,6 +1028,18 @@ public class OracleDialect extends Dialect implements CurrentTemporalSupport, Te
 					jdbcType,
 					TimestampUtcAsOffsetDateTimeJdbcType.class,
 					TemporalPreservation.InstantBasis.NATIVE,
+					StandardTemporalPreservations.GREGORIAN_START
+			);
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			// Held as its date and time at UTC in a plain TIMESTAMP column, for the
+			// columns which are part of a primary key, where Oracle does not allow
+			// a TIMESTAMP WITH TIME ZONE. Exchanged with the driver as a LocalDateTime.
+			preservation = StandardTemporalPreservations.instant(
+					javaType,
+					jdbcType,
+					OracleInstantAtUtcJdbcType.class,
+					TemporalPreservation.InstantBasis.UTC_CONVENTION,
 					StandardTemporalPreservations.GREGORIAN_START
 			);
 		}

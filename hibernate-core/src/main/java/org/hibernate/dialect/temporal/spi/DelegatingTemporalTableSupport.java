@@ -1,5 +1,6 @@
 package org.hibernate.dialect.temporal.spi;
 
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import java.util.List;
 
 import org.hibernate.SPI;
@@ -46,6 +47,11 @@ public abstract class DelegatingTemporalTableSupport implements TemporalTableSup
 	@Override
 	public boolean supportsPreservedInstantAsTemporalColumn() {
 		return delegate.supportsPreservedInstantAsTemporalColumn();
+	}
+
+	@Override
+	public @Nullable JdbcType getPreservedInstantJdbcTypeForTemporalColumn() {
+		return delegate.getPreservedInstantJdbcTypeForTemporalColumn();
 	}
 
 	@Override

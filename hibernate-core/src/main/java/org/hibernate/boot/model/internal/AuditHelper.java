@@ -678,6 +678,19 @@ public final class AuditHelper {
 		setColumnName( columnName, column, database,
 				context.getBuildingOptions().getPhysicalNamingStrategy() );
 		setTemporalColumnType( column, database, javaType, context );
+		if ( Instant.class.equals( javaType )
+				&& MetadataBuildingContext.isTemporalPreservationEnabled(
+						context.getBootstrapContext().getServiceRegistry() ) ) {
+			final var temporalTableSupport = database.getDialect().getTemporalTableSupport();
+			// where the column cannot have the type an Instant is otherwise stored in,
+			// the Dialect may name the descriptor which preserves it in this one
+			final var preserving = temporalTableSupport.supportsPreservedInstantAsTemporalColumn()
+					? null
+					: temporalTableSupport.getPreservedInstantJdbcTypeForTemporalColumn();
+			if ( preserving != null ) {
+				basicValue.setExplicitJdbcTypeAccess( typeConfiguration -> preserving );
+			}
+		}
 
 		return column;
 	}

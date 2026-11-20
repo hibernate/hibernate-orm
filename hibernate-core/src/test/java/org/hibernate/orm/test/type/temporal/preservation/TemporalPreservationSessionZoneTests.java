@@ -157,9 +157,9 @@ class TemporalPreservationSessionZoneTests {
 			builder.applySetting( MappingSettings.TEMPORAL_PRESERVATION, true );
 			builder.applySetting( StateManagementSettings.TEMPORAL_TABLE_STRATEGY, "SINGLE_TABLE" );
 			builder.applySetting( StateManagementSettings.USE_SERVER_TRANSACTION_TIMESTAMPS, fromDatabase );
-			// Oracle allows no column with a time zone in a primary key, so the
-			// row start of a temporal table cannot be stored as an Instant is
-			final boolean temporalTables = !( DialectContext.getDialect() instanceof OracleDialect );
+			// on Oracle the row start is held at UTC in a plain timestamp, since a
+			// column with a time zone is not allowed in a primary key
+			final boolean temporalTables = true;
 			try ( var registry = builder.build();
 					var factory = (SessionFactoryImplementor) new MetadataSources( registry )
 							.addAnnotatedClasses( temporalTables
@@ -191,7 +191,10 @@ class TemporalPreservationSessionZoneTests {
 						assertThat( session.find( SoftDeleted.class, id ) ).isNull();
 						for ( String query : temporalTables
 								? new String[] {
-										"select effective_from from WithHistory where id = " + id,
+										// on Oracle the row start is held at UTC in a column without a time zone
+										DialectContext.getDialect() instanceof OracleDialect
+												? "select from_tz(effective_from, 'UTC') from WithHistory where id = " + id
+												: "select effective_from from WithHistory where id = " + id,
 										"select deleted from SoftDeleted where id = " + id
 								}
 								: new String[] { "select deleted from SoftDeleted where id = " + id } ) {

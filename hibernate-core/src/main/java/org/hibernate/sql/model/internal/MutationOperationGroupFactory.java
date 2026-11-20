@@ -2,6 +2,7 @@ package org.hibernate.sql.model.internal;
 
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.model.EntityMutationOperationGroup;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.spi.mutation.MutationTarget;
 import org.hibernate.sql.spi.mutation.MutationType;
@@ -64,5 +65,28 @@ public final class MutationOperationGroupFactory {
 		else {
 			return new MutationOperationGroupStandard( mutationType, mutationTarget, operations );
 		}
+	}
+
+	/**
+	 * A group with the operations of the given group, for auxiliary tables (audit, history)
+	 * which use the entity persister as their mutation target. Such a group has no
+	 * {@linkplain EntityMutationOperationGroup#getMutationDelegate() generated values delegate},
+	 * since the auxiliary tables never return the values generated for the entity table.
+	 */
+	public static MutationOperationGroup auxiliaryOperations(final MutationOperationGroup operationGroup) {
+		final var entityOperationGroup = operationGroup.asEntityMutationOperationGroup();
+		if ( entityOperationGroup == null ) {
+			return operationGroup;
+		}
+		final var operations = new MutationOperation[entityOperationGroup.getNumberOfOperations()];
+		for ( int i = 0; i < operations.length; i++ ) {
+			operations[i] = entityOperationGroup.getOperation( i );
+		}
+		return new EntityMutationOperationGroupStandard(
+				entityOperationGroup.getMutationType(),
+				entityOperationGroup.getMutationTarget(),
+				operations,
+				true
+		);
 	}
 }

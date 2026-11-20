@@ -988,7 +988,7 @@ public class PluralAttributeMappingImpl
 				joinForRestrictions.applyPredicate( auxiliaryRestrictions );
 				joinPredicate = keyPredicateCollector.getPredicate();
 			}
-			else if ( restrictions == null ) {
+			else if ( restrictions == null && hasElementOrIndexTableGroupJoin( tableGroup ) ) {
 				final var junction = new Junction( Junction.Nature.CONJUNCTION );
 				junction.add( keyPredicateCollector.getPredicate() );
 				junction.add( new AuxiliaryRestrictions( auxiliaryRestrictions ) );
@@ -1036,11 +1036,28 @@ public class PluralAttributeMappingImpl
 	}
 
 	/**
-	 * A join of the collection with only the restriction of an auxiliary mapping,
-	 * for example soft delete, added to its key predicate is a join which a fetch
-	 * may use, just as it was when that restriction belonged to the join of the
-	 * element table. A join with a where restriction or a filter is not, and nor
-	 * is a join to which anything else was added.
+	 * Whether the collection table group has a join of the table of an element
+	 * or index, to which the restriction of an auxiliary mapping used to belong
+	 * when the joins are not nested.
+	 */
+	private static boolean hasElementOrIndexTableGroupJoin(TableGroup collectionTableGroup) {
+		final var tableGroupJoins =
+				collectionTableGroup.getNestedTableGroupJoins().isEmpty()
+						? collectionTableGroup.getTableGroupJoins()
+						: collectionTableGroup.getNestedTableGroupJoins();
+		return !tableGroupJoins.isEmpty()
+			&& !tableGroupJoins.get( tableGroupJoins.size() - 1 ).getJoinedGroup().isVirtual();
+	}
+
+	/**
+	 * Which joins of the collection a fetch may use is not to change. A join with
+	 * only the restriction of an auxiliary mapping, for example soft delete, added
+	 * to its key predicate was such a join when that restriction belonged to the
+	 * join of the table of an element or index, and so it still is. Where there is
+	 * no such table, for a collection of basic or embeddable values or a one-to-many
+	 * association, the restriction always belonged to this join, and the join was
+	 * never used for a fetch, just as a join with a where restriction or a filter
+	 * never was, nor a join to which anything else was added.
 	 */
 	@Override
 	public boolean isDefaultJoinPredicate(Predicate predicate) {

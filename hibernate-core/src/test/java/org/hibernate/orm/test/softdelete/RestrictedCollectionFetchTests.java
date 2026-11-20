@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -43,7 +45,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 		RestrictedCollectionFetchTests.Owner.class,
 		RestrictedCollectionFetchTests.Tag.class,
 		RestrictedCollectionFetchTests.Note.class,
-		RestrictedCollectionFetchTests.Child.class
+		RestrictedCollectionFetchTests.Child.class,
+		RestrictedCollectionFetchTests.SoftChild.class
 })
 @SessionFactory
 @JiraKey("HHH-21214")
@@ -71,9 +74,13 @@ public class RestrictedCollectionFetchTests {
 			owner.plain.add( n11 );
 			owner.plain.add( n12 );
 			owner.keyed.put( t11, n13 );
+			owner.names.add( "tag11" );
+			owner.names.add( "tag12" );
 			session.persist( owner );
 			session.persist( new Child( 11, owner ) );
 			session.persist( new Child( 12, owner ) );
+			session.persist( new SoftChild( 11, owner ) );
+			session.persist( new SoftChild( 12, owner ) );
 		} );
 		scope.inTransaction( session -> session.remove( session.find( Note.class, 13 ) ) );
 	}
@@ -112,18 +119,24 @@ public class RestrictedCollectionFetchTests {
 	}
 
 	@ParameterizedTest
-	@ValueSource(strings = {"labels", "children"})
+	@ValueSource(strings = {"labels", "children", "names", "softChildren"})
 	public void laterJoinDoesNotTruncateFetchedCollection(String collection, SessionFactoryScope scope) {
 		scope.inSession( session -> {
 			final var graph = session.createEntityGraph( Owner.class );
 			graph.addAttributeNodes( collection );
 			// the join of the collection is restricted by a later join, so it is not the join the fetch uses
+			final String element = "names".equals( collection ) ? "t.name = e" : "t.id = e.id";
 			final Owner owner = session.createSelectionQuery(
 							"select o from Owner o left join o." + collection + " e"
-									+ " join Tag t on t.id = e.id and t.id = 11", Owner.class )
+									+ " join Tag t on " + element + " and t.id = 11", Owner.class )
 					.setHint( "jakarta.persistence.fetchgraph", graph )
 					.getSingleResult();
-			final List<?> elements = "labels".equals( collection ) ? owner.labels : owner.children;
+			final List<?> elements = switch ( collection ) {
+				case "labels" -> owner.labels;
+				case "children" -> owner.children;
+				case "names" -> owner.names;
+				default -> owner.softChildren;
+			};
 			assertThat( Hibernate.isInitialized( elements ) ).isTrue();
 			assertThat( elements ).hasSize( 2 );
 		} );
@@ -166,6 +179,14 @@ public class RestrictedCollectionFetchTests {
 		@OneToMany(mappedBy = "owner")
 		@SQLRestriction("id <> 10")
 		List<Child> children = new ArrayList<>();
+
+		@OneToMany(mappedBy = "owner")
+		List<SoftChild> softChildren = new ArrayList<>();
+
+		@ElementCollection
+		@CollectionTable(name = "owner_names")
+		@SoftDelete
+		List<String> names = new ArrayList<>();
 
 		@ManyToMany
 		@JoinTable(name = "owner_keyed")
@@ -223,6 +244,24 @@ public class RestrictedCollectionFetchTests {
 		}
 
 		public Child(Integer id, Owner owner) {
+			this.id = id;
+			this.owner = owner;
+		}
+	}
+
+	@Entity(name = "SoftChild")
+	@Table(name = "soft_children")
+	@SoftDelete
+	public static class SoftChild {
+		@Id
+		Integer id;
+		@ManyToOne
+		Owner owner;
+
+		public SoftChild() {
+		}
+
+		public SoftChild(Integer id, Owner owner) {
 			this.id = id;
 			this.owner = owner;
 		}

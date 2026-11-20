@@ -128,6 +128,7 @@ public class CorrelatedPathJoinTest {
 	@ParameterizedTest
 	@MethodSource("fromClausesWithLeftJoinOfSecondPath")
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInSelect.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void countPerParentWithLeftJoinOfSecondPath(String fromClause, List<Integer> expected, SessionFactoryScope scope) {
 		scope.inSession( session -> {
 			final String hql =
@@ -195,6 +196,7 @@ public class CorrelatedPathJoinTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOuterReferenceInOnClause.class)
 	public void leftJoinOfOuterToOnePath(SessionFactoryScope scope) {
 		scope.inSession( session -> assertRendered( session, List.of( 1, 2, 3 ), """
 				select i.id from Item i where exists (
@@ -205,6 +207,7 @@ public class CorrelatedPathJoinTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void manyToManyPathAfterEntity(SessionFactoryScope scope) {
 		scope.inSession( session -> {
 			assertRendered( session, List.of( 1 ), """
@@ -255,6 +258,7 @@ public class CorrelatedPathJoinTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOuterReferenceInOnClause.class)
 	public void outerPathThenLeftJoinThenRightJoin(SessionFactoryScope scope) {
 		scope.inSession( session -> assertRendered( session, List.of( 1, 2 ), """
 				select p.id from Parent p where exists (

@@ -883,6 +883,14 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsOuterReferenceInOnClause implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			// CUBRID does not allow a reference to an enclosing query in an ON condition; the CUBRID
+			// translator moves it to the WHERE clause for an inner join, unless a right join follows
+			return !( dialect instanceof CUBRIDDialect );
+		}
+	}
+
 	public static class SupportsFullJoin implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			// Derby and CUBRID do not support FULL [OUTER] JOIN

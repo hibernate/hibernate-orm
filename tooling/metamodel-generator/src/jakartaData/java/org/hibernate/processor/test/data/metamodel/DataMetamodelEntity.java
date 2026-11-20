@@ -15,7 +15,9 @@ public class DataMetamodelEntity {
 
 	String title;
 
-	String _eventPreInsert;
+	String event;
+
+	String event$;
 
 	boolean published;
 

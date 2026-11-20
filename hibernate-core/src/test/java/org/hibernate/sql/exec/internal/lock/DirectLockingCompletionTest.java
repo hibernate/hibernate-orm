@@ -31,7 +31,7 @@ class DirectLockingCompletionTest {
 		f.completion.register( new EntityKey( 1, f.persister ), entity, f.entry );
 		final List<String> events = new ArrayList<>();
 		try ( var helper = mockStatic( OptimisticLockHelper.class ) ) {
-			helper.when( () -> OptimisticLockHelper.forceVersionIncrement( entity, f.entry, f.session ) )
+			helper.when( () -> OptimisticLockHelper.forceVersionIncrementImmediately( entity, f.entry, f.session ) )
 					.thenAnswer( call -> { events.add( "increment" ); return null; } );
 			f.completion.complete( () -> events.add( "acquire" ), f.session );
 			f.completion.complete( () -> events.add( "next unit" ), f.session );
@@ -83,9 +83,9 @@ class DirectLockingCompletionTest {
 		f.register( 2 );
 		final var failure = new HibernateException( "increment" );
 		try ( var helper = mockStatic( OptimisticLockHelper.class ) ) {
-			helper.when( () -> OptimisticLockHelper.forceVersionIncrement( first, f.entry, f.session ) ).thenThrow( failure );
+			helper.when( () -> OptimisticLockHelper.forceVersionIncrementImmediately( first, f.entry, f.session ) ).thenThrow( failure );
 			assertThatThrownBy( () -> f.completion.complete( () -> {}, f.session ) ).isSameAs( failure );
-			helper.verify( () -> OptimisticLockHelper.forceVersionIncrement( first, f.entry, f.session ) );
+			helper.verify( () -> OptimisticLockHelper.forceVersionIncrementImmediately( first, f.entry, f.session ) );
 			helper.verifyNoMoreInteractions();
 		}
 	}
@@ -122,11 +122,11 @@ class DirectLockingCompletionTest {
 		f.register( 3 );
 		final var failure = new HibernateException( "second increment" );
 		try ( var helper = mockStatic( OptimisticLockHelper.class ) ) {
-			helper.when( () -> OptimisticLockHelper.forceVersionIncrement( second, f.entry, f.session ) ).thenThrow( failure );
+			helper.when( () -> OptimisticLockHelper.forceVersionIncrementImmediately( second, f.entry, f.session ) ).thenThrow( failure );
 			assertThatThrownBy( () -> f.completion.complete( () -> {}, f.session ) ).isSameAs( failure );
 			assertThatThrownBy( () -> f.completion.complete( () -> {}, f.session ) ).isInstanceOf( HibernateException.class );
-			helper.verify( () -> OptimisticLockHelper.forceVersionIncrement( first, f.entry, f.session ) );
-			helper.verify( () -> OptimisticLockHelper.forceVersionIncrement( second, f.entry, f.session ) );
+			helper.verify( () -> OptimisticLockHelper.forceVersionIncrementImmediately( first, f.entry, f.session ) );
+			helper.verify( () -> OptimisticLockHelper.forceVersionIncrementImmediately( second, f.entry, f.session ) );
 			helper.verifyNoMoreInteractions();
 		}
 	}

@@ -23,9 +23,12 @@ import org.hibernate.ScrollMode;
 import org.hibernate.Session;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -118,6 +121,30 @@ class DirectForceIncrementOrderingTest {
 			assertOrdering( scope );
 		} );
 		assertStoredVersion( scope, 1 );
+	}
+
+	@Test
+	@JiraKey("HHH-20417")
+	@RequiresDialect(H2Dialect.class)
+	void directExtendedForceIncrementIsVisibleBeforeFlushWithBatching(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.setJdbcBatchSize( 10 );
+			final var item = session.find( Item.class, 1, PESSIMISTIC_FORCE_INCREMENT, EXTENDED, Locking.FollowOn.DISALLOW );
+			assertThat( item.version ).isEqualTo( 1 );
+
+			// Read on the same connection without flushing Hibernate's pending batch.
+			final int databaseVersion = session.doReturningWork( connection -> {
+				try ( var statement = connection.prepareStatement( "select version from direct_force_item where id = ?" ) ) {
+					statement.setInt( 1, item.id );
+					try ( var resultSet = statement.executeQuery() ) {
+						assertThat( resultSet.next() ).isTrue();
+						return resultSet.getInt( 1 );
+					}
+				}
+			} );
+			assertThat( databaseVersion ).isEqualTo( 1 );
+			assertThat( session.getJdbcBatchSize() ).isEqualTo( 10 );
+		} );
 	}
 
 	@ParameterizedTest

@@ -25,6 +25,18 @@ public final class OptimisticLockHelper {
 	}
 
 	public static void forceVersionIncrement(Object object, EntityEntry entry, SharedSessionContractImplementor session) {
+		forceVersionIncrement( object, entry, true, session );
+	}
+
+	public static void forceVersionIncrementImmediately(Object object, EntityEntry entry, SharedSessionContractImplementor session) {
+		forceVersionIncrement( object, entry, false, session );
+	}
+
+	private static void forceVersionIncrement(
+			Object object,
+			EntityEntry entry,
+			boolean allowBatching,
+			SharedSessionContractImplementor session) {
 		final var persister = entry.getPersister();
 		RootTenantCache.invalidateEntity( entry.getId(), persister, session );
 		final Object previousVersion = entry.getVersion();
@@ -39,7 +51,10 @@ public final class OptimisticLockHelper {
 			return new CacheLock( cache, cacheKey, lock );
 		}, null );
 		try {
-			final Object nextVersion = persister.forceVersionIncrement( entry.getId(), previousVersion, session );
+			final Object id = entry.getId();
+			final Object nextVersion = allowBatching
+					? persister.forceVersionIncrement( id, previousVersion, session )
+					: forceVersionIncrementWithoutBatching( persister, id, previousVersion, session );
 			entry.forceLocked( object, nextVersion );
 			if ( cacheLock != null ) {
 				final Object cacheEntry = updateCacheItem(
@@ -77,6 +92,22 @@ public final class OptimisticLockHelper {
 				}
 			}
 			throw failure;
+		}
+	}
+
+	private static Object forceVersionIncrementWithoutBatching(
+			EntityPersister persister,
+			Object id,
+			Object previousVersion,
+			SharedSessionContractImplementor session) {
+		final Integer batchSize = session.getJdbcBatchSize();
+		// Use the original overload so custom persisters still see pessimistic increments.
+		session.setJdbcBatchSize( 0 );
+		try {
+			return persister.forceVersionIncrement( id, previousVersion, session );
+		}
+		finally {
+			session.setJdbcBatchSize( batchSize );
 		}
 	}
 

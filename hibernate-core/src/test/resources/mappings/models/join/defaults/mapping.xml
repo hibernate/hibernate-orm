@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+
+<!--
+  The <secondary-table/> below deliberately omits both `owned` and `optional`.
+  They must default to the @SecondaryRow annotation defaults: owned=true, optional=true.
+-->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <entity class="org.hibernate.orm.test.boot.models.hbm.join.defaults.Widget" access="FIELD">
+        <secondary-table name="widget_supplemental">
+            <primary-key-join-column name="widget_fk"/>
+        </secondary-table>
+
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+            <basic name="extra">
+                <column table="widget_supplemental"/>
+            </basic>
+        </attributes>
+    </entity>
+</entity-mappings>

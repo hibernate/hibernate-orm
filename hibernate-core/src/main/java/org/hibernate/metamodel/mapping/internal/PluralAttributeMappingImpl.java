@@ -1268,7 +1268,6 @@ public class PluralAttributeMappingImpl
 			// For outer joins we need nesting if there might be an on-condition that refers to the element table.
 			// A restriction which hides an element hides the whole row of the collection table, along with the
 			// key of the element or index which is read from it, and the index of a hidden element of a map.
-			// For outer joins we need nesting if there might be an on-condition that refers to the element table
 			&& ( addsPredicate
 					|| hasSoftDelete()
 					|| collectionDescriptor.hasWhereRestrictions()
@@ -1322,7 +1321,7 @@ public class PluralAttributeMappingImpl
 					tableGroup,
 					null,
 					sqlAliasBase,
-					nestedJoin && joinType != SqlAstJoinType.RIGHT ? SqlAstJoinType.INNER : joinType,
+					nestedJoin ? SqlAstJoinType.INNER : joinType,
 					fetched,
 					false,
 					creationState

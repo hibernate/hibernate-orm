@@ -1,6 +1,11 @@
 package org.hibernate.community.dialect;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.dialect.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.dialect.sql.ast.spi.DerivedTableRenderingSupport;
@@ -14,18 +19,26 @@ import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.sql.ast.spi.AbstractSqlAstWalker;
 import org.hibernate.sql.ast.spi.Statement;
 import org.hibernate.sql.ast.spi.query.delete.DeleteStatement;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
+import org.hibernate.sql.ast.spi.query.expression.QueryLiteral;
 import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
 import org.hibernate.sql.ast.spi.query.expression.Summarization;
+import org.hibernate.sql.ast.spi.query.from.FromClause;
 import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.query.insert.InsertSelectStatement;
+import org.hibernate.sql.ast.spi.query.predicate.BooleanExpressionPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.InListPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.InSubQueryPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.Junction;
 import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.ast.spi.query.select.SqlSelection;
 import org.hibernate.sql.ast.spi.query.update.Assignment;
@@ -40,6 +53,8 @@ import org.hibernate.type.SqlTypes;
  * @author Christian Beikov
  */
 public class CUBRIDSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+
+	private final Map<Predicate, JoinConditionParts> correlatedJoinConditions = new IdentityHashMap<>();
 
 	public CUBRIDSqlAstTranslator(SqlAstTranslationRequest<? extends Statement, T> request) {
 		super( request );
@@ -243,5 +258,103 @@ public class CUBRIDSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 		else {
 			super.visitInListPredicate( inListPredicate );
 		}
+	}
+
+	//CUBRID rejects a reference to an enclosing query in a join condition, so a subquery moves the conjuncts
+	//of an inner join condition that refer to one to its where clause, unless a right or full join could
+	//null-extend the rows they filter
+	@Override
+	public void visitQuerySpec(QuerySpec querySpec) {
+		final List<Predicate> registeredConditions =
+				querySpec.isRoot() ? List.of() : registerCorrelatedJoinConditions( querySpec.getFromClause() );
+		try {
+			super.visitQuerySpec( querySpec );
+		}
+		finally {
+			registeredConditions.forEach( correlatedJoinConditions::remove );
+		}
+	}
+
+	@Override
+	public void visitJunction(Junction junction) {
+		if ( !renderCorrelatedJoinCondition( junction ) ) {
+			super.visitJunction( junction );
+		}
+	}
+
+	@Override
+	public void visitRelationalPredicate(ComparisonPredicate comparisonPredicate) {
+		if ( !renderCorrelatedJoinCondition( comparisonPredicate ) ) {
+			super.visitRelationalPredicate( comparisonPredicate );
+		}
+	}
+
+	private List<Predicate> registerCorrelatedJoinConditions(FromClause fromClause) {
+		if ( fromClause.queryTableGroupJoins( join -> join.getJoinType() == SqlAstJoinType.RIGHT
+				|| join.getJoinType() == SqlAstJoinType.FULL ? join : null ) != null ) {
+			return List.of();
+		}
+		final Set<String> aliases = new HashSet<>();
+		fromClause.visitTableReferences( tableReference -> aliases.add( tableReference.getIdentificationVariable() ) );
+		final List<Predicate> registeredConditions = new ArrayList<>();
+		fromClause.visitTableGroupJoins( join -> {
+			final Predicate condition = join.getPredicate();
+			if ( join.getJoinType() == SqlAstJoinType.INNER && condition != null ) {
+				final List<Predicate> conjuncts =
+						condition instanceof Junction junction && junction.getNature() == Junction.Nature.CONJUNCTION
+								? junction.getPredicates()
+								: List.of( condition );
+				final List<Predicate> local = new ArrayList<>();
+				final List<Predicate> correlated = new ArrayList<>();
+				for ( Predicate conjunct : conjuncts ) {
+					( aliases.containsAll( columnQualifiers( conjunct ) ) ? local : correlated ).add( conjunct );
+				}
+				if ( !correlated.isEmpty() ) {
+					correlatedJoinConditions.put( condition, new JoinConditionParts( local, correlated ) );
+					registeredConditions.add( condition );
+				}
+			}
+		} );
+		return registeredConditions;
+	}
+
+	private boolean renderCorrelatedJoinCondition(Predicate condition) {
+		final JoinConditionParts parts = getClauseStack().getCurrent() == Clause.FROM
+				? correlatedJoinConditions.get( condition )
+				: null;
+		if ( parts == null ) {
+			return false;
+		}
+		addAdditionalWherePredicate( conjunction( parts.correlated() ) );
+		if ( parts.local().isEmpty() ) {
+			new BooleanExpressionPredicate( new QueryLiteral<>( true, getBooleanType() ) ).accept( this );
+		}
+		else {
+			conjunction( parts.local() ).accept( this );
+		}
+		return true;
+	}
+
+	//a fresh junction, since combining predicates appends to the first one
+	private static Junction conjunction(List<Predicate> conjuncts) {
+		final Junction junction = new Junction( Junction.Nature.CONJUNCTION );
+		conjuncts.forEach( junction::add );
+		return junction;
+	}
+
+	private record JoinConditionParts(List<Predicate> local, List<Predicate> correlated) {
+	}
+
+	private static Set<String> columnQualifiers(Predicate predicate) {
+		final Set<String> qualifiers = new HashSet<>();
+		predicate.accept( new AbstractSqlAstWalker() {
+			@Override
+			public void visitColumnReference(ColumnReference columnReference) {
+				if ( columnReference.getQualifier() != null ) {
+					qualifiers.add( columnReference.getQualifier() );
+				}
+			}
+		} );
+		return qualifiers;
 	}
 }

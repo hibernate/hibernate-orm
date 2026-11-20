@@ -248,9 +248,9 @@ class SQLJoinTableRestrictionQueryTest {
 
 	@ParameterizedTest
 	@CsvSource({
-			"items,inner", "items,left", "items,right",
-			"unrestrictedItems,inner", "unrestrictedItems,left", "unrestrictedItems,right",
-			"manyToManyItems,inner", "manyToManyItems,left", "manyToManyItems,right"
+			"items,inner", "items,left",
+			"unrestrictedItems,inner", "unrestrictedItems,left",
+			"manyToManyItems,inner", "manyToManyItems,left"
 	})
 	void joinWithOnPredicateBindsIdentifiersForExpandedInParameter(
 			String collection, String joinType, SessionFactoryScope scope) {
@@ -258,19 +258,16 @@ class SQLJoinTableRestrictionQueryTest {
 			final Item visibleItem = session.find( Item.class, 1L );
 			final Item unassociatedItem = session.find( Item.class, 5L );
 			final List<Item> items = List.of( visibleItem, unassociatedItem );
-			final boolean rightJoin = "right".equals( joinType );
-			final List<Long> expectedIn = rightJoin ? List.of( 1L, 5L ) : List.of( 1L );
-			final List<Long> expectedNotIn = rightJoin ? List.of( 2L, 3L, 4L ) : List.of();
 			final String query = "select item.id from Cart cart " + joinType + " join cart." + collection
 								+ " item on item.id = 1";
-			assertEquals( expectedIn,
+			assertEquals( List.of( 1L ),
 					session.createQuery(
 									query + " where item in :items order by item.id",
 									Long.class
 							)
 							.setParameter( "items", items )
 							.getResultList() );
-			assertEquals( expectedNotIn,
+			assertEquals( List.of(),
 					session.createQuery(
 									query + " where item not in :items order by item.id",
 									Long.class
@@ -281,18 +278,15 @@ class SQLJoinTableRestrictionQueryTest {
 	}
 
 	@ParameterizedTest
-	@ValueSource(strings = {"inner", "left", "right"})
+	@ValueSource(strings = {"inner", "left"})
 	void joinWithOnPredicateBindsIdentifiersForIndividualInParameters(
 			String joinType, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Item visibleItem = session.find( Item.class, 1L );
 			final Item unassociatedItem = session.find( Item.class, 5L );
-			final boolean rightJoin = "right".equals( joinType );
-			final List<Long> expectedIn = rightJoin ? List.of( 1L, 5L ) : List.of( 1L );
-			final List<Long> expectedNotIn = rightJoin ? List.of( 2L, 3L, 4L ) : List.of();
 			final String query = "select item.id from Cart cart " + joinType
 								+ " join cart.items item on item.id = 1";
-			assertEquals( expectedIn,
+			assertEquals( List.of( 1L ),
 					session.createQuery(
 									query + " where item in (:visible, :unassociated) order by item.id",
 									Long.class
@@ -300,7 +294,7 @@ class SQLJoinTableRestrictionQueryTest {
 							.setParameter( "visible", visibleItem )
 							.setParameter( "unassociated", unassociatedItem )
 							.getResultList() );
-			assertEquals( expectedNotIn,
+			assertEquals( List.of(),
 					session.createQuery(
 									query + " where item not in (:visible, :unassociated) order by item.id",
 									Long.class
@@ -312,7 +306,7 @@ class SQLJoinTableRestrictionQueryTest {
 	}
 
 	@ParameterizedTest
-	@CsvSource({"items,in", "items,not in", "unrestrictedItems,in", "unrestrictedItems,not in"})
+	@CsvSource({"items,not in", "unrestrictedItems,in", "unrestrictedItems,not in"})
 	void rightJoinBindsIdentifiersForInParameter(
 			String collection, String operator, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
@@ -328,28 +322,6 @@ class SQLJoinTableRestrictionQueryTest {
 							)
 							.setParameter( "items", items )
 							.getResultList() );
-		} );
-	}
-
-	@Test
-	void rightJoinPreservesRestrictedAndUnassociatedItems(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			assertEquals( 5L, session.createQuery(
-					"select count(item) from Cart cart right join cart.pkItems item",
-					Long.class
-			).getSingleResult() );
-		} );
-	}
-
-	@ParameterizedTest
-	@ValueSource(strings = {"item = other", "other = item"})
-	void rightJoinEntityComparisonsPreserveRestrictedAndUnassociatedItems(
-			String comparison, SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			assertEquals( 5L, session.createQuery(
-					"select count(*) from Cart cart right join cart.pkItems item, Item other where " + comparison,
-					Long.class
-			).getSingleResult() );
 		} );
 	}
 

@@ -69,6 +69,33 @@ public interface PluralAttributeMapping
 			@Nonnull LoadQueryInfluencers influencers,
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator);
 
+	/// Apply the restrictions of a collection join or a correlated collection subquery.
+	/// Joins collect auxiliary restrictions separately to recognize joins eligible for a fetch.
+	/// Subqueries apply both kinds directly to their where clause.
+	default void applyCollectionRestrictions(
+			@Nonnull TableGroup ownerTableGroup,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull Consumer<Predicate> restrictionConsumer,
+			@Nonnull Consumer<Predicate> auxiliaryRestrictionConsumer,
+			@Nonnull SqlAstCreationState creationState) {
+		final var influencers = creationState.getLoadQueryInfluencers();
+		final var filters = influencers.getEnabledFilters();
+		applyBaseRestrictions( restrictionConsumer, tableGroup, true, filters, false, null, creationState );
+		applyBaseManyToManyRestrictions( restrictionConsumer, tableGroup, true, filters, null, creationState );
+		applyAuxiliaryRestrictions( tableGroup, auxiliaryRestrictionConsumer::accept, influencers,
+				creationState.getSqlAliasBaseGenerator(), ownerTableGroup );
+	}
+
+	/// An association in an all-changesets query can use its owner's revision as the upper bound.
+	default void applyAuxiliaryRestrictions(
+			@Nonnull TableGroup tableGroup,
+			@Nonnull PredicateConsumer predicateConsumer,
+			@Nonnull LoadQueryInfluencers influencers,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			@Nullable TableGroup ownerTableGroup) {
+		applyAuxiliaryRestrictions( tableGroup, predicateConsumer, influencers, sqlAliasBaseGenerator );
+	}
+
 	interface IndexMetadata {
 		@Nullable
 		CollectionPart getIndexDescriptor();

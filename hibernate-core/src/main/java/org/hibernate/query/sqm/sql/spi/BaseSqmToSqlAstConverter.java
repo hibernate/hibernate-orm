@@ -5068,20 +5068,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				)
 		);
 		try {
-			final var tableGroup = pluralAttributeMapping.createRootTableGroup(
-					true,
-					navigablePath,
-					null,
-					null,
-					() -> subQuerySpec::applyPredicate,
-					this
-			);
-
-			applyPluralAttributeRestrictions( pluralAttributeMapping, tableGroup, subQuerySpec );
-
-			getFromClauseAccess().registerTableGroup( navigablePath, tableGroup );
-			registerPluralTableGroupParts( tableGroup );
-			subQuerySpec.getFromClause().addRoot( tableGroup );
+			createCollectionSubQueryRoot( pluralAttributeMapping, parentTableGroup,
+					navigablePath, subQuerySpec );
 
 			final var functionDescriptor = resolveFunction( "count" );
 			final var integerType =
@@ -5097,11 +5085,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 			subQuerySpec.getSelectClause()
 					.addSqlSelection( new SqlSelectionImpl( expression ) );
-
-			subQuerySpec.applyPredicate(
-					pluralAttributeMapping.getKeyDescriptor()
-							.generateJoinPredicate( parentTableGroup, tableGroup, this )
-			);
 		}
 		finally {
 			popProcessingStateStack();
@@ -5109,41 +5092,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return new SelectStatement( subQuerySpec );
 	}
 
-	/**
-	 * Applies the restrictions which a join of the given collection is subject to
-	 * to a subquery whose root is the collection.
-	 *
-	 * @see PluralAttributeMapping#createTableGroupJoin
-	 */
-	private void applyPluralAttributeRestrictions(
-			PluralAttributeMapping pluralAttributeMapping,
-			TableGroup tableGroup,
-			QuerySpec subQuerySpec) {
-		final var influencers = getLoadQueryInfluencers();
-		final var enabledFilters = influencers.getEnabledFilters();
-		pluralAttributeMapping.applyBaseRestrictions(
-				subQuerySpec::applyPredicate,
-				tableGroup,
-				true,
-				enabledFilters,
-				false,
-				null,
-				this
-		);
-		pluralAttributeMapping.applyBaseManyToManyRestrictions(
-				subQuerySpec::applyPredicate,
-				tableGroup,
-				true,
-				enabledFilters,
-				null,
-				this
-		);
-		pluralAttributeMapping.applyAuxiliaryRestrictions(
-				tableGroup,
-				subQuerySpec::applyPredicate,
-				influencers,
-				getSqlAliasBaseGenerator()
-		);
+	/// Build the correlated collection root with the same restrictions as an association join.
+	private TableGroup createCollectionSubQueryRoot(
+			PluralAttributeMapping collection,
+			TableGroup ownerTableGroup,
+			NavigablePath path,
+			QuerySpec subQuery) {
+		final var tableGroup = collection.createRootTableGroup(
+				true, path, null, null, () -> subQuery::applyPredicate, this );
+		collection.applyCollectionRestrictions( ownerTableGroup, tableGroup,
+				subQuery::applyPredicate, subQuery::applyPredicate, this );
+		getFromClauseAccess().registerTableGroup( path, tableGroup );
+		registerPluralTableGroupParts( tableGroup );
+		subQuery.getFromClause().addRoot( tableGroup );
+		subQuery.applyPredicate( collection.getKeyDescriptor().generateJoinPredicate( ownerTableGroup, tableGroup, this ) );
+		return tableGroup;
 	}
 
 	@Override
@@ -5233,6 +5196,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		prepareReusablePath( pluralPartPath.getLhs(), () -> null );
 
 		final var parentFromClauseAccess = getFromClauseAccess();
+		final var ownerTableGroup = parentFromClauseAccess.getTableGroup(
+				pluralPartPath.getPluralDomainPath().getNavigablePath().getParent() );
 		final var pluralAttributeMapping =
 				(PluralAttributeMapping)
 						determineValueMapping( pluralPartPath.getPluralDomainPath() );
@@ -5249,20 +5214,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				)
 		);
 		try {
-			final var tableGroup = pluralAttributeMapping.createRootTableGroup(
-					true,
-					pluralPartPath.getNavigablePath(),
-					null,
-					null,
-					() -> subQuerySpec::applyPredicate,
-					this
-			);
-
-			applyPluralAttributeRestrictions( pluralAttributeMapping, tableGroup, subQuerySpec );
-
-			getFromClauseAccess().registerTableGroup( pluralPartPath.getNavigablePath(), tableGroup );
-			registerPluralTableGroupParts( tableGroup );
-			subQuerySpec.getFromClause().addRoot( tableGroup );
+			final var tableGroup = createCollectionSubQueryRoot( pluralAttributeMapping, ownerTableGroup,
+					pluralPartPath.getNavigablePath(), subQuerySpec );
 
 			final var functionDescriptor = resolveFunction( function );
 			final var collectionPart = index
@@ -5314,15 +5267,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 			subQuerySpec.getSelectClause()
 					.addSqlSelection( new SqlSelectionImpl( expression ) );
-
-			final var parent = pluralPartPath.getPluralDomainPath().getNavigablePath().getParent();
-			subQuerySpec.applyPredicate(
-					pluralAttributeMapping.getKeyDescriptor().generateJoinPredicate(
-							parentFromClauseAccess.findTableGroup( parent ),
-							tableGroup,
-							this
-					)
-			);
 		}
 		finally {
 			popProcessingStateStack();
@@ -5346,6 +5290,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				(PluralAttributeMapping)
 						determineValueMapping( pluralPartPath.getPluralDomainPath() );
 		final var parentFromClauseAccess = getFromClauseAccess();
+		final var ownerTableGroup = parentFromClauseAccess.getTableGroup(
+				pluralPartPath.getPluralDomainPath().getNavigablePath().getParent() );
 		final var parentTableGroup = parentFromClauseAccess.findTableGroup(
 				pluralPartPath.getNavigablePath().getParent()
 		);
@@ -5386,20 +5332,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					)
 			);
 			try {
-				final var tableGroup = pluralAttributeMapping.createRootTableGroup(
-						true,
-						pluralPartPath.getNavigablePath(),
-						null,
-						null,
-						() -> subQuerySpec::applyPredicate,
-						this
-				);
-
-				applyPluralAttributeRestrictions( pluralAttributeMapping, tableGroup, subQuerySpec );
-
-				getFromClauseAccess().registerTableGroup( pluralPartPath.getNavigablePath(), tableGroup );
-				registerPluralTableGroupParts( tableGroup );
-				subQuerySpec.getFromClause().addRoot( tableGroup );
+				final var tableGroup = createCollectionSubQueryRoot( pluralAttributeMapping, ownerTableGroup,
+						pluralPartPath.getNavigablePath(), subQuerySpec );
 
 				final List<String> columnNames = new ArrayList<>( jdbcTypeCount );
 				final List<ColumnReference> resultColumnReferences = new ArrayList<>( jdbcTypeCount );
@@ -5486,15 +5420,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							)
 					);
 				}
-				subQuerySpec.applyPredicate(
-						pluralAttributeMapping.getKeyDescriptor().generateJoinPredicate(
-								parentFromClauseAccess.findTableGroup(
-										pluralPartPath.getPluralDomainPath().getNavigablePath().getParent()
-								),
-								tableGroup,
-								this
-						)
-				);
 				lateralTableGroup = new QueryPartTableGroup(
 						queryPath,
 						null,
@@ -8192,6 +8117,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 
 		final var parentFromClauseAccess = getFromClauseAccess();
+		final var ownerTableGroup = parentFromClauseAccess.getTableGroup(
+				pluralPath.getNavigablePath().getParent() );
 		final var subQuerySpec = new QuerySpec( false );
 		pushProcessingState(
 				new SqlAstQueryPartProcessingStateImpl(
@@ -8203,33 +8130,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				)
 		);
 		try {
-			final var tableGroup = pluralAttributeMapping.createRootTableGroup(
-					true,
-					pluralPath.getNavigablePath(),
-					null,
-					null,
-					() -> subQuerySpec::applyPredicate,
-					this
-			);
-
-			applyPluralAttributeRestrictions( pluralAttributeMapping, tableGroup, subQuerySpec );
-
-			getFromClauseAccess().registerTableGroup( pluralPath.getNavigablePath(), tableGroup );
-			registerPluralTableGroupParts( tableGroup );
-			subQuerySpec.getFromClause().addRoot( tableGroup );
+			final var tableGroup = createCollectionSubQueryRoot( pluralAttributeMapping, ownerTableGroup,
+					pluralPath.getNavigablePath(), subQuerySpec );
 
 			pluralAttributeMapping.getElementDescriptor().getInclusionCheckPart().applySqlSelections(
 					pluralPath.getNavigablePath(),
 					tableGroup,
 					this
-			);
-
-			subQuerySpec.applyPredicate(
-					pluralAttributeMapping.getKeyDescriptor().generateJoinPredicate(
-							parentFromClauseAccess.findTableGroup( pluralPath.getNavigablePath().getParent() ),
-							tableGroup,
-							this
-					)
 			);
 			final var subQuerySpecSelectClause = subQuerySpec.getSelectClause();
 			subQuerySpec.applyPredicate(

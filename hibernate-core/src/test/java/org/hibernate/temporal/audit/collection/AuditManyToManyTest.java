@@ -174,6 +174,34 @@ class AuditManyToManyTest {
 		}
 	}
 
+	@Test
+	void testLeftJoinAtChangeset(SessionFactoryScope scope) {
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( revDrop ).openSession()) {
+			assertEquals( List.of( 2L ), session.createSelectionQuery(
+					"select c.id from Student s left join s.courses c where s.id = 1", Long.class )
+					.getResultList() );
+			assertEquals( List.of( "Physics" ), session.createSelectionQuery(
+					"select c.name from Student s left join s.courses c where s.id = 1", String.class )
+					.getResultList() );
+		}
+	}
+
+	@Test
+	void testSizeAtEachChangeset(SessionFactoryScope scope) {
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
+			final var revisions = session.createSelectionQuery(
+					"select s, size(s.courses) from Student s where s.id = 1 order by changesetId(s)", Object[].class )
+					.getResultList();
+			assertEquals( 4, revisions.size() );
+			for ( var revision : revisions ) {
+				final var student = (Student) revision[0];
+				assertEquals( student.courses.size(), revision[1] );
+			}
+			assertEquals( List.of( 2, 2 ), session.createSelectionQuery(
+					"select size(s.courses) from Student s where s.id = 10", Integer.class ).getResultList() );
+		}
+	}
+
 	// --- getHistory ---
 
 	@Test

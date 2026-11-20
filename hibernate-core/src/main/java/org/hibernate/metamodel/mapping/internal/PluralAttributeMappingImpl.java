@@ -56,6 +56,7 @@ import org.hibernate.sql.ast.spi.creation.SqlAliasBase;
 import org.hibernate.sql.ast.spi.creation.SqlAliasStemHelper;
 import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.from.CollectionTableGroup;
 import org.hibernate.sql.ast.spi.query.from.AuxiliaryTableReference;
 import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
@@ -584,19 +585,25 @@ public class PluralAttributeMappingImpl
 			@Nonnull PredicateConsumer predicateConsumer,
 			@Nonnull LoadQueryInfluencers influencers,
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator) {
-		final var descriptor = getCollectionDescriptor();
-		if ( descriptor.isOneToMany() || descriptor.isManyToMany() ) {
-			final var elementDescriptor = (EntityCollectionPart) getElementDescriptor();
-			final var associatedEntityDescriptor = elementDescriptor.getAssociatedEntityMappingType();
-			final var associatedAuxiliaryMapping = associatedEntityDescriptor.getAuxiliaryMapping();
-			if ( associatedAuxiliaryMapping != null ) {
-				associatedAuxiliaryMapping.applyPredicate(
-						associatedEntityDescriptor,
-						predicateConsumer::applyPredicate,
-						tableGroup,
-						sqlAliasBaseGenerator,
-						influencers
-				);
+		applyAuxiliaryRestrictions( tableGroup, predicateConsumer, influencers, sqlAliasBaseGenerator, null );
+	}
+
+	@Override
+	public void applyAuxiliaryRestrictions(
+			@Nonnull TableGroup tableGroup,
+			@Nonnull PredicateConsumer predicateConsumer,
+			@Nonnull LoadQueryInfluencers influencers,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			@Nullable TableGroup ownerTableGroup) {
+		final var ownerRevision = ownerTableGroup != null && influencers.isAllRevisions()
+				? getOwnerRevision( ownerTableGroup )
+				: null;
+		if ( elementDescriptor instanceof EntityCollectionPart element ) {
+			final var associatedEntity = element.getAssociatedEntityMappingType();
+			final var mapping = associatedEntity.getAuxiliaryMapping();
+			if ( mapping != null ) {
+				mapping.applyPredicate( associatedEntity, predicateConsumer::applyPredicate, tableGroup,
+						sqlAliasBaseGenerator, influencers, ownerRevision );
 			}
 		}
 
@@ -607,9 +614,16 @@ public class PluralAttributeMappingImpl
 					predicateConsumer::applyPredicate,
 					tableGroup,
 					sqlAliasBaseGenerator,
-					influencers
+					influencers,
+					ownerRevision
 			);
 		}
+	}
+
+	private @Nullable Expression getOwnerRevision(TableGroup ownerTableGroup) {
+		final var owner = collectionDescriptor.getOwnerEntityPersister();
+		final var auditMapping = owner.getAuditMapping();
+		return auditMapping == null ? null : auditMapping.getChangesetIdColumn( owner, ownerTableGroup );
 	}
 
 	@Nonnull
@@ -937,33 +951,9 @@ public class PluralAttributeMappingImpl
 				creationState
 		);
 		final var restrictionCollector = new PredicateCollector();
-
-		getCollectionDescriptor().applyBaseRestrictions(
-				restrictionCollector::applyPredicate,
-				tableGroup,
-				true,
-				creationState.getLoadQueryInfluencers().getEnabledFilters(),
-				false,
-				null,
-				creationState
-		);
-
-		getCollectionDescriptor().applyBaseManyToManyRestrictions(
-				restrictionCollector::applyPredicate,
-				tableGroup,
-				true,
-				creationState.getLoadQueryInfluencers().getEnabledFilters(),
-				null,
-				creationState
-		);
-
 		final var auxiliaryRestrictionCollector = new PredicateCollector();
-		applyAuxiliaryRestrictions(
-				tableGroup,
-				auxiliaryRestrictionCollector::applyPredicate,
-				creationState.getLoadQueryInfluencers(),
-				creationState.getSqlAliasBaseGenerator()
-		);
+		applyCollectionRestrictions( lhs, tableGroup, restrictionCollector::applyPredicate,
+				auxiliaryRestrictionCollector::applyPredicate, creationState );
 
 		if ( fetched ) {
 			if ( orderByFragment != null ) {
@@ -1262,6 +1252,14 @@ public class PluralAttributeMappingImpl
 		return tableGroup;
 	}
 
+	private boolean hasAuxiliaryRestriction(LoadQueryInfluencers influencers) {
+		final var elementMapping = elementDescriptor instanceof EntityCollectionPart element
+				? element.getAssociatedEntityMappingType().getAuxiliaryMapping()
+				: null;
+		return auxiliaryMapping != null && auxiliaryMapping.hasRowRestriction( influencers )
+			|| elementMapping != null && elementMapping.hasRowRestriction( influencers );
+	}
+
 	private boolean isNestedJoin(SqlAstJoinType joinType, boolean addsPredicate, SqlAstCreationState creationState) {
 		// For inner joins we never need join nesting
 		return joinType != SqlAstJoinType.INNER
@@ -1269,7 +1267,7 @@ public class PluralAttributeMappingImpl
 			// A restriction which hides an element hides the whole row of the collection table, along with the
 			// key of the element or index which is read from it, and the index of a hidden element of a map.
 			&& ( addsPredicate
-					|| hasSoftDelete()
+					|| hasAuxiliaryRestriction( creationState.getLoadQueryInfluencers() )
 					|| collectionDescriptor.hasWhereRestrictions()
 					|| isAffectedByEnabledFilters( creationState.getLoadQueryInfluencers(),
 							creationState.applyOnlyLoadByKeyFilters() ) );

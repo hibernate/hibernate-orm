@@ -5,6 +5,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import org.hibernate.annotations.Audited;
+import org.hibernate.audit.AuditLog;
 import org.hibernate.audit.AuditLogFactory;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.SharedSessionContract;
@@ -262,6 +263,16 @@ class AuditBidirectionalOneToManyTest {
 			assertNotNull( parent );
 			assertEquals( 1, parent.children.size() );
 			assertEquals( "Upd Child A v2", parent.children.get( 0 ).name );
+		}
+	}
+
+	@Test
+	void testSizeWithMultipleChildRevisions(SessionFactoryScope scope) {
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
+			// Only the child changed after the sole revision of this parent.
+			assertEquals( 1, session.createSelectionQuery(
+					"select size(p.children) from Parent p where p.id = 20", Integer.class )
+					.getSingleResult() );
 		}
 	}
 

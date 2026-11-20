@@ -425,33 +425,11 @@ public class AuditMappingImpl implements AuditMapping {
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull SqlAstCreationState creationState) {
 		final var influencers = creationState.getLoadQueryInfluencers();
-		final var persister = associatedEntityMappingType.getEntityPersister();
-		final var info = resolveInfo( persister.getTableName() );
-		if ( hasTemporalPredicate( influencers ) ) {
-			predicateConsumer.accept( createRestriction(
-					persister,
-					lazyTableGroup.resolveTableReference( navigablePath, info.auditTableName ),
-					collectEntityKeySelectables( associatedEntityMappingType ),
-					creationState.getSqlAliasBaseGenerator(),
-					info,
-					resolveDefaultUpperBound( info ),
-					false
-			) );
-		}
-		else if ( influencers.isAllRevisions() ) {
-			final var parentRevColumn = findParentRevColumn( navigablePath, creationState );
-			if ( parentRevColumn != null ) {
-				predicateConsumer.accept( createRestriction(
-						persister,
-						lazyTableGroup.resolveTableReference( navigablePath, info.auditTableName ),
-						collectEntityKeySelectables( associatedEntityMappingType ),
-						creationState.getSqlAliasBaseGenerator(),
-						info,
-						parentRevColumn,
-						false
-				) );
-			}
-		}
+		final var ownerRevision = influencers.isAllRevisions()
+				? findParentRevColumn( navigablePath, creationState )
+				: null;
+		applyPredicate( associatedEntityMappingType, predicateConsumer, lazyTableGroup,
+				creationState.getSqlAliasBaseGenerator(), influencers, ownerRevision );
 	}
 
 	@Override
@@ -461,7 +439,18 @@ public class AuditMappingImpl implements AuditMapping {
 			@Nonnull TableGroup tableGroup,
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
 			@Nonnull LoadQueryInfluencers influencers) {
-		if ( hasTemporalPredicate( influencers ) ) {
+		applyPredicate( associatedEntityDescriptor, predicateConsumer, tableGroup, sqlAliasBaseGenerator, influencers, null );
+	}
+
+	@Override
+	public void applyPredicate(
+			@Nonnull EntityMappingType associatedEntityDescriptor,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			@Nonnull LoadQueryInfluencers influencers,
+			@Nullable Expression ownerRevision) {
+		if ( ownerRevision != null || hasTemporalPredicate( influencers ) ) {
 			final var persister = associatedEntityDescriptor.getEntityPersister();
 			final var info = resolveInfo( persister.getTableName() );
 			predicateConsumer.accept( createRestriction(
@@ -470,7 +459,7 @@ public class AuditMappingImpl implements AuditMapping {
 					collectEntityKeySelectables( associatedEntityDescriptor ),
 					sqlAliasBaseGenerator,
 					info,
-					resolveDefaultUpperBound( info ),
+					ownerRevision == null ? resolveDefaultUpperBound( info ) : ownerRevision,
 					false
 			) );
 		}
@@ -483,7 +472,18 @@ public class AuditMappingImpl implements AuditMapping {
 			@Nonnull TableGroup tableGroup,
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
 			@Nonnull LoadQueryInfluencers influencers) {
-		if ( hasTemporalPredicate( influencers ) ) {
+		applyPredicate( collectionDescriptor, predicateConsumer, tableGroup, sqlAliasBaseGenerator, influencers, null );
+	}
+
+	@Override
+	public void applyPredicate(
+			@Nonnull PluralAttributeMapping collectionDescriptor,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			@Nonnull LoadQueryInfluencers influencers,
+			@Nullable Expression ownerRevision) {
+		if ( ownerRevision != null || hasTemporalPredicate( influencers ) ) {
 			final String collectionTable = collectionDescriptor.getCollectionDescriptor().getTableName();
 			final var info = resolveInfo( collectionTable );
 			predicateConsumer.accept( createRestriction(
@@ -492,7 +492,7 @@ public class AuditMappingImpl implements AuditMapping {
 					collectCollectionRowKeySelectables( collectionDescriptor ),
 					sqlAliasBaseGenerator,
 					info,
-					resolveDefaultUpperBound( info ),
+					ownerRevision == null ? resolveDefaultUpperBound( info ) : ownerRevision,
 					false
 			) );
 		}
@@ -589,15 +589,15 @@ public class AuditMappingImpl implements AuditMapping {
 				&& parentTableGroup.getModelPart() instanceof EntityValuedModelPart entityPart ) {
 			final var parentAuditMapping = entityPart.getEntityMappingType().getAuditMapping();
 			if ( parentAuditMapping != null ) {
-				final String parentTable = entityPart.getEntityMappingType().getMappedTableDetails().getTableName();
-				final String parentAuditTable = parentAuditMapping.resolveTableName( parentTable );
-				return new ColumnReference(
-						parentTableGroup.resolveTableReference( parentAuditTable ),
-						parentAuditMapping.getChangesetIdMapping( parentTable )
-				);
+				return parentAuditMapping.getChangesetIdColumn( entityPart.getEntityMappingType(), parentTableGroup );
 			}
 		}
 		return null;
+	}
+
+	@Override
+	public boolean hasRowRestriction(@Nonnull LoadQueryInfluencers influencers) {
+		return useAuxiliaryTable( influencers );
 	}
 
 	@Override
@@ -610,8 +610,8 @@ public class AuditMappingImpl implements AuditMapping {
 		return influencers.getTemporalIdentifier() != null;
 	}
 
-	private static boolean hasTemporalPredicate(LoadQueryInfluencers influencers) {
-		return influencers.getTemporalIdentifier() != null
+	private boolean hasTemporalPredicate(LoadQueryInfluencers influencers) {
+		return hasRowRestriction( influencers )
 			&& !influencers.isAllRevisions();
 	}
 }

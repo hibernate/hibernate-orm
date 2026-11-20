@@ -29,6 +29,7 @@ public class PreparedStatementSpyConnectionProvider extends ConnectionProviderDe
 	private final Map<PreparedStatement, String> preparedStatementMap = new LinkedHashMap<>();
 	private final List<String> executeStatements = new ArrayList<>( 4 );
 	private final List<String> executeUpdateStatements = new ArrayList<>( 4 );
+	private final List<int[]> batchUpdateCounts = new ArrayList<>( 4 );
 
 	public final JdbcSpies.SpyContext spyContext = new JdbcSpies.SpyContext()
 			.registerCallback(
@@ -44,6 +45,10 @@ public class PreparedStatementSpyConnectionProvider extends ConnectionProviderDe
 						else if ( method.getDeclaringClass() == Statement.class
 								&& method.getName().equals( "executeUpdate" ) ) {
 							executeUpdateStatements.add( (String) args[0] );
+						}
+						else if ( method.getDeclaringClass() == Statement.class
+								&& method.getName().equals( "executeBatch" ) ) {
+							batchUpdateCounts.add( (int[]) result );
 						}
 					}
 			);
@@ -100,6 +105,7 @@ public class PreparedStatementSpyConnectionProvider extends ConnectionProviderDe
 		preparedStatementMap.clear();
 		executeStatements.clear();
 		executeUpdateStatements.clear();
+		batchUpdateCounts.clear();
 	}
 
 	/**
@@ -195,5 +201,13 @@ public class PreparedStatementSpyConnectionProvider extends ConnectionProviderDe
 	 */
 	public List<Connection> getReleasedConnections() {
 		return releasedConnections;
+	}
+
+	/**
+	 * Gets a list of the update counts of batch executions.
+	 * @return list of update counts
+	 */
+	public List<int[]> getBatchUpdateCounts() {
+		return batchUpdateCounts;
 	}
 }

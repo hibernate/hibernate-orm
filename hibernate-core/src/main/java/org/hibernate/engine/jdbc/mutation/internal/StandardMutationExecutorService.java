@@ -2,7 +2,6 @@ package org.hibernate.engine.jdbc.mutation.internal;
 
 import java.util.Map;
 
-import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
@@ -17,6 +16,8 @@ import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
 import org.hibernate.sql.spi.mutation.SelfExecutingUpdateOperation;
 
+import static org.hibernate.cfg.BatchSettings.STATEMENT_BATCH_SIZE;
+
 /**
  * Standard {@link MutationExecutorService} implementation
  *
@@ -28,7 +29,7 @@ public class StandardMutationExecutorService implements MutationExecutorService 
 	private final int globalBatchSize;
 
 	public StandardMutationExecutorService(Map<String, Object> configurationValues) {
-		this( ConfigurationHelper.getInt( Environment.STATEMENT_BATCH_SIZE, configurationValues, 1 ) );
+		this( ConfigurationHelper.getInt( STATEMENT_BATCH_SIZE, configurationValues, 1 ) );
 	}
 
 	public StandardMutationExecutorService(int globalBatchSize) {
@@ -42,9 +43,7 @@ public class StandardMutationExecutorService implements MutationExecutorService 
 			JdbcValueBindingsFactory bindingsFactory,
 			SharedSessionContractImplementor session) {
 		// decide whether to use batching - any number > one means to batch
-		final Integer sessionBatchSize = session.getJdbcCoordinator()
-				.getJdbcSessionOwner()
-				.getJdbcBatchSize();
+		final Integer sessionBatchSize = session.getJdbcBatchSize();
 		final int batchSizeToUse = sessionBatchSize == null
 				? globalBatchSize
 				: sessionBatchSize;

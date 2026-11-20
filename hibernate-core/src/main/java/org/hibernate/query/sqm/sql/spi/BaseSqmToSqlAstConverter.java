@@ -5082,15 +5082,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					this
 			);
 
-			pluralAttributeMapping.applyBaseRestrictions(
-					subQuerySpec::applyPredicate,
-					tableGroup,
-					true,
-					getLoadQueryInfluencers().getEnabledFilters(),
-					false,
-					null,
-					this
-			);
+			applyPluralAttributeRestrictions( pluralAttributeMapping, tableGroup, subQuerySpec );
 
 			getFromClauseAccess().registerTableGroup( navigablePath, tableGroup );
 			registerPluralTableGroupParts( tableGroup );
@@ -5120,6 +5112,43 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			popProcessingStateStack();
 		}
 		return new SelectStatement( subQuerySpec );
+	}
+
+	/**
+	 * Applies the restrictions which a join of the given collection is subject to
+	 * to a subquery whose root is the collection.
+	 *
+	 * @see PluralAttributeMapping#createTableGroupJoin
+	 */
+	private void applyPluralAttributeRestrictions(
+			PluralAttributeMapping pluralAttributeMapping,
+			TableGroup tableGroup,
+			QuerySpec subQuerySpec) {
+		final var influencers = getLoadQueryInfluencers();
+		final var enabledFilters = influencers.getEnabledFilters();
+		pluralAttributeMapping.applyBaseRestrictions(
+				subQuerySpec::applyPredicate,
+				tableGroup,
+				true,
+				enabledFilters,
+				false,
+				null,
+				this
+		);
+		pluralAttributeMapping.applyBaseManyToManyRestrictions(
+				subQuerySpec::applyPredicate,
+				tableGroup,
+				true,
+				enabledFilters,
+				null,
+				this
+		);
+		pluralAttributeMapping.applyAuxiliaryRestrictions(
+				tableGroup,
+				subQuerySpec::applyPredicate,
+				influencers,
+				getSqlAliasBaseGenerator()
+		);
 	}
 
 	@Override
@@ -5234,15 +5263,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					this
 			);
 
-			pluralAttributeMapping.applyBaseRestrictions(
-					subQuerySpec::applyPredicate,
-					tableGroup,
-					true,
-					getLoadQueryInfluencers().getEnabledFilters(),
-					false,
-					null,
-					this
-			);
+			applyPluralAttributeRestrictions( pluralAttributeMapping, tableGroup, subQuerySpec );
 
 			getFromClauseAccess().registerTableGroup( pluralPartPath.getNavigablePath(), tableGroup );
 			registerPluralTableGroupParts( tableGroup );
@@ -5377,15 +5398,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						this
 				);
 
-				pluralAttributeMapping.applyBaseRestrictions(
-						subQuerySpec::applyPredicate,
-						tableGroup,
-						true,
-						getLoadQueryInfluencers().getEnabledFilters(),
-						false,
-						null,
-						this
-				);
+				applyPluralAttributeRestrictions( pluralAttributeMapping, tableGroup, subQuerySpec );
 
 				getFromClauseAccess().registerTableGroup( pluralPartPath.getNavigablePath(), tableGroup );
 				registerPluralTableGroupParts( tableGroup );
@@ -8198,15 +8211,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					this
 			);
 
-			pluralAttributeMapping.applyBaseRestrictions(
-					subQuerySpec::applyPredicate,
-					tableGroup,
-					true,
-					getLoadQueryInfluencers().getEnabledFilters(),
-					false,
-					null,
-					this
-			);
+			applyPluralAttributeRestrictions( pluralAttributeMapping, tableGroup, subQuerySpec );
 
 			getFromClauseAccess().registerTableGroup( pluralPath.getNavigablePath(), tableGroup );
 			registerPluralTableGroupParts( tableGroup );

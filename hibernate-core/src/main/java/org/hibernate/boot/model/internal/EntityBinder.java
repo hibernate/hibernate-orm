@@ -126,6 +126,7 @@ import static org.hibernate.boot.model.internal.AnnotatedClassType.MAPPED_SUPERC
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN_NAME;
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.buildDiscriminatorColumn;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumn.buildInheritanceJoinColumn;
+import static org.hibernate.boot.model.internal.AuditHelper.applyAuditOverrides;
 import static org.hibernate.boot.model.internal.BinderHelper.extractFromPackage;
 import static org.hibernate.boot.model.internal.BinderHelper.getMappedSuperclassOrNull;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
@@ -262,6 +263,7 @@ public class EntityBinder {
 			bindTemporal( clazzToProcess, rootClass, context );
 			bindAudited( clazzToProcess, rootClass, context );
 		}
+		applyAuditOverrides( persistentClass, clazzToProcess, context );
 		if ( persistentClass instanceof Subclass subclass ) {
 			assert superEntity != null;
 			superEntity.addSubclass( subclass );
@@ -370,7 +372,7 @@ public class EntityBinder {
 		}
 	}
 
-	private static <T extends Annotation> T extract(
+	static <T extends Annotation> T extract(
 			Class<T> annotationClass, ClassDetails classDetails, MetadataBuildingContext context) {
 		final var modelsContext = context.getBootstrapContext().getModelsContext();
 		final var fromClass = classDetails.getAnnotationUsage( annotationClass, modelsContext );

@@ -2068,6 +2068,10 @@ public class HbmXmlTransformer {
 				final var targetColumnAdapter = target.makeColumnAdapter( columnDefaults );
 				targetColumnAdapter.setName( column.getQuotedName() );
 				targetColumnAdapter.setTable( table );
+				if ( column.isUnique() ) {
+					targetColumnAdapter.setUnique( true );
+				}
+				targetColumnAdapter.setColumnDefinition( column.getSqlType() );
 				targetColumnAdapter.setLength( convertColumnLength( column.getLength() ) );
 				targetColumnAdapter.setPrecision( column.getPrecision() );
 				targetColumnAdapter.setScale( column.getScale() );

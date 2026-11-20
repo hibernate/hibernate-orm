@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/orm/hbm"
+                   package="org.hibernate.orm.test.boot.models.hbm.manytoone"
+                   default-access="field">
+    <class name="ManyToOneColumnTests$Target" table="target_t">
+        <id name="id"/>
+    </class>
+    <class name="ManyToOneColumnTests$UniqueSource" table="unique_source_t">
+        <id name="id"/>
+        <many-to-one name="target" class="ManyToOneColumnTests$Target" unique="true"/>
+    </class>
+    <class name="ManyToOneColumnTests$UniqueColumnSource" table="unique_column_source_t">
+        <id name="id"/>
+        <many-to-one name="target" class="ManyToOneColumnTests$Target">
+            <column name="target" unique="true"/>
+        </many-to-one>
+    </class>
+    <class name="ManyToOneColumnTests$TypedColumnSource" table="typed_column_source_t">
+        <id name="id"/>
+        <many-to-one name="target" class="ManyToOneColumnTests$Target">
+            <column name="target" sql-type="numeric(19,0)"/>
+        </many-to-one>
+    </class>
+</hibernate-mapping>

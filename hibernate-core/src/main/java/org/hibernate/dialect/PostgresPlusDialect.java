@@ -173,10 +173,11 @@ public class PostgresPlusDialect extends PostgreSQLDialect implements CurrentTem
 		};
 	}
 
-	/// Nothing has been assessed for EDB Postgres Advanced Server, which is a different
-	/// database with a different JDBC driver than PostgreSQL.
+	/// EDB Postgres Advanced Server is a different database with a different JDBC
+	/// driver than PostgreSQL, so what PostgreSQLDialect answers is not taken for
+	/// granted: it has been verified against EDB itself, and holds there as well.
 	@Override
 	public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
-		return TemporalPreservation.unknown();
+		return super.getTemporalPreservation( javaType, jdbcType );
 	}
 }

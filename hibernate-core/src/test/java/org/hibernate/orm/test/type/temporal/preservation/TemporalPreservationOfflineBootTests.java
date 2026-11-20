@@ -26,6 +26,7 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -65,6 +66,7 @@ class TemporalPreservationOfflineBootTests {
 	@RequiresDialect(H2Dialect.class)
 	@RequiresDialect(HSQLDialect.class)
 	@RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
+	@RequiresDialect(PostgresPlusDialect.class)
 	@RequiresDialect(MySQLDialect.class)
 	@RequiresDialect(SQLServerDialect.class)
 	@RequiresDialect(OracleDialect.class)

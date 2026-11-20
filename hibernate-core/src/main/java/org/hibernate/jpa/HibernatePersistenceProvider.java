@@ -213,6 +213,10 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	@Override
 	public boolean generateSchema(PersistenceConfiguration persistenceConfiguration) {
 		JPA_LOGGER.startingGenerateSchema( persistenceConfiguration.name() );
+		if ( !isRequestedProvider( persistenceConfiguration ) ) {
+			JPA_LOGGER.excludingDueToProviderMismatch();
+			return false;
+		}
 		final var builder = getEntityManagerFactoryBuilder(persistenceConfiguration);
 		builder.generateSchema();
 		return true;
@@ -252,7 +256,17 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 
 	@Override
 	public EntityManagerFactory createEntityManagerFactory(PersistenceConfiguration configuration) {
+		if ( !isRequestedProvider( configuration ) ) {
+			JPA_LOGGER.excludingDueToProviderMismatch();
+			return null;
+		}
 		return getEntityManagerFactoryBuilder( configuration ).build();
+	}
+
+	// See if we (Hibernate) are the persistence provider, like for a persistence unit:
+	// we are when the configuration names no provider
+	private static boolean isRequestedProvider(PersistenceConfiguration configuration) {
+		return isProvider( new PersistenceConfigurationDescriptor( configuration ), configuration.properties() );
 	}
 
 	private EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(PersistenceConfiguration configuration) {

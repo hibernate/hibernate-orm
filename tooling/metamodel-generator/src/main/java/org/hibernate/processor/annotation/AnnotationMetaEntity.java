@@ -2348,13 +2348,14 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 				fieldNames.add( attribute.fieldName() );
 			}
 		}
+		String eventFieldName = "event";
+		while ( !fieldNames.add( eventFieldName ) ) {
+			eventFieldName += "$";
+		}
+		members.putIfAbsent( "<event>", new EventField( this, entity, eventFieldName ) );
 		for ( String callback : List.of( PRE_INSERT, POST_INSERT, PRE_UPDATE, POST_UPDATE,
 				PRE_DELETE, POST_DELETE, PRE_UPSERT, POST_UPSERT ) ) {
 			final var callbackName = unqualify( callback );
-			String eventFieldName = "_event" + callbackName;
-			while ( !fieldNames.add( eventFieldName ) ) {
-				eventFieldName += "$";
-			}
 			members.putIfAbsent( "event." + callbackName + "Event." + entity,
 					new LifecycleEventCallback( this, entity, callback, callbackName, eventFieldName ) );
 		}

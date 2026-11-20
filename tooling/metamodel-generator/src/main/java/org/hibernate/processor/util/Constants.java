@@ -89,6 +89,7 @@ public final class Constants {
 	public static final String PATTERN = "org.hibernate.annotations.processing.Pattern";
 	public static final String EXCLUDE = "org.hibernate.annotations.processing.Exclude";
 
+	public static final String JD_LIFECYCLE_EVENT = "jakarta.data.event.LifecycleEvent";
 	public static final String JD_REPOSITORY = "jakarta.data.repository.Repository";
 	public static final String JD_QUERY = "jakarta.data.repository.Query";
 	public static final String JD_FIND = "jakarta.data.repository.Find";

@@ -3,8 +3,6 @@ package org.hibernate.processor.annotation;
 import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 
-import static org.hibernate.processor.util.Constants.EVENT;
-import static org.hibernate.processor.util.Constants.INJECT;
 
 /**
  * A JPA entity listener callback that fires a Jakarta Data lifecycle event.
@@ -47,16 +45,6 @@ public class LifecycleEventCallback implements MetaAttribute {
 		final var eventClass = annotationMetaEntity.importType( "jakarta.data.event." + callbackName + "Event" );
 		return new StringBuilder()
 				.append( "\n@" )
-				.append( annotationMetaEntity.importType( INJECT ) )
-				.append( "\nprivate " )
-				.append( annotationMetaEntity.importType( EVENT ) )
-				.append( "<" )
-				.append( eventClass )
-				.append( "<" )
-				.append( entityType )
-				.append( ">> " )
-				.append( fieldName )
-				.append( ";\n\n@" )
 				.append( annotationMetaEntity.importType( callbackAnnotation ) )
 				.append( "\npublic void _on" )
 				.append( callbackName )

@@ -61,13 +61,15 @@ class StatefulRepositoryTest {
 
 		assertTrue( entityMetamodel.contains( "@EntityListener" ) );
 		assertTrue( entityMetamodel.contains( "public class _StatefulBook" ) );
+		assertTrue( entityMetamodel.contains( "@Inject\n\tprivate Event<LifecycleEvent<StatefulBook>> event;" ) );
+		assertTrue( entityMetamodel.indexOf( "private Event<" ) == entityMetamodel.lastIndexOf( "private Event<" ) );
+		assertFalse( entityMetamodel.contains( "TypeLiteral" ) );
 		for ( String callback : new String[] {
 				"PreInsert", "PostInsert", "PreUpdate", "PostUpdate", "PreDelete", "PostDelete", "PreUpsert", "PostUpsert"
 		} ) {
-			assertTrue( entityMetamodel.contains( "private Event<" + callback + "Event<StatefulBook>> _event" + callback + ";" ) );
-			assertTrue( entityMetamodel.contains( "@" + callback + "\n\tpublic void _on" + callback + "(StatefulBook entity)" ) );
-			assertTrue( entityMetamodel.contains( "if (_event" + callback + " != null)" ) );
-			assertTrue( entityMetamodel.contains( "_event" + callback + ".fire(new " + callback + "Event<>(entity));" ) );
+			assertTrue( entityMetamodel.contains( "@" + callback + "\n\tpublic void _on" + callback
+					+ "(StatefulBook entity) {\n\t\tif (event != null) {\n\t\t\tevent.fire(new "
+					+ callback + "Event<>(entity));\n\t\t}\n\t}" ) );
 		}
 		assertFalse( repository.contains( "_hibernate_data_" ) );
 	}

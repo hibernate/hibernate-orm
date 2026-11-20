@@ -2,10 +2,12 @@ package org.hibernate.orm.test.query.hql;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterJoinTable;
@@ -48,25 +50,34 @@ class SQLJoinTableRestrictionQueryTest {
 			final Item visibleItem = new Item();
 			visibleItem.id = 1;
 			visibleItem.code = "A";
+			visibleItem.alternateCode = "V";
 			final Item restrictedItem = new Item();
 			restrictedItem.id = 2;
 			restrictedItem.code = "B";
+			restrictedItem.alternateCode = "W";
 			final Item anotherRestrictedItem = new Item();
 			anotherRestrictedItem.id = 3;
 			anotherRestrictedItem.code = "C";
+			anotherRestrictedItem.alternateCode = "X";
 			final Item additionalRestrictedItem = new Item();
 			additionalRestrictedItem.id = 4;
 			additionalRestrictedItem.code = "D";
+			additionalRestrictedItem.alternateCode = "Y";
 			final Item unassociatedItem = new Item();
 			unassociatedItem.id = 5;
 			unassociatedItem.code = "E";
+			unassociatedItem.alternateCode = "Z";
 
 			cart.unrestrictedItems.add( visibleItem );
 			cart.unrestrictedItems.add( restrictedItem );
+			cart.unrestrictedAlternateKeyItems.add( visibleItem );
+			cart.unrestrictedAlternateKeyItems.add( restrictedItem );
 			cart.unrestrictedPkItems.add( visibleItem );
 			cart.unrestrictedPkItems.add( restrictedItem );
 			cartWithOnlyRestrictedItems.unrestrictedItems.add( anotherRestrictedItem );
 			cartWithOnlyRestrictedItems.unrestrictedItems.add( additionalRestrictedItem );
+			cartWithOnlyRestrictedItems.unrestrictedAlternateKeyItems.add( anotherRestrictedItem );
+			cartWithOnlyRestrictedItems.unrestrictedAlternateKeyItems.add( additionalRestrictedItem );
 			cartWithOnlyRestrictedItems.unrestrictedPkItems.add( anotherRestrictedItem );
 			cartWithOnlyRestrictedItems.unrestrictedPkItems.add( additionalRestrictedItem );
 
@@ -332,7 +343,8 @@ class SQLJoinTableRestrictionQueryTest {
 
 	@ParameterizedTest
 	@CsvSource({
-			"unrestrictedItems,unrestrictedPkItems"
+			"unrestrictedItems,unrestrictedPkItems",
+			"unrestrictedPkItems,unrestrictedItems"
 	})
 	void entityInSubqueryBetweenPrimaryAndUniqueKeyJoinTables(
 			String collection, String subqueryCollection, SessionFactoryScope scope) {
@@ -342,6 +354,40 @@ class SQLJoinTableRestrictionQueryTest {
 					+ "where cart.id = 1 and item in (select other from cart." + subqueryCollection + " other)",
 					Long.class
 			).getSingleResult() );
+		} );
+	}
+
+	@ParameterizedTest
+	@CsvSource({
+			"'item in (cart.single, other)',1",
+			"'item between other and cart.single',1",
+			"'item not between other and cart.single',2"
+	})
+	void entityPredicatesSupportDifferentAssociationKeys(String predicate, long expectedId, SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.find( Cart.class, 1L ).single = session.find( Item.class, 1L );
+			assertEquals( List.of( expectedId ), session.createQuery(
+					"select item.id from Cart cart join cart.unrestrictedAlternateKeyItems item "
+					+ "join cart.unrestrictedItems other where cart.id = 1 and other.id = 1 and " + predicate,
+					Long.class
+			).getResultList() );
+		} );
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {
+			"item in (cart.single, other)",
+			"item not in (cart.single, other)"
+	})
+	void entityInPredicatesSupportDifferentKeysWithMatchingKeyFirst(String predicate, SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.find( Cart.class, 1L ).single = session.find( Item.class, 2L );
+			assertEquals( predicate.contains( "not in" ) ? List.of() : List.of( 1L, 2L ), session.createQuery(
+					"select item.id from Cart cart join cart.unrestrictedItems item "
+					+ "join cart.unrestrictedAlternateKeyItems other "
+					+ "where cart.id = 1 and other.id = 1 and " + predicate + " order by item.id",
+					Long.class
+			).getResultList() );
 		} );
 	}
 
@@ -561,6 +607,9 @@ class SQLJoinTableRestrictionQueryTest {
 
 		@Column(unique = true)
 		public String code;
+
+		@Column(unique = true)
+		public String alternateCode;
 	}
 
 	@Entity(name = "Cart")
@@ -569,6 +618,10 @@ class SQLJoinTableRestrictionQueryTest {
 		@Id
 		public long id;
 
+		@ManyToOne(fetch = FetchType.LAZY)
+		@JoinColumn(name = "single_code", referencedColumnName = "code")
+		public Item single;
+
 		@OneToMany
 		@JoinTable(
 				name = "cart_items",
@@ -576,6 +629,14 @@ class SQLJoinTableRestrictionQueryTest {
 				inverseJoinColumns = @JoinColumn(name = "item_code", referencedColumnName = "code")
 		)
 		public Set<Item> unrestrictedItems = new HashSet<>();
+
+		@OneToMany
+		@JoinTable(
+				name = "cart_alternate_key_items",
+				joinColumns = @JoinColumn(name = "cart_id"),
+				inverseJoinColumns = @JoinColumn(name = "item_alternate_code", referencedColumnName = "alternateCode")
+		)
+		public Set<Item> unrestrictedAlternateKeyItems = new HashSet<>();
 
 		@OneToMany
 		@JoinTable(

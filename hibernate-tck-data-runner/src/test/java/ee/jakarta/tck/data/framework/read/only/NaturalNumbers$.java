@@ -13,8 +13,16 @@ interface NaturalNumbers$ extends NaturalNumbers {
 	public long countByIdBetween(long minimum, long maximum);
 
 	@Override
+	@Query("select count(this) as Integer where id in ?1")
+	public long countByIdIn(java.util.Set<java.lang.Long> ids);
+
+	@Override
 	@Query("select count(this)>0 where id = ?1")
 	public boolean existsById(long id);
+
+	@Override
+	@Query("select count(this)>0 where id in ?1")
+	public boolean existsByIdIn(java.util.Set<java.lang.Long> ids);
 
 	@Override
 	@Query("select count(this) as Integer")

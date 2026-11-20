@@ -10,14 +10,18 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
 import org.hibernate.query.criteria.JpaCriteriaInsertValues;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 @DomainModel(
@@ -72,6 +76,32 @@ public class InsertConflictWithCriteriaCopyTreeEnabledTests {
 					session.createMutationQuery( insertIntoItem ).executeUpdate();
 				}
 		);
+	}
+
+	@Test
+	@JiraKey("HHH-20755")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
+	void createCriteriaInsertSelectOnConflictTargetTest(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final TestEntity entity = new TestEntity();
+			entity.id = 2L;
+			session.persist( entity );
+			session.flush();
+
+			final HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+			final JpaCriteriaInsertSelect<TestEntity> insert = cb.createCriteriaInsertSelect( TestEntity.class );
+			insert.setInsertionTargetPaths( insert.getTarget().get( "id" ) );
+			final JpaCriteriaQuery<Tuple> select = cb.createTupleQuery();
+			select.select( cb.tuple( cb.literal( 2L ) ) );
+			insert.select( select );
+			insert.onConflict().conflictOnConstraintPaths( insert.getTarget().get( "id" ) )
+					.onConflictDoNothing();
+			session.createMutationQuery( insert ).executeUpdate();
+
+			assertEquals( 1L, session.createSelectionQuery(
+					"select count(*) from TestEntity where id = 2", Long.class
+			).getSingleResult() );
+		} );
 	}
 
 	@Entity(name = "TestEntity")

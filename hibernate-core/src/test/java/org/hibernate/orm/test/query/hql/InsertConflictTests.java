@@ -2,15 +2,22 @@ package org.hibernate.orm.test.query.hql;
 
 import java.time.LocalDate;
 
+import jakarta.persistence.Tuple;
+
+import org.hibernate.cfg.QuerySettings;
 import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaConflictClause;
+import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
 import org.hibernate.query.criteria.JpaCriteriaInsertValues;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaRoot;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.contacts.Contact;
@@ -25,13 +32,16 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@ServiceRegistry
+@ServiceRegistry(settings = @Setting(name = QuerySettings.CRITERIA_COPY_TREE, value = "false"))
 @DomainModel(standardModels = { StandardDomainModel.GAMBIT, StandardDomainModel.CONTACTS })
 @SessionFactory
 @JiraKey("HHH-17506")
@@ -55,6 +65,94 @@ public class InsertConflictTests {
 	@AfterEach
 	public void cleanupData(SessionFactoryScope scope) {
 		scope.getSessionFactory().getSchemaManager().truncate();
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-20755" )
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
+	@SkipForDialect( dialectClass = SpannerDialect.class,
+			reason = "Cloud Spanner does not support ON CONFLICT clauses for INSERT ... SELECT statements" )
+	public void testInsertSelectOnConflictTarget(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.createMutationQuery(
+					"insert into BasicEntity (id, data) select 1, :data on conflict(id) do nothing"
+			).setParameter( "data", "changed" ).executeUpdate();
+			assertEquals( "data", session.find( BasicEntity.class, 1 ).getData() );
+		} );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-20755" )
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
+	@SkipForDialect( dialectClass = SpannerDialect.class,
+			reason = "Cloud Spanner does not support ON CONFLICT clauses for INSERT ... SELECT statements" )
+	public void testInsertSelectOnConflictDoUpdateWithAliases(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.createMutationQuery(
+					"insert into BasicEntity b (id, data) " +
+							"select s.id, 'changed' from BasicEntity s where s.id = 1 " +
+							"on conflict(b.id) do update set b.data = excluded.data"
+			).executeUpdate();
+			assertEquals( "changed", session.find( BasicEntity.class, 1 ).getData() );
+		} );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-20755" )
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
+	@SkipForDialect( dialectClass = SpannerDialect.class,
+			reason = "Cloud Spanner does not support ON CONFLICT clauses for INSERT ... SELECT statements" )
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class,
+			reason = "Spanner does not support predicates (WHERE clause) in conflict clauses" )
+	public void testInsertSelectOnConflictDoUpdateWithWhere(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.createMutationQuery(
+					"insert into BasicEntity b (id, data) " +
+							"select s.id, 'changed' from BasicEntity s where s.id = 1 " +
+							"on conflict(id) do update set b.data = excluded.data " +
+							"where b.data = 'other' and excluded.data = 'changed'"
+			).executeUpdate();
+			assertEquals( "data", session.find( BasicEntity.class, 1 ).getData() );
+		} );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-20755" )
+	public void testInsertSelectOnConflictRejectsSourceAlias(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			final SemanticException exception = assertThrows( SemanticException.class, () -> session.createMutationQuery(
+					"insert into BasicEntity b (id, data) " +
+							"select s.id, s.data from BasicEntity s " +
+							"on conflict(id) do update set b.data = s.data"
+			) );
+			assertTrue( exception.getMessage().contains( "Could not interpret path expression 's.data'" ) );
+		} );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-20755" )
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
+	@SkipForDialect( dialectClass = SpannerDialect.class,
+			reason = "Cloud Spanner does not support ON CONFLICT clauses for INSERT ... SELECT statements" )
+	public void testInsertSelectOnConflictDoUpdateCriteria(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+			final JpaCriteriaInsertSelect<BasicEntity> insert = cb.createCriteriaInsertSelect( BasicEntity.class );
+			insert.getTarget().alias( "b" );
+			insert.setInsertionTargetPaths( insert.getTarget().get( "id" ), insert.getTarget().get( "data" ) );
+			final JpaCriteriaQuery<Tuple> select = cb.createTupleQuery();
+			final JpaRoot<BasicEntity> source = select.from( BasicEntity.class );
+			source.alias( "s" );
+			select.select( cb.tuple( source.get( "id" ), cb.value( "changed" ) ) );
+			select.where( cb.equal( source.get( "id" ), 1 ) );
+			insert.select( select );
+			final JpaConflictClause<BasicEntity> conflictClause = insert.onConflict();
+			conflictClause.conflictOnConstraintPaths( insert.getTarget().get( "id" ) )
+					.onConflictDoUpdate()
+					.set( "data", conflictClause.getExcludedRoot().get( "data" ) );
+			session.createMutationQuery( insert ).executeUpdate();
+			assertEquals( "changed", session.find( BasicEntity.class, 1 ).getData() );
+		} );
 	}
 
 	@Test

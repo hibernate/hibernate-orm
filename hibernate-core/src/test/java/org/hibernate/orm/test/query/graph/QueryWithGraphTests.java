@@ -174,9 +174,22 @@ public class QueryWithGraphTests {
 		factoryScope.inTransaction( session -> {
 			assertThat( session.createNativeQuery( "select name from Publisher" )
 					.ofType( String.class ).getSingleResult() ).isEqualTo( "Me" );
-			assertThat( session.createNativeQuery( "select id, name from Publisher" )
-					.ofType( Object[].class ).getSingleResult() ).containsExactly( 1, "Me" );
-			assertThat( session.createNativeQuery( "select id, name from Publisher" )
+			final String sql = "select id, name from Publisher";
+			final Object plainResult = session.createNativeQuery( sql ).getSingleResult();
+			assertThat( plainResult ).isInstanceOf( Object[].class );
+			final Object[] plainRow = (Object[]) plainResult;
+			assertThat( plainRow ).hasSize( 2 );
+			assertThat( plainRow[0] ).isInstanceOfSatisfying(
+					Number.class, id -> assertThat( id.doubleValue() ).isEqualTo( 1.0 )
+			);
+			assertThat( plainRow[1] ).isEqualTo( "Me" );
+
+			final Object[] typedRow = session.createNativeQuery( sql )
+					.ofType( Object[].class ).getSingleResult();
+			assertThat( typedRow ).containsExactly( plainRow );
+			assertThat( typedRow[0].getClass() ).isEqualTo( plainRow[0].getClass() );
+
+			assertThat( session.createNativeQuery( sql )
 					.ofType( Object.class ).getSingleResult() ).isInstanceOf( Object[].class );
 		} );
 	}

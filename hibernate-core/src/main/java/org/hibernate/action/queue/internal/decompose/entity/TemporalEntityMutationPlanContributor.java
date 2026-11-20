@@ -73,7 +73,7 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 				)
 				: staticEndOperation;
 
-		operationConsumer.accept( createEndOperation(
+		final var end = createEndOperation(
 				context.ordinalBase(),
 				"EntityUpdateAction(" + entityPersister.getEntityName() + ")",
 				context.identifier(),
@@ -82,9 +82,13 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 				context.previousState(),
 				effectiveOptLockStyle,
 				endOperation
-		) );
-
-		contributeReplacementInsert( context, operationConsumer );
+		);
+		operationConsumer.accept( end );
+		contributeReplacementInsert( context, insert -> {
+			// Inserts may be batched with a different entity's insert from the same flush.
+			insert.setExecutionPrerequisite( end );
+			operationConsumer.accept( insert );
+		} );
 		return true;
 	}
 

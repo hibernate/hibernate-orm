@@ -113,15 +113,15 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 			contributeHistoryExcludedUpdate( context, operationConsumer );
 		}
 		else {
-			operationConsumer.accept( createHistoryEndOperation(
+			final var end = createHistoryEndOperation(
 					context.ordinalBase(),
 					"EntityUpdateAction(" + entityPersister.getEntityName() + "#history-end)",
 					context.identifier(),
 					context.rowId(),
 					context.previousVersion(),
 					context.previousState()
-			) );
-			operationConsumer.accept( createHistoryInsertOperation(
+			);
+			final var insert = createHistoryInsertOperation(
 					context.ordinalBase(),
 					501,
 					"EntityUpdateAction(" + entityPersister.getEntityName() + "#history-insert)",
@@ -129,7 +129,10 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 					context.identifier(),
 					context.state(),
 					entityPersister.getPropertyInsertability()
-			) );
+			);
+			insert.setExecutionPrerequisite( end );
+			operationConsumer.accept( end );
+			operationConsumer.accept( insert );
 		}
 	}
 

@@ -1324,13 +1324,33 @@ public class EntityBinder {
 			}
 		}
 		else {
-			buildInheritanceJoinColumn(
-					null,
-					null,
-					superEntity.getIdentifier(),
-					joinColumns,
-					context
-			);
+			// Handle composite IDs by creating a join column for each column in the identifier
+			final Value identifier = superEntity.getIdentifier();
+			final int columnCount = identifier.getColumns().size();
+
+			if ( columnCount == 1 ) {
+				// Simple ID - use the original method
+				buildInheritanceJoinColumn(
+						null,
+						null,
+						identifier,
+						joinColumns,
+						context
+				);
+			}
+			else {
+				// Composite ID - create a join column for each column in the identifier
+				for ( int i = 0; i < columnCount; i++ ) {
+					buildInheritanceJoinColumn(
+							null,
+							null,
+							identifier,
+							i,
+							joinColumns,
+							context
+					);
+				}
+			}
 		}
 		return joinColumns;
 	}
@@ -2176,13 +2196,34 @@ public class EntityBinder {
 		joinColumns.setBuildingContext( context );
 		joinColumns.setJoins( secondaryTables );
 		joinColumns.setPropertyHolder( propertyHolder );
-		buildInheritanceJoinColumn(
-				null,
-				null,
-				persistentClass.getIdentifier(),
-				joinColumns,
-				context
-		);
+
+		// Handle composite IDs by creating a join column for each column in the identifier
+		final Value identifier = persistentClass.getIdentifier();
+		final int columnCount = identifier.getColumns().size();
+
+		if ( columnCount == 1 ) {
+			// Simple ID - use the original method
+			buildInheritanceJoinColumn(
+					null,
+					null,
+					identifier,
+					joinColumns,
+					context
+			);
+		}
+		else {
+			// Composite ID - create a join column for each column in the identifier
+			for ( int i = 0; i < columnCount; i++ ) {
+				buildInheritanceJoinColumn(
+						null,
+						null,
+						identifier,
+						i,
+						joinColumns,
+						context
+				);
+			}
+		}
 		return joinColumns;
 	}
 

@@ -157,6 +157,25 @@ public class SoftDeleteCollectionJoinTests {
 						+ " where z.id = 2 and n.id is null) order by p.id" ) );
 	}
 
+	@Test
+	@JiraKey("HHH-21213")
+	public void implicitJoin(SessionFactoryScope scope) {
+		// a path through the collection is an inner join, just like an explicit join
+		assertEquals( List.of( 2 ), ids( scope, "select element(p.notes).id from Parent p" ) );
+		assertEquals( List.of(), ids( scope, "select p.id from Parent p where element(p.notes) is null order by p.id" ) );
+		assertEquals( List.of( 2 ),
+				ids( scope, "select p.id from Parent p where element(p.notes).name = 'y' order by p.id" ) );
+	}
+
+	@Test
+	@JiraKey("HHH-21213")
+	public void implicitJoinInSubquery(SessionFactoryScope scope) {
+		// the path through the collection starts from the root of the outer query
+		assertEquals( List.of( 2 ), ids( scope,
+				"select p.id from Parent p where exists (select 1 from Marker z where z.id = element(p.notes).id)"
+						+ " order by p.id" ) );
+	}
+
 	private static List<Integer> ids(SessionFactoryScope scope, String hql) {
 		return scope.fromSession( session -> session.createSelectionQuery( hql, Integer.class ).getResultList() );
 	}

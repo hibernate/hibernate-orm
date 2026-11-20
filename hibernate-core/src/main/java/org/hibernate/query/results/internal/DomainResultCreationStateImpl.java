@@ -35,6 +35,7 @@ import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.HashMap;
@@ -263,11 +264,12 @@ public class DomainResultCreationStateImpl
 			sqlSelection = resultSetMappingSqlSelection;
 		}
 		else if ( created instanceof ColumnReference columnReference) {
-			sqlSelection =
-					new ResultSetMappingSqlSelection(
-							valuesArrayPosition( columnReference.getSelectableName() ),
-							columnReference.getJdbcMapping()
-					);
+			final String selectableName = columnReference.getSelectableName();
+			final int nestedPosition = nestedValuesArrayPosition( selectableName );
+			sqlSelection = nestedPosition == -1
+					? new ResultSetMappingSqlSelection( jdbcValuesArrayPosition( selectableName ),
+							columnReference.getJdbcMapping() )
+					: new ResultSetMappingSqlSelection( nestedPosition, columnReference.getJdbcMapping(), true );
 		}
 		else if ( created instanceof CaseStatementDiscriminatorExpression ) {
 			sqlSelection = new ResultSetMappingSqlSelection(
@@ -280,14 +282,33 @@ public class DomainResultCreationStateImpl
 		}
 
 		sqlSelectionMap.put( key, sqlSelection );
-		sqlSelectionConsumer.accept( sqlSelection );
+		if ( !sqlSelection.isVirtual() ) {
+			// A virtual selection reads its value from the aggregate column (e.g. JSON)
+			// of the nesting fetch parent, not from the JDBC ResultSet
+			sqlSelectionConsumer.accept( sqlSelection );
+		}
 		return sqlSelection;
+	}
+
+	/**
+	 * @return the position of the selectable in the values of the aggregate column (e.g. JSON)
+	 * of the nesting fetch parent, or {@code -1} if there's no nesting fetch parent or the
+	 * selectable is not part of it
+	 */
+	public int nestedValuesArrayPosition(String selectableName) {
+		return nestingFetchParent != null
+				? nestingFetchParent.getReferencedMappingType().getSelectableIndex( selectableName )
+				: -1;
 	}
 
 	private int valuesArrayPosition(String selectableName) {
 		return nestingFetchParent != null
-				? nestingFetchParent.getReferencedMappingType().getSelectableIndex( selectableName )
-				: jdbcPositionToValuesArrayPosition( jdbcResultsMetadata.resolveColumnPosition( selectableName ) );
+				? nestedValuesArrayPosition( selectableName )
+				: jdbcValuesArrayPosition( selectableName );
+	}
+
+	private int jdbcValuesArrayPosition(String selectableName) {
+		return jdbcPositionToValuesArrayPosition( jdbcResultsMetadata.resolveColumnPosition( selectableName ) );
 	}
 
 	@Override
@@ -300,6 +321,22 @@ public class DomainResultCreationStateImpl
 		}
 		if ( !(expression instanceof ResultSetMappingSqlSelection sqlSelection) ) {
 			throw new IllegalArgumentException( "Expression must be a ResultSetMappingSqlSelection" );
+		}
+		final var jdbcMapping = sqlSelection.getExpressionType().getSingleJdbcMapping();
+		if ( javaType != null
+				&& !sqlSelection.isVirtual()
+				&& jdbcMapping.getJdbcType() instanceof AggregateJdbcType
+				&& jdbcMapping.getMappedJavaType() != javaType ) {
+			// For example, AggregateEmbeddableFetchImpl reads the values of a JSON column as Object[]:
+			// register a selection with the extractor for that type, it replaces the one at the same position
+			final var aggregateSelection = new ResultSetMappingSqlSelection(
+					sqlSelection.getValuesArrayPosition(),
+					jdbcMapping,
+					jdbcMapping.getJdbcType().getExtractor( javaType ),
+					false
+			);
+			sqlSelectionConsumer.accept( aggregateSelection );
+			return aggregateSelection;
 		}
 		return sqlSelection;
 	}

@@ -307,6 +307,44 @@ class SQLJoinTableRestrictionQueryTest {
 		} );
 	}
 
+	@Test
+	void entityInSubqueryOnUniqueKeyJoinTable(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			assertEquals( 2L, session.createQuery(
+					"select count(*) from Cart cart join cart.unrestrictedItems item "
+					+ "where cart.id = 1 and item in (select other from Item other)",
+					Long.class
+			).getSingleResult() );
+		} );
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {"item = other", "other = item"})
+	void entityComparisonBetweenPrimaryAndUniqueKeyJoinTables(String comparison, SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			assertEquals( 2L, session.createQuery(
+					"select count(*) from Cart cart join cart.unrestrictedItems item "
+					+ "join cart.unrestrictedPkItems other where cart.id = 1 and " + comparison,
+					Long.class
+			).getSingleResult() );
+		} );
+	}
+
+	@ParameterizedTest
+	@CsvSource({
+			"unrestrictedItems,unrestrictedPkItems"
+	})
+	void entityInSubqueryBetweenPrimaryAndUniqueKeyJoinTables(
+			String collection, String subqueryCollection, SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			assertEquals( 2L, session.createQuery(
+					"select count(*) from Cart cart join cart." + collection + " item "
+					+ "where cart.id = 1 and item in (select other from cart." + subqueryCollection + " other)",
+					Long.class
+			).getSingleResult() );
+		} );
+	}
+
 	@ParameterizedTest
 	@ValueSource(strings = {"item = :item", ":item = item"})
 	void entityParameterComparisonsApplyRestriction(String predicate, SessionFactoryScope scope) {
@@ -322,6 +360,39 @@ class SQLJoinTableRestrictionQueryTest {
 					query,
 					Long.class
 			).setParameter( "item", restrictedItem ).getSingleResult() );
+		} );
+	}
+
+	@ParameterizedTest
+	@CsvSource({
+			"items,between,1,1",
+			"items,not between,0,0",
+			"unrestrictedItems,between,1,2",
+			"unrestrictedItems,not between,1,0",
+			"pkItems,between,1,1",
+			"pkItems,not between,0,0",
+			"unrestrictedPkItems,between,1,2",
+			"unrestrictedPkItems,not between,1,0",
+			"manyToManyItems,between,1,1",
+			"manyToManyItems,not between,0,0"
+	})
+	void entityBetweenParametersUseMatchingComparisonKey(
+			String collection,
+			String operator,
+			long expectedSingleCount,
+			long expectedRangeCount,
+			SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final Item visibleItem = session.find( Item.class, 1L );
+			final Item restrictedItem = session.find( Item.class, 2L );
+			final var query = session.createQuery(
+					"select count(*) from Cart cart join cart." + collection
+					+ " item where cart.id = 1 and item " + operator + " :lower and :upper",
+					Long.class
+			);
+			assertEquals( expectedSingleCount,
+					query.setParameter( "lower", visibleItem ).setParameter( "upper", visibleItem ).getSingleResult() );
+			assertEquals( expectedRangeCount, query.setParameter( "upper", restrictedItem ).getSingleResult() );
 		} );
 	}
 

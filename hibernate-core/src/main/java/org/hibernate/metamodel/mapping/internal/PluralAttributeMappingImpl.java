@@ -84,7 +84,6 @@ import java.util.function.Supplier;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static java.util.Locale.ROOT;
 import static org.hibernate.internal.util.StringHelper.subStringNullIfEmpty;
-import static org.hibernate.sql.ast.internal.TableGroupJoinHelper.determineJoinForPredicateApply;
 
 
 /**
@@ -985,10 +984,32 @@ public class PluralAttributeMappingImpl
 				collectionPredicateCollector.getPredicate()
 		);
 		if ( predicateCollector != collectionPredicateCollector ) {
-			determineJoinForPredicateApply( tableGroupJoin )
+			determineJoinForRestrictions( tableGroupJoin )
 					.applyPredicate( predicateCollector.getPredicate() );
 		}
 		return tableGroupJoin;
+	}
+
+	/**
+	 * Determine the join to which the restrictions of the collection are applied
+	 * when the joins of its element and index tables are not nested.
+	 * <p>
+	 * A restriction which refers to the table of the element or index initialized
+	 * the lazy table group of that table, and so it belongs to that join, or to a
+	 * later one. A restriction which refers to the collection table alone stays
+	 * on the join of the collection table, since a join of a table group which is
+	 * never initialized is never rendered, and would take the restriction with it.
+	 */
+	private static TableGroupJoin determineJoinForRestrictions(TableGroupJoin collectionTableGroupJoin) {
+		final var tableGroupJoins = collectionTableGroupJoin.getJoinedGroup().getTableGroupJoins();
+		for ( int i = tableGroupJoins.size() - 1; i >= 0; i-- ) {
+			final var tableGroupJoin = tableGroupJoins.get( i );
+			final var joinedGroup = tableGroupJoin.getJoinedGroup();
+			if ( joinedGroup.isInitialized() && !joinedGroup.isVirtual() ) {
+				return tableGroupJoin;
+			}
+		}
+		return collectionTableGroupJoin;
 	}
 
 	private boolean hasSoftDelete() {

@@ -64,6 +64,7 @@ import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.ast.spi.query.from.TableGroupJoin;
 import org.hibernate.sql.ast.spi.query.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.predicate.Junction;
 import org.hibernate.sql.ast.spi.query.predicate.PredicateCollector;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -84,7 +85,6 @@ import java.util.function.Supplier;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static java.util.Locale.ROOT;
 import static org.hibernate.internal.util.StringHelper.subStringNullIfEmpty;
-import static org.hibernate.sql.ast.internal.TableGroupJoinHelper.determineJoinForPredicateApply;
 
 
 /**
@@ -924,7 +924,7 @@ public class PluralAttributeMappingImpl
 			boolean fetched,
 			boolean addsPredicate,
 			SqlAstCreationState creationState) {
-		final var collectionPredicateCollector = new PredicateCollector();
+		final var keyPredicateCollector = new PredicateCollector();
 		final var tableGroup = createRootTableGroupJoin(
 				navigablePath,
 				lhs,
@@ -933,17 +933,13 @@ public class PluralAttributeMappingImpl
 				requestedJoinType,
 				fetched,
 				addsPredicate,
-				collectionPredicateCollector::applyPredicate,
+				keyPredicateCollector::applyPredicate,
 				creationState
 		);
-		final var predicateCollector =
-				tableGroup.getNestedTableGroupJoins().isEmpty()
-						// No nested table group joins means that the predicate has to be pushed to the last join
-						? new PredicateCollector()
-						: collectionPredicateCollector;
+		final var restrictionCollector = new PredicateCollector();
 
 		getCollectionDescriptor().applyBaseRestrictions(
-				predicateCollector::applyPredicate,
+				restrictionCollector::applyPredicate,
 				tableGroup,
 				true,
 				creationState.getLoadQueryInfluencers().getEnabledFilters(),
@@ -953,7 +949,7 @@ public class PluralAttributeMappingImpl
 		);
 
 		getCollectionDescriptor().applyBaseManyToManyRestrictions(
-				predicateCollector::applyPredicate,
+				restrictionCollector::applyPredicate,
 				tableGroup,
 				true,
 				creationState.getLoadQueryInfluencers().getEnabledFilters(),
@@ -961,9 +957,10 @@ public class PluralAttributeMappingImpl
 				creationState
 		);
 
+		final var auxiliaryRestrictionCollector = new PredicateCollector();
 		applyAuxiliaryRestrictions(
 				tableGroup,
-				predicateCollector::applyPredicate,
+				auxiliaryRestrictionCollector::applyPredicate,
 				creationState.getLoadQueryInfluencers(),
 				creationState.getSqlAliasBaseGenerator()
 		);
@@ -978,17 +975,110 @@ public class PluralAttributeMappingImpl
 			}
 		}
 
-		final var tableGroupJoin = new TableGroupJoin(
+		final var restrictions = restrictionCollector.getPredicate();
+		final var auxiliaryRestrictions = auxiliaryRestrictionCollector.getPredicate();
+		final Predicate joinPredicate;
+		if ( restrictions == null && auxiliaryRestrictions == null ) {
+			joinPredicate = keyPredicateCollector.getPredicate();
+		}
+		else {
+			final var joinForRestrictions = determineJoinForRestrictions( tableGroup );
+			if ( joinForRestrictions != null ) {
+				joinForRestrictions.applyPredicate( restrictions );
+				joinForRestrictions.applyPredicate( auxiliaryRestrictions );
+				joinPredicate = keyPredicateCollector.getPredicate();
+			}
+			else if ( restrictions == null && hasElementOrIndexTableGroupJoin( tableGroup ) ) {
+				final var junction = new Junction( Junction.Nature.CONJUNCTION );
+				junction.add( keyPredicateCollector.getPredicate() );
+				junction.add( new AuxiliaryRestrictions( auxiliaryRestrictions ) );
+				joinPredicate = junction;
+			}
+			else {
+				keyPredicateCollector.applyPredicate( restrictions );
+				keyPredicateCollector.applyPredicate( auxiliaryRestrictions );
+				joinPredicate = keyPredicateCollector.getPredicate();
+			}
+		}
+		return new TableGroupJoin(
 				navigablePath,
 				determineSqlJoinType( lhs, requestedJoinType, fetched ),
 				tableGroup,
-				collectionPredicateCollector.getPredicate()
+				joinPredicate
 		);
-		if ( predicateCollector != collectionPredicateCollector ) {
-			determineJoinForPredicateApply( tableGroupJoin )
-					.applyPredicate( predicateCollector.getPredicate() );
+	}
+
+	/**
+	 * Determine the join of the element or index table to which the restrictions
+	 * of the collection are applied, or {@code null} if they belong to the join of
+	 * the collection table itself.
+	 * <p>
+	 * When the joins of the element and index tables are nested, every table is
+	 * in scope of the predicate of the join of the collection table. Otherwise,
+	 * a restriction which refers to the table of the element or index initialized
+	 * the lazy table group of that table, and so it belongs to that join, or to a
+	 * later one. A restriction which refers to the collection table alone stays
+	 * on the join of the collection table, since a join of a table group which is
+	 * never initialized is never rendered, and would take the restriction with it.
+	 */
+	private static @Nullable TableGroupJoin determineJoinForRestrictions(TableGroup collectionTableGroup) {
+		if ( collectionTableGroup.getNestedTableGroupJoins().isEmpty() ) {
+			final var tableGroupJoins = collectionTableGroup.getTableGroupJoins();
+			for ( int i = tableGroupJoins.size() - 1; i >= 0; i-- ) {
+				final var tableGroupJoin = tableGroupJoins.get( i );
+				final var joinedGroup = tableGroupJoin.getJoinedGroup();
+				if ( joinedGroup.isInitialized() && !joinedGroup.isVirtual() ) {
+					return tableGroupJoin;
+				}
+			}
 		}
-		return tableGroupJoin;
+		return null;
+	}
+
+	/**
+	 * Whether the collection table group has a join of the table of an element
+	 * or index, to which the restriction of an auxiliary mapping used to belong
+	 * when the joins are not nested.
+	 */
+	private static boolean hasElementOrIndexTableGroupJoin(TableGroup collectionTableGroup) {
+		final var tableGroupJoins =
+				collectionTableGroup.getNestedTableGroupJoins().isEmpty()
+						? collectionTableGroup.getTableGroupJoins()
+						: collectionTableGroup.getNestedTableGroupJoins();
+		return !tableGroupJoins.isEmpty()
+			&& !tableGroupJoins.get( tableGroupJoins.size() - 1 ).getJoinedGroup().isVirtual();
+	}
+
+	/**
+	 * Which joins of the collection a fetch may use is not to change. A join with
+	 * only the restriction of an auxiliary mapping, for example soft delete, added
+	 * to its key predicate was such a join when that restriction belonged to the
+	 * join of the table of an element or index, and so it still is. Where there is
+	 * no such table, for a collection of basic or embeddable values or a one-to-many
+	 * association, the restriction always belonged to this join, and the join was
+	 * never used for a fetch, just as a join with a where restriction or a filter
+	 * never was, nor a join to which anything else was added.
+	 */
+	@Override
+	public boolean isDefaultJoinPredicate(Predicate predicate) {
+		return isSimpleJoinPredicate( predicate )
+			|| predicate instanceof Junction junction
+				&& junction.getNature() == Junction.Nature.CONJUNCTION
+				&& junction.getPredicates().size() == 2
+				&& isSimpleJoinPredicate( junction.getPredicates().get( 0 ) )
+				&& junction.getPredicates().get( 1 ) instanceof AuxiliaryRestrictions;
+	}
+
+	/**
+	 * The restrictions of the auxiliary mappings, in the predicate of a join of
+	 * the collection table, kept apart from the key predicate and from anything
+	 * added to the predicate later, so that they can be recognized.
+	 */
+	private static final class AuxiliaryRestrictions extends Junction {
+		private AuxiliaryRestrictions(Predicate restrictions) {
+			super( Nature.CONJUNCTION );
+			add( restrictions );
+		}
 	}
 
 	private boolean hasSoftDelete() {
@@ -1175,8 +1265,11 @@ public class PluralAttributeMappingImpl
 	private boolean isNestedJoin(SqlAstJoinType joinType, boolean addsPredicate, SqlAstCreationState creationState) {
 		// For inner joins we never need join nesting
 		return joinType != SqlAstJoinType.INNER
-			// For outer joins we need nesting if there might be an on-condition that refers to the element table
+			// For outer joins we need nesting if there might be an on-condition that refers to the element table.
+			// A restriction which hides an element hides the whole row of the collection table, along with the
+			// key of the element or index which is read from it, and the index of a hidden element of a map.
 			&& ( addsPredicate
+					|| hasSoftDelete()
 					|| collectionDescriptor.hasWhereRestrictions()
 					|| isAffectedByEnabledFilters( creationState.getLoadQueryInfluencers(),
 							creationState.applyOnlyLoadByKeyFilters() ) );

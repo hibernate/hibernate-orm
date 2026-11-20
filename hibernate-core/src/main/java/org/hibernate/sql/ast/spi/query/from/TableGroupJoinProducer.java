@@ -24,6 +24,15 @@ public interface TableGroupJoinProducer extends TableGroupProducer {
 	boolean isSimpleJoinPredicate(Predicate predicate);
 
 	/**
+	 * Returns whether a join of this attribute with the given predicate may stand in for any other
+	 * join of the attribute with the same join type, a fetch included. By default, that is a join
+	 * with a {@linkplain #isSimpleJoinPredicate simple join predicate}.
+	 */
+	default boolean isDefaultJoinPredicate(Predicate predicate) {
+		return isSimpleJoinPredicate( predicate );
+	}
+
+	/**
 	 * Create a TableGroupJoin.
 	 *
 	 * @param navigablePath The NavigablePath to the join

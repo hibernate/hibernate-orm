@@ -584,7 +584,7 @@
         </bindings>
 
         <bindings node="//xsd:complexType[@name='entity-listener']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbLifecycleCallbackContainer</inheritance:implements>
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerCallbackContainer</inheritance:implements>
         </bindings>
 
         <bindings node="//xsd:complexType[@name='lifecycle-callback']">

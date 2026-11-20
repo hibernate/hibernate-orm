@@ -847,9 +847,18 @@ public class GeneratorBinder {
 			) );
 		}
 		if ( !idGeneratorAnnotations.isEmpty() ) {
+			final var idGeneratorAnnotation = idGeneratorAnnotations.get(0);
+			final var generatedValue = idMemberDetails.getDirectAnnotationUsage( GeneratedValue.class );
+			if ( generatedValue != null && isNotEmpty( generatedValue.generator() ) ) {
+				BOOT_LOGGER.ignoredGeneratedValueGenerator(
+						getPath( propertyHolder, inferredData ),
+						generatedValue.generator(),
+						idGeneratorAnnotation.annotationType().getName()
+				);
+			}
 			idValue.setCustomIdGeneratorCreator( identifierGeneratorCreator(
 					idMemberDetails,
-					idGeneratorAnnotations.get(0),
+					idGeneratorAnnotation,
 					idValue,
 					beanContainer( buildingContext )
 			) );

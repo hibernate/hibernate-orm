@@ -460,4 +460,8 @@ public interface BootLogging extends BasicLogger {
 	@LogMessage(level = TRACE)
 	@Message(id = 160248, value = "Binding named native mutation query '%s' to [%s]")
 	void bindingNamedNativeMutation(String queryName, String bindingTarget);
+
+	@LogMessage(level = WARN)
+	@Message(id = 160249, value = "Identifier attribute '%s' specifies '@GeneratedValue(generator=\"%s\")', but its generator is selected by '@%s'; the generator name is ignored")
+	void ignoredGeneratedValueGenerator(String attributePath, String generatorName, String annotationType);
 }

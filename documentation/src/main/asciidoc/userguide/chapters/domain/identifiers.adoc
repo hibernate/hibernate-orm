@@ -807,6 +807,10 @@ include::{domain-identifiers-core-test-base}/id/custom/Sequence.java[tag=identif
 The example illustrates using `@IdGeneratorType` to define a custom sequence-based annotation `@Sequence`
 to apply and configure a custom `IdentifierGenerator` implementation `CustomSequenceGenerator`.
 
+A generator annotation applied directly to the identifier field or getter takes precedence over `@GeneratedValue`.
+If `@GeneratedValue` specifies a nonempty `generator` name, Hibernate logs a warning that this name is ignored.
+Remove the ignored name from the mapping. This also applies to a directly applied `@GenericGenerator`.
+
 Notice the `CustomSequenceGenerator` constructor.  Custom generator defined through `@IdGeneratorType`
 receive the following arguments:
 

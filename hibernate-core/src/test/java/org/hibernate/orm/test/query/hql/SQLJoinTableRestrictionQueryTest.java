@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @DomainModel(annotatedClasses = {
 		SQLJoinTableRestrictionQueryTest.Cart.class,
@@ -213,6 +214,83 @@ class SQLJoinTableRestrictionQueryTest {
 			assertEquals( List.of( 1L ), session.createQuery(
 					"select cart.id from Cart cart, Item i "
 					+ "where element(cart.items) = i and i.code = 'A'",
+					Long.class
+			).getResultList() );
+		} );
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {"item = other", "other = item"})
+	void entityComparisonWithJoinPredicateOnUniqueKeyJoinTable(String comparison, SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			assertEquals( 1L, session.createQuery(
+					"select count(*) from Cart cart join cart.unrestrictedItems item on item.id = 1, Item other where "
+					+ comparison,
+					Long.class
+			).getSingleResult() );
+		} );
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {"item = other", "other = item"})
+	void rightJoinEntityComparisonOnUniqueKeyJoinTable(String comparison, SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			assertEquals( 5L, session.createQuery(
+					"select count(*) from Cart cart right join cart.unrestrictedItems item, Item other where "
+					+ comparison,
+					Long.class
+			).getSingleResult() );
+		} );
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {"item = other", "other = item", "item in (other)", "other in (item)"})
+	void rightJoinEntityComparisonsPreserveUnassociatedItems(String comparison, SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final String fromClause = " from Cart cart right join cart.unrestrictedItems item, Item other where "
+					+ comparison;
+			assertEquals( List.of( 1L, 5L ), session.createQuery(
+					"select other.id" + fromClause + " and other.id in (1, 5) order by other.id",
+					Long.class
+			).getResultList() );
+			assertNull( session.createQuery(
+					"select cart.id" + fromClause + " and other.id = 5",
+					Long.class
+			).getSingleResult() );
+			assertEquals( 1L, session.createQuery(
+					"select cart.id" + fromClause + " and other.id = 2",
+					Long.class
+			).getSingleResult() );
+		} );
+	}
+
+	@ParameterizedTest
+	@CsvSource({
+			"items,item = other", "items,other = item",
+			"items,item in (other)", "items,other in (item)",
+			"unrestrictedItems,item = other", "unrestrictedItems,other = item",
+			"unrestrictedItems,item in (other)", "unrestrictedItems,other in (item)"
+	})
+	void leftJoinWithOnPredicateEntityComparisonsUseIdentifier(
+			String collection, String comparison, SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final String query = "select other.id from Cart cart left join cart." + collection
+					+ " item on item.id = 1, Item other where cart.id = :id and " + comparison
+					+ " order by other.id";
+			assertEquals( List.of( 1L ), session.createQuery( query, Long.class )
+					.setParameter( "id", 1L ).getResultList() );
+			assertEquals( List.of(), session.createQuery( query, Long.class )
+					.setParameter( "id", 2L ).getResultList() );
+		} );
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {"item = other", "other = item", "item in (other)", "other in (item)"})
+	void entityComparisonsApplyRestrictionInBothDirections(String comparison, SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			assertEquals( List.of( 1L ), session.createQuery(
+					"select other.id from Cart cart join cart.items item, Item other where "
+					+ comparison + " order by other.id",
 					Long.class
 			).getResultList() );
 		} );

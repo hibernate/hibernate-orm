@@ -22,6 +22,7 @@ import org.hibernate.annotations.TimeZoneRepresentation;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.StateManagementSettings;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -55,6 +56,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @RequiresDialect(MySQLDialect.class)
 @RequiresDialect(SQLServerDialect.class)
 @RequiresDialect(OracleDialect.class)
+@RequiresDialect(value = DB2Dialect.class, matchSubTypes = false)
 class TemporalPreservationSessionZoneTests {
 	private static final String[] DATABASE_SESSION_ZONES = { null, "Asia/Kathmandu", "America/New_York" };
 
@@ -227,7 +229,10 @@ class TemporalPreservationSessionZoneTests {
 					"e.instant in (e.normalized)",
 					// tuples are compared element by element
 					"(e.id, e.instant) = (e.id, e.normalized)",
-					"(e.id, e.instant) in ((e.id, e.normalized))",
+					// Db2 does not accept columns of the outer query in a list of tuples
+					DialectContext.getDialect() instanceof DB2Dialect
+							? "(e.id, e.instant) = (e.id, e.normalized)"
+							: "(e.id, e.instant) in ((e.id, e.normalized))",
 					// as is what a subquery selects
 					"e.instant = (select o.normalized from Compared o where o.id = e.id)",
 					"e.instant in (select o.normalized from Compared o)",
@@ -316,6 +321,7 @@ class TemporalPreservationSessionZoneTests {
 			for ( String attribute : new String[] { "instant", "inTwoColumns", "normalized" } ) {
 				// on HSQLDB a date-time in a single column has a time zone
 				final boolean rejected = dialect instanceof MySQLDialect
+						|| dialect instanceof DB2Dialect
 						|| dialect instanceof SQLServerDialect
 						|| dialect instanceof HSQLDialect && !attribute.equals( "normalized" );
 				for ( String current : new String[] { "current_date", "local date", "local date + 1 day" } ) {

@@ -295,6 +295,14 @@ public class DB2Dialect extends Dialect implements CurrentTemporalSupport, Tempo
 	public CurrentTemporalSupport getCurrentTemporalSupport() {
 		return this;
 	}
+
+	/// The current date and time at UTC. `CURRENT TIMEZONE` is the offset of the
+	/// time zone of the server from UTC, as a duration, and `CURRENT TIMESTAMP`
+	/// is in that time zone. Both have one value throughout a statement.
+	@Override
+	public String currentUtcTimestamp() {
+		return "(current timestamp - current timezone)";
+	}
 	private static final NamespaceSupport NAMESPACE_SUPPORT = new StandardNamespaceSupport(
 			false,
 			name -> { throw new UnsupportedOperationException( "Catalog lifecycle is not supported" ); },

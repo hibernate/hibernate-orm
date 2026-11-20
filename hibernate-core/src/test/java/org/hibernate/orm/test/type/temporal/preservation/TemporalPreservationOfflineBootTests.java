@@ -9,6 +9,7 @@ import java.time.LocalTime;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -127,38 +128,48 @@ class TemporalPreservationOfflineBootTests {
 	}
 
 	/// The timestamp of a soft delete is always computed by the database. Its
-	/// column on DB2 holds the date and time at UTC, for which DB2Dialect has
-	/// no expression, so the mapping is rejected.
+	/// column on DB2 holds the date and time at UTC, for which the Dialect has
+	/// an expression. A Dialect which has none rejects the mapping.
 	@Test
-	void timestampOfSoftDeleteIsRejectedOnDb2() {
-		final var registryBuilder = ServiceRegistryUtil.serviceRegistryBuilder();
-		registryBuilder.applySetting( MappingSettings.TEMPORAL_PRESERVATION, true );
-		registryBuilder.applySetting( JdbcSettings.ALLOW_METADATA_ON_BOOT, false );
-		registryBuilder.applySetting( JdbcSettings.DIALECT, DB2Dialect.class.getName() );
-		registryBuilder.applySetting( JdbcSettings.CONNECTION_PROVIDER, new NoConnections() );
-		registryBuilder.applySetting( "hibernate.hbm2ddl.auto", "none" );
-		try ( var registry = registryBuilder.build() ) {
-			assertThatThrownBy( () -> new MetadataSources( registry )
-					.addAnnotatedClass( SoftDeleted.class )
-					.buildMetadata()
-					.buildSessionFactory()
-					.close() )
-					.hasStackTraceContaining( MappingSettings.TEMPORAL_PRESERVATION )
-					.hasStackTraceContaining( "has no expression for the current date and time at UTC" );
+	void timestampOfSoftDeleteNeedsAnExpressionForTheTimeAtUtc() {
+		assertThat( new DB2Dialect().getCurrentTemporalSupport().currentUtcTimestamp() )
+				.isEqualTo( "(current timestamp - current timezone)" );
+		for ( Class<? extends DB2Dialect> dialectClass : List.of( DB2Dialect.class, Db2WithoutTheTimeAtUtc.class ) ) {
+			final var registryBuilder = ServiceRegistryUtil.serviceRegistryBuilder();
+			registryBuilder.applySetting( MappingSettings.TEMPORAL_PRESERVATION, true );
+			registryBuilder.applySetting( JdbcSettings.ALLOW_METADATA_ON_BOOT, false );
+			registryBuilder.applySetting( JdbcSettings.DIALECT, dialectClass.getName() );
+			registryBuilder.applySetting( JdbcSettings.CONNECTION_PROVIDER, new NoConnections() );
+			registryBuilder.applySetting( "hibernate.hbm2ddl.auto", "none" );
+			try ( var registry = registryBuilder.build() ) {
+				final var boot = assertThatCode( () -> new MetadataSources( registry )
+						.addAnnotatedClass( SoftDeleted.class )
+						.buildMetadata()
+						.buildSessionFactory()
+						.close() );
+				if ( dialectClass == DB2Dialect.class ) {
+					boot.doesNotThrowAnyException();
+				}
+				else {
+					boot.hasStackTraceContaining( MappingSettings.TEMPORAL_PRESERVATION )
+							.hasStackTraceContaining( "has no expression for the current date and time at UTC" );
+				}
+			}
 		}
 	}
 
 	/// Compared with an instant, `current_timestamp` stands for the current
 	/// instant. The column of an `Instant` on DB2 holds the date and time at
-	/// UTC, for which DB2Dialect has no expression, so the comparison is
-	/// rejected, as is one with the current date. This is decided when the
-	/// query is translated, before any connection is needed.
+	/// UTC, so a Dialect which has no expression for that rejects the
+	/// comparison, and DB2 rejects one with the current date, which cannot be
+	/// given such a meaning. This is decided when the query is translated,
+	/// before any connection is needed.
 	@Test
-	void comparisonWithTheCurrentTimestampIsRejectedOnDb2() {
+	void comparisonWithTheCurrentTimestampNeedsAnExpressionForTheTimeAtUtc() {
 		final var registryBuilder = ServiceRegistryUtil.serviceRegistryBuilder();
 		registryBuilder.applySetting( MappingSettings.TEMPORAL_PRESERVATION, true );
 		registryBuilder.applySetting( JdbcSettings.ALLOW_METADATA_ON_BOOT, false );
-		registryBuilder.applySetting( JdbcSettings.DIALECT, DB2Dialect.class.getName() );
+		registryBuilder.applySetting( JdbcSettings.DIALECT, Db2WithoutTheTimeAtUtc.class.getName() );
 		registryBuilder.applySetting( JdbcSettings.CONNECTION_PROVIDER, new NoConnections() );
 		registryBuilder.applySetting( "hibernate.hbm2ddl.auto", "none" );
 		try ( var registry = registryBuilder.build();
@@ -267,6 +278,14 @@ class TemporalPreservationOfflineBootTests {
 		@Id
 		Integer id;
 		java.time.Instant theValue;
+	}
+
+	/// DB2Dialect as it was before it had an expression for the current date and time at UTC.
+	public static class Db2WithoutTheTimeAtUtc extends DB2Dialect {
+		@Override
+		public String currentUtcTimestamp() {
+			return null;
+		}
 	}
 
 	@Entity(name = "WithArray")

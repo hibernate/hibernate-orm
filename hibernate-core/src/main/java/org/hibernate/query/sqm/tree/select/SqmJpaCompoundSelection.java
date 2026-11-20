@@ -141,9 +141,11 @@ public class SqmJpaCompoundSelection<T>
 			|| selectableNodes.size() != that.selectableNodes.size() ) {
 			return false;
 		}
-		for ( SqmSelectableNode<?> selectableNode : selectableNodes ) {
-			if ( !selectableNode.equals( that )
-				|| !Objects.equals( selectableNode.getAlias(), that.getAlias() ) ) {
+		for ( int i = 0; i < selectableNodes.size(); i++ ) {
+			final SqmSelectableNode<?> selectableNode = selectableNodes.get( i );
+			final SqmSelectableNode<?> thatSelectableNode = that.selectableNodes.get( i );
+			if ( !selectableNode.equals( thatSelectableNode )
+				|| !Objects.equals( selectableNode.getAlias(), thatSelectableNode.getAlias() ) ) {
 				return false;
 			}
 		}
@@ -161,9 +163,11 @@ public class SqmJpaCompoundSelection<T>
 			|| selectableNodes.size() != that.selectableNodes.size() ) {
 			return false;
 		}
-		for ( SqmSelectableNode<?> selectableNode : selectableNodes ) {
-			if ( !selectableNode.isCompatible( that )
-				|| !Objects.equals( selectableNode.getAlias(), that.getAlias() ) ) {
+		for ( int i = 0; i < selectableNodes.size(); i++ ) {
+			final SqmSelectableNode<?> selectableNode = selectableNodes.get( i );
+			final SqmSelectableNode<?> thatSelectableNode = that.selectableNodes.get( i );
+			if ( !selectableNode.isCompatible( thatSelectableNode )
+				|| !Objects.equals( selectableNode.getAlias(), thatSelectableNode.getAlias() ) ) {
 				return false;
 			}
 		}

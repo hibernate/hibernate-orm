@@ -7,6 +7,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.FilterJoinTable;
 import org.hibernate.annotations.SQLJoinTableRestriction;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -82,6 +84,45 @@ class SQLJoinTableRestrictionQueryTest {
 	@AfterEach
 	void tearDown(SessionFactoryScope scope) {
 		scope.dropData();
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {"count(item)", "count(*)", "count(cart)"})
+	void innerJoinAppliesJoinTableFilter(String selection, SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.enableFilter( "itemOneOnly" );
+			// Cart 1 holds items 1 and 2, and the filter hides item 2.
+			assertEquals( 1L, session.createQuery(
+					"select " + selection + " from Cart cart join cart.filteredPkItems item where cart.id = 1",
+					Long.class
+			).getSingleResult() );
+		} );
+	}
+
+	@Test
+	void innerJoinWithTargetColumnAppliesJoinTableFilter(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.enableFilter( "itemOneOnly" );
+			assertEquals( List.of( "A" ), session.createQuery(
+					"select item.code from Cart cart join cart.filteredPkItems item where cart.id = 1",
+					String.class
+			).getResultList() );
+		} );
+	}
+
+	@ParameterizedTest
+	@CsvSource({"1,1", "2,0", "3,0"})
+	void leftJoinAppliesJoinTableFilter(long cartId, long expectedItems, SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.enableFilter( "itemOneOnly" );
+			final Object[] counts = session.createQuery(
+					"select count(item), count(cart) from Cart cart left join cart.filteredPkItems item "
+					+ "where cart.id = :id",
+					Object[].class
+			).setParameter( "id", cartId ).getSingleResult();
+			assertEquals( expectedItems, counts[0] );
+			assertEquals( 1L, counts[1] );
+		} );
 	}
 
 	@ParameterizedTest
@@ -374,6 +415,7 @@ class SQLJoinTableRestrictionQueryTest {
 	}
 
 	@Entity(name = "Cart")
+	@FilterDef(name = "itemOneOnly")
 	public static class Cart {
 		@Id
 		public long id;
@@ -424,6 +466,15 @@ class SQLJoinTableRestrictionQueryTest {
 		)
 		@SQLJoinTableRestriction("item_id = 1")
 		public Set<Item> pkItems = new HashSet<>();
+
+		@ManyToMany
+		@JoinTable(
+				name = "cart_pk_items",
+				joinColumns = @JoinColumn(name = "cart_id", insertable = false, updatable = false),
+				inverseJoinColumns = @JoinColumn(name = "item_id", insertable = false, updatable = false)
+		)
+		@FilterJoinTable(name = "itemOneOnly", condition = "item_id = 1")
+		public Set<Item> filteredPkItems = new HashSet<>();
 
 		@ManyToMany
 		@JoinTable(

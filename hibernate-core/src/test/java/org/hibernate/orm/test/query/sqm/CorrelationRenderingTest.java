@@ -138,6 +138,7 @@ public class CorrelationRenderingTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOuterReferenceInOnClause.class)
 	public void leftJoinOfCorrelatedJoin(SessionFactoryScope scope) {
 		scope.inSession( session -> {
 			final var cb = session.getCriteriaBuilder();
@@ -279,6 +280,7 @@ public class CorrelationRenderingTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOuterReferenceInOnClause.class)
 	public void leftJoinOnOuterPathWithLocalPredicate(SessionFactoryScope scope) {
 		scope.inSession( session -> assertRendersItself( session, List.of( 2 ), """
 				select p.id from Parent p where exists (
@@ -289,6 +291,7 @@ public class CorrelationRenderingTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOuterReferenceInOnClause.class)
 	public void rightJoinPreservesUnmatchedItem(SessionFactoryScope scope) {
 		assertPreservesUnmatchedItem( scope, "right" );
 	}

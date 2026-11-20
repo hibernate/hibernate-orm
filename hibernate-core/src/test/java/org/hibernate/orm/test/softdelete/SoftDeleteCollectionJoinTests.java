@@ -146,6 +146,7 @@ public class SoftDeleteCollectionJoinTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOuterReferenceInOnClause.class)
 	public void correlatedCollectionAfterEntityInSubquery(SessionFactoryScope scope) {
 		// the join of the collection follows an entity in the from clause of the subquery
 		assertEquals( List.of( 2 ), ids( scope,

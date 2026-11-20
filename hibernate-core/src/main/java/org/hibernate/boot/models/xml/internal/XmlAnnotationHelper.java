@@ -483,28 +483,27 @@ public class XmlAnnotationHelper {
 			JaxbCascadeTypeImpl jaxbCascadeType,
 			AttributeMarker.Cascadeable cascadeable,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( jaxbCascadeType == null ) {
-			return;
-		}
-
+		// the document's effective default cascade applies whether or not a <cascade/> is declared
 		final List<CascadeType> cascadeTypes = new ArrayList<>( xmlDocumentContext.getEffectiveDefaults().getDefaultCascadeTypes() );
-		if ( jaxbCascadeType.getCascadeAll() != null ) {
-			cascadeTypes.add( CascadeType.ALL );
-		}
-		if ( jaxbCascadeType.getCascadePersist() != null ) {
-			cascadeTypes.add( CascadeType.PERSIST );
-		}
-		if ( jaxbCascadeType.getCascadeMerge() != null ) {
-			cascadeTypes.add( CascadeType.MERGE );
-		}
-		if ( jaxbCascadeType.getCascadeRemove() != null ) {
-			cascadeTypes.add( CascadeType.REMOVE );
-		}
-		if ( jaxbCascadeType.getCascadeRefresh() != null ) {
-			cascadeTypes.add( CascadeType.REFRESH );
-		}
-		if ( jaxbCascadeType.getCascadeDetach() != null ) {
-			cascadeTypes.add( CascadeType.DETACH );
+		if ( jaxbCascadeType != null ) {
+			if ( jaxbCascadeType.getCascadeAll() != null ) {
+				cascadeTypes.add( CascadeType.ALL );
+			}
+			if ( jaxbCascadeType.getCascadePersist() != null ) {
+				cascadeTypes.add( CascadeType.PERSIST );
+			}
+			if ( jaxbCascadeType.getCascadeMerge() != null ) {
+				cascadeTypes.add( CascadeType.MERGE );
+			}
+			if ( jaxbCascadeType.getCascadeRemove() != null ) {
+				cascadeTypes.add( CascadeType.REMOVE );
+			}
+			if ( jaxbCascadeType.getCascadeRefresh() != null ) {
+				cascadeTypes.add( CascadeType.REFRESH );
+			}
+			if ( jaxbCascadeType.getCascadeDetach() != null ) {
+				cascadeTypes.add( CascadeType.DETACH );
+			}
 		}
 
 		if ( !cascadeTypes.isEmpty() ) {

@@ -204,6 +204,7 @@ public class XmlDocumentImpl implements XmlDocument {
 		private final String accessorStrategy;
 		private final String catalog;
 		private final String schema;
+		private final String cascade;
 		private final boolean autoImport;
 		private final boolean impliedLaziness;
 
@@ -214,7 +215,8 @@ public class XmlDocumentImpl implements XmlDocument {
 				String catalog,
 				String schema,
 				Boolean autoImport,
-				Boolean impliedLaziness) {
+				Boolean impliedLaziness,
+				String cascade) {
 			this.pckg = pckg;
 			this.accessType = accessType;
 			this.accessorStrategy = accessorStrategy;
@@ -222,6 +224,7 @@ public class XmlDocumentImpl implements XmlDocument {
 			this.schema = schema;
 			this.autoImport = NullnessHelper.nullif( autoImport, true );
 			this.impliedLaziness = NullnessHelper.nullif( impliedLaziness, false );
+			this.cascade = cascade;
 		}
 
 		@Override
@@ -259,6 +262,11 @@ public class XmlDocumentImpl implements XmlDocument {
 			return impliedLaziness;
 		}
 
+		@Override
+		public String getDefaultCascade() {
+			return cascade;
+		}
+
 		static DefaultsImpl consume(JaxbEntityMappingsImpl jaxbRoot, PersistenceUnitMetadata metadata) {
 			return new DefaultsImpl(
 					jaxbRoot.getPackage(),
@@ -267,7 +275,8 @@ public class XmlDocumentImpl implements XmlDocument {
 					jaxbRoot.getCatalog(),
 					jaxbRoot.getSchema(),
 					jaxbRoot.isAutoImport(),
-					jaxbRoot.isDefaultLazy()
+					jaxbRoot.isDefaultLazy(),
+					jaxbRoot.getDefaultCascade()
 			);
 		}
 	}

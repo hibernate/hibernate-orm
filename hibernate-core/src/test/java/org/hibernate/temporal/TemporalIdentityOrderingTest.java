@@ -15,6 +15,8 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static jakarta.persistence.GenerationType.IDENTITY;
 import static org.hibernate.cfg.FlushSettings.GRAPH_DEFER_IDENTITY_INSERTS;
@@ -64,22 +66,24 @@ class TemporalIdentityOrderingTest {
 			@Setting(name = CHANGESET_ID_SUPPLIER, value = SUPPLIER)
 	})
 	void earlyIdentityInsertCompletesInitialVersion(SessionFactoryScope scope) {
-		checkInitialVersion( scope );
+		checkInitialVersion( scope, null );
 	}
 
-	@Test
+	@ParameterizedTest
+	@ValueSource(ints = { 0, 5 })
 	@SessionFactory
 	@DomainModel(annotatedClasses = { AssignedNode.class, IdentityNode.class })
 	@ServiceRegistry(settings = {
 			@Setting(name = TEMPORAL_TABLE_STRATEGY, value = "HISTORY_TABLE"),
 			@Setting(name = CHANGESET_ID_SUPPLIER, value = SUPPLIER)
 	})
-	void earlyIdentityInsertCompletesInitialHistoryVersion(SessionFactoryScope scope) {
-		checkInitialVersion( scope );
+	void earlyIdentityInsertCompletesInitialHistoryVersion(int batchSize, SessionFactoryScope scope) {
+		checkInitialVersion( scope, batchSize );
 	}
 
-	private static void checkInitialVersion(SessionFactoryScope scope) {
+	private static void checkInitialVersion(SessionFactoryScope scope, Integer batchSize) {
 		final var changeset = scope.fromTransaction( session -> {
+			session.setJdbcBatchSize( batchSize );
 			final var node = new AssignedNode();
 			node.id = 1L;
 			final var peer = new IdentityNode();

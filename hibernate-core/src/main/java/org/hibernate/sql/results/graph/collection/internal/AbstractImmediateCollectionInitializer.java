@@ -219,6 +219,10 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 
 	@Override
 	public void resolveInstance(Data data) {
+		resolveAtOwnerChangeset( data, () -> resolveCollectionInstance( data ) );
+	}
+
+	private void resolveCollectionInstance(Data data) {
 		if ( data.getState() == State.KEY_RESOLVED ) {// Being a result initializer means that this collection initializer is for lazy loading,
 			// which has a very high chance that a collection resolved of the previous row is the same for the current row,
 			// so pass that flag as indicator whether to check previous row state.
@@ -346,6 +350,10 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 
 	@Override
 	public void resolveInstance(Object instance, Data data) {
+		resolveAtOwnerChangeset( data, () -> resolveExistingCollectionInstance( instance, data ) );
+	}
+
+	private void resolveExistingCollectionInstance(Object instance, Data data) {
 		assert data.getState() == State.UNINITIALIZED || instance == data.getCollectionInstance();
 		if ( instance == null ) {
 			setMissing( data );

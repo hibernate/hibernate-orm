@@ -75,6 +75,8 @@ public class LoadQueryInfluencers implements Serializable {
 	private Boolean readOnly;
 	@Nullable
 	private Object temporalIdentifier;
+	private boolean allChangesetsSession;
+	private transient boolean historyTables;
 
 	public LoadQueryInfluencers(@Nonnull SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
@@ -91,6 +93,7 @@ public class LoadQueryInfluencers implements Serializable {
 		subselectFetchEnabled = options.isSubselectFetchEnabled();
 		effectiveEntityGraph = new EffectiveEntityGraph();
 		temporalIdentifier = options.getTemporalIdentifier();
+		allChangesetsSession = temporalIdentifier == AuditLog.ALL_CHANGESETS;
 		for ( var filterDefinition : sessionFactory.getAutoEnabledFilters() ) {
 			final var filter = new FilterImpl( filterDefinition );
 			if ( enabledFilters == null ) {
@@ -125,10 +128,21 @@ public class LoadQueryInfluencers implements Serializable {
 		return temporalIdentifier;
 	}
 
+	/**
+	 * Set the changeset the session reads at, which also determines
+	 * whether it is an {@linkplain #isAllChangesetsSession all-changesets}
+	 * session.
+	 */
 	public void setTemporalIdentifier(@Nullable Object temporalIdentifier) {
 		this.temporalIdentifier = temporalIdentifier;
+		allChangesetsSession = temporalIdentifier == AuditLog.ALL_CHANGESETS;
 	}
 
+	/**
+	 * Perform the action reading at the given changeset, or at the
+	 * current state when it is {@code null}, without changing whether
+	 * this is an all-changesets session.
+	 */
 	public <T> T withTemporalIdentifier(@Nullable Object changesetId, @Nonnull Supplier<T> action) {
 		final var previous = temporalIdentifier;
 		temporalIdentifier = changesetId;
@@ -140,8 +154,94 @@ public class LoadQueryInfluencers implements Serializable {
 		}
 	}
 
+	/**
+	 * Perform the action reading at the given changeset, or at the
+	 * current state when it is {@code null}, without changing whether
+	 * this is an all-changesets session.
+	 */
+	public void withTemporalIdentifier(@Nullable Object changesetId, @Nonnull Runnable action) {
+		withTemporalIdentifier( changesetId, () -> {
+			action.run();
+			return null;
+		} );
+	}
+
+	/**
+	 * Perform the action reading at the changeset captured by a proxy, a
+	 * collection, or an entity key when it was created. In an all-changesets
+	 * session, {@code null} means current state; otherwise, it means the
+	 * changeset the session reads at.
+	 */
+	public <T> T withCapturedTemporalIdentifier(@Nullable Object changesetId, @Nonnull Supplier<T> action) {
+		return changesetId != null || allChangesetsSession
+				? withTemporalIdentifier( changesetId, action )
+				: action.get();
+	}
+
+	/**
+	 * Perform the action reading at the changeset captured by a proxy, a
+	 * collection, or an entity key when it was created.
+	 *
+	 * @see #withCapturedTemporalIdentifier(Object, Supplier)
+	 */
+	public void withCapturedTemporalIdentifier(@Nullable Object changesetId, @Nonnull Runnable action) {
+		withCapturedTemporalIdentifier( changesetId, () -> {
+			action.run();
+			return null;
+		} );
+	}
+
+	/**
+	 * Perform the action reading at the given changeset, and reading the
+	 * history tables of temporal entities if {@code historyTables}.
+	 */
+	public <T> T withTemporalIdentifier(
+			@Nullable Object changesetId,
+			boolean historyTables,
+			@Nonnull Supplier<T> action) {
+		return withTemporalIdentifier( changesetId, () -> withHistoryTables( historyTables, action ) );
+	}
+
+	/**
+	 * Perform the action reading the history tables of temporal entities
+	 * in place of their current tables, if {@code historyTables}, so that
+	 * their state can be restricted to a revision given by a column,
+	 * without changing the changeset the session reads at.
+	 */
+	public <T> T withHistoryTables(boolean historyTables, @Nonnull Supplier<T> action) {
+		final boolean previous = this.historyTables;
+		this.historyTables = historyTables;
+		try {
+			return action.get();
+		}
+		finally {
+			this.historyTables = previous;
+		}
+	}
+
+	/**
+	 * Whether the history tables of temporal entities are currently read
+	 * in place of their current tables.
+	 *
+	 * @see #withHistoryTables
+	 */
+	public boolean readsHistoryTables() {
+		return historyTables;
+	}
+
+	/**
+	 * Whether the session currently reads every revision.
+	 */
 	public boolean isAllRevisions() {
 		return temporalIdentifier == AuditLog.ALL_CHANGESETS;
+	}
+
+	/**
+	 * Whether the session was opened at {@link AuditLog#ALL_CHANGESETS},
+	 * even while it loads a snapshot at one changeset.
+	 */
+	public boolean isAllChangesetsSession() {
+		return allChangesetsSession;
 	}
 
 

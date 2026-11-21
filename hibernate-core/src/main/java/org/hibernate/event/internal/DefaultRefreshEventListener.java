@@ -16,6 +16,7 @@ import org.hibernate.event.spi.RefreshEvent;
 import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.proxy.AbstractLazyInitializer;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
@@ -81,15 +82,19 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		if ( refreshedAlready.isEmpty() ) {
 			final var lazyInitializer = extractLazyInitializer( object );
 			final var persister = getPersister( lazyInitializer, source, object, isTransient );
-			refresh(
-					event,
-					null,
-					source,
-					persister,
-					lazyInitializer,
-					null,
-					persister.getIdentifier( object, source ),
-					source.getPersistenceContextInternal()
+			// a proxy for a snapshot is refreshed at the changeset of the snapshot
+			source.getLoadQueryInfluencers().withCapturedTemporalIdentifier(
+					proxyChangesetId( lazyInitializer, object, source ),
+					() -> refresh(
+							event,
+							null,
+							source,
+							persister,
+							lazyInitializer,
+							null,
+							persister.getIdentifier( object, source ),
+							source.getPersistenceContextInternal()
+					)
 			);
 			if ( lazyInitializer != null ) {
 				refreshedAlready.add( lazyInitializer.getImplementation() );
@@ -98,6 +103,26 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 
 		if ( isTransient ) {
 			source.setReadOnly( object, source.isDefaultReadOnly() );
+		}
+	}
+
+	/**
+	 * The changeset of the snapshot an uninitialized proxy stands for, or
+	 * {@code null} if it stands for current state.
+	 */
+	private static @Nullable Object proxyChangesetId(
+			@Nullable LazyInitializer lazyInitializer,
+			@Nonnull Object object,
+			@Nonnull EventSource source) {
+		if ( lazyInitializer instanceof AbstractLazyInitializer abstractLazyInitializer ) {
+			return abstractLazyInitializer.getTemporalIdentifier();
+		}
+		else {
+			// an enhanced proxy has an entry with the key of the snapshot
+			final var entry = source.getPersistenceContextInternal().getEntry( object );
+			return entry != null && entry.getEntityKey().isTemporal()
+					? entry.getEntityKey().getChangesetId()
+					: null;
 		}
 	}
 
@@ -266,8 +291,11 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			}
 		}
 
-		// Go ahead and reload the entity from the database.
-		final Object result = persister.load( id, object, lockOptionsToUse, source );
+		// Go ahead and reload the entity from the database, a snapshot at its own changeset
+		final Object result = entry == null
+				? persister.load( id, object, lockOptionsToUse, source )
+				: source.getLoadQueryInfluencers().withCapturedTemporalIdentifier( entry.getEntityKey().getChangesetId(),
+						() -> persister.load( id, object, lockOptionsToUse, source ) );
 		if ( result != null ) {
 			// Apply the preserved postRefreshLockMode, if any.
 			if ( postRefreshLockMode != null ) {

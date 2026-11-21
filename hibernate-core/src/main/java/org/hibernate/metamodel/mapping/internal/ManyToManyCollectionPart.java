@@ -311,18 +311,23 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 				creationState.getSqlAliasBaseGenerator()
 		);
 
+		// the element is built lazily, but in the context of the join, which may be current state
+		final var influencers = creationState.getLoadQueryInfluencers();
+		final Object changesetId = influencers.getTemporalIdentifier();
+		final boolean historyTables = influencers.readsHistoryTables();
 		final var lazyTableGroup = new LazyTableGroup(
 				canUseInnerJoin,
 				navigablePath,
 				fetched,
-				() -> createTableGroupInternal(
-						canUseInnerJoin,
-						navigablePath,
-						fetched,
-						null,
-						sqlAliasBase,
-						creationState
-				),
+				() -> influencers.withTemporalIdentifier( changesetId, historyTables,
+						() -> createTableGroupInternal(
+								canUseInnerJoin,
+								navigablePath,
+								fetched,
+								null,
+								sqlAliasBase,
+								creationState
+						) ),
 				this,
 				this,
 				explicitSourceAlias,

@@ -27,7 +27,9 @@ import static org.hibernate.audit.AuditLog.ALL_CHANGESETS;
 import static org.hibernate.cfg.CacheSettings.USE_SECOND_LEVEL_CACHE;
 import static org.hibernate.cfg.StateManagementSettings.CHANGESET_ID_SUPPLIER;
 import static org.hibernate.cfg.StateManagementSettings.TEMPORAL_TABLE_STRATEGY;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SessionFactory(generateStatistics = true)
@@ -161,7 +163,7 @@ class TemporalSecondLevelCacheTest {
 	}
 
 	@Test
-	void currentTitleAfterFetchingOlderArticleRevision(SessionFactoryScope scope) {
+	void currentArticleFetchedAlongsideOlderRevision(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final var article = new Article();
 			article.id = 1;
@@ -179,13 +181,62 @@ class TemporalSecondLevelCacheTest {
 		try (var session = factory.withOptions().atChangeset( ALL_CHANGESETS ).openSession()) {
 			final var row = session.createSelectionQuery( """
 					select revision, ref from Article revision cross join ArticleReference ref
-					join fetch ref.article a
-					where revision.title = 'Latest title' and a.title = 'Original title'
+					join fetch ref.article
+					where revision.title = 'Original title' and ref.id = 1
 					""", Object[].class ).getSingleResult();
-			assertEquals( "Latest title", ( (Article) row[0] ).title );
-			assertEquals( "Original title", ( (ArticleReference) row[1] ).article.title );
+			final var revision = (Article) row[0];
+			// The non-audited reference is current, so its article is too
+			final var current = ( (ArticleReference) row[1] ).article;
+			assertEquals( "Original title", revision.title );
+			assertEquals( "Latest title", current.title );
+			assertNotSame( revision, current );
 		}
+		// only the current state reaches the cache
+		assertTrue( factory.getCache().containsEntity( Article.class, 1 ) );
 		scope.inSession( session -> assertEquals( "Latest title", session.find( Article.class, 1 ).title ) );
+	}
+
+	@Test
+	void currentArticleRetainsAuditExcludedNote(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var article = new Article();
+			article.id = 2;
+			article.title = "Draft";
+			article.note = "Editorial note";
+			session.persist( article );
+			final var reference = new ArticleReference();
+			reference.id = 2;
+			reference.article = article;
+			session.persist( reference );
+		} );
+
+		final var factory = scope.getSessionFactory();
+		final var cache = factory.getCache();
+		cache.evictEntityData( Article.class, 2 );
+		try (var session = factory.withOptions().atChangeset( ALL_CHANGESETS ).openSession()) {
+			session.createSelectionQuery(
+					"from ArticleReference ref join fetch ref.article where ref.id = 2", ArticleReference.class )
+					.getSingleResult();
+		}
+
+		final var cachedNote = scope.fromTransaction( session -> {
+			final var statistics = factory.getStatistics().getEntityStatistics( Article.class.getName() );
+			final long hits = statistics.getCacheHitCount();
+			final var article = session.find( Article.class, 2 );
+			assertEquals( hits + 1, statistics.getCacheHitCount() );
+			article.title = "Published";
+			return article.note;
+		} );
+
+		cache.evictEntityData( Article.class, 2 );
+		scope.inSession( session -> {
+			final var article = session.find( Article.class, 2 );
+			assertAll(
+					() -> assertEquals( "Editorial note", cachedNote, "Note on cache hit" ),
+					() -> assertEquals( "Published", article.title ),
+					() -> assertEquals( "Editorial note", article.note, "Note after update and eviction" )
+			);
+		} );
 	}
 
 	@Entity(name = "Article")
@@ -195,6 +246,7 @@ class TemporalSecondLevelCacheTest {
 	static class Article {
 		@Id int id;
 		String title;
+		@Audited.Excluded String note;
 	}
 
 	@Entity(name = "ArticleReference")

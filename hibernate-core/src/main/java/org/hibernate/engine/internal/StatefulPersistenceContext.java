@@ -64,6 +64,7 @@ import org.hibernate.sql.results.spi.LoadContexts;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
+import static org.hibernate.metamodel.mapping.internal.CurrentState.keyChangesetId;
 import static java.util.Collections.emptyIterator;
 import static java.util.Collections.emptyMap;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asHibernateProxy;
@@ -979,6 +980,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 								collectionType.getLHSPropertyName(),
 								key,
 								collectionPersister.getKeyType(),
+								keyChangesetId( session, ownerPersister ),
 								session.getFactory()
 						)
 				);

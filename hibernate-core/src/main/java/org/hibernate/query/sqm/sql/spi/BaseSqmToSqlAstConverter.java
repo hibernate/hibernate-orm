@@ -5072,12 +5072,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				)
 		);
 		try {
-			final var tableGroup = pluralAttributeMapping.createRootTableGroup(
-					true,
+			final var tableGroup = pluralAttributeMapping.createSubqueryRootTableGroup(
 					navigablePath,
-					null,
-					null,
-					() -> subQuerySpec::applyPredicate,
+					subQuerySpec::applyPredicate,
 					this
 			);
 
@@ -5115,7 +5112,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	/**
 	 * Applies the restrictions which a join of the given collection is subject to
-	 * to a subquery whose root is the collection.
+	 * to a subquery whose root is the collection, other than the restrictions of its
+	 * auxiliary mappings, which {@link PluralAttributeMapping#createSubqueryRootTableGroup}
+	 * applies.
 	 *
 	 * @see PluralAttributeMapping#createTableGroupJoin
 	 */
@@ -5141,12 +5140,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				enabledFilters,
 				null,
 				this
-		);
-		pluralAttributeMapping.applyAuxiliaryRestrictions(
-				tableGroup,
-				subQuerySpec::applyPredicate,
-				influencers,
-				getSqlAliasBaseGenerator()
 		);
 	}
 
@@ -5253,12 +5246,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				)
 		);
 		try {
-			final var tableGroup = pluralAttributeMapping.createRootTableGroup(
-					true,
+			final var tableGroup = pluralAttributeMapping.createSubqueryRootTableGroup(
 					pluralPartPath.getNavigablePath(),
-					null,
-					null,
-					() -> subQuerySpec::applyPredicate,
+					subQuerySpec::applyPredicate,
 					this
 			);
 
@@ -5390,12 +5380,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					)
 			);
 			try {
-				final var tableGroup = pluralAttributeMapping.createRootTableGroup(
-						true,
+				final var tableGroup = pluralAttributeMapping.createSubqueryRootTableGroup(
 						pluralPartPath.getNavigablePath(),
-						null,
-						null,
-						() -> subQuerySpec::applyPredicate,
+						subQuerySpec::applyPredicate,
 						this
 				);
 
@@ -8207,12 +8194,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				)
 		);
 		try {
-			final var tableGroup = pluralAttributeMapping.createRootTableGroup(
-					true,
+			final var tableGroup = pluralAttributeMapping.createSubqueryRootTableGroup(
 					pluralPath.getNavigablePath(),
-					null,
-					null,
-					() -> subQuerySpec::applyPredicate,
+					subQuerySpec::applyPredicate,
 					this
 			);
 
@@ -8916,7 +8900,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private Fetch createFetch(FetchParent fetchParent, Fetchable fetchable, Boolean isKeyFetchable) {
-		if ( !fetchable.isSelectable() || isFetchableAuditExcluded( fetchable, loadQueryInfluencers ) ) {
+		if ( !fetchable.isSelectable() || isFetchableAuditExcluded( fetchParent, fetchable, this ) ) {
 			return null;
 		}
 		final var resolvedNavigablePath = fetchParent.resolveNavigablePath( fetchable );

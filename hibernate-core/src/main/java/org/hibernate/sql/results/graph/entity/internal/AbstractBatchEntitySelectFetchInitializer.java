@@ -1,5 +1,6 @@
 package org.hibernate.sql.results.graph.entity.internal;
 
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.FetchMethod;
 import org.hibernate.Hibernate;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
@@ -22,6 +23,7 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 import jakarta.annotation.Nullable;
 
+import static org.hibernate.sql.results.graph.entity.internal.OwnerChangeset.resolveAtOwnerChangeset;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 import static org.hibernate.sql.results.graph.entity.internal.EntityInitializerImpl.getAttributeInterceptor;
@@ -127,7 +129,8 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 					return;
 				}
 			}
-			resolveInstanceFromIdentifier( data );
+			resolveAtOwnerChangeset( getParent(), concreteDescriptor, rowProcessingState,
+					() -> resolveInstanceFromIdentifier( data ) );
 		}
 	}
 
@@ -156,7 +159,8 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 			data.setInstance( null );
 		}
 		else {
-			resolve( instance, data );
+			resolveAtOwnerChangeset( getParent(), concreteDescriptor, data.getRowProcessingState(),
+					() -> resolve( instance, data ) );
 		}
 	}
 
@@ -304,13 +308,27 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 		else {
 			final var lazyInitializer = extractLazyInitializer( instance );
 			if ( lazyInitializer != null && lazyInitializer.isUninitialized() ) {
-				data.entityKey =
-						data.getRowProcessingState().getSession()
-								.generateEntityKey( lazyInitializer.getInternalIdentifier(), concreteDescriptor );
-				registerToBatchFetchQueue( data );
+				resolveAtOwnerChangeset( getParent(), concreteDescriptor, data.getRowProcessingState(),
+						() -> registerProxyToBatchFetchQueue( lazyInitializer, data ) );
 			}
 			data.setState( State.INITIALIZED );
 		}
+	}
+
+	private void registerProxyToBatchFetchQueue(LazyInitializer lazyInitializer, Data data) {
+		data.entityKey =
+				data.getRowProcessingState().getSession()
+						.generateEntityKey( lazyInitializer.getInternalIdentifier(), concreteDescriptor );
+		registerToBatchFetchQueue( data );
+	}
+
+	/**
+	 * Each batched key loads at the changeset of the key.
+	 */
+	protected Object loadInstance(EntityKey entityKey, Data data) {
+		final var session = data.getRowProcessingState().getSession();
+		return session.getLoadQueryInfluencers()
+				.withCapturedTemporalIdentifier( entityKey.getChangesetId(), () -> loadInstance( entityKey, session ) );
 	}
 
 	protected Object loadInstance(EntityKey entityKey, SharedSessionContractImplementor session) {

@@ -43,6 +43,10 @@ public abstract class AbstractNonJoinCollectionInitializer<Data extends Abstract
 	}
 
 	protected void resolveInstance(Data data, boolean isEager) {
+		resolveAtOwnerChangeset( data, () -> resolveCollectionInstance( data, isEager ) );
+	}
+
+	private void resolveCollectionInstance(Data data, boolean isEager) {
 		if ( data.getState() == State.KEY_RESOLVED ) {
 			resolveCollectionKey( data, false );
 			if ( data.getState() == State.KEY_RESOLVED ) {
@@ -133,6 +137,10 @@ public abstract class AbstractNonJoinCollectionInitializer<Data extends Abstract
 	}
 
 	protected void resolveInstance(Object instance, Data data, boolean isEager) {
+		resolveAtOwnerChangeset( data, () -> resolveExistingCollectionInstance( instance, data, isEager ) );
+	}
+
+	private void resolveExistingCollectionInstance(Object instance, Data data, boolean isEager) {
 		if ( instance == null ) {
 			setMissing( data );
 		}

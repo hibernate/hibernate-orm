@@ -261,21 +261,17 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		}
 	}
 
+	/**
+	 * The changeset the proxied entity is read at, or {@code null} for current state.
+	 */
+	public @Nullable Object getTemporalIdentifier() {
+		return temporalIdentifier;
+	}
+
 	private Object immediateLoad(SharedSessionContractImplementor session) {
-		if ( temporalIdentifier != null ) {
-			final var influencers = session.getLoadQueryInfluencers();
-			final Object previous = influencers.getTemporalIdentifier();
-			influencers.setTemporalIdentifier( temporalIdentifier );
-			try {
-				return session.immediateLoad( entityName, id );
-			}
-			finally {
-				influencers.setTemporalIdentifier( previous );
-			}
-		}
-		else {
-			return session.immediateLoad( entityName, id );
-		}
+		// A proxy loads at the changeset it was created at
+		return session.getLoadQueryInfluencers()
+				.withCapturedTemporalIdentifier( temporalIdentifier, () -> session.immediateLoad( entityName, id ) );
 	}
 
 	/**

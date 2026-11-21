@@ -186,9 +186,6 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 			TableReference tableReference,
 			@Nullable SqlExpressionResolver expressionResolver,
 			Object temporalValue) {
-		final var startingColumn = resolveColumn( tableReference, expressionResolver, startingColumnMapping );
-		final var endingColumn = resolveColumn( tableReference, expressionResolver, endingColumnMapping );
-
 		final Expression startingTemporalValue;
 		final Expression endingTemporalValue;
 		if ( currentTimestampExpression == null || temporalValue != null ) {
@@ -199,6 +196,16 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 			startingTemporalValue = currentTimestampExpression;
 			endingTemporalValue = currentTimestampExpression;
 		}
+		return createRestriction( tableReference, expressionResolver, startingTemporalValue, endingTemporalValue );
+	}
+
+	private Predicate createRestriction(
+			TableReference tableReference,
+			@Nullable SqlExpressionResolver expressionResolver,
+			Expression startingTemporalValue,
+			Expression endingTemporalValue) {
+		final var startingColumn = resolveColumn( tableReference, expressionResolver, startingColumnMapping );
+		final var endingColumn = resolveColumn( tableReference, expressionResolver, endingColumnMapping );
 
 		final var startingPredicate = new ComparisonPredicate( startingColumn, LESS_THAN_OR_EQUAL, startingTemporalValue );
 		final var endingNullPredicate = new NullnessPredicate( endingColumn, false, jdbcMapping );
@@ -275,9 +282,16 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 			@Nonnull LazyTableGroup lazyTableGroup,
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull SqlAstCreationState creationState) {
-		if ( useTemporalRestriction( creationState ) ) {
+		final var ownerRevision = ownerRevision( navigablePath, creationState );
+		if ( ownerRevision != null ) {
+			// read as of the revision of the audited snapshot that owns the association
 			final var tableReference = lazyTableGroup.resolveTableReference( navigablePath, getTableName() );
-			final var temporalInstant = creationState.getLoadQueryInfluencers().getTemporalIdentifier();
+			predicateConsumer.accept( createRestriction( tableReference, creationState.getSqlExpressionResolver(),
+					ownerRevision, ownerRevision ) );
+		}
+		else if ( useTemporalRestriction( creationState ) ) {
+			final var tableReference = lazyTableGroup.resolveTableReference( navigablePath, getTableName() );
+			final var temporalInstant = temporalInstant( creationState.getLoadQueryInfluencers() );
 			final var resolver = creationState.getSqlExpressionResolver();
 			final var temporalPredicate =
 					temporalInstant == null
@@ -295,7 +309,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
 			@Nonnull LoadQueryInfluencers influencers) {
 		if ( useTemporalRestriction( influencers ) ) {
-			final var instant = influencers.getTemporalIdentifier();
+			final var instant = temporalInstant( influencers );
 			final var primaryTableReference =
 					tableGroup.resolveTableReference( getTableName() );
 			predicateConsumer.accept( instant == null
@@ -312,7 +326,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
 			@Nonnull LoadQueryInfluencers influencers) {
 		if ( useTemporalRestriction( influencers ) ) {
-			final var instant = influencers.getTemporalIdentifier();
+			final var instant = temporalInstant( influencers );
 			final var tableReference = tableGroup.resolveTableReference( getTableName() );
 			predicateConsumer.accept( instant == null
 					? createCurrentRestriction( tableReference )
@@ -326,7 +340,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
 			@Nonnull LoadQueryInfluencers loadQueryInfluencers) {
 		if ( useTemporalRestriction( loadQueryInfluencers ) ) {
-			final var temporalInstant = loadQueryInfluencers.getTemporalIdentifier();
+			final var temporalInstant = temporalInstant( loadQueryInfluencers );
 			final var tableReference = tableGroupJoin.getJoinedGroup().resolveTableReference( getTableName() );
 			tableGroupJoin.applyPredicate( temporalInstant == null
 					? createCurrentRestriction( tableReference )
@@ -344,8 +358,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 		if ( useTemporalRestriction( creationState ) ) {
 			final var tableReference =
 					tableGroup.resolveTableReference( getTableName() );
-			final var temporalInstant =
-					creationState.getLoadQueryInfluencers().getTemporalIdentifier();
+			final var temporalInstant = temporalInstant( creationState.getLoadQueryInfluencers() );
 			final var resolver = creationState.getSqlExpressionResolver();
 			predicateCollector.get()
 					.accept( temporalInstant == null
@@ -358,24 +371,68 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 		}
 	}
 
+	/**
+	 * In an all-revisions query, the revision column of the audit snapshot owning a
+	 * temporal target or element with the given path, which it is read at. It is
+	 * {@code null} when the owner is current state, or when the dialect reads history
+	 * with {@code AS OF}, which cannot take a column.
+	 *
+	 * @see CurrentState#ownerRevision
+	 */
+	public @Nullable ColumnReference ownerRevision(
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqlAstCreationState creationState) {
+		return readsHistoryWithRestriction( creationState )
+				? CurrentState.ownerRevision( navigablePath, creationState )
+				: null;
+	}
+
+	/**
+	 * Restricts a temporal entity joined as the element of a collection to its state
+	 * as of the given revision.
+	 */
+	@Nonnull
+	public Predicate createRevisionRestriction(@Nonnull TableGroup tableGroup, @Nonnull Expression revision) {
+		return createRestriction( tableGroup.resolveTableReference( getTableName() ), null, revision, revision );
+	}
+
+	/**
+	 * Whether the dialect reads history with a restriction, which can be bounded by a
+	 * revision column, rather than with {@code AS OF}, which cannot.
+	 */
+	public boolean readsHistoryWithRestriction(@Nonnull SqlAstCreationState creationState) {
+		final var creationContext = creationState.getCreationContext();
+		return creationContext.getDialect().getTemporalTableSupport()
+				.useTemporalRestriction( new TemporalRestrictionRequest(
+						temporalTableStrategy,
+						true,
+						creationContext.getSessionFactory().getChangesetCoordinator().isIdentifierTypeInstant()
+				) );
+	}
+
+	/**
+	 * The instant at which temporal state is read. A temporal entity has no
+	 * revisions of its own, so an all-revisions query reads its current state.
+	 */
+	private static @Nullable Object temporalInstant(LoadQueryInfluencers influencers) {
+		return influencers.isAllRevisions() ? null : influencers.getTemporalIdentifier();
+	}
+
 	private static boolean useTemporalRestriction(LoadQueryInfluencers influencers) {
-		return !influencers.isAllRevisions()
-			&& influencers.getSessionFactory().getJdbcServices().getDialect().getTemporalTableSupport()
-						.useTemporalRestriction( temporalRestrictionRequest( influencers ) );
+		return influencers.getSessionFactory().getJdbcServices().getDialect().getTemporalTableSupport()
+				.useTemporalRestriction( temporalRestrictionRequest( influencers ) );
 	}
 
 	private boolean useTemporalRestriction(SqlAstCreationState creationState) {
-		final var influencers = creationState.getLoadQueryInfluencers();
-		return !influencers.isAllRevisions()
-			&& creationState.getCreationContext().getDialect().getTemporalTableSupport()
-						.useTemporalRestriction( temporalRestrictionRequest( influencers ) );
+		return creationState.getCreationContext().getDialect().getTemporalTableSupport()
+				.useTemporalRestriction( temporalRestrictionRequest( creationState.getLoadQueryInfluencers() ) );
 	}
 
 	private static TemporalRestrictionRequest temporalRestrictionRequest(LoadQueryInfluencers influencers) {
 		final var sessionFactory = influencers.getSessionFactory();
 		return new TemporalRestrictionRequest(
 				sessionFactory.getSessionFactoryOptions().getTemporalTableStrategy(),
-				influencers.getTemporalIdentifier() != null,
+				temporalInstant( influencers ) != null,
 				sessionFactory.getChangesetCoordinator().isIdentifierTypeInstant()
 		);
 	}
@@ -383,13 +440,11 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 	@Override
 	public boolean useAuxiliaryTable(@Nonnull LoadQueryInfluencers influencers) {
 		return temporalTableStrategy == TemporalTableStrategy.HISTORY_TABLE
-			&& influencers.getTemporalIdentifier() != null
-			&& !influencers.isAllRevisions();
+			&& ( temporalInstant( influencers ) != null || influencers.readsHistoryTables() );
 	}
 
 	@Override
 	public boolean isAffectedByInfluencers(@Nonnull LoadQueryInfluencers influencers) {
-		return influencers.getTemporalIdentifier() != null
-			&& !influencers.isAllRevisions();
+		return temporalInstant( influencers ) != null;
 	}
 }

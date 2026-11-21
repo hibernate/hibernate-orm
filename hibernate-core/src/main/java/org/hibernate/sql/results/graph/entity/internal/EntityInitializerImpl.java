@@ -75,7 +75,6 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 import jakarta.annotation.Nullable;
 
-import static org.hibernate.audit.AuditLog.ALL_CHANGESETS;
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
@@ -110,6 +109,7 @@ public class EntityInitializerImpl
 	private final boolean affectedByRefreshCascade;
 	private final boolean isPartOfKey;
 	private final boolean isResultInitializer;
+	private final boolean currentState;
 	private final boolean hasKeyManyToOne;
 	private final FetchOptions fetchOptions;
 	/**
@@ -254,6 +254,7 @@ public class EntityInitializerImpl
 
 		navigablePath = resultDescriptor.getNavigablePath();
 		fetchOptions = resultDescriptor.getFetchOptions();
+		currentState = resultDescriptor.readsCurrentState();
 		isPartOfKey = Initializer.isPartOfKey( navigablePath, parent );
 		// If the parent already has previous row reuse enabled, we can skip that here
 		previousRowReuse = !isPreviousRowReuse( parent ) && (
@@ -889,8 +890,8 @@ public class EntityInitializerImpl
 				return;
 			}
 		}
-		// An all-revisions query also returns current rows for entities without an audit mapping.
-		data.entityKey = data.allRevisionsQuery
+		// Current state, and an entity without an audit mapping in an all-revisions query, has no changeset
+		data.entityKey = currentState || data.allRevisionsQuery
 				? new EntityKey( id, concreteDescriptor )
 				: rowProcessingState.getSession().generateEntityKey( id, concreteDescriptor );
 	}
@@ -1280,13 +1281,6 @@ public class EntityInitializerImpl
 									this
 							);
 
-			if ( isResultInitializer && data.allRevisions && data.entityKey.isTemporal() ) {
-				// Association loads use the root revision even when a fetch joins an older audit row.
-				data.getRowProcessingState().getSession()
-						.getLoadQueryInfluencers()
-						.setTemporalIdentifier( data.entityKey.getChangesetId() );
-			}
-
 			if ( useEmbeddedIdentifierInstanceAsEntity( data ) ) {
 				data.setInstance( data.entityInstanceForNotify = rowProcessingState.getEntityId() );
 			}
@@ -1299,6 +1293,7 @@ public class EntityInitializerImpl
 							data.uniqueKeyAttributePath,
 							rowProcessingState.getEntityUniqueKey(),
 							data.uniqueKeyPropertyTypes[concreteDescriptor.getSubclassId()],
+							data.entityKey.getChangesetId(),
 							session.getFactory()
 					);
 					persistenceContext.addEntity( entityUniqueKey, data.getInstance() );
@@ -1656,15 +1651,6 @@ public class EntityInitializerImpl
 				}
 			}
 			data.setState( State.INITIALIZED );
-		}
-	}
-
-	@Override
-	public void endLoading(EntityInitializerData data) {
-		if ( isResultInitializer && data.allRevisions ) {
-			data.getRowProcessingState().getSession()
-					.getLoadQueryInfluencers()
-					.setTemporalIdentifier( ALL_CHANGESETS );
 		}
 	}
 
@@ -2121,6 +2107,7 @@ public class EntityInitializerImpl
 								uniqueKeyName,
 								key,
 								type,
+								data.entityKey.getChangesetId(),
 								session.getFactory()
 						);
 				session.getPersistenceContextInternal()

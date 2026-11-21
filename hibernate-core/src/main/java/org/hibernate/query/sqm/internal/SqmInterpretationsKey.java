@@ -32,7 +32,9 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 					keySource.getResultType(),
 					lockOptions,
 					memoryEfficientDefensiveSetCopy( keySource.getLoadQueryInfluencers().getEnabledFetchProfileNames() ),
-					keySource.getLoadQueryInfluencers().getTemporalIdentifier() != null
+					keySource.getLoadQueryInfluencers().getTemporalIdentifier() != null,
+					keySource.getLoadQueryInfluencers().isAllRevisions(),
+					keySource.getLoadQueryInfluencers().isAllChangesetsSession()
 			);
 		}
 		else {
@@ -93,6 +95,10 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 	private final LockOptions lockOptions;
 	private final Collection<String> enabledFetchProfiles;
 	private final boolean historical;
+	// an all-revisions query reads every revision, so it needs its own plan
+	private final boolean allRevisions;
+	// an all-changesets session reads associations of current state as current
+	private final boolean allChangesetsSession;
 	private final int hashCode;
 
 	private SqmInterpretationsKey(
@@ -102,8 +108,12 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 			Class<?> resultType,
 			LockOptions lockOptions,
 			Collection<String> enabledFetchProfiles,
-			boolean historical) {
+			boolean historical,
+			boolean allRevisions,
+			boolean allChangesetsSession) {
 		this.historical = historical;
+		this.allRevisions = allRevisions;
+		this.allChangesetsSession = allChangesetsSession;
 		assert query.getClass() == String.class || query instanceof SqmStatement<?>;
 		this.query = query;
 		this.unnamedParameterIndices = unnamedParameterIndices;
@@ -123,7 +133,9 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 				// Since lock options might be mutable, we need a copy for the cache key
 				lockOptions.makeDefensiveCopy(),
 				enabledFetchProfiles,
-				historical
+				historical,
+				allRevisions,
+				allChangesetsSession
 		);
 	}
 
@@ -148,7 +160,9 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 			&& Objects.equals( this.resultType, that.resultType )
 			&& Objects.equals( this.lockOptions, that.lockOptions )
 			&& Objects.equals( this.enabledFetchProfiles, that.enabledFetchProfiles )
-			&& this.historical == that.historical;
+			&& this.historical == that.historical
+			&& this.allRevisions == that.allRevisions
+			&& this.allChangesetsSession == that.allChangesetsSession;
 	}
 
 	@Override

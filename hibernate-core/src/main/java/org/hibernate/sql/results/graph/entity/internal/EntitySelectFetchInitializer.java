@@ -29,6 +29,7 @@ import jakarta.annotation.Nullable;
 
 import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
+import static org.hibernate.sql.results.graph.entity.internal.OwnerChangeset.resolveAtOwnerChangeset;
 
 /**
  * @author Andrea Boriero
@@ -149,13 +150,18 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 			}
 			else {
 				data.setState( State.INITIALIZED );
-				initialize( data );
+				resolveAtOwnerChangeset( parent, concreteDescriptor, rowProcessingState, () -> initialize( data ) );
 			}
 		}
 	}
 
 	@Override
 	public void resolveInstance(Object instance, Data data) {
+		final var rowProcessingState = data.getRowProcessingState();
+		resolveAtOwnerChangeset( parent, concreteDescriptor, rowProcessingState, () -> resolveExistingInstance( instance, data ) );
+	}
+
+	private void resolveExistingInstance(Object instance, Data data) {
 		if ( instance == null ) {
 			data.setState(  State.MISSING );
 			data.entityIdentifier = null;

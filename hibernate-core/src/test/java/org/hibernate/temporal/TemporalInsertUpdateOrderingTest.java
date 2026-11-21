@@ -9,7 +9,6 @@ import jakarta.persistence.InheritanceType;
 
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Temporal;
-import org.hibernate.audit.AuditLog;
 import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -49,10 +48,8 @@ class TemporalInsertUpdateOrderingTest {
 			assertEquals( "original", session.find( Item.class, 1 ).note );
 		}
 		scope.inSession( session -> assertEquals( "edited", session.find( Item.class, 1 ).note ) );
-		try (var session = scope.getSessionFactory().withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
-			assertEquals( List.of( "first", "second" ), session.createSelectionQuery(
-					"select i.name from Item i order by i.name", String.class ).list() );
-		}
+		scope.inSession( session -> assertEquals( List.of( "first", "second" ), session.createNativeQuery(
+				"select name from Item order by effective", String.class ).list() ) );
 	}
 
 	@Test

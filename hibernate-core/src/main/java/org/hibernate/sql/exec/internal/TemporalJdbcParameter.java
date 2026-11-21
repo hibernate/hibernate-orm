@@ -16,8 +16,19 @@ import java.sql.SQLException;
  */
 public class TemporalJdbcParameter extends SqlTypedMappingJdbcParameter {
 
+	private final boolean current;
+
 	public TemporalJdbcParameter(SqlTypedMapping sqlTypedMapping) {
+		this( sqlTypedMapping, false );
+	}
+
+	/**
+	 * @param current whether the parameter is bound to the current changeset,
+	 * whatever changeset the session reads at
+	 */
+	public TemporalJdbcParameter(SqlTypedMapping sqlTypedMapping, boolean current) {
 		super( sqlTypedMapping );
+		this.current = current;
 	}
 
 	@Override
@@ -25,7 +36,7 @@ public class TemporalJdbcParameter extends SqlTypedMappingJdbcParameter {
 			throws SQLException {
 		final SharedSessionContractImplementor session = executionContext.getSession();
 		final Object temporalIdentifier = session.getLoadQueryInfluencers().getTemporalIdentifier();
-		final Object currentChangesetIdentifier = temporalIdentifier != null
+		final Object currentChangesetIdentifier = temporalIdentifier != null && !current
 				? temporalIdentifier
 				: session.getCurrentChangesetIdentifier();
 		if ( currentChangesetIdentifier == null ) {

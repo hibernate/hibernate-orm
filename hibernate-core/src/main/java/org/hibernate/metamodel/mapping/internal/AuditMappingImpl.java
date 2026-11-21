@@ -52,6 +52,7 @@ import org.hibernate.type.BasicType;
 import jakarta.annotation.Nullable;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+import static org.hibernate.metamodel.mapping.internal.CurrentState.ownerRevision;
 import static java.util.Collections.singletonList;
 import static org.hibernate.audit.AuditStrategy.VALIDITY;
 import static org.hibernate.query.sqm.ComparisonOperator.EQUAL;
@@ -438,8 +439,8 @@ public class AuditMappingImpl implements AuditMapping {
 					false
 			) );
 		}
-		else if ( influencers.isAllRevisions() ) {
-			final var parentRevColumn = findParentRevColumn( navigablePath, creationState );
+		else {
+			final var parentRevColumn = ownerRevision( navigablePath, creationState );
 			if ( parentRevColumn != null ) {
 				predicateConsumer.accept( createRestriction(
 						persister,
@@ -462,17 +463,8 @@ public class AuditMappingImpl implements AuditMapping {
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
 			@Nonnull LoadQueryInfluencers influencers) {
 		if ( hasTemporalPredicate( influencers ) ) {
-			final var persister = associatedEntityDescriptor.getEntityPersister();
-			final var info = resolveInfo( persister.getTableName() );
-			predicateConsumer.accept( createRestriction(
-					persister,
-					tableGroup.resolveTableReference( info.auditTableName ),
-					collectEntityKeySelectables( associatedEntityDescriptor ),
-					sqlAliasBaseGenerator,
-					info,
-					resolveDefaultUpperBound( info ),
-					false
-			) );
+			predicateConsumer.accept(
+					createRevisionRestriction( associatedEntityDescriptor, tableGroup, sqlAliasBaseGenerator, null ) );
 		}
 	}
 
@@ -484,18 +476,55 @@ public class AuditMappingImpl implements AuditMapping {
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
 			@Nonnull LoadQueryInfluencers influencers) {
 		if ( hasTemporalPredicate( influencers ) ) {
-			final String collectionTable = collectionDescriptor.getCollectionDescriptor().getTableName();
-			final var info = resolveInfo( collectionTable );
-			predicateConsumer.accept( createRestriction(
-					collectionDescriptor,
-					tableGroup.resolveTableReference( info.auditTableName ),
-					collectCollectionRowKeySelectables( collectionDescriptor ),
-					sqlAliasBaseGenerator,
-					info,
-					resolveDefaultUpperBound( info ),
-					false
-			) );
+			predicateConsumer.accept(
+					createRevisionRestriction( collectionDescriptor, tableGroup, sqlAliasBaseGenerator, null ) );
 		}
+	}
+
+	/**
+	 * Restricts an audited entity joined by a collection to its state as of the given
+	 * revision, or, when it is {@code null}, as of the changeset the session reads.
+	 */
+	@Nonnull
+	public Predicate createRevisionRestriction(
+			@Nonnull EntityMappingType associatedEntityDescriptor,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			@Nullable Expression revision) {
+		final var persister = associatedEntityDescriptor.getEntityPersister();
+		final var info = resolveInfo( persister.getTableName() );
+		return createRestriction(
+				persister,
+				tableGroup.resolveTableReference( info.auditTableName ),
+				collectEntityKeySelectables( associatedEntityDescriptor ),
+				sqlAliasBaseGenerator,
+				info,
+				revision == null ? resolveDefaultUpperBound( info ) : revision,
+				false
+		);
+	}
+
+	/**
+	 * Restricts the rows of an audited collection to its state as of the given
+	 * revision, or, when it is {@code null}, as of the changeset the session reads.
+	 */
+	@Nonnull
+	public Predicate createRevisionRestriction(
+			@Nonnull PluralAttributeMapping collectionDescriptor,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
+			@Nullable Expression revision) {
+		final String collectionTable = collectionDescriptor.getCollectionDescriptor().getTableName();
+		final var info = resolveInfo( collectionTable );
+		return createRestriction(
+				collectionDescriptor,
+				tableGroup.resolveTableReference( info.auditTableName ),
+				collectCollectionRowKeySelectables( collectionDescriptor ),
+				sqlAliasBaseGenerator,
+				info,
+				revision == null ? resolveDefaultUpperBound( info ) : revision,
+				false
+		);
 	}
 
 	@Override
@@ -569,41 +598,6 @@ public class AuditMappingImpl implements AuditMapping {
 				) );
 			}
 		}
-	}
-
-	/**
-	 * The parent revision that bounds an audited to-one join in an all-revisions query.
-	 */
-	@Nullable
-	public static ColumnReference findParentRevColumn(
-			NavigablePath navigablePath,
-			SqlAstCreationState creationState) {
-		final var parentPath = navigablePath.getParent();
-		if ( parentPath == null ) {
-			return null;
-		}
-		final var parentTableGroup = creationState.getFromClauseAccess()
-				.findTableGroup( parentPath );
-		if ( parentTableGroup != null
-				&& parentTableGroup.getModelPart() instanceof EntityValuedModelPart entityPart ) {
-			final var parentAuditMapping = entityPart.getEntityMappingType().getAuditMapping();
-			if ( parentAuditMapping != null ) {
-				// A fetched to-one represents its owner's snapshot even if its own row is older.
-				if ( parentTableGroup.isFetched() && entityPart instanceof ToOneAttributeMapping ) {
-					final var ownerRevColumn = findParentRevColumn( parentPath, creationState );
-					if ( ownerRevColumn != null ) {
-						return ownerRevColumn;
-					}
-				}
-				final String parentTable = entityPart.getEntityMappingType().getMappedTableDetails().getTableName();
-				final String parentAuditTable = parentAuditMapping.resolveTableName( parentTable );
-				return new ColumnReference(
-						parentTableGroup.resolveTableReference( parentAuditTable ),
-						parentAuditMapping.getChangesetIdMapping( parentTable )
-				);
-			}
-		}
-		return null;
 	}
 
 	@Override

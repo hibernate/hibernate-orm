@@ -105,14 +105,14 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 			final var factory = session.getFactory();
 			final var persistenceContext = session.getPersistenceContextInternal();
 			if ( isSubselectFetch()
-					&& initializeSubselect( toBatchLoad, session, persistenceContext ) ) {
+					&& initializeSubselect( data, toBatchLoad, session, persistenceContext ) ) {
 				data.toBatchLoad = null;
 				return;
 			}
 			for ( var entry : toBatchLoad.entrySet() ) {
 				final var entityKey = entry.getKey();
 				final var parentInfos = entry.getValue();
-				final Object instance = loadInstance( entityKey, session );
+				final Object instance = loadInstance( entityKey, data );
 				for ( var parentInfo : parentInfos ) {
 					final Object parentInstance = parentInfo.parentInstance;
 					final var entityEntry = persistenceContext.getEntry( parentInstance );
@@ -129,6 +129,7 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 	}
 
 	private boolean initializeSubselect(
+			BatchEntitySelectFetchInitializerData data,
 			HashMap<EntityKey, List<ParentInfo>> toBatchLoad,
 			SharedSessionContractImplementor session,
 			PersistenceContext persistenceContext) {
@@ -146,7 +147,7 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 			final var parentInfos = entry.getValue();
 			var instance = persistenceContext.getEntity( entityKey );
 			if ( instance == null ) {
-				instance = loadInstance( entityKey, session );
+				instance = loadInstance( entityKey, data );
 			}
 			for ( var parentInfo : parentInfos ) {
 				final Object parentInstance = parentInfo.parentInstance;

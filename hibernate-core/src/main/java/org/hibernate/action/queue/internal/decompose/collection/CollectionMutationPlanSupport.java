@@ -106,16 +106,6 @@ final class CollectionMutationPlanSupport {
 		} );
 	}
 
-	static LogicalTableUpdate<?> buildSoftDeleteMutation(
-			TableUpdateBuilderStandard<?> updateBuilder,
-			MutatingTableReference mutatingTable,
-			org.hibernate.metamodel.mapping.SoftDeleteMapping softDeleteMapping) {
-		final var softDeleteColumnReference = new ColumnReference( mutatingTable, softDeleteMapping );
-		updateBuilder.addColumnAssignment( softDeleteMapping.createDeletedValueBinding( softDeleteColumnReference ) );
-		updateBuilder.addNonKeyRestriction( softDeleteMapping.createNonDeletedValueBinding( softDeleteColumnReference ) );
-		return updateBuilder.buildMutation();
-	}
-
 	static LogicalTableUpdate<?> buildTemporalDeleteMutation(
 			TableUpdateBuilderStandard<?> updateBuilder,
 			MutatingTableReference mutatingTable,

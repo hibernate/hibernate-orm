@@ -137,6 +137,11 @@ public interface PluralAttributeMapping
 	}
 
 	@Nullable
+	default AuxiliaryMapping getAuxiliaryMapping() {
+		return null;
+	}
+
+	@Nullable
 	OrderByFragment getOrderByFragment();
 	@Nullable
 	OrderByFragment getManyToManyOrderByFragment();

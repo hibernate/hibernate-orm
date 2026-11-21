@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.loader.ast.spi.Loadable;
+import org.hibernate.mapping.Property;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.creation.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
@@ -38,6 +39,13 @@ import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 /// @since 7.4
 @Incubating(since = "5.4")
 public interface AuxiliaryMapping {
+	/// Called during mapping initialization for the inverse side of a shared collection table.
+	/// Returns the auxiliary mapping to use for reads of that property, or null if none applies.
+	@Nullable
+	default AuxiliaryMapping forInverseCollection(@Nonnull Property inverseProperty) {
+		return null;
+	}
+
 	/// The primary auxiliary table name.
 	///
 	/// Single-table state-management strategies generally use this table for all
@@ -96,6 +104,7 @@ public interface AuxiliaryMapping {
 	/// Contributes restrictions for a collection or an associated entity. Predicates
 	/// on the associated row alone may be applied inside a preserved join operand.
 	/// Predicates which also reference the owner must be applied where both are in scope.
+	/// For an inverse collection, `mapping` is the inverse attribute being read.
 	default void applyAssociationRestrictions(
 			@Nonnull Loadable mapping, @Nonnull TableGroup tableGroup, @Nullable TableGroup ownerGroup,
 			@Nonnull Consumer<Predicate> rowRestrictions, @Nonnull Consumer<Predicate> ownerRestrictions,

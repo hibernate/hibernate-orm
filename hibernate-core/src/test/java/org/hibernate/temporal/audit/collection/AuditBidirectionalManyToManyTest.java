@@ -32,6 +32,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Tests bidirectional @ManyToMany auditing.
@@ -205,6 +206,15 @@ class AuditBidirectionalManyToManyTest {
 	}
 
 	@Test
+	void testExcludedInverseCollection(SessionFactoryScope scope) {
+		final var mappings = scope.getSessionFactory().getMappingMetamodel();
+		final var owning = mappings.getCollectionDescriptor( OwningEntity.class.getName() + ".otherReferences" );
+		final var inverse = mappings.getCollectionDescriptor( OwnedEntity.class.getName() + ".excludedReferencing" );
+		assertNotNull( owning.getAttributeMapping().getAuditMapping() );
+		assertNull( inverse.getAttributeMapping().getAuxiliaryMapping() );
+	}
+
+	@Test
 	void testInverseCollectionSizeAtChangeset(SessionFactoryScope scope) {
 		final String size = "select size(e.referencing) from OwnedEntity e where e.id = 1";
 		final var factory = scope.getSessionFactory();
@@ -226,14 +236,22 @@ class AuditBidirectionalManyToManyTest {
 			session.persist( element );
 			session.persist( owner );
 		} );
-		scope.inTransaction( session -> session.find( OwningEntity.class, 30 ).orderedReferences.remove( 1 ) );
+		scope.inTransaction( session -> {
+			session.find( OwningEntity.class, 30 ).orderedReferences.remove( 1 );
+			session.find( OwnedEntity.class, 30 ).data = "one slot left";
+		} );
 		final int oneEntryLeft = currentTxId;
 		scope.inTransaction( session -> session.find( OwningEntity.class, 30 ).orderedReferences.clear() );
 
-		try (var session = scope.getSessionFactory().withOptions().atChangeset( oneEntryLeft ).openSession()) {
-			// Removing the second slot leaves the first membership row visible.
-			assertEquals( 1, session.createSelectionQuery(
-					"select size(e.orderedReferencing) from OwnedEntity e where e.id = 30", Integer.class )
+		final String size = "select size(e.orderedReferencing) from OwnedEntity e where e.id = 30";
+		final var factory = scope.getSessionFactory();
+		// Removing the second slot leaves the first membership row visible.
+		try (var session = factory.withOptions().atChangeset( oneEntryLeft ).openSession()) {
+			assertEquals( 1, session.createSelectionQuery( size, Integer.class ).getSingleResult() );
+		}
+		try (var session = factory.withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
+			assertEquals( 1, session.createSelectionQuery( size + " and changesetId(e) = :revision", Integer.class )
+					.setParameter( "revision", oneEntryLeft )
 					.getSingleResult() );
 		}
 	}
@@ -337,6 +355,9 @@ class AuditBidirectionalManyToManyTest {
 		@JoinTable(name = "ordered_references")
 		@OrderColumn(name = "position_in_list")
 		List<OwnedEntity> orderedReferences = new ArrayList<>();
+		@ManyToMany
+		@JoinTable(name = "other_references")
+		Set<OwnedEntity> otherReferences = new HashSet<>();
 
 		OwningEntity() {
 		}
@@ -357,6 +378,9 @@ class AuditBidirectionalManyToManyTest {
 		Set<OwningEntity> referencing = new HashSet<>();
 		@ManyToMany(mappedBy = "orderedReferences")
 		Set<OwningEntity> orderedReferencing = new HashSet<>();
+		@Audited.Excluded
+		@ManyToMany(mappedBy = "otherReferences")
+		Set<OwningEntity> excludedReferencing = new HashSet<>();
 
 		OwnedEntity() {
 		}

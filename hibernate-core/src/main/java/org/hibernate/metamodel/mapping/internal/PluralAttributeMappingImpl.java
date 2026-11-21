@@ -124,7 +124,6 @@ public class PluralAttributeMappingImpl
 	private final FetchStyle fetchStyle;
 	@Nullable
 	private AuxiliaryMapping auxiliaryMapping;
-	@Nullable private PluralAttributeMapping collectionTableOwner;
 
 	private final String bidirectionalAttributeName;
 
@@ -367,7 +366,6 @@ public class PluralAttributeMappingImpl
 		this.orderByFragment = original.orderByFragment;
 		this.manyToManyOrderByFragment = original.manyToManyOrderByFragment;
 		this.auxiliaryMapping = original.auxiliaryMapping;
-		this.collectionTableOwner = original.collectionTableOwner;
 		injectAttributeMapping( elementDescriptor, indexDescriptor, collectionDescriptor, this );
 	}
 
@@ -425,14 +423,12 @@ public class PluralAttributeMappingImpl
 			@SuppressWarnings("unused")
 			MappingModelCreationProcess creationProcess) {
 		final String mappedBy = bootDescriptor.getMappedByProperty();
-		if ( auxiliaryMapping == null && !bootProperty.isAuditedExcluded()
-				&& bootDescriptor.isInverse() && mappedBy != null && !mappedBy.isEmpty()
-				&& elementDescriptor instanceof ManyToManyCollectionPart element ) {
-			if ( element.resolveMappedByPart( mappedBy ) instanceof PluralAttributeMapping owningCollection
-					&& owningCollection.getAuditMapping() != null ) {
-				// Both directions read the same membership rows. Only the owning collection writes their history.
-				collectionTableOwner = owningCollection;
-				auxiliaryMapping = owningCollection.getAuditMapping();
+		if ( auxiliaryMapping == null && bootDescriptor.isInverse() && mappedBy != null && !mappedBy.isEmpty()
+				&& elementDescriptor instanceof ManyToManyCollectionPart element
+				&& element.resolveMappedByPart( mappedBy ) instanceof PluralAttributeMapping owningCollection ) {
+			final var owningMapping = owningCollection.getAuxiliaryMapping();
+			if ( owningMapping != null ) {
+				auxiliaryMapping = owningMapping.forInverseCollection( bootProperty );
 			}
 		}
 		final boolean hasOrder = bootDescriptor.getOrderBy() != null;
@@ -535,7 +531,8 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Nullable
-	private AuxiliaryMapping getAuxiliaryMapping() {
+	@Override
+	public AuxiliaryMapping getAuxiliaryMapping() {
 		return auxiliaryMapping;
 	}
 
@@ -639,9 +636,7 @@ public class PluralAttributeMappingImpl
 		applyPartRestriction( indexDescriptor, group.getIndexTableGroup(), ownerGroup,
 				restrictions, ownerRestrictions, aliases, influencers );
 		if ( auxiliaryMapping != null ) {
-			// The owning collection defines the audit row key, including any list index or map key.
-			final var tableMapping = collectionTableOwner == null ? this : collectionTableOwner;
-			auxiliaryMapping.applyAssociationRestrictions( tableMapping, group, ownerGroup,
+			auxiliaryMapping.applyAssociationRestrictions( this, group, ownerGroup,
 					restrictions, ownerRestrictions, aliases, influencers );
 		}
 	}

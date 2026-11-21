@@ -15,6 +15,7 @@ import org.hibernate.audit.spi.AuditEntityLoader;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.ast.spi.Loadable;
+import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.mapping.AuditMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
@@ -90,16 +91,16 @@ public class AuditMappingImpl implements AuditMapping {
 	private final FunctionRenderer maxFunctionDescriptor;
 	private final AuditStrategy auditStrategy;
 
-	private final EntityMappingType entityMappingType;
+	private final Loadable auditedMapping;
 	private final SessionFactoryImplementor sessionFactory;
 	@Nullable private AuditEntityLoader entityLoader;
 
 	public AuditMappingImpl(
 			Map<String, TableAuditInfo> tableAuditInfoMap,
-			EntityMappingType entityMappingType,
+			Loadable auditedMapping,
 			MappingModelCreationProcess creationProcess) {
 		this.tableAuditInfoMap = Map.copyOf( tableAuditInfoMap );
-		this.entityMappingType = entityMappingType;
+		this.auditedMapping = auditedMapping;
 
 		final var creationContext = creationProcess.getCreationContext();
 		this.sessionFactory = creationContext.getSessionFactory();
@@ -119,6 +120,12 @@ public class AuditMappingImpl implements AuditMapping {
 		maxFunctionDescriptor = resolveMaxFunction( sessionFactory );
 	}
 
+	@Nullable
+	@Override
+	public AuditMapping forInverseCollection(@Nonnull Property inverseProperty) {
+		return inverseProperty.isAuditedExcluded() ? null : this;
+	}
+
 	private TableAuditInfo resolveInfo(String originalTableName) {
 		final var info = tableAuditInfoMap.get( originalTableName );
 		if ( info == null ) {
@@ -133,7 +140,7 @@ public class AuditMappingImpl implements AuditMapping {
 	@Override
 	public AuditEntityLoader getEntityLoader() {
 		if ( entityLoader == null ) {
-			if ( entityMappingType == null ) {
+			if ( !( auditedMapping instanceof EntityMappingType entityMappingType ) ) {
 				throw new IllegalStateException( "getEntityLoader() is not available for collection audit mappings" );
 			}
 			entityLoader = new AuditEntityLoaderImpl( entityMappingType, sessionFactory );
@@ -359,7 +366,11 @@ public class AuditMappingImpl implements AuditMapping {
 		return keySelectables;
 	}
 
-	private static List<SelectableMapping> collectCollectionRowKeySelectables(PluralAttributeMapping collectionDescriptor) {
+	private List<SelectableMapping> collectCollectionRowKeySelectables() {
+		// The owning role defines the physical row key in both directions. Resolve its initialized mapping
+		// through the persister since the mapping may be wrapped during model creation.
+		final var owningRole = (PluralAttributeMapping) auditedMapping;
+		final var collectionDescriptor = owningRole.getCollectionDescriptor().getAttributeMapping();
 		final var keySelectables = new ArrayList<SelectableMapping>();
 		final var identifierDescriptor = collectionDescriptor.getIdentifierDescriptor();
 		if ( identifierDescriptor != null ) {
@@ -444,7 +455,7 @@ public class AuditMappingImpl implements AuditMapping {
 		final List<SelectableMapping> keys;
 		if ( mapping instanceof PluralAttributeMapping collection ) {
 			table = collection.getCollectionDescriptor().getTableName();
-			keys = collectCollectionRowKeySelectables( collection );
+			keys = collectCollectionRowKeySelectables();
 		}
 		else {
 			final var entity = mapping.asEntityMappingType();
@@ -485,7 +496,7 @@ public class AuditMappingImpl implements AuditMapping {
 		if ( hasTemporalPredicate( influencers ) ) {
 			final var info = resolveInfo( collectionDescriptor.getCollectionDescriptor().getTableName() );
 			predicateConsumer.accept( createRestriction( collectionDescriptor, tableGroup.resolveTableReference( info.auditTableName ),
-					collectCollectionRowKeySelectables( collectionDescriptor ), sqlAliasBaseGenerator, info,
+					collectCollectionRowKeySelectables(), sqlAliasBaseGenerator, info,
 					resolveDefaultUpperBound( info ), false ) );
 		}
 	}

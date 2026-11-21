@@ -74,18 +74,20 @@ public final class ConstraintModelBuilder {
 			PlanningOptions planningOptions,
 			MetadataImplementor bootMappingModel,
 			SqlStringGenerationContext sqlStringGenerationContext) {
-		return new ConstraintModelBuilder( planningOptions ).build( mappingModel, bootMappingModel, sqlStringGenerationContext );
+		return new ConstraintModelBuilder( planningOptions, bootMappingModel ).build( mappingModel, sqlStringGenerationContext );
 	}
 
 	private final PlanningOptions planningOptions;
+	private final MetadataImplementor bootModel;
+	private final List<ForeignKey> generatedIdentifierReferences = new ArrayList<>();
 
-	private ConstraintModelBuilder(PlanningOptions planningOptions) {
+	private ConstraintModelBuilder(PlanningOptions planningOptions, MetadataImplementor bootModel) {
+		this.bootModel = bootModel;
 		this.planningOptions = planningOptions;
 	}
 
-	public ConstraintModel build(
+	private ConstraintModel build(
 			MappingMetamodelImplementor mappingModel,
-			MetadataImplementor bootModel,
 			SqlStringGenerationContext sqlStringGenerationContext) {
 		final var foreignKeys = new ArrayList<ForeignKey>();
 		final var uniqueConstraints = new ArrayList<UniqueConstraint>();
@@ -99,7 +101,7 @@ public final class ConstraintModelBuilder {
 
 		// Second pass: collect foreign keys and unique constraints
 		mappingModel.forEachEntityDescriptor( (descriptor) -> {
-			collectFromEntityPersister(descriptor, foreignKeys, uniqueConstraints, seen, entityPersisters, bootModel, sqlStringGenerationContext);
+			collectFromEntityPersister(descriptor, foreignKeys, uniqueConstraints, seen, entityPersisters, sqlStringGenerationContext);
 		} );
 
 		// Also scan collection persisters because join tables often show up there
@@ -110,7 +112,6 @@ public final class ConstraintModelBuilder {
 					uniqueConstraints,
 					seen,
 					entityPersisters,
-					bootModel,
 					sqlStringGenerationContext
 			);
 		} );
@@ -136,9 +137,11 @@ public final class ConstraintModelBuilder {
 
 		// Identify tables with self-referential associations
 		var selfReferentialTables = identifySelfReferentialTables( reclassifiedForeignKeys );
+		selfReferentialTables.addAll( identifySelfReferentialTables( generatedIdentifierReferences ) );
 
 		return new ConstraintModel(
 				reclassifiedForeignKeys,
+				indexForeignKeysByTargetTable( generatedIdentifierReferences ),
 				uniqueConstraints,
 				uniqueConstraintsByTable,
 				inboundForeignKeysByTable,
@@ -154,7 +157,6 @@ public final class ConstraintModelBuilder {
 			List<UniqueConstraint> uniqueConstraints,
 			IdentityHashMap<ForeignKeyDescriptor, Boolean> seen,
 			Map<String, EntityPersister> entityPersisters,
-			MetadataImplementor bootModel,
 			SqlStringGenerationContext sqlStringGenerationContext) {
 
 		// Collect unique constraint for primary key
@@ -165,7 +167,7 @@ public final class ConstraintModelBuilder {
 		collectNaturalIdConstraint(descriptor, uniqueConstraints);
 
 		// Collect @Column(unique=true) constraints
-		collectUniqueColumnConstraints(descriptor, uniqueConstraints, bootModel, sqlStringGenerationContext);
+		collectUniqueColumnConstraints(descriptor, uniqueConstraints, sqlStringGenerationContext);
 
 		collectEntityTableGroupConstraints(descriptor, foreignKeys, seen, entityPersisters);
 
@@ -303,7 +305,6 @@ public final class ConstraintModelBuilder {
 	private void collectUniqueColumnConstraints(
 			EntityPersister descriptor,
 			List<UniqueConstraint> uniqueConstraints,
-			MetadataImplementor bootModel,
 			SqlStringGenerationContext sqlStringGenerationContext) {
 		if ( !planningOptions.orderByUniqueKeySlots() || bootModel == null || sqlStringGenerationContext == null ) {
 			return;
@@ -539,7 +540,6 @@ public final class ConstraintModelBuilder {
 			List<UniqueConstraint> uniqueConstraints,
 			IdentityHashMap<ForeignKeyDescriptor, Boolean> seen,
 			Map<String, EntityPersister> entityPersisters,
-			MetadataImplementor bootModel,
 			SqlStringGenerationContext sqlStringGenerationContext) {
 		var attributeMapping = descriptor.getAttributeMapping();
 
@@ -559,7 +559,6 @@ public final class ConstraintModelBuilder {
 				descriptor,
 				attributeMapping,
 				uniqueConstraints,
-				bootModel,
 				sqlStringGenerationContext
 		);
 	}
@@ -568,7 +567,6 @@ public final class ConstraintModelBuilder {
 			CollectionPersister descriptor,
 			PluralAttributeMapping attributeMapping,
 			List<UniqueConstraint> uniqueConstraints,
-			MetadataImplementor bootModel,
 			SqlStringGenerationContext sqlStringGenerationContext) {
 		if ( !planningOptions.orderByUniqueKeySlots() || bootModel == null || sqlStringGenerationContext == null ) {
 			return;
@@ -633,7 +631,7 @@ public final class ConstraintModelBuilder {
 		return constraintsByTable;
 	}
 
-	private Map<String, List<ForeignKey>> indexForeignKeysByTargetTable(ArrayList<ForeignKey> foreignKeys) {
+	private Map<String, List<ForeignKey>> indexForeignKeysByTargetTable(List<ForeignKey> foreignKeys) {
 		final Map<String, List<ForeignKey>> foreignKeysByTable = new HashMap<>();
 		for ( ForeignKey foreignKey : foreignKeys ) {
 			addIndexedValue( foreignKeysByTable, foreignKey.targetTable(), foreignKey );
@@ -916,17 +914,21 @@ public final class ConstraintModelBuilder {
 			List<ForeignKey> foreignKeys,
 			IdentityHashMap<ForeignKeyDescriptor, Boolean> seen,
 			Map<String, EntityPersister> entityPersisters) {
-		if ( fk == null ) {
+		if ( fk == null || seen.put( fk, Boolean.TRUE ) != null ) {
 			return;
 		}
-		if ( !fk.hasConstraint() ) {
-			return;
+		final var targetPart = fk.getTargetPart();
+		final var target = targetPart.findContainingEntityMapping();
+		final var binding = bootModel == null || target == null ? null
+				: bootModel.getEntityBinding( target.getEntityName() );
+		if ( fk.hasConstraint() && ( binding == null || !binding.getRootClass().isAuxiliaryColumnInPrimaryKey() ) ) {
+			addConstraint( fk, keySide, targetSide, nullable, foreignKeys, entityPersisters );
 		}
-		if ( seen.containsKey( fk ) ) {
-			return;
+		else if ( targetPart instanceof EntityIdentifierMapping && target != null
+				&& target.getEntityPersister().getGenerator().generatedOnExecution() ) {
+			// Binding the reference still requires the identifier produced by the target insert.
+			addConstraint( fk, keySide, targetSide, nullable, generatedIdentifierReferences, entityPersisters );
 		}
-		seen.put( fk, Boolean.TRUE );
-		addConstraint( fk, keySide, targetSide, nullable, foreignKeys, entityPersisters );
 	}
 
 	private void addConstraint(
@@ -1078,7 +1080,7 @@ public final class ConstraintModelBuilder {
 
 	/// Identifies tables that have self-referential associations (FK from table to itself).
 	/// These tables need special grouping treatment to avoid creating false cycles in the graph.
-	private java.util.Set<String> identifySelfReferentialTables(ArrayList<ForeignKey> foreignKeys) {
+	private java.util.Set<String> identifySelfReferentialTables(List<ForeignKey> foreignKeys) {
 		final java.util.Set<String> tables = new java.util.HashSet<>();
 		for (var fk : foreignKeys) {
 			if (fk.isAssociation()) {

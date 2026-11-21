@@ -19,7 +19,9 @@ import org.hibernate.sql.spi.mutation.ValuesAnalysis;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /// Represents a single SQL operation to be executed.
@@ -58,7 +60,7 @@ public class FlushOperation implements OperationResultChecker {
 	// remove the entity from persistence context (e.g., DELETE operations)
 	private PostExecutionCallback postExecutionCallback;
 	private PreExecutionCallback preExecutionCallback;
-	private FlushOperation executionPrerequisite;
+	private List<FlushOperation> executionPrerequisites = List.of();
 	private OperationExecutionMonitor executionMonitor;
 	private boolean executionSkipped;
 	private CollectionMutationCompletion collectionMutationCompletion;
@@ -263,13 +265,18 @@ public class FlushOperation implements OperationResultChecker {
 		return preExecutionCallback;
 	}
 
-	/// An operation whose execution and result checking must precede this operation.
-	public FlushOperation getExecutionPrerequisite() {
-		return executionPrerequisite;
+	/// Operations whose execution and result checking must precede this operation.
+	public List<FlushOperation> getExecutionPrerequisites() {
+		return executionPrerequisites;
 	}
 
-	public void setExecutionPrerequisite(FlushOperation executionPrerequisite) {
-		this.executionPrerequisite = executionPrerequisite;
+	public void addExecutionPrerequisite(FlushOperation prerequisite) {
+		if ( prerequisite != null && !executionPrerequisites.contains( prerequisite ) ) {
+			if ( executionPrerequisites.isEmpty() ) {
+				executionPrerequisites = new ArrayList<>( 2 );
+			}
+			executionPrerequisites.add( prerequisite );
+		}
 	}
 
 	public OperationExecutionMonitor getExecutionMonitor() {

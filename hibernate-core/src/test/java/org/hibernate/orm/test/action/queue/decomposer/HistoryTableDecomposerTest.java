@@ -88,12 +88,14 @@ public class HistoryTableDecomposerTest {
 		}
 
 		scope.inTransaction( entityManager -> {
-			final SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			final HistoryEntity entity = new HistoryEntity();
 			entity.id = 2L;
 			entity.name = "before";
 			entityManager.persist( entity );
-			entityManager.flush();
+		} );
+		scope.inTransaction( entityManager -> {
+			final SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
+			final var entity = entityManager.find( HistoryEntity.class, 2L );
 
 			final EntityPersister persister = sfi.getMappingMetamodel().getEntityDescriptor( HistoryEntity.class );
 			final Object[] previousState = persister.getValues( entity );
@@ -199,13 +201,15 @@ public class HistoryTableDecomposerTest {
 		}
 
 		scope.inTransaction( entityManager -> {
-			final SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			final HistorySecondaryEntity entity = new HistorySecondaryEntity();
 			entity.id = 5L;
 			entity.primaryName = "primary-before";
 			entity.secondaryName = "secondary-before";
 			entityManager.persist( entity );
-			entityManager.flush();
+		} );
+		scope.inTransaction( entityManager -> {
+			final SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
+			final var entity = entityManager.find( HistorySecondaryEntity.class, 5L );
 
 			final EntityPersister persister = sfi.getMappingMetamodel().getEntityDescriptor( HistorySecondaryEntity.class );
 			final Object[] previousState = persister.getValues( entity );
@@ -316,13 +320,15 @@ public class HistoryTableDecomposerTest {
 		}
 
 		scope.inTransaction( entityManager -> {
-			final SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			final HistoryJoinedChild entity = new HistoryJoinedChild();
 			entity.id = 8L;
 			entity.parentName = "parent-before";
 			entity.childName = "child-before";
 			entityManager.persist( entity );
-			entityManager.flush();
+		} );
+		scope.inTransaction( entityManager -> {
+			final SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
+			final var entity = entityManager.find( HistoryJoinedChild.class, 8L );
 
 			final EntityPersister persister = sfi.getMappingMetamodel().getEntityDescriptor( HistoryJoinedChild.class );
 			final Object[] previousState = persister.getValues( entity );

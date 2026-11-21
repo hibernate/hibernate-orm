@@ -8,6 +8,9 @@ public enum GraphEdgeKind {
 	/// A true ordering dependency that cycle breaking must preserve.
 	REQUIRED_ORDER,
 
+	/// An explicit dependency between flush operations. It is never a cycle-breaking candidate.
+	EXECUTION_PREREQUISITE,
+
 	/// A useful ordering preference that should be kept in acyclic plans but
 	/// dropped before patchable dependencies when it participates in a cycle.
 	PREFERRED_ORDER,

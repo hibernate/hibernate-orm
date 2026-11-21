@@ -378,6 +378,11 @@ public class FlushCoordinator {
 		// Build set of tables involved in this flush
 		final java.util.Set<String> involvedTables = new java.util.HashSet<>();
 		for (FlushOperationGroup group : groups) {
+			if ( group.needsIdPrePhase()
+					&& !constraintModel.getGeneratedIdentifierReferences( group.tableExpression() ).isEmpty() ) {
+				// Let the graph order references whose values are produced by an insert.
+				return true;
+			}
 			involvedTables.add(group.tableExpression());
 		}
 

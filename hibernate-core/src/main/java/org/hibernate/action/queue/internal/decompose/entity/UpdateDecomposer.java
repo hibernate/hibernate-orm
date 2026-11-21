@@ -163,7 +163,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 						&& TenantIdHelper.checksTenantId( entityPersister, flushOperation.getJdbcOperation() ) ) {
 					for ( var operation : operations ) {
 						if ( operation.getKind() != MutationKind.NO_OP && operation != flushOperation ) {
-							operation.setExecutionPrerequisite( flushOperation );
+							operation.addExecutionPrerequisite( flushOperation );
 						}
 					}
 					return;
@@ -1070,6 +1070,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		else {
 			tableUpdateBuilder.addKeyRestrictions( tableDescriptor.keyDescriptor() );
 		}
+		mutationPlanContributor.applyUpdateRestriction( tableDescriptor, tableUpdateBuilder );
 	}
 
 	private void applyOptimisticLocking(

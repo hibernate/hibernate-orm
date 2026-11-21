@@ -206,7 +206,8 @@ class AuditManyToManyTest {
 			for ( var revision : revisions ) {
 				final var student = (Student) revision[0];
 				assertEquals( revision[1], Hibernate.size( student.courses ) );
-				assertEquals( student.courses.size(), revision[1] );
+				Hibernate.initialize( student.courses );
+				assertEquals( revision[1], student.courses.size() );
 			}
 			assertEquals( List.of( 2, 2 ), session.createSelectionQuery(
 					"select size(s.courses) from Student s where s.id = 10", Integer.class ).getResultList() );

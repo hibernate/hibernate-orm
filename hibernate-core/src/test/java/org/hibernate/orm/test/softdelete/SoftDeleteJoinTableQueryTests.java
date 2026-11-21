@@ -241,12 +241,17 @@ public class SoftDeleteJoinTableQueryTests {
 			assertEquals( 0, Hibernate.size( owner.labels ) );
 			assertEquals( 1, Hibernate.size( owner.marks ) );
 			assertThat( Hibernate.contains( owner.marks, tag ) ).isTrue();
+			assertEquals( 1, owner.marks.size() );
+			assertThat( Hibernate.isInitialized( owner.marks ) ).isFalse();
+		} );
+		scope.inSession( session -> {
 			session.enableFilter( "liveMarks" );
+			final var owner = session.find( Owner.class, 1 );
+			final var tag = session.find( Tag.class, 10 );
 			assertEquals( 0, Hibernate.size( owner.marks ) );
 			assertThat( Hibernate.contains( owner.marks, tag ) ).isFalse();
+			assertEquals( 0, owner.marks.size() );
 			assertThat( Hibernate.isInitialized( owner.marks ) ).isFalse();
-			session.disableFilter( "liveMarks" );
-			assertEquals( 1, owner.marks.size() );
 		} );
 	}
 
@@ -264,7 +269,11 @@ public class SoftDeleteJoinTableQueryTests {
 			assertThat( Hibernate.get( hidden.keyed, session.find( Tag.class, 10 ) ) ).isNull();
 			assertThat( Hibernate.get( live.keyed, tag ) ).isSameAs( tag );
 			assertThat( Hibernate.get( live.keyed, session.find( Tag.class, 25 ) ) ).isSameAs( tag );
+		} );
+		scope.inSession( session -> {
 			session.enableFilter( "visibleNotes" );
+			final var live = session.find( Owner.class, 2 );
+			final var tag = session.find( Tag.class, 20 );
 			assertThat( Hibernate.get( live.keyed, tag ) ).isNull();
 			assertThat( Hibernate.isInitialized( live.keyed ) ).isFalse();
 			assertThat( live.keyed.get( tag ) ).isNull();

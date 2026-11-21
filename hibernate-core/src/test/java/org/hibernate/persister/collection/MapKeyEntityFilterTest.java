@@ -101,15 +101,19 @@ class MapKeyEntityFilterTest {
 	@Test
 	void uninitializedMapReads(SessionFactoryScope scope) {
 		scope.inSession( session -> {
-			final var tags = session.find( session.createEntityGraph( Owner.class ), 1, FETCH ).tags;
-			final var collection = (PersistentCollection<?>) tags;
-			final var key = session.getReference( Note.class, 20 );
 			session.enableFilter( "queryNotes" );
-			assertThat( collection.getSize() ).isEqualTo( 2 );
+			final var tags = session.find( session.createEntityGraph( Owner.class ), 1, FETCH ).tags;
+			final var key = session.getReference( Note.class, 20 );
+			assertThat( ( (PersistentCollection<?>) tags ).getSize() ).isEqualTo( 2 );
 			assertThat( Hibernate.get( tags, key ) ).isNotNull();
-
+			assertThat( Hibernate.isInitialized( tags ) ).isFalse();
+		} );
+		scope.inSession( session -> {
+			session.enableFilter( "queryNotes" );
 			session.enableFilter( "loadNotes" );
-			assertThat( collection.getSize() ).isEqualTo( 1 );
+			final var tags = session.find( session.createEntityGraph( Owner.class ), 1, FETCH ).tags;
+			final var key = session.getReference( Note.class, 20 );
+			assertThat( ( (PersistentCollection<?>) tags ).getSize() ).isEqualTo( 1 );
 			assertThat( Hibernate.get( tags, key ) ).isNull();
 			assertThat( Hibernate.isInitialized( tags ) ).isFalse();
 		} );

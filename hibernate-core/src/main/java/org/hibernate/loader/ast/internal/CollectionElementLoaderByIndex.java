@@ -15,6 +15,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.sql.ast.spi.creation.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 
 /**
  * @author Andrea Boriero
@@ -22,6 +23,7 @@ import org.hibernate.sql.exec.spi.JdbcParametersList;
 public class CollectionElementLoaderByIndex implements Loader {
 	private final PluralAttributeMapping attributeMapping;
 	private final SelectStatement sqlAst;
+	private final JdbcSelect jdbcSelect;
 	private final JdbcParametersList jdbcParameters;
 	private final int baseIndex;
 
@@ -68,6 +70,7 @@ public class CollectionElementLoaderByIndex implements Loader {
 				sessionFactory
 		);
 		jdbcParameters = jdbcParametersBuilder.build();
+		jdbcSelect = CollectionScalarLoader.translate( sqlAst, sessionFactory );
 	}
 
 	@Nonnull
@@ -94,7 +97,7 @@ public class CollectionElementLoaderByIndex implements Loader {
 	@Nullable
 	public Object load(@Nonnull Object key, @Nonnull Object index, @Nonnull SharedSessionContractImplementor session) {
 		return CollectionScalarLoader.load( attributeMapping, key, attributeMapping.getIndexDescriptor(),
-				incrementIndexByBase( index ), sqlAst, jdbcParameters, session );
+				incrementIndexByBase( index ), jdbcSelect, jdbcParameters, session );
 	}
 
 	/**

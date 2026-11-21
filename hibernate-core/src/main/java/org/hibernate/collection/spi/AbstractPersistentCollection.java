@@ -166,35 +166,43 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	 */
 	protected boolean readSize() {
 		if ( !initialized ) {
-			return withTemporarySessionIfNeeded(
-					() -> {
-						final var entry = getCollectionEntry();
-						if ( entry != null ) {
-							final var persister = entry.getLoadedPersister();
-							checkPersister( this, persister );
-							if ( persister.isExtraLazy() ) {
-								// TODO: support for extra-lazy collections was
-								//       dropped so this code should be obsolete
-								if ( hasQueuedOperations() ) {
-									session.flush();
+			if ( cachedSize != -1 && !hasQueuedOperations() ) {
+				return true;
+			}
+			else {
+				return withTemporarySessionIfNeeded(
+						() -> {
+							final var entry = getCollectionEntry();
+							if ( entry != null ) {
+								final var persister = entry.getLoadedPersister();
+								checkPersister( this, persister );
+								if ( persister.isExtraLazy() ) {
+									// TODO: support for extra-lazy collections was
+									//       dropped so this code should be obsolete
+									if ( hasQueuedOperations() ) {
+										session.flush();
+									}
+									cachedSize = persister.getSize( entry.getLoadedKey(), session );
+									return true;
 								}
-								cachedSize = persister.getSize( entry.getLoadedKey(), session );
-								return true;
+								else {
+									read();
+								}
 							}
-							else {
-								read();
-							}
+							return false;
 						}
-						return false;
-					}
-			);
+				);
+			}
 		}
 		return false;
 	}
 
 	public int getSize() {
-		final var entry = entryForRead();
-		return withTemporalIdentifier( () -> entry.getLoadedPersister().getSize( entry.getLoadedKey(), session ) );
+		if ( cachedSize < 0 ) {
+			final var entry = entryForRead();
+			cachedSize = withTemporalIdentifier( () -> entry.getLoadedPersister().getSize( entry.getLoadedKey(), session ) );
+		}
+		return cachedSize;
 	}
 
 	private CollectionEntry entryForRead() {

@@ -1091,7 +1091,7 @@ public abstract class AbstractCollectionPersister
 	protected String generateSelectSizeString(boolean isIntegerIndexed) {
 		final String selectValue = isIntegerIndexed
 				? "max(" + castNonNull( getIndexColumnNames() )[0] + ") + 1"  // lists, arrays
-				: "count(" + getElementColumnNames()[0] + ")"; // sets, maps, bags
+				: "count(*)"; // sets, maps, bags
 		return new SimpleSelect( getFactory() )
 				.setTableName( getTableName() )
 				.addRestriction( getKeyColumnNames() )
@@ -1532,7 +1532,11 @@ public abstract class AbstractCollectionPersister
 				getKeyType().nullSafeSet( statement, key, 1, session );
 				final var resultSet = jdbcCoordinator.getResultSetReturn().extract( statement, sqlSelectSizeString );
 				try {
-					return resultSet.next() ? resultSet.getInt( 1 ) - baseIndex() : 0;
+					if ( !resultSet.next() ) {
+						return 0;
+					}
+					final int size = resultSet.getInt( 1 );
+					return resultSet.wasNull() ? 0 : size - baseIndex();
 				}
 				finally {
 					resourceRegistry.release( resultSet, statement );

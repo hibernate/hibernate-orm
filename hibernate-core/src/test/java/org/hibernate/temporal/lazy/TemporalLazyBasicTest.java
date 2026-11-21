@@ -192,23 +192,67 @@ class TemporalLazyBasicTest {
 		}
 	}
 
+	@Test
+	void auditedArticleFetchedThroughNonAuditedEdition(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var article = new AuditedDocument();
+			article.id = 5;
+			article.title = "Original title";
+			article.body = "First draft";
+			session.persist( article );
+			final var edition = new Edition();
+			edition.id = 5;
+			edition.auditedArticle = article;
+			session.persist( edition );
+			final var event = new AuditEvent();
+			event.id = 5;
+			event.edition = edition;
+			session.persist( event );
+		} );
+		scope.inTransaction( session -> {
+			final var article = session.find( AuditedDocument.class, 5 );
+			article.title = "Revised title";
+			article.body = "Second draft";
+		} );
+		scope.inTransaction( session -> {
+			final var article = session.find( AuditedDocument.class, 5 );
+			article.title = "Published title";
+			article.body = "Final draft";
+		} );
+
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( ALL_CHANGESETS ).openSession()) {
+			final var event = session.createSelectionQuery( """
+					from AuditEvent e join fetch e.edition ed join fetch ed.auditedArticle a
+					where e.id = 5 and a.title = 'Revised title'
+					""", AuditEvent.class ).getSingleResult();
+			final var article = event.edition.auditedArticle;
+			assertTrue( isInitialized( article ) );
+			assertEquals( "Revised title", article.title );
+			assertFalse( isPropertyInitialized( article, "body" ) );
+			assertEquals( "Second draft", article.body );
+		}
+	}
+
 	@Entity(name = "AuditEvent")
 	@Audited
 	static class AuditEvent {
 		@Id int id;
 		@ManyToOne(fetch = LAZY) Document article;
+		@ManyToOne(fetch = LAZY) Edition edition;
 	}
 
 	@Entity(name = "Edition")
 	static class Edition {
 		@Id int id;
 		@ManyToOne(fetch = LAZY) Document article;
+		@ManyToOne(fetch = LAZY) AuditedDocument auditedArticle;
 	}
 
 	@Entity(name = "AuditedDocument")
 	@Audited
 	static class AuditedDocument {
 		@Id int id;
+		String title;
 		@Basic(fetch = LAZY) String body;
 		@Audited.Excluded @Basic(fetch = LAZY) String note;
 	}

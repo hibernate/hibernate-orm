@@ -881,28 +881,14 @@ public class EntityInitializerImpl
 							discriminatorAssembler, entityDescriptor );
 			assert concreteDescriptor != null;
 		}
-		final Object changesetId = resolveChangesetId( data );
+		final var rowProcessingState = data.getRowProcessingState();
+		// An all-revisions result carries its changeset on the row itself.
+		final Object changesetId = auditChangesetIdAssembler == null
+				? null
+				: auditChangesetIdAssembler.assemble( rowProcessingState );
 		data.entityKey = changesetId != null
 				? new TemporalEntityKey( id, concreteDescriptor, changesetId )
-				: new EntityKey( id, concreteDescriptor );
-	}
-
-	protected Object resolveChangesetId(EntityInitializerData data) {
-		// For audited entities, include the per-row changeset identifier in the key
-		// so the PC distinguishes the same entity at different points in time
-		final var temporalIdentifier =
-				data.getRowProcessingState().getLoadQueryInfluencers()
-						.getTemporalIdentifier();
-		if ( auditChangesetIdAssembler != null ) {
-			return auditChangesetIdAssembler.assemble( data.getRowProcessingState() );
-		}
-		else if ( entityDescriptor.getAuditMapping() != null
-				&& temporalIdentifier != null && temporalIdentifier != ALL_CHANGESETS ) {
-			return temporalIdentifier;
-		}
-		else {
-			return null;
-		}
+				: rowProcessingState.getSession().generateEntityKey( id, concreteDescriptor );
 	}
 
 	@Override

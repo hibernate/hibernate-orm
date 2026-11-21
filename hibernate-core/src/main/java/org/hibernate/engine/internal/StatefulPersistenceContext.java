@@ -2190,8 +2190,8 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public void registerInsertedKey(@Nonnull EntityPersister persister, @Nonnull Object id) {
-		// we only are worried about registering these if the persister defines caching
-		if ( persister.canWriteToCache() ) {
+		// Temporal updates in the same transaction complete the initial revision in place.
+		if ( persister.canWriteToCache() || persister.getTemporalMapping() != null ) {
 			if ( insertedKeysMap == null ) {
 				insertedKeysMap = new HashMap<>();
 			}
@@ -2204,17 +2204,9 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public boolean wasInsertedDuringTransaction(@Nonnull EntityPersister persister, @Nonnull Object id) {
-		// again, we only really care if the entity is cached
-		if ( persister.canWriteToCache() ) {
-			if ( insertedKeysMap != null ) {
-				final var insertedEntityIds =
-						insertedKeysMap.get( persister.getRootEntityName() );
-				if ( insertedEntityIds != null ) {
-					return insertedEntityIds.contains( id );
-				}
-			}
-		}
-		return false;
+		final var insertedEntityIds = insertedKeysMap == null ? null
+				: insertedKeysMap.get( persister.getRootEntityName() );
+		return insertedEntityIds != null && insertedEntityIds.contains( id );
 	}
 
 	@Override

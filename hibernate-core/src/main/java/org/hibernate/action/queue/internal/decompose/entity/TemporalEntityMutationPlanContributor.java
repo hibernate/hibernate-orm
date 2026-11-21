@@ -20,6 +20,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.ast.spi.model.MutatingTableReference;
+import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilder;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 
 import static org.hibernate.generator.EventType.UPDATE;
@@ -45,12 +46,19 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 	}
 
 	@Override
+	public void applyUpdateRestriction(EntityTableDescriptor table, TableUpdateBuilder<?> builder) {
+		final var ending = temporalMapping.getEndingColumnMapping();
+		if ( table.name().equals( entityPersister.physicalTableNameForMutation( ending ) ) ) {
+			final var endingColumn = new ColumnReference( builder.getMutatingTable(), ending );
+			builder.addNonKeyRestriction( temporalMapping.createNullEndingValueBinding( endingColumn ) );
+		}
+	}
+
+	@Override
 	public boolean contributeReplacementUpdate(
 			UpdateContext context,
 			Consumer<FlushOperation> operationConsumer) {
-		if ( entityPersister.excludedFromTemporalVersioning(
-				context.action().getDirtyFields(),
-				context.action().hasDirtyCollection() ) ) {
+		if ( !context.requiresNewTemporalVersion() ) {
 			return false;
 		}
 
@@ -73,7 +81,7 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 				)
 				: staticEndOperation;
 
-		operationConsumer.accept( createEndOperation(
+		final var end = createEndOperation(
 				context.ordinalBase(),
 				"EntityUpdateAction(" + entityPersister.getEntityName() + ")",
 				context.identifier(),
@@ -82,9 +90,13 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 				context.previousState(),
 				effectiveOptLockStyle,
 				endOperation
-		) );
-
-		contributeReplacementInsert( context, operationConsumer );
+		);
+		operationConsumer.accept( end );
+		contributeReplacementInsert( context, insert -> {
+			// Inserts may be batched with a different entity's insert from the same flush.
+			insert.addExecutionPrerequisite( end );
+			operationConsumer.accept( insert );
+		} );
 		return true;
 	}
 

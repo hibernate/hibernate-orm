@@ -11,6 +11,7 @@ import java.util.Map;
 /// @author Steve Ebersole
 public record ConstraintModel(
 		List<ForeignKey> foreignKeys,
+		Map<String, List<ForeignKey>> generatedIdentifierReferencesByTargetTable,
 		List<UniqueConstraint> uniqueConstraints,
 		Map<String, List<UniqueConstraint>> uniqueConstraintsByTable,
 		Map<String, List<ForeignKey>> inboundForeignKeysByTable,
@@ -31,6 +32,11 @@ public record ConstraintModel(
 
 	public List<ForeignKey> getOutboundForeignKeysForTable(String tableName) {
 		return getForeignKeysForTable( outboundForeignKeysByTable, tableName );
+	}
+
+	/// References that need a generated identifier even though schema export omits the constraint.
+	public List<ForeignKey> getGeneratedIdentifierReferences(String targetTable) {
+		return getForeignKeysForTable( generatedIdentifierReferencesByTargetTable, targetTable );
 	}
 
 	public List<ForeignKey> getInboundForeignKeysForTable(String tableName) {

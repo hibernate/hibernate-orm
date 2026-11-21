@@ -68,8 +68,8 @@ class HistoryCollectionDecomposerTest {
 			var inserts = operations.stream().filter( op -> op.getTableExpression().equals( history )
 					&& op.getKind() == MutationKind.INSERT ).toList();
 			assertThat( ends ).hasSize( 2 ); assertThat( inserts ).hasSize( 2 );
-			assertThat( ends.get( 1 ).getExecutionPrerequisite() ).isSameAs( ends.get( 0 ) );
-			assertThat( inserts ).allSatisfy( op -> assertThat( op.getExecutionPrerequisite() ).isSameAs( ends.get( 1 ) ) );
+			assertThat( ends.get( 1 ).getExecutionPrerequisites() ).containsExactly( ends.get( 0 ) );
+			assertThat( inserts ).allSatisfy( op -> assertThat( op.getExecutionPrerequisites() ).containsExactly( ends.get( 1 ) ) );
 			assertThat( operations ).hasSize( 6 );
 			session.clear();
 		} );

@@ -25,6 +25,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +55,8 @@ public class Decomposer implements DecompositionContext {
 	// Tracks entities being inserted in the current flush
 	// Used to recognize that entities with INSERT actions in this flush are not unresolved dependencies
 	private Set<Object> entitiesBeingInserted = null;
+	// Only allocated for temporal entities with both an insert and an update in this flush.
+	private Map<Object, Map<String, FlushOperation>> initialVersionInserts;
 
 	// Tracks entities being deleted in the current flush
 	// Used to skip unnecessary UPDATE operations for entities about to be deleted
@@ -92,6 +95,18 @@ public class Decomposer implements DecompositionContext {
 		}
 		else {
 			entitiesBeingInserted = null;
+		}
+
+		initialVersionInserts = null;
+		if ( entitiesBeingInserted != null ) {
+			for ( var update : updates ) {
+				if ( entitiesBeingInserted.contains( update.getInstance() ) && update.getPersister().getTemporalMapping() != null ) {
+					if ( initialVersionInserts == null ) {
+						initialVersionInserts = new IdentityHashMap<>();
+					}
+					initialVersionInserts.put( update.getInstance(), new HashMap<>() );
+				}
+			}
 		}
 
 		if ( CollectionHelper.isNotEmpty( deletions ) || CollectionHelper.isNotEmpty( orphanRemovals ) ) {
@@ -135,6 +150,7 @@ public class Decomposer implements DecompositionContext {
 	/// End a flush operation - clear the tracking sets
 	public void endFlush() {
 		sealPendingQueuedCollectionMutations();
+		initialVersionInserts = null;
 		entitiesBeingInserted = null;
 		entitiesBeingDeleted = null;
 		updatedAttributesByDeletedEntity = null;
@@ -241,7 +257,7 @@ public class Decomposer implements DecompositionContext {
 					ordinalBase,
 					session,
 					this,
-					operationConsumer
+					orderInitialVersionUpdates( insert.getInstance(), operationConsumer )
 			);
 			return;
 		}
@@ -252,7 +268,7 @@ public class Decomposer implements DecompositionContext {
 					ordinalBase,
 					session,
 					this,
-					operationConsumer
+					orderInitialVersionUpdates( eua.getInstance(), operationConsumer )
 			);
 			return;
 		}
@@ -268,6 +284,23 @@ public class Decomposer implements DecompositionContext {
 		}
 
 		throw new UnsupportedOperationException( "Decomposition not supported for " +  executable.getClass().getName() );
+	}
+
+	private Consumer<FlushOperation> orderInitialVersionUpdates(Object entity, Consumer<FlushOperation> consumer) {
+		final var inserts = initialVersionInserts == null ? null : initialVersionInserts.get( entity );
+		if ( inserts == null ) {
+			return consumer;
+		}
+		return operation -> {
+			// Inserts are decomposed before updates. Each physical row must exist before its FK can be filled in.
+			if ( operation.getKind() == MutationKind.INSERT ) {
+				inserts.put( operation.getTableExpression(), operation );
+			}
+			else if ( operation.getKind() == MutationKind.UPDATE ) {
+				operation.addExecutionPrerequisite( inserts.get( operation.getTableExpression() ) );
+			}
+			consumer.accept( operation );
+		};
 	}
 
 	public void decompose(

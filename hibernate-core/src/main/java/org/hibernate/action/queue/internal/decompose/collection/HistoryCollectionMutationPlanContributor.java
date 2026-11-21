@@ -77,14 +77,14 @@ public class HistoryCollectionMutationPlanContributor implements CollectionMutat
 		// The explicit prerequisites survive regrouping and do not depend on encounter order.
 		for ( var operation : context.plannedOperations() ) {
 			if ( operation.getTableExpression().equals( historyTable ) && operation.getKind() == MutationKind.UPDATE ) {
-				operation.setExecutionPrerequisite( lastEnd );
+				operation.addExecutionPrerequisite( lastEnd );
 				lastEnd = operation;
 			}
 		}
 		if ( lastEnd != null ) {
 			for ( var operation : context.plannedOperations() ) {
 				if ( operation.getTableExpression().equals( historyTable ) && operation.getKind() == MutationKind.INSERT ) {
-					operation.setExecutionPrerequisite( lastEnd );
+					operation.addExecutionPrerequisite( lastEnd );
 				}
 			}
 		}

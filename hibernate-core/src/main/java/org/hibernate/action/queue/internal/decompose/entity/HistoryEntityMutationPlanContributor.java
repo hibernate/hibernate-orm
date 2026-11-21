@@ -108,20 +108,19 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 	public void contributeAdditionalUpdate(
 			UpdateContext context,
 			Consumer<FlushOperation> operationConsumer) {
-		final int[] dirtyFields = context.action().getDirtyFields();
-		if ( entityPersister.excludedFromTemporalVersioning( dirtyFields, context.action().hasDirtyCollection() ) ) {
-			contributeHistoryExcludedUpdate( context, operationConsumer );
+		if ( !context.requiresNewTemporalVersion() ) {
+			contributeHistoryInPlaceUpdate( context, operationConsumer );
 		}
 		else {
-			operationConsumer.accept( createHistoryEndOperation(
+			final var end = createHistoryEndOperation(
 					context.ordinalBase(),
 					"EntityUpdateAction(" + entityPersister.getEntityName() + "#history-end)",
 					context.identifier(),
 					context.rowId(),
 					context.previousVersion(),
 					context.previousState()
-			) );
-			operationConsumer.accept( createHistoryInsertOperation(
+			);
+			final var insert = createHistoryInsertOperation(
 					context.ordinalBase(),
 					501,
 					"EntityUpdateAction(" + entityPersister.getEntityName() + "#history-insert)",
@@ -129,7 +128,10 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 					context.identifier(),
 					context.state(),
 					entityPersister.getPropertyInsertability()
-			) );
+			);
+			insert.addExecutionPrerequisite( end );
+			operationConsumer.accept( end );
+			operationConsumer.accept( insert );
 		}
 	}
 
@@ -151,15 +153,17 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 		) );
 	}
 
-	private void contributeHistoryExcludedUpdate(
+	private void contributeHistoryInPlaceUpdate(
 			UpdateContext context,
 			Consumer<FlushOperation> operationConsumer) {
 		final int[] dirtyFields = context.action().getDirtyFields();
-		if ( dirtyFields != null && dirtyFields.length != 0 ) {
-			final var details = buildHistoryExcludedUpdate(
+		final boolean initialVersion = context.updatesInitialVersion();
+		if ( initialVersion || dirtyFields != null && dirtyFields.length != 0 ) {
+			final var details = buildHistoryInPlaceUpdate(
 					context.entity(),
 					context.rowId(),
 					dirtyFields,
+					initialVersion,
 					context.session()
 			);
 			if ( details != null ) {
@@ -167,7 +171,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 						historyTableDescriptor,
 						MutationKind.UPDATE,
 						details.operation.createMutationOperation( null, sessionFactory ),
-						new HistoryExcludedUpdateBindPlan(
+						new HistoryInPlaceUpdateBindPlan(
 								context.entity(),
 								context.identifier(),
 								context.rowId(),
@@ -178,7 +182,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 								details.applyVersionRestriction
 						),
 						context.ordinalBase() * 1_000 + 500,
-						"EntityUpdateAction(" + entityPersister.getEntityName() + "#history-excluded)"
+						"EntityUpdateAction(" + entityPersister.getEntityName() + "#history-update)"
 				) );
 			}
 		}
@@ -335,16 +339,23 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 		return updateBuilder.buildMutation();
 	}
 
-	private HistoryExcludedUpdateDetails buildHistoryExcludedUpdate(
+	private HistoryInPlaceUpdateDetails buildHistoryInPlaceUpdate(
 			Object entity,
 			Object rowId,
 			int[] dirtyAttributeIndexes,
+			boolean initialVersion,
 			SharedSessionContractImplementor session) {
 		final boolean[] dirtyFlags = new boolean[entityPersister.getAttributeMappings().size()];
-		for ( int dirtyAttributeIndex : dirtyAttributeIndexes ) {
-			dirtyFlags[dirtyAttributeIndex] = true;
+		if ( dirtyAttributeIndexes != null ) {
+			for ( int dirtyAttributeIndex : dirtyAttributeIndexes ) {
+				dirtyFlags[dirtyAttributeIndex] = true;
+			}
 		}
 
+		final var versionMapping = entityPersister.getVersionMapping();
+		if ( initialVersion && versionMapping != null ) {
+			dirtyFlags[versionMapping.getVersionAttribute().getStateArrayPosition()] = true;
+		}
 		final var updateability = entityPersister.hasUninitializedLazyProperties( entity )
 				? entityPersister.getNonLazyPropertyUpdateability()
 				: entityPersister.getPropertyUpdateability();
@@ -358,7 +369,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 
 		for ( final var attribute : historyTableDescriptor.attributes() ) {
 			final int attributeIndex = attribute.getStateArrayPosition();
-			if ( !entityPersister.isPropertyTemporalExcluded( attributeIndex ) ) {
+			if ( !initialVersion && !entityPersister.isPropertyTemporalExcluded( attributeIndex ) ) {
 				continue;
 			}
 
@@ -366,7 +377,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 			final boolean generatedInSql = needsUpdateValueGeneration( entity, session, generator );
 			final boolean include = generatedInSql
 					|| isGeneratedBeforeExecution( entity, session, generator )
-					|| dirtyFlags[attributeIndex] && updateability[attributeIndex];
+					|| updateability[attributeIndex] && ( dirtyAttributeIndexes == null || dirtyFlags[attributeIndex] );
 
 			if ( include ) {
 				if ( generatedInSql ) {
@@ -402,7 +413,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 			updateBuilder.addOptimisticLockRestriction( entityPersister.getVersionMapping() );
 		}
 
-		return new HistoryExcludedUpdateDetails(
+		return new HistoryInPlaceUpdateDetails(
 				updateBuilder.buildMutation(),
 				toIntArray( bindableAttributeIndexes ),
 				entityPersister.optimisticLockStyle() == OptimisticLockStyle.VERSION
@@ -667,7 +678,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 		}
 	}
 
-	private final class HistoryExcludedUpdateBindPlan implements BindPlan, OperationResultChecker {
+	private final class HistoryInPlaceUpdateBindPlan implements BindPlan, OperationResultChecker {
 		private final Object entity;
 		private final Object identifier;
 		private final Object rowId;
@@ -677,7 +688,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 		private final int[] attributeIndexes;
 		private final boolean applyVersionRestriction;
 
-		private HistoryExcludedUpdateBindPlan(
+		private HistoryInPlaceUpdateBindPlan(
 				Object entity,
 				Object identifier,
 				Object rowId,
@@ -867,7 +878,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 		}
 	}
 
-	private record HistoryExcludedUpdateDetails(
+	private record HistoryInPlaceUpdateDetails(
 			LogicalTableUpdate<?> operation,
 			int[] attributeIndexes,
 			boolean applyVersionRestriction) {

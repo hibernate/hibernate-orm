@@ -8,11 +8,13 @@ import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.queue.spi.decompose.DecompositionContext;
+import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.spi.model.TableMutation;
+import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilder;
 
 /// Contributes state-management-specific graph mutation plans for entity actions.
 ///
@@ -64,6 +66,10 @@ public interface EntityMutationPlanContributor {
 			UpdateContext context,
 			Consumer<FlushOperation> operationConsumer) {
 		return false;
+	}
+
+	/// Restricts a regular table update to the row managed by this contributor.
+	default void applyUpdateRestriction(EntityTableDescriptor table, TableUpdateBuilder<?> builder) {
 	}
 
 	/// Optionally replaces the mutation plan for a logical entity delete.
@@ -135,6 +141,20 @@ public interface EntityMutationPlanContributor {
 			Object previousVersion,
 			EntityEntry entityEntry,
 			UpdateCacheHandling.CacheUpdate cacheUpdate) {
+		/// An update to a row inserted in this transaction completes its initial temporal version.
+		public boolean requiresNewTemporalVersion() {
+			return !updatesInitialVersion()
+					&& !entityPersister.excludedFromTemporalVersioning( action.getDirtyFields(), action.hasDirtyCollection() );
+		}
+
+		public boolean updatesInitialVersion() {
+			return isBeingInserted()
+					|| session.getPersistenceContextInternal().wasInsertedDuringTransaction( entityPersister, identifier );
+		}
+
+		public boolean isBeingInserted() {
+			return decompositionContext != null && decompositionContext.isBeingInsertedInCurrentFlush( entity );
+		}
 	}
 
 	/// Context passed to delete contribution hooks.

@@ -86,8 +86,9 @@ public interface PluralAttributeMapping
 		applyBaseManyToManyRestrictions( restrictionConsumer, tableGroup, true, filters, null, creationState );
 		if ( getIndexDescriptor() instanceof EntityCollectionPart index ) {
 			final var keyGroup = ((PluralTableGroup) tableGroup).getIndexTableGroup();
+			// Map keys follow load-by-key filter semantics even in an HQL fetch join.
 			index.getAssociatedEntityMappingType().applyBaseRestrictions( restrictionConsumer, keyGroup, true,
-					filters, false, null, creationState );
+					filters, true, null, creationState );
 		}
 		applyAuxiliaryRestrictions( tableGroup, auxiliaryRestrictionConsumer::accept, influencers,
 				creationState.getSqlAliasBaseGenerator(), ownerTableGroup );

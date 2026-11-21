@@ -1337,8 +1337,7 @@ public class PluralAttributeMappingImpl
 			&& ( addsPredicate
 					|| hasAuxiliaryRestriction( creationState.getLoadQueryInfluencers() )
 					|| collectionDescriptor.hasWhereRestrictions()
-					|| isAffectedByEnabledFilters( creationState.getLoadQueryInfluencers(),
-							creationState.applyOnlyLoadByKeyFilters() ) );
+					|| isAffectedByEnabledFilters( creationState.getLoadQueryInfluencers(), true ) );
 	}
 
 	private TableGroup createCollectionTableGroup(

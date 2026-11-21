@@ -847,10 +847,15 @@ public abstract class AbstractCollectionPersister
 					return subSelectLoader;
 				}
 			}
-			return attributeMapping.isAffectedByInfluencers( influencers, false )
+			return needsNewLoader( influencers )
 					? createCollectionLoader( influencers )
 					: getCollectionLoader();
 		}
+	}
+
+	private boolean needsNewLoader(LoadQueryInfluencers influencers) {
+		// Collection and join-table filters always count. Entity filters must apply to loading by key.
+		return attributeMapping.isAffectedByInfluencers( influencers, true );
 	}
 
 	@Nullable
@@ -1453,7 +1458,7 @@ public abstract class AbstractCollectionPersister
 
 	private CollectionScalarLoader scalarLoader(Operation operation, SharedSessionContractImplementor session) {
 		final var influencers = session.getLoadQueryInfluencers();
-		return attributeMapping.isAffectedByInfluencers( influencers, false )
+		return needsNewLoader( influencers )
 				? new CollectionScalarLoader( attributeMapping, operation, influencers )
 				: scalarLoaders.computeIfAbsent( operation,
 						op -> new CollectionScalarLoader( attributeMapping, op, new LoadQueryInfluencers( factory ) ) );
@@ -1487,7 +1492,7 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public Object getElementByIndex(@Nonnull Object key, @Nonnull Object index, @Nonnull SharedSessionContractImplementor session, @Nullable Object owner) {
 		final var influencers = session.getLoadQueryInfluencers();
-		if ( attributeMapping.isAffectedByInfluencers( influencers, false ) ) {
+		if ( needsNewLoader( influencers ) ) {
 			return new CollectionElementLoaderByIndex( attributeMapping, influencers, factory )
 					.load( key, index, session );
 		}

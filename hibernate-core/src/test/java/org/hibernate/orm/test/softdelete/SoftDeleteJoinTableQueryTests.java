@@ -354,7 +354,7 @@ public class SoftDeleteJoinTableQueryTests {
 	}
 
 	@SQLRestriction("id <> 30")
-	@FilterDef(name = "visibleNotes")
+	@FilterDef(name = "visibleNotes", applyToLoadByKey = true)
 	@Filter(name = "visibleNotes", condition = "id <> 20")
 	@Entity(name = "Note")
 	@Table(name = "notes")

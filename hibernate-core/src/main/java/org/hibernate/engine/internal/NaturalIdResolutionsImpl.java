@@ -16,7 +16,6 @@ import org.hibernate.stat.internal.StatsHelper;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +26,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableCollection;
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
 import static org.hibernate.engine.internal.NaturalIdLogging.NATURAL_ID_LOGGER;
+import static org.hibernate.pretty.MessageHelper.naturalIdToLoggableString;
 
 public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializable {
 
@@ -59,6 +59,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 		return getEntityResolutions( session().getFactory().getMappingMetamodel().getEntityDescriptor( entityType ) );
 	}
 
+
 	@Override
 	public boolean cacheResolution(Object id, Object naturalId, EntityMappingType entityDescriptor) {
 		validateNaturalId( entityDescriptor, naturalId );
@@ -70,7 +71,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 		if ( NATURAL_ID_LOGGER.isTraceEnabled() ) {
 			NATURAL_ID_LOGGER.cachingNaturalIdResolutionFromLoad(
 					entityDescriptor.getEntityName(),
-					naturalId instanceof Object[] array ? Arrays.toString( array ) : naturalId,
+					naturalIdToLoggableString( naturalId, entityDescriptor, session().getFactory() ),
 					id
 			);
 		}
@@ -98,7 +99,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 		if ( NATURAL_ID_LOGGER.isTraceEnabled() ) {
 			NATURAL_ID_LOGGER.locallyCachingNaturalIdResolution(
 					entityDescriptor.getEntityName(),
-					naturalId instanceof Object[] array ? Arrays.toString( array ) : naturalId,
+					naturalIdToLoggableString( naturalId, entityDescriptor, session().getFactory() ),
 					id
 			);
 		}
@@ -154,7 +155,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			if ( NATURAL_ID_LOGGER.isTraceEnabled() ) {
 				NATURAL_ID_LOGGER.removingLocallyCachedNaturalIdResolution(
 						entityDescriptor.getEntityName(),
-						naturalId instanceof Object[] array ? Arrays.toString( array ) : naturalId,
+						naturalIdToLoggableString( naturalId, entityDescriptor, session().getFactory() ),
 						id
 				);
 			}
@@ -593,7 +594,8 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			if ( identifier != null ) {
 				// Found in session cache
 				if ( NATURAL_ID_LOGGER.isTraceEnabled() ) {
-					NATURAL_ID_LOGGER.resolvedNaturalIdInSessionCache( naturalId, identifier,
+					NATURAL_ID_LOGGER.resolvedNaturalIdInSessionCache(
+							naturalIdToLoggableString( naturalId, entityDescriptor, session().getFactory() ), identifier,
 							entityDescriptor.getEntityName() );
 				}
 				return identifier;
@@ -625,8 +627,9 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 					);
 				}
 				if ( NATURAL_ID_LOGGER.isTraceEnabled() ) {
-					// protected to avoid Arrays.toString call unless needed
-					NATURAL_ID_LOGGER.foundNaturalIdInSecondLevelCache( naturalId, id,
+					// Render the natural id only when TRACE is enabled.
+					NATURAL_ID_LOGGER.foundNaturalIdInSecondLevelCache(
+							naturalIdToLoggableString( naturalId, persister, session.getFactory() ), id,
 							persister.getRootEntityName() );
 				}
 				storeInResolutionCache( resolutionCache, persister, id, cachedNaturalId );

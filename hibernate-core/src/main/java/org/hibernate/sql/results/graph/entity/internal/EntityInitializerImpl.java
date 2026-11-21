@@ -46,6 +46,7 @@ import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -238,7 +239,8 @@ public class EntityInitializerImpl
 		this.isResultInitializer = isResultInitializer;
 
 		referencedModelPart = resultDescriptor.getEntityValuedModelPart();
-		affectedByRefreshCascade = hasCascadeRefresh( referencedModelPart );
+		affectedByRefreshCascade = hasCascadeRefresh( referencedModelPart )
+				&& hasCascadeRefreshParents( parent );
 		entityDescriptor = (EntityPersister) referencedModelPart.getEntityMappingType();
 
 		final String rootEntityName = entityDescriptor.getRootEntityName();
@@ -517,6 +519,24 @@ public class EntityInitializerImpl
 			return false;
 		}
 		return cascadeStyle.getCascadeStyle().doCascade( CascadingActions.REFRESH );
+	}
+
+	private static boolean hasCascadeRefreshParents(@Nullable InitializerParent<?> parent) {
+		// A cascading association cannot restart refresh after a non-cascading ancestor.
+		while ( parent != null && !parent.isResultInitializer() ) {
+			final var modelPart = parent.getInitializedPart();
+			if ( modelPart instanceof EntityValuedModelPart entityPart ) {
+				if ( !hasCascadeRefresh( entityPart ) ) {
+					return false;
+				}
+			}
+			else if ( modelPart instanceof PluralAttributeMapping pluralPart
+					&& !pluralPart.getAttributeMetadata().getCascadeStyle().doCascade( CascadingActions.REFRESH ) ) {
+				return false;
+			}
+			parent = parent.getParent();
+		}
+		return true;
 	}
 
 	private static ImmutableBitSet[] toBitSetArray(BitSet[] lazySets) {

@@ -247,17 +247,23 @@ public final class Hibernate {
 	 * is read from memory if the list is already initialized.
 	 *
 	 * @param list a persistent list associated with an open session
-	 * @param key an index belonging to the list
-	 * @return the element of the list with the given index
+	 * @param key the index to look up
+	 * @return the element at the given index, or {@code null} if the index
+	 *         is outside the bounds of a persistent list
 	 *
 	 * @since 6.1.1
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T> T get(List<T> list, int key) {
-		return list instanceof PersistentCollection<?> persistentCollection
-			&& !persistentCollection.wasInitialized()
-				? (T) persistentCollection.elementByIndex( key )
-				: list.get( key );
+		if ( list instanceof PersistentCollection<?> persistentCollection ) {
+			if ( !persistentCollection.wasInitialized() ) {
+				return (T) persistentCollection.elementByIndex( key );
+			}
+			if ( key < 0 || key >= list.size() ) {
+				return null;
+			}
+		}
+		return list.get( key );
 	}
 
 	/**

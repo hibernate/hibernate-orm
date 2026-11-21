@@ -87,6 +87,20 @@ class InitializedCollectionAccessTest {
 	}
 
 	@Test
+	void getMissingListIndex(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var items = session.find( Owner.class, 1 ).items;
+			assertNull( Hibernate.get( items, 1 ) );
+			assertNull( Hibernate.get( items, -1 ) );
+			assertFalse( Hibernate.isInitialized( items ) );
+
+			Hibernate.initialize( items );
+			assertNull( Hibernate.get( items, 1 ) );
+			assertNull( Hibernate.get( items, -1 ) );
+		} );
+	}
+
+	@Test
 	void uninitializedCollectionsAreNotInitialized(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final var owner = session.find( Owner.class, 1 );

@@ -21,6 +21,7 @@ import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static jakarta.persistence.FetchType.LAZY;
+import static org.hibernate.Hibernate.isInitialized;
 import static org.hibernate.Hibernate.isPropertyInitialized;
 import static org.hibernate.audit.AuditLog.ALL_CHANGESETS;
 import static org.hibernate.cfg.StateManagementSettings.CHANGESET_ID_SUPPLIER;
@@ -28,11 +29,13 @@ import static org.hibernate.cfg.StateManagementSettings.TEMPORAL_TABLE_STRATEGY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @BytecodeEnhanced
 @SessionFactory
 @DomainModel(annotatedClasses = {
-		TemporalLazyBasicTest.Document.class, TemporalLazyBasicTest.AuditedDocument.class, TemporalLazyBasicTest.Edition.class
+		TemporalLazyBasicTest.Document.class, TemporalLazyBasicTest.AuditedDocument.class,
+		TemporalLazyBasicTest.Edition.class, TemporalLazyBasicTest.AuditEvent.class
 })
 @ServiceRegistry(settings = {
 		@Setting(name = TEMPORAL_TABLE_STRATEGY, value = "HISTORY_TABLE"),
@@ -157,6 +160,43 @@ class TemporalLazyBasicTest {
 				assertEquals( "Current body", article.body );
 			}
 		}
+	}
+
+	@Test
+	void joinFetchedArticleFromAuditedEvent(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var article = new Document();
+			article.id = 4;
+			article.title = "Old title";
+			article.body = "Old body";
+			session.persist( article );
+			final var event = new AuditEvent();
+			event.id = 4;
+			event.article = article;
+			session.persist( event );
+		} );
+		scope.inTransaction( session -> {
+			final var article = session.find( Document.class, 4 );
+			article.title = "Current title";
+			article.body = "Current body";
+		} );
+
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( ALL_CHANGESETS ).openSession()) {
+			final var event = session.createSelectionQuery(
+					"from AuditEvent e join fetch e.article where e.id = 4", AuditEvent.class ).getSingleResult();
+			final var article = event.article;
+			assertTrue( isInitialized( article ) );
+			assertEquals( "Current title", article.title );
+			assertFalse( isPropertyInitialized( article, "body" ) );
+			assertEquals( "Current body", article.body );
+		}
+	}
+
+	@Entity(name = "AuditEvent")
+	@Audited
+	static class AuditEvent {
+		@Id int id;
+		@ManyToOne(fetch = LAZY) Document article;
 	}
 
 	@Entity(name = "Edition")

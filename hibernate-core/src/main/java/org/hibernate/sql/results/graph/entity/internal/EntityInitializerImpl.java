@@ -534,8 +534,8 @@ public class EntityInitializerImpl
 		if ( auditChangesetIdAssembler != null ) {
 			return this;
 		}
-		if ( allRevisionsQuery
-				&& ( entityDescriptor.getTemporalMapping() != null || entityDescriptor.getAuditMapping() != null ) ) {
+		// An all-revisions join applies the parent's revision only to an audited target.
+		if ( allRevisionsQuery && entityDescriptor.getAuditMapping() != null ) {
 			for ( var ancestor = parent; ancestor != null; ancestor = ancestor.getParent() ) {
 				if ( ancestor instanceof EntityInitializerImpl entity && entity.auditChangesetIdAssembler != null ) {
 					return entity;

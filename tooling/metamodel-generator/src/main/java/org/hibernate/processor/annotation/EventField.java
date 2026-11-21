@@ -17,9 +17,13 @@ import static org.hibernate.processor.util.Constants.JD_LIFECYCLE_EVENT;
 public class EventField implements MetaAttribute {
 
 	private final AnnotationMetaEntity annotationMetaEntity;
+	private final String entity;
+	private final String fieldName;
 
-	public EventField(AnnotationMetaEntity annotationMetaEntity) {
+	public EventField(AnnotationMetaEntity annotationMetaEntity, String entity, String fieldName) {
 		this.annotationMetaEntity = annotationMetaEntity;
+		this.entity = entity;
+		this.fieldName = fieldName;
 	}
 
 	@Override
@@ -34,10 +38,12 @@ public class EventField implements MetaAttribute {
 
 	@Override
 	public String getAttributeDeclarationString() {
-		annotationMetaEntity.importType(INJECT);
-		annotationMetaEntity.importType(EVENT);
-		annotationMetaEntity.importType(JD_LIFECYCLE_EVENT);
-		return "\n@Inject\nprivate Event<LifecycleEvent<?>> event;";
+		final var injectType = annotationMetaEntity.importType( INJECT );
+		final var eventType = annotationMetaEntity.importType( EVENT );
+		final var lifecycleEventType = annotationMetaEntity.importType( JD_LIFECYCLE_EVENT );
+		final var entityType = annotationMetaEntity.importType( entity );
+		return "\n@" + injectType + "\nprivate " + eventType + "<" + lifecycleEventType + "<" + entityType
+				+ ">> " + fieldName + ";";
 	}
 
 	@Override
@@ -52,7 +58,7 @@ public class EventField implements MetaAttribute {
 
 	@Override
 	public String getPropertyName() {
-		return "event";
+		return fieldName;
 	}
 
 	@Override

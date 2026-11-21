@@ -38,6 +38,8 @@ class DataMetamodelTest {
 	void generatedDataMetamodelUsesJakartaData11AttributeTypes() throws Exception {
 		assertAttribute( "id", NumericAttribute.class, DataMetamodelEntity.class, Long.class );
 		assertAttribute( "title", TextAttribute.class, DataMetamodelEntity.class );
+		assertAttribute( "event", TextAttribute.class, DataMetamodelEntity.class );
+		assertAttribute( "event$", TextAttribute.class, DataMetamodelEntity.class );
 		assertAttribute( "published", BooleanAttribute.class, DataMetamodelEntity.class );
 		assertAttribute( "pages", NumericAttribute.class, DataMetamodelEntity.class, Integer.class );
 		assertAttribute( "price", NumericAttribute.class, DataMetamodelEntity.class, BigDecimal.class );
@@ -56,7 +58,10 @@ class DataMetamodelTest {
 		final String source = getMetaModelSourceAsString( DataMetamodelEntity.class, true );
 		assertTrue( source.contains( "@EntityListener" ) );
 		assertTrue( source.contains( "public class _DataMetamodelEntity" ) );
-		assertTrue( source.contains( "private Event<LifecycleEvent<?>> event;" ) );
+		assertTrue( source.contains( "private Event<LifecycleEvent<DataMetamodelEntity>> event$$;" ) );
+		assertTrue( source.contains( "event$$.fire(new PreInsertEvent<>(entity));" ) );
+		assertTrue( source.contains( "event$$.fire(new PostUpsertEvent<>(entity));" ) );
+		assertFalse( source.contains( "TypeLiteral" ) );
 		assertTrue( source.contains( "void _onPreInsert(DataMetamodelEntity entity)" ) );
 		assertTrue( source.contains( "void _onPostUpsert(DataMetamodelEntity entity)" ) );
 		assertFalse( source.contains( "jakarta.data.metamodel.impl" ) );

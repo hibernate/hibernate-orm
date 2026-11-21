@@ -173,7 +173,6 @@ public final class Constants {
 	public static final String TUPLE = "jakarta.persistence.Tuple";
 
 	public static final String INJECT = "jakarta.inject.Inject";
-	public static final String TYPE_LITERAL = "jakarta.enterprise.util.TypeLiteral";
 	public static final String EVENT = "jakarta.enterprise.event.Event";
 
 	public static final String UNI = "io.smallrye.mutiny.Uni";

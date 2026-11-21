@@ -15,6 +15,10 @@ public class DataMetamodelEntity {
 
 	String title;
 
+	String event;
+
+	String event$;
+
 	boolean published;
 
 	int pages;

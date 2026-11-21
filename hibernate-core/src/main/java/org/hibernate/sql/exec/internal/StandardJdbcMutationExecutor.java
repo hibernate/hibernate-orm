@@ -70,7 +70,13 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 				final var eventMonitor = session.getEventMonitor();
 				final var executionEvent = eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 				try {
-					final int rows = preparedStatement.executeUpdate();
+					int rows;
+					try {
+						rows = preparedStatement.executeUpdate();
+					}
+					catch (SQLException e) {
+						rows = retryAfterUniqueConstraintViolation( jdbcMutation, preparedStatement, e, jdbcServices, finalSql );
+					}
 					expectationCheck.accept( rows, preparedStatement );
 					return rows;
 				}
@@ -89,6 +95,40 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 		finally {
 			executionContext.afterStatement( logicalConnection );
 		}
+	}
+
+	/**
+	 * Executes the statement once more if it failed with a unique constraint violation
+	 * and {@linkplain JdbcOperationQueryInsert#isRetryableOnUniqueConstraintViolation() may be retried}.
+	 * If the retry fails as well, the original exception is thrown, with the retry failure suppressed.
+	 */
+	private static int retryAfterUniqueConstraintViolation(
+			JdbcOperationQueryMutation jdbcMutation,
+			PreparedStatement preparedStatement,
+			SQLException sqle,
+			JdbcServices jdbcServices,
+			String finalSql) throws SQLException {
+		if ( jdbcMutation instanceof JdbcOperationQueryInsert jdbcInsert
+				&& jdbcInsert.isRetryableOnUniqueConstraintViolation()
+				&& isUniqueConstraintViolation( sqle, jdbcServices, finalSql ) ) {
+			JDBC_LOGGER.debugf( "Retrying statement after a unique constraint violation: %s", sqle.getMessage() );
+			try {
+				return preparedStatement.executeUpdate();
+			}
+			catch (SQLException retryFailure) {
+				sqle.addSuppressed( retryFailure );
+			}
+		}
+		throw sqle;
+	}
+
+	private static boolean isUniqueConstraintViolation(SQLException sqle, JdbcServices jdbcServices, String finalSql) {
+		// Convert without logging, the exception is logged when it is finally thrown
+		final var exception =
+				jdbcServices.getSqlExceptionHelper().getSqlExceptionConverter()
+						.convert( sqle, "JDBC exception executing SQL", finalSql );
+		return exception instanceof ConstraintViolationException constraintViolationException
+			&& constraintViolationException.getKind() == ConstraintViolationException.ConstraintKind.UNIQUE;
 	}
 
 	private static int handleException(

@@ -17,6 +17,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 public class AbstractJdbcOperationQueryInsert extends AbstractJdbcOperationQuery implements JdbcOperationQueryInsert {
 
 	private final String uniqueConstraintNameThatMayFail;
+	private final boolean retryableOnUniqueConstraintViolation;
 
 	public AbstractJdbcOperationQueryInsert(
 			String sql,
@@ -25,6 +26,7 @@ public class AbstractJdbcOperationQueryInsert extends AbstractJdbcOperationQuery
 			String uniqueConstraintNameThatMayFail) {
 		super( sql, parameterBinders, affectedTableNames );
 		this.uniqueConstraintNameThatMayFail = uniqueConstraintNameThatMayFail;
+		this.retryableOnUniqueConstraintViolation = false;
 	}
 
 	public AbstractJdbcOperationQueryInsert(
@@ -33,12 +35,28 @@ public class AbstractJdbcOperationQueryInsert extends AbstractJdbcOperationQuery
 			Set<String> affectedTableNames,
 			Map<JdbcParameter, JdbcParameterBinding> appliedParameters,
 			String uniqueConstraintNameThatMayFail) {
+		this( sql, parameterBinders, affectedTableNames, appliedParameters, uniqueConstraintNameThatMayFail, false );
+	}
+
+	public AbstractJdbcOperationQueryInsert(
+			String sql,
+			List<JdbcParameterBinder> parameterBinders,
+			Set<String> affectedTableNames,
+			Map<JdbcParameter, JdbcParameterBinding> appliedParameters,
+			String uniqueConstraintNameThatMayFail,
+			boolean retryableOnUniqueConstraintViolation) {
 		super( sql, parameterBinders, affectedTableNames, appliedParameters );
 		this.uniqueConstraintNameThatMayFail = uniqueConstraintNameThatMayFail;
+		this.retryableOnUniqueConstraintViolation = retryableOnUniqueConstraintViolation;
 	}
 
 	@Override
 	public String getUniqueConstraintNameThatMayFail() {
 		return uniqueConstraintNameThatMayFail;
+	}
+
+	@Override
+	public boolean isRetryableOnUniqueConstraintViolation() {
+		return retryableOnUniqueConstraintViolation;
 	}
 }

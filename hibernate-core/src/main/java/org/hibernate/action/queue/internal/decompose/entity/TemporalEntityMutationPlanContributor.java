@@ -47,8 +47,9 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 
 	@Override
 	public void applyUpdateRestriction(EntityTableDescriptor table, TableUpdateBuilder<?> builder) {
-		if ( table.name().equals( temporalMapping.getTableName() ) ) {
-			final var endingColumn = new ColumnReference( builder.getMutatingTable(), temporalMapping.getEndingColumnMapping() );
+		final var ending = temporalMapping.getEndingColumnMapping();
+		if ( table.name().equals( entityPersister.physicalTableNameForMutation( ending ) ) ) {
+			final var endingColumn = new ColumnReference( builder.getMutatingTable(), ending );
 			builder.addNonKeyRestriction( temporalMapping.createNullEndingValueBinding( endingColumn ) );
 		}
 	}

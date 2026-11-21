@@ -52,12 +52,14 @@ public class TemporalUpdateDecomposerTest {
 		}
 
 		scope.inTransaction( entityManager -> {
-			final SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			final TemporalEntity entity = new TemporalEntity();
 			entity.id = 1L;
 			entity.name = "before";
 			entityManager.persist( entity );
-			entityManager.flush();
+		} );
+		scope.inTransaction( entityManager -> {
+			final SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
+			final var entity = entityManager.find( TemporalEntity.class, 1L );
 
 			final EntityPersister persister = sfi.getMappingMetamodel().getEntityDescriptor( TemporalEntity.class );
 
@@ -85,12 +87,14 @@ public class TemporalUpdateDecomposerTest {
 	})
 	void tenantOwnershipCheckPreservesHistoryPrerequisite(EntityManagerFactoryScope scope) {
 		scope.inTransaction( em -> {
-			final var session = em.unwrap( SessionImplementor.class );
 			final var item = new TenantItem();
 			item.id = 1L;
 			item.name = "before";
 			em.persist( item );
-			em.flush();
+		} );
+		scope.inTransaction( em -> {
+			final var session = em.unwrap( SessionImplementor.class );
+			final var item = em.find( TenantItem.class, 1L );
 
 			final var persister = session.getFactory().getMappingMetamodel().getEntityDescriptor( TenantItem.class );
 			final var previous = persister.getValues( item );

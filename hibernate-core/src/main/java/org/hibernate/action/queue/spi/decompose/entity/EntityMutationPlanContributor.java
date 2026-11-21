@@ -141,10 +141,15 @@ public interface EntityMutationPlanContributor {
 			Object previousVersion,
 			EntityEntry entityEntry,
 			UpdateCacheHandling.CacheUpdate cacheUpdate) {
-		/// An update to a row inserted by this flush completes its initial temporal version.
+		/// An update to a row inserted in this transaction completes its initial temporal version.
 		public boolean requiresNewTemporalVersion() {
-			return !isBeingInserted()
+			return !updatesInitialVersion()
 					&& !entityPersister.excludedFromTemporalVersioning( action.getDirtyFields(), action.hasDirtyCollection() );
+		}
+
+		public boolean updatesInitialVersion() {
+			return isBeingInserted()
+					|| session.getPersistenceContextInternal().wasInsertedDuringTransaction( entityPersister, identifier );
 		}
 
 		public boolean isBeingInserted() {

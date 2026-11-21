@@ -4,6 +4,8 @@ import java.util.List;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
 
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Temporal;
@@ -51,6 +53,40 @@ class TemporalInsertUpdateOrderingTest {
 			assertEquals( List.of( "first", "second" ), session.createSelectionQuery(
 					"select i.name from Item i order by i.name", String.class ).list() );
 		}
+	}
+
+	@Test
+	@SessionFactory
+	@DomainModel(annotatedClasses = { BaseItem.class, SubItem.class })
+	@ServiceRegistry(settings = {
+			@Setting(name = TEMPORAL_TABLE_STRATEGY, value = "SINGLE_TABLE"),
+			@Setting(name = CHANGESET_ID_SUPPLIER, value = SUPPLIER)
+	})
+	void excludedSubclassUpdatePreservesClosedRow(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			final var item = new SubItem();
+			item.id = 1;
+			item.name = "first";
+			item.note = "original";
+			session.inTransaction( transaction -> session.persist( item ) );
+			session.inTransaction( transaction -> item.name = "second" );
+			session.inTransaction( transaction -> item.note = "edited" );
+			assertEquals( List.of( "original", "edited" ), session.createNativeQuery(
+					"select note from SubItem order by effective", String.class ).list() );
+		} );
+	}
+
+	@Entity(name = "BaseItem")
+	@Temporal
+	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+	static abstract class BaseItem {
+		@Id int id;
+		String name;
+		@Temporal.Excluded String note;
+	}
+
+	@Entity(name = "SubItem")
+	static class SubItem extends BaseItem {
 	}
 
 	@Test

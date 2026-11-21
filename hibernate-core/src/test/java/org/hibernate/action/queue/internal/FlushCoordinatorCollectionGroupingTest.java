@@ -45,6 +45,7 @@ class FlushCoordinatorCollectionGroupingTest {
 
 		final var constraintModel = new ConstraintModel(
 				List.of(),
+				Map.of(),
 				List.of(),
 				Map.of(),
 				Map.of(),

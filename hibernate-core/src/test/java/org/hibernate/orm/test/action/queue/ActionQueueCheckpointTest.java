@@ -77,6 +77,7 @@ public class ActionQueueCheckpointTest {
 				new GraphBasedActionQueue(
 						new ConstraintModel(
 								List.of(),
+								Map.of(),
 								List.of(),
 								Map.of(),
 								Map.of(),

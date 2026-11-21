@@ -157,12 +157,13 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 			UpdateContext context,
 			Consumer<FlushOperation> operationConsumer) {
 		final int[] dirtyFields = context.action().getDirtyFields();
-		if ( context.isBeingInserted() || dirtyFields != null && dirtyFields.length != 0 ) {
+		final boolean initialVersion = context.updatesInitialVersion();
+		if ( initialVersion || dirtyFields != null && dirtyFields.length != 0 ) {
 			final var details = buildHistoryInPlaceUpdate(
 					context.entity(),
 					context.rowId(),
 					dirtyFields,
-					context.isBeingInserted(),
+					initialVersion,
 					context.session()
 			);
 			if ( details != null ) {

@@ -129,6 +129,20 @@ public class StandardGraphBuilder implements GraphBuilder {
 				deferrableConstraintMode
 		);
 
+		if ( !constraintModel.generatedIdentifierReferencesByTargetTable().isEmpty() ) {
+			for ( var node : nodes ) {
+				if ( node.group().needsIdPrePhase() ) {
+					final String target = node.group().tableExpression();
+					final var producer = List.of( node );
+					for ( var reference : constraintModel.getGeneratedIdentifierReferences( target ) ) {
+						final String key = reference.keyTable();
+						edgeId = createInsertToInsertEdges( reference, key, target, producer, insertNodeByTable.get( key ),
+								outgoing, edgeId, deferrableConstraintMode );
+						edgeId = createInsertToUpdateEdges( reference, producer, updateNodeByTable.get( key ), outgoing, edgeId );
+					}
+				}
+			}
+		}
 		edgeId = createInsertToOrderUpdateEdges( insertNodeByTable, updateNodeByTable, outgoing, edgeId );
 		if ( hasExecutionPrerequisites ) {
 			edgeId = createExecutionPrerequisiteEdges( nodes, outgoing, edgeId );

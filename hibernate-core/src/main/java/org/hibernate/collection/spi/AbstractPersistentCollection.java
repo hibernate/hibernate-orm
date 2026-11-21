@@ -198,7 +198,8 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	}
 
 	public int getSize() {
-		if ( cachedSize>=0 ) {
+		// A queued operation may change the size, so flush it and count again
+		if ( cachedSize >= 0 && !hasQueuedOperations() ) {
 			return cachedSize;
 		}
 		else {
@@ -617,7 +618,6 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		// triggering collection initialization.
 		if ( hasQueuedOperations() ) {
 			performQueuedOperations();
-			cachedSize = -1;
 		}
 	}
 
@@ -684,6 +684,8 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	protected final void setInitialized() {
 		this.initializing = false;
 		this.initialized = true;
+		// A size counted before initialization doesn't track later changes in memory
+		cachedSize = -1;
 	}
 
 	@Override

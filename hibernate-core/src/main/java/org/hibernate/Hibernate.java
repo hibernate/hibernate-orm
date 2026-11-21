@@ -173,7 +173,8 @@ public final class Hibernate {
 
 	/**
 	 * Obtain the {@linkplain Collection#size() size} of a persistent collection,
-	 * without fetching its state from the database.
+	 * without fetching its state from the database. The size of a collection
+	 * which is already initialized is its size in memory.
 	 *
 	 * @param collection a persistent collection associated with an open session
 	 * @return the size of the collection
@@ -182,13 +183,15 @@ public final class Hibernate {
 	 */
 	public static int size(Collection<?> collection) {
 		return collection instanceof PersistentCollection<?> persistentCollection
+			&& !persistentCollection.wasInitialized()
 				? persistentCollection.getSize()
 				: collection.size();
 	}
 
 	/**
 	 * Determine is the given persistent collection is {@linkplain Collection#isEmpty() empty},
-	 * without fetching its state from the database.
+	 * without fetching its state from the database. A collection which is already
+	 * initialized is empty if it is empty in memory.
 	 *
 	 * @param collection a persistent collection associated with an open session
 	 * @return {@code true} if the collection is empty
@@ -197,6 +200,7 @@ public final class Hibernate {
 	 */
 	public static boolean isEmpty(Collection<?> collection) {
 		return collection instanceof PersistentCollection<?> persistentCollection
+			&& !persistentCollection.wasInitialized()
 				? persistentCollection.getSize() == 0
 				: collection.isEmpty();
 	}

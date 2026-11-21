@@ -11,62 +11,73 @@ import jakarta.data.event.PreInsertEvent;
 import jakarta.data.event.PreUpsertEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.inject.spi.EventMetadata;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SettingProvider;
 import org.jboss.weld.environment.se.Weld;
+import org.jboss.weld.environment.se.WeldContainer;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
+@ServiceRegistry(settingProviders = @SettingProvider(
+		settingName = "jakarta.persistence.bean.manager", provider = LifecycleEventWeldTest.BeanManagerProvider.class
+))
+@DomainModel(annotatedClasses = { LifecycleItem.class, _LifecycleItem.class })
+@SessionFactory
 class LifecycleEventWeldTest {
-	@Test
-	void generatedListenerDeliversConcreteAndGenericEvents() {
-		try ( var container = new Weld().disableDiscovery()
-				.addBeanClasses( Observers.class, _LifecycleItem.class ).initialize() ) {
-			final var registry = new StandardServiceRegistryBuilder()
-					.applySetting( "jakarta.persistence.jdbc.url", "jdbc:h2:mem:processor_lifecycle;DB_CLOSE_DELAY=-1" )
-					.applySetting( "jakarta.persistence.jdbc.driver", "org.h2.Driver" )
-					.applySetting( "hibernate.hbm2ddl.auto", "create-drop" )
-					.applySetting( "jakarta.persistence.bean.manager", container.getBeanManager() )
-					.build();
-			try ( var factory = new MetadataSources( registry )
-					.addAnnotatedClass( LifecycleItem.class )
-					.addAnnotatedClass( _LifecycleItem.class )
-					.buildMetadata().buildSessionFactory() ) {
-				final var item = new LifecycleItem();
-				item.id = 1L;
-				item.name = "before";
-				try ( var session = factory.openSession() ) {
-					final var tx = session.beginTransaction();
-					session.persist( item );
-					tx.commit();
-				}
-				try ( var session = factory.openStatelessSession() ) {
-					final var tx = session.beginTransaction();
-					item.name = "after";
-					session.upsert( item );
-					tx.commit();
-				}
-				final var observer = container.select( Observers.class ).get();
-				assertEquals( 1, observer.count( "preInsert" ) );
-				assertEquals( 1, observer.count( "preUpsert" ) );
-				assertEquals( 1, observer.count( "postUpsert" ) );
-				for ( var event : List.of( "PreInsertEvent", "PostInsertEvent", "PreUpsertEvent", "PostUpsertEvent" ) ) {
-					assertEquals( 1, observer.count( "item:" + event ) );
-					assertEquals( 1, observer.count( "any:" + event ) );
-				}
-				assertEquals( 0, observer.wrongCount() );
-				final var eventType = assertInstanceOf( ParameterizedType.class, observer.eventType() );
-				assertEquals( PreInsertEvent.class, eventType.getRawType() );
-				assertArrayEquals( new Type[] { LifecycleItem.class }, eventType.getActualTypeArguments() );
-			}
-			finally {
-				StandardServiceRegistryBuilder.destroy( registry );
+	private static WeldContainer container;
+
+	public static class BeanManagerProvider implements SettingProvider.Provider<BeanManager> {
+		@Override
+		public BeanManager getSetting() {
+			container = new Weld().disableDiscovery()
+					.addBeanClasses( Observers.class, _LifecycleItem.class ).initialize();
+			return container.getBeanManager();
+		}
+	}
+
+	@AfterAll
+	void shutdown(SessionFactoryScope scope) {
+		try {
+			scope.releaseSessionFactory();
+		}
+		finally {
+			if ( container != null ) {
+				container.close();
 			}
 		}
+	}
+
+	@Test
+	void generatedListenerDeliversConcreteAndGenericEvents(SessionFactoryScope scope) {
+		final var item = new LifecycleItem();
+		item.id = 1L;
+		item.name = "before";
+		scope.inTransaction( session -> session.persist( item ) );
+		scope.inStatelessTransaction( session -> {
+			item.name = "after";
+			session.upsert( item );
+		} );
+		final var observer = container.select( Observers.class ).get();
+		assertEquals( 1, observer.count( "preInsert" ) );
+		assertEquals( 1, observer.count( "preUpsert" ) );
+		assertEquals( 1, observer.count( "postUpsert" ) );
+		for ( var event : List.of( "PreInsertEvent", "PostInsertEvent", "PreUpsertEvent", "PostUpsertEvent" ) ) {
+			assertEquals( 1, observer.count( "item:" + event ) );
+			assertEquals( 1, observer.count( "any:" + event ) );
+		}
+		assertEquals( 0, observer.wrongCount() );
+		final var eventType = assertInstanceOf( ParameterizedType.class, observer.eventType() );
+		assertEquals( PreInsertEvent.class, eventType.getRawType() );
+		assertArrayEquals( new Type[] { LifecycleItem.class }, eventType.getActualTypeArguments() );
 	}
 
 	@ApplicationScoped

@@ -1209,7 +1209,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						)
 				)
 		);
-		currentClauseStack.push( Clause.INSERT );
 		final InsertSelectStatement insertStatement;
 		final AdditionalInsertValues additionalInsertValues;
 		try {
@@ -1244,7 +1243,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		finally {
 			popProcessingStateStack();
-			currentClauseStack.pop();
 		}
 
 		insertStatement.setSourceSelectStatement(
@@ -1427,18 +1425,24 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			versionAttributeName = null;
 			needsVersionInsert = false;
 		}
-		// Go through all target paths and remember if the target paths contain the version or id attributes
-		for ( int i = 0; i < targetPaths.size(); i++ ) {
-			final var path = targetPaths.get( i );
-			final String localName = path.getNavigablePath().getLocalName();
-			if ( localName.equals( identifierPropertyName ) ) {
-				identifierGenerator = null;
+		currentClauseStack.push( Clause.INSERT );
+		try {
+			// Go through all target paths and remember if the target paths contain the version or id attributes
+			for ( int i = 0; i < targetPaths.size(); i++ ) {
+				final var path = targetPaths.get( i );
+				final String localName = path.getNavigablePath().getLocalName();
+				if ( localName.equals( identifierPropertyName ) ) {
+					identifierGenerator = null;
+				}
+				else if ( localName.equals( versionAttributeName ) ) {
+					needsVersionInsert = false;
+				}
+				final var assignable = (Assignable) visitWithRequiredResult( path );
+				targetColumnReferenceConsumer.accept( assignable, assignable.getColumnReferences() );
 			}
-			else if ( localName.equals( versionAttributeName ) ) {
-				needsVersionInsert = false;
-			}
-			final var assignable = (Assignable) visitWithRequiredResult( path );
-			targetColumnReferenceConsumer.accept( assignable, assignable.getColumnReferences() );
+		}
+		finally {
+			currentClauseStack.pop();
 		}
 		if ( needsVersionInsert ) {
 			final var versionPath = BasicValuedPathInterpretation.from(

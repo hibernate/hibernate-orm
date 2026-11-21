@@ -5,6 +5,7 @@ import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.NaturalIdResolutions;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.Resolution;
@@ -68,6 +69,15 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 
 	@Override
 	public void cacheResolutionFromLoad(Object id, Object naturalId, EntityMappingType entityDescriptor) {
+		cacheResolutionFromLoad( id, naturalId, entityDescriptor, readsHistory( session(), entityDescriptor.getEntityPersister() ) );
+	}
+
+	@Override
+	public void cacheResolutionFromLoad(EntityKey entityKey, Object naturalId) {
+		cacheResolutionFromLoad( entityKey.getIdentifier(), naturalId, entityKey.getPersister(), entityKey.isTemporal() );
+	}
+
+	private void cacheResolutionFromLoad(Object id, Object naturalId, EntityMappingType entityDescriptor, boolean historical) {
 		if ( NATURAL_ID_LOGGER.isTraceEnabled() ) {
 			NATURAL_ID_LOGGER.cachingNaturalIdResolutionFromLoad(
 					entityDescriptor.getEntityName(),
@@ -82,7 +92,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			// the second comes from the entity loading. In this condition, we want to avoid the multiple
 			// 'put' stats incrementing.
 			final boolean justAddedLocally = cacheResolution( id, naturalId, entityDescriptor );
-			if ( justAddedLocally && naturalIdMapping.getCacheAccess() != null ) {
+			if ( justAddedLocally && !historical && naturalIdMapping.getCacheAccess() != null ) {
 				final var persister = locatePersisterForKey( entityDescriptor.getEntityPersister() );
 				manageSharedResolution( persister, id, naturalId, (Object) null, CachedNaturalIdValueSource.LOAD );
 			}
@@ -217,7 +227,8 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			EntityMappingType entityDescriptor,
 			CachedNaturalIdValueSource source) {
 		final var naturalIdMapping = entityDescriptor.getNaturalIdMapping();
-		if ( naturalIdMapping != null && naturalIdMapping.getCacheAccess() != null ) {
+		if ( naturalIdMapping != null && naturalIdMapping.getCacheAccess() != null
+				&& ( source != CachedNaturalIdValueSource.LOAD || !readsHistory( session(), entityDescriptor.getEntityPersister() ) ) ) {
 			manageSharedResolution(
 					entityDescriptor.getEntityPersister(),
 					id,
@@ -235,8 +246,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			Object previousNaturalIdValues,
 			CachedNaturalIdValueSource source) {
 		final var session = session();
-		if ( session.isRootTenant()
-				|| source == CachedNaturalIdValueSource.LOAD && readsHistory( session, persister ) ) {
+		if ( session.isRootTenant() ) {
 			return;
 		}
 		final var cacheAccess = persister.getNaturalIdMapping().getCacheAccess();

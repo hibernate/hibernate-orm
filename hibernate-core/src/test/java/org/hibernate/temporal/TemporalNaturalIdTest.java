@@ -1,8 +1,11 @@
 package org.hibernate.temporal;
 
+import jakarta.persistence.Cacheable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.SharedSessionContract;
+import org.hibernate.annotations.Audited;
+import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.annotations.Temporal;
@@ -19,14 +22,16 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.FindMultipleOption.OrderingMode.ORDERED;
 import static org.hibernate.KeyType.NATURAL;
+import static org.hibernate.annotations.CacheConcurrencyStrategy.READ_WRITE;
+import static org.hibernate.audit.AuditLog.ALL_CHANGESETS;
 import static org.hibernate.cfg.CacheSettings.USE_SECOND_LEVEL_CACHE;
 import static org.hibernate.cfg.StateManagementSettings.CHANGESET_ID_SUPPLIER;
 import static org.hibernate.cfg.StateManagementSettings.TEMPORAL_TABLE_STRATEGY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-@SessionFactory
-@DomainModel(annotatedClasses = TemporalNaturalIdTest.Book.class)
+@SessionFactory(generateStatistics = true)
+@DomainModel(annotatedClasses = { TemporalNaturalIdTest.Book.class, TemporalNaturalIdTest.AuditEvent.class })
 @ServiceRegistry(settings = {
 		@Setting(name = USE_SECOND_LEVEL_CACHE, value = "true"),
 		@Setting(name = TEMPORAL_TABLE_STRATEGY, value = "HISTORY_TABLE"),
@@ -72,9 +77,45 @@ class TemporalNaturalIdTest {
 		}
 	}
 
+	@Test
+	void currentIsbnCachedAfterAllChangesetsQuery(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var event = new AuditEvent();
+			event.id = 1;
+			event.name = "Book announced";
+			session.persist( event );
+		} );
+		scope.inTransaction( session -> session.persist( new Book( 4, "9780134685991", "Fourth book" ) ) );
+
+		final var factory = scope.getSessionFactory();
+		factory.getCache().evictNaturalIdData( Book.class );
+		factory.getCache().evictEntityData( Book.class, 4 );
+		try (var session = factory.withOptions().atChangeset( ALL_CHANGESETS ).openSession()) {
+			final var row = session.createSelectionQuery(
+					"select e, b from AuditEvent e cross join Book b where b.id = 4", Object[].class )
+					.getSingleResult();
+			assertEquals( "9780134685991", ( (Book) row[1] ).isbn );
+		}
+
+		final var statistics = factory.getStatistics();
+		statistics.clear();
+		scope.inSession( session -> assertEquals( 4, session.find( Book.class, "9780134685991", NATURAL ).id ) );
+		assertEquals( 1, statistics.getNaturalIdCacheHitCount() );
+		assertEquals( 0, statistics.getPrepareStatementCount() );
+	}
+
+	@Entity(name = "AuditEvent")
+	@Audited
+	static class AuditEvent {
+		@Id int id;
+		String name;
+	}
+
 	@Entity(name = "Book")
 	@Temporal
 	@NaturalIdCache
+	@Cacheable
+	@Cache(usage = READ_WRITE)
 	static class Book {
 		@Id int id;
 		@NaturalId(mutable = true) String isbn;

@@ -1898,7 +1898,7 @@ public class EntityInitializerImpl
 					entityDescriptor.getNaturalIdMapping()
 							.extractNaturalIdFromEntityState( resolvedEntityState );
 			persistenceContext.getNaturalIdResolutions()
-					.cacheResolutionFromLoad( data.entityKey.getIdentifier(), naturalId, entityDescriptor );
+					.cacheResolutionFromLoad( data.entityKey, naturalId );
 		}
 	}
 

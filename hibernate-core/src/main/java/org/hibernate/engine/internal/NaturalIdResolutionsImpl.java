@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableCollection;
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
+import static org.hibernate.engine.internal.CacheHelper.readsHistory;
 import static org.hibernate.engine.internal.NaturalIdLogging.NATURAL_ID_LOGGER;
 
 public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializable {
@@ -233,14 +234,16 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			Object naturalIdValues,
 			Object previousNaturalIdValues,
 			CachedNaturalIdValueSource source) {
-		if ( session().isRootTenant() ) {
+		final var session = session();
+		if ( session.isRootTenant()
+				|| source == CachedNaturalIdValueSource.LOAD && readsHistory( session, persister ) ) {
 			return;
 		}
 		final var cacheAccess = persister.getNaturalIdMapping().getCacheAccess();
 		if ( cacheAccess != null ) {
 			final var rootEntityDescriptor = persister.getRootEntityDescriptor();
 			final var rootEntityPersister = rootEntityDescriptor.getEntityPersister();
-			final Object cacheKey = cacheAccess.generateCacheKey( naturalIdValues, rootEntityPersister, session() );
+			final Object cacheKey = cacheAccess.generateCacheKey( naturalIdValues, rootEntityPersister, session );
 			switch ( source ) {
 				case LOAD:
 					cacheFromLoad(
@@ -605,7 +608,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 		}
 
 		// Session cache miss, see if second-level caching is enabled
-		if ( !persister.hasNaturalIdCache() ) {
+		if ( !persister.hasNaturalIdCache() || readsHistory( session(), persister ) ) {
 			return null;
 		}
 		else {

@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -18,13 +19,16 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.FindMultipleOption.OrderingMode.ORDERED;
 import static org.hibernate.KeyType.NATURAL;
+import static org.hibernate.cfg.CacheSettings.USE_SECOND_LEVEL_CACHE;
 import static org.hibernate.cfg.StateManagementSettings.CHANGESET_ID_SUPPLIER;
 import static org.hibernate.cfg.StateManagementSettings.TEMPORAL_TABLE_STRATEGY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @SessionFactory
 @DomainModel(annotatedClasses = TemporalNaturalIdTest.Book.class)
 @ServiceRegistry(settings = {
+		@Setting(name = USE_SECOND_LEVEL_CACHE, value = "true"),
 		@Setting(name = TEMPORAL_TABLE_STRATEGY, value = "HISTORY_TABLE"),
 		@Setting(name = CHANGESET_ID_SUPPLIER, value = "org.hibernate.temporal.TemporalNaturalIdTest$ChangesetIds")
 })
@@ -46,11 +50,34 @@ class TemporalNaturalIdTest {
 		}
 	}
 
+	@Test
+	void mutableNaturalIdAtChangeset(SessionFactoryScope scope) {
+		final var changeset = scope.fromTransaction( session -> {
+			session.persist( new Book( 3, "old", "Third book" ) );
+			return session.getCurrentChangesetIdentifier();
+		} );
+		scope.inTransaction( session -> session.find( Book.class, 3 ).isbn = "new" );
+		scope.getSessionFactory().getCache().evictNaturalIdData( Book.class );
+
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( changeset ).openSession()) {
+			assertEquals( "old", session.find( Book.class, 3 ).isbn );
+		}
+		scope.inSession( session -> {
+			assertNull( session.find( Book.class, "old", NATURAL ) );
+			assertEquals( 3, session.find( Book.class, "new", NATURAL ).id );
+		} );
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( changeset ).openSession()) {
+			assertNull( session.find( Book.class, "new", NATURAL ) );
+			assertEquals( 3, session.find( Book.class, "old", NATURAL ).id );
+		}
+	}
+
 	@Entity(name = "Book")
 	@Temporal
+	@NaturalIdCache
 	static class Book {
 		@Id int id;
-		@NaturalId String isbn;
+		@NaturalId(mutable = true) String isbn;
 		String title;
 
 		Book() {

@@ -102,7 +102,7 @@ public class UnmodifiableListMergeTest {
 	}
 
 	private static List<Long> itemIds(Owner owner) {
-		return owner.items.stream().map( item -> item.id ).toList();
+		return owner.items.stream().map( Item::getId ).toList();
 	}
 
 	enum ListKind {
@@ -143,6 +143,10 @@ public class UnmodifiableListMergeTest {
 		private Long id;
 
 		public Item() {
+		}
+
+		public Long getId() {
+			return id;
 		}
 
 		Item(Long id) {

@@ -237,6 +237,7 @@ public class IdentifierMappingMaterializer {
 		idValue.setFlattened( true );
 		idValue.setPreservePropertyOrder( true );
 		EmbeddableMappingMaterializer.applyComponentType( idValue, idMapping.getIdClassType() );
+		new EmbeddableMappingMaterializer( state ).applyComponentCustomizations( idValue, null, idMapping.getIdClassType() );
 		EmbeddableMappingMaterializer.applyComponentMappedSuperclass( idValue, idMapping.getIdClassType(), state );
 		idValue.setTable( table );
 		typeBinding.setIdentifier( idValue );
@@ -473,6 +474,7 @@ public class IdentifierMappingMaterializer {
 		final boolean separateIdentifierMapper = hasIdClass && !wholeDerivedIdClass || noIdClassMapsId;
 		if ( hasIdClass && !wholeDerivedIdClass ) {
 			EmbeddableMappingMaterializer.applyComponentType( idValue, idMapping.getIdClassType() );
+		new EmbeddableMappingMaterializer( state ).applyComponentCustomizations( idValue, null, idMapping.getIdClassType() );
 			EmbeddableMappingMaterializer.applyComponentMappedSuperclass( idValue, idMapping.getIdClassType(), state );
 		}
 		else {
@@ -755,6 +757,7 @@ public class IdentifierMappingMaterializer {
 		idValue.setFlattened( true );
 		idValue.setPreservePropertyOrder( true );
 		EmbeddableMappingMaterializer.applyComponentType( idValue, idMapping.getIdClassType() );
+		new EmbeddableMappingMaterializer( state ).applyComponentCustomizations( idValue, null, idMapping.getIdClassType() );
 		EmbeddableMappingMaterializer.applyComponentMappedSuperclass( idValue, idMapping.getIdClassType(), state );
 		idValue.setTable( table );
 		typeBinding.setIdentifier( idValue );
@@ -966,6 +969,7 @@ public class IdentifierMappingMaterializer {
 			final Component component = new Component( state.getMetadataBuildingContext(), typeBinding );
 			component.setKey( true );
 			component.setFlattened( true );
+			component.setPreservePropertyOrder( true );
 			EmbeddableMappingMaterializer.applyComponentType( component, idClassMemberType );
 			component.setTable( table );
 			final ComponentSource sourceComponent = ComponentSource.embeddedIdentifier(

@@ -129,9 +129,10 @@ public class TableBinder {
 		final TableReference tableReference;
 
 		if ( type.getHierarchy().getInheritanceType() == InheritanceType.TABLE_PER_CLASS ) {
-			assert subselectAnn == null;
-
-			if ( hierarchyRelation == EntityHierarchyImpl.HierarchyRelation.ROOT ) {
+			if ( subselectAnn != null ) {
+				tableReference = bindVirtualTable( type, subselectAnn, TableSource.from( tableAnn ) );
+			}
+			else if ( hierarchyRelation == EntityHierarchyImpl.HierarchyRelation.ROOT ) {
 				tableReference = bindPhysicalTable( type, TableSource.from( tableAnn ), true, viewAnn );
 			}
 			else {

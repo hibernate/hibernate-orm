@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.embeddable;
 
+import org.hibernate.annotations.Bag;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -100,6 +101,7 @@ class NestedElementCollectionAssociationTest {
 		Long id;
 
 		@ElementCollection
+		@Bag
 		@CollectionTable(name = "hhh8034_elements", joinColumns = @JoinColumn(name = "owner_id"))
 		List<Element> elements = new ArrayList<>();
 	}

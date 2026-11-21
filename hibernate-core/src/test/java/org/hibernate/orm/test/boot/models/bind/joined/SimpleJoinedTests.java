@@ -183,10 +183,7 @@ public class SimpleJoinedTests {
 	@Table(name = "Sub")
 	@DiscriminatorValue("S")
 	public static class Sub extends Root {
-		@Id
-		private Integer id;
-
-		private String name;
+		private String details;
 	}
 
 	@Entity(name = "CompositeRoot")

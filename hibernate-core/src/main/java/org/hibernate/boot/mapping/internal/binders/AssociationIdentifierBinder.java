@@ -143,9 +143,9 @@ class AssociationIdentifierBinder {
 			associationIdentifierBinding.ownerBinding().getTable().addColumn( column );
 				associationIdentifierBinding.value().addColumn( column, true, false );
 				if ( associationIdentifierBinding.identifierMapperValue().get() != null ) {
-					addIdentifierColumn( associationIdentifierBinding.identifierMapperValue().get(), i, column, false );
+					addIdentifierColumn( associationIdentifierBinding.identifierMapperValue().get(), targetIdentifierBinding.value(), targetColumns.columns().get( i ), i, column, false );
 				}
-				addIdentifierColumn( associationIdentifierBinding.identifierValue(), i, column, true );
+				addIdentifierColumn( associationIdentifierBinding.identifierValue(), targetIdentifierBinding.value(), targetColumns.columns().get( i ), i, column, true );
 				primaryTableKeyMappingMaterializer.addIdentifierColumn(
 						primaryTableKeyMappingMaterializer.resolvePrimaryKey(
 								associationIdentifierBinding.ownerBinding(),
@@ -295,11 +295,16 @@ class AssociationIdentifierBinder {
 		return result[0];
 	}
 
-	private void addIdentifierColumn(Value identifierValue, int columnIndex, Column column, boolean writable) {
+	private void addIdentifierColumn(Value identifierValue, Value targetIdentifier, Column targetColumn, int columnIndex, Column column, boolean writable) {
 		if ( identifierValue == null ) {
 			return;
 		}
 		if ( identifierValue instanceof Component component ) {
+			final SimpleValue matchedValue = matchingIdentifierValue( component, targetIdentifier, targetColumn );
+			if ( matchedValue != null ) {
+				matchedValue.addColumn( column, writable, writable );
+				return;
+			}
 			final List<SimpleValue> leafValues = new ArrayList<>();
 			collectLeafValues( component, leafValues );
 			if ( columnIndex >= leafValues.size() ) {
@@ -313,6 +318,24 @@ class AssociationIdentifierBinder {
 		else if ( identifierValue instanceof SimpleValue simpleValue ) {
 			simpleValue.addColumn( column, writable, writable );
 		}
+	}
+
+	private SimpleValue matchingIdentifierValue(Value local, Value target, Column targetColumn) {
+		if ( local instanceof SimpleValue simpleValue && !(local instanceof Component) ) {
+			return simpleValue;
+		}
+		if ( local instanceof Component localComponent && target instanceof Component targetComponent ) {
+			for ( var targetProperty : targetComponent.getProperties() ) {
+				if ( targetProperty.getColumns().contains( targetColumn ) ) {
+					for ( var localProperty : localComponent.getProperties() ) {
+						if ( localProperty.getName().equals( targetProperty.getName() ) ) {
+							return matchingIdentifierValue( localProperty.getValue(), targetProperty.getValue(), targetColumn );
+						}
+					}
+				}
+			}
+		}
+		return null;
 	}
 
 	private void collectLeafValues(Component component, List<SimpleValue> leafValues) {
@@ -349,19 +372,17 @@ class AssociationIdentifierBinder {
 							+ "." + associationIdentifierBinding.property().getName()
 			);
 		}
-		if ( associationIdentifierBinding.ownerBinding().hasEmbeddedIdentifier() ) {
-			final List<String> referencedColumnNames = referencedColumnNames( joinColumns );
-			final List<Column> targetColumns = new ArrayList<>( referencedColumnNames.size() );
-			for ( String referencedColumnName : referencedColumnNames ) {
-				targetColumns.add( new Column( referencedColumnName ) );
-			}
-			return TargetColumns.nonPrimaryKey( targetColumns, referencedColumnNames );
+		if ( !associationIdentifierBinding.ownerBinding().hasEmbeddedIdentifier()
+				&& associationIdentifierBinding.identifierValue() != null ) {
+			throw new MappingException( "Unable to match association identifier join column referencedColumnName to target identifier column - "
+					+ associationIdentifierBinding.ownerBinding().getClassName() + "." + associationIdentifierBinding.property().getName() );
 		}
-		throw new MappingException(
-				"Unable to match association identifier join column referencedColumnName to target identifier column - "
-						+ associationIdentifierBinding.ownerBinding().getClassName()
-						+ "." + associationIdentifierBinding.property().getName()
-		);
+		final List<String> referencedColumnNames = referencedColumnNames( joinColumns );
+		final List<Column> targetColumns = new ArrayList<>( referencedColumnNames.size() );
+		for ( String referencedColumnName : referencedColumnNames ) {
+			targetColumns.add( new Column( referencedColumnName ) );
+		}
+		return TargetColumns.nonPrimaryKey( targetColumns, referencedColumnNames );
 	}
 
 	private List<Column> sortedTargetIdentifierColumns(IdentifierBinding targetIdentifierBinding) {

@@ -3,6 +3,10 @@ package org.hibernate.orm.test.annotations.type.dynamicparameterized;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionBuilder;
+import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionDetails;
+import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionState;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -118,6 +122,9 @@ public class DynamicParameterizedTypeTest {
 				DynamicParameterizedType.RETURNED_CLASS, List.class.getName()
 		) );
 		value.setExplicitCustomType( MyGenericType.class );
+		final var details = BasicValueResolutionDetails.create( value, BasicValueSource.genericDeclaration() );
+		details.setTypeParameters( value.getTypeParameters() );
+		BasicValueResolutionBuilder.applyResolution( details, context.getServiceComponents(), MappingResolutionState.from( context ) );
 		final var type = (CustomType<?>) value.getType();
 		final var userType = (MyGenericType) type.getUserType();
 		assertEquals( List.class, userType.getParameterType().getReturnedJavaType() );

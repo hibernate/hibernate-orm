@@ -12,7 +12,7 @@
                 <generic-generator name="id-generator" class="native"/>
             </id>
             <basic name="userid">
-                <column name="userid" nullable="false" length="32"/>
+                <column unique="true" name="userid" nullable="false" length="32"/>
             </basic>
             <one-to-many name="mail" target-entity="Mail" fetch="EAGER"
                          mapped-by="user" orphan-removal="true" classification="SET">

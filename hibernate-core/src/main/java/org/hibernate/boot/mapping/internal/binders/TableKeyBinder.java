@@ -879,9 +879,12 @@ public class TableKeyBinder {
 			return null;
 		}
 		for ( Property property : referenceableProperties( ownerBinding ) ) {
+			if ( property.getValue() instanceof Component component ) {
+				component.completeShape();
+			}
 			if ( property.getValue() instanceof SimpleValue simpleValue
 					&& !( simpleValue instanceof ToOne )
-					&& columnNamesMatch( simpleValue.getColumns(), referencedColumnNames ) ) {
+					&& columnNamesReferenceSameColumns( simpleValue.getColumns(), referencedColumnNames ) ) {
 				if ( simpleValue instanceof BasicValue basicValue ) {
 					requireResolution( basicValue );
 				}

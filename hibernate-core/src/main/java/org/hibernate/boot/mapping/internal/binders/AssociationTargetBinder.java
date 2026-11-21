@@ -80,9 +80,12 @@ class AssociationTargetBinder {
 					|| table.getPrimaryKey() != null && sameColumns( table.getPrimaryKey().getColumns(), columns )
 					|| table.getUniqueKeys().values().stream().anyMatch( key -> sameColumns( key.getColumns(), columns ) )
 					|| table.getIndexes().values().stream().anyMatch( index -> index.isUnique() && sameColumns( index.getSelectables(), columns ) );
-			if ( !unique ) {
+			if ( !unique && associationTargetBinding.propertyReferenceColumns() != null ) {
 				throw new MappingException( "Association '" + associationTargetBinding.role() + "' references property '"
 						+ property.getName() + "' which is not unique" );
+			}
+			if ( !unique && property.getValue() instanceof SimpleValue simpleValue ) {
+				materializeUniqueKey( simpleValue, associationTargetBinding.role() );
 			}
 			return property;
 		}

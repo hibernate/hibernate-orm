@@ -4,6 +4,9 @@ package org.hibernate.metamodel.internal;
 import java.lang.reflect.Member;
 import java.util.Objects;
 
+import static org.hibernate.internal.util.ReflectHelper.findGetterMethod;
+import static org.hibernate.internal.util.ReflectHelper.findField;
+
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.boot.mapping.spi.MappingRole;
@@ -120,6 +123,12 @@ public class MappedSuperclassHandoffResolver {
 			Property property) {
 		final var attributeUsage = findAttributeUsage( nearestEntityConsumer, property );
 		if ( attributeUsage != null ) {
+			if ( "property".equals( property.getPropertyAccessorName() ) && attributeUsage.member().isField() ) {
+				return findGetterMethod( nearestEntityConsumer.getMappedClass(), property.getName() );
+			}
+			if ( "field".equals( property.getPropertyAccessorName() ) && !attributeUsage.member().isField() ) {
+				return findField( nearestEntityConsumer.getMappedClass(), property.getName() );
+			}
 			return attributeUsage.member().toJavaMember();
 		}
 		if ( isGenericSpecializationFallback( property ) && property.getMemberDetails() != null ) {

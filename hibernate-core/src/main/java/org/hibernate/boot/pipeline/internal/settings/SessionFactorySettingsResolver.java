@@ -43,6 +43,7 @@ import org.hibernate.cfg.PersistenceSettings;
 import org.hibernate.cfg.QuerySettings;
 import org.hibernate.cfg.SessionEventSettings;
 import org.hibernate.cfg.TransactionSettings;
+import org.hibernate.boot.ConflictingInterceptorSettingsException;
 import org.hibernate.cfg.ValidationSettings;
 import org.hibernate.context.spi.MultiTenancy;
 import org.hibernate.dialect.type.spi.TimeZoneSupport;
@@ -255,6 +256,10 @@ public class SessionFactorySettingsResolver {
 	private static Interceptor resolveInterceptor(
 			Map<String, Object> configurationValues,
 			SessionFactorySettingsResolutionContext context) {
+		if ( configurationValues.get( SessionEventSettings.INTERCEPTOR ) != null
+				&& configurationValues.get( SessionEventSettings.SESSION_SCOPED_INTERCEPTOR ) != null ) {
+			throw new ConflictingInterceptorSettingsException();
+		}
 		final Object setting = configurationValues.get( SessionEventSettings.INTERCEPTOR );
 		return setting instanceof Interceptor interceptor ? interceptor : null;
 	}

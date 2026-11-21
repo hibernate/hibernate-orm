@@ -7,6 +7,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.Bag;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Jira;
@@ -94,9 +95,11 @@ public class MappedSuperclassTest {
 		@Id
 		private Long id;
 
+		@Bag
 		@OneToMany(mappedBy = "owner")
 		private List<Child> children;
 
+		@Bag
 		@ManyToMany
 		private List<Child> linkedChildren = new ArrayList<>();
 	}

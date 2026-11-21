@@ -123,7 +123,17 @@ class DerivedIdentifierBinder {
 			reorderAssociationColumns( derivedIdentifierBinding.value(), runtimeIdentifierColumns );
 			derivedIdentifierBinding.value().setSorted( true );
 		}
-		derivedIdentifierBinding.property().setOptional( false );
+		if ( derivedIdentifierBinding.referenceToPrimaryKey()
+				|| derivedIdentifierBinding.value().getColumns().stream()
+						.allMatch( column -> findColumn( identifierColumns, column ) != null ) ) {
+			derivedIdentifierBinding.value().setNonInsertable();
+			derivedIdentifierBinding.value().setNonUpdatable();
+			derivedIdentifierBinding.property().setInsertable( false );
+			derivedIdentifierBinding.property().setUpdatable( false );
+		}
+		if ( !(derivedIdentifierBinding.value() instanceof ManyToOne manyToOne) || !manyToOne.isIgnoreNotFound() ) {
+			derivedIdentifierBinding.property().setOptional( false );
+		}
 		bindingState.addForeignKeyBinding( new ForeignKeyBinding(
 				derivedIdentifierBinding.ownerBinding(),
 				derivedIdentifierBinding.value(),

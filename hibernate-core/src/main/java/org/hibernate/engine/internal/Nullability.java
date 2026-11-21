@@ -1,5 +1,8 @@
 package org.hibernate.engine.internal;
 
+import java.util.Arrays;
+import java.util.Collection;
+
 import org.hibernate.HibernateException;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -210,6 +213,20 @@ public final class Nullability {
 		// The fix would be to cascade saves of the many-to-any elements before Nullability checking.
 
 		if ( compositeType instanceof AnyType ) {
+			return null;
+		}
+		else if ( compositeType instanceof ComponentType componentType
+				&& componentType.isAggregateArrayValue( composite ) ) {
+			final Iterable<?> elements = composite instanceof Collection<?> collection
+					? collection : Arrays.asList( (Object[]) composite );
+			for ( Object element : elements ) {
+				if ( element != null ) {
+					final String path = checkComponentNullability( element, compositeType, mapping, state, filteredMapping );
+					if ( path != null ) {
+						return path;
+					}
+				}
+			}
 			return null;
 		}
 		else {

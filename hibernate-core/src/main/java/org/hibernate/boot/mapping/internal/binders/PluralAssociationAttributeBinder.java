@@ -251,7 +251,7 @@ class PluralAssociationAttributeBinder {
 	private Collection bindInverseManyToMany(CollectionSource source, String mappedBy, Property property) {
 		final ClassDetails targetClassDetails = resolveTargetClassDetails( source );
 		final Collection collection = createCollection( source );
-		collection.setRole( ownerBinding.getEntityName() + "." + collectionRolePath );
+		collection.setRole( (registerCollectionBindings ? ownerBinding.getEntityName() : ownerType.getClassDetails().getName()) + "." + collectionRolePath );
 		collection.setInverse( true );
 		collection.setMappedByProperty( mappedBy );
 		collection.setMutable( source.isMutable() );
@@ -286,7 +286,7 @@ class PluralAssociationAttributeBinder {
 	private Collection bindInverseOneToMany(CollectionSource source, String mappedBy, Property property) {
 		final ClassDetails targetClassDetails = resolveTargetClassDetails( source );
 		final Collection collection = createCollection( source );
-		collection.setRole( ownerBinding.getEntityName() + "." + collectionRolePath );
+		collection.setRole( (registerCollectionBindings ? ownerBinding.getEntityName() : ownerType.getClassDetails().getName()) + "." + collectionRolePath );
 		collection.setInverse( true );
 		collection.setMappedByProperty( mappedBy );
 		collection.setMutable( source.isMutable() );
@@ -325,7 +325,7 @@ class PluralAssociationAttributeBinder {
 				: createDeclarationOnlyTable();
 
 		final Collection collection = createCollection( source );
-		collection.setRole( ownerBinding.getEntityName() + "." + collectionRolePath );
+		collection.setRole( (registerCollectionBindings ? ownerBinding.getEntityName() : ownerType.getClassDetails().getName()) + "." + collectionRolePath );
 		collection.setCollectionTable( table );
 		collection.setInverse( false );
 		collection.setMutable( source.isMutable() );
@@ -402,7 +402,7 @@ class PluralAssociationAttributeBinder {
 				: createDeclarationOnlyTable();
 
 		final Collection collection = createCollection( source );
-		collection.setRole( ownerBinding.getEntityName() + "." + collectionRolePath );
+		collection.setRole( (registerCollectionBindings ? ownerBinding.getEntityName() : ownerType.getClassDetails().getName()) + "." + collectionRolePath );
 		collection.setCollectionTable( table );
 		collection.setInverse( false );
 		collection.setMutable( source.isMutable() );
@@ -498,7 +498,7 @@ class PluralAssociationAttributeBinder {
 				: createDeclarationOnlyTable();
 
 		final Collection collection = createCollection( source );
-		collection.setRole( ownerBinding.getEntityName() + "." + collectionRolePath );
+		collection.setRole( (registerCollectionBindings ? ownerBinding.getEntityName() : ownerType.getClassDetails().getName()) + "." + collectionRolePath );
 		collection.setCollectionTable( table );
 		collection.setInverse( false );
 		collection.setMutable( source.isMutable() );

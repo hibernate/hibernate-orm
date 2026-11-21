@@ -25,9 +25,9 @@
                 <mutability>org.hibernate.orm.test.boot.models.xml.complete.XmlSourceParityMutabilityPlan</mutability>
             </basic>
             <element-collection name="tags" classification="LIST" target-class="java.lang.String" lazy-group="tag-group">
-                <collection-table name="xml_source_tags"/>
                 <list-index-base>3</list-index-base>
                 <column name="tag_name"/>
+                <collection-table name="xml_source_tags"/>
             </element-collection>
         </attributes>
     </entity>

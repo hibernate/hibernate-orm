@@ -179,7 +179,7 @@ class ElementCollectionAttributeBinder {
 		final CollectionTable collectionTable = source.collectionTable();
 		final Table table = registerCollectionBindings ? bindCollectionTable( source ) : createDeclarationOnlyTable();
 		final Collection collection = createCollection( source );
-		collection.setRole( ownerBinding.getEntityName() + "." + collectionRolePath );
+		collection.setRole( (registerCollectionBindings ? ownerBinding.getEntityName() : ownerType.getClassDetails().getName()) + "." + collectionRolePath );
 		collection.setCollectionTable( table );
 		collection.setInverse( false );
 		collection.setMutable( source.isMutable() );

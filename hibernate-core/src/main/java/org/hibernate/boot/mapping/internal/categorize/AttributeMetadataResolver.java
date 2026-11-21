@@ -48,8 +48,7 @@ final class AttributeMetadataResolver {
 			AccessType inheritedAccessType,
 			CategorizationContext context,
 			Set<String> embeddableResolutionPath) {
-		final Access access = member.getDirectAnnotationUsage( Access.class );
-		final AccessType effectiveAccessType = access == null ? inheritedAccessType : access.value();
+		final AccessType effectiveAccessType = declaringAccessType( member, inheritedAccessType );
 		final AttributeNature nature = isRegisteredCompositeUserType( memberType, context )
 				? AttributeNature.EMBEDDED
 				: determineAttributeNature( member, memberType );

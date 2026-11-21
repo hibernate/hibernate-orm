@@ -10,6 +10,8 @@ import org.hibernate.AnnotationException;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CompositeType;
 import org.hibernate.annotations.MapKeyFormula;
+import org.hibernate.annotations.Struct;
+import org.hibernate.boot.mapping.internal.model.AggregateMappingIntent;
 import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.models.spi.MemberDetails;
 
@@ -29,7 +31,10 @@ final class AttributeAnnotationValidation {
 			throw new AnnotationException( "Property '" + path + "' is annotated '@Cache' but is not a collection" );
 		}
 		if ( member.hasDirectAnnotationUsage( Column.class )
-				&& (embedded || member.hasDirectAnnotationUsage( CompositeType.class )) ) {
+				&& (embedded || member.hasDirectAnnotationUsage( CompositeType.class ))
+				&& !AggregateMappingIntent.hasAggregateJdbcTypeCode( member )
+				&& !member.hasDirectAnnotationUsage( Struct.class )
+				&& !member.getType().determineRawClass().hasDirectAnnotationUsage( Struct.class ) ) {
 			throw new AnnotationException( "Property '" + path
 					+ "' may not be annotated '@Column'; use '@AttributeOverride' to specify its columns" );
 		}

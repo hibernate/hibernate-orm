@@ -464,7 +464,8 @@ public class AttributeBinder {
 		applyChecks( selectableIntent, column );
 
 		final String tableName = selectableIntent.tableName();
-		if ( tableName == null || tableName.isEmpty() ) {
+		if ( tableName == null || tableName.isEmpty()
+				|| Identifier.toIdentifier( tableName ).equals( Identifier.toIdentifier( primaryTable.getName() ) ) ) {
 			basicValue.setTable( primaryTable );
 		}
 		else {

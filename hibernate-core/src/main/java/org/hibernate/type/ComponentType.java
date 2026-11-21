@@ -119,7 +119,8 @@ public class ComponentType extends AbstractType
 		return isAggregate;
 	}
 
-	private boolean isAggregateArrayValue(Object value) {
+	@Internal
+	public boolean isAggregateArrayValue(Object value) {
 		if ( value == null || !value.getClass().isArray() && !( value instanceof Collection<?> ) ) {
 			return false;
 		}

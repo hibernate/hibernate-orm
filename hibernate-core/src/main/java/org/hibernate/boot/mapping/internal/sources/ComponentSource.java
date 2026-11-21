@@ -8,6 +8,8 @@ import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.ColumnTransformer;
+import org.hibernate.annotations.CompositeType;
+import org.hibernate.mapping.MappingHelper;
 import org.hibernate.annotations.ColumnTransformers;
 import org.hibernate.annotations.TargetEmbeddable;
 import org.hibernate.annotations.TimeZoneColumn;
@@ -169,7 +171,7 @@ public record ComponentSource(
 				memberSourceType,
 				embeddedAttributeTypeVariableScope( member ),
 				new PathAdjustmentCollector( member, bindingContext ),
-				effectiveAccessType( member, fallbackAccessType( member ) ),
+				fallbackAccessType( member ),
 				"",
 				member.resolveAttributeName() + "."
 		);
@@ -216,7 +218,7 @@ public record ComponentSource(
 				memberSourceType,
 				typeVariableScope,
 				new PathAdjustmentCollector( member, ownerType, hierarchyRootType, bindingContext ),
-				effectiveAccessType( member, defaultAccessType ),
+				collectionAccessType( member, defaultAccessType ),
 				"",
 				member.resolveAttributeName() + "."
 		);
@@ -479,6 +481,12 @@ public record ComponentSource(
 			MemberDetails member,
 			TypeDetails memberType,
 			BindingContext bindingContext) {
+		final CompositeType compositeType = member.getDirectAnnotationUsage( CompositeType.class );
+		if ( compositeType != null ) {
+			final var userType = MappingHelper.createCompositeUserType( compositeType.value(),
+					bindingContext.getManagedBeanRegistry(), bindingContext.getBuildingPlan().isAllowExtensionsInCdi() );
+			return bindingContext.getClassDetailsRegistry().resolveClassDetails( userType.embeddable().getName() );
+		}
 		final TargetEmbeddable targetEmbeddable = resolveTargetEmbeddable( member, false );
 		if ( targetEmbeddable != null ) {
 			return bindingContext.getClassDetailsRegistry()
@@ -617,10 +625,6 @@ public record ComponentSource(
 		return access == null ? defaultAccessType : access.value();
 	}
 
-	private static AccessType effectiveAccessType(MemberDetails member, AccessType defaultAccessType) {
-		final Access access = member.getDirectAnnotationUsage( Access.class );
-		return access == null ? defaultAccessType : access.value();
-	}
 
 	public static ClassDetails resolveEmbeddableType(
 			MemberDetails member,

@@ -193,7 +193,7 @@ public record ToOneSource(
 		if ( fetch != null && fetch.type() != FetchType.DEFAULT ) {
 			return fetch.type();
 		}
-		return fetchType() == FetchType.LAZY ? FetchType.LAZY : defaultToOneFetchType;
+		return fetchType() == FetchType.DEFAULT ? defaultToOneFetchType : fetchType();
 	}
 
 	private Fetch graphlessFetch() {

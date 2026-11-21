@@ -6,6 +6,8 @@ import java.util.List;
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.MapKeyCompositeType;
+import org.hibernate.annotations.MapKeyFormula;
+import org.hibernate.mapping.Formula;
 import org.hibernate.boot.model.naming.ImplicitIndexColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitMapKeyColumnNameSource;
 import org.hibernate.boot.model.naming.internal.ImplicitNamingContextImpl;
@@ -24,6 +26,7 @@ import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.boot.mapping.internal.categorize.AbstractIdentifiableTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
@@ -372,6 +375,9 @@ class CollectionIndexBinder {
 						collection,
 						table
 				);
+		if ( !(ownerType instanceof EntityTypeMetadataImpl) ) {
+			component.setMappingRole( null );
+		}
 		if ( componentMapKey.compositeUserTypeClass() != null ) {
 			component.setCompositeUserType( componentMapKey.compositeUserType() );
 		}
@@ -691,6 +697,13 @@ class CollectionIndexBinder {
 					bindingState.getMappingResolutionState(),
 					bindingState.getMetadataBuildingContext()
 			) );
+
+		final MapKeyFormula formula = source.member().getDirectAnnotationUsage( MapKeyFormula.class );
+		if ( formula != null ) {
+			index.addFormula( new Formula( formula.value() ) );
+			collection.setIndex( index );
+			return;
+		}
 
 		final org.hibernate.mapping.Column indexColumn = ColumnBinder.bindColumn(
 				ColumnSource.from( source.mapKeyColumn() ),

@@ -601,6 +601,7 @@ public class BindingStateImpl implements BindingState {
 
 	@Override
 	public void addTableBinding(TableReference table) {
+		tableMap.putIfAbsent( table.logicalName().getCanonicalName(), table );
 		tableByBindingMap.put( table.binding(), table );
 	}
 

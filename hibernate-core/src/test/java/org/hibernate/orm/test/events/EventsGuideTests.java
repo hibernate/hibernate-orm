@@ -224,7 +224,7 @@ public class EventsGuideTests {
 		assertThatThrownBy( () -> configuration( PlainRecord.class )
 				.property( "hibernate.session_factory.interceptor", new CountingInterceptor() )
 				.property( "hibernate.session_factory.session_scoped_interceptor", CountingInterceptor.class )
-				.createEntityManagerFactory() ).isInstanceOf( ConflictingInterceptorSettingsException.class );
+				.createEntityManagerFactory() ).hasRootCauseInstanceOf( ConflictingInterceptorSettingsException.class );
 	}
 
 	static HibernatePersistenceConfiguration configuration(Class<?>... entities) {

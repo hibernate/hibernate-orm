@@ -1,5 +1,6 @@
 package org.hibernate.boot.mapping.internal.model;
 
+import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Array;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.CollectionId;
@@ -75,7 +76,7 @@ public record BasicValueIntent(
 				ColumnSource.from( effectiveColumn ),
 				effectiveColumn == null ? null : effectiveColumn.table(),
 				effectiveColumn == null || effectiveColumn.insertable(),
-				effectiveColumn == null || effectiveColumn.updatable(),
+				!member.hasDirectAnnotationUsage( Immutable.class ) && (effectiveColumn == null || effectiveColumn.updatable()),
 				member,
 				checks( member, bindingState, bindingContext ),
 				directConversion( member )
@@ -105,7 +106,7 @@ public record BasicValueIntent(
 				columnSource,
 				null,
 				columnSource == null || columnSource.insertable( true ),
-				columnSource == null || columnSource.updatable( true ),
+				!member.member().hasDirectAnnotationUsage( Immutable.class ) && (columnSource == null || columnSource.updatable( true )),
 				member.member(),
 				source.columnTransformer( member.path(), member.member(), bindingContext ),
 				checks( member.member(), bindingState, bindingContext ),

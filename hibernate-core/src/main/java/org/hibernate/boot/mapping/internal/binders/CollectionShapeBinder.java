@@ -427,12 +427,12 @@ class CollectionShapeBinder {
 		if ( source.nature() == CollectionSource.Nature.ELEMENT_COLLECTION || source.elementType() == null ) {
 			return null;
 		}
-		return getOverridableAnnotation(
-				source.elementType().determineRawClass(),
-				SQLRestriction.class,
-				bindingState.getDatabase().getDialect(),
-				bindingState.getMetadataBuildingContext().getModelsContext()
-		);
+		for ( var type = source.elementType().determineRawClass(); type != null; type = type.getSuperClass() ) {
+			final var restriction = getOverridableAnnotation( type, SQLRestriction.class,
+					bindingState.getDatabase().getDialect(), bindingState.getMetadataBuildingContext().getModelsContext() );
+			if ( restriction != null ) { return restriction; }
+		}
+		return null;
 	}
 
 	private static void applyOrdering(CollectionSource source, Collection collection, BindingState bindingState) {

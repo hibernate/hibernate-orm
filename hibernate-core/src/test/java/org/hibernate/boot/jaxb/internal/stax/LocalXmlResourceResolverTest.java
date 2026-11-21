@@ -29,7 +29,7 @@ public class LocalXmlResourceResolverTest {
 	@ParameterizedTest
 	@CsvSource({
 			"http://www.hibernate.org/xsd/orm/mapping,org/hibernate/xsd/mapping/mapping-7.0.xsd",
-			"https://www.hibernate.org/xsd/orm/mapping,org/hibernate/xsd/mapping/mapping-8.0.xsd",
+			"https://www.hibernate.org/xsd/orm/mapping,org/hibernate/xsd/mapping/mapping-9.0.xsd",
 			// JPA 1.0 and 2.0 share the same namespace URI
 			// NOTE: Behavior differs from Hibernate ORM 5, which resolves to org/hibernate/jpa/orm_2_0.xsd
 			"http://java.sun.com/xml/ns/persistence/orm,org/hibernate/jpa/orm_1_0.xsd",

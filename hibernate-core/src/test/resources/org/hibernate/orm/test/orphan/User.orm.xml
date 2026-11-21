@@ -13,7 +13,7 @@
                 <generated-value generator="native"/>
             </id>
             <basic name="userid" fetch="EAGER" optional="false" optimistic-lock="true">
-                <column name="userid" length="32"/>
+                <column unique="true" name="userid" length="32"/>
             </basic>
             <one-to-many name="mails" target-entity="Mail" fetch="EAGER" mapped-by="user" orphan-removal="true" classification="SET" not-found="EXCEPTION">
                 <cascade>

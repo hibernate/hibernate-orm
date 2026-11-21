@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.function.BiConsumer;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.annotations.CompositeType;
+import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Collate;
 import org.hibernate.annotations.EmbeddedTable;
@@ -368,7 +370,7 @@ public class ComponentBinder {
 				final ComponentMemberTarget nestedMemberTarget =
 						ComponentMemberTarget.forSource( nestedSource, memberTarget.table() );
 				final EmbeddableContribution nestedContribution =
-						embeddedValueIntent.valueMetadata() == null
+						embeddedValueIntent.valueMetadata() == null || member.hasDirectAnnotationUsage( CompositeType.class )
 								? embeddableMappingMaterializer.createContribution( nestedSource, context )
 								: embeddableMappingMaterializer.createContribution(
 										nestedSource,
@@ -400,6 +402,10 @@ public class ComponentBinder {
 						extendComponentTypeStack( componentTypeStack, nestedSource.componentType() ),
 						nestedContribution
 				);
+				if ( nestedComponent.getCompositeUserType() != null ) {
+					EmbeddableAttributeBinder.processCompositeUserType( nestedComponent, nestedComponent.getCompositeUserType(),
+							context.getServiceRegistry().requireService( PropertyAccessorService.class ) );
+				}
 				AggregateComponentBinder.processAggregate(
 						ownerBinding,
 						nestedSource,

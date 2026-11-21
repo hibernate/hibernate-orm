@@ -160,6 +160,8 @@ public final class SessionFactoryOptionsAdapter {
 				case "getPreferredSqlTypeCodeForDuration" -> settings.preferredSqlTypeCodeForDuration();
 				case "getDefaultTimeZoneStorageStrategy" -> settings.defaultTimeZoneStorageStrategy();
 				case "isPassProcedureParameterNames" -> settings.passProcedureParameterNames();
+				case "isPreferNativeEnumTypesEnabled" -> ConfigurationHelper.getBoolean(
+						MappingSettings.PREFER_NATIVE_ENUM_TYPES, settings.configurationValues(), false );
 				case "isPreferJavaTimeJdbcTypesEnabled" -> settings.preferJavaTimeJdbcTypesEnabled();
 				case "isPreferJdbcDatetimeTypesInNativeQueriesEnabled" ->
 						settings.preferJdbcDatetimeTypesInNativeQueriesEnabled();

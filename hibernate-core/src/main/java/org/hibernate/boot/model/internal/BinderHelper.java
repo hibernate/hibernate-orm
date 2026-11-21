@@ -218,6 +218,9 @@ public class BinderHelper {
 //		where context.getMetadataCollector() can cache some of this - either the annotations themselves
 //		or even just the XPackage resolutions
 
+		if ( classDetails.getName().lastIndexOf( '.' ) < 0 ) {
+			return null;
+		}
 		final var packageDetails = classDetails.getPackage();
 		if ( packageDetails == null ) {
 			return null;

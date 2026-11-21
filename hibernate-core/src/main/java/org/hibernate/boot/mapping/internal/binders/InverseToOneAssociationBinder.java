@@ -140,6 +140,7 @@ class InverseToOneAssociationBinder {
 			ManyToOne owningToOne,
 			Join owningJoin) {
 		final Join inverseJoin = createInverseJoin( inverseBinding, owningToOne, owningJoin.getTable() );
+		inverseJoin.setSqlRestriction( owningJoin.getSqlRestriction() );
 		final ManyToOne inverseValue = createInverseJoinTableValue(
 				inverseBinding,
 				targetTypeBinder,
@@ -192,6 +193,7 @@ class InverseToOneAssociationBinder {
 		value.setFetchStyle( inverseBinding.value().getFetchStyle() );
 		value.setLazy( inverseBinding.value().isLazy() );
 		value.setOnDeleteAction( inverseBinding.value().getOnDeleteAction() );
+		value.copyRestrictions( inverseBinding.value() );
 		value.setUnwrapProxy( inverseBinding.value().isUnwrapProxy() );
 		value.markAsLogicalOneToOne();
 		for ( Column column : owningJoin.getKey().getColumns() ) {

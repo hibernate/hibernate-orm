@@ -113,7 +113,7 @@ public class MappingNamespaceTests {
 							assertThat( element.getNamespaceURI( "xsi" ) ).isEqualTo( W3C_XML_SCHEMA_INSTANCE_NS_URI );
 							assertThat( element.getNamespaceURI( "ext" ) ).isEqualTo( FOREIGN_NAMESPACE );
 							assertThat( element.getAttributeByName( new QName( "version" ) ).getValue() )
-									.isEqualTo( "8.0" );
+									.isEqualTo( MappingXsdSupport.latestDescriptor().getVersion() );
 							assertThat( element.getAttributeByName( new QName( FOREIGN_NAMESPACE, "version" ) ).getValue() )
 									.isEqualTo( "99.0" );
 							assertThat( element.getAttributeByName( new QName( W3C_XML_SCHEMA_INSTANCE_NS_URI, "schemaLocation" ) )
@@ -194,7 +194,7 @@ public class MappingNamespaceTests {
 	}
 
 	private static void verifyMapping(JaxbEntityMappingsImpl mapping) {
-		assertThat( mapping.getVersion() ).isEqualTo( "8.0" );
+		assertThat( mapping.getVersion() ).isEqualTo( MappingXsdSupport.latestDescriptor().getVersion() );
 		assertThat( mapping.getPackage() ).isEqualTo( "org.example" );
 		assertThat( mapping.getEntities() ).hasSize( 1 );
 		final var entity = mapping.getEntities().get( 0 );

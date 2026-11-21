@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.SQLJoinTableRestriction;
 import org.hibernate.annotations.SqlFragmentAlias;
 import org.hibernate.mapping.ToOne;
 import static org.hibernate.boot.models.internal.DialectOverrideAnnotationHelper.getOverridableAnnotation;
@@ -401,7 +402,7 @@ class ToOneAttributeBinder {
 		ToOneMaterializationHelper.applyFetchMode( source, value, ownerBinding, fetchType );
 		final boolean optional = source.optional() && allowsNull( member );
 		value.setConstrained( !optional );
-		value.setForeignKeyType( org.hibernate.type.ForeignKeyDirection.TO_PARENT );
+		value.setForeignKeyType( ForeignKeyDirection.TO_PARENT );
 		applyOnDelete( member, value );
 		applyAssociationRestrictions( member, value, bindingState );
 		applyFetchProfileOverrides( source, ownerBinding, propertyName, bindingState );
@@ -421,6 +422,11 @@ class ToOneAttributeBinder {
 					target.identifierColumns(),
 					source.valueForeignKeySource( null )
 			) );
+		}
+		if ( mapsId == null && !optional ) {
+			bindingState.addForeignKeyBinding( new ForeignKeyBinding( ownerBinding, value, source.valueForeignKeySource( null ),
+					ResolvedForeignKey.from( value, target.entityName(), SelectableOrderResolver.resolveByTargetOrder(
+							ownerBinding.getIdentifier().getColumns(), target.identifierColumns(), ownerClassName + "." + propertyName ) ) ) );
 		}
 		return value;
 	}
@@ -457,6 +463,14 @@ class ToOneAttributeBinder {
 						bindingContext
 				);
 
+		if ( joinTable != null ) {
+			final var restriction = member.getDirectAnnotationUsage( SQLJoinTableRestriction.class );
+			if ( restriction != null ) {
+				for ( Join join : ownerBinding.getJoins() ) {
+					if ( join.getTable() == associationTable ) { join.setSqlRestriction( restriction.value() ); }
+				}
+			}
+		}
 		final ManyToOne value = new ManyToOne(
 				bindingState.getMetadataBuildingContext(),
 				associationTable
@@ -488,7 +502,10 @@ class ToOneAttributeBinder {
 			value.markAsLogicalOneToOne();
 		}
 
-		final boolean optional = mapsId == null && source.optional() && allowsNull( member );
+		final boolean optional = ( mapsId == null || value.isIgnoreNotFound() ) && source.optional() && allowsNull( member );
+		if ( optional && value.isIgnoreNotFound() ) {
+			value.setNullable( true );
+		}
 		property.setOptional( optional );
 		property.setCascade( source.cascades( bindingState ), source.orphanRemoval() );
 		final List<Column> sharedIdentifierColumns = resolveSharedIdentifierColumns(
@@ -1483,6 +1500,9 @@ class ToOneAttributeBinder {
 		}
 
 		final Identifier identifier = Identifier.toIdentifier( tableName );
+		if ( identifier.equals( Identifier.toIdentifier( primaryTable.getName() ) ) ) {
+			return primaryTable;
+		}
 		final TableReference tableByName = bindingState.getTableByName( identifier.getCanonicalName() );
 		return tableByName.binding();
 	}

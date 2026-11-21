@@ -2,6 +2,7 @@ package org.hibernate.boot.mapping.internal.binders;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.MapKeyFormula;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.mapping.internal.materialize.CollectionKeyMappingMaterializer;
@@ -383,6 +384,14 @@ class InversePluralAssociationBinder {
 		if ( !( inverseCollection instanceof org.hibernate.mapping.Map inverseMap ) ) {
 			return;
 		}
+		if ( inverseBinding.source().mapKey() != null ) {
+			final var targetBinder = (EntityTypeBinder) bindingState.getTypeBinder( inverseBinding.source().elementType().determineRawClass() );
+			final String name = inverseBinding.source().mapKeyName();
+			final Value key = name.isEmpty() ? targetBinder.getTypeBinding().getIdentifier()
+					: resolveTargetMapKeyProperty( targetBinder, name ).getValue();
+			CollectionIndexBinder.bindPropertyMapKeyValue( inverseMap, key, name.isEmpty() ? null : name, bindingState );
+			return;
+		}
 		if ( !( owningCollection instanceof org.hibernate.mapping.Map owningMap ) ) {
 			throw new MappingException(
 					"Inverse map-valued @ManyToMany mappedBy did not name a map-valued owning collection - "
@@ -418,7 +427,7 @@ class InversePluralAssociationBinder {
 			return;
 		}
 
-		if ( source.mapKeyColumn() != null ) {
+		if ( source.mapKeyColumn() != null || source.member().hasDirectAnnotationUsage( MapKeyFormula.class ) ) {
 			CollectionIndexBinder.bindBasicMapKey(
 					inverseBinding.source(),
 					null,

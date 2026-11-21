@@ -4,6 +4,8 @@ import java.util.Locale;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.EmbeddedColumnNaming;
+import org.hibernate.annotations.Instantiator;
+import org.hibernate.AnnotationException;
 import org.hibernate.boot.mapping.internal.model.EmbeddableContribution;
 import org.hibernate.boot.mapping.internal.categorize.EmbeddedValueMetadataImpl;
 import org.hibernate.boot.mapping.internal.binders.MappedSuperTypeBinder;
@@ -154,10 +156,20 @@ public class EmbeddableMappingMaterializer {
 		applyColumnNamingPattern( component, source.sourceMember() );
 	}
 
-	private void applyComponentCustomizations(
+	void applyComponentCustomizations(
 			Component component,
 			MemberDetails sourceMember,
 			ClassDetails componentType) {
+		for ( var constructor : componentType.getConstructors() ) {
+			final Instantiator annotation = constructor.getDirectAnnotationUsage( Instantiator.class );
+			if ( annotation != null ) {
+				if ( component.getInstantiator() != null ) {
+					throw new AnnotationException( "Multiple constructors of '" + componentType.getName()
+							+ "' are annotated '@Instantiator'" );
+				}
+				component.setInstantiator( constructor.toJavaConstructor(), annotation.value() );
+			}
+		}
 		final org.hibernate.annotations.CompositeType compositeType = sourceMember == null
 				? null
 				: sourceMember.getDirectAnnotationUsage( org.hibernate.annotations.CompositeType.class );

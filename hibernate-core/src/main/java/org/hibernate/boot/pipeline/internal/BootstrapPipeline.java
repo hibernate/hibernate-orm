@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.jpa.boot.spi.IntegratorProvider;
 import org.hibernate.boot.beanvalidation.BeanValidationIntegrator;
 import java.util.List;
 import java.util.Map;
@@ -640,6 +641,7 @@ public class BootstrapPipeline {
 		if ( settings.get( AvailableSettings.CLASSLOADERS ) instanceof Collection<?> loaders ) {
 			loaders.forEach( loader -> builder.applyClassLoader( (ClassLoader) loader ) );
 		}
+		applyIntegrators( builder, settings );
 		return builder.build();
 	}
 
@@ -650,10 +652,19 @@ public class BootstrapPipeline {
 		if ( persistenceUnitClassLoader != null ) {
 			builder.applyClassLoader( persistenceUnitClassLoader );
 		}
-		if ( integrationSettings.get( AvailableSettings.CLASSLOADERS ) instanceof Collection<?> loaders ) {
+		if ( integrationSettings != null
+				&& integrationSettings.get( AvailableSettings.CLASSLOADERS ) instanceof Collection<?> loaders ) {
 			loaders.forEach( loader -> builder.applyClassLoader( (ClassLoader) loader ) );
 		}
+		applyIntegrators( builder, integrationSettings != null && integrationSettings.get( JpaSettings.INTEGRATOR_PROVIDER ) != null
+				? integrationSettings : persistenceUnitDescriptor.getProperties() );
 		return builder.build();
+	}
+
+	private static void applyIntegrators(BootstrapServiceRegistryBuilder builder, Map<?, ?> settings) {
+		if ( settings != null && settings.get( JpaSettings.INTEGRATOR_PROVIDER ) instanceof IntegratorProvider provider ) {
+			provider.getIntegrators().forEach( builder::applyIntegrator );
+		}
 	}
 
 	/// Intermediate request produced by adapting raw entry-point inputs.

@@ -1431,16 +1431,16 @@ public abstract class AbstractEntityPersister
 		final Map<String, SingleIdArrayLoadPlan> result = new HashMap<>();
 		final var attributesMetadata = metadata.getLazyAttributesMetadata();
 		for ( String groupName : attributesMetadata.getFetchGroupNames() ) {
-			final var plan = createLazyLoadPlan( attributesMetadata.getFetchGroupAttributeDescriptors( groupName ) );
-			if ( plan != null ) {
-				result.put( groupName, plan );
+			final var parts = getLazyFetchGroupParts( attributesMetadata.getFetchGroupAttributeDescriptors( groupName ) );
+			if ( !parts.isEmpty() ) {
+				result.put( groupName, createLazyLoadPlan( parts, new LoadQueryInfluencers( factory ) ) );
 			}
 		}
 		return result;
 	}
 
-	@Nullable
-	private SingleIdArrayLoadPlan createLazyLoadPlan(@Nonnull List<LazyAttributeDescriptor> fetchGroupAttributeDescriptors) {
+	@Nonnull
+	private List<ModelPart> getLazyFetchGroupParts(@Nonnull List<LazyAttributeDescriptor> fetchGroupAttributeDescriptors) {
 		final List<ModelPart> partsToSelect = new ArrayList<>( fetchGroupAttributeDescriptors.size() );
 		for ( var lazyAttributeDescriptor : fetchGroupAttributeDescriptors ) {
 			// all this only really needs to consider properties
@@ -1449,11 +1449,13 @@ public abstract class AbstractEntityPersister
 			// use the subclass closure
 			partsToSelect.add( getAttributeMapping( getSubclassPropertyIndex( lazyAttributeDescriptor.getName() ) ) );
 		}
-		return partsToSelect.isEmpty() ? null : createLazyLoanPlan( partsToSelect );
+		return partsToSelect;
 	}
 
 	@Nonnull
-	private SingleIdArrayLoadPlan createLazyLoanPlan(@Nonnull List<ModelPart> partsToSelect) {
+	private SingleIdArrayLoadPlan createLazyLoadPlan(
+			@Nonnull List<ModelPart> partsToSelect,
+			@Nonnull LoadQueryInfluencers influencers) {
 		assert !partsToSelect.isEmpty();
 		final var lockOptions = new LockOptions();
 		final var jdbcParametersBuilder = JdbcParametersList.newBuilder();
@@ -1463,7 +1465,7 @@ public abstract class AbstractEntityPersister
 				getIdentifierMapping(),
 				null,
 				1,
-				new LoadQueryInfluencers( factory ),
+				influencers,
 				lockOptions,
 				jdbcParametersBuilder::add,
 				new SqlAliasBaseManager(),
@@ -1710,7 +1712,8 @@ public abstract class AbstractEntityPersister
 		// attempt to read it from second-level cache
 		if ( session.getCacheMode().isGetEnabled()
 				&& canReadFromCache()
-				&& isLazyPropertiesCacheable() ) {
+				&& isLazyPropertiesCacheable()
+				&& !entry.getEntityKey().isTemporal() ) {
 			final var cacheAccess = getCacheAccessStrategy();
 			final Object cacheKey =
 					cacheAccess.generateCacheKey(
@@ -1856,12 +1859,18 @@ public abstract class AbstractEntityPersister
 
 		final var lazyAttributesMetadata = getBytecodeEnhancementMetadata().getLazyAttributesMetadata();
 		final String fetchGroup = lazyAttributesMetadata.getFetchGroupName( fieldName );
-		final var fetchGroupAttributeDescriptors =
-				lazyAttributesMetadata.getFetchGroupAttributeDescriptors( fetchGroup );
-		final var lazySelectLoadPlan = castNonNull( getSQLLazySelectLoadPlan( fetchGroup ) );
+		final var historical = entry.getEntityKey().isTemporal();
+		final var groupAttributes = lazyAttributesMetadata.getFetchGroupAttributeDescriptors( fetchGroup );
+		final var fetchGroupAttributeDescriptors = historical && getAuditMapping() != null
+				? groupAttributes.stream()
+						.filter( attribute -> !isPropertyAuditedExcluded( attribute.getAttributeIndex() ) )
+						.toList()
+				: groupAttributes;
 		try {
 			Object finalResult = null;
-			final var results = lazySelectLoadPlan.load( id, session );
+			final var results = historical
+					? loadHistoricalLazyAttributes( getLazyFetchGroupParts( fetchGroupAttributeDescriptors ), entry, session )
+					: castNonNull( getSQLLazySelectLoadPlan( fetchGroup ) ).load( id, session );
 			if ( results == null ) {
 				throw new ObjectNotFoundException( id, getEntityName() );
 			}
@@ -1914,11 +1923,11 @@ public abstract class AbstractEntityPersister
 			@Nonnull SharedSessionContractImplementor session) {
 		// An eager property can be lazy because of an applied EntityGraph
 		final int propertyIndex = getPropertyIndex( fieldName );
-		final var lazyLoanPlan =
-				getOrCreateLazyLoadPlan( fieldName,
-						List.of( getAttributeMapping( propertyIndex ) ) );
+		final List<ModelPart> partsToSelect = List.of( getAttributeMapping( propertyIndex ) );
 		try {
-			final var results = lazyLoanPlan.load( id, session );
+			final var results = entry.getEntityKey().isTemporal()
+					? loadHistoricalLazyAttributes( partsToSelect, entry, session )
+					: getOrCreateLazyLoadPlan( fieldName, partsToSelect ).load( id, session );
 			if ( results == null ) {
 				throw new ObjectNotFoundException( id, getEntityName() );
 			}
@@ -1949,9 +1958,20 @@ public abstract class AbstractEntityPersister
 				return lazyLoanPlan;
 			}
 		}
-		final var newLazyLoanPlan = createLazyLoanPlan( partsToSelect );
+		final var newLazyLoanPlan = createLazyLoadPlan( partsToSelect, new LoadQueryInfluencers( factory ) );
 		plans.put( fieldName, newLazyLoanPlan );
 		return newLazyLoanPlan;
+	}
+
+	@Nullable
+	private Object[] loadHistoricalLazyAttributes(
+			@Nonnull List<ModelPart> partsToSelect,
+			@Nonnull EntityEntry entry,
+			@Nonnull SharedSessionContractImplementor session) {
+		// An all-revisions session can hold snapshots from several changesets.
+		final var influencers = session.getLoadQueryInfluencers();
+		return influencers.withTemporalIdentifier( entry.getEntityKey().getChangesetId(),
+				() -> createLazyLoadPlan( partsToSelect, influencers ).load( entry.getId(), session ) );
 	}
 
 	@Nullable
@@ -4592,7 +4612,10 @@ public abstract class AbstractEntityPersister
 				instanceof EnhancementAsProxyLazinessInterceptor proxyInterceptor ) {
 			final var entityKey = proxyInterceptor.getEntityKey();
 			final Object id = entityKey.getIdentifier();
-			final Object loaded = loadEnhancedEntityUsedAsProxy( entity, session, entityKey );
+			final Object loaded = entityKey.isTemporal()
+					? session.getLoadQueryInfluencers().withTemporalIdentifier( entityKey.getChangesetId(),
+							() -> loadEnhancedEntityUsedAsProxy( entity, session, entityKey ) )
+					: loadEnhancedEntityUsedAsProxy( entity, session, entityKey );
 			if ( loaded == null ) {
 				final var persistenceContext = session.getPersistenceContext();
 				persistenceContext.removeEntry( entity );

@@ -518,7 +518,8 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Nullable
-	private AuxiliaryMapping getAuxiliaryMapping() {
+	@Override
+	public AuxiliaryMapping getAuxiliaryMapping() {
 		return auxiliaryMapping;
 	}
 

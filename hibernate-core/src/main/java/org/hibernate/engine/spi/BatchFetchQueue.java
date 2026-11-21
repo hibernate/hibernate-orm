@@ -17,6 +17,7 @@ import jakarta.annotation.Nullable;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
+import static org.hibernate.engine.internal.CacheHelper.readsHistory;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.collections.CollectionHelper.linkedMapOfSize;
 import static org.hibernate.internal.util.collections.CollectionHelper.linkedSetOfSize;
@@ -454,7 +455,7 @@ public class BatchFetchQueue {
 
 	private boolean isCached(Object collectionKey, CollectionPersister persister) {
 		final var session = getSession();
-		if ( session.getCacheMode().isGetEnabled() && persister.hasCache() ) {
+		if ( session.getCacheMode().isGetEnabled() && persister.hasCache() && !readsHistory( session, persister ) ) {
 			final var cache = castNonNull( persister.getCacheAccessStrategy() );
 			final Object cacheKey =
 					cache.generateCacheKey( collectionKey, persister,
@@ -468,7 +469,7 @@ public class BatchFetchQueue {
 
 	private boolean isCached(EntityKey entityKey, EntityPersister persister) {
 		final var session = getSession();
-		if ( session.getCacheMode().isGetEnabled() && persister.canReadFromCache() ) {
+		if ( session.getCacheMode().isGetEnabled() && persister.canReadFromCache() && !readsHistory( session, persister ) ) {
 			final var cache = castNonNull( persister.getCacheAccessStrategy() );
 			final Object key =
 					cache.generateCacheKey( entityKey.getIdentifier(), persister,

@@ -1,0 +1,10 @@
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="7.0">
+    <package>org.hibernate.orm.test.boot.models.xml</package>
+    <entity class="SimpleEntity" name="MergedEntity" access="FIELD">
+        <attributes>
+            <basic name="name">
+                <column name="merged_name"/>
+            </basic>
+        </attributes>
+    </entity>
+</entity-mappings>

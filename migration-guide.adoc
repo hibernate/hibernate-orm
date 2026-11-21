@@ -92,6 +92,12 @@ XML mapping documents are now validated against their schema by default, as docu
 Previously, validation was disabled when this setting was absent, allowing invalid attributes to be silently ignored.
 Applications with invalid `orm.xml` or `hbm.xml` documents must correct their mappings or explicitly set `hibernate.validate_xml=false` to disable validation.
 
+[[duplicate-xml-entity-mappings]]
+=== Conflicting XML entity mappings
+
+Hibernate rejects conflicting explicit names for the same entity class within one XML mapping document.
+It also rejects repeated metadata-complete declarations for the same class that replace a previously explicit entity name with a different effective name or turn a previously mapped basic attribute into a transient attribute.
+
 [[callable-embeddable-types]]
 === Embeddable types in procedure and function calls
 

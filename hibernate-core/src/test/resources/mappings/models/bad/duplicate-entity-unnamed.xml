@@ -1,0 +1,11 @@
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <package>org.hibernate.orm.test.boot.models.xml</package>
+    <entity class="SimpleEntity" metadata-complete="true" access="FIELD">
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+        </attributes>
+    </entity>
+</entity-mappings>

@@ -4,6 +4,8 @@ import java.util.List;
 import jakarta.annotation.Nullable;
 import org.hibernate.SPI;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import static org.hibernate.SPI.Role.IMPLEMENT;
 import static org.hibernate.SPI.Role.SUPPLY;
 import static org.hibernate.SPI.Role.USE;
@@ -62,6 +64,11 @@ public interface AggregateSupport {
 	/// Resolve the effective SQL type code of a component within an aggregate
 	/// representation.
 	int aggregateComponentSqlTypeCode(int aggregateColumnSqlTypeCode, int columnSqlTypeCode);
+
+	/// Resolve the JDBC representation used to access an individual aggregate member.
+	default JdbcType aggregateComponentJdbcType(int aggregateCode, JavaType<?> javaType, JdbcType jdbcType) {
+		return jdbcType;
+	}
 
 	/// Determine whether component nullability and checks may be expressed as a
 	/// check constraint on the containing table.

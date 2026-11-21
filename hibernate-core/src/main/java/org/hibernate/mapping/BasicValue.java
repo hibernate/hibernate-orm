@@ -712,7 +712,7 @@ public class BasicValue extends SimpleValue
 			}
 		}
 
-		return InferredBasicValueResolver.from(
+		final var inferred = InferredBasicValueResolver.from(
 				explicitJavaType,
 				jdbcType,
 				this::determineReflectedJavaType,
@@ -724,6 +724,16 @@ public class BasicValue extends SimpleValue
 				propertyName,
 				getBuildingContext()
 		);
+		if ( aggregateColumn != null ) {
+			final var componentJdbcType = getDialect().getAggregateSupport().aggregateComponentJdbcType(
+					aggregateColumn.getType().getJdbcType().getDefaultSqlTypeCode(),
+					inferred.getRelationalJavaType(), inferred.getJdbcType() );
+			if ( componentJdbcType != inferred.getJdbcType() ) {
+				inferred.updateResolution( getTypeConfiguration().getBasicTypeRegistry()
+						.resolve( inferred.getRelationalJavaType(), componentJdbcType ) );
+			}
+		}
+		return inferred;
 	}
 
 	@Override

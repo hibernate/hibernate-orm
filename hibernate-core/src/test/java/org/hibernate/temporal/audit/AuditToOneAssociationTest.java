@@ -29,10 +29,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
 
+import static org.hibernate.Hibernate.isInitialized;
 import static org.hibernate.Hibernate.unproxy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests @Audited with @ManyToOne and @OneToOne associations.
@@ -475,24 +477,7 @@ class AuditToOneAssociationTest {
 	@Order(13)
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void joinFetchedArticleUsesEachEventRevisionForItsAuthor(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			final var author = new Author( 42L, "Original name" );
-			session.persist( author );
-			session.persist( new LazyBook( 42L, "Unchanged article", author ) );
-		} );
-		scope.inTransaction( session -> {
-			final var event = new ArticleEvent();
-			event.id = 42L;
-			event.label = "First event revision";
-			event.article = session.find( LazyBook.class, 42L );
-			event.alternate = event.article;
-			session.persist( event );
-		} );
-		scope.inTransaction( session -> {
-			session.find( Author.class, 42L ).setName( "Revised name" );
-			session.find( ArticleEvent.class, 42L ).label = "Second event revision";
-		} );
-		scope.inTransaction( session -> session.find( Author.class, 42L ).setName( "Current name" ) );
+		createArticleEventHistory( scope, 42L );
 
 		try (var session = scope.getSessionFactory().withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
 			final var events = session.createSelectionQuery( """
@@ -507,6 +492,50 @@ class AuditToOneAssociationTest {
 			assertEquals( "Revised name", second.article.getAuthor().getName() );
 			assertSame( second.article, unproxy( second.alternate ) );
 		}
+	}
+
+	@Test
+	@Order(14)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
+	void nestedJoinFetchUsesSameAuthorRevisionAsLazyAssociation(SessionFactoryScope scope) {
+		createArticleEventHistory( scope, 43L );
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
+			final var events = session.createSelectionQuery( """
+					from ArticleEvent e join fetch e.article a join fetch a.author
+					where e.id = 43 order by changesetId(e)
+					""", ArticleEvent.class ).getResultList();
+			assertEquals( 2, events.size() );
+			for ( var event : events ) {
+				final var author = event.article.getAuthor();
+				assertTrue( isInitialized( author ) );
+				assertSame( unproxy( author ), unproxy( event.article.alternateAuthor ) );
+			}
+			assertEquals( "Original name", events.get( 0 ).article.getAuthor().getName() );
+			assertEquals( "Revised name", events.get( 1 ).article.getAuthor().getName() );
+		}
+	}
+
+	private void createArticleEventHistory(SessionFactoryScope scope, long id) {
+		scope.inTransaction( session -> {
+			final var author = new Author( id, "Original name" );
+			session.persist( author );
+			final var article = new LazyBook( id, "Unchanged article", author );
+			article.alternateAuthor = author;
+			session.persist( article );
+		} );
+		scope.inTransaction( session -> {
+			final var event = new ArticleEvent();
+			event.id = id;
+			event.label = "First event revision";
+			event.article = session.find( LazyBook.class, id );
+			event.alternate = event.article;
+			session.persist( event );
+		} );
+		scope.inTransaction( session -> {
+			session.find( Author.class, id ).setName( "Revised name" );
+			session.find( ArticleEvent.class, id ).label = "Second event revision";
+		} );
+		scope.inTransaction( session -> session.find( Author.class, id ).setName( "Current name" ) );
 	}
 
 	// ---- Entity classes ----
@@ -625,6 +654,8 @@ class AuditToOneAssociationTest {
 		String title;
 		@ManyToOne(fetch = FetchType.LAZY)
 		Author author;
+		@ManyToOne(fetch = FetchType.LAZY)
+		Author alternateAuthor;
 
 		LazyBook() {
 		}

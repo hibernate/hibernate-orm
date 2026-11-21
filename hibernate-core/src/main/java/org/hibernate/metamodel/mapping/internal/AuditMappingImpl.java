@@ -588,6 +588,13 @@ public class AuditMappingImpl implements AuditMapping {
 				&& parentTableGroup.getModelPart() instanceof EntityValuedModelPart entityPart ) {
 			final var parentAuditMapping = entityPart.getEntityMappingType().getAuditMapping();
 			if ( parentAuditMapping != null ) {
+				// A fetched to-one represents its owner's snapshot even if its own row is older.
+				if ( parentTableGroup.isFetched() && entityPart instanceof ToOneAttributeMapping ) {
+					final var ownerRevColumn = findParentRevColumn( parentPath, creationState );
+					if ( ownerRevColumn != null ) {
+						return ownerRevColumn;
+					}
+				}
 				final String parentTable = entityPart.getEntityMappingType().getMappedTableDetails().getTableName();
 				final String parentAuditTable = parentAuditMapping.resolveTableName( parentTable );
 				return new ColumnReference(

@@ -275,7 +275,9 @@ public class SqmUtil {
 	/** A filtered target's key must be read from the joined target, not the owner's foreign key. */
 	public static boolean isAssociationAffectedByEnabledFilters(
 			ModelPart modelPart, SqmToSqlAstConverter creationState) {
-		return modelPart instanceof ToOneAttributeMapping toOne
+		// An insert target names the foreign key columns on the association owner.
+		return creationState.getCurrentClauseStack().getCurrent() != Clause.INSERT
+				&& modelPart instanceof ToOneAttributeMapping toOne
 				&& toOne.hasFilterForLoadByKey()
 				&& toOne.isAffectedByEnabledFilters( creationState.getLoadQueryInfluencers() );
 	}

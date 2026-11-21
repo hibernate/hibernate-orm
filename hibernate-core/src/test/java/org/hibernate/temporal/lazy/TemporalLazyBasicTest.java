@@ -3,6 +3,7 @@ package org.hibernate.temporal.lazy;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Tuple;
 
 import java.util.List;
@@ -30,7 +31,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 @BytecodeEnhanced
 @SessionFactory
-@DomainModel(annotatedClasses = { TemporalLazyBasicTest.Document.class, TemporalLazyBasicTest.AuditedDocument.class })
+@DomainModel(annotatedClasses = {
+		TemporalLazyBasicTest.Document.class, TemporalLazyBasicTest.AuditedDocument.class, TemporalLazyBasicTest.Edition.class
+})
 @ServiceRegistry(settings = {
 		@Setting(name = TEMPORAL_TABLE_STRATEGY, value = "HISTORY_TABLE"),
 		@Setting(name = CHANGESET_ID_SUPPLIER, value = "org.hibernate.temporal.lazy.TemporalLazyBasicTest$ChangesetIds")
@@ -115,6 +118,51 @@ class TemporalLazyBasicTest {
 				assertEquals( "Article text", article.body );
 			}
 		}
+	}
+
+	@Test
+	void joinFetchedArticleInBothProjectionOrders(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var article = new Document();
+			article.id = 3;
+			article.title = "Old title";
+			article.body = "Old body";
+			session.persist( article );
+			final var edition = new Edition();
+			edition.id = 3;
+			edition.article = article;
+			session.persist( edition );
+		} );
+		scope.inTransaction( session -> {
+			final var revision = new AuditedDocument();
+			revision.id = 3;
+			revision.body = "Audit revision";
+			session.persist( revision );
+		} );
+		scope.inTransaction( session -> {
+			final var article = session.find( Document.class, 3 );
+			article.title = "Current title";
+			article.body = "Current body";
+		} );
+
+		final var builder = scope.getSessionFactory().withOptions().atChangeset( ALL_CHANGESETS );
+		for ( var projection : List.of( "e as edition, r", "r, e as edition" ) ) {
+			try (var session = builder.openSession()) {
+				final var tuple = session.createSelectionQuery( "select " + projection
+						+ " from AuditedDocument r cross join Edition e join fetch e.article"
+						+ " where r.id = 3 and e.id = 3", Tuple.class ).getSingleResult();
+				final var article = tuple.get( "edition", Edition.class ).article;
+				assertEquals( "Current title", article.title );
+				assertFalse( isPropertyInitialized( article, "body" ) );
+				assertEquals( "Current body", article.body );
+			}
+		}
+	}
+
+	@Entity(name = "Edition")
+	static class Edition {
+		@Id int id;
+		@ManyToOne(fetch = LAZY) Document article;
 	}
 
 	@Entity(name = "AuditedDocument")

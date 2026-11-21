@@ -153,7 +153,8 @@ public class EntityInitializerImpl
 		protected final boolean hasCallbackActions;
 		protected final @Nullable EntityPersister defaultConcreteDescriptor;
 		protected final boolean allRevisions;
-		private final boolean currentStateRoot;
+		private final boolean allRevisionsQuery;
+		private final @Nullable EntityInitializerImpl revisionSource;
 
 		// per-row state
 		protected @Nullable EntityPersister concreteDescriptor;
@@ -182,10 +183,9 @@ public class EntityInitializerImpl
 				canUseEmbeddedIdentifierInstanceAsEntity = false;
 			}
 			hasCallbackActions = rowProcessingState.hasCallbackActions();
-			final boolean allRevisionsQuery = rowProcessingState.getSession().getLoadQueryInfluencers().isAllRevisions();
-			allRevisions = allRevisionsQuery && initializer.auditChangesetIdAssembler != null;
-			currentStateRoot = allRevisionsQuery && initializer.isResultInitializer()
-					&& initializer.auditChangesetIdAssembler == null;
+			allRevisionsQuery = rowProcessingState.getSession().getLoadQueryInfluencers().isAllRevisions();
+			revisionSource = initializer.findRevisionSource( allRevisionsQuery );
+			allRevisions = allRevisionsQuery && revisionSource != null;
 			defaultConcreteDescriptor =
 					hasConcreteDescriptor( rowProcessingState, initializer.discriminatorAssembler, entityDescriptor )
 							? entityDescriptor
@@ -204,7 +204,8 @@ public class EntityInitializerImpl
 			this.canUseEmbeddedIdentifierInstanceAsEntity = original.canUseEmbeddedIdentifierInstanceAsEntity;
 			this.hasCallbackActions = original.hasCallbackActions;
 			this.allRevisions = original.allRevisions;
-			this.currentStateRoot = original.currentStateRoot;
+			this.allRevisionsQuery = original.allRevisionsQuery;
+			this.revisionSource = original.revisionSource;
 			this.defaultConcreteDescriptor = original.defaultConcreteDescriptor;
 			this.concreteDescriptor = original.concreteDescriptor;
 			this.entityKey = original.entityKey;
@@ -527,6 +528,21 @@ public class EntityInitializerImpl
 		return Arrays.stream( lazySets )
 				.map( ImmutableBitSet::valueOfOrEmpty )
 				.toArray( ImmutableBitSet[]::new );
+	}
+
+	private @Nullable EntityInitializerImpl findRevisionSource(boolean allRevisionsQuery) {
+		if ( auditChangesetIdAssembler != null ) {
+			return this;
+		}
+		if ( allRevisionsQuery
+				&& ( entityDescriptor.getTemporalMapping() != null || entityDescriptor.getAuditMapping() != null ) ) {
+			for ( var ancestor = parent; ancestor != null; ancestor = ancestor.getParent() ) {
+				if ( ancestor instanceof EntityInitializerImpl entity && entity.auditChangesetIdAssembler != null ) {
+					return entity;
+				}
+			}
+		}
+		return null;
 	}
 
 	private static boolean isPreviousRowReuse(@Nullable InitializerParent<?> parent) {
@@ -885,19 +901,19 @@ public class EntityInitializerImpl
 							discriminatorAssembler, entityDescriptor );
 			assert concreteDescriptor != null;
 		}
-		if ( data.currentStateRoot ) {
-			// Another root may have set its row's changeset for association loads.
-			// This root was selected from the current table.
-			data.entityKey = new EntityKey( id, concreteDescriptor );
-			return;
-		}
 		final var rowProcessingState = data.getRowProcessingState();
-		// An all-revisions result carries its changeset on the row itself.
-		final Object changesetId = auditChangesetIdAssembler == null
-				? null
-				: auditChangesetIdAssembler.assemble( rowProcessingState );
-		data.entityKey = changesetId != null
-				? new TemporalEntityKey( id, concreteDescriptor, changesetId )
+		final var source = data.revisionSource;
+		if ( source != null ) {
+			final Object changesetId = castNonNull( source.auditChangesetIdAssembler ).assemble(
+					source.getData( rowProcessingState ).getRowProcessingState() );
+			if ( changesetId != null ) {
+				data.entityKey = new TemporalEntityKey( id, concreteDescriptor, changesetId );
+				return;
+			}
+		}
+		// In an all-revisions query, only this result or its fetch parents can supply a changeset.
+		data.entityKey = data.allRevisionsQuery
+				? new EntityKey( id, concreteDescriptor )
 				: rowProcessingState.getSession().generateEntityKey( id, concreteDescriptor );
 	}
 

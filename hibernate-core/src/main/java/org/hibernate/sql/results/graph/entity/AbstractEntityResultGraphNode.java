@@ -49,9 +49,7 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 		discriminatorFetch = creationState.visitDiscriminatorFetch( entityResultGraphNode );
 
 		rowIdResult = rowIdResult( creationState, navigablePath, entityTableGroup );
-		if ( fetchParent == this ) {
-			auditChangesetIdResult = auditChangesetIdResult( creationState, entityTableGroup );
-		}
+		auditChangesetIdResult = auditChangesetIdResult( creationState, entityTableGroup );
 
 		super.afterInitialize( fetchParent, creationState );
 	}
@@ -163,6 +161,9 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 		final var entityPersister = fetchContainer.getEntityMappingType().getEntityPersister();
 		if ( identifierFetch != null ) {
 			identifierFetch.collectValueIndexesToCache( valueIndexes );
+		}
+		if ( auditChangesetIdResult != null ) {
+			auditChangesetIdResult.collectValueIndexesToCache( valueIndexes );
 		}
 		if ( !entityPersister.useShallowQueryCacheLayout() ) {
 			if ( discriminatorFetch != null ) {

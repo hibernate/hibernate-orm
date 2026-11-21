@@ -154,7 +154,6 @@ public class EntityInitializerImpl
 		protected final @Nullable EntityPersister defaultConcreteDescriptor;
 		protected final boolean allRevisions;
 		private final boolean allRevisionsQuery;
-		private final @Nullable EntityInitializerImpl revisionSource;
 
 		// per-row state
 		protected @Nullable EntityPersister concreteDescriptor;
@@ -184,8 +183,7 @@ public class EntityInitializerImpl
 			}
 			hasCallbackActions = rowProcessingState.hasCallbackActions();
 			allRevisionsQuery = rowProcessingState.getSession().getLoadQueryInfluencers().isAllRevisions();
-			revisionSource = initializer.findRevisionSource( allRevisionsQuery );
-			allRevisions = allRevisionsQuery && revisionSource != null;
+			allRevisions = allRevisionsQuery && initializer.auditChangesetIdAssembler != null;
 			defaultConcreteDescriptor =
 					hasConcreteDescriptor( rowProcessingState, initializer.discriminatorAssembler, entityDescriptor )
 							? entityDescriptor
@@ -205,7 +203,6 @@ public class EntityInitializerImpl
 			this.hasCallbackActions = original.hasCallbackActions;
 			this.allRevisions = original.allRevisions;
 			this.allRevisionsQuery = original.allRevisionsQuery;
-			this.revisionSource = original.revisionSource;
 			this.defaultConcreteDescriptor = original.defaultConcreteDescriptor;
 			this.concreteDescriptor = original.concreteDescriptor;
 			this.entityKey = original.entityKey;
@@ -528,21 +525,6 @@ public class EntityInitializerImpl
 		return Arrays.stream( lazySets )
 				.map( ImmutableBitSet::valueOfOrEmpty )
 				.toArray( ImmutableBitSet[]::new );
-	}
-
-	private @Nullable EntityInitializerImpl findRevisionSource(boolean allRevisionsQuery) {
-		if ( auditChangesetIdAssembler != null ) {
-			return this;
-		}
-		// An all-revisions join applies the parent's revision only to an audited target.
-		if ( allRevisionsQuery && entityDescriptor.getAuditMapping() != null ) {
-			for ( var ancestor = parent; ancestor != null; ancestor = ancestor.getParent() ) {
-				if ( ancestor instanceof EntityInitializerImpl entity && entity.auditChangesetIdAssembler != null ) {
-					return entity;
-				}
-			}
-		}
-		return null;
 	}
 
 	private static boolean isPreviousRowReuse(@Nullable InitializerParent<?> parent) {
@@ -902,16 +884,14 @@ public class EntityInitializerImpl
 			assert concreteDescriptor != null;
 		}
 		final var rowProcessingState = data.getRowProcessingState();
-		final var source = data.revisionSource;
-		if ( source != null ) {
-			final Object changesetId = castNonNull( source.auditChangesetIdAssembler ).assemble(
-					source.getData( rowProcessingState ).getRowProcessingState() );
+		if ( auditChangesetIdAssembler != null ) {
+			final Object changesetId = auditChangesetIdAssembler.assemble( rowProcessingState );
 			if ( changesetId != null ) {
 				data.entityKey = new TemporalEntityKey( id, concreteDescriptor, changesetId );
 				return;
 			}
 		}
-		// In an all-revisions query, only this result or its fetch parents can supply a changeset.
+		// An all-revisions query also returns current rows for entities without an audit mapping.
 		data.entityKey = data.allRevisionsQuery
 				? new EntityKey( id, concreteDescriptor )
 				: rowProcessingState.getSession().generateEntityKey( id, concreteDescriptor );
@@ -1302,8 +1282,8 @@ public class EntityInitializerImpl
 									this
 							);
 
-			if ( data.allRevisions && data.entityKey.isTemporal() ) {
-				// Set the per-row temporal identifier so that association loads use the correct revision
+			if ( isResultInitializer && data.allRevisions && data.entityKey.isTemporal() ) {
+				// Association loads use the root revision even when a fetch joins an older audit row.
 				data.getRowProcessingState().getSession()
 						.getLoadQueryInfluencers()
 						.setTemporalIdentifier( data.entityKey.getChangesetId() );
@@ -1683,7 +1663,7 @@ public class EntityInitializerImpl
 
 	@Override
 	public void endLoading(EntityInitializerData data) {
-		if ( data.allRevisions ) {
+		if ( isResultInitializer && data.allRevisions ) {
 			data.getRowProcessingState().getSession()
 					.getLoadQueryInfluencers()
 					.setTemporalIdentifier( ALL_CHANGESETS );

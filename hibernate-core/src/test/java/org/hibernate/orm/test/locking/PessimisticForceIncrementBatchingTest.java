@@ -111,6 +111,20 @@ public class PessimisticForceIncrementBatchingTest {
 	}
 
 	@Test
+	void testSharedSessionLockExecutesImmediately(SessionFactoryScope scope) {
+		scope.inTransaction( parent -> {
+			parent.setJdbcBatchSize( 20 );
+			try ( var child = parent.sessionWithOptions().connection().openSession() ) {
+				final var entity = child.find( VersionedEntity.class, 1L );
+				child.lock( entity, LockMode.PESSIMISTIC_FORCE_INCREMENT );
+				assertThat( entity.version ).isEqualTo( 1L );
+				assertThat( databaseVersion( child ) ).isEqualTo( 1L );
+				assertThat( parent.getJdbcBatchSize() ).isEqualTo( 20 );
+			}
+		} );
+	}
+
+	@Test
 	void testSessionBatchSizeOverride(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			session.setJdbcBatchSize( 20 );

@@ -62,6 +62,7 @@ import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.StructuredJdbcType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 
+import static org.hibernate.dialect.aggregate.internal.AggregateColumnDescriptorAdapter.memberName;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static java.lang.System.arraycopy;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.buildBasicAttributeMapping;
@@ -498,7 +499,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					temporalPrecision = column.getTemporalPrecision();
 					isLob = column.isSqlTypeLob( creationContext.getMetadata() );
 					nullable = bootPropertyDescriptor.isOptional() && column.isNullable() ;
-					selectablePath = basicValue.createSelectablePath( column.getQuotedName( dialect ) );
+					selectablePath = basicValue.createSelectablePath( memberName( column, dialect ) );
 					MappingModelCreationHelper.resolveAggregateColumnBasicType( creationProcess, role, column );
 				}
 				else {

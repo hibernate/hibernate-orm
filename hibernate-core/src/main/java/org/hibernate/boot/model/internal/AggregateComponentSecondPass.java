@@ -38,6 +38,7 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.sql.Template;
 import org.hibernate.type.SqlTypes;
 
+import static org.hibernate.dialect.aggregate.internal.AggregateColumnDescriptorAdapter.memberName;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
@@ -172,7 +173,7 @@ public class AggregateComponentSecondPass implements SecondPass {
 
 		// The following determines the custom read/write expression and write expression for aggregatedColumns
 		for ( var subColumn : aggregatedColumns ) {
-			final String selectableExpression = subColumn.getText( dialect );
+			final String selectableExpression = memberName( subColumn, dialect );
 			final String customReadExpression;
 			final int aggregateTypeCode = effectiveAggregateTypeCode( aggregateColumn );
 			final var columnMapping = AggregateColumnDescriptorAdapter.mapping( subColumn );

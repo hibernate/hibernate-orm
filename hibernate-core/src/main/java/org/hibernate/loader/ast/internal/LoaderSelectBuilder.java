@@ -602,10 +602,16 @@ public class LoaderSelectBuilder {
 		}
 
 		for ( var restrictedPart : restrictedParts ) {
+			// For an indexed collection lookup, the identifier belongs to the index.
+			// The element may map the same table under a different alias.
+			final var restrictionGroup = restrictedPart instanceof EntityIdentifierMapping
+					&& rootTableGroup instanceof PluralTableGroup collectionGroup
+					? collectionGroup.getIndexTableGroup()
+					: rootTableGroup;
 			applyRestriction(
 					rootQuerySpec,
-					rootNavigablePath,
-					rootTableGroup,
+					restrictionGroup.getNavigablePath(),
+					restrictionGroup,
 					restrictedPart,
 					restrictedPart.getJdbcTypeCount(),
 					castNonNull( jdbcParameterConsumer ),

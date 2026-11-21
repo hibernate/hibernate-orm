@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
@@ -77,6 +78,18 @@ public class SoftDeleteCollectionJoinTests {
 	}
 
 	@Test
+	public void membershipUsesChildIdentifier(SessionFactoryScope scope) {
+		scope.inTransaction( session ->
+				session.persist( new Note( 20, "visible", session.find( Parent.class, 1 ) ) ) );
+		scope.inSession( session -> {
+			final var notes = session.find( Parent.class, 1 ).notes;
+			assertThat( Hibernate.contains( notes, session.find( Note.class, 20 ) ) ).isTrue();
+			assertThat( Hibernate.contains( notes, session.find( Note.class, 2 ) ) ).isFalse();
+			assertThat( Hibernate.isInitialized( notes ) ).isFalse();
+		} );
+	}
+
+	@Test
 	public void innerJoin(SessionFactoryScope scope) {
 		assertEquals( List.of( 2 ), ids( scope, "select p.id from Parent p join p.notes n order by p.id" ) );
 	}
@@ -95,8 +108,7 @@ public class SoftDeleteCollectionJoinTests {
 	@Test
 	public void rightJoinDoesNotReturnHiddenNotes(SessionFactoryScope scope) {
 		assertThat( ids( scope, "select n.id from Parent p right join p.notes n" ) )
-				.contains( 2 )
-				.doesNotContain( 1, 4, 5 );
+				.containsExactlyInAnyOrder( 2, 3 );
 	}
 
 	@Test

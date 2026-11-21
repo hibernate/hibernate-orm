@@ -198,24 +198,23 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	}
 
 	public int getSize() {
-		if ( cachedSize>=0 ) {
-			return cachedSize;
+		if ( cachedSize < 0 ) {
+			final var entry = entryForRead();
+			cachedSize = withTemporalIdentifier( () -> entry.getLoadedPersister().getSize( entry.getLoadedKey(), session ) );
 		}
-		else {
-			throwLazyInitializationExceptionIfNotConnected();
-			final var entry = getCollectionEntry();
-			if ( entry == null ) {
-				throwLazyInitializationException( "collection not associated with session" );
-				throw new AssertionFailure( "impossible" );
-			}
-			else {
-				if ( hasQueuedOperations() ) {
-					session.flush();
-				}
-				cachedSize = entry.getLoadedPersister().getSize( entry.getLoadedKey(), session );
-				return cachedSize;
-			}
+		return cachedSize;
+	}
+
+	private CollectionEntry entryForRead() {
+		throwLazyInitializationExceptionIfNotConnected();
+		final var entry = getCollectionEntry();
+		if ( entry == null ) {
+			throwLazyInitializationException( "collection not associated with session" );
 		}
+		if ( hasQueuedOperations() ) {
+			session.flush();
+		}
+		return entry;
 	}
 
 	/**
@@ -288,7 +287,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 				session.getPersistenceContextInternal()
 						.addUninitializedDetachedCollection( collectionDescriptor, this );
 			}
-			return lazyInitializationWork.doWork();
+			return withTemporalIdentifier( lazyInitializationWork );
 		}
 		finally {
 			if ( tempSession != null ) {
@@ -380,19 +379,9 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 
 	@Override
 	public boolean elementExists(Object element) {
-		throwLazyInitializationExceptionIfNotConnected();
-		final var entry = getCollectionEntry();
-		if ( entry == null ) {
-			throwLazyInitializationException( "collection not associated with session" );
-			throw new AssertionFailure( "impossible" );
-		}
-		else {
-			if ( hasQueuedOperations() ) {
-				session.flush();
-			}
-			return entry.getLoadedPersister()
-					.elementExists( entry.getLoadedKey(), element, session );
-		}
+		final var entry = entryForRead();
+		return withTemporalIdentifier( () -> entry.getLoadedPersister()
+				.elementExists( entry.getLoadedKey(), element, session ) );
 	}
 
 	protected Optional<E> readElementByIndex(final Object index) {
@@ -419,19 +408,9 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 
 	@Override
 	public Object elementByIndex(Object index) {
-		throwLazyInitializationExceptionIfNotConnected();
-		final var entry = getCollectionEntry();
-		if ( entry == null ) {
-			throwLazyInitializationException( "collection not associated with session" );
-			throw new AssertionFailure( "impossible" );
-		}
-		else {
-			if ( hasQueuedOperations() ) {
-				session.flush();
-			}
-			return entry.getLoadedPersister()
-					.getElementByIndex( entry.getLoadedKey(), index, session, owner );
-		}
+		final var entry = entryForRead();
+		return withTemporalIdentifier( () -> entry.getLoadedPersister()
+				.getElementByIndex( entry.getLoadedKey(), index, session, owner ) );
 	}
 
 	protected int getCachedSize() {
@@ -631,25 +610,25 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	 */
 	protected final void initialize(final boolean writing) {
 		if ( !initialized ) {
-			withTemporarySessionIfNeeded(
-					() -> {
-						if ( temporalIdentifier != null ) {
-							final var influencers = session.getLoadQueryInfluencers();
-							final Object previous = influencers.getTemporalIdentifier();
-							influencers.setTemporalIdentifier( temporalIdentifier );
-							try {
-								session.initializeCollection( this, writing );
-							}
-							finally {
-								influencers.setTemporalIdentifier( previous );
-							}
-						}
-						else {
-							session.initializeCollection( this, writing );
-						}
-						return null;
-					}
-			);
+			withTemporarySessionIfNeeded( () -> {
+				session.initializeCollection( this, writing );
+				return null;
+			} );
+		}
+	}
+
+	private <T> T withTemporalIdentifier(LazyInitializationWork<T> work) {
+		if ( temporalIdentifier == null ) {
+			return work.doWork();
+		}
+		final var influencers = session.getLoadQueryInfluencers();
+		final var previous = influencers.getTemporalIdentifier();
+		influencers.setTemporalIdentifier( temporalIdentifier );
+		try {
+			return work.doWork();
+		}
+		finally {
+			influencers.setTemporalIdentifier( previous );
 		}
 	}
 

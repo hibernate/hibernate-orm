@@ -275,7 +275,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 			@Nonnull LazyTableGroup lazyTableGroup,
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull SqlAstCreationState creationState) {
-		if ( useTemporalRestriction( creationState ) ) {
+		if ( hasRowRestriction( creationState.getLoadQueryInfluencers() ) ) {
 			final var tableReference = lazyTableGroup.resolveTableReference( navigablePath, getTableName() );
 			final var temporalInstant = creationState.getLoadQueryInfluencers().getTemporalIdentifier();
 			final var resolver = creationState.getSqlExpressionResolver();
@@ -294,7 +294,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 			@Nonnull TableGroup tableGroup,
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
 			@Nonnull LoadQueryInfluencers influencers) {
-		if ( useTemporalRestriction( influencers ) ) {
+		if ( hasRowRestriction( influencers ) ) {
 			final var instant = influencers.getTemporalIdentifier();
 			final var primaryTableReference =
 					tableGroup.resolveTableReference( getTableName() );
@@ -311,7 +311,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 			@Nonnull TableGroup tableGroup,
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
 			@Nonnull LoadQueryInfluencers influencers) {
-		if ( useTemporalRestriction( influencers ) ) {
+		if ( hasRowRestriction( influencers ) ) {
 			final var instant = influencers.getTemporalIdentifier();
 			final var tableReference = tableGroup.resolveTableReference( getTableName() );
 			predicateConsumer.accept( instant == null
@@ -325,7 +325,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 			@Nonnull TableGroupJoin tableGroupJoin,
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
 			@Nonnull LoadQueryInfluencers loadQueryInfluencers) {
-		if ( useTemporalRestriction( loadQueryInfluencers ) ) {
+		if ( hasRowRestriction( loadQueryInfluencers ) ) {
 			final var temporalInstant = loadQueryInfluencers.getTemporalIdentifier();
 			final var tableReference = tableGroupJoin.getJoinedGroup().resolveTableReference( getTableName() );
 			tableGroupJoin.applyPredicate( temporalInstant == null
@@ -341,7 +341,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 			@Nonnull TableGroup tableGroup,
 			@Nonnull NamedTableReference rootTableReference,
 			@Nonnull EntityMappingType entityMappingType) {
-		if ( useTemporalRestriction( creationState ) ) {
+		if ( hasRowRestriction( creationState.getLoadQueryInfluencers() ) ) {
 			final var tableReference =
 					tableGroup.resolveTableReference( getTableName() );
 			final var temporalInstant =
@@ -358,16 +358,10 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 		}
 	}
 
-	private static boolean useTemporalRestriction(LoadQueryInfluencers influencers) {
+	@Override
+	public boolean hasRowRestriction(@Nonnull LoadQueryInfluencers influencers) {
 		return !influencers.isAllRevisions()
 			&& influencers.getSessionFactory().getJdbcServices().getDialect().getTemporalTableSupport()
-						.useTemporalRestriction( temporalRestrictionRequest( influencers ) );
-	}
-
-	private boolean useTemporalRestriction(SqlAstCreationState creationState) {
-		final var influencers = creationState.getLoadQueryInfluencers();
-		return !influencers.isAllRevisions()
-			&& creationState.getCreationContext().getDialect().getTemporalTableSupport()
 						.useTemporalRestriction( temporalRestrictionRequest( influencers ) );
 	}
 

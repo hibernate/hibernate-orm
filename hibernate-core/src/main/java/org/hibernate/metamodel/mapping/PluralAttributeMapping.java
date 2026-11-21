@@ -69,6 +69,29 @@ public interface PluralAttributeMapping
 			@Nonnull LoadQueryInfluencers influencers,
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator);
 
+	/// Whether reading collection rows needs restrictions beyond the plain collection table.
+	default boolean hasRowRestrictions(@Nonnull LoadQueryInfluencers influencers) {
+		return hasWhereRestrictions() || isAffectedByEnabledFilters( influencers, true );
+	}
+
+	/// Whether these session settings change the visibility of collection rows.
+	default boolean isAffectedByRowRestrictions(@Nonnull LoadQueryInfluencers influencers, boolean onlyLoadByKeyFilters) {
+		return isAffectedByEnabledFilters( influencers, onlyLoadByKeyFilters );
+	}
+
+	/// Apply the row restrictions shared by collection loads and subqueries.
+	default void applyCollectionRestrictions(
+			@Nullable TableGroup ownerTableGroup,
+			@Nonnull TableGroup tableGroup,
+			@Nonnull Consumer<Predicate> predicateConsumer,
+			@Nonnull SqlAstCreationState creationState) {
+		final var influencers = creationState.getLoadQueryInfluencers();
+		final var filters = influencers.getEnabledFilters();
+		applyBaseRestrictions( predicateConsumer, tableGroup, true, filters, false, null, creationState );
+		applyBaseManyToManyRestrictions( predicateConsumer, tableGroup, true, filters, null, creationState );
+		applyAuxiliaryRestrictions( tableGroup, predicateConsumer::accept, influencers, creationState.getSqlAliasBaseGenerator() );
+	}
+
 	interface IndexMetadata {
 		@Nullable
 		CollectionPart getIndexDescriptor();

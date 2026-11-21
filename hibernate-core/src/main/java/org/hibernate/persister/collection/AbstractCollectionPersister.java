@@ -41,6 +41,8 @@ import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.Generator;
 import org.hibernate.jdbc.Expectation;
+import org.hibernate.loader.ast.internal.CollectionScalarLoader;
+import org.hibernate.loader.ast.internal.CollectionScalarLoader.Operation;
 import org.hibernate.loader.ast.internal.CollectionElementLoaderByIndex;
 import org.hibernate.loader.ast.internal.CollectionLoaderNamedQuery;
 import org.hibernate.loader.ast.internal.CollectionLoaderSingleKey;
@@ -121,6 +123,7 @@ import org.hibernate.type.Type;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -128,6 +131,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 
@@ -162,6 +166,10 @@ public abstract class AbstractCollectionPersister
 	private final CollectionSemantics<?,?> collectionSemantics;
 	private final EntityPersister ownerPersister;
 	private final SessionFactoryImplementor factory;
+
+	private final Map<Operation, CollectionScalarLoader> scalarLoaders = new ConcurrentHashMap<>();
+	private final EnumSet<Operation> customScalarSql = EnumSet.noneOf( Operation.class );
+	private boolean hasStaticRowRestrictions;
 
 	protected final String qualifiedTableName;
 	private final CollectionTableMapping tableMapping;
@@ -681,6 +689,19 @@ public abstract class AbstractCollectionPersister
 		sqlSelectSizeString = generateSelectSizeString( hasIndex() && !isMap() );
 		sqlDetectRowByIndexString = generateDetectRowByIndexString();
 		sqlDetectRowByElementString = generateDetectRowByElementString();
+		// An explicit SQL override owns this operation, including its parameter contract.
+		if ( getClass() != BasicCollectionPersister.class && getClass() != OneToManyPersister.class ) {
+			customScalarSql.clear();
+			if ( !sqlSelectSizeString.equals( defaultSelectSizeString( hasIndex() && !isMap() ) ) ) {
+				customScalarSql.add( Operation.SIZE );
+			}
+			if ( !java.util.Objects.equals( sqlDetectRowByIndexString, defaultDetectRowByIndexString() ) ) {
+				customScalarSql.add( Operation.INDEX_EXISTS );
+			}
+			if ( !sqlDetectRowByElementString.equals( defaultDetectRowByElementString() ) ) {
+				customScalarSql.add( Operation.ELEMENT_EXISTS );
+			}
+		}
 	}
 
 	private boolean isMap() {
@@ -756,6 +777,7 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public void postInstantiate() throws MappingException {
+		hasStaticRowRestrictions = attributeMapping.hasRowRestrictions( new LoadQueryInfluencers( factory ) );
 		collectionLoader =
 				hasNamedQueryLoader()
 						// We pass null as metamodel because we did the initialization during construction already
@@ -1089,6 +1111,11 @@ public abstract class AbstractCollectionPersister
 
 	@Nonnull
 	protected String generateSelectSizeString(boolean isIntegerIndexed) {
+		return defaultSelectSizeString( isIntegerIndexed );
+	}
+
+	@Nonnull
+	private String defaultSelectSizeString(boolean isIntegerIndexed) {
 		final String selectValue = isIntegerIndexed
 				? "max(" + castNonNull( getIndexColumnNames() )[0] + ") + 1"  // lists, arrays
 				: "count(" + getElementColumnNames()[0] + ")"; // sets, maps, bags
@@ -1103,6 +1130,11 @@ public abstract class AbstractCollectionPersister
 
 	@Nullable
 	protected String generateDetectRowByIndexString() {
+		return defaultDetectRowByIndexString();
+	}
+
+	@Nullable
+	private String defaultDetectRowByIndexString() {
 		if ( !hasIndex() ) {
 			return null;
 		}
@@ -1122,6 +1154,11 @@ public abstract class AbstractCollectionPersister
 
 	@Nonnull
 	protected String generateDetectRowByElementString() {
+		return defaultDetectRowByElementString();
+	}
+
+	@Nonnull
+	private String defaultDetectRowByElementString() {
 		return new SimpleSelect( getFactory() )
 				.setTableName( getTableName() )
 				.addRestriction( getKeyColumnNames() )
@@ -1516,6 +1553,20 @@ public abstract class AbstractCollectionPersister
 		}
 	}
 
+	private @Nullable CollectionScalarLoader restrictedScalarLoader(Operation operation, SharedSessionContractImplementor session) {
+		if ( customScalarSql.contains( operation ) ) {
+			return null;
+		}
+		final var influencers = session.getLoadQueryInfluencers();
+		if ( attributeMapping.isAffectedByRowRestrictions( influencers, true ) ) {
+			return new CollectionScalarLoader( attributeMapping, operation, influencers );
+		}
+		return hasStaticRowRestrictions
+				? scalarLoaders.computeIfAbsent( operation,
+						op -> new CollectionScalarLoader( attributeMapping, op, new LoadQueryInfluencers( factory ) ) )
+				: null;
+	}
+
 	int baseIndex() {
 		final int listIndexBase = getAttributeMapping().getIndexMetadata().getListIndexBase();
 		//noinspection ManualMinMaxCalculation
@@ -1524,6 +1575,10 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public int getSize(@Nonnull Object key, @Nonnull SharedSessionContractImplementor session) {
+		final var loader = restrictedScalarLoader( Operation.SIZE, session );
+		if ( loader != null ) {
+			return loader.select( key, null, session );
+		}
 		try {
 			final var jdbcCoordinator = session.getJdbcCoordinator();
 			final var statement = jdbcCoordinator.getStatementPreparer().prepareStatement( sqlSelectSizeString );
@@ -1555,15 +1610,24 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public boolean indexExists(@Nonnull Object key, @Nonnull Object index, @Nonnull SharedSessionContractImplementor session) {
-		return exists( key, incrementIndexByBase( index ), castNonNull( getIndexType() ), castNonNull( sqlDetectRowByIndexString ), session );
+		return exists( Operation.INDEX_EXISTS, key, incrementIndexByBase( index ), castNonNull( getIndexType() ), castNonNull( sqlDetectRowByIndexString ), session );
 	}
 
 	@Override
 	public boolean elementExists(@Nonnull Object key, @Nullable Object element, @Nonnull SharedSessionContractImplementor session) {
-		return exists( key, element, getElementType(), sqlDetectRowByElementString, session );
+		return exists( Operation.ELEMENT_EXISTS, key, element, getElementType(), sqlDetectRowByElementString, session );
 	}
 
-	private boolean exists(@Nonnull Object key, @Nullable Object indexOrElement, @Nonnull Type indexOrElementType, @Nonnull String sql, @Nonnull SharedSessionContractImplementor session) {
+	private boolean exists(Operation operation, @Nonnull Object key, @Nullable Object indexOrElement, @Nonnull Type indexOrElementType, @Nonnull String sql, @Nonnull SharedSessionContractImplementor session) {
+		final var loader = restrictedScalarLoader( operation, session );
+		if ( loader != null ) {
+			try {
+				return loader.select( key, indexOrElement, session ) != 0;
+			}
+			catch ( TransientObjectException e ) {
+				return false;
+			}
+		}
 		try {
 			final var jdbcCoordinator = session.getJdbcCoordinator();
 			final var statement = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
@@ -1601,8 +1665,7 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public Object getElementByIndex(@Nonnull Object key, @Nonnull Object index, @Nonnull SharedSessionContractImplementor session, @Nullable Object owner) {
 		final var influencers = session.getLoadQueryInfluencers();
-		if ( influencers.hasEnabledFilters()
-			&& isAffectedByFilters( new HashSet<>(), attributeMapping.getElementDescriptor(), influencers, true ) ) {
+		if ( attributeMapping.isAffectedByRowRestrictions( influencers, true ) ) {
 			return new CollectionElementLoaderByIndex( attributeMapping, influencers, factory )
 					.load( key, index, session );
 		}

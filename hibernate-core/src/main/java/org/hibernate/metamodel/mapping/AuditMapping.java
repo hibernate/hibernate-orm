@@ -8,6 +8,8 @@ import org.hibernate.Incubating;
 import org.hibernate.audit.spi.AuditEntityLoader;
 import org.hibernate.sql.ast.spi.creation.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.ast.spi.query.from.TableGroupProducer;
 import org.hibernate.sql.ast.spi.query.from.TableReference;
 import org.hibernate.sql.ast.spi.query.predicate.Predicate;
@@ -29,6 +31,14 @@ public interface AuditMapping extends AuxiliaryMapping {
 	 */
 	@Nonnull
 	SelectableMapping getChangesetIdMapping(@Nonnull String originalTableName);
+
+	/// The changeset of the entity row represented by this table group.
+	@Nonnull
+	default ColumnReference getChangesetIdColumn(@Nonnull EntityMappingType entity, @Nonnull TableGroup tableGroup) {
+		final String table = entity.getMappedTableDetails().getTableName();
+		return new ColumnReference( tableGroup.resolveTableReference( resolveTableName( table ) ),
+				getChangesetIdMapping( table ) );
+	}
 
 	/**
 	 * Get the modification type selectable mapping for the given original table,

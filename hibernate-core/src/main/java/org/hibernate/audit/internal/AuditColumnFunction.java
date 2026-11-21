@@ -6,7 +6,7 @@ import java.util.List;
 import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import org.hibernate.audit.ModificationType;
-import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.spi.NodeBuilder;
@@ -16,6 +16,7 @@ import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
+import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
@@ -25,6 +26,7 @@ import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.from.PluralTableGroup;
 import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
@@ -160,12 +162,16 @@ public class AuditColumnFunction extends AbstractSqmFunctionDescriptor {
 		@Nonnull
 		@Override
 		public Expression convertToSqlAst(@Nonnull SqmToSqlAstConverter walker) {
-			final var entityPath = (SqmPath<?>) getArguments().get( 0 );
-
-			final var tableGroup = walker.getFromClauseAccess()
-					.findTableGroup( entityPath.getNavigablePath() );
-
-			final var entityMapping = (EntityMappingType) tableGroup.getModelPart();
+			final var tableGroup = getArguments().get( 0 ) instanceof SqmPath<?> path
+					? walker.getFromClauseAccess().findTableGroup( path.getNavigablePath() )
+					: null;
+			final var entityGroup = tableGroup instanceof PluralTableGroup collection
+					? collection.getElementTableGroup()
+					: tableGroup;
+			if ( entityGroup == null || !( entityGroup.getModelPart() instanceof EntityValuedModelPart entityPart ) ) {
+				throw new FunctionArgumentException( getFunctionName() + "() requires an entity-valued argument" );
+			}
+			final var entityMapping = entityPart.getEntityMappingType();
 			final var auditMapping = entityMapping.getAuditMapping();
 			if ( auditMapping == null ) {
 				throw new IllegalArgumentException(
@@ -182,10 +188,7 @@ public class AuditColumnFunction extends AbstractSqmFunctionDescriptor {
 					? auditMapping.getChangesetIdMapping( originalTable )
 					: auditMapping.getModificationTypeMapping( originalTable );
 
-			final var tableReference = tableGroup.resolveTableReference(
-					entityPath.getNavigablePath(),
-					originalTable
-			);
+			final var tableReference = entityGroup.resolveTableReference( entityGroup.getNavigablePath(), originalTable );
 
 			final var columnReference =
 					new ColumnReference( tableReference, selectableMapping );

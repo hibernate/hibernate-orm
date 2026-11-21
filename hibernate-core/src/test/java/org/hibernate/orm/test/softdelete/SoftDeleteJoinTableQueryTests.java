@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -14,7 +15,10 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.MapKeyJoinColumn;
 import jakarta.persistence.Table;
 
+import org.hibernate.Hibernate;
+import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.FilterJoinTable;
 import org.hibernate.annotations.SQLJoinTableRestriction;
 import org.hibernate.annotations.SoftDelete;
@@ -27,6 +31,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -47,7 +52,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		SoftDeleteJoinTableQueryTests.Tag.class,
 		SoftDeleteJoinTableQueryTests.Note.class
 })
-@SessionFactory
+@SessionFactory(useCollectingStatementObserver = true)
 @JiraKey("HHH-21214")
 public class SoftDeleteJoinTableQueryTests {
 
@@ -73,6 +78,7 @@ public class SoftDeleteJoinTableQueryTests {
 			session.persist( liveNote );
 			// every element of the first owner is hidden
 			final Owner first = new Owner( 1 );
+			first.byNote.put( hiddenNote, hidden );
 			first.tags.add( hidden );
 			first.labels.add( hidden );
 			first.marks.add( hidden );
@@ -80,7 +86,9 @@ public class SoftDeleteJoinTableQueryTests {
 			first.notes.put( hidden, hiddenNote );
 			session.persist( first );
 			final Owner second = new Owner( 2 );
+			second.byNote.put( liveNote, live );
 			second.tags.add( live );
+			second.tagsByCode.add( live );
 			second.labels.add( live );
 			second.marks.add( live );
 			second.keyed.put( live, live );
@@ -211,6 +219,104 @@ public class SoftDeleteJoinTableQueryTests {
 				ids( scope, "select o.id from Owner o where element(o." + collection + ") is not null order by o.id" ) );
 	}
 
+	@Test
+	void explicitCrossJoin(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.persist( new Note( 30 ) );
+			session.persist( new Note( 40 ) );
+		} );
+		scope.inSession( session -> {
+			final String hql = "select n.id from Owner o cross join Note n where o.id = 1 order by n.id";
+			assertEquals( List.of( 20, 40 ), session.createSelectionQuery( hql, Integer.class ).list() );
+			session.enableFilter( "visibleNotes" );
+			assertEquals( List.of( 40 ), session.createSelectionQuery( hql, Integer.class ).list() );
+		} );
+	}
+
+	@Test
+	void collectionSizeAndMembership(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			final var owner = session.find( Owner.class, 1 );
+			final var tag = session.find( Tag.class, 10 );
+			assertThat( Hibernate.isEmpty( owner.tags ) ).isTrue();
+			assertThat( Hibernate.contains( owner.tags, tag ) ).isFalse();
+			assertEquals( 0, Hibernate.size( owner.labels ) );
+			assertEquals( 1, Hibernate.size( owner.marks ) );
+			assertThat( Hibernate.contains( owner.marks, tag ) ).isTrue();
+			assertEquals( 1, owner.marks.size() );
+			assertThat( Hibernate.isInitialized( owner.marks ) ).isFalse();
+		} );
+		scope.inSession( session -> {
+			session.enableFilter( "liveMarks" );
+			final var owner = session.find( Owner.class, 1 );
+			final var tag = session.find( Tag.class, 10 );
+			assertEquals( 0, Hibernate.size( owner.marks ) );
+			assertThat( Hibernate.contains( owner.marks, tag ) ).isFalse();
+			assertEquals( 0, owner.marks.size() );
+			assertThat( Hibernate.isInitialized( owner.marks ) ).isFalse();
+		} );
+	}
+
+	@Test
+	void membershipUsesReferencedColumn(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			final var owner = session.find( Owner.class, 2 );
+			final var tag = session.find( Tag.class, 20 );
+			final var observer = scope.getCollectingStatementObserver();
+			observer.clear();
+			assertThat( Hibernate.contains( owner.tags, tag ) ).isTrue();
+			observer.assertQuery( 0 ).doesNotContain( " join " );
+			assertThat( Hibernate.contains( owner.tagsByCode, tag ) ).isTrue();
+			assertThat( Hibernate.contains( owner.tagsByCode, session.find( Tag.class, 10 ) ) ).isFalse();
+		} );
+	}
+
+	@Test
+	void sameEntityTypeForMapKeyAndValue(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.find( Owner.class, 3 ).keyed
+				.put( session.find( Tag.class, 10 ), session.find( Tag.class, 20 ) ) );
+		scope.inSession( session -> {
+			final var map = session.find( Owner.class, 3 ).keyed;
+			final var value = session.find( Tag.class, 20 );
+			assertThat( Hibernate.get( map, session.find( Tag.class, 10 ) ) ).isSameAs( value );
+			assertThat( Hibernate.get( map, value ) ).isNull();
+			assertThat( Hibernate.isInitialized( map ) ).isFalse();
+		} );
+	}
+
+	@Test
+	void indexedAccess(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			final var hidden = session.find( Owner.class, 1 );
+			final var live = session.find( Owner.class, 2 );
+			final var tag = session.find( Tag.class, 20 );
+			assertThat( Hibernate.get( hidden.keyed, session.find( Tag.class, 10 ) ) ).isNull();
+			assertThat( Hibernate.get( live.keyed, tag ) ).isSameAs( tag );
+		} );
+		scope.inSession( session -> {
+			session.enableFilter( "visibleNotes" );
+			final var live = session.find( Owner.class, 2 );
+			final var tag = session.find( Tag.class, 20 );
+			assertThat( Hibernate.get( live.keyed, tag ) ).isNull();
+			assertThat( Hibernate.isInitialized( live.keyed ) ).isFalse();
+			assertThat( live.keyed.get( tag ) ).isNull();
+		} );
+	}
+
+	@Test
+	void softDeletedMapKey(SessionFactoryScope scope) {
+		assertEquals( List.of( 20 ), ids( scope, "select key(v).id from Owner o join o.byNote v" ) );
+		assertEquals( List.of( 0, 1, 0 ), ids( scope, "select size(o.byNote) from Owner o order by o.id" ) );
+		assertEquals( singletonList( null ), ids( scope, "select v.id from Owner o left join o.byNote v where o.id = 1" ) );
+		scope.inSession( session -> {
+			assertThat( session.find( Owner.class, 1 ).byNote ).isEmpty();
+			session.enableFilter( "visibleNotes" );
+			assertThat( session.find( Owner.class, 2 ).byNote ).isEmpty();
+			assertThat( session.createSelectionQuery( "select key(v).id from Owner o join o.byNote v", Integer.class )
+					.list() ).isEmpty();
+		} );
+	}
+
 	private static List<Integer> ids(SessionFactoryScope scope, String hql) {
 		return scope.fromSession( session -> {
 			session.enableFilter( "liveMarks" );
@@ -231,6 +337,11 @@ public class SoftDeleteJoinTableQueryTests {
 		Set<Tag> tags = new HashSet<>();
 
 		@ManyToMany
+		@JoinTable(name = "owner_codes", inverseJoinColumns = @JoinColumn(name = "tag_code", referencedColumnName = "code"))
+		@SoftDelete
+		Set<Tag> tagsByCode = new HashSet<>();
+
+		@ManyToMany
 		@JoinTable(name = "owner_labels", inverseJoinColumns = @JoinColumn(name = "label_id"))
 		@SQLJoinTableRestriction("label_id <> 10")
 		Set<Tag> labels = new HashSet<>();
@@ -243,6 +354,7 @@ public class SoftDeleteJoinTableQueryTests {
 		@ManyToMany
 		@JoinTable(name = "owner_keyed")
 		@MapKeyJoinColumn(name = "key_id")
+		@FilterJoinTable(name = "visibleNotes", condition = "key_id <> 20")
 		@SoftDelete
 		Map<Tag, Tag> keyed = new HashMap<>();
 
@@ -250,6 +362,11 @@ public class SoftDeleteJoinTableQueryTests {
 		@JoinTable(name = "owner_notes")
 		@MapKeyJoinColumn(name = "key_id")
 		Map<Tag, Note> notes = new HashMap<>();
+
+		@ManyToMany
+		@JoinTable(name = "owner_by_note")
+		@MapKeyJoinColumn(name = "note_id")
+		Map<Note, Tag> byNote = new HashMap<>();
 
 		public Owner() {
 		}
@@ -265,14 +382,21 @@ public class SoftDeleteJoinTableQueryTests {
 		@Id
 		Integer id;
 
+		@Column(unique = true)
+		String code;
+
 		public Tag() {
 		}
 
 		public Tag(Integer id) {
 			this.id = id;
+			code = "tag-" + id;
 		}
 	}
 
+	@SQLRestriction("id <> 30")
+	@FilterDef(name = "visibleNotes", applyToLoadByKey = true)
+	@Filter(name = "visibleNotes", condition = "id <> 20")
 	@Entity(name = "Note")
 	@Table(name = "notes")
 	@SoftDelete

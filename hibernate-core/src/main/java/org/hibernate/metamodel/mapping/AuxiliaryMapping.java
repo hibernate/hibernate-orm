@@ -146,6 +146,11 @@ public interface AuxiliaryMapping {
 	@Nonnull
 	JdbcMapping getJdbcMapping();
 
+	/// Whether this mapping can contribute a row restriction to an association join.
+	default boolean hasRowRestriction(@Nonnull LoadQueryInfluencers influencers) {
+		return true;
+	}
+
 	/// Whether this mapping should use its auxiliary table for the supplied
 	/// query influencers.
 	///

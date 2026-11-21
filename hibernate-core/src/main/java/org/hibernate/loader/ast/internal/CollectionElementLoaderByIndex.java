@@ -3,9 +3,6 @@ package org.hibernate.loader.ast.internal;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
-import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
-
-import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.LockOptions;
@@ -15,15 +12,10 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.Loader;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
-import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.spi.creation.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.query.select.SelectStatement;
-import org.hibernate.sql.exec.internal.BaseExecutionContext;
-import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
-import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
-import org.hibernate.sql.results.spi.ListResultsConsumer;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 
 /**
  * @author Andrea Boriero
@@ -31,10 +23,9 @@ import org.hibernate.sql.results.spi.ListResultsConsumer;
 public class CollectionElementLoaderByIndex implements Loader {
 	private final PluralAttributeMapping attributeMapping;
 	private final SelectStatement sqlAst;
+	private final JdbcSelect jdbcSelect;
 	private final JdbcParametersList jdbcParameters;
 	private final int baseIndex;
-
-	private final int keyJdbcCount;
 
 	/**
 	 * Shortened form of {@link #CollectionElementLoaderByIndex(PluralAttributeMapping, int, LoadQueryInfluencers, SessionFactoryImplementor)}
@@ -61,23 +52,9 @@ public class CollectionElementLoaderByIndex implements Loader {
 		final var keyDescriptor = attributeMapping.getKeyDescriptor();
 		final var indexDescriptor = attributeMapping.getIndexDescriptor();
 
-		final List<ModelPart> restrictedParts = new ArrayList<>();
-		restrictedParts.add( keyDescriptor );
-
-		if ( indexDescriptor instanceof EntityCollectionPart entityCollectionPart ) {
-			var identifierMapping =
-					entityCollectionPart.getEntityMappingType()
-							.getIdentifierMapping();
-			restrictedParts.add( identifierMapping );
-			keyJdbcCount = keyDescriptor.getJdbcTypeCount() + identifierMapping.getJdbcTypeCount();
-		}
-		else {
-			restrictedParts.add( indexDescriptor );
-			keyJdbcCount = keyDescriptor.getJdbcTypeCount() + indexDescriptor.getJdbcTypeCount();
-		}
-
-		final List<ModelPart> partsToSelect = new ArrayList<>();
-		partsToSelect.add( attributeMapping.getElementDescriptor() );
+		final List<ModelPart> restrictedParts = List.of( keyDescriptor, indexDescriptor );
+		final int keyJdbcCount = keyDescriptor.getJdbcTypeCount() + indexDescriptor.getJdbcTypeCount();
+		final List<ModelPart> partsToSelect = List.of( attributeMapping.getElementDescriptor() );
 
 		final var jdbcParametersBuilder = JdbcParametersList.newBuilder( keyJdbcCount );
 		sqlAst = LoaderSelectBuilder.createSelect(
@@ -93,6 +70,7 @@ public class CollectionElementLoaderByIndex implements Loader {
 				sessionFactory
 		);
 		jdbcParameters = jdbcParametersBuilder.build();
+		jdbcSelect = CollectionScalarLoader.translate( sqlAst, sessionFactory );
 	}
 
 	@Nonnull
@@ -118,40 +96,8 @@ public class CollectionElementLoaderByIndex implements Loader {
 
 	@Nullable
 	public Object load(@Nonnull Object key, @Nonnull Object index, @Nonnull SharedSessionContractImplementor session) {
-
-		final var jdbcParameterBindings = new JdbcParameterBindingsImpl( keyJdbcCount );
-
-		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(
-				key,
-				attributeMapping.getKeyDescriptor(),
-				jdbcParameters,
-				session
-		);
-		offset += jdbcParameterBindings.registerParametersForEachJdbcValue(
-				incrementIndexByBase( index ),
-				offset,
-				attributeMapping.getIndexDescriptor(),
-				jdbcParameters,
-				session
-		);
-		assert offset == jdbcParameters.size();
-
-		final var sessionFactory = session.getFactory();
-		final var jdbcServices = sessionFactory.getJdbcServices();
-		final var jdbcSelect =
-				jdbcServices.getJdbcEnvironment().getSqlAstTranslatorFactory()
-						.buildTranslator( new SqlAstTranslationRequest.Select( sessionFactory, sqlAst ) )
-						.translate( jdbcParameterBindings, QueryOptions.NONE );
-		var list = jdbcServices.getJdbcSelectExecutor().list(
-				jdbcSelect,
-				jdbcParameterBindings,
-				new BaseExecutionContext( session ),
-				RowTransformerStandardImpl.instance(),
-				null,
-				ListResultsConsumer.UniqueSemantic.FILTER,
-				1
-		);
-		return list.isEmpty() ? null : list.get( 0 );
+		return CollectionScalarLoader.load( attributeMapping, key, attributeMapping.getIndexDescriptor(),
+				incrementIndexByBase( index ), jdbcSelect, jdbcParameters, session );
 	}
 
 	/**

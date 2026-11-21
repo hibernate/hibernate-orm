@@ -64,15 +64,6 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 				sessionFactory
 		);
 
-		final var querySpec = sqlAst.getQueryPart().getFirstQuerySpec();
-		final var tableGroup = querySpec.getFromClause().getRoots().get( 0 );
-		attributeMapping.applyAuxiliaryRestrictions(
-				tableGroup,
-				querySpec::applyPredicate,
-				influencers,
-				sqlAliasBaseGenerator
-		);
-
 		jdbcParameters = jdbcParametersBuilder.build();
 		jdbcSelect =
 				sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()

@@ -102,7 +102,7 @@ class SQLJoinTableRestrictionQueryTest {
 
 	@ParameterizedTest
 	@ValueSource(strings = {"count(item)", "count(*)", "count(cart)"})
-	void innerJoinAppliesJoinTableFilter(String selection, SessionFactoryScope scope) {
+	void innerJoinCountsApplyJoinTableFilter(String selection, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			session.enableFilter( "itemOneOnly" );
 			// Cart 1 holds items 1 and 2, and the filter hides item 2.

@@ -1120,6 +1120,14 @@ informix_post_setup() {
 
 ###############################################################################
 
+timesten() {
+    # Official images need `docker login container-registry.oracle.com` after accepting the licence terms there
+    compose_down "timesten"
+    compose_up "latest/timesten/docker-compose.yaml"
+}
+
+###############################################################################
+
 spanner() {
   spanner_emulator GOOGLE_STANDARD_SQL
 }
@@ -1279,6 +1287,7 @@ if [ -z ${1} ]; then
     echo -e "\tinformix_15"
     echo -e "\tinformix_14_10"
     echo -e "\tinformix_12_10"
+    echo -e "\ttimesten"
     echo -e "\tspanner"
     echo -e "\tspanner_pg"
     echo -e "\tspanner_emulator"

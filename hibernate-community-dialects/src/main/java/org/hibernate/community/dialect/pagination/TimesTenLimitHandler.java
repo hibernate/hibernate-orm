@@ -1,12 +1,16 @@
 package org.hibernate.community.dialect.pagination;
 
+import java.util.List;
+
 import org.hibernate.dialect.pagination.spi.AbstractSimpleLimitHandler;
 import org.hibernate.dialect.pagination.spi.LimitHandler;
 import org.hibernate.dialect.pagination.spi.PaginationRequest;
 
 /**
- * A {@link LimitHandler} for TimesTen, which uses {@code ROWS n},
- * but at the start of the query instead of at the end.
+ * A {@link LimitHandler} for TimesTen, which uses {@code FIRST n} or {@code ROWS m TO n},
+ * but at the start of the query, immediately after {@code SELECT}, instead of at the end.
+ * <p>
+ * The row numbers in {@code ROWS m TO n} are one-based and inclusive.
  */
 public class TimesTenLimitHandler extends AbstractSimpleLimitHandler {
 
@@ -34,6 +38,31 @@ public class TimesTenLimitHandler extends AbstractSimpleLimitHandler {
 	@Override
 	public boolean bindLimitParametersFirst() {
 		return true;
+	}
+
+	@Override
+	protected String insert(String limitClause, String sql) {
+		return insertAfterSelect( limitClause, sql );
+	}
+
+	@Override
+	protected List<Integer> bindLimitParameterValues(PaginationRequest request) {
+		if ( request.hasMaxRows() ) {
+			if ( request.hasFirstRow() ) {
+				// rows (offset + 1) to (offset + max)
+				final int firstRow = convertToFirstRowValue( request.firstRowOrZero() );
+				final long lastRow = (long) request.firstRowOrZero() + request.maxRows();
+				return List.of( firstRow, lastRow > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) lastRow );
+			}
+			// first max
+			return List.of( request.maxRows() );
+		}
+		else if ( request.hasFirstRow() ) {
+			return List.of( convertToFirstRowValue( request.firstRowOrZero() ) );
+		}
+		else {
+			return List.of();
+		}
 	}
 
 	@Override

@@ -388,7 +388,9 @@ public class AuditMappingImpl implements AuditMapping {
 		);
 
 		final var indexDescriptor = collectionDescriptor.getIndexDescriptor();
-		if ( indexDescriptor != null ) {
+		// the key of a map mapped by @MapKey is an attribute of the element,
+		// which is not in the collection table, so the element identifies the row
+		if ( indexDescriptor != null && collectionDescriptor.getIndexMetadata().getIndexPropertyName() == null ) {
 			indexDescriptor.forEachSelectable(
 					(selectionIndex, selectableMapping) -> {
 						if ( !selectableMapping.isFormula() ) {

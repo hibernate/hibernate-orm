@@ -29,6 +29,7 @@ import java.util.Set;
 import static jakarta.persistence.FetchType.LAZY;
 import static org.hibernate.audit.AuditLog.ALL_CHANGESETS;
 import static org.hibernate.cfg.StateManagementSettings.CHANGESET_ID_SUPPLIER;
+import static org.hibernate.cfg.StateManagementSettings.TEMPORAL_TABLE_STRATEGY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
@@ -47,8 +48,11 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 		AuditRevisionAssociationTest.Comment.class,
 		AuditRevisionAssociationTest.Tag.class
 })
-@ServiceRegistry(settings = @Setting(name = CHANGESET_ID_SUPPLIER,
-		value = "org.hibernate.temporal.audit.AuditRevisionAssociationTest$ChangesetIds"))
+@ServiceRegistry(settings = {
+		@Setting(name = TEMPORAL_TABLE_STRATEGY, value = "HISTORY_TABLE"),
+		@Setting(name = CHANGESET_ID_SUPPLIER,
+				value = "org.hibernate.temporal.audit.AuditRevisionAssociationTest$ChangesetIds")
+})
 class AuditRevisionAssociationTest {
 
 	private static Object historyCreatedFor;
@@ -216,7 +220,7 @@ class AuditRevisionAssociationTest {
 		@OneToOne(fetch = LAZY) Event event;
 	}
 
-	@Entity(name = "Comment")
+	@Entity(name = "EventComment")
 	static class Comment {
 		@Id int id;
 		@ManyToOne(fetch = LAZY) Event event;

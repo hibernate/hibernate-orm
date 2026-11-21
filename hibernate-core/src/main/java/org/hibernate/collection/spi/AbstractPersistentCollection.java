@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.audit.AuditLog;
@@ -25,7 +26,10 @@ import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.Optional;
 import org.hibernate.internal.util.collections.IdentitySet;
+import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.proxy.AbstractLazyInitializer;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
@@ -39,6 +43,7 @@ import static org.hibernate.engine.internal.ForeignKeys.getEntityIdentifier;
 import static org.hibernate.engine.internal.ForeignKeys.getEntityIdentifierIfNotUnsaved;
 import static org.hibernate.engine.internal.ForeignKeys.isNotTransient;
 import static org.hibernate.metamodel.mapping.internal.CurrentState.hasHistory;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 import static org.hibernate.resource.transaction.spi.TransactionStatus.FAILED_COMMIT;
 import static org.hibernate.resource.transaction.spi.TransactionStatus.FAILED_ROLLBACK;
@@ -183,7 +188,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 									if ( hasQueuedOperations() ) {
 										session.flush();
 									}
-									cachedSize = countRows( persister, entry.getLoadedKey() );
+									cachedSize = atOwnChangeset( () -> persister.getSize( entry.getLoadedKey(), session ) );
 									return true;
 								}
 								else {
@@ -214,7 +219,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 				if ( hasQueuedOperations() ) {
 					session.flush();
 				}
-				cachedSize = countRows( entry.getLoadedPersister(), entry.getLoadedKey() );
+				cachedSize = atOwnChangeset( () -> entry.getLoadedPersister().getSize( entry.getLoadedKey(), session ) );
 				return cachedSize;
 			}
 		}
@@ -341,11 +346,14 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 						final var entry = getCollectionEntry();
 						final var persister = entry.getLoadedPersister();
 						checkPersister( this, persister );
-						if ( persister.isExtraLazy() && !readsAtChangeset( persister ) ) {
+						if ( persister.isExtraLazy() ) {
+							if ( readAtOtherChangeset( persister.getAttributeMapping().getIndexDescriptor(), index ) ) {
+								return false;
+							}
 							if ( hasQueuedOperations() ) {
 								session.flush();
 							}
-							return persister.indexExists( entry.getLoadedKey(), index, session );
+							return atOwnChangeset( () -> persister.indexExists( entry.getLoadedKey(), index, session ) );
 						}
 						else {
 							read();
@@ -364,11 +372,14 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 						final var entry = getCollectionEntry();
 						final var persister = entry.getLoadedPersister();
 						checkPersister( this, persister );
-						if ( persister.isExtraLazy() && !readsAtChangeset( persister ) ) {
+						if ( persister.isExtraLazy() ) {
+							if ( readAtOtherChangeset( persister.getAttributeMapping().getElementDescriptor(), element ) ) {
+								return false;
+							}
 							if ( hasQueuedOperations() ) {
 								session.flush();
 							}
-							return persister.elementExists( entry.getLoadedKey(), element, session );
+							return atOwnChangeset( () -> persister.elementExists( entry.getLoadedKey(), element, session ) );
 						}
 						else {
 							read();
@@ -388,16 +399,15 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 			throwLazyInitializationException( "collection not associated with session" );
 			throw new AssertionFailure( "impossible" );
 		}
-		else if ( readsAtChangeset( entry.getLoadedPersister() ) ) {
-			read();
-			return this instanceof Map<?, ?> map ? map.containsValue( element ) : ( (Collection<?>) this ).contains( element );
+		else if ( readAtOtherChangeset( entry.getLoadedPersister().getAttributeMapping().getElementDescriptor(), element ) ) {
+			return false;
 		}
 		else {
 			if ( hasQueuedOperations() ) {
 				session.flush();
 			}
-			return entry.getLoadedPersister()
-					.elementExists( entry.getLoadedKey(), element, session );
+			return atOwnChangeset( () -> entry.getLoadedPersister()
+					.elementExists( entry.getLoadedKey(), element, session ) );
 		}
 	}
 
@@ -407,11 +417,15 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 				final var entry = getCollectionEntry();
 				final var persister = entry.getLoadedPersister();
 				checkPersister( AbstractPersistentCollection.this, persister );
-				if ( persister.isExtraLazy() && !readsAtChangeset( persister ) ) {
+				if ( persister.isExtraLazy() ) {
+					if ( readAtOtherChangeset( persister.getAttributeMapping().getIndexDescriptor(), index ) ) {
+						return Optional.of( null );
+					}
 					if ( hasQueuedOperations() ) {
 						session.flush();
 					}
-					final Object element = persister.getElementByIndex( entry.getLoadedKey(), index, session, owner );
+					final Object element = atOwnChangeset(
+							() -> persister.getElementByIndex( entry.getLoadedKey(), index, session, owner ) );
 					return Optional.of( (E) element );
 				}
 				else {
@@ -431,41 +445,51 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 			throwLazyInitializationException( "collection not associated with session" );
 			throw new AssertionFailure( "impossible" );
 		}
-		else if ( readsAtChangeset( entry.getLoadedPersister() ) ) {
-			read();
-			if ( this instanceof Map<?, ?> map ) {
-				return map.get( index );
-			}
-			else {
-				final var list = (List<?>) this;
-				final int position = (Integer) index;
-				return position >= 0 && position < list.size() ? list.get( position ) : null;
-			}
+		else if ( readAtOtherChangeset( entry.getLoadedPersister().getAttributeMapping().getIndexDescriptor(), index ) ) {
+			return null;
 		}
 		else {
 			if ( hasQueuedOperations() ) {
 				session.flush();
 			}
-			return entry.getLoadedPersister()
-					.getElementByIndex( entry.getLoadedKey(), index, session, owner );
+			return atOwnChangeset( () -> entry.getLoadedPersister()
+					.getElementByIndex( entry.getLoadedKey(), index, session, owner ) );
 		}
 	}
 
 	/**
-	 * Count the rows of the collection, at the changeset the collection was created at.
+	 * Whether the given element or key of this collection is an entity with history
+	 * which the session holds at another changeset than this collection: a snapshot of
+	 * another revision, or current state where this collection holds a snapshot, or
+	 * a snapshot where it holds current state. Such an entity is never an element or
+	 * key of this collection, which holds the entities at its own changeset, just as
+	 * a lookup of the initialized collection would find.
 	 */
-	private int countRows(CollectionPersister persister, Object key) {
-		return session.getLoadQueryInfluencers()
-				.withCapturedTemporalIdentifier( temporalIdentifier, () -> persister.getSize( key, session ) );
+	private boolean readAtOtherChangeset(@Nullable CollectionPart part, @Nullable Object value) {
+		if ( value != null
+				&& part instanceof EntityCollectionPart entityPart
+				&& hasHistory( entityPart.getAssociatedEntityMappingType() ) ) {
+			final var lazyInitializer = extractLazyInitializer( value );
+			if ( lazyInitializer != null && lazyInitializer.isUninitialized() ) {
+				return lazyInitializer.getSession() == session
+					&& lazyInitializer instanceof AbstractLazyInitializer abstractLazyInitializer
+					&& !Objects.equals( abstractLazyInitializer.getTemporalIdentifier(), temporalIdentifier );
+			}
+			else {
+				final var entry = session.getPersistenceContextInternal()
+						.getEntry( lazyInitializer == null ? value : lazyInitializer.getImplementation() );
+				return entry != null && !Objects.equals( entry.getEntityKey().getChangesetId(), temporalIdentifier );
+			}
+		}
+		return false;
 	}
 
 	/**
-	 * Whether this collection holds state as of a changeset, which the queries
-	 * searching the rows of a collection do not read, since they read current
-	 * state. Its state is then read in memory, once initialized.
+	 * Perform a lookup of the rows of the collection, without initializing it,
+	 * at the changeset the collection was created at.
 	 */
-	private boolean readsAtChangeset(CollectionPersister persister) {
-		return temporalIdentifier != null && hasHistory( persister.getAttributeMapping() );
+	private <T> T atOwnChangeset(Supplier<T> lookup) {
+		return session.getLoadQueryInfluencers().withCapturedTemporalIdentifier( temporalIdentifier, lookup );
 	}
 
 	protected int getCachedSize() {

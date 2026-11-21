@@ -40,13 +40,15 @@ public final class CurrentState {
 
 	/**
 	 * Whether the collection has states other than its current one: it is audited
-	 * or temporal, or its elements are.
+	 * or temporal, or its elements or keys are.
 	 */
 	public static boolean hasHistory(@Nonnull PluralAttributeMapping collection) {
 		return collection.getAuditMapping() != null
 			|| collection.getTemporalMapping() != null
 			|| collection.getElementDescriptor() instanceof EntityCollectionPart element
-					&& hasHistory( element.getAssociatedEntityMappingType() );
+					&& hasHistory( element.getAssociatedEntityMappingType() )
+			|| collection.getIndexDescriptor() instanceof EntityCollectionPart index
+					&& hasHistory( index.getAssociatedEntityMappingType() );
 	}
 
 	/**

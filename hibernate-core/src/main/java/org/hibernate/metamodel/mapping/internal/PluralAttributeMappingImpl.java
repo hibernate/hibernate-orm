@@ -1494,9 +1494,16 @@ public class PluralAttributeMappingImpl
 		}
 
 		if ( indexDescriptor instanceof TableGroupJoinProducer tableGroupJoinProducer ) {
+			// an entity which is the key of a map mapped by @MapKey is an association
+			// of the element, so it is joined from the element, whose table has the
+			// foreign key
+			final var elementTableGroup = tableGroup.getElementTableGroup();
+			final boolean joinedFromElement = mapKeyPropertyName != null
+					&& indexDescriptor instanceof EntityCollectionPart
+					&& elementTableGroup != null;
 			final var tableGroupJoin = tableGroupJoinProducer.createTableGroupJoin(
 					navigablePath.append( CollectionPart.Nature.INDEX.getName() ),
-					tableGroup,
+					joinedFromElement ? elementTableGroup : tableGroup,
 					null,
 					sqlAliasBase,
 					nestedJoin ? SqlAstJoinType.INNER : joinType,

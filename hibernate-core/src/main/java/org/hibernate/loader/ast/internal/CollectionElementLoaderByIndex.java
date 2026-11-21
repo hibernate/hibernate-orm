@@ -9,13 +9,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.LockOptions;
+import org.hibernate.TransientObjectException;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.Loader;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.spi.creation.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.query.select.SelectStatement;
@@ -25,11 +25,14 @@ import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 /**
  * @author Andrea Boriero
  */
 public class CollectionElementLoaderByIndex implements Loader {
 	private final PluralAttributeMapping attributeMapping;
+	private final CollectionPartRestriction indexRestriction;
 	private final SelectStatement sqlAst;
 	private final JdbcParametersList jdbcParameters;
 	private final int baseIndex;
@@ -64,22 +67,15 @@ public class CollectionElementLoaderByIndex implements Loader {
 		final List<ModelPart> restrictedParts = new ArrayList<>();
 		restrictedParts.add( keyDescriptor );
 
-		if ( indexDescriptor instanceof EntityCollectionPart entityCollectionPart ) {
-			var identifierMapping =
-					entityCollectionPart.getEntityMappingType()
-							.getIdentifierMapping();
-			restrictedParts.add( identifierMapping );
-			keyJdbcCount = keyDescriptor.getJdbcTypeCount() + identifierMapping.getJdbcTypeCount();
-		}
-		else {
-			restrictedParts.add( indexDescriptor );
-			keyJdbcCount = keyDescriptor.getJdbcTypeCount() + indexDescriptor.getJdbcTypeCount();
-		}
+		indexRestriction = CollectionPartRestriction.of( attributeMapping, castNonNull( indexDescriptor ) );
+		indexRestriction.addRestrictedPart( restrictedParts );
+		keyJdbcCount = keyDescriptor.getJdbcTypeCount() + indexRestriction.getJdbcTypeCount();
 
 		final List<ModelPart> partsToSelect = new ArrayList<>();
 		partsToSelect.add( attributeMapping.getElementDescriptor() );
 
 		final var jdbcParametersBuilder = JdbcParametersList.newBuilder( keyJdbcCount );
+		final var sqlAliasBaseGenerator = new SqlAliasBaseManager();
 		sqlAst = LoaderSelectBuilder.createSelect(
 				attributeMapping,
 				partsToSelect,
@@ -89,8 +85,17 @@ public class CollectionElementLoaderByIndex implements Loader {
 				influencers,
 				new LockOptions(),
 				jdbcParametersBuilder::add,
-				new SqlAliasBaseManager(),
+				sqlAliasBaseGenerator,
 				sessionFactory
+		);
+		// restricted like the rows which load the collection
+		final var querySpec = sqlAst.getQueryPart().getFirstQuerySpec();
+		indexRestriction.restrictJoined( querySpec, jdbcParametersBuilder::add );
+		attributeMapping.applyAuxiliaryRestrictions(
+				querySpec.getFromClause().getRoots().get( 0 ),
+				querySpec::applyPredicate,
+				influencers,
+				sqlAliasBaseGenerator
 		);
 		jdbcParameters = jdbcParametersBuilder.build();
 	}
@@ -127,13 +132,19 @@ public class CollectionElementLoaderByIndex implements Loader {
 				jdbcParameters,
 				session
 		);
-		offset += jdbcParameterBindings.registerParametersForEachJdbcValue(
-				incrementIndexByBase( index ),
-				offset,
-				attributeMapping.getIndexDescriptor(),
-				jdbcParameters,
-				session
-		);
+		try {
+			offset += indexRestriction.bind(
+					jdbcParameterBindings,
+					incrementIndexByBase( index ),
+					offset,
+					jdbcParameters,
+					session
+			);
+		}
+		catch (TransientObjectException e) {
+			// an unsaved entity is not a key of the map
+			return null;
+		}
 		assert offset == jdbcParameters.size();
 
 		final var sessionFactory = session.getFactory();

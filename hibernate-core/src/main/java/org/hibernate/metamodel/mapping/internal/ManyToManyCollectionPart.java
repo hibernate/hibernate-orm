@@ -395,9 +395,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 			}
 		}
 		else if ( isNotEmpty( bootCollectionDescriptor.getMappedByProperty() ) ) {
-			final var mappedByPart =
-					resolveNamedTargetPart( bootCollectionDescriptor.getMappedByProperty(),
-							getAssociatedEntityMappingType(), collectionDescriptor );
+			final var mappedByPart = resolveMappedByPart( bootCollectionDescriptor.getMappedByProperty() );
 			if ( mappedByPart instanceof ToOneAttributeMapping
 					|| mappedByPart instanceof DiscriminatedAssociationAttributeMapping ) {
 				////////////////////////////////////////////////
@@ -570,6 +568,10 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 					creationProcess
 			);
 		}
+	}
+
+	ValuedModelPart resolveMappedByPart(String mappedBy) {
+		return resolveNamedTargetPart( mappedBy, getAssociatedEntityMappingType(), getCollectionDescriptor() );
 	}
 
 	private static ValuedModelPart resolveNamedTargetPart(

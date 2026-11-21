@@ -2,7 +2,9 @@ package org.hibernate.temporal.audit.collection;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OrderColumn;
 import org.hibernate.annotations.Audited;
 import org.hibernate.audit.AuditLog;
 import org.hibernate.audit.AuditLogFactory;
@@ -22,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -190,6 +193,51 @@ class AuditBidirectionalManyToManyTest {
 		}
 	}
 
+	@Test
+	void testCollectionSizeAtJoinedOwnersRevision(SessionFactoryScope scope) {
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
+			// At revLink the reference exists, but the referenced entity's own revision predates the link.
+			assertEquals( List.of( 0 ), session.createSelectionQuery(
+					"select size(e.referencing) from OwningEntity o join o.references e "
+							+ "where o.id = 3 and changesetId(o) = :revision",
+					Integer.class ).setParameter( "revision", revLink ).list() );
+		}
+	}
+
+	@Test
+	void testInverseCollectionSizeAtChangeset(SessionFactoryScope scope) {
+		final String size = "select size(e.referencing) from OwnedEntity e where e.id = 1";
+		final var factory = scope.getSessionFactory();
+		try (var session = factory.withOptions().atChangeset( revLink ).openSession()) {
+			assertEquals( 2, session.createSelectionQuery( size, Integer.class ).getSingleResult() );
+		}
+		try (var session = factory.withOptions().atChangeset( revRemoveRef ).openSession()) {
+			assertEquals( 1, session.createSelectionQuery( size, Integer.class ).getSingleResult() );
+		}
+	}
+
+	@Test
+	void testInverseCollectionSizeUsesOwningListIndex(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			var owner = new OwningEntity( 30, "list owner" );
+			var element = new OwnedEntity( 30, "repeated element" );
+			owner.orderedReferences.add( element );
+			owner.orderedReferences.add( element );
+			session.persist( element );
+			session.persist( owner );
+		} );
+		scope.inTransaction( session -> session.find( OwningEntity.class, 30 ).orderedReferences.remove( 1 ) );
+		final int oneEntryLeft = currentTxId;
+		scope.inTransaction( session -> session.find( OwningEntity.class, 30 ).orderedReferences.clear() );
+
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( oneEntryLeft ).openSession()) {
+			// Removing the second slot leaves the first membership row visible.
+			assertEquals( 1, session.createSelectionQuery(
+					"select size(e.orderedReferencing) from OwnedEntity e where e.id = 30", Integer.class )
+					.getSingleResult() );
+		}
+	}
+
 	// --- getHistory ---
 
 	@Test
@@ -285,6 +333,10 @@ class AuditBidirectionalManyToManyTest {
 		String data;
 		@ManyToMany
 		Set<OwnedEntity> references = new HashSet<>();
+		@ManyToMany
+		@JoinTable(name = "ordered_references")
+		@OrderColumn(name = "position_in_list")
+		List<OwnedEntity> orderedReferences = new ArrayList<>();
 
 		OwningEntity() {
 		}
@@ -303,6 +355,8 @@ class AuditBidirectionalManyToManyTest {
 		String data;
 		@ManyToMany(mappedBy = "references")
 		Set<OwningEntity> referencing = new HashSet<>();
+		@ManyToMany(mappedBy = "orderedReferences")
+		Set<OwningEntity> orderedReferencing = new HashSet<>();
 
 		OwnedEntity() {
 		}

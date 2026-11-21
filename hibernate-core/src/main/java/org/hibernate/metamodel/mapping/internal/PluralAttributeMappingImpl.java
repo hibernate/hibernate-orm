@@ -123,7 +123,8 @@ public class PluralAttributeMappingImpl
 	private final FetchTiming fetchTiming;
 	private final FetchStyle fetchStyle;
 	@Nullable
-	private final AuxiliaryMapping auxiliaryMapping;
+	private AuxiliaryMapping auxiliaryMapping;
+	@Nullable private PluralAttributeMapping collectionTableOwner;
 
 	private final String bidirectionalAttributeName;
 
@@ -366,6 +367,7 @@ public class PluralAttributeMappingImpl
 		this.orderByFragment = original.orderByFragment;
 		this.manyToManyOrderByFragment = original.manyToManyOrderByFragment;
 		this.auxiliaryMapping = original.auxiliaryMapping;
+		this.collectionTableOwner = original.collectionTableOwner;
 		injectAttributeMapping( elementDescriptor, indexDescriptor, collectionDescriptor, this );
 	}
 
@@ -418,11 +420,21 @@ public class PluralAttributeMappingImpl
 	}
 
 	public void finishInitialization(
-			@SuppressWarnings("unused")
 			Property bootProperty,
 			Collection bootDescriptor,
 			@SuppressWarnings("unused")
 			MappingModelCreationProcess creationProcess) {
+		final String mappedBy = bootDescriptor.getMappedByProperty();
+		if ( auxiliaryMapping == null && !bootProperty.isAuditedExcluded()
+				&& bootDescriptor.isInverse() && mappedBy != null && !mappedBy.isEmpty()
+				&& elementDescriptor instanceof ManyToManyCollectionPart element ) {
+			if ( element.resolveMappedByPart( mappedBy ) instanceof PluralAttributeMapping owningCollection
+					&& owningCollection.getAuditMapping() != null ) {
+				// Both directions read the same membership rows. Only the owning collection writes their history.
+				collectionTableOwner = owningCollection;
+				auxiliaryMapping = owningCollection.getAuditMapping();
+			}
+		}
 		final boolean hasOrder = bootDescriptor.getOrderBy() != null;
 		final boolean hasManyToManyOrder = bootDescriptor.getManyToManyOrdering() != null;
 
@@ -627,7 +639,9 @@ public class PluralAttributeMappingImpl
 		applyPartRestriction( indexDescriptor, group.getIndexTableGroup(), ownerGroup,
 				restrictions, ownerRestrictions, aliases, influencers );
 		if ( auxiliaryMapping != null ) {
-			auxiliaryMapping.applyAssociationRestrictions( this, group, ownerGroup,
+			// The owning collection defines the audit row key, including any list index or map key.
+			final var tableMapping = collectionTableOwner == null ? this : collectionTableOwner;
+			auxiliaryMapping.applyAssociationRestrictions( tableMapping, group, ownerGroup,
 					restrictions, ownerRestrictions, aliases, influencers );
 		}
 	}

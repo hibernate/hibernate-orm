@@ -3,6 +3,9 @@ package org.hibernate.temporal.lazy;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Tuple;
+
+import java.util.List;
 
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Audited;
@@ -75,7 +78,7 @@ class TemporalLazyBasicTest {
 
 		try (var session = scope.getSessionFactory().withOptions().atChangeset( ALL_CHANGESETS ).openSession()) {
 			final var documents = session.createSelectionQuery(
-					"from AuditedDocument d order by changesetId(d)", AuditedDocument.class ).getResultList();
+					"from AuditedDocument d where d.id = 1 order by changesetId(d)", AuditedDocument.class ).getResultList();
 			assertEquals( 2, documents.size() );
 			for ( var document : documents ) {
 				assertFalse( isPropertyInitialized( document, "body" ) );
@@ -83,6 +86,34 @@ class TemporalLazyBasicTest {
 			assertEquals( "Final draft", documents.get( 1 ).body );
 			assertEquals( "First draft", documents.get( 0 ).body );
 			assertNull( documents.get( 0 ).note );
+		}
+	}
+
+	@Test
+	void lazyAttributeOfIndependentRootInBothProjectionOrders(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var revision = new AuditedDocument();
+			revision.id = 2;
+			revision.body = "Earlier revision";
+			session.persist( revision );
+		} );
+		scope.inTransaction( session -> {
+			final var article = new Document();
+			article.id = 2;
+			article.body = "Article text";
+			session.persist( article );
+		} );
+
+		final var builder = scope.getSessionFactory().withOptions().atChangeset( ALL_CHANGESETS );
+		for ( var projection : List.of( "a as article, r", "r, a as article" ) ) {
+			try (var session = builder.openSession()) {
+				final var tuple = session.createSelectionQuery( "select " + projection
+						+ " from AuditedDocument r cross join Document a where r.id = 2 and a.id = 2",
+						Tuple.class ).getSingleResult();
+				final var article = tuple.get( "article", Document.class );
+				assertFalse( isPropertyInitialized( article, "body" ) );
+				assertEquals( "Article text", article.body );
+			}
 		}
 	}
 

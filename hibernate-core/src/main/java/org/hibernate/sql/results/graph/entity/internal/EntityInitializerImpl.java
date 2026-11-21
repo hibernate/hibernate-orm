@@ -153,6 +153,7 @@ public class EntityInitializerImpl
 		protected final boolean hasCallbackActions;
 		protected final @Nullable EntityPersister defaultConcreteDescriptor;
 		protected final boolean allRevisions;
+		private final boolean currentStateRoot;
 
 		// per-row state
 		protected @Nullable EntityPersister concreteDescriptor;
@@ -181,8 +182,10 @@ public class EntityInitializerImpl
 				canUseEmbeddedIdentifierInstanceAsEntity = false;
 			}
 			hasCallbackActions = rowProcessingState.hasCallbackActions();
-			allRevisions = initializer.auditChangesetIdAssembler != null
-					&& rowProcessingState.getSession().getLoadQueryInfluencers().isAllRevisions();
+			final boolean allRevisionsQuery = rowProcessingState.getSession().getLoadQueryInfluencers().isAllRevisions();
+			allRevisions = allRevisionsQuery && initializer.auditChangesetIdAssembler != null;
+			currentStateRoot = allRevisionsQuery && initializer.isResultInitializer()
+					&& initializer.auditChangesetIdAssembler == null;
 			defaultConcreteDescriptor =
 					hasConcreteDescriptor( rowProcessingState, initializer.discriminatorAssembler, entityDescriptor )
 							? entityDescriptor
@@ -201,6 +204,7 @@ public class EntityInitializerImpl
 			this.canUseEmbeddedIdentifierInstanceAsEntity = original.canUseEmbeddedIdentifierInstanceAsEntity;
 			this.hasCallbackActions = original.hasCallbackActions;
 			this.allRevisions = original.allRevisions;
+			this.currentStateRoot = original.currentStateRoot;
 			this.defaultConcreteDescriptor = original.defaultConcreteDescriptor;
 			this.concreteDescriptor = original.concreteDescriptor;
 			this.entityKey = original.entityKey;
@@ -880,6 +884,12 @@ public class EntityInitializerImpl
 					determineConcreteEntityDescriptor( data.getRowProcessingState(),
 							discriminatorAssembler, entityDescriptor );
 			assert concreteDescriptor != null;
+		}
+		if ( data.currentStateRoot ) {
+			// Another root may have set its row's changeset for association loads.
+			// This root was selected from the current table.
+			data.entityKey = new EntityKey( id, concreteDescriptor );
+			return;
 		}
 		final var rowProcessingState = data.getRowProcessingState();
 		// An all-revisions result carries its changeset on the row itself.

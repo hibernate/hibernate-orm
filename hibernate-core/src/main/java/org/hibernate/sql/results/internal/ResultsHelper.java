@@ -87,7 +87,7 @@ public class ResultsHelper {
 			&& collectionDescriptor.hasCache()  // the collection role has a cache
 			&& isCachePutEnabled( session, cacheStoreMode )  // the effective cache mode allows puts
 			&& !hasQueuedCollectionRemove( session, collection )  // this is not a forced initialization during flush
-			&& !readsHistory( session );  // this is not a historical snapshot
+			&& !readsHistory( session, collectionDescriptor );  // this is not a historical snapshot
 	}
 
 	private static boolean hasQueuedCollectionRemove(SharedSessionContractImplementor session, PersistentCollection<?> collection) {

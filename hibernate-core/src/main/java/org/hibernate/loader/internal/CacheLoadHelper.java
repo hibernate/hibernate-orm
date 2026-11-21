@@ -398,7 +398,7 @@ public class CacheLoadHelper {
 			@Nonnull CollectionPersister persister,
 			@Nonnull PersistentCollection<?> collection,
 			@Nonnull SharedSessionContractImplementor source) {
-		if ( source.getCacheMode().isGetEnabled() && !readsHistory( source ) ) {
+		if ( source.getCacheMode().isGetEnabled() && !readsHistory( source, persister ) ) {
 			return usingCache( persister, cache -> {
 				final Object cachedEntry = getFromSharedCache( key, persister, source, cache );
 				if ( cachedEntry == null ) {

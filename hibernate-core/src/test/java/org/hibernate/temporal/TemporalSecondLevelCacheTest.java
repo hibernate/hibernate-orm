@@ -27,10 +27,11 @@ import static org.hibernate.cfg.StateManagementSettings.TEMPORAL_TABLE_STRATEGY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@SessionFactory
+@SessionFactory(generateStatistics = true)
 @DomainModel(annotatedClasses = {
 		TemporalSecondLevelCacheTest.TemporalThing.class,
-		TemporalSecondLevelCacheTest.AuditedThing.class
+		TemporalSecondLevelCacheTest.AuditedThing.class,
+		TemporalSecondLevelCacheTest.OrdinaryThing.class
 })
 @ServiceRegistry(settings = {
 		@Setting(name = USE_SECOND_LEVEL_CACHE, value = "true"),
@@ -128,6 +129,38 @@ class TemporalSecondLevelCacheTest {
 			assertEquals( "v3", thing.name );
 			assertEquals( Set.of( "a", "b", "c" ), thing.tags );
 		} );
+	}
+
+	@Test
+	void historicalSessionHitsNonTemporalCollectionCache(SessionFactoryScope scope) {
+		final var changeset = scope.fromTransaction( session -> {
+			final var thing = new OrdinaryThing();
+			thing.id = 1;
+			thing.tags.add( "a" );
+			session.persist( thing );
+			return session.getCurrentChangesetIdentifier();
+		} );
+		scope.inSession( session -> assertEquals( Set.of( "a" ), session.find( OrdinaryThing.class, 1 ).tags ) );
+
+		final var factory = scope.getSessionFactory();
+		final String role = OrdinaryThing.class.getName() + ".tags";
+		assertTrue( factory.getCache().containsCollection( role, 1 ) );
+		try (var session = factory.withOptions().atChangeset( changeset ).openSession()) {
+			final var thing = session.find( OrdinaryThing.class, 1 );
+			final var statistics = factory.getStatistics();
+			statistics.clear();
+			assertEquals( Set.of( "a" ), thing.tags );
+			assertEquals( 1, statistics.getCollectionStatistics( role ).getCacheHitCount() );
+			assertEquals( 0, statistics.getPrepareStatementCount() );
+		}
+	}
+
+	@Entity(name = "OrdinaryThing")
+	static class OrdinaryThing {
+		@Id int id;
+		@ElementCollection
+		@Cache(usage = READ_WRITE)
+		Set<String> tags = new HashSet<>();
 	}
 
 	@Entity(name = "TemporalThing")

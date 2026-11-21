@@ -462,7 +462,7 @@ public class BatchFetchQueue {
 
 	private boolean isCached(Object collectionKey, CollectionPersister persister) {
 		final var session = getSession();
-		if ( session.getCacheMode().isGetEnabled() && !readsHistory( session ) ) {
+		if ( session.getCacheMode().isGetEnabled() && !readsHistory( session, persister ) ) {
 			return usingCache( persister, cache -> {
 				final Object cacheKey =
 						cache.generateCacheKey( collectionKey, persister,

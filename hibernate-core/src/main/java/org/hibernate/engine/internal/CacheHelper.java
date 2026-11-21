@@ -42,12 +42,20 @@ public final class CacheHelper {
 	}
 
 	/**
-	 * Whether the given session reads historical snapshots of collections,
-	 * which the second-level cache, holding their current state, cannot
-	 * supply.
+	 * Whether the changeset affects the collection table or its associated
+	 * entities and therefore the collection's cached membership.
 	 */
-	public static boolean readsHistory(@Nonnull SharedSessionContractImplementor session) {
-		return session.getLoadQueryInfluencers().getTemporalIdentifier() != null;
+	public static boolean readsHistory(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull CollectionPersister persister) {
+		final var influencers = session.getLoadQueryInfluencers();
+		if ( influencers.getTemporalIdentifier() == null ) {
+			return false;
+		}
+		final var auxiliaryMapping = persister.getAttributeMapping().getAuxiliaryMapping();
+		return auxiliaryMapping != null && auxiliaryMapping.isAffectedByInfluencers( influencers )
+			|| ( persister.isOneToMany() || persister.isManyToMany() )
+					&& readsHistory( session, persister.getElementPersister() );
 	}
 
 	public static Object fromSharedCache(

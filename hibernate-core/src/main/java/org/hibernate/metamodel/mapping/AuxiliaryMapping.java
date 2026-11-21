@@ -1,7 +1,6 @@
 package org.hibernate.metamodel.mapping;
 
 import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -12,7 +11,6 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.creation.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.from.LazyTableGroup;
 import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
 import org.hibernate.sql.ast.spi.query.from.TableGroup;
@@ -82,17 +80,6 @@ public interface AuxiliaryMapping {
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
 			@Nonnull LoadQueryInfluencers influencers);
 
-	/// Applies the restriction in the context of the owning audit revision, when available.
-	default void applyPredicate(
-			@Nonnull EntityMappingType associatedEntityDescriptor,
-			@Nonnull Consumer<Predicate> predicateConsumer,
-			@Nonnull TableGroup tableGroup,
-			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
-			@Nonnull LoadQueryInfluencers influencers,
-			@Nullable Expression ownerRevision) {
-		applyPredicate( associatedEntityDescriptor, predicateConsumer, tableGroup, sqlAliasBaseGenerator, influencers );
-	}
-
 	/// Applies the auxiliary row restriction to a collection table group.
 	///
 	/// This is the collection counterpart to the entity table-group overload and
@@ -103,17 +90,6 @@ public interface AuxiliaryMapping {
 			@Nonnull TableGroup tableGroup,
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
 			@Nonnull LoadQueryInfluencers influencers);
-
-	/// Applies the restriction in the context of the owning audit revision, when available.
-	default void applyPredicate(
-			@Nonnull PluralAttributeMapping associatedEntityDescriptor,
-			@Nonnull Consumer<Predicate> predicateConsumer,
-			@Nonnull TableGroup tableGroup,
-			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
-			@Nonnull LoadQueryInfluencers influencers,
-			@Nullable Expression ownerRevision) {
-		applyPredicate( associatedEntityDescriptor, predicateConsumer, tableGroup, sqlAliasBaseGenerator, influencers );
-	}
 
 	/// Applies the auxiliary row restriction directly to a table-group join.
 	///
@@ -173,12 +149,6 @@ public interface AuxiliaryMapping {
 	/// Whether this mapping can contribute a row restriction to an association join.
 	default boolean hasRowRestriction(@Nonnull LoadQueryInfluencers influencers) {
 		return true;
-	}
-
-	/// Whether an association must join the target table to observe this mapping's row visibility.
-	/// Native temporal tables may restrict rows without contributing a predicate.
-	default boolean requiresTargetTable(@Nonnull LoadQueryInfluencers influencers) {
-		return hasRowRestriction( influencers ) || isAffectedByInfluencers( influencers );
 	}
 
 	/// Whether this mapping should use its auxiliary table for the supplied

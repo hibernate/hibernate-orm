@@ -14,6 +14,7 @@ import org.hibernate.audit.internal.AuditEntityLoaderImpl;
 import org.hibernate.audit.spi.AuditEntityLoader;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.metamodel.mapping.AuditMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
@@ -237,9 +238,16 @@ public class AuditMappingImpl implements AuditMapping {
 			TableAuditInfo info,
 			Expression upperBound,
 			boolean includeDeletions) {
-		if ( usesValidityStrategy( info ) ) {
-			return createValidityRestriction( tableReference, info, upperBound, includeDeletions );
-		}
+		final var revision = usesValidityStrategy( info )
+				? createValidityRestriction( tableReference, info, upperBound )
+				: createMaxRevisionRestriction( tableGroupProducer, tableReference, keySelectables, sqlAliasBaseGenerator, info, upperBound );
+		return includeDeletions || info.modificationTypeMapping == null ? revision
+				: Predicate.combinePredicates( revision, excludeDeletions( tableReference, info.modificationTypeMapping ) );
+	}
+
+	private Predicate createMaxRevisionRestriction(
+			TableGroupProducer tableGroupProducer, TableReference tableReference, List<SelectableMapping> keySelectables,
+			SqlAliasBaseGenerator sqlAliasBaseGenerator, TableAuditInfo info, Expression upperBound) {
 		final var subQuerySpec = new QuerySpec( false, 1 );
 		final String stem = tableGroupProducer.getSqlAliasStem();
 		final String aliasStem = stem == null ? SUBQUERY_ALIAS_STEM : stem;
@@ -274,21 +282,11 @@ public class AuditMappingImpl implements AuditMapping {
 		subPredicate.add( new ComparisonPredicate( changesetId, LESS_THAN_OR_EQUAL, upperBound ) );
 		subQuerySpec.applyPredicate( subPredicate );
 
-		// Main predicate: REV = (subquery) AND optionally REVTYPE <> DEL
-		final var auditPredicate = new Junction( Junction.Nature.CONJUNCTION );
-		auditPredicate.add( new ComparisonPredicate(
+		return new ComparisonPredicate(
 				new ColumnReference( tableReference, info.changesetIdMapping ),
 				EQUAL,
 				new SelectStatement( subQuerySpec )
-		) );
-		if ( !includeDeletions && info.modificationTypeMapping != null ) {
-			auditPredicate.add( new ComparisonPredicate(
-					new ColumnReference( tableReference, info.modificationTypeMapping ),
-					NOT_EQUAL,
-					new JdbcLiteral<>( ModificationType.DEL, info.modificationTypeMapping.getJdbcMapping() )
-			) );
-		}
-		return auditPredicate;
+		);
 	}
 
 	private boolean usesValidityStrategy(TableAuditInfo info) {
@@ -297,13 +295,9 @@ public class AuditMappingImpl implements AuditMapping {
 
 	/**
 	 * Build the validity strategy restriction:
-	 * {@code REV <= upperBound AND (REVEND > upperBound OR REVEND IS NULL) AND REVTYPE <> DEL}
+	 * {@code REV <= upperBound AND (REVEND > upperBound OR REVEND IS NULL)}
 	 */
-	private static Predicate createValidityRestriction(
-			TableReference tableReference,
-			TableAuditInfo info,
-			Expression upperBound,
-			boolean includeDeletions) {
+	private static Predicate createValidityRestriction(TableReference tableReference, TableAuditInfo info, Expression upperBound) {
 		final var predicate = new Junction( Junction.Nature.CONJUNCTION );
 
 		// REV <= upperBound
@@ -320,15 +314,15 @@ public class AuditMappingImpl implements AuditMapping {
 		revEndDisjunction.add( new NullnessPredicate( revEndRef ) );
 		predicate.add( revEndDisjunction );
 
-		// REVTYPE <> DEL (when applicable)
-		if ( !includeDeletions && info.modificationTypeMapping != null ) {
-			predicate.add( new ComparisonPredicate(
-					new ColumnReference( tableReference, info.modificationTypeMapping ),
-					NOT_EQUAL,
-					new JdbcLiteral<>( ModificationType.DEL, info.modificationTypeMapping.getJdbcMapping() )
-			) );
-		}
 		return predicate;
+	}
+
+	private static Predicate excludeDeletions(TableReference tableReference, SelectableMapping modificationType) {
+		return new ComparisonPredicate(
+				new ColumnReference( tableReference, modificationType ),
+				NOT_EQUAL,
+				new JdbcLiteral<>( ModificationType.DEL, modificationType.getJdbcMapping() )
+		);
 	}
 
 	private AggregateFunctionExpression buildMaxExpression(ColumnReference expression) {
@@ -364,7 +358,7 @@ public class AuditMappingImpl implements AuditMapping {
 		return keySelectables;
 	}
 
-	private List<SelectableMapping> collectCollectionRowKeySelectables(PluralAttributeMapping collectionDescriptor) {
+	private static List<SelectableMapping> collectCollectionRowKeySelectables(PluralAttributeMapping collectionDescriptor) {
 		final var keySelectables = new ArrayList<SelectableMapping>();
 		final var identifierDescriptor = collectionDescriptor.getIdentifierDescriptor();
 		if ( identifierDescriptor != null ) {
@@ -428,8 +422,37 @@ public class AuditMappingImpl implements AuditMapping {
 		final var ownerRevision = influencers.isAllRevisions()
 				? findParentRevColumn( navigablePath, creationState )
 				: null;
-		applyPredicate( associatedEntityMappingType, predicateConsumer, lazyTableGroup,
-				creationState.getSqlAliasBaseGenerator(), influencers, ownerRevision );
+		if ( ownerRevision != null ) {
+			applyAtRevision( this, associatedEntityMappingType, lazyTableGroup, creationState.getSqlAliasBaseGenerator(),
+					ownerRevision, predicateConsumer, predicateConsumer );
+		}
+		else {
+			applyPredicate( associatedEntityMappingType, predicateConsumer, lazyTableGroup,
+					creationState.getSqlAliasBaseGenerator(), influencers );
+		}
+	}
+
+	/** The revision bound references the owner. The deletion check references only the audited row. */
+	static void applyAtRevision(
+			AuditMapping audit, Loadable mapping, TableGroup group, SqlAliasBaseGenerator aliases, Expression revision,
+			Consumer<Predicate> revisionConsumer, Consumer<Predicate> rowConsumer) {
+		final String table;
+		final List<SelectableMapping> keys;
+		if ( mapping instanceof PluralAttributeMapping collection ) {
+			table = collection.getCollectionDescriptor().getTableName();
+			keys = collectCollectionRowKeySelectables( collection );
+		}
+		else {
+			final var entity = mapping.asEntityMappingType();
+			table = entity.getEntityPersister().getTableName();
+			keys = collectEntityKeySelectables( entity );
+		}
+		final var reference = group.resolveTableReference( audit.resolveTableName( table ) );
+		revisionConsumer.accept( audit.createRestriction( mapping, reference, keys, aliases, table, revision, true ) );
+		final var modificationType = audit.getModificationTypeMapping( table );
+		if ( modificationType != null ) {
+			rowConsumer.accept( excludeDeletions( reference, modificationType ) );
+		}
 	}
 
 	@Override
@@ -439,29 +462,12 @@ public class AuditMappingImpl implements AuditMapping {
 			@Nonnull TableGroup tableGroup,
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
 			@Nonnull LoadQueryInfluencers influencers) {
-		applyPredicate( associatedEntityDescriptor, predicateConsumer, tableGroup, sqlAliasBaseGenerator, influencers, null );
-	}
-
-	@Override
-	public void applyPredicate(
-			@Nonnull EntityMappingType associatedEntityDescriptor,
-			@Nonnull Consumer<Predicate> predicateConsumer,
-			@Nonnull TableGroup tableGroup,
-			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
-			@Nonnull LoadQueryInfluencers influencers,
-			@Nullable Expression ownerRevision) {
-		if ( ownerRevision != null || hasTemporalPredicate( influencers ) ) {
+		if ( hasTemporalPredicate( influencers ) ) {
 			final var persister = associatedEntityDescriptor.getEntityPersister();
 			final var info = resolveInfo( persister.getTableName() );
-			predicateConsumer.accept( createRestriction(
-					persister,
-					tableGroup.resolveTableReference( info.auditTableName ),
-					collectEntityKeySelectables( associatedEntityDescriptor ),
-					sqlAliasBaseGenerator,
-					info,
-					ownerRevision == null ? resolveDefaultUpperBound( info ) : ownerRevision,
-					false
-			) );
+			predicateConsumer.accept( createRestriction( persister, tableGroup.resolveTableReference( info.auditTableName ),
+					collectEntityKeySelectables( associatedEntityDescriptor ), sqlAliasBaseGenerator, info,
+					resolveDefaultUpperBound( info ), false ) );
 		}
 	}
 
@@ -472,29 +478,11 @@ public class AuditMappingImpl implements AuditMapping {
 			@Nonnull TableGroup tableGroup,
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
 			@Nonnull LoadQueryInfluencers influencers) {
-		applyPredicate( collectionDescriptor, predicateConsumer, tableGroup, sqlAliasBaseGenerator, influencers, null );
-	}
-
-	@Override
-	public void applyPredicate(
-			@Nonnull PluralAttributeMapping collectionDescriptor,
-			@Nonnull Consumer<Predicate> predicateConsumer,
-			@Nonnull TableGroup tableGroup,
-			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
-			@Nonnull LoadQueryInfluencers influencers,
-			@Nullable Expression ownerRevision) {
-		if ( ownerRevision != null || hasTemporalPredicate( influencers ) ) {
-			final String collectionTable = collectionDescriptor.getCollectionDescriptor().getTableName();
-			final var info = resolveInfo( collectionTable );
-			predicateConsumer.accept( createRestriction(
-					collectionDescriptor,
-					tableGroup.resolveTableReference( info.auditTableName ),
-					collectCollectionRowKeySelectables( collectionDescriptor ),
-					sqlAliasBaseGenerator,
-					info,
-					ownerRevision == null ? resolveDefaultUpperBound( info ) : ownerRevision,
-					false
-			) );
+		if ( hasTemporalPredicate( influencers ) ) {
+			final var info = resolveInfo( collectionDescriptor.getCollectionDescriptor().getTableName() );
+			predicateConsumer.accept( createRestriction( collectionDescriptor, tableGroup.resolveTableReference( info.auditTableName ),
+					collectCollectionRowKeySelectables( collectionDescriptor ), sqlAliasBaseGenerator, info,
+					resolveDefaultUpperBound( info ), false ) );
 		}
 	}
 
@@ -607,7 +595,7 @@ public class AuditMappingImpl implements AuditMapping {
 
 	@Override
 	public boolean isAffectedByInfluencers(@Nonnull LoadQueryInfluencers influencers) {
-		return influencers.getTemporalIdentifier() != null;
+		return useAuxiliaryTable( influencers );
 	}
 
 	private boolean hasTemporalPredicate(LoadQueryInfluencers influencers) {

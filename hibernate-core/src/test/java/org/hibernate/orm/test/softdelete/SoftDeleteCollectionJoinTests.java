@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
@@ -74,6 +75,18 @@ public class SoftDeleteCollectionJoinTests {
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
 		scope.dropData();
+	}
+
+	@Test
+	public void membershipUsesChildIdentifier(SessionFactoryScope scope) {
+		scope.inTransaction( session ->
+				session.persist( new Note( 20, "visible", session.find( Parent.class, 1 ) ) ) );
+		scope.inSession( session -> {
+			final var notes = session.find( Parent.class, 1 ).notes;
+			assertThat( Hibernate.contains( notes, session.find( Note.class, 20 ) ) ).isTrue();
+			assertThat( Hibernate.contains( notes, session.find( Note.class, 2 ) ) ).isFalse();
+			assertThat( Hibernate.isInitialized( notes ) ).isFalse();
+		} );
 	}
 
 	@Test

@@ -34,6 +34,7 @@ import org.hibernate.metamodel.mapping.Restrictable;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
+import org.hibernate.metamodel.mapping.internal.ManyToManyCollectionPart;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.spi.OrderByFragment;
@@ -588,13 +589,13 @@ public class LoaderSelectBuilder {
 		final var query = new QuerySpec( true );
 		final var state = builder.createSqlAstCreationState( query );
 		final var group = builder.buildRootTableGroup( path, query, state );
-		builder.applyRestriction( query, path, group, key, key.getJdbcTypeCount(), parameters, state );
+		builder.applyRestriction( query, path, group, key, parameters, state );
 		builder.applyFiltering( query, group, collection, state );
 
 		final var integerType = factory.getTypeConfiguration().getBasicTypeForJavaType( Integer.class );
 		final Expression selection;
 		if ( match != null ) {
-			builder.applyRestriction( query, path, group, match, match.getJdbcTypeCount(), parameters, state );
+			builder.applyRestriction( query, path, group, match, parameters, state );
 			final var one = new QueryLiteral<>( 1, integerType );
 			selection = one;
 			query.setFetchClauseExpression( one, FetchClauseType.ROWS_ONLY );
@@ -656,7 +657,6 @@ public class LoaderSelectBuilder {
 					rootNavigablePath,
 					rootTableGroup,
 					restrictedPart,
-					restrictedPart.getJdbcTypeCount(),
 					castNonNull( jdbcParameterConsumer ),
 					sqlAstCreationState
 			);
@@ -756,16 +756,22 @@ public class LoaderSelectBuilder {
 			@Nonnull NavigablePath rootNavigablePath,
 			@Nonnull TableGroup rootTableGroup,
 			@Nonnull ModelPart restrictedPart,
-			int numberColumns,
 			@Nonnull Consumer<JdbcParameter> jdbcParameterConsumer,
 			@Nonnull LoaderSqlAstCreationState sqlAstCreationState) {
 		if ( restrictedPart instanceof EntityCollectionPart part && rootTableGroup instanceof PluralTableGroup pluralGroup ) {
-			final var identifier = part.getAssociatedEntityMappingType().getIdentifierMapping();
-			final var partGroup = pluralGroup.getTableGroup( part.getNature() );
-			applyRestriction( rootQuerySpec, partGroup.getNavigablePath(), partGroup, identifier,
-					identifier.getJdbcTypeCount(), jdbcParameterConsumer, sqlAstCreationState );
-			return;
+			// Entity parameters are bound by identifier. A join-table foreign key
+			// referencing another unique key cannot be compared to that parameter.
+			if ( part instanceof ManyToManyCollectionPart manyToMany && manyToMany.isReferenceToPrimaryKey() ) {
+				restrictedPart = manyToMany.getInclusionCheckPart();
+			}
+			else {
+				final var partGroup = pluralGroup.getTableGroup( part.getNature() );
+				applyRestriction( rootQuerySpec, partGroup.getNavigablePath(), partGroup,
+						part.getAssociatedEntityMappingType().getIdentifierMapping(), jdbcParameterConsumer, sqlAstCreationState );
+				return;
+			}
 		}
+		final int numberColumns = restrictedPart.getJdbcTypeCount();
 		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		final var navigablePath =
 				rootNavigablePath.append( restrictedPart.getNavigableRole().getNavigableName() );
@@ -842,8 +848,7 @@ public class LoaderSelectBuilder {
 		// because for table group joins the restriction is applied
 		// via PluralAttributeMappingImpl.createTableGroupJoin
 		assert tableGroup.getNavigablePath().getParent() == null;
-		pluralAttributeMapping.applyCollectionRestrictions( null, tableGroup, querySpec::applyPredicate,
-				querySpec::applyPredicate, astCreationState );
+		pluralAttributeMapping.applyCollectionRestrictions( null, tableGroup, querySpec::applyPredicate, astCreationState );
 	}
 
 	private void applyFiltering(

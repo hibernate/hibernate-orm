@@ -267,6 +267,16 @@ class AuditBidirectionalOneToManyTest {
 	}
 
 	@Test
+	void testRightJoinExcludesDeletedChildRevision(SessionFactoryScope scope) {
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
+			// The parent has a single revision. The later child update survives as an orphan, the deletion does not.
+			assertEquals( List.of( "Child A v2" ), session.createSelectionQuery(
+					"select c.name from Parent p right join p.children c where p.id is null and c.id = 1",
+					String.class ).list() );
+		}
+	}
+
+	@Test
 	void testSizeWithMultipleChildRevisions(SessionFactoryScope scope) {
 		try (var session = scope.getSessionFactory().withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
 			// Only the child changed after the sole revision of this parent.

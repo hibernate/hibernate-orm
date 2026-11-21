@@ -10,7 +10,9 @@ import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.Hibernate;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.AuditedTest;
 import org.hibernate.testing.orm.junit.BeforeClassTemplate;
@@ -193,6 +195,26 @@ class AuditManyToManyTest {
 			assertEquals( List.of( "Math" ), session.createSelectionQuery(
 					"select c.name from Student s right join s.courses c where s.id = 1 and changesetId(s) = :revision",
 					String.class ).setParameter( "revision", revCreate ).list() );
+		}
+	}
+
+	@Test
+	void testRightJoinExcludesDeletedMembership(SessionFactoryScope scope) {
+		assertNoDeletedMembership( scope, "right" );
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFullJoin.class)
+	void testFullJoinExcludesDeletedMembership(SessionFactoryScope scope) {
+		assertNoDeletedMembership( scope, "full" );
+	}
+
+	private static void assertNoDeletedMembership(SessionFactoryScope scope, String joinType) {
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
+			// The Math membership was removed at revDrop. Its deletion row must not survive as an orphan.
+			assertEquals( List.of(), session.createSelectionQuery(
+					"select c.id from Student s " + joinType + " join s.courses c where s.id is null and c.id = 1",
+					Long.class ).list() );
 		}
 	}
 

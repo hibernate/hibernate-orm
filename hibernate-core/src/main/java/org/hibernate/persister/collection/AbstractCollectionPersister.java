@@ -170,7 +170,6 @@ public abstract class AbstractCollectionPersister
 	private final Map<Operation, CollectionScalarLoader> scalarLoaders = new ConcurrentHashMap<>();
 	private final EnumSet<Operation> customScalarSql = EnumSet.noneOf( Operation.class );
 	private boolean hasStaticRowRestrictions;
-	private boolean hasTemporalRows;
 
 	protected final String qualifiedTableName;
 	private final CollectionTableMapping tableMapping;
@@ -779,9 +778,6 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public void postInstantiate() throws MappingException {
 		hasStaticRowRestrictions = attributeMapping.hasRowRestrictions( new LoadQueryInfluencers( factory ) );
-		hasTemporalRows = attributeMapping.getTemporalMapping() != null || attributeMapping.getAuditMapping() != null
-				|| isTemporalPart( attributeMapping.getElementDescriptor() )
-				|| isTemporalPart( attributeMapping.getIndexDescriptor() );
 		collectionLoader =
 				hasNamedQueryLoader()
 						// We pass null as metamodel because we did the initialization during construction already
@@ -1557,25 +1553,12 @@ public abstract class AbstractCollectionPersister
 		}
 	}
 
-	private static boolean isTemporalPart(@Nullable CollectionPart part) {
-		if ( part instanceof EntityCollectionPart entityPart ) {
-			final var entity = entityPart.getAssociatedEntityMappingType();
-			return entity.getTemporalMapping() != null || entity.getAuditMapping() != null;
-		}
-		return false;
-	}
-
-	private boolean hasSessionRowRestrictions(LoadQueryInfluencers influencers) {
-		return attributeMapping.isAffectedByEnabledFilters( influencers, true )
-			|| hasTemporalRows && influencers.getTemporalIdentifier() != null;
-	}
-
 	private @Nullable CollectionScalarLoader restrictedScalarLoader(Operation operation, SharedSessionContractImplementor session) {
 		if ( customScalarSql.contains( operation ) ) {
 			return null;
 		}
 		final var influencers = session.getLoadQueryInfluencers();
-		if ( hasSessionRowRestrictions( influencers ) ) {
+		if ( attributeMapping.isAffectedByRowRestrictions( influencers, true ) ) {
 			return new CollectionScalarLoader( attributeMapping, operation, influencers );
 		}
 		return hasStaticRowRestrictions
@@ -1682,7 +1665,7 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public Object getElementByIndex(@Nonnull Object key, @Nonnull Object index, @Nonnull SharedSessionContractImplementor session, @Nullable Object owner) {
 		final var influencers = session.getLoadQueryInfluencers();
-		if ( hasSessionRowRestrictions( influencers ) ) {
+		if ( attributeMapping.isAffectedByRowRestrictions( influencers, true ) ) {
 			return new CollectionElementLoaderByIndex( attributeMapping, influencers, factory )
 					.load( key, index, session );
 		}

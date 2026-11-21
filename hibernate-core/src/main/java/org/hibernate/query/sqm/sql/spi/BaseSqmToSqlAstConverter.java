@@ -5091,7 +5091,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final var tableGroup = collection.createRootTableGroup(
 				true, path, null, null, () -> subQuery::applyPredicate, this );
 		collection.applyCollectionRestrictions( ownerTableGroup, tableGroup,
-				subQuery::applyPredicate, subQuery::applyPredicate, this );
+				subQuery::applyPredicate, this );
 		getFromClauseAccess().registerTableGroup( path, tableGroup );
 		registerPluralTableGroupParts( tableGroup );
 		subQuery.getFromClause().addRoot( tableGroup );

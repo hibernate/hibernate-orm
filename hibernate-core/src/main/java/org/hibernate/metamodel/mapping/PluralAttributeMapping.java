@@ -14,14 +14,12 @@ import org.hibernate.Incubating;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.spi.IndexedConsumer;
 import org.hibernate.loader.ast.spi.Loadable;
-import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.spi.OrderByFragment;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.creation.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.spi.query.from.PluralTableGroup;
 import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.ast.spi.query.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.spi.query.predicate.Predicate;
@@ -76,37 +74,22 @@ public interface PluralAttributeMapping
 		return hasWhereRestrictions() || isAffectedByEnabledFilters( influencers, true );
 	}
 
-	/// Apply the row restrictions shared by collection loads, joins and subqueries.
-	/// Joins collect auxiliary restrictions separately to recognize joins eligible for a fetch.
-	/// Subqueries apply both kinds directly to their where clause.
+	/// Whether these session settings change the visibility of collection rows.
+	default boolean isAffectedByRowRestrictions(@Nonnull LoadQueryInfluencers influencers, boolean onlyLoadByKeyFilters) {
+		return isAffectedByEnabledFilters( influencers, onlyLoadByKeyFilters );
+	}
+
+	/// Apply the row restrictions shared by collection loads and subqueries.
 	default void applyCollectionRestrictions(
 			@Nullable TableGroup ownerTableGroup,
 			@Nonnull TableGroup tableGroup,
-			@Nonnull Consumer<Predicate> restrictionConsumer,
-			@Nonnull Consumer<Predicate> auxiliaryRestrictionConsumer,
+			@Nonnull Consumer<Predicate> predicateConsumer,
 			@Nonnull SqlAstCreationState creationState) {
 		final var influencers = creationState.getLoadQueryInfluencers();
 		final var filters = influencers.getEnabledFilters();
-		applyBaseRestrictions( restrictionConsumer, tableGroup, true, filters, false, null, creationState );
-		applyBaseManyToManyRestrictions( restrictionConsumer, tableGroup, true, filters, null, creationState );
-		if ( getIndexDescriptor() instanceof EntityCollectionPart index ) {
-			final var keyGroup = ((PluralTableGroup) tableGroup).getIndexTableGroup();
-			// Map keys follow load-by-key filter semantics even in an HQL fetch join.
-			index.getAssociatedEntityMappingType().applyBaseRestrictions( restrictionConsumer, keyGroup, true,
-					filters, true, null, creationState );
-		}
-		applyAuxiliaryRestrictions( tableGroup, auxiliaryRestrictionConsumer::accept, influencers,
-				creationState.getSqlAliasBaseGenerator(), ownerTableGroup );
-	}
-
-	/// An association in an all-changesets query can use its owner's revision as the upper bound.
-	default void applyAuxiliaryRestrictions(
-			@Nonnull TableGroup tableGroup,
-			@Nonnull PredicateConsumer predicateConsumer,
-			@Nonnull LoadQueryInfluencers influencers,
-			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
-			@Nullable TableGroup ownerTableGroup) {
-		applyAuxiliaryRestrictions( tableGroup, predicateConsumer, influencers, sqlAliasBaseGenerator );
+		applyBaseRestrictions( predicateConsumer, tableGroup, true, filters, false, null, creationState );
+		applyBaseManyToManyRestrictions( predicateConsumer, tableGroup, true, filters, null, creationState );
+		applyAuxiliaryRestrictions( tableGroup, predicateConsumer::accept, influencers, creationState.getSqlAliasBaseGenerator() );
 	}
 
 	interface IndexMetadata {

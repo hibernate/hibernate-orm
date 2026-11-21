@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -51,7 +52,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		SoftDeleteJoinTableQueryTests.Tag.class,
 		SoftDeleteJoinTableQueryTests.Note.class
 })
-@SessionFactory
+@SessionFactory(useCollectingStatementObserver = true)
 @JiraKey("HHH-21214")
 public class SoftDeleteJoinTableQueryTests {
 
@@ -87,6 +88,7 @@ public class SoftDeleteJoinTableQueryTests {
 			final Owner second = new Owner( 2 );
 			second.byNote.put( liveNote, live );
 			second.tags.add( live );
+			second.tagsByCode.add( live );
 			second.labels.add( live );
 			second.marks.add( live );
 			second.keyed.put( live, live );
@@ -256,6 +258,33 @@ public class SoftDeleteJoinTableQueryTests {
 	}
 
 	@Test
+	void membershipUsesReferencedColumn(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			final var owner = session.find( Owner.class, 2 );
+			final var tag = session.find( Tag.class, 20 );
+			final var observer = scope.getCollectingStatementObserver();
+			observer.clear();
+			assertThat( Hibernate.contains( owner.tags, tag ) ).isTrue();
+			observer.assertQuery( 0 ).doesNotContain( " join " );
+			assertThat( Hibernate.contains( owner.tagsByCode, tag ) ).isTrue();
+			assertThat( Hibernate.contains( owner.tagsByCode, session.find( Tag.class, 10 ) ) ).isFalse();
+		} );
+	}
+
+	@Test
+	void sameEntityTypeForMapKeyAndValue(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.find( Owner.class, 3 ).keyed
+				.put( session.find( Tag.class, 10 ), session.find( Tag.class, 20 ) ) );
+		scope.inSession( session -> {
+			final var map = session.find( Owner.class, 3 ).keyed;
+			final var value = session.find( Tag.class, 20 );
+			assertThat( Hibernate.get( map, session.find( Tag.class, 10 ) ) ).isSameAs( value );
+			assertThat( Hibernate.get( map, value ) ).isNull();
+			assertThat( Hibernate.isInitialized( map ) ).isFalse();
+		} );
+	}
+
+	@Test
 	void indexedAccess(SessionFactoryScope scope) {
 		scope.inSession( session -> {
 			final var hidden = session.find( Owner.class, 1 );
@@ -308,6 +337,11 @@ public class SoftDeleteJoinTableQueryTests {
 		Set<Tag> tags = new HashSet<>();
 
 		@ManyToMany
+		@JoinTable(name = "owner_codes", inverseJoinColumns = @JoinColumn(name = "tag_code", referencedColumnName = "code"))
+		@SoftDelete
+		Set<Tag> tagsByCode = new HashSet<>();
+
+		@ManyToMany
 		@JoinTable(name = "owner_labels", inverseJoinColumns = @JoinColumn(name = "label_id"))
 		@SQLJoinTableRestriction("label_id <> 10")
 		Set<Tag> labels = new HashSet<>();
@@ -348,11 +382,15 @@ public class SoftDeleteJoinTableQueryTests {
 		@Id
 		Integer id;
 
+		@Column(unique = true)
+		String code;
+
 		public Tag() {
 		}
 
 		public Tag(Integer id) {
 			this.id = id;
+			code = "tag-" + id;
 		}
 	}
 

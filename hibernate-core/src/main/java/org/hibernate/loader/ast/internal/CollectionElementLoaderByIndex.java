@@ -11,7 +11,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.Loader;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.sql.ast.spi.creation.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.query.select.SelectStatement;
@@ -53,10 +52,7 @@ public class CollectionElementLoaderByIndex implements Loader {
 		final var keyDescriptor = attributeMapping.getKeyDescriptor();
 		final var indexDescriptor = attributeMapping.getIndexDescriptor();
 
-		final ModelPart indexRestriction = indexDescriptor instanceof EntityCollectionPart index
-				? index.getAssociatedEntityMappingType().getIdentifierMapping()
-				: indexDescriptor;
-		final List<ModelPart> restrictedParts = List.of( keyDescriptor, indexRestriction );
+		final List<ModelPart> restrictedParts = List.of( keyDescriptor, indexDescriptor );
 		final int keyJdbcCount = keyDescriptor.getJdbcTypeCount() + indexDescriptor.getJdbcTypeCount();
 		final List<ModelPart> partsToSelect = List.of( attributeMapping.getElementDescriptor() );
 

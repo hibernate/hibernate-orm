@@ -20,6 +20,7 @@ import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.engine.spi.TemporalEntityKey;
 import org.hibernate.internal.util.ImmutableBitSet;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.TypeHelper;
@@ -266,6 +267,14 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 			cachedEntityKey = new EntityKey( id, persister );
 		}
 		return cachedEntityKey;
+	}
+
+	/**
+	 * Called when this entry belongs to a historical snapshot, whose
+	 * {@link TemporalEntityKey} cannot be recovered from the id alone.
+	 */
+	void setChangesetId(@Nonnull Object changesetId) {
+		cachedEntityKey = new TemporalEntityKey( id, persister, changesetId );
 	}
 
 	@Override

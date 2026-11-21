@@ -13,6 +13,7 @@ import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
 import org.hibernate.engine.internal.EntityEntryImpl;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -242,6 +243,9 @@ class ForceIncrementExecutionTest {
 
 		Fixture(boolean cached) {
 			final var factory = mock( SessionFactoryImplementor.class );
+			final var jdbcCoordinator = mock( JdbcCoordinator.class );
+			when( session.getJdbcCoordinator() ).thenReturn( jdbcCoordinator );
+			when( jdbcCoordinator.getJdbcSessionOwner() ).thenReturn( session );
 			when( session.getFactory() ).thenReturn( factory );
 			when( factory.getStatistics() ).thenReturn( mock( StatisticsImplementor.class ) );
 			when( session.getEventMonitor() ).thenReturn( monitor );

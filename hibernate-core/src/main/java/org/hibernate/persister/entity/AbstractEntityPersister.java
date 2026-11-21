@@ -1983,14 +1983,8 @@ public abstract class AbstractEntityPersister
 			@Nonnull SharedSessionContractImplementor session) {
 		// An all-revisions session can hold snapshots from several changesets.
 		final var influencers = session.getLoadQueryInfluencers();
-		final var previous = influencers.getTemporalIdentifier();
-		influencers.setTemporalIdentifier( entry.getEntityKey().getChangesetId() );
-		try {
-			return createLazyLoadPlan( partsToSelect, influencers ).load( entry.getId(), session );
-		}
-		finally {
-			influencers.setTemporalIdentifier( previous );
-		}
+		return influencers.withTemporalIdentifier( entry.getEntityKey().getChangesetId(),
+				() -> createLazyLoadPlan( partsToSelect, influencers ).load( entry.getId(), session ) );
 	}
 
 	@Nullable
@@ -4631,7 +4625,10 @@ public abstract class AbstractEntityPersister
 				instanceof EnhancementAsProxyLazinessInterceptor proxyInterceptor ) {
 			final var entityKey = proxyInterceptor.getEntityKey();
 			final Object id = entityKey.getIdentifier();
-			final Object loaded = loadEnhancedEntityUsedAsProxy( entity, session, entityKey );
+			final Object loaded = entityKey.isTemporal()
+					? session.getLoadQueryInfluencers().withTemporalIdentifier( entityKey.getChangesetId(),
+							() -> loadEnhancedEntityUsedAsProxy( entity, session, entityKey ) )
+					: loadEnhancedEntityUsedAsProxy( entity, session, entityKey );
 			if ( loaded == null ) {
 				final var persistenceContext = session.getPersistenceContext();
 				persistenceContext.removeEntry( entity );

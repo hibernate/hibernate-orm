@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Audited;
+import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
@@ -23,7 +24,9 @@ import org.junit.jupiter.api.Test;
 import static jakarta.persistence.FetchType.LAZY;
 import static org.hibernate.Hibernate.isInitialized;
 import static org.hibernate.Hibernate.isPropertyInitialized;
+import static org.hibernate.annotations.CacheConcurrencyStrategy.READ_WRITE;
 import static org.hibernate.audit.AuditLog.ALL_CHANGESETS;
+import static org.hibernate.cfg.CacheSettings.USE_SECOND_LEVEL_CACHE;
 import static org.hibernate.cfg.StateManagementSettings.CHANGESET_ID_SUPPLIER;
 import static org.hibernate.cfg.StateManagementSettings.TEMPORAL_TABLE_STRATEGY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -38,10 +41,57 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		TemporalLazyBasicTest.Edition.class, TemporalLazyBasicTest.AuditEvent.class
 })
 @ServiceRegistry(settings = {
+		@Setting(name = USE_SECOND_LEVEL_CACHE, value = "true"),
 		@Setting(name = TEMPORAL_TABLE_STRATEGY, value = "HISTORY_TABLE"),
 		@Setting(name = CHANGESET_ID_SUPPLIER, value = "org.hibernate.temporal.lazy.TemporalLazyBasicTest$ChangesetIds")
 })
 class TemporalLazyBasicTest {
+	@Test
+	void enhancedProxyLoadsItsRevisionAfterCacheEviction(SessionFactoryScope scope) {
+		final var firstChangeset = scope.fromTransaction( session -> {
+			final var article = new Document();
+			article.id = 6;
+			article.title = "First title";
+			session.persist( article );
+			final var event = new AuditEvent();
+			event.id = 6;
+			event.article = article;
+			session.persist( event );
+			return session.getCurrentChangesetIdentifier();
+		} );
+		scope.inTransaction( session -> {
+			session.find( Document.class, 6 ).title = "Second title";
+			session.find( AuditEvent.class, 6 ).label = "Revised event";
+		} );
+		scope.inTransaction( session -> session.find( Document.class, 6 ).title = "Current title" );
+
+		final var factory = scope.getSessionFactory();
+		final var cache = factory.getCache();
+		scope.inSession( session -> assertEquals( "Current title", session.find( Document.class, 6 ).title ) );
+		assertTrue( cache.containsEntity( Document.class, 6 ) );
+		cache.evictEntityData( Document.class, 6 );
+		try (var session = factory.withOptions().atChangeset( firstChangeset ).openSession()) {
+			final var article = session.getReference( Document.class, 6 );
+			assertFalse( isInitialized( article ) );
+			assertEquals( "First title", article.title );
+		}
+		assertFalse( cache.containsEntity( Document.class, 6 ) );
+		try (var session = factory.withOptions().atChangeset( ALL_CHANGESETS ).openSession()) {
+			final var events = session.createSelectionQuery( """
+					from AuditEvent e where e.id = 6 order by changesetId(e)
+					""", AuditEvent.class ).getResultList();
+			assertEquals( 2, events.size() );
+			final var first = events.get( 0 ).article;
+			final var second = events.get( 1 ).article;
+			assertFalse( isInitialized( first ) );
+			assertFalse( isInitialized( second ) );
+			assertEquals( "Second title", second.title );
+			assertEquals( "First title", first.title );
+			assertEquals( 2L, session.createSelectionQuery(
+					"select count(e) from AuditEvent e where e.id = 6", Long.class ).getSingleResult() );
+		}
+	}
+
 	@Test
 	void lazyAttributesAtChangeset(SessionFactoryScope scope) {
 		final var changeset = scope.fromTransaction( session -> {
@@ -237,6 +287,7 @@ class TemporalLazyBasicTest {
 	@Audited
 	static class AuditEvent {
 		@Id int id;
+		String label;
 		@ManyToOne(fetch = LAZY) Document article;
 		@ManyToOne(fetch = LAZY) Edition edition;
 	}
@@ -259,6 +310,7 @@ class TemporalLazyBasicTest {
 
 	@Entity(name = "Document")
 	@Temporal
+	@Cache(usage = READ_WRITE)
 	static class Document {
 		@Id int id;
 		String title;

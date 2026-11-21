@@ -354,9 +354,8 @@ public interface SharedSessionContractImplementor
 	 * Instantiate an {@link EntityKey} with the given id and for the
 	 * entity represented by the given {@link EntityPersister}.
 	 * <p>
-	 * When operating in a temporal context, this will automatically
-	 * create a {@link TemporalEntityKey} that includes the transaction
-	 * identifier.
+	 * At a specific changeset, the key for a temporal or audited entity
+	 * is a {@link TemporalEntityKey} including the changeset identifier.
 	 *
 	 * @param id The entity id
 	 * @param persister The entity persister

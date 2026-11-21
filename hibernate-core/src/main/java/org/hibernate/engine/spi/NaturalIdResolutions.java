@@ -35,6 +35,11 @@ public interface NaturalIdResolutions {
 	void cacheResolutionFromLoad(Object id, Object naturalId, EntityMappingType entityDescriptor);
 
 	/**
+	 * Cache a resolution using the changeset of the entity actually loaded.
+	 */
+	void cacheResolutionFromLoad(EntityKey entityKey, Object naturalId);
+
+	/**
 	 * Ensures that the necessary local cross-reference exists.  Specifically, this
 	 * only effects the persistence-context cache, not the L2 cache
 	 */

@@ -28,6 +28,36 @@ public final class CacheHelper {
 	public record CacheLock(@Nonnull EntityDataAccess cache, Object cacheKey, SoftLock lock) {
 	}
 
+	/**
+	 * Whether the given session reads a historical snapshot of the given
+	 * entity, which the second-level cache, holding the current state of
+	 * the entity, cannot supply.
+	 */
+	public static boolean readsHistory(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull EntityPersister persister) {
+		final var auxiliaryMapping = persister.getAuxiliaryMapping();
+		return auxiliaryMapping != null
+			&& auxiliaryMapping.isAffectedByInfluencers( session.getLoadQueryInfluencers() );
+	}
+
+	/**
+	 * Whether the changeset affects the collection table or its associated
+	 * entities and therefore the collection's cached membership.
+	 */
+	public static boolean readsHistory(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull CollectionPersister persister) {
+		final var influencers = session.getLoadQueryInfluencers();
+		if ( influencers.getTemporalIdentifier() == null ) {
+			return false;
+		}
+		final var auxiliaryMapping = persister.getAttributeMapping().getAuxiliaryMapping();
+		return auxiliaryMapping != null && auxiliaryMapping.isAffectedByInfluencers( influencers )
+			|| ( persister.isOneToMany() || persister.isManyToMany() )
+					&& readsHistory( session, persister.getElementPersister() );
+	}
+
 	public static Object fromSharedCache(
 			SharedSessionContractImplementor session,
 			Object cacheKey,

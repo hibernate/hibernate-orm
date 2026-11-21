@@ -572,11 +572,10 @@ public class AuditMappingImpl implements AuditMapping {
 	}
 
 	/**
-	 * Walk up the navigable path to find a parent table group with an
-	 * audit mapping, and return a column reference to its REV column.
+	 * The parent revision that bounds an audited to-one join in an all-revisions query.
 	 */
 	@Nullable
-	private static ColumnReference findParentRevColumn(
+	public static ColumnReference findParentRevColumn(
 			NavigablePath navigablePath,
 			SqlAstCreationState creationState) {
 		final var parentPath = navigablePath.getParent();
@@ -589,6 +588,13 @@ public class AuditMappingImpl implements AuditMapping {
 				&& parentTableGroup.getModelPart() instanceof EntityValuedModelPart entityPart ) {
 			final var parentAuditMapping = entityPart.getEntityMappingType().getAuditMapping();
 			if ( parentAuditMapping != null ) {
+				// A fetched to-one represents its owner's snapshot even if its own row is older.
+				if ( parentTableGroup.isFetched() && entityPart instanceof ToOneAttributeMapping ) {
+					final var ownerRevColumn = findParentRevColumn( parentPath, creationState );
+					if ( ownerRevColumn != null ) {
+						return ownerRevColumn;
+					}
+				}
 				final String parentTable = entityPart.getEntityMappingType().getMappedTableDetails().getTableName();
 				final String parentAuditTable = parentAuditMapping.resolveTableName( parentTable );
 				return new ColumnReference(

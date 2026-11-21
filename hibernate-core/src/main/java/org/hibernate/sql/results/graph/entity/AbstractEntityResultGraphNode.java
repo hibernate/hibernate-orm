@@ -3,6 +3,7 @@ package org.hibernate.sql.results.graph.entity;
 import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.query.from.TableGroup;
@@ -17,6 +18,8 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import java.util.BitSet;
+
+import static org.hibernate.metamodel.mapping.internal.AuditMappingImpl.findParentRevColumn;
 
 /**
  * AbstractFetchParent sub-class for entity-valued graph nodes
@@ -49,9 +52,8 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 		discriminatorFetch = creationState.visitDiscriminatorFetch( entityResultGraphNode );
 
 		rowIdResult = rowIdResult( creationState, navigablePath, entityTableGroup );
-		if ( fetchParent == this ) {
-			auditChangesetIdResult = auditChangesetIdResult( creationState, entityTableGroup );
-		}
+		auditChangesetIdResult = auditChangesetIdResult( creationState, entityTableGroup,
+				fetchParent instanceof Fetch && fetchContainer instanceof ToOneAttributeMapping );
 
 		super.afterInitialize( fetchParent, creationState );
 	}
@@ -93,7 +95,8 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 
 	private @Nullable DomainResult<?> auditChangesetIdResult(
 			DomainResultCreationState creationState,
-			TableGroup entityTableGroup) {
+			TableGroup entityTableGroup,
+			boolean toOneFetch) {
 		final var entityMappingType = getEntityValuedModelPart().getEntityMappingType();
 		final var auditMapping = entityMappingType.getAuditMapping();
 		if ( auditMapping != null ) {
@@ -103,9 +106,14 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 				final var changesetIdMapping = auditMapping.getChangesetIdMapping( originalTable );
 				final var sqlAstCreationState = creationState.getSqlAstCreationState();
 				final var expressionResolver = sqlAstCreationState.getSqlExpressionResolver();
-				final var tableReference = entityTableGroup.resolveTableReference(
-						auditMapping.resolveTableName( originalTable ) );
-				final var expression = expressionResolver.resolveSqlExpression( tableReference, changesetIdMapping );
+				// A correlated fetch represents the target as of its parent's revision.
+				final var parentRevColumn = toOneFetch
+						? findParentRevColumn( entityTableGroup.getNavigablePath(), sqlAstCreationState )
+						: null;
+				final var expression = parentRevColumn != null ? parentRevColumn
+						: expressionResolver.resolveSqlExpression(
+								entityTableGroup.resolveTableReference( auditMapping.resolveTableName( originalTable ) ),
+								changesetIdMapping );
 				final var sqlSelection = expressionResolver.resolveSqlSelection(
 						expression,
 						changesetIdMapping.getJdbcMapping().getJdbcJavaType(),
@@ -163,6 +171,9 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 		final var entityPersister = fetchContainer.getEntityMappingType().getEntityPersister();
 		if ( identifierFetch != null ) {
 			identifierFetch.collectValueIndexesToCache( valueIndexes );
+		}
+		if ( auditChangesetIdResult != null ) {
+			auditChangesetIdResult.collectValueIndexesToCache( valueIndexes );
 		}
 		if ( !entityPersister.useShallowQueryCacheLayout() ) {
 			if ( discriminatorFetch != null ) {

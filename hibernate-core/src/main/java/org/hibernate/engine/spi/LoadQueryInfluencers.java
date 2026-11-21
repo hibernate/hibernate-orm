@@ -129,6 +129,17 @@ public class LoadQueryInfluencers implements Serializable {
 		this.temporalIdentifier = temporalIdentifier;
 	}
 
+	public <T> T withTemporalIdentifier(@Nullable Object changesetId, @Nonnull Supplier<T> action) {
+		final var previous = temporalIdentifier;
+		temporalIdentifier = changesetId;
+		try {
+			return action.get();
+		}
+		finally {
+			temporalIdentifier = previous;
+		}
+	}
+
 	public boolean isAllRevisions() {
 		return temporalIdentifier == AuditLog.ALL_CHANGESETS;
 	}

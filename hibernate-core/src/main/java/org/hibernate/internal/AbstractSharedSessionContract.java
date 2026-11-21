@@ -1552,6 +1552,7 @@ abstract class AbstractSharedSessionContract
 		final Object temporalId = getLoadQueryInfluencers().getTemporalIdentifier();
 		return temporalId != null
 			&& temporalId != AuditLog.ALL_CHANGESETS
+			&& ( persister.getTemporalMapping() != null || persister.getAuditMapping() != null )
 				? new TemporalEntityKey( id, persister, temporalId )
 				: new EntityKey( id, persister );
 	}

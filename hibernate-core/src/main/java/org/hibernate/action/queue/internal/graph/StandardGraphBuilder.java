@@ -182,8 +182,7 @@ public class StandardGraphBuilder implements GraphBuilder {
 						throw new IllegalStateException( "Flush operation prerequisite is missing from the execution graph" );
 					}
 					if ( prerequisiteNode != node && prerequisites.add( prerequisiteNode ) ) {
-						outgoing.get( prerequisiteNode ).add( GraphEdge.requiredOrder(
-								prerequisiteNode, node, prerequisiteNode, node, Util.EMPTY_SELECTABLES, null, edgeId++ ) );
+						outgoing.get( prerequisiteNode ).add( GraphEdge.executionPrerequisite( prerequisiteNode, node, edgeId++ ) );
 					}
 				}
 			}

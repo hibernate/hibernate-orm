@@ -74,18 +74,19 @@ public final class ConstraintModelBuilder {
 			PlanningOptions planningOptions,
 			MetadataImplementor bootMappingModel,
 			SqlStringGenerationContext sqlStringGenerationContext) {
-		return new ConstraintModelBuilder( planningOptions ).build( mappingModel, bootMappingModel, sqlStringGenerationContext );
+		return new ConstraintModelBuilder( planningOptions, bootMappingModel ).build( mappingModel, sqlStringGenerationContext );
 	}
 
 	private final PlanningOptions planningOptions;
+	private final MetadataImplementor bootModel;
 
-	private ConstraintModelBuilder(PlanningOptions planningOptions) {
+	private ConstraintModelBuilder(PlanningOptions planningOptions, MetadataImplementor bootModel) {
+		this.bootModel = bootModel;
 		this.planningOptions = planningOptions;
 	}
 
-	public ConstraintModel build(
+	private ConstraintModel build(
 			MappingMetamodelImplementor mappingModel,
-			MetadataImplementor bootModel,
 			SqlStringGenerationContext sqlStringGenerationContext) {
 		final var foreignKeys = new ArrayList<ForeignKey>();
 		final var uniqueConstraints = new ArrayList<UniqueConstraint>();
@@ -99,7 +100,7 @@ public final class ConstraintModelBuilder {
 
 		// Second pass: collect foreign keys and unique constraints
 		mappingModel.forEachEntityDescriptor( (descriptor) -> {
-			collectFromEntityPersister(descriptor, foreignKeys, uniqueConstraints, seen, entityPersisters, bootModel, sqlStringGenerationContext);
+			collectFromEntityPersister(descriptor, foreignKeys, uniqueConstraints, seen, entityPersisters, sqlStringGenerationContext);
 		} );
 
 		// Also scan collection persisters because join tables often show up there
@@ -110,7 +111,6 @@ public final class ConstraintModelBuilder {
 					uniqueConstraints,
 					seen,
 					entityPersisters,
-					bootModel,
 					sqlStringGenerationContext
 			);
 		} );
@@ -154,7 +154,6 @@ public final class ConstraintModelBuilder {
 			List<UniqueConstraint> uniqueConstraints,
 			IdentityHashMap<ForeignKeyDescriptor, Boolean> seen,
 			Map<String, EntityPersister> entityPersisters,
-			MetadataImplementor bootModel,
 			SqlStringGenerationContext sqlStringGenerationContext) {
 
 		// Collect unique constraint for primary key
@@ -165,7 +164,7 @@ public final class ConstraintModelBuilder {
 		collectNaturalIdConstraint(descriptor, uniqueConstraints);
 
 		// Collect @Column(unique=true) constraints
-		collectUniqueColumnConstraints(descriptor, uniqueConstraints, bootModel, sqlStringGenerationContext);
+		collectUniqueColumnConstraints(descriptor, uniqueConstraints, sqlStringGenerationContext);
 
 		collectEntityTableGroupConstraints(descriptor, foreignKeys, seen, entityPersisters);
 
@@ -303,7 +302,6 @@ public final class ConstraintModelBuilder {
 	private void collectUniqueColumnConstraints(
 			EntityPersister descriptor,
 			List<UniqueConstraint> uniqueConstraints,
-			MetadataImplementor bootModel,
 			SqlStringGenerationContext sqlStringGenerationContext) {
 		if ( !planningOptions.orderByUniqueKeySlots() || bootModel == null || sqlStringGenerationContext == null ) {
 			return;
@@ -539,7 +537,6 @@ public final class ConstraintModelBuilder {
 			List<UniqueConstraint> uniqueConstraints,
 			IdentityHashMap<ForeignKeyDescriptor, Boolean> seen,
 			Map<String, EntityPersister> entityPersisters,
-			MetadataImplementor bootModel,
 			SqlStringGenerationContext sqlStringGenerationContext) {
 		var attributeMapping = descriptor.getAttributeMapping();
 
@@ -559,7 +556,6 @@ public final class ConstraintModelBuilder {
 				descriptor,
 				attributeMapping,
 				uniqueConstraints,
-				bootModel,
 				sqlStringGenerationContext
 		);
 	}
@@ -568,7 +564,6 @@ public final class ConstraintModelBuilder {
 			CollectionPersister descriptor,
 			PluralAttributeMapping attributeMapping,
 			List<UniqueConstraint> uniqueConstraints,
-			MetadataImplementor bootModel,
 			SqlStringGenerationContext sqlStringGenerationContext) {
 		if ( !planningOptions.orderByUniqueKeySlots() || bootModel == null || sqlStringGenerationContext == null ) {
 			return;
@@ -926,6 +921,14 @@ public final class ConstraintModelBuilder {
 			return;
 		}
 		seen.put( fk, Boolean.TRUE );
+		// Schema export omits association FKs when the id alone does not identify a physical row.
+		final var target = fk.getTargetPart().findContainingEntityMapping();
+		if ( bootModel != null && target != null ) {
+			final var binding = bootModel.getEntityBinding( target.getEntityName() );
+			if ( binding != null && binding.getRootClass().isAuxiliaryColumnInPrimaryKey() ) {
+				return;
+			}
+		}
 		addConstraint( fk, keySide, targetSide, nullable, foreignKeys, entityPersisters );
 	}
 

@@ -8,6 +8,7 @@ import org.hibernate.action.queue.internal.constraint.DeferrableConstraintMode;
 import org.hibernate.action.queue.internal.cyclebreak.BindingPatch;
 import org.hibernate.action.queue.internal.graph.Graph;
 import org.hibernate.action.queue.internal.graph.GraphEdge;
+import org.hibernate.action.queue.internal.graph.GraphEdgeKind;
 import org.hibernate.action.queue.internal.graph.GroupNode;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
@@ -113,7 +114,13 @@ public class CycleBreaker {
 
 			final GraphEdge chosen = chooseEdgeToBreak(cycle);
 			if (chosen == null) {
-				if (isDeleteOnlyCycle(cycle)) {
+				final boolean deleteOnly = isDeleteOnlyCycle( cycle );
+				// The fallbacks may relax inferred ordering, but an explicit prerequisite must execute first.
+				cycle.removeIf( edge -> edge.getKind() == GraphEdgeKind.EXECUTION_PREREQUISITE );
+				if ( cycle.isEmpty() ) {
+					throw new IllegalStateException( "Cyclic execution prerequisites for SCC: " + describeScc( scc ) );
+				}
+				if ( deleteOnly ) {
 					breakArbitraryDeleteEdge(cycle, deferrableConstraintMode);
 					continue;
 				}

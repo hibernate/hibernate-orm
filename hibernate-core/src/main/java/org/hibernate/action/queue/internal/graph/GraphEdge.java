@@ -97,6 +97,11 @@ public class GraphEdge {
 		);
 	}
 
+	static GraphEdge executionPrerequisite(GroupNode prerequisite, GroupNode dependent, long stableId) {
+		return new GraphEdge( prerequisite, dependent, prerequisite, dependent, 0, Util.EMPTY_SELECTABLES,
+				null, GraphEdgeKind.EXECUTION_PREREQUISITE, stableId );
+	}
+
 	static GraphEdge preferredOrder(
 			GroupNode targetTableOpGroup,
 			GroupNode keyTableOpGroup,
@@ -198,7 +203,7 @@ public class GraphEdge {
 	}
 
 	public boolean isRequiredOrder() {
-		return kind == GraphEdgeKind.REQUIRED_ORDER;
+		return kind == GraphEdgeKind.REQUIRED_ORDER || kind == GraphEdgeKind.EXECUTION_PREREQUISITE;
 	}
 
 	public boolean isNullPatchableForeignKey() {
@@ -231,7 +236,7 @@ public class GraphEdge {
 		return switch ( kind ) {
 			case NULL_PATCHABLE_UNIQUE -> true;
 			case REQUIRED_ORDER -> isUniqueConstraintEdge();
-			case NULL_PATCHABLE_FK, PREFERRED_ORDER -> false;
+			case NULL_PATCHABLE_FK, PREFERRED_ORDER, EXECUTION_PREREQUISITE -> false;
 		};
 	}
 
@@ -239,7 +244,7 @@ public class GraphEdge {
 		return switch ( kind ) {
 			case NULL_PATCHABLE_FK -> BindingPatch.CycleType.FOREIGN_KEY;
 			case NULL_PATCHABLE_UNIQUE -> BindingPatch.CycleType.UNIQUE_SWAP;
-			case REQUIRED_ORDER, PREFERRED_ORDER -> null;
+			case REQUIRED_ORDER, PREFERRED_ORDER, EXECUTION_PREREQUISITE -> null;
 		};
 	}
 

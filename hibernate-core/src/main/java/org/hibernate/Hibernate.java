@@ -207,7 +207,8 @@ public final class Hibernate {
 
 	/**
 	 * Determine if the given persistent collection {@linkplain Collection#contains(Object) contains}
-	 * the given element, without fetching its state from the database.
+	 * the given element, without fetching its state from the database. A collection
+	 * which is already initialized is searched in memory.
 	 *
 	 * @param collection a persistent collection associated with an open session
 	 * @return true if the collection does contain the given element
@@ -216,13 +217,15 @@ public final class Hibernate {
 	 */
 	public static <T> boolean contains(Collection<? super T> collection, T element) {
 		return collection instanceof PersistentCollection<?> persistentCollection
+			&& !persistentCollection.wasInitialized()
 				? persistentCollection.elementExists( element )
 				: collection.contains( element );
 	}
 
 	/**
 	 * Obtain the value associated with the given key by the given persistent
-	 * map, without fetching the state of the map from the database.
+	 * map, without fetching the state of the map from the database. The value
+	 * is read from memory if the map is already initialized.
 	 *
 	 * @param map a persistent map associated with an open session
 	 * @param key a key belonging to the map
@@ -233,13 +236,15 @@ public final class Hibernate {
 	@SuppressWarnings("unchecked")
 	public static <K,V> V get(Map<? super K, V> map, K key) {
 		return map instanceof PersistentCollection<?> persistentCollection
+			&& !persistentCollection.wasInitialized()
 				? (V) persistentCollection.elementByIndex( key )
 				: map.get( key );
 	}
 
 	/**
 	 * Obtain the element of the given persistent list with the given index,
-	 * without fetching the state of the list from the database.
+	 * without fetching the state of the list from the database. The element
+	 * is read from memory if the list is already initialized.
 	 *
 	 * @param list a persistent list associated with an open session
 	 * @param key an index belonging to the list
@@ -250,6 +255,7 @@ public final class Hibernate {
 	@SuppressWarnings("unchecked")
 	public static <T> T get(List<T> list, int key) {
 		return list instanceof PersistentCollection<?> persistentCollection
+			&& !persistentCollection.wasInitialized()
 				? (T) persistentCollection.elementByIndex( key )
 				: list.get( key );
 	}

@@ -84,6 +84,7 @@ class CollectionSizeCacheTest {
 			owner.children.add( child );
 			assertFalse( Hibernate.isInitialized( owner.children ) );
 			assertEquals( 2, Hibernate.size( owner.children ) );
+			assertFalse( Hibernate.isInitialized( owner.children ) );
 		} );
 	}
 

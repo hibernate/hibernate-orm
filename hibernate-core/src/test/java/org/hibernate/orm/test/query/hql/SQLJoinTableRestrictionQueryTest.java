@@ -12,8 +12,10 @@ import jakarta.persistence.OneToMany;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterJoinTable;
 import org.hibernate.annotations.SQLJoinTableRestriction;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -311,6 +313,7 @@ class SQLJoinTableRestrictionQueryTest {
 			"unrestrictedItems,item = other", "unrestrictedItems,other = item",
 			"unrestrictedItems,item in (other)", "unrestrictedItems,other in (item)"
 	})
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	void leftJoinWithOnPredicateEntityComparisonsUseIdentifier(
 			String collection, String comparison, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
@@ -512,12 +515,21 @@ class SQLJoinTableRestrictionQueryTest {
 	}
 
 	@ParameterizedTest
-	@CsvSource({
-			"items,inner", "items,left",
-			"unrestrictedItems,inner", "unrestrictedItems,left",
-			"manyToManyItems,inner", "manyToManyItems,left"
-	})
-	void joinWithOnPredicateBindsIdentifiersForExpandedInParameter(
+	@ValueSource(strings = {"items", "unrestrictedItems", "manyToManyItems"})
+	void innerJoinWithOnPredicateBindsIdentifiersForExpandedInParameter(
+			String collection, SessionFactoryScope scope) {
+		assertExpandedInParameterBindings( collection, "inner", scope );
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {"items", "unrestrictedItems", "manyToManyItems"})
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
+	void leftJoinWithOnPredicateBindsIdentifiersForExpandedInParameter(
+			String collection, SessionFactoryScope scope) {
+		assertExpandedInParameterBindings( collection, "left", scope );
+	}
+
+	private void assertExpandedInParameterBindings(
 			String collection, String joinType, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Item visibleItem = session.find( Item.class, 1L );
@@ -542,9 +554,18 @@ class SQLJoinTableRestrictionQueryTest {
 		} );
 	}
 
-	@ParameterizedTest
-	@ValueSource(strings = {"inner", "left"})
-	void joinWithOnPredicateBindsIdentifiersForIndividualInParameters(
+	@Test
+	void innerJoinWithOnPredicateBindsIdentifiersForIndividualInParameters(SessionFactoryScope scope) {
+		assertIndividualInParameterBindings( "inner", scope );
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
+	void leftJoinWithOnPredicateBindsIdentifiersForIndividualInParameters(SessionFactoryScope scope) {
+		assertIndividualInParameterBindings( "left", scope );
+	}
+
+	private void assertIndividualInParameterBindings(
 			String joinType, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Item visibleItem = session.find( Item.class, 1L );
@@ -571,8 +592,18 @@ class SQLJoinTableRestrictionQueryTest {
 	}
 
 	@ParameterizedTest
-	@CsvSource({"items,not in", "unrestrictedItems,in", "unrestrictedItems,not in"})
-	void rightJoinBindsIdentifiersForInParameter(
+	@ValueSource(strings = {"in", "not in"})
+	void unrestrictedRightJoinBindsIdentifiersForInParameter(String operator, SessionFactoryScope scope) {
+		assertRightJoinInParameterBindings( "unrestrictedItems", operator, scope );
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
+	void restrictedRightJoinBindsIdentifiersForNotInParameter(SessionFactoryScope scope) {
+		assertRightJoinInParameterBindings( "items", "not in", scope );
+	}
+
+	private void assertRightJoinInParameterBindings(
 			String collection, String operator, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Item visibleItem = session.find( Item.class, 1L );

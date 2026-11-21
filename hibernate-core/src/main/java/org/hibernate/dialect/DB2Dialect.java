@@ -225,6 +225,14 @@ public class DB2Dialect extends Dialect implements CurrentTemporalSupport, Tempo
 	private static final RefCursorSupportFactory REF_CURSOR_SUPPORT_FACTORY =
 			RefCursorSupports.jdbcType( Types.REF_CURSOR );
 
+	// Recursive CTEs are supported at last since 9.7
+	private final CteSupport cteSupport = CteSupport.builder()
+			.placement( CteSupport.Placement.TOP_LEVEL )
+			.recursiveFeatures( CteSupport.RecursiveFeature.RECURSIVE )
+			.mutationFeatures( CteSupport.MutationFeature.NON_QUERY )
+			.requiresRecursiveKeyword( false )
+			.build();
+	private final MutationSyntaxSupport mutationSyntaxSupport = MutationSyntaxSupport.of( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE );
 	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
 			.defaultDecimalPrecision( 31 )
 			.maxVarcharLength( 32_672 ).maxVarcharCapacity( 32_672 )
@@ -1171,13 +1179,7 @@ public class DB2Dialect extends Dialect implements CurrentTemporalSupport, Tempo
 
 	@Override
 	public CteSupport getCteSupport() {
-		// Recursive CTEs are supported at last since 9.7
-		return CteSupport.builder()
-				.placement( CteSupport.Placement.TOP_LEVEL )
-				.recursiveFeatures( CteSupport.RecursiveFeature.RECURSIVE )
-				.mutationFeatures( CteSupport.MutationFeature.NON_QUERY )
-				.requiresRecursiveKeyword( false )
-				.build();
+		return cteSupport;
 	}
 
 	@Override
@@ -1329,7 +1331,7 @@ public class DB2Dialect extends Dialect implements CurrentTemporalSupport, Tempo
 
 	@Override
 	public MutationSyntaxSupport getMutationSyntaxSupport() {
-		return MutationSyntaxSupport.of( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE );
+		return mutationSyntaxSupport;
 	}
 
 	@Override

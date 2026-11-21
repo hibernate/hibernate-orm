@@ -195,6 +195,10 @@ public class H2Dialect extends Dialect implements CurrentTemporalSupport, Tempor
 	public CurrentTemporalSupport getCurrentTemporalSupport() {
 		return this;
 	}
+	private final CteSupport cteSupport = CteSupport.builder()
+			.placement( CteSupport.Placement.TOP_LEVEL )
+			.recursiveFeatures( CteSupport.RecursiveFeature.RECURSIVE )
+			.build();
 	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
 			.maxVarcharLength( 1_048_576 ).maxVarcharCapacity( 1_048_576 )
 			.maxNVarcharLength( 1_048_576 ).maxNVarcharCapacity( 1_048_576 )
@@ -959,10 +963,7 @@ public class H2Dialect extends Dialect implements CurrentTemporalSupport, Tempor
 
 	@Override
 	public CteSupport getCteSupport() {
-		return CteSupport.builder()
-				.placement( CteSupport.Placement.TOP_LEVEL )
-				.recursiveFeatures( CteSupport.RecursiveFeature.RECURSIVE )
-				.build();
+		return cteSupport;
 	}
 
 	@Override

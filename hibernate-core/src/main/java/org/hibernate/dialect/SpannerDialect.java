@@ -216,6 +216,14 @@ public class SpannerDialect extends Dialect implements CurrentTemporalSupport, T
 	public CurrentTemporalSupport getCurrentTemporalSupport() {
 		return this;
 	}
+	private final CteSupport cteSupport = CteSupport.builder()
+			.placement( CteSupport.Placement.TOP_LEVEL )
+			.supportsCteHeaderColumnList( false )
+			.build();
+	private final MutationSyntaxSupport mutationSyntaxSupport = MutationSyntaxSupport.builder()
+			.capability( MutationKind.UPDATE, MutationSyntaxCapability.REQUIRES_WHERE )
+			.capability( MutationKind.DELETE, MutationSyntaxCapability.REQUIRES_WHERE )
+			.build();
 	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
 			.maxVarcharLength( 2_621_440 ).maxVarcharCapacity( 2_621_440 )
 			.maxNVarcharLength( 2_621_440 ).maxNVarcharCapacity( 2_621_440 )
@@ -1437,18 +1445,12 @@ public class SpannerDialect extends Dialect implements CurrentTemporalSupport, T
 
 	@Override
 	public CteSupport getCteSupport() {
-		return CteSupport.builder()
-				.placement( CteSupport.Placement.TOP_LEVEL )
-				.supportsCteHeaderColumnList( false )
-				.build();
+		return cteSupport;
 	}
 
 	@Override
 	public MutationSyntaxSupport getMutationSyntaxSupport() {
-		return MutationSyntaxSupport.builder()
-				.capability( MutationKind.UPDATE, MutationSyntaxCapability.REQUIRES_WHERE )
-				.capability( MutationKind.DELETE, MutationSyntaxCapability.REQUIRES_WHERE )
-				.build();
+		return mutationSyntaxSupport;
 	}
 
 	@Override

@@ -252,6 +252,19 @@ public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport
 		return this;
 	}
 	private static final RefCursorSupportFactory REF_CURSOR_SUPPORT_FACTORY = RefCursorSupports.postgresql();
+	private final CteSupport cteSupport = CteSupport.builder()
+			.recursiveFeatures(
+					CteSupport.RecursiveFeature.RECURSIVE,
+					CteSupport.RecursiveFeature.SEARCH,
+					CteSupport.RecursiveFeature.CYCLE,
+					CteSupport.RecursiveFeature.CYCLE_USING
+			)
+			.mutationFeatures(
+					CteSupport.MutationFeature.NON_QUERY,
+					CteSupport.MutationFeature.INSERT_CONFLICT
+			)
+			.build();
+	private final MutationSyntaxSupport mutationSyntaxSupport = MutationSyntaxSupport.of( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE );
 	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
 			.defaultIntervalSecondScale( 6 )
 			.maxVarcharLength( 10_485_760 ).maxVarcharCapacity( 1_073_741_824 )
@@ -926,18 +939,7 @@ public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport
 
 	@Override
 	public CteSupport getCteSupport() {
-		return CteSupport.builder()
-				.recursiveFeatures(
-						CteSupport.RecursiveFeature.RECURSIVE,
-						CteSupport.RecursiveFeature.SEARCH,
-						CteSupport.RecursiveFeature.CYCLE,
-						CteSupport.RecursiveFeature.CYCLE_USING
-				)
-				.mutationFeatures(
-						CteSupport.MutationFeature.NON_QUERY,
-						CteSupport.MutationFeature.INSERT_CONFLICT
-				)
-				.build();
+		return cteSupport;
 	}
 
 	@Override
@@ -1584,7 +1586,7 @@ public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport
 
 	@Override
 	public MutationSyntaxSupport getMutationSyntaxSupport() {
-		return MutationSyntaxSupport.of( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE );
+		return mutationSyntaxSupport;
 	}
 
 	@Override

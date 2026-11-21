@@ -1,6 +1,6 @@
 package org.hibernate.orm.test.boot.models.xml.bad;
 
-import org.hibernate.MappingException;
+import org.hibernate.boot.MappingException;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.models.MemberResolutionException;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -93,9 +93,11 @@ public class BadMappingTests {
 		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() )
 				.addResource( "mappings/models/bad/duplicate-entity-unnamed.xml" )
 				.addResource( "mappings/models/bad/duplicate-entity-first.xml" );
-		assertDoesNotThrow( () -> {
-			return metadataSources.buildMetadata();
-		} );
+		final var metadata = metadataSources.buildMetadata();
+		assertEquals(
+				"FirstEntity",
+				metadata.getEntityBinding( "org.hibernate.orm.test.boot.models.xml.SimpleEntity" ).getJpaEntityName()
+		);
 	}
 
 	@Test
@@ -111,13 +113,14 @@ public class BadMappingTests {
 
 	@Test
 	@ServiceRegistry
-	void testNamedAndUnnamedEntityMappings(ServiceRegistryScope registryScope) {
+	void testUnnamedCompleteMappingCannotReplaceExplicitEntityName(ServiceRegistryScope registryScope) {
+		final String resource = "mappings/models/bad/duplicate-entity-unnamed.xml";
 		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() )
 				.addResource( "mappings/models/bad/duplicate-entity-first.xml" )
-				.addResource( "mappings/models/bad/duplicate-entity-unnamed.xml" );
-		assertDoesNotThrow( () -> {
-			return metadataSources.buildMetadata();
-		} );
+				.addResource( resource );
+		final MappingException exception = assertThrows( MappingException.class, metadataSources::buildMetadata );
+		assertEquals( resource, exception.getOrigin().getName() );
+		assertTrue( exception.getMessage().contains( "entity names 'FirstEntity' and 'SimpleEntity'" ) );
 	}
 
 	@Test

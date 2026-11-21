@@ -1,18 +1,24 @@
 package org.hibernate.boot.models.xml.spi;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.BiConsumer;
+
+import org.hibernate.boot.MappingException;
 import org.hibernate.boot.internal.RootMappingDefaults;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.models.xml.internal.XmlDocumentContextImpl;
 import org.hibernate.boot.models.xml.internal.XmlProcessingResultImpl;
 import org.hibernate.boot.models.xml.spi.XmlProcessingResult.OverrideTuple;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.ModelsContext;
-
-import java.util.function.BiConsumer;
 
 import static org.hibernate.boot.models.xml.internal.ManagedTypeProcessor.processCompleteEmbeddable;
 import static org.hibernate.boot.models.xml.internal.ManagedTypeProcessor.processCompleteEntity;
 import static org.hibernate.boot.models.xml.internal.ManagedTypeProcessor.processCompleteMappedSuperclass;
+import static org.hibernate.boot.models.xml.internal.XmlProcessingHelper.determineClassName;
 
 /**
  * Processes XML mappings - applying metadata-complete mappings and collecting
@@ -30,6 +36,7 @@ public class XmlProcessor {
 			RootMappingDefaults mappingDefaults) {
 		final boolean xmlMappingsGloballyComplete = persistenceUnitMetadata.areXmlMappingsComplete();
 		final var xmlOverlay = new XmlProcessingResultImpl();
+		final Map<String, JaxbEntityImpl> completeEntitiesByClass = new HashMap<>();
 
 		xmlPreProcessingResult.getDocuments().forEach( xmlDocument -> {
 			final var xmlDocumentContext = new XmlDocumentContextImpl(
@@ -68,7 +75,14 @@ public class XmlProcessor {
 
 			jaxbRoot.getEntities().forEach( jaxbEntity -> {
 				if ( xmlMappingsGloballyComplete || jaxbEntity.isMetadataComplete() == Boolean.TRUE ) {
-					// the XML mapping is complete, we can process it immediately
+					// Complete mappings clear previous metadata. Partial overlays are applied later.
+					if ( StringHelper.isNotEmpty( jaxbEntity.getClazz() ) ) {
+						final String className = determineClassName( jaxbRoot, jaxbEntity );
+						final var previous = completeEntitiesByClass.put( className, jaxbEntity );
+						if ( previous != null ) {
+							checkCompleteEntityReplacement( className, previous, jaxbEntity, xmlDocument );
+						}
+					}
 					processCompleteEntity( jaxbRoot, jaxbEntity, xmlDocumentContext );
 				}
 				else {
@@ -80,5 +94,49 @@ public class XmlProcessor {
 		} );
 
 		return xmlOverlay;
+	}
+
+	private static void checkCompleteEntityReplacement(
+			String className,
+			JaxbEntityImpl previous,
+			JaxbEntityImpl incoming,
+			XmlDocument document) {
+		final String previousName = effectiveEntityName( className, previous );
+		final String incomingName = effectiveEntityName( className, incoming );
+		final String removedAttribute = removedBasicAttribute( previous, incoming );
+		// A first explicit name may replace the default; an established explicit name may not be lost.
+		final boolean losesExplicitName = hasExplicitName( previous ) && !previousName.equals( incomingName );
+		if ( losesExplicitName || removedAttribute != null ) {
+			throw new MappingException(
+					"Conflicting complete XML mappings for entity class '" + className
+							+ "': entity names '" + previousName + "' and '" + incomingName + "'"
+							+ ( removedAttribute == null ? "" : ", removed basic attribute '" + removedAttribute + "'" ),
+					document.getOrigin()
+			);
+		}
+	}
+
+	private static String effectiveEntityName(String className, JaxbEntityImpl entity) {
+		return hasExplicitName( entity ) ? entity.getName() : StringHelper.unqualify( className );
+	}
+
+	private static boolean hasExplicitName(JaxbEntityImpl entity) {
+		final String name = entity.getName();
+		return name != null && !name.isBlank();
+	}
+
+	private static String removedBasicAttribute(JaxbEntityImpl previous, JaxbEntityImpl incoming) {
+		final var previousAttributes = previous.getAttributes();
+		final var incomingAttributes = incoming.getAttributes();
+		if ( previousAttributes != null && incomingAttributes != null ) {
+			for ( var transientAttribute : incomingAttributes.getTransients() ) {
+				for ( var previousBasic : previousAttributes.getBasicAttributes() ) {
+					if ( transientAttribute.getName().equals( previousBasic.getName() ) ) {
+						return previousBasic.getName();
+					}
+				}
+			}
+		}
+		return null;
 	}
 }

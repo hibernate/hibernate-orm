@@ -85,14 +85,10 @@ Previously, validation was disabled when this setting was absent, allowing inval
 Applications with invalid `orm.xml` or `hbm.xml` documents must correct their mappings or explicitly set `hibernate.validate_xml=false` to disable validation.
 
 [[duplicate-xml-entity-mappings]]
-=== Conflicting XML entity names
+=== Conflicting XML entity mappings
 
-Mapping XML now rejects different explicit entity names for the same Java class within the same batch of mapping resources, instead of silently retaining the last declaration.
-This applies to declarations within one document and across different mapping documents.
-Relative class names are resolved against the mapping package before detecting conflicts.
-Use one explicit entity name per class.
-Repeated declarations with the same explicit name and declarations that omit the name retain their existing processing, including mappings discovered in multiple archives.
-This check does not add support for mapping one class under multiple entity names.
+Hibernate rejects conflicting explicit names for the same entity class within one XML mapping document.
+It also rejects repeated metadata-complete declarations for the same class that replace a previously explicit entity name with a different effective name or turn a previously mapped basic attribute into a transient attribute.
 
 [[callable-embeddable-types]]
 === Embeddable types in procedure and function calls

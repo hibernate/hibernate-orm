@@ -18,6 +18,7 @@ import org.jboss.logging.Logger;
 
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
 import static org.hibernate.engine.internal.CacheHelper.readingFromCache;
+import static org.hibernate.engine.internal.CacheHelper.readsHistory;
 import static org.hibernate.engine.internal.CacheHelper.usingCache;
 import static org.hibernate.internal.util.collections.CollectionHelper.linkedMapOfSize;
 import static org.hibernate.internal.util.collections.CollectionHelper.linkedSetOfSize;
@@ -461,7 +462,7 @@ public class BatchFetchQueue {
 
 	private boolean isCached(Object collectionKey, CollectionPersister persister) {
 		final var session = getSession();
-		if ( session.getCacheMode().isGetEnabled() ) {
+		if ( session.getCacheMode().isGetEnabled() && !readsHistory( session ) ) {
 			return usingCache( persister, cache -> {
 				final Object cacheKey =
 						cache.generateCacheKey( collectionKey, persister,
@@ -476,7 +477,7 @@ public class BatchFetchQueue {
 
 	private boolean isCached(EntityKey entityKey, EntityPersister persister) {
 		final var session = getSession();
-		if ( session.getCacheMode().isGetEnabled() ) {
+		if ( session.getCacheMode().isGetEnabled() && !readsHistory( session, persister ) ) {
 			return readingFromCache( persister, cache -> {
 			final Object key =
 					cache.generateCacheKey( entityKey.getIdentifier(), persister,

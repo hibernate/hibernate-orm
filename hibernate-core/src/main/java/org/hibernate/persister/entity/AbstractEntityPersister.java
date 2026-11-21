@@ -268,6 +268,7 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.function.Function.identity;
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
 import static org.hibernate.engine.internal.CacheHelper.readingFromCache;
+import static org.hibernate.engine.internal.CacheHelper.readsHistory;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfPersistentAttributeInterceptable;
@@ -1712,7 +1713,8 @@ public abstract class AbstractEntityPersister
 
 		// attempt to read it from second-level cache
 		if ( session.getCacheMode().isGetEnabled()
-				&& isLazyPropertiesCacheable() ) {
+				&& isLazyPropertiesCacheable()
+				&& !readsHistory( session, this ) ) {
 			final Object cachedValue = initializeLazyFieldFromCache( fieldName, entity, session, id, entry );
 			if ( cachedValue != UNFETCHED_PROPERTY ) {
 				// The following should be redundant, since the setter should have set this already.

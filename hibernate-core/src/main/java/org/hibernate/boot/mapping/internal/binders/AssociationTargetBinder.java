@@ -23,6 +23,7 @@ import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SyntheticProperty;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
@@ -63,7 +64,32 @@ class AssociationTargetBinder {
 	}
 
 	private Property resolveReferencedProperty(AssociationTargetBinding associationTargetBinding) {
+		if ( associationTargetBinding.value().getReferencedPropertyName() != null ) {
+			final var target = associationTargetBinding.targetTypeBinder().getTypeBinding();
+			final var property = target.getReferencedProperty( associationTargetBinding.value().getReferencedPropertyName() );
+			if ( property.getValue() instanceof Component component ) { component.completeShape(); }
+			final var columns = property.getColumns();
+			final var value = associationTargetBinding.value();
+			ToOneAttributeBinder.bindPropertyReferenceColumns( associationTargetBinding, columns, entityBinder.getBindingState() );
+			if ( value.getColumnSpan() != columns.size() ) {
+				throw new MappingException( "Association '" + associationTargetBinding.role() + "' has "
+						+ value.getColumnSpan() + " join selectables but its target property has " + columns.size() + " columns" );
+			}
+			final var table = property.getValue().getTable();
+			final boolean unique = columns.size() == 1 && columns.get( 0 ).isUnique()
+					|| table.getPrimaryKey() != null && sameColumns( table.getPrimaryKey().getColumns(), columns )
+					|| table.getUniqueKeys().values().stream().anyMatch( key -> sameColumns( key.getColumns(), columns ) )
+					|| table.getIndexes().values().stream().anyMatch( index -> index.isUnique() && sameColumns( index.getSelectables(), columns ) );
+			if ( !unique ) {
+				throw new MappingException( "Association '" + associationTargetBinding.role() + "' references property '"
+						+ property.getName() + "' which is not unique" );
+			}
+			return property;
+		}
 		final List<Identifier> referencedColumnNames = referencedColumnNames( associationTargetBinding );
+		if ( new LinkedHashSet<>( referencedColumnNames ).size() != referencedColumnNames.size() ) {
+			throw new MappingException( "Duplicate target column references " + referencedColumnNames + " - " + associationTargetBinding.role() );
+		}
 		final PersistentClass targetBinding = associationTargetBinding.targetTypeBinder().getTypeBinding();
 		for ( Property property : referenceableProperties( targetBinding ) ) {
 			if ( property.getValue() instanceof SimpleValue simpleValue
@@ -98,6 +124,10 @@ class AssociationTargetBinder {
 				"Could not resolve non-primary-key association target columns "
 						+ referencedColumnNames + " - " + associationTargetBinding.role()
 		);
+	}
+
+	private static boolean sameColumns(List<? extends Selectable> actual, List<Column> expected) {
+		return actual.size() == expected.size() && actual.containsAll( expected );
 	}
 
 	private List<Property> referenceableProperties(PersistentClass targetBinding) {

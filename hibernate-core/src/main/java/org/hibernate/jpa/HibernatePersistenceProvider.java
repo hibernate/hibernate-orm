@@ -1,5 +1,13 @@
 package org.hibernate.jpa;
 
+import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_DIRTY_TRACKING;
+import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_LAZY_INITIALIZATION;
+import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT;
+import static org.hibernate.cfg.BytecodeSettings.BYTECODE_PROVIDER_INSTANCE;
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
+
+import java.util.Locale;
+
 import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import jakarta.annotation.Nonnull;
 import org.hibernate.boot.model.process.internal.EnhancementCandidates;

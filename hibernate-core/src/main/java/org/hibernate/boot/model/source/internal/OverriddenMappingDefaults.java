@@ -31,7 +31,6 @@ public class OverriddenMappingDefaults implements EffectiveMappingDefaults {
 	private final boolean pluralAttributesImplicitlyLazy;
 	private final AccessType implicitCacheAccessType;
 	private final String implicitCascadeStyleName;
-	private final CollectionClassification implicitListClassification;
 
 	public OverriddenMappingDefaults(
 			String implicitSchemaName,

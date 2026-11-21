@@ -1,5 +1,9 @@
 package org.hibernate.orm.test.bytecode.enhance.client;
 
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.testing.orm.junit.SessionFactoryUtil;
+
 import java.io.IOException;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
@@ -21,7 +25,6 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.Hibernate;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
@@ -48,8 +51,7 @@ public class ClientEnhancementTests {
 		try ( var bootstrap = new BootstrapServiceRegistryBuilder().applyClassLoader( loader ).build();
 				var registry = ServiceRegistryUtil.serviceRegistryBuilder( bootstrap )
 						.applySetting( "hibernate.hbm2ddl.auto", "create-drop" ).build();
-				var factory = new MetadataSources( registry ).addAnnotatedClass( bookType )
-						.buildMetadata().buildSessionFactory() ) {
+				var factory = SessionFactoryUtil.buildSessionFactory( MetadataBuildingHelper.buildMetadata( registry, new MappingSources().addManagedClass( bookType ) ) ) ) {
 			try ( var session = factory.openSession() ) {
 				final var transaction = session.beginTransaction();
 				final var book = bookType.getConstructor().newInstance();

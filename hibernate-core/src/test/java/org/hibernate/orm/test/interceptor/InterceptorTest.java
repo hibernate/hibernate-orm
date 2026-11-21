@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.interceptor;
 
+
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
@@ -31,10 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Lukasz Antoniak
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(xmlMappings = {
-		"org/hibernate/orm/test/interceptor/User.hbm.xml",
-		"org/hibernate/orm/test/interceptor/Image.hbm.xml"
-})
+@DomainModel(annotatedClasses = { User.class, Log.class, Image.class })
 @SessionFactory
 public class InterceptorTest {
 	@AfterEach

@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.boot.mapping.internal.categorize;
 
 import java.util.Set;
@@ -62,7 +58,7 @@ final class AttributeMetadataResolver {
 					member,
 					memberType,
 					nature,
-					effectiveAccessType,
+					declaringAccessType( member, inheritedAccessType ),
 					context,
 					embeddableResolutionPath
 			);
@@ -114,6 +110,11 @@ final class AttributeMetadataResolver {
 						embeddableResolutionPath
 				)
 		);
+	}
+
+	private static AccessType declaringAccessType(MemberDetails member, AccessType inheritedAccessType) {
+		final Access access = member.getDeclaringType().getDirectAnnotationUsage( Access.class );
+		return access == null ? inheritedAccessType : access.value();
 	}
 
 	private static boolean isRegisteredCompositeUserType(

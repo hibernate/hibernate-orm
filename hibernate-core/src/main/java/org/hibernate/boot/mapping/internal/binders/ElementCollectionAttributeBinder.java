@@ -21,6 +21,7 @@ import org.hibernate.boot.mapping.internal.sources.CollectionSource;
 import org.hibernate.boot.mapping.internal.sources.ComponentSource;
 import org.hibernate.boot.mapping.internal.sources.ForeignKeySource;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
+import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.boot.mapping.internal.categorize.AttributeMetadataImplementor;
@@ -402,7 +403,8 @@ class ElementCollectionAttributeBinder {
 		if ( componentElement.compositeUserTypeClass() != null ) {
 			EmbeddableAttributeBinder.processCompositeUserType(
 					component,
-					componentElement.compositeUserType()
+					componentElement.compositeUserType(),
+					bindingContext.getServiceRegistry().requireService( PropertyAccessorService.class )
 			);
 		}
 		return component;

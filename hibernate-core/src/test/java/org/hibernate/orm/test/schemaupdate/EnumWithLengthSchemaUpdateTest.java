@@ -1,11 +1,13 @@
 package org.hibernate.orm.test.schemaupdate;
 
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.EnumSet;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -67,9 +69,7 @@ public class EnumWithLengthSchemaUpdateTest {
 	}
 
 	private MetadataImplementor buildMetadata() {
-		final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
-				.addAnnotatedClass( Widget.class )
-				.buildMetadata();
+		final MetadataImplementor metadata = (MetadataImplementor) MetadataBuildingHelper.buildMetadata( ssr, new MappingSources().addManagedClass( Widget.class ) );
 		metadata.orderColumns( false );
 		metadata.validate();
 		return metadata;

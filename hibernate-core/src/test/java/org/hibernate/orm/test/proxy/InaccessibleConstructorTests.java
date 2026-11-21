@@ -1,9 +1,13 @@
 package org.hibernate.orm.test.proxy;
 
+import org.hibernate.testing.orm.junit.SessionFactoryUtil;
+
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.HibernateException;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.internal.InaccessibleConstructorProxyFactory;
 import org.hibernate.testing.orm.junit.Jira;
@@ -25,9 +29,9 @@ public class InaccessibleConstructorTests {
 	@ServiceRegistry
 	void testPrivateCtor(ServiceRegistryScope registryScope) {
 		var registry = registryScope.getRegistry();
-		var domainModel = new MetadataSources( registry ).addAnnotatedClass( PrivateCtorEntity.class ).buildMetadata();
+		var domainModel = MetadataBuildingHelper.buildMetadata( registry, new MappingSources().addManagedClass( PrivateCtorEntity.class ) );
 
-		try ( var sf = domainModel.buildSessionFactory() ) {
+		try ( var sf = SessionFactoryUtil.buildSessionFactory( domainModel ) ) {
 			var mapping = sf.unwrap( SessionFactoryImplementor.class )
 					.getMappingMetamodel()
 					.findEntityDescriptor( PrivateCtorEntity.class );

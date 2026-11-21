@@ -249,12 +249,20 @@ public record ToOneSource(
 
 	/// Resolves the source join table, considering association overrides first.
 	///
-	/// A non-empty override join table replaces the member-level join table source.
+	/// Join-column overrides replace a member join table. A join-table override replaces
+	/// the declared table, including an empty override that requests implicit naming.
 	public JoinTable joinTable() {
-		if ( associationOverride != null && isSpecified( associationOverride.joinTable() ) ) {
-			return associationOverride.joinTable();
+		final JoinTable declaredJoinTable = member.getDirectAnnotationUsage( JoinTable.class );
+		if ( associationOverride != null ) {
+			if ( associationOverride.joinColumns().length > 0 ) {
+				return null;
+			}
+			if ( declaredJoinTable != null || isSpecified( associationOverride.joinTable() ) ) {
+				return associationOverride.joinTable();
+			}
+			return null;
 		}
-		return member.getDirectAnnotationUsage( JoinTable.class );
+		return declaredJoinTable;
 	}
 
 	/// Resolves the join columns that point from this association value to the target.

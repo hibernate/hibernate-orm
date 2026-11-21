@@ -1,7 +1,10 @@
 package org.hibernate.orm.test.mapping.converted.converter;
 
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+
 import jakarta.persistence.AttributeConverter;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -20,18 +23,17 @@ public class JpaOrmXmlRegisterConverterTest {
 	public void jpaXmlAutoApplyTakesPrecedenceOverManagedClassDiscovery() {
 		final var registry = ServiceRegistryUtil.serviceRegistry();
 		try {
-			final var sources = new MetadataSources( registry )
-					.addAnnotatedClassName( Customer.class.getName() )
+			final var sources = new MappingSources()
+					.addManagedClassName( Customer.class.getName() )
 					// Mimic a container supplying the converter among its managed classes.
 					// Discovery registers it without an explicit auto-apply setting.
-					.addAnnotatedClassName( EmailAddressConverter.class.getName() )
+					.addManagedClassName( EmailAddressConverter.class.getName() )
 					// Standard JPA XML also declares this converter, explicitly enabling auto-apply.
-					.addResource( "org/hibernate/test/converter/xml-auto-apply-overrides-managed-converter.orm.xml" );
+					.addMappingResource( "org/hibernate/test/converter/xml-auto-apply-overrides-managed-converter.orm.xml" );
 
 			// Before the fix, discovery hid the XML setting and metadata boot failed:
 			// EmailAddress has no JDBC mapping without its converter.
-			final var metadata = sources
-					.buildMetadata();
+			final var metadata = MetadataBuildingHelper.buildMetadata( registry, sources );
 			final var value = (BasicValue) metadata.getEntityBinding( Customer.class.getName() )
 					.getProperty( "emailAddress" ).getValue();
 			final var type = assertInstanceOf( ConvertedBasicTypeImpl.class, value.getType() );

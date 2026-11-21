@@ -566,7 +566,7 @@ public class XmlAnnotationHelper {
 
 		final TemporalAnnotation temporalAnn = (TemporalAnnotation) target.applyAnnotationUsage(
 				HibernateAnnotations.TEMPORAL,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		if ( isNotEmpty( jaxbTemporal.getRowStart() ) ) {
 			temporalAnn.setRowStart( jaxbTemporal.getRowStart() );
@@ -583,7 +583,7 @@ public class XmlAnnotationHelper {
 			final HistoryPartitioningAnnotation partitioningAnn =
 					(HistoryPartitioningAnnotation) target.applyAnnotationUsage(
 							HibernateAnnotations.TEMPORAL_HISTORY_PARTITIONING,
-							xmlDocumentContext.getModelBuildingContext()
+							xmlDocumentContext.getModelsContext()
 					);
 			if ( isNotEmpty( jaxbPartitioning.getCurrentPartition() ) ) {
 				partitioningAnn.currentPartition( jaxbPartitioning.getCurrentPartition() );
@@ -598,7 +598,7 @@ public class XmlAnnotationHelper {
 			final HistoryTableAnnotation historyTableAnn =
 					(HistoryTableAnnotation) target.applyAnnotationUsage(
 							HibernateAnnotations.TEMPORAL_HISTORY_TABLE,
-							xmlDocumentContext.getModelBuildingContext()
+							xmlDocumentContext.getModelsContext()
 					);
 			if ( isNotEmpty( jaxbHistoryTable.getName() ) ) {
 				historyTableAnn.name( jaxbHistoryTable.getName() );
@@ -620,7 +620,7 @@ public class XmlAnnotationHelper {
 
 		target.applyAnnotationUsage(
 				HibernateAnnotations.TEMPORAL_EXCLUDED,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 	}
 
@@ -639,7 +639,7 @@ public class XmlAnnotationHelper {
 
 		target.applyAnnotationUsage(
 				HibernateAnnotations.AUDITED,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 
 		final JaxbAuditedTableImpl jaxbAuditedTable = jaxbAudited.getAuditedTable();
@@ -647,7 +647,7 @@ public class XmlAnnotationHelper {
 			final AuditedTableAnnotation auditedTableAnn =
 					(AuditedTableAnnotation) target.applyAnnotationUsage(
 							HibernateAnnotations.AUDITED_TABLE,
-							xmlDocumentContext.getModelBuildingContext()
+							xmlDocumentContext.getModelsContext()
 					);
 			if ( isNotEmpty( jaxbAuditedTable.getName() ) ) {
 				auditedTableAnn.name( jaxbAuditedTable.getName() );
@@ -684,7 +684,7 @@ public class XmlAnnotationHelper {
 
 		target.applyAnnotationUsage(
 				HibernateAnnotations.AUDITED_EXCLUDED,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 	}
 
@@ -703,7 +703,7 @@ public class XmlAnnotationHelper {
 
 		final ChangelogAnnotation changelogAnn = (ChangelogAnnotation) target.applyAnnotationUsage(
 				HibernateAnnotations.CHANGELOG,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		if ( isNotEmpty( jaxbChangelog.getListener() ) ) {
 			final Class<?> listenerClass = resolveJavaType( jaxbChangelog.getListener(), xmlDocumentContext ).toJavaClass();
@@ -725,7 +725,7 @@ public class XmlAnnotationHelper {
 
 		target.applyAnnotationUsage(
 				HibernateAnnotations.CHANGELOG_CHANGESET_ID,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 	}
 
@@ -743,7 +743,7 @@ public class XmlAnnotationHelper {
 
 		target.applyAnnotationUsage(
 				HibernateAnnotations.CHANGELOG_TIMESTAMP,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 	}
 
@@ -761,7 +761,7 @@ public class XmlAnnotationHelper {
 
 		target.applyAnnotationUsage(
 				HibernateAnnotations.CHANGELOG_MODIFIED_ENTITIES,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 	}
 
@@ -2384,7 +2384,7 @@ public class XmlAnnotationHelper {
 
 		final UpdateTimestampAnnotation updateTimestampAnn = (UpdateTimestampAnnotation) memberDetails.applyAnnotationUsage(
 				HibernateAnnotations.UPDATE_TIMESTAMP,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		if ( updateTimestamp.getSource() != null ) {
 			updateTimestampAnn.source( updateTimestamp.getSource() );

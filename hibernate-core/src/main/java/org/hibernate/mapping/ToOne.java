@@ -9,6 +9,7 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.type.MappingContext;
 
 import java.util.ArrayList;
+import static java.util.Collections.singletonMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -72,7 +73,9 @@ public abstract sealed class ToOne
 			filters = new ArrayList<>();
 		}
 		filters.add( new FilterConfiguration( name, condition, autoAliasInjection,
-				aliasTableMap, aliasEntityMap, getReferencedEntity() ) );
+				aliasTableMap,
+				(aliasTableMap == null || aliasTableMap.isEmpty()) && (aliasEntityMap == null || aliasEntityMap.isEmpty())
+						? singletonMap( null, referencedEntityName ) : aliasEntityMap, null ) );
 	}
 
 	@Override
@@ -127,11 +130,6 @@ public abstract sealed class ToOne
 				null : referencedEntityName.intern();
 	}
 
-	private PersistentClass getReferencedEntity() {
-		return referencedEntityName != null
-				? getMetadata().getEntityBinding( referencedEntityName )
-				: null;
-	}
 
 	public String getPropertyName() {
 		return propertyName;

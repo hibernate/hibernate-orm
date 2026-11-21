@@ -1,5 +1,10 @@
 package org.hibernate.orm.test.interceptor;
 
+import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
+
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -11,8 +16,7 @@ import java.util.stream.Stream;
 import org.hibernate.Interceptor;
 import org.hibernate.boot.ConflictingInterceptorSettingsException;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.selector.spi.StrategySelectionException;
@@ -37,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Baseline (pre-CDI) cross-check of how {@code SessionEventSettings#INTERCEPTOR} /
- * {@code #SESSION_SCOPED_INTERCEPTOR} and the corresponding {@link SessionFactoryBuilder}
+ * {@code #SESSION_SCOPED_INTERCEPTOR} and the corresponding {@link SessionFactoryOptionsCollector}
  * methods interact when resolving the {@link Interceptor} used by sessions opened
  * directly from the {@link org.hibernate.SessionFactory}.
  * <p>
@@ -109,9 +113,9 @@ class SessionFactoryInterceptorConfigurationTest {
 				case DEFAULT -> {}
 				case INSTANCE -> builder.applyInterceptor( suppliedOverride );
 				case CLEAR_GLOBAL -> builder.applyInterceptor( null );
-				case CLEAR_SCOPED -> builder.applyStatelessInterceptor( (Supplier<Interceptor>) null );
+				case CLEAR_SCOPED -> builder.applyStatelessInterceptorSupplier( (Supplier<Interceptor>) null );
 				case SCOPED_CLASS -> builder.applyStatelessInterceptor( BuilderInterceptor.class );
-				case SCOPED_SUPPLIER -> builder.applyStatelessInterceptor( (Supplier<Interceptor>) () -> {
+				case SCOPED_SUPPLIER -> builder.applyStatelessInterceptorSupplier( (Supplier<Interceptor>) () -> {
 					builderSupplierCalls.incrementAndGet();
 					return new BuilderInterceptor();
 				} );
@@ -188,7 +192,7 @@ class SessionFactoryInterceptorConfigurationTest {
 			switch ( first ) {
 				case INSTANCE -> builder.applyInterceptor( original );
 				case SCOPED_CLASS -> builder.applyStatelessInterceptor( SettingsInterceptor.class );
-				case SCOPED_SUPPLIER -> builder.applyStatelessInterceptor( (Supplier<Interceptor>) () -> {
+				case SCOPED_SUPPLIER -> builder.applyStatelessInterceptorSupplier( (Supplier<Interceptor>) () -> {
 					originalSupplierCalls.incrementAndGet();
 					return new SettingsInterceptor();
 				} );
@@ -197,12 +201,12 @@ class SessionFactoryInterceptorConfigurationTest {
 			switch ( last ) {
 				case INSTANCE -> builder.applyInterceptor( replacement );
 				case SCOPED_CLASS -> builder.applyStatelessInterceptor( BuilderInterceptor.class );
-				case SCOPED_SUPPLIER -> builder.applyStatelessInterceptor( (Supplier<Interceptor>) () -> {
+				case SCOPED_SUPPLIER -> builder.applyStatelessInterceptorSupplier( (Supplier<Interceptor>) () -> {
 					replacementSupplierCalls.incrementAndGet();
 					return new BuilderInterceptor();
 				} );
 				case CLEAR_GLOBAL -> builder.applyInterceptor( null );
-				case CLEAR_SCOPED -> builder.applyStatelessInterceptor( (Supplier<Interceptor>) null );
+				case CLEAR_SCOPED -> builder.applyStatelessInterceptorSupplier( (Supplier<Interceptor>) null );
 				default -> throw new IllegalArgumentException( last.name() );
 			}
 		}, factory -> {
@@ -421,7 +425,7 @@ class SessionFactoryInterceptorConfigurationTest {
 	void applyStatelessInterceptorSupplier_WithNoSetting_CreatesAFreshInstancePerSession() {
 		withSessionFactory(
 				Map.of(),
-				b -> b.applyStatelessInterceptor( (Supplier<Interceptor>) MarkerInterceptor::new ),
+				b -> b.applyStatelessInterceptorSupplier( (Supplier<Interceptor>) MarkerInterceptor::new ),
 				sessionFactory -> {
 					try ( var session1 = openSession( sessionFactory );
 							var session2 = openSession( sessionFactory ) ) {
@@ -437,7 +441,7 @@ class SessionFactoryInterceptorConfigurationTest {
 	void applyStatelessInterceptorSupplier_OverridesInterceptorSetting() {
 		withSessionFactory(
 				Map.of( INTERCEPTOR, MarkerInterceptor.class ),
-				b -> b.applyStatelessInterceptor( (Supplier<Interceptor>) StatefulInterceptor::new ),
+				b -> b.applyStatelessInterceptorSupplier( (Supplier<Interceptor>) StatefulInterceptor::new ),
 				sessionFactory -> {
 					try ( var session = openSession( sessionFactory ) ) {
 						assertThat( session.getInterceptor() ).isInstanceOf( StatefulInterceptor.class );
@@ -450,7 +454,7 @@ class SessionFactoryInterceptorConfigurationTest {
 	void applyStatelessInterceptorSupplier_OverridesSessionScopedInterceptorSetting() {
 		withSessionFactory(
 				Map.of( SESSION_SCOPED_INTERCEPTOR, StatefulInterceptor.class ),
-				b -> b.applyStatelessInterceptor( (Supplier<Interceptor>) MarkerInterceptor::new ),
+				b -> b.applyStatelessInterceptorSupplier( (Supplier<Interceptor>) MarkerInterceptor::new ),
 				sessionFactory -> {
 					try ( var session = openSession( sessionFactory ) ) {
 						assertThat( session.getInterceptor() ).isInstanceOf( MarkerInterceptor.class );
@@ -500,7 +504,8 @@ class SessionFactoryInterceptorConfigurationTest {
 		// "never configured" - it does NOT suppress a settings-based interceptor.
 		final var configuration = new Configuration();
 		configuration.setInterceptor( EmptyInterceptor.INSTANCE );
-		configuration.addResource( "org/hibernate/orm/test/interceptor/User.hbm.xml" );
+		configuration.addAnnotatedClass( User.class );
+		configuration.addAnnotatedClass( Log.class );
 
 		// Note: the INTERCEPTOR setting must live on the registry, not Configuration#setProperty -
 		// Configuration#buildSessionFactory(ServiceRegistry) never merges Configuration's own
@@ -533,19 +538,19 @@ class SessionFactoryInterceptorConfigurationTest {
 
 	private void withSessionFactory(
 			Map<String, Object> settings,
-			Consumer<SessionFactoryBuilder> builderCustomizer,
+			Consumer<SessionFactoryOptionsCollector> builderCustomizer,
 			Consumer<SessionFactoryImplementor> work) {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySettings( Environment.getProperties() )
 				.applySettings( settings )
 				.build();
 		try {
-			final MetadataSources metadataSources = new MetadataSources( ssr )
-					.addResource( "org/hibernate/orm/test/interceptor/User.hbm.xml" );
-			final Metadata metadata = metadataSources.buildMetadata();
-			final SessionFactoryBuilder sfBuilder = metadata.getSessionFactoryBuilder();
+			final MappingSources metadataSources = new MappingSources()
+					.addManagedClasses( User.class, Log.class );
+			final Metadata metadata = MetadataBuildingHelper.buildMetadata( ssr, metadataSources );
+			final var sfBuilder = new SessionFactoryOptionsCollector();
 			builderCustomizer.accept( sfBuilder );
-			try ( var sessionFactory = (SessionFactoryImplementor) sfBuilder.build() ) {
+			try ( var sessionFactory = (SessionFactoryImplementor) SessionFactoryPipeline.build( metadata, sfBuilder ) ) {
 				work.accept( sessionFactory );
 			}
 		}

@@ -6,6 +6,7 @@ import jakarta.annotation.Nullable;
 
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.mapping.ToOne;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.filter.internal.FilterHelper;
@@ -30,20 +31,19 @@ final class ToOneRestrictions {
 		this.filters = filters;
 	}
 
-	static ToOneRestrictions create(ToOne bootMapping, EntityMappingType target) {
+	static ToOneRestrictions create(ToOne bootMapping, EntityMappingType target, RuntimeModelCreationContext creationContext) {
 		final String restriction = bootMapping.getSqlRestriction();
 		final var configurations = bootMapping.getFilters();
 		if ( (restriction == null || restriction.isBlank()) && configurations.isEmpty() ) {
 			return NONE;
 		}
-		final var factory = target.getEntityPersister().getFactory();
 		return new ToOneRestrictions(
 				restriction == null || restriction.isBlank() ? null : Template.renderWhereStringTemplate(
-						"(" + restriction + ")", factory.getJdbcServices().getDialect(), factory.getTypeConfiguration() ),
+						"(" + restriction + ")", creationContext.getDialect(), creationContext.getTypeConfiguration() ),
 				configurations.isEmpty() ? null : new FilterHelper( configurations,
 						AbstractEntityPersister.getEntityNameByTableNameMap(
-								bootMapping.getMetadata().getEntityBinding( bootMapping.getReferencedEntityName() ),
-								factory.getSqlStringGenerationContext() ), factory ) );
+								creationContext.getBootModel().getEntityBinding( bootMapping.getReferencedEntityName() ),
+								creationContext.getSqlStringGenerationContext() ), creationContext ) );
 	}
 
 	boolean hasSqlRestriction() {

@@ -310,7 +310,7 @@ public class ToOneAttributeMapping
 		referencedPropertyName = bootValue.getReferencedPropertyName();
 		unwrapProxy = bootValue.isUnwrapProxy();
 		this.entityMappingType = entityMappingType;
-		restrictions = ToOneRestrictions.create( bootValue, entityMappingType );
+		restrictions = ToOneRestrictions.create( bootValue, entityMappingType, creationContext );
 
 		this.navigableRole = navigableRole;
 		declaringTableGroupProducer = resolveDeclaringTableGroupProducer(

@@ -1,18 +1,24 @@
 package org.hibernate.orm.test.boot.models.xml;
 
+import org.hibernate.MappingException;
+
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.pipeline.internal.source.XmlMappingSource;
+
 import java.io.ByteArrayInputStream;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Stream;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.mapping.ManyToOne;
 
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -51,16 +57,28 @@ public class PropertyRefUniqueIndexTest {
 	@ParameterizedTest
 	@MethodSource("mappings")
 	void nonUniqueIndexDoesNotEstablishUniqueness(Class<?> dialect, String version, int span) {
-		assertThrows( AssertionError.class, () -> withMapping( dialect, version, span, false, false ) );
+		assertThrows( MappingException.class, () -> withMapping( dialect, version, span, false, false ) );
 	}
 
 	@ParameterizedTest
 	@MethodSource("mappings")
 	void widerUniqueKeyDoesNotEstablishUniqueness(Class<?> dialect, String version, int span) {
-		assertThrows( AssertionError.class, () -> withMapping( dialect, version, span, true, true ) );
+		assertThrows( MappingException.class, () -> withMapping( dialect, version, span, true, true ) );
+	}
+
+	@Test
+	void implicitJoinColumnsUseReferencedPropertyShape() {
+		final var metadata = withMapping( H2Dialect.class, "9.0", 2, true, false, true );
+		final var association = (ManyToOne) metadata.getEntityBinding( Owner.class.getName() ).getProperty( "target" ).getValue();
+		assertThat( association.getReferencedPropertyName() ).isEqualTo( "lookup" );
+		assertThat( association.getColumnSpan() ).isEqualTo( 2 );
 	}
 
 	private static Metadata withMapping(Class<?> dialect, String version, int span, boolean unique, boolean wider) {
+		return withMapping( dialect, version, span, unique, wider, false );
+	}
+
+	private static Metadata withMapping(Class<?> dialect, String version, int span, boolean unique, boolean wider, boolean implicit) {
 		String secondColumn = span == 2 ? "<column-name>lookup_kind</column-name>" : "";
 		String declaration = unique
 				? "<unique-constraint><column-name>lookup_code</column-name>" + secondColumn
@@ -95,15 +113,17 @@ public class PropertyRefUniqueIndexTest {
 				Lookup.class.getName(), span == 2
 						? "<basic name=\"kind\"><column name=\"lookup_kind\"/></basic>"
 						: "<transient name=\"kind\"/>" );
+		if ( implicit ) {
+			xml = xml.replace( "<join-column name=\"target_code\"/>", "" )
+					.replace( "<join-column name=\"target_kind\"/>", "" );
+		}
 		var registry = new StandardServiceRegistryBuilder()
 				.applySetting( "hibernate.dialect", dialect.getName() )
 				.applySetting( "hibernate.boot.allow_jdbc_metadata_access", false )
 				.applySetting( "hibernate.validate_xml", true )
 				.build();
 		try {
-			var metadata = new MetadataSources( registry )
-					.addInputStream( new ByteArrayInputStream( xml.getBytes( StandardCharsets.UTF_8 ) ) )
-					.buildMetadata();
+			var metadata = MetadataBuildingHelper.buildMetadata( registry, new MappingSources().addXmlMappingSource( XmlMappingSource.fromInputStream( new ByteArrayInputStream( xml.getBytes( StandardCharsets.UTF_8 ) ) ) ) );
 			return metadata;
 		}
 		finally {

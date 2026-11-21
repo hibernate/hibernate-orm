@@ -1,9 +1,12 @@
 package org.hibernate.orm.test.boot.models.xml;
 
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.pipeline.internal.source.XmlMappingSource;
+
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.mapping.Index;
@@ -58,9 +61,7 @@ public class XmlIndexAttributesTest {
 				.applySetting( "hibernate.validate_xml", true )
 				.build();
 		try {
-			final var metadata = new MetadataSources( registry )
-					.addInputStream( new ByteArrayInputStream( xml.getBytes( StandardCharsets.UTF_8 ) ) )
-					.buildMetadata();
+			final var metadata = MetadataBuildingHelper.buildMetadata( registry, new MappingSources().addXmlMappingSource( XmlMappingSource.fromInputStream( new ByteArrayInputStream( xml.getBytes( StandardCharsets.UTF_8 ) ) ) ) );
 			final Index index = metadata.getEntityBinding( IndexedEntity.class.getName() )
 					.getTable()
 					.getIndex( INDEX_NAME );

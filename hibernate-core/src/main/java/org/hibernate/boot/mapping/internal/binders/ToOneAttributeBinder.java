@@ -1,8 +1,22 @@
 package org.hibernate.boot.mapping.internal.binders;
 
+import org.hibernate.boot.models.annotations.internal.LegacyOneToOneXmlAnnotation;
+import org.hibernate.type.ForeignKeyDirection;
+import org.hibernate.mapping.JoinedSubclass;
+import org.hibernate.mapping.Selectable;
+
+import java.util.HashMap;
+import java.util.Map;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.SqlFragmentAlias;
+import org.hibernate.mapping.ToOne;
+import static org.hibernate.boot.models.internal.DialectOverrideAnnotationHelper.getOverridableAnnotation;
+
 import org.hibernate.boot.mapping.spi.ValueNature;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
@@ -114,7 +128,7 @@ class ToOneAttributeBinder {
 		this.bindingContext = bindingContext;
 	}
 
-	Value bind(Property property) {
+	Value bind(Property property, boolean registerTableColumns) {
 		final MemberDetails member = attributeBinding.member();
 		final AssociationOverride associationOverride = attributeBinding.toOneValueIntent().associationOverride();
 		final ToOneSource source = ToOneSource.create(
@@ -133,6 +147,7 @@ class ToOneAttributeBinder {
 				ownerBinding,
 				ownerType.getClassDetails().getClassName(),
 				attributeBinding.attributeName(),
+				AttributePath.parse( attributeBinding.attributeName() ),
 				member,
 				attributeBinding.resolvedType(),
 				property,
@@ -141,7 +156,8 @@ class ToOneAttributeBinder {
 				modelBinders,
 				bindingOptions,
 				bindingState,
-				bindingContext
+				bindingContext,
+				registerTableColumns
 		);
 	}
 
@@ -297,6 +313,12 @@ class ToOneAttributeBinder {
 				bindingContext.getModelsContext(),
 				resolvedType
 		);
+		if ( registerTableColumns && source.associationOverride() != null
+				&& source.associationOverride().joinColumns().length == 0 && source.joinTable() == null ) {
+			throw new AnnotationException( "Association override for '" + ownerBinding.getClassName() + "."
+					+ implicitNamingPath.getFullPath() + "' must specify 'joinColumns' (foreign key '"
+					+ source.associationOverride().foreignKey().name() + "')" );
+		}
 		if ( source.isInverseOneToOne() ) {
 			return bindInverseOneToOne(
 					source,
@@ -381,6 +403,7 @@ class ToOneAttributeBinder {
 		value.setConstrained( !optional );
 		value.setForeignKeyType( org.hibernate.type.ForeignKeyDirection.TO_PARENT );
 		applyOnDelete( member, value );
+		applyAssociationRestrictions( member, value, bindingState );
 		applyFetchProfileOverrides( source, ownerBinding, propertyName, bindingState );
 		property.setOptional( optional );
 		property.setCascade( source.cascades( bindingState ), source.orphanRemoval() );
@@ -402,7 +425,7 @@ class ToOneAttributeBinder {
 		return value;
 	}
 
-	private static ManyToOne bindToOne(
+	private static ToOne bindToOne(
 			ToOneSource source,
 			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
@@ -418,7 +441,7 @@ class ToOneAttributeBinder {
 			boolean registerTableColumns) {
 		final TargetEntityBinding target = resolveTargetEntityBinding( source, bindingState, bindingContext );
 		final JoinTable joinTable = source.joinTable();
-		final Table associationTable = joinTable == null
+		final Table associationTable = !registerTableColumns ? primaryTable : joinTable == null
 				? resolveAssociationTable( source, primaryTable, bindingState )
 				: bindAssociationTable(
 						ownerType,
@@ -445,10 +468,7 @@ class ToOneAttributeBinder {
 		final PropertyRef propertyRef = source.propertyRef();
 		final boolean referenceToPrimaryKey = propertyRef == null
 				&& referencesPrimaryKeySources( valueJoinColumns, target, bindingState.getDatabase(), bindingState.getRelationalModelCorrespondences().columnNames() );
-		final List<Column> referencedPropertyColumns = propertyRef == null
-				|| hasExplicitReferencedColumnNames( valueJoinColumns )
-				? List.of()
-				: referencedPropertyColumns( target, propertyRef.value() );
+		final List<Column> referencedPropertyColumns = List.of();
 		final MapsId mapsId = member.getDirectAnnotationUsage( MapsId.class );
 		value.setPropertyName( source.implicitNamingPath().getFullPath() );
 		value.setReferencedEntityName( target.entityName() );
@@ -459,6 +479,7 @@ class ToOneAttributeBinder {
 		applyLazy( source, value, ownerBinding, fetchType );
 		ToOneMaterializationHelper.applyFetchMode( source, value, ownerBinding, fetchType );
 		applyOnDelete( member, value );
+		applyAssociationRestrictions( member, value, bindingState );
 		applyNotFound( source, value );
 		applyFetchProfileOverrides( source, ownerBinding, propertyName, bindingState );
 
@@ -472,6 +493,7 @@ class ToOneAttributeBinder {
 		property.setCascade( source.cascades( bindingState ), source.orphanRemoval() );
 		final List<Column> sharedIdentifierColumns = resolveSharedIdentifierColumns(
 				ownerType,
+				ownerBinding,
 				associationTable,
 				bindingState
 		);
@@ -479,6 +501,7 @@ class ToOneAttributeBinder {
 
 		if ( mapsId == null ) {
 			final boolean valueColumnsOptional = joinTable == null && optional;
+			if ( propertyRef == null ) {
 			bindJoinColumns(
 					valueJoinColumns,
 					value,
@@ -497,6 +520,7 @@ class ToOneAttributeBinder {
 					bindingState,
 					registerTableColumns
 			);
+			}
 			if ( referenceToPrimaryKey ) {
 				value.setSorted( true );
 			}
@@ -551,11 +575,12 @@ class ToOneAttributeBinder {
 			) );
 		}
 		if ( propertyRef != null ) {
-			UniquePropertyReferenceBinder.bindUniquePropertyReference(
-					bindingState,
-					value,
-					propertyRef.value()
-			);
+			value.setReferencedPropertyName( propertyRef.value() );
+			bindingState.addAssociationTargetBinding( new AssociationTargetBinding(
+					ownerBinding, value, target.typeBinder(), List.of(), ownerClassName + "." + propertyName,
+					new PropertyReferenceColumnBinding( source, target, valueJoinColumns, sharedIdentifierColumns,
+							logicalOneToOne && !hasFormula( valueJoinColumns ), joinTable == null && optional,
+							ownerBinding, bindingOptions, registerTableColumns ) ) );
 		}
 		if ( !referenceToPrimaryKey && propertyRef == null ) {
 			bindingState.addAssociationTargetBinding( new AssociationTargetBinding(
@@ -581,6 +606,28 @@ class ToOneAttributeBinder {
 							? List.of()
 							: referencedColumnNamesSources( valueJoinColumns )
 			) );
+		}
+		if ( source.oneToOne() != null && !(source.oneToOne() instanceof LegacyOneToOneXmlAnnotation)
+				&& value.hasFormula() && referenceToPrimaryKey && joinTable == null
+				&& physicalColumns( value ).stream().anyMatch( column -> isSharedIdentifierColumn( column, sharedIdentifierColumns, bindingState.getDatabase() ) ) ) {
+			final var oneToOne = new OneToOne( bindingState.getMetadataBuildingContext(), associationTable, ownerBinding );
+			oneToOne.setPropertyName( value.getPropertyName() );
+			oneToOne.setReferencedEntityName( value.getReferencedEntityName() );
+			oneToOne.setReferenceToPrimaryKey( true );
+			oneToOne.setTypeName( value.getTypeName() );
+			oneToOne.setLazy( value.isLazy() );
+			oneToOne.setUnwrapProxy( value.isUnwrapProxy() );
+			oneToOne.setUnwrapProxyImplicit( value.isUnwrapProxyImplicit() );
+			oneToOne.setFetchStyle( value.getFetchStyle() );
+			oneToOne.setConstrained( !optional );
+			oneToOne.setForeignKeyType( ForeignKeyDirection.TO_PARENT );
+			oneToOne.copyRestrictions( value );
+			oneToOne.setOnDeleteAction( value.getOnDeleteAction() );
+			for ( Selectable selectable : value.getSelectables() ) {
+				if ( selectable instanceof Formula formula ) { oneToOne.addFormula( formula ); }
+				else { oneToOne.addColumn( (Column) selectable, false, false ); }
+			}
+			return oneToOne;
 		}
 		return value;
 	}
@@ -616,6 +663,10 @@ class ToOneAttributeBinder {
 
 		final List<JoinColumn> joinColumns = source.valueJoinColumns( joinTable );
 		return joinColumns.size() == 1 && joinColumns.get( 0 ).unique();
+	}
+
+	private static List<Column> physicalColumns(ToOne value) {
+		return value.getSelectables().stream().filter( Column.class::isInstance ).map( Column.class::cast ).toList();
 	}
 
 	private static boolean hasFormula(List<JoinColumnOrFormulaSource> joinColumns) {
@@ -707,6 +758,7 @@ class ToOneAttributeBinder {
 		value.setForeignKeyType( org.hibernate.type.ForeignKeyDirection.TO_PARENT );
 		value.setMappedByProperty( source.oneToOne().mappedBy() );
 		applyOnDelete( member, value );
+		applyAssociationRestrictions( member, value, bindingState );
 		property.setOptional( optional );
 		property.setCascade( source.cascades( bindingState ), source.orphanRemoval() );
 
@@ -797,6 +849,15 @@ class ToOneAttributeBinder {
 		}
 	}
 
+	static void bindPropertyReferenceColumns(AssociationTargetBinding binding, List<Column> targetColumns, BindingState state) {
+		final var pending = binding.propertyReferenceColumns();
+		if ( pending != null ) {
+			bindJoinColumns( pending.joinColumns(), binding.value(), pending.target(), binding.value().getTable(), false,
+					pending.sharedIdentifierColumns(), state.getDatabase(), targetColumns, pending.uniqueByDefault(), pending.optional(),
+					pending.ownerBinding(), pending.source(), binding.role(), pending.options(), state, pending.registerTableColumns() );
+		}
+	}
+
 	private static void bindJoinColumns(
 			List<JoinColumnOrFormulaSource> joinColumnAnns,
 			ManyToOne value,
@@ -822,8 +883,8 @@ class ToOneAttributeBinder {
 				&& !joinColumnAnns.isEmpty()
 				&& joinColumnAnns.size() != targetColumns.size() ) {
 			throw new MappingException(
-					"Composite to-one join column count did not match target identifier column count - "
-							+ sourceRole
+					"Association '" + sourceRole + "' has " + joinColumnAnns.size()
+							+ " join selectables but its target identifier has " + targetColumns.size() + " columns"
 			);
 		}
 
@@ -886,7 +947,9 @@ class ToOneAttributeBinder {
 					registerImplicitTerminalColumnAlias( table, source, targetColumnName, column, bindingState );
 				}
 			}
-			final boolean sharedIdentifierColumn = isSharedIdentifierColumn( column, sharedIdentifierColumns, database );
+			final boolean sharedIdentifierColumn = source.oneToOne() != null
+					&& !(source.oneToOne() instanceof LegacyOneToOneXmlAnnotation)
+					&& isSharedIdentifierColumn( column, sharedIdentifierColumns, database );
 			value.addColumn(
 					column,
 					!sharedIdentifierColumn
@@ -894,6 +957,25 @@ class ToOneAttributeBinder {
 					!sharedIdentifierColumn
 					&& ( joinColumnAnn == null || joinColumnAnn.column() == null || joinColumnAnn.column().updatable() )
 			);
+		}
+		if ( source.oneToOne() != null && !(source.oneToOne() instanceof LegacyOneToOneXmlAnnotation) && value.hasFormula()
+				&& physicalColumns( value ).stream().anyMatch( column -> isSharedIdentifierColumn( column, sharedIdentifierColumns, database ) ) ) {
+			final var selectables = value.getSelectables();
+			int firstColumn = -1;
+			for ( int i = 0; i < selectables.size(); i++ ) {
+				if ( selectables.get( i ) instanceof Column column ) {
+					if ( firstColumn < 0 ) { firstColumn = i; }
+					else {
+						final String conflict = value.getColumnInsertability()[firstColumn] != value.getColumnInsertability()[i] ? "insertable"
+								: value.getColumnUpdateability()[firstColumn] != value.getColumnUpdateability()[i] ? "updatable" : null;
+						if ( conflict != null ) {
+							throw new MappingException( "Association '" + sourceRole + "' has conflicting effective '" + conflict
+									+ "' flags for columns '" + selectables.get( firstColumn ).getText() + "' and '" + column.getText()
+									+ "'; shared owner primary-key columns were inferred read-only" );
+						}
+					}
+				}
+			}
 		}
 		if ( !value.hasFormula() && value.getColumns().size() == targetColumns.size() ) {
 			final SelectableOrderResolution selectableOrderResolution = hasExplicitReferencedColumnNames( orderedJoinColumns )
@@ -1017,9 +1099,15 @@ class ToOneAttributeBinder {
 
 	private static List<Column> resolveSharedIdentifierColumns(
 			AbstractIdentifiableTypeMetadata ownerType,
+			PersistentClass ownerBinding,
 			Table associationTable,
 			BindingState bindingState) {
 		final IdentifierBinding entityIdentifierBinding = bindingState.getIdentifierBinding( ownerType.getHierarchy().getRoot() );
+		if ( ownerBinding instanceof JoinedSubclass && associationTable == ownerBinding.getTable() ) {
+			final var columns = ownerType.getClassDetails().getRepeatedAnnotationUsages( PrimaryKeyJoinColumn.class,
+					bindingState.getMetadataBuildingContext().getModelsContext() );
+			if ( columns.length > 0 ) { return primaryKeyJoinColumns( columns ); }
+		}
 		if ( entityIdentifierBinding == null || entityIdentifierBinding.table() != associationTable ) {
 			return List.of();
 		}
@@ -1387,7 +1475,8 @@ class ToOneAttributeBinder {
 			ToOneSource source,
 			Table primaryTable,
 			BindingState bindingState) {
-		final List<JoinColumn> joinColumns = source.joinColumns();
+		final List<JoinColumn> joinColumns = source.valueJoinColumnsOrFormulas( null, bindingState.getDatabase().getDialect() )
+				.stream().map( JoinColumnOrFormulaSource::column ).filter( Objects::nonNull ).toList();
 		final String tableName = resolveJoinTableName( joinColumns, primaryTable );
 		if ( StringHelper.isEmpty( tableName ) ) {
 			return primaryTable;
@@ -1479,6 +1568,21 @@ class ToOneAttributeBinder {
 		return source.effectiveFetchType( bindingOptions.getDefaultToOneFetchType() );
 	}
 
+	/// Join-column inputs retained until the referenced property has been bound.
+	///
+	/// @author Steve Ebersole
+	record PropertyReferenceColumnBinding(
+			ToOneSource source,
+			TargetEntityBinding target,
+			List<JoinColumnOrFormulaSource> joinColumns,
+			List<Column> sharedIdentifierColumns,
+			boolean uniqueByDefault,
+			boolean optional,
+			PersistentClass ownerBinding,
+			BindingOptions options,
+			boolean registerTableColumns) {
+	}
+
 	private record TargetEntityBinding(
 			String entityName,
 			EntityTypeBinder typeBinder,
@@ -1499,5 +1603,40 @@ class ToOneAttributeBinder {
 			}
 			return identifierColumns;
 		}
+	}
+
+	private static void applyAssociationRestrictions(MemberDetails member, ToOne association, BindingState state) {
+		final var modelsContext = state.getMetadataBuildingContext().getModelsContext();
+		final var restriction = getOverridableAnnotation(
+				member, SQLRestriction.class, state.getDatabase().getDialect(), modelsContext );
+		if ( restriction != null ) {
+			association.setSqlRestriction( restriction.value() );
+		}
+		member.forEachAnnotationUsage( Filter.class, modelsContext, filter -> {
+			final var definition = state.getFilterDefinition( filter.name() );
+			final String path = member.getDeclaringType().getName() + "." + member.getName();
+			if ( definition == null ) {
+				throw new AnnotationException( "Association '" + path
+						+ "' refers to an undefined filter named '" + filter.name() + "'" );
+			}
+			final String condition = filter.condition().isBlank()
+					? definition.getDefaultFilterCondition() : filter.condition();
+			if ( condition == null || condition.isBlank() ) {
+				throw new AnnotationException( "Association '" + path
+						+ "' has no condition for filter '" + filter.name() + "'" );
+			}
+			final Map<String, String> aliasTables = new HashMap<>();
+			final Map<String, String> aliasEntities = new HashMap<>();
+			for ( SqlFragmentAlias alias : filter.aliases() ) {
+				if ( !alias.table().isBlank() ) {
+					aliasTables.put( alias.alias(), alias.table() );
+				}
+				if ( alias.entity() != void.class ) {
+					aliasEntities.put( alias.alias(), alias.entity().getName() );
+				}
+			}
+			association.addFilter( filter.name(), condition, filter.deduceAliasInjectionPoints(),
+					aliasTables, aliasEntities );
+		} );
 	}
 }

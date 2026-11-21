@@ -1,5 +1,9 @@
 package org.hibernate.orm.test.dialect.functional;
 
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.testing.orm.junit.SessionFactoryUtil;
+
 import java.util.HashSet;
 
 import jakarta.persistence.Column;
@@ -10,7 +14,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.SchemaToolingSettings;
@@ -55,10 +58,7 @@ public class H2SequenceInformationCaseTest {
 				connectionProvider.closeConnection( connection );
 			}
 
-			try ( var factory = new MetadataSources( registry )
-					.addAnnotatedClass( SampleEntity.class )
-					.buildMetadata()
-					.buildSessionFactory() ) {
+			try ( var factory = SessionFactoryUtil.buildSessionFactory( MetadataBuildingHelper.buildMetadata( registry, new MappingSources().addManagedClass( SampleEntity.class ) ) ) ) {
 				final var sequence = factory.unwrap( SessionFactoryImplementor.class )
 						.getJdbcServices().getJdbcMetadata().getSequenceInformationList()
 						.stream()

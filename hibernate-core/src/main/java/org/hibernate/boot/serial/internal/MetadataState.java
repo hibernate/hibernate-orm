@@ -1,5 +1,7 @@
 package org.hibernate.boot.serial.internal;
 
+import org.hibernate.property.access.spi.PropertyAccessorService;
+
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.HashMap;
@@ -166,7 +168,8 @@ public final class MetadataState implements Serializable {
 				restoredContext.getClassLoaderAccess(),
 				restoredContext.getManagedBeanRegistry(),
 				modelsContext,
-				restoredOptions.isAllowExtensionsInCdi()
+				restoredOptions.isAllowExtensionsInCdi(),
+				restoredContext.getServiceRegistry().requireService( PropertyAccessorService.class )
 		);
 		restoredFilterDefinitionMap.values().forEach( definition -> definition.reattachParameterResolvers(
 				restoredContext.getClassLoaderAccess(),
@@ -243,7 +246,7 @@ public final class MetadataState implements Serializable {
 			ClassLoaderAccess classLoaderAccess,
 			ManagedBeanRegistry managedBeanRegistry,
 			ModelsContext modelsContext,
-			boolean allowExtensionsInCdi) {
+			boolean allowExtensionsInCdi, PropertyAccessorService propertyAccessorService) {
 		final Set<Value> visited = java.util.Collections.newSetFromMap( new IdentityHashMap<>() );
 		for ( PersistentClass entityBinding : entityBindingMap.values() ) {
 			reattachValue( entityBinding.getIdentifier(), typeConfiguration, modelsContext, visited );
@@ -285,7 +288,7 @@ public final class MetadataState implements Serializable {
 				.forEach( component -> component.reattachCompositeUserType(
 						classLoaderAccess,
 						managedBeanRegistry,
-						allowExtensionsInCdi
+						allowExtensionsInCdi, propertyAccessorService
 				) );
 		visited.stream()
 				.filter( Any.class::isInstance )

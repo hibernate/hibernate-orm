@@ -2,7 +2,6 @@ package org.hibernate.orm.test.jpa.beanvalidation;
 
 import java.io.StringWriter;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -15,8 +14,8 @@ import jakarta.validation.Validation;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
-import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
+import jakarta.persistence.PersistenceConfiguration;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.tool.schema.ValidationConstraintDdlInfluence;
@@ -42,13 +41,8 @@ public class StandaloneSchemaGenerationValidationTest {
 	void testStandaloneSchemaGeneration() {
 		StringWriter script = new StringWriter();
 		var builder = builder( script );
-		try {
-			builder.generateSchema();
-			assertColumnLengths( script.toString() );
-		}
-		finally {
-			builder.cancel();
-		}
+		BootstrapPipeline.generateSchema( builder );
+		assertColumnLengths( script.toString() );
 	}
 
 	@ParameterizedTest
@@ -59,15 +53,10 @@ public class StandaloneSchemaGenerationValidationTest {
 		settings.put( AvailableSettings.JAKARTA_VALIDATION_MODE, "none" );
 		settings.put( AvailableSettings.APPLY_VALIDATION_CONSTRAINTS, influence );
 		var builder = builder( settings );
-		try {
-			builder.generateSchema();
-			boolean disabled = influence == ValidationConstraintDdlInfluence.DISABLED;
-			assertEquals( disabled ? 255 : 32, columnLength( script.toString(), "validated_name" ) );
-			assertEquals( disabled ? 255 : 48, columnLength( script.toString(), "sized_name" ) );
-		}
-		finally {
-			builder.cancel();
-		}
+		BootstrapPipeline.generateSchema( builder );
+		boolean disabled = influence == ValidationConstraintDdlInfluence.DISABLED;
+		assertEquals( disabled ? 255 : 32, columnLength( script.toString(), "validated_name" ) );
+		assertEquals( disabled ? 255 : 48, columnLength( script.toString(), "sized_name" ) );
 	}
 
 	@Test
@@ -80,18 +69,13 @@ public class StandaloneSchemaGenerationValidationTest {
 			var settings = settings( script );
 			settings.put( AvailableSettings.JAKARTA_VALIDATION_FACTORY, configuredSpy );
 			var builder = builder( settings );
-			builder.withValidatorFactory( programmaticSpy );
-			try {
-				builder.generateSchema();
-				assertColumnLengths( script.toString() );
-				verify( programmaticSpy, atLeastOnce() ).getValidator();
-				verify( configuredSpy, never() ).getValidator();
-				verify( programmaticSpy, never() ).close();
-				verify( configuredSpy, never() ).close();
-			}
-			finally {
-				builder.cancel();
-			}
+			builder.property( AvailableSettings.JAKARTA_VALIDATION_FACTORY, programmaticSpy );
+			BootstrapPipeline.generateSchema( builder );
+			assertColumnLengths( script.toString() );
+			verify( programmaticSpy, atLeastOnce() ).getValidator();
+			verify( configuredSpy, never() ).getValidator();
+			verify( programmaticSpy, never() ).close();
+			verify( configuredSpy, never() ).close();
 		}
 	}
 
@@ -99,17 +83,12 @@ public class StandaloneSchemaGenerationValidationTest {
 	void testSchemaGenerationWithEntityManagerFactory() {
 		StringWriter script = new StringWriter();
 		var builder = builder( script );
-		try {
-			try ( var factory = builder.build() ) {
-				assertColumnLengths( script.toString() );
-			}
-		}
-		finally {
-			builder.cancel();
+		try ( var factory = BootstrapPipeline.build( builder ) ) {
+			assertColumnLengths( script.toString() );
 		}
 	}
 
-	private EntityManagerFactoryBuilderImpl builder(StringWriter script) {
+	private PersistenceConfiguration builder(StringWriter script) {
 		return builder( settings( script ) );
 	}
 
@@ -125,18 +104,9 @@ public class StandaloneSchemaGenerationValidationTest {
 		return settings;
 	}
 
-	private EntityManagerFactoryBuilderImpl builder(Map<String, Object> settings) {
-		return new EntityManagerFactoryBuilderImpl( new PersistenceUnitDescriptorAdapter() {
-			@Override
-			public String getName() {
-				return "standalone-validation-schema";
-			}
-
-			@Override
-			public List<String> getManagedClassNames() {
-				return List.of( ValidatedEntity.class.getName() );
-			}
-		}, settings );
+	private PersistenceConfiguration builder(Map<String, Object> settings) {
+		return new PersistenceConfiguration( "standalone-validation-schema" )
+				.managedClass( ValidatedEntity.class ).properties( settings );
 	}
 
 	private void assertColumnLengths(String script) {

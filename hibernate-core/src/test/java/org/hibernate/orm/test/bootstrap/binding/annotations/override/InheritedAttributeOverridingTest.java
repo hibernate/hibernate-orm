@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.bootstrap.binding.annotations.override;
 
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+
 import java.util.Set;
 
 import jakarta.persistence.AssociationOverride;
@@ -70,9 +72,7 @@ public class InheritedAttributeOverridingTest {
 	@Test
 	@JiraKey("HHH-13248")
 	public void manyToManyKeepsDeclaredJoinTable() {
-		final var metadata = new MetadataSources( standardServiceRegistry )
-				.addAnnotatedClass( UserGroup.class )
-				.buildMetadata();
+		final var metadata = MetadataBuildingHelper.buildMetadata( standardServiceRegistry, new MappingSources().addManagedClass( UserGroup.class ) );
 		final var members = metadata.getCollectionBinding( UserGroup.class.getName() + ".members" );
 		assertThat( members.getCollectionTable().getName() ).isEqualTo( "explicit_m2m" );
 		assertThat( members.getKey().getColumns() ).extracting( Column::getName ).containsExactly( "owner_id" );
@@ -96,10 +96,7 @@ public class InheritedAttributeOverridingTest {
 	@Test
 	@JiraKey("HHH-13248")
 	public void oneToManyColumnOverrideReplacesDeclaredJoinTable() {
-		final var metadata = new MetadataSources( standardServiceRegistry )
-				.addAnnotatedClass( Team.class )
-				.addAnnotatedClass( Player.class )
-				.buildMetadata();
+		final var metadata = MetadataBuildingHelper.buildMetadata( standardServiceRegistry, new MappingSources().addManagedClass( Team.class ).addManagedClass( Player.class ) );
 		final var players = metadata.getCollectionBinding( Team.class.getName() + ".players" );
 		// the join columns in the override select a foreign key mapping, held by the target entity
 		assertThat( players.isOneToMany() ).isTrue();

@@ -20,6 +20,7 @@ import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessorService;
+import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -29,13 +30,15 @@ public class IdClassRepresentationStrategy implements EmbeddableRepresentationSt
 	private final JavaType<?> idClassType;
 	private final EmbeddableInstantiator instantiator;
 	private final PropertyAccessorService propertyAccessorService;
+	private final PropertyAccessStrategyResolver propertyAccessStrategyResolver;
 
 	public IdClassRepresentationStrategy(
 			@Nonnull PropertyAccessorService propertyAccessorService,
 			@Nonnull IdClassEmbeddable idClassEmbeddable,
 			@Nonnull Component idClassSource,
 			boolean simplePropertyOrder,
-			@Nonnull Supplier<String[]> attributeNamesAccess) {
+			@Nonnull Supplier<String[]> attributeNamesAccess,
+			PropertyAccessStrategyResolver propertyAccessStrategyResolver) {
 		idClassType = idClassEmbeddable.getMappedJavaType();
 		final var javaTypeClass = idClassType.getJavaTypeClass();
 		if ( javaTypeClass.isRecord() ) {
@@ -45,7 +48,7 @@ public class IdClassRepresentationStrategy implements EmbeddableRepresentationSt
 					: EmbeddableInstantiatorRecordIndirecting.of( javaTypeClass, attributeNamesAccess.get(), accessorFactory );
 		}
 		else if ( idClassSource.getInstantiator() != null ) {
-			idClassSource.sortProperties();
+			idClassSource.completeShape();
 			instantiator = EmbeddableInstantiatorPojoIndirecting.of(
 					idClassSource.getPropertyNames(),
 					idClassSource.getInstantiator(),
@@ -61,15 +64,18 @@ public class IdClassRepresentationStrategy implements EmbeddableRepresentationSt
 			);
 		}
 		this.propertyAccessorService = propertyAccessorService;
+		this.propertyAccessStrategyResolver = propertyAccessStrategyResolver;
 	}
 
 	IdClassRepresentationStrategy(
 			@Nonnull PropertyAccessorService propertyAccessorService,
 			@Nonnull IdClassEmbeddable idClassEmbeddable,
-			@Nonnull EmbeddableInstantiator instantiator) {
+			@Nonnull EmbeddableInstantiator instantiator,
+			PropertyAccessStrategyResolver propertyAccessStrategyResolver) {
 		this.idClassType = idClassEmbeddable.getMappedJavaType();
 		this.instantiator = instantiator;
 		this.propertyAccessorService = propertyAccessorService;
+		this.propertyAccessStrategyResolver = propertyAccessStrategyResolver;
 	}
 
 	@Override
@@ -105,7 +111,7 @@ public class IdClassRepresentationStrategy implements EmbeddableRepresentationSt
 	@Override
 	@Nonnull
 	public PropertyAccess resolvePropertyAccess(@Nonnull Property bootAttributeDescriptor) {
-		final var strategy = bootAttributeDescriptor.getPropertyAccessStrategy( idClassType.getJavaTypeClass() );
+		final var strategy = bootAttributeDescriptor.getPropertyAccessStrategy( idClassType.getJavaTypeClass(), propertyAccessStrategyResolver );
 
 		if ( strategy == null ) {
 			throw new HibernateException(

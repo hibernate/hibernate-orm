@@ -70,7 +70,7 @@ import jakarta.persistence.MapKeyJoinColumns;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.OrderBy;
-import org.jetbrains.annotations.NotNull;
+import jakarta.annotation.Nonnull;
 
 import static org.hibernate.models.spi.TypeDetailsHelper.resolveRelativeType;
 
@@ -483,8 +483,12 @@ public record CollectionSource(
 	}
 
 	private static JoinTable effectiveJoinTable(MemberDetails member, AssociationOverride associationOverride) {
-		if ( associationOverride != null ) {
-			return isSpecified( associationOverride.joinTable() ) ? associationOverride.joinTable() : null;
+		if ( associationOverride != null && associationOverride.joinColumns().length > 0
+				&& member.hasDirectAnnotationUsage( OneToMany.class ) ) {
+			return null;
+		}
+		if ( associationOverride != null && isSpecified( associationOverride.joinTable() ) ) {
+			return associationOverride.joinTable();
 		}
 		final JoinTable joinTable = member.getDirectAnnotationUsage( JoinTable.class );
 		return isSpecified( joinTable ) ? joinTable : null;
@@ -953,7 +957,7 @@ public record CollectionSource(
 		return extractJoinColumns( collectionTable.joinColumns() );
 	}
 
-	@NotNull
+	@Nonnull
 	private List<JoinColumn> extractJoinColumns(JoinColumn[] joinColumns) {
 		if ( joinColumns.length == 0 ) {
 			return List.of();

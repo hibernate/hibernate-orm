@@ -15,6 +15,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 
 import static java.util.Collections.emptyMap;
+import static org.hibernate.context.spi.MultiTenancy.getTenantCredentialsMapper;
 import static java.util.Collections.singletonMap;
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_CREDENTIALS_MAPPER;
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_RLS_ENABLED;

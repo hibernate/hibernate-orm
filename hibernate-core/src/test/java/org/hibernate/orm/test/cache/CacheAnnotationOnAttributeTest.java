@@ -1,12 +1,14 @@
 package org.hibernate.orm.test.cache;
 
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+
 import java.util.List;
 import java.util.Set;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.boot.MetadataSources;
 
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -61,20 +63,20 @@ public class CacheAnnotationOnAttributeTest {
 	public void testCacheOnCollections() {
 		try (var registry = ServiceRegistryUtil.serviceRegistry()) {
 			final var metadataSources =
-					new MetadataSources( registry )
-							.addAnnotatedClass( WithCollections.class )
-							.addAnnotatedClass( Child.class );
-			assertDoesNotThrow( () -> metadataSources.buildMetadata() );
+					new MappingSources()
+							.addManagedClass( WithCollections.class )
+							.addManagedClass( Child.class );
+			assertDoesNotThrow( () -> MetadataBuildingHelper.buildMetadata( registry, metadataSources ) );
 		}
 	}
 
 	private static void assertRejected(String path, Class<?>... classes) {
 		try (var registry = ServiceRegistryUtil.serviceRegistry()) {
-			final var metadataSources = new MetadataSources( registry );
+			final var metadataSources = new MappingSources();
 			for ( var entityClass : classes ) {
-				metadataSources.addAnnotatedClass( entityClass );
+				metadataSources.addManagedClass( entityClass );
 			}
-			final var thrown = assertThrows( AnnotationException.class, metadataSources::buildMetadata );
+			final var thrown = assertThrows( AnnotationException.class, () -> MetadataBuildingHelper.buildMetadata( registry, metadataSources ) );
 			assertThat( thrown.getMessage() )
 					.contains( path )
 					.contains( "is annotated '@Cache' but is not a collection" );

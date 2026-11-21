@@ -247,7 +247,7 @@ public class SessionFactorySettingsResolverTests {
 		assertThat( options.getServiceRegistry() ).isSameAs( registryScope.getRegistry() );
 		assertThat( options.isJpaBootstrap() ).isTrue();
 		assertThat( options.getSessionFactoryName() ).isEqualTo( "adapter-test" );
-		assertThat( options.getInterceptor() ).isNull();
+		assertThat( options.getConfiguredInterceptor().getReference() ).isNull();
 		assertThat( options.getDefaultSchema() ).isEqualTo( "adapter_schema" );
 		assertThat( options.getValidatorFactoryReference() ).isNull();
 		assertThat( options.isSecondLevelCacheEnabled() ).isTrue();

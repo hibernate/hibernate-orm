@@ -1,5 +1,8 @@
 package org.hibernate.boot.model.internal;
 
+import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.models.spi.ClassDetailsRegistry;
+
 import org.hibernate.models.spi.ModuleDetails;
 
 import jakarta.persistence.SequenceGenerator;
@@ -8,7 +11,6 @@ import jakarta.annotation.Nullable;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.annotations.GeneratorOptimizer;
 import org.hibernate.boot.model.IdentifierGeneratorRegistration;
 import org.hibernate.boot.model.relational.ExportableProducer;
@@ -185,7 +187,7 @@ public class GeneratorAnnotationHelper {
 		}
 
 		// lastly, on the package
-		final var packageInfo = idMember.getDeclaringType().getPackage();
+		final var packageInfo = locatePackageInfoDetails( idMember.getDeclaringType(), modelsContext );
 		if ( packageInfo != null ) {
 			for ( A generatorAnnotation :
 					packageInfo.getRepeatedAnnotationUsages( generatorAnnotationType, modelsContext ) ) {

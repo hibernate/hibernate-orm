@@ -1,5 +1,10 @@
 package org.hibernate.orm.test.boot;
 
+import java.util.function.Consumer;
+import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
+import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+
 import java.util.List;
 import java.util.Map;
 
@@ -15,7 +20,18 @@ import org.hibernate.boot.spi.MetadataImplementor;
 
 import jakarta.persistence.SharedCacheMode;
 
+/// Helpers for tests building mapping and factory pipeline products directly.
+///
+/// @author Steve Ebersole
 public final class MetadataBuildingTestHelper {
+	public static SessionFactoryImplementor buildSessionFactory(StandardServiceRegistry registry,
+			MappingSources sources, Consumer<SessionFactoryOptionsCollector> customizer) {
+		final var metadata = MetadataBuildingHelper.buildMetadata( registry, sources );
+		final var options = new SessionFactoryOptionsCollector();
+		customizer.accept( options );
+		return SessionFactoryPipeline.build( metadata, options );
+	}
+
 	private MetadataBuildingTestHelper() {
 	}
 

@@ -725,20 +725,6 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
-	public void registerAdHocBasicType(BasicType<?> basicType) {
-	}
-
-	@Override
-	public <T> BasicType<T> resolveAdHocBasicType(String key) {
-		return null;
-	}
-
-	@Override
-	public <T> BasicType<T> findAdHocBasicType(JavaType<T> javaType, JdbcType jdbcType) {
-		return null;
-	}
-
-	@Override
 	public String getSessionFactoryName() {
 		return "mock";
 	}

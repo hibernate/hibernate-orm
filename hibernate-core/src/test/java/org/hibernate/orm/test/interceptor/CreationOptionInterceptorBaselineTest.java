@@ -1,5 +1,11 @@
 package org.hibernate.orm.test.interceptor;
 
+
+import org.hibernate.testing.orm.junit.SessionFactoryUtil;
+
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -10,7 +16,6 @@ import jakarta.persistence.EntityManager;
 import org.hibernate.CacheMode;
 import org.hibernate.Interceptor;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
@@ -85,10 +90,8 @@ class CreationOptionInterceptorBaselineTest {
 	}
 
 	private static SessionFactoryImplementor buildSessionFactory(StandardServiceRegistry ssr) {
-		final Metadata metadata = new MetadataSources( ssr )
-				.addResource( "org/hibernate/orm/test/interceptor/User.hbm.xml" )
-				.buildMetadata();
-		return (SessionFactoryImplementor) metadata.buildSessionFactory();
+		final Metadata metadata = MetadataBuildingHelper.buildMetadata( ssr, new MappingSources().addManagedClasses( User.class, Log.class ) );
+		return (SessionFactoryImplementor) SessionFactoryUtil.buildSessionFactory( metadata );
 	}
 
 	private static SessionFactoryImplementor factoryFor(EndState state) {

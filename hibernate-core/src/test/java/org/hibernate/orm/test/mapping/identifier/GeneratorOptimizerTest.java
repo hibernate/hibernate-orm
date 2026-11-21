@@ -18,7 +18,6 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,7 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
-import static org.hibernate.cfg.JpaComplianceSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE;
 
 /// User Guide examples of optimizer selection for local and global generator definitions.
 ///
@@ -39,7 +37,7 @@ import static org.hibernate.cfg.JpaComplianceSettings.JPA_ID_GENERATOR_GLOBAL_SC
 		GeneratorOptimizerTest.SecondConsumer.class
 })
 @SessionFactory
-@ServiceRegistry(settings = @Setting(name = JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE, value = "true"))
+@ServiceRegistry
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportPooledSequences.class)
 public class GeneratorOptimizerTest {
 	@Test

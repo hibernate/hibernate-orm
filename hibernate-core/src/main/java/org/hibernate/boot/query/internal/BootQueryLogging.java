@@ -5,7 +5,6 @@ import java.util.Locale;
 
 import org.hibernate.Internal;
 import org.hibernate.boot.BootLogging;
-import org.hibernate.boot.query.HbmResultSetMappingDescriptor;
 import org.hibernate.internal.log.SubSystemLogging;
 import org.hibernate.spi.NavigablePath;
 
@@ -49,14 +48,6 @@ public interface BootQueryLogging extends BasicLogger {
 	@LogMessage(level = TRACE)
 	@Message(id = 160304, value = "Resolving HBM EntityResultDescriptor into memento - %s : %s (%s)")
 	void resolvingEntityResult(String tableAlias, String entityName, String registrationName);
-
-	@LogMessage(level = TRACE)
-	@Message(id = 160305, value = "Creating PropertyFetchDescriptor (%s : %s) for ResultSet mapping - %s")
-	void creatingPropertyFetch(HbmResultSetMappingDescriptor.HbmFetchParent parent, String propertyPath, String registrationName);
-
-	@LogMessage(level = TRACE)
-	@Message(id = 160306, value = "Resolving HBM PropertyFetchDescriptor into memento - %s : %s")
-	void resolvingPropertyFetch(HbmResultSetMappingDescriptor.HbmFetchParent parent, String propertyPath);
 
 	@LogMessage(level = TRACE)
 	@Message(id = 160307, value = "Resolving HBM JoinDescriptor into memento - %s : %s . %s")

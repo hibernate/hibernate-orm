@@ -93,7 +93,7 @@ public class OneToOneAttributeProcessing {
 		);
 
 		if ( Integer.parseInt( xmlDocumentContext.getXmlDocument().getSourceVersion().split( "\\." )[0] ) < 8 ) {
-			annotation = new LegacyOneToOneXmlAnnotation( annotation, xmlDocumentContext.getModelBuildingContext() );
+			annotation = new LegacyOneToOneXmlAnnotation( annotation, xmlDocumentContext.getModelsContext() );
 			memberDetails.addAnnotationUsage( annotation );
 		}
 

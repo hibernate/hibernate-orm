@@ -1,6 +1,10 @@
 package org.hibernate.boot.pipeline.internal;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.boot.beanvalidation.BeanValidationIntegrator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -91,7 +95,7 @@ public class BootstrapPipeline {
 	///
 	/// @throws PersistenceException if bootstrap fails
 	public static SessionFactory build(PersistenceConfiguration persistenceConfiguration) {
-		final var bootstrapServiceRegistry = new BootstrapServiceRegistryBuilder().build();
+		final var bootstrapServiceRegistry = buildBootstrapServiceRegistry( persistenceConfiguration.properties() );
 		try {
 			final var bootstrapRequest = createEntryPointBootstrapRequest( persistenceConfiguration, bootstrapServiceRegistry );
 			return build( bootstrapRequest );
@@ -122,7 +126,7 @@ public class BootstrapPipeline {
 	///
 	/// @throws PersistenceException if schema management fails
 	public static void generateSchema(PersistenceConfiguration persistenceConfiguration) {
-		final var bootstrapServiceRegistry = new BootstrapServiceRegistryBuilder().build();
+		final var bootstrapServiceRegistry = buildBootstrapServiceRegistry( persistenceConfiguration.properties() );
 		StandardServiceRegistry standardServiceRegistry = null;
 		try {
 			final var bootstrapRequest = createEntryPointBootstrapRequest( persistenceConfiguration, bootstrapServiceRegistry );
@@ -152,7 +156,7 @@ public class BootstrapPipeline {
 	/// the resolved mapping product. Closing the result releases the
 	/// bootstrap-owned service registries.
 	public static MappingResolutionResult resolveMetadata(PersistenceConfiguration persistenceConfiguration) {
-		final var bootstrapServiceRegistry = new BootstrapServiceRegistryBuilder().build();
+		final var bootstrapServiceRegistry = buildBootstrapServiceRegistry( persistenceConfiguration.properties() );
 		StandardServiceRegistry standardServiceRegistry = null;
 		try {
 			final var bootstrapRequest =
@@ -201,7 +205,7 @@ public class BootstrapPipeline {
 			PersistenceUnitSources persistenceUnitSources,
 			Map<?, ?> integrationSettings) {
 		final var persistenceUnitDescriptor = persistenceUnitSources.descriptor();
-		final var bootstrapServiceRegistry = buildBootstrapServiceRegistry( persistenceUnitDescriptor );
+		final var bootstrapServiceRegistry = buildBootstrapServiceRegistry( persistenceUnitDescriptor, integrationSettings );
 		try {
 			final var bootstrapRequest = createEntryPointBootstrapRequest(
 					persistenceUnitSources,
@@ -243,7 +247,7 @@ public class BootstrapPipeline {
 			PersistenceUnitSources persistenceUnitSources,
 			Map<?, ?> integrationSettings) {
 		final var persistenceUnitDescriptor = persistenceUnitSources.descriptor();
-		final var bootstrapServiceRegistry = buildBootstrapServiceRegistry( persistenceUnitDescriptor );
+		final var bootstrapServiceRegistry = buildBootstrapServiceRegistry( persistenceUnitDescriptor, integrationSettings );
 		StandardServiceRegistry standardServiceRegistry = null;
 		try {
 			final var bootstrapRequest = createEntryPointBootstrapRequest(
@@ -280,7 +284,7 @@ public class BootstrapPipeline {
 			PersistenceUnitSources persistenceUnitSources,
 			Map<?, ?> integrationSettings) {
 		final var persistenceUnitDescriptor = persistenceUnitSources.descriptor();
-		final var bootstrapServiceRegistry = buildBootstrapServiceRegistry( persistenceUnitDescriptor );
+		final var bootstrapServiceRegistry = buildBootstrapServiceRegistry( persistenceUnitDescriptor, integrationSettings );
 		StandardServiceRegistry standardServiceRegistry = null;
 		try {
 			final var bootstrapRequest = createEntryPointBootstrapRequest(
@@ -432,6 +436,8 @@ public class BootstrapPipeline {
 				bootstrapRequest.standardServiceRegistry(),
 				typeConfiguration
 		);
+		BeanValidationIntegrator.applyRelationalConstraints( resolvedMapping.metadata(),
+				bootstrapRequest.standardServiceRegistry(), null );
 		SchemaManagementToolCoordinator.process(
 				resolvedMapping.metadata(),
 				bootstrapRequest.standardServiceRegistry(),
@@ -629,12 +635,23 @@ public class BootstrapPipeline {
 		}
 	}
 
-	private static org.hibernate.boot.registry.BootstrapServiceRegistry buildBootstrapServiceRegistry(
-			PersistenceUnitDescriptor persistenceUnitDescriptor) {
+	private static BootstrapServiceRegistry buildBootstrapServiceRegistry(Map<?, ?> settings) {
+		final var builder = new BootstrapServiceRegistryBuilder();
+		if ( settings.get( AvailableSettings.CLASSLOADERS ) instanceof Collection<?> loaders ) {
+			loaders.forEach( loader -> builder.applyClassLoader( (ClassLoader) loader ) );
+		}
+		return builder.build();
+	}
+
+	private static BootstrapServiceRegistry buildBootstrapServiceRegistry(
+			PersistenceUnitDescriptor persistenceUnitDescriptor, Map<?, ?> integrationSettings) {
 		final var builder = new BootstrapServiceRegistryBuilder();
 		final var persistenceUnitClassLoader = persistenceUnitDescriptor.getClassLoader();
 		if ( persistenceUnitClassLoader != null ) {
 			builder.applyClassLoader( persistenceUnitClassLoader );
+		}
+		if ( integrationSettings.get( AvailableSettings.CLASSLOADERS ) instanceof Collection<?> loaders ) {
+			loaders.forEach( loader -> builder.applyClassLoader( (ClassLoader) loader ) );
 		}
 		return builder.build();
 	}

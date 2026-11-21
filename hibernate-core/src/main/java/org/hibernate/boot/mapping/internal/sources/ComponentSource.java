@@ -348,7 +348,7 @@ public record ComponentSource(
 				memberSourceType,
 				elementType,
 				new PathAdjustmentCollector( member, bindingContext ),
-				effectiveAccessType( member, defaultAccessType ),
+				collectionAccessType( member, defaultAccessType ),
 				"",
 				namingPathPrefix + "."
 		);
@@ -371,7 +371,7 @@ public record ComponentSource(
 				memberSourceType,
 				memberSourceType,
 				new PathAdjustmentCollector( member, bindingContext ),
-				effectiveAccessType( member, defaultAccessType ),
+				collectionAccessType( member, defaultAccessType ),
 				"",
 				member.resolveAttributeName() + "."
 		);
@@ -410,7 +410,7 @@ public record ComponentSource(
 				componentType,
 				mapKeyType,
 				new PathAdjustmentCollector( member, bindingContext ),
-				defaultAccessType,
+				collectionAccessType( member, defaultAccessType ),
 				"",
 				member.resolveAttributeName() + ".key."
 		);
@@ -610,6 +610,11 @@ public record ComponentSource(
 	private static AccessType fallbackAccessType(MemberDetails member) {
 		final Access access = member.getDeclaringType().getDirectAnnotationUsage( Access.class );
 		return access == null ? AccessType.FIELD : access.value();
+	}
+
+	private static AccessType collectionAccessType(MemberDetails member, AccessType defaultAccessType) {
+		final Access access = member.getDeclaringType().getDirectAnnotationUsage( Access.class );
+		return access == null ? defaultAccessType : access.value();
 	}
 
 	private static AccessType effectiveAccessType(MemberDetails member, AccessType defaultAccessType) {

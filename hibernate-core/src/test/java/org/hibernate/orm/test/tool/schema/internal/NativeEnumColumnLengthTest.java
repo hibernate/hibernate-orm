@@ -1,8 +1,10 @@
 package org.hibernate.orm.test.tool.schema.internal;
 
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+
 import java.sql.Types;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -53,9 +55,7 @@ public class NativeEnumColumnLengthTest {
 
 	@Test
 	public void testExplicitLengthDoesNotCauseMismatch() {
-		final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
-				.addAnnotatedClass( Widget.class )
-				.buildMetadata();
+		final MetadataImplementor metadata = (MetadataImplementor) MetadataBuildingHelper.buildMetadata( ssr, new MappingSources().addManagedClass( Widget.class ) );
 		metadata.orderColumns( false );
 		metadata.validate();
 		final Dialect dialect = ssr.getService( JdbcEnvironment.class ).getDialect();

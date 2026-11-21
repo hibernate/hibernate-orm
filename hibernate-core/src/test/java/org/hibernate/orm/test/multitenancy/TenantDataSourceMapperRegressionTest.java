@@ -1,5 +1,11 @@
 package org.hibernate.orm.test.multitenancy;
 
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
+
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.testing.orm.junit.SessionFactoryUtil;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -13,7 +19,6 @@ import javax.naming.spi.InitialContextFactory;
 import javax.sql.DataSource;
 
 import jakarta.annotation.Nonnull;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
 import org.hibernate.context.spi.TenantCredentialsMapper;
@@ -127,7 +132,7 @@ class TenantDataSourceMapperRegressionTest {
 						.applySetting( MULTI_TENANT_DATASOURCE_MAPPER,
 								conventionalNaming ? "default" : (TenantDataSourceMapper<String>) tenant -> TENANT )
 						.applySetting( MULTI_TENANT_CREDENTIALS_MAPPER, credentials ).build();
-						var factory = new MetadataSources( registry ).buildMetadata().buildSessionFactory() ) {
+						var factory = SessionFactoryUtil.buildSessionFactory( MetadataBuildingHelper.buildMetadata( registry, new MappingSources() ) ) ) {
 					assertEquals( 0, credentials.userCalls );
 					assertEquals( 0, credentials.passwordCalls );
 					assertTrue( tenantSource.credentials.isEmpty() );
@@ -180,8 +185,8 @@ class TenantDataSourceMapperRegressionTest {
 		try ( var registry = registry( source, source )
 				.applySetting( MULTI_TENANT_DATASOURCE_MAPPER,
 						conventionalNaming ? "default" : (TenantDataSourceMapper<String>) tenant -> TENANT ).build();
-				var factory = new MetadataSources( registry ).buildMetadata().getSessionFactoryBuilder()
-						.applyTenantCredentialsMapper( credentials ).build() ) {
+				var factory = MetadataBuildingTestHelper.buildSessionFactory( registry, new MappingSources(),
+						options -> options.applyTenantCredentialsMapper( credentials ) ) ) {
 			assertEquals( 0, credentials.userCalls );
 			assertEquals( 0, credentials.passwordCalls );
 			try ( var session = factory.withOptions().tenantIdentifier( "tenant" ).readOnly( readOnly ).openSession() ) {
@@ -212,7 +217,7 @@ class TenantDataSourceMapperRegressionTest {
 				explicit.injectServices( (ServiceRegistryImplementor) registry );
 			}
 			assertSame( explicit, registry.requireService( MultiTenantConnectionProvider.class ) );
-			try ( var factory = (SessionFactoryImplementor) new MetadataSources( registry ).buildMetadata().buildSessionFactory() ) {
+			try ( var factory = (SessionFactoryImplementor) SessionFactoryUtil.buildSessionFactory( MetadataBuildingHelper.buildMetadata( registry, new MappingSources() ) ) ) {
 				assertSame( explicit, factory.getServiceRegistry().requireService( MultiTenantConnectionProvider.class ) );
 				try ( var session = factory.withOptions().tenantIdentifier( "tenant" ).openSession() ) {
 					session.doWork( connection -> assertFalse( connection.isClosed() ) );
@@ -232,8 +237,7 @@ class TenantDataSourceMapperRegressionTest {
 				.applySetting( MULTI_TENANT_DATASOURCE_MAPPER, (TenantDataSourceMapper<String>) tenant -> TENANT )
 				.build() ) {
 			final var explicit = registry.requireService( MultiTenantConnectionProvider.class );
-			try ( var factory = (SessionFactoryImplementor) new MetadataSources( registry ).buildMetadata()
-					.buildSessionFactory() ) {
+			try ( var factory = (SessionFactoryImplementor) SessionFactoryUtil.buildSessionFactory( MetadataBuildingHelper.buildMetadata( registry, new MappingSources() ) ) ) {
 				assertSame( explicit, factory.getServiceRegistry().requireService( MultiTenantConnectionProvider.class ) );
 			}
 		}

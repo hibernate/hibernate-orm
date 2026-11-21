@@ -128,6 +128,9 @@ public class AttributeBinder {
 				: new PropertyMappingMaterializer().createProperty( appliedMapping );
 
 		final ValueIntent valueIntent = attributeBinding.valueIntent();
+		AttributeAnnotationValidation.validate( attributeBinding.member(),
+				ownerBinding.getEntityName() + "." + attributeBinding.attributePath(), attributeBinding.nature(),
+				valueIntent instanceof EmbeddedValueIntent );
 		if ( valueIntent instanceof BasicValueIntent ) {
 			if ( usesComponentBindingForBasicValue() ) {
 				final var componentValue = new EmbeddableAttributeBinder(
@@ -168,7 +171,7 @@ public class AttributeBinder {
 					bindingOptions,
 					bindingState,
 					bindingContext
-			).bind( binding );
+			).bind( binding, registerCollectionBindings );
 			relaxSingleTableSubclassNullability( ownerBinding, toOneValue );
 			binding.setValue( toOneValue );
 			attributeTable = toOneValue.getTable();

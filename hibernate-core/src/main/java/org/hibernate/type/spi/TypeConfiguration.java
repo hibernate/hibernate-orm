@@ -1,5 +1,7 @@
 package org.hibernate.type.spi;
 
+import org.hibernate.jpa.spi.JpaCompliance;
+
 import java.io.InvalidObjectException;
 import java.io.Serial;
 import java.io.Serializable;

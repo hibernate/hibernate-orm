@@ -1,5 +1,11 @@
 package org.hibernate.orm.test.transactions;
 
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
+
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.testing.orm.junit.SessionFactoryUtil;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -17,7 +23,6 @@ import jakarta.transaction.UserTransaction;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.hibernate.testing.jta.TestingJtaBootstrap;
@@ -276,9 +281,8 @@ public class TransactionsTest {
 	@ParameterizedTest
 	@ValueSource(booleans = { true, false })
 	public void helperRollbackOnly(boolean compliant, ServiceRegistryScope registryScope) {
-		try (EntityManagerFactory factory = new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClass( Customer.class ).buildMetadata()
-				.getSessionFactoryBuilder().enableJpaTransactionCompliance( compliant ).build()) {
+		try (EntityManagerFactory factory = MetadataBuildingTestHelper.buildSessionFactory( registryScope.getRegistry(), new MappingSources().addManagedClass( Customer.class ),
+				options -> options.enableJpaTransactionCompliance( compliant ) )) {
 			factory.runInTransaction( entityManager -> entityManager.persist( new Customer( "Alex" ) ) );
 			List<EntityManager> contexts = new ArrayList<>();
 			java.util.function.Function<EntityManager, String> work = entityManager -> {
@@ -309,9 +313,8 @@ public class TransactionsTest {
 		UserTransaction userTransaction = TestingJtaPlatformImpl.userTransaction();
 		List<Integer> jtaStatuses = new ArrayList<>();
 		List<TransactionStatus> hibernateStatuses = new ArrayList<>();
-		try (SessionFactory factory = new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClass( Customer.class ).buildMetadata()
-				.getSessionFactoryBuilder().applyJtaTrackingByThread( trackByThread ).build()) {
+		try (SessionFactory factory = MetadataBuildingTestHelper.buildSessionFactory( registryScope.getRegistry(), new MappingSources().addManagedClass( Customer.class ),
+				options -> options.enableJtaTrackingByThread( trackByThread ) )) {
 			try {
 				for ( int completion : new int[] {
 						Status.STATUS_COMMITTED, Status.STATUS_ROLLEDBACK, Status.STATUS_MARKED_ROLLBACK
@@ -355,10 +358,7 @@ public class TransactionsTest {
 	}
 
 	private SessionFactory buildFactory(ServiceRegistryScope registryScope) {
-		return new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClass( Customer.class )
-				.buildMetadata()
-				.buildSessionFactory();
+		return SessionFactoryUtil.buildSessionFactory( MetadataBuildingHelper.buildMetadata( registryScope.getRegistry(), new MappingSources().addManagedClass( Customer.class ) ) );
 	}
 
 	private String customerName(EntityManagerFactory factory) {

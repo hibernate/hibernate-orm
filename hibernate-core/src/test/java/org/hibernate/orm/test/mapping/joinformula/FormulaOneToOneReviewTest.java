@@ -1,5 +1,10 @@
 package org.hibernate.orm.test.mapping.joinformula;
 
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
+
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+
 import java.io.Serializable;
 import java.io.StringReader;
 import javax.xml.transform.stream.StreamSource;
@@ -8,7 +13,6 @@ import org.hibernate.FetchNotFoundException;
 import org.hibernate.annotations.JoinFormula;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategySnakeCaseImpl;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.xsd.MappingXsdSupport;
@@ -60,12 +64,9 @@ public class FormulaOneToOneReviewTest {
 				.applySetting("hibernate.boot.allow_jdbc_metadata_access", false)
 				.build();
 		try {
-			var metadata = new MetadataSources(registry)
-					.addAnnotatedClass(NamedOwner.class)
-					.addAnnotatedClass(NamedTarget.class)
-					.getMetadataBuilder()
-					.applyPhysicalNamingStrategy(new PhysicalNamingStrategySnakeCaseImpl())
-					.build();
+			var metadata = MetadataBuildingTestHelper.buildMetadataWithPhysicalNaming( registry,
+					new MappingSources().addManagedClass( NamedOwner.class ).addManagedClass( NamedTarget.class ),
+					new PhysicalNamingStrategySnakeCaseImpl() );
 			assertNotNull(metadata.getEntityBinding(NamedOwner.class.getName()));
 		}
 		finally {
@@ -80,10 +81,7 @@ public class FormulaOneToOneReviewTest {
 				.applySetting("hibernate.boot.allow_jdbc_metadata_access", false)
 				.build();
 		try {
-			new MetadataSources(registry)
-					.addAnnotatedClass(CodeOwner.class)
-					.addAnnotatedClass(CodeTarget.class)
-					.buildMetadata();
+			MetadataBuildingHelper.buildMetadata( registry, new MappingSources().addManagedClass(CodeOwner.class).addManagedClass(CodeTarget.class) );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy(registry);

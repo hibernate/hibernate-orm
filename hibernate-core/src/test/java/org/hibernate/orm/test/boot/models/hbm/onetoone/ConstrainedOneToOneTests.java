@@ -1,5 +1,9 @@
 package org.hibernate.orm.test.boot.models.hbm.onetoone;
 
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.pipeline.internal.source.XmlMappingSource;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.List;
@@ -9,12 +13,10 @@ import jakarta.xml.bind.JAXBException;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.jaxb.hbm.transform.HbmXmlTransformer;
-import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
+import org.hibernate.boot.jaxb.Origin;
+import org.hibernate.boot.jaxb.SourceType;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.MappingSettings;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToOne;
@@ -23,72 +25,52 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
-/**
- * A {@code <one-to-one/>} which is constrained, or which has a {@code property-ref},
- * is joined on the primary key of its owner, whether or not the {@code hbm.xml}
- * mapping is transformed.
- */
+/// Verifies shared-primary-key and property-ref joins in mapping XML, including a JAXB round trip.
+///
+/// @author Steve Ebersole
+
 @JiraKey("HHH-21112")
+@ServiceRegistry
 @SuppressWarnings("JUnitMalformedDeclaration")
 public class ConstrainedOneToOneTests {
-	private static final String MAPPING = "mappings/models/hbm/onetoone/constrained.hbm.xml";
-	private static final String PROPERTY_REF_MAPPING = "mappings/models/hbm/onetoone/property-ref.hbm.xml";
+	private static final String MAPPING = "mappings/models/hbm/onetoone/constrained.orm.xml";
+	private static final String PROPERTY_REF_MAPPING = "mappings/models/hbm/onetoone/property-ref.orm.xml";
 
 	@Test
-	@ServiceRegistry(settings = @Setting(name = MappingSettings.TRANSFORM_HBM_XML, value = "false"))
 	@DomainModel(xmlMappings = MAPPING)
-	void testHbm(DomainModelScope scope) {
+	void testMapping(DomainModelScope scope) {
 		verifySharedPrimaryKey( scope.getDomainModel() );
 	}
 
 	@Test
-	@ServiceRegistry(settings = @Setting(name = MappingSettings.TRANSFORM_HBM_XML, value = "true"))
-	@DomainModel(xmlMappings = MAPPING)
-	void testTransformed(DomainModelScope scope) {
-		verifySharedPrimaryKey( scope.getDomainModel() );
+	void testSerializedMapping(ServiceRegistryScope scope) throws JAXBException {
+		verifySharedPrimaryKey( roundTrip( MAPPING, scope ) );
 	}
 
 	@Test
-	@ServiceRegistry(settings = @Setting(name = MappingSettings.TRANSFORM_HBM_XML, value = "false"))
-	void testTransformedAndSerialized(ServiceRegistryScope scope) throws JAXBException {
-		verifySharedPrimaryKey( transformAndSerialize( MAPPING, scope ) );
-	}
-
-	@Test
-	@ServiceRegistry(settings = @Setting(name = MappingSettings.TRANSFORM_HBM_XML, value = "false"))
 	@DomainModel(xmlMappings = PROPERTY_REF_MAPPING)
-	void testPropertyRefHbm(DomainModelScope scope) {
-		verifyPropertyRef( scope.getDomainModel() );
+	void testPropertyRefMapping(DomainModelScope scope) {
+		verifyPropertyRefConstraints( scope.getDomainModel() );
 	}
 
 	@Test
-	@ServiceRegistry(settings = @Setting(name = MappingSettings.TRANSFORM_HBM_XML, value = "true"))
-	@DomainModel(xmlMappings = PROPERTY_REF_MAPPING)
-	void testPropertyRefTransformed(DomainModelScope scope) {
-		verifyTransformedPropertyRef( scope.getDomainModel() );
+	void testPropertyRefSerializedMapping(ServiceRegistryScope scope) throws JAXBException {
+		verifyPropertyRefConstraints( roundTrip( PROPERTY_REF_MAPPING, scope ) );
 	}
 
 	@Test
-	@ServiceRegistry(settings = @Setting(name = MappingSettings.TRANSFORM_HBM_XML, value = "false"))
-	void testPropertyRefTransformedAndSerialized(ServiceRegistryScope scope) throws JAXBException {
-		verifyTransformedPropertyRef( transformAndSerialize( PROPERTY_REF_MAPPING, scope ) );
-	}
-
-	@Test
-	@ServiceRegistry(settings = @Setting(name = MappingSettings.TRANSFORM_HBM_XML, value = "true"))
 	@DomainModel(xmlMappings = PROPERTY_REF_MAPPING)
 	@SessionFactory
-	void testPropertyRefTransformedJoin(SessionFactoryScope scope) {
+	void testPropertyRefJoin(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final var parent = new CodedParent();
 			parent.id = 1L;
@@ -150,7 +132,7 @@ public class ConstrainedOneToOneTests {
 		} );
 	}
 
-	private static void verifyTransformedPropertyRef(Metadata metadata) {
+	private static void verifyPropertyRefConstraints(Metadata metadata) {
 		verifyPropertyRef( metadata );
 
 		// the primary key holds a foreign key, which is a constraint only when the association is constrained
@@ -167,23 +149,18 @@ public class ConstrainedOneToOneTests {
 	}
 
 	/**
-	 * Transform the mapping, write it as XML, and read it back,
+	 * Write the mapping as XML and read it back,
 	 * validating it against the schema, as the Gradle plugin does.
 	 */
-	private static Metadata transformAndSerialize(String mapping, ServiceRegistryScope scope) throws JAXBException {
+	private static Metadata roundTrip(String mapping, ServiceRegistryScope scope) throws JAXBException {
 		final var registry = scope.getRegistry();
-		final var sources = new MetadataSources( registry ).addResource( mapping );
-		final var transformed = HbmXmlTransformer.transform(
-				sources.getHbmXmlBindings(),
-				(MetadataImplementor) sources.buildMetadata(),
-				UnsupportedFeatureHandling.ERROR
-		);
+		final var binder = new MappingBinder( registry );
+		final var binding = binder.bind( registry.requireService( ClassLoaderService.class ).locateResourceStream( mapping ),
+				new Origin( SourceType.RESOURCE, mapping ) );
 		final var xml = new ByteArrayOutputStream();
 		new MappingBinder( registry ).mappingJaxbContext().createMarshaller()
-				.marshal( transformed.get( 0 ).getRoot(), xml );
-		return new MetadataSources( registry )
-				.addInputStream( new ByteArrayInputStream( xml.toByteArray() ) )
-				.buildMetadata();
+				.marshal( binding.getRoot(), xml );
+		return MetadataBuildingHelper.buildMetadata( registry, new MappingSources().addXmlMappingSource( XmlMappingSource.fromInputStream( new ByteArrayInputStream( xml.toByteArray() ) ) ) );
 	}
 
 	@SuppressWarnings("unused")

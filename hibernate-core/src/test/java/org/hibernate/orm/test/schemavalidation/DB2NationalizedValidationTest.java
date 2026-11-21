@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.schemavalidation;
 
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+
 import java.util.EnumSet;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -9,7 +12,6 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.dialect.DB2Dialect;
@@ -45,7 +47,7 @@ public class DB2NationalizedValidationTest {
 	private static void createThenValidate(Class<?> entityClass) {
 		final StandardServiceRegistry registry = ServiceRegistryUtil.serviceRegistry();
 		try {
-			final Metadata metadata = new MetadataSources( registry ).addAnnotatedClass( entityClass ).buildMetadata();
+			final Metadata metadata = MetadataBuildingHelper.buildMetadata( registry, new MappingSources().addManagedClass( entityClass ) );
 			new SchemaExport().create( EnumSet.of( TargetType.DATABASE ), metadata );
 			try {
 				new SchemaValidator().validate( metadata );

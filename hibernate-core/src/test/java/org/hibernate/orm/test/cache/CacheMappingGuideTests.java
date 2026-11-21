@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.cache;
 
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -8,7 +11,6 @@ import jakarta.persistence.SharedCacheMode;
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.CacheSettings;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
@@ -29,8 +31,7 @@ class CacheMappingGuideTests {
 				.applySetting( CacheSettings.CACHE_REGION_FACTORY, CachingRegionFactory.class )
 				.applySetting( CacheSettings.JAKARTA_SHARED_CACHE_MODE, SharedCacheMode.NONE )
 				.build() ) {
-			var metadata = new MetadataSources( registry )
-					.addAnnotatedClasses( Root.class, StandardOnly.class ).buildMetadata();
+			var metadata = MetadataBuildingHelper.buildMetadata( registry, new MappingSources().addManagedClasses( Root.class, StandardOnly.class ) );
 			assertThat( metadata.getEntityBinding( Root.class.getName() ).isCached() ).isTrue();
 			assertThat( metadata.getEntityBinding( StandardOnly.class.getName() ).isCached() ).isFalse();
 		}
@@ -39,8 +40,7 @@ class CacheMappingGuideTests {
 	@Test
 	void subclassCannotDeclareHibernateCacheSemantics() {
 		try ( var registry = ServiceRegistryUtil.serviceRegistry() ) {
-			assertThatThrownBy( () -> new MetadataSources( registry )
-					.addAnnotatedClasses( Root.class, IllegalSubclass.class ).buildMetadata() )
+			assertThatThrownBy( () -> MetadataBuildingHelper.buildMetadata( registry, new MappingSources().addManagedClasses( Root.class, IllegalSubclass.class ) ) )
 					.isInstanceOf( AnnotationException.class )
 					.hasMessageContaining( "only root classes may define second-level caching semantics" );
 		}

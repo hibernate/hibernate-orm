@@ -62,8 +62,8 @@ public class BasicValueResolutionDetails {
 		this.role = value.isVersion() ? BasicValueRole.VERSION : BasicValueRole.from( source.kind() );
 		this.softDelete = value.isSoftDelete();
 		this.softDeleteStrategy = value.getSoftDeleteStrategy();
-		this.ownerName = value.getOwnerName();
-		this.propertyName = value.getPropertyName();
+		this.ownerName = value.getOwnerName() != null ? value.getOwnerName() : source.member() == null ? null : source.member().getDeclaringType().getName();
+		this.propertyName = value.getPropertyName() != null ? value.getPropertyName() : source.member() == null ? null : source.member().resolveAttributeName();
 	}
 
 	public static BasicValueResolutionDetails create(BasicValue value, BasicValueSource source) {

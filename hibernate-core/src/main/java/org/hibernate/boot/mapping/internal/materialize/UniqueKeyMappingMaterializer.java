@@ -1,6 +1,9 @@
 package org.hibernate.boot.mapping.internal.materialize;
 
 import java.util.List;
+import java.util.ArrayList;
+import org.hibernate.dialect.unique.spi.UniqueKeyRepresentation;
+import org.hibernate.dialect.unique.spi.UniqueKeyRepresentationRequest;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
@@ -22,6 +25,14 @@ public final class UniqueKeyMappingMaterializer {
 	}
 
 	public static UniqueKey materializeUniqueKey(ResolvedUniqueKey uniqueKey) {
+		if ( uniqueKey.metadataBuildingContext().getServiceComponents().getJdbcServices().getDialect().getUniqueDelegate()
+				.representation( new UniqueKeyRepresentationRequest( false, false, false ) ) == UniqueKeyRepresentation.INDEX ) {
+			IndexMappingMaterializer.materializeIndex( ResolvedIndex.explicit( uniqueKey.table(),
+					new ArrayList<>( uniqueKey.columns() ), uniqueKey.columns().stream().map( Column::getName ).toList(),
+					uniqueKey.metadataBuildingContext(), keyName( uniqueKey ), true, null, null, uniqueKey.options(),
+					uniqueKey.columnOrderings(), uniqueKey.sourceRole() ) );
+			return null;
+		}
 		final List<Column> keyColumns = uniqueKey.columns();
 		if ( keyColumns.size() == 1 ) {
 			if ( uniqueKey.tableUniqueKey() ) {

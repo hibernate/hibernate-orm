@@ -1,5 +1,9 @@
 package org.hibernate.orm.test.callback;
 
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.testing.orm.junit.SessionFactoryUtil;
+
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.annotation.PostConstruct;
@@ -8,7 +12,6 @@ import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 
 import org.hibernate.Interceptor;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.callback.internal.GlobalInterceptorStrategy;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -111,10 +114,7 @@ class GlobalInterceptorStrategyCdiTest {
 						CdiGlobalInterceptor.class )
 				.applySetting( "hibernate.hbm2ddl.auto", "create-drop" )
 				.build() ) {
-			try ( var sessionFactory = (SessionFactoryImplementor) new MetadataSources( services )
-					.buildMetadata()
-					.getSessionFactoryBuilder()
-					.build() ) {
+			try ( var sessionFactory = (SessionFactoryImplementor) SessionFactoryUtil.buildSessionFactory( MetadataBuildingHelper.buildMetadata( services, new MappingSources() ) ) ) {
 				cdi.triggerReadyForUse();
 
 				final var strategy = sessionFactory.getInterceptorStrategy();
@@ -143,10 +143,7 @@ class GlobalInterceptorStrategyCdiTest {
 						CdiGlobalInterceptor.class )
 				.applySetting( "hibernate.hbm2ddl.auto", "create-drop" )
 				.build() ) {
-			try ( var sessionFactory = (SessionFactoryImplementor) new MetadataSources( services )
-					.buildMetadata()
-					.getSessionFactoryBuilder()
-					.build() ) {
+			try ( var sessionFactory = (SessionFactoryImplementor) SessionFactoryUtil.buildSessionFactory( MetadataBuildingHelper.buildMetadata( services, new MappingSources() ) ) ) {
 				cdi.triggerReadyForUse();
 
 				final var strategy = sessionFactory.getInterceptorStrategy();

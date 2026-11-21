@@ -1,5 +1,7 @@
 package org.hibernate.engine.spi;
 
+import java.util.Collections;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;

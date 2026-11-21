@@ -1,5 +1,7 @@
 package org.hibernate.boot.model.relational;
 
+import org.hibernate.dialect.H2Dialect;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;

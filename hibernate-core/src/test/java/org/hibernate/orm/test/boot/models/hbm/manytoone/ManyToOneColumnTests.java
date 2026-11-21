@@ -1,40 +1,31 @@
 package org.hibernate.orm.test.boot.models.hbm.manytoone;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.cfg.MappingSettings;
 import org.hibernate.mapping.Column;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
-/**
- * The column of a {@code <many-to-one/>} keeps its {@code unique} and {@code sql-type}
- * settings, whether or not the {@code hbm.xml} mapping is transformed.
- */
+/// Verifies uniqueness and SQL column types for many-to-one joins in mapping XML.
+///
+/// @author Steve Ebersole
+
 @JiraKey("HHH-21209")
 @SuppressWarnings("JUnitMalformedDeclaration")
 public class ManyToOneColumnTests {
-	private static final String MAPPING = "mappings/models/hbm/manytoone/columns.hbm.xml";
+	private static final String MAPPING = "mappings/models/hbm/manytoone/columns.orm.xml";
 
 	@Test
-	@ServiceRegistry(settings = @Setting(name = MappingSettings.TRANSFORM_HBM_XML, value = "false"))
 	@DomainModel(xmlMappings = MAPPING)
-	void testHbm(DomainModelScope scope) {
+	void testMapping(DomainModelScope scope) {
 		verifyColumns( scope.getDomainModel() );
 	}
 
-	@Test
-	@ServiceRegistry(settings = @Setting(name = MappingSettings.TRANSFORM_HBM_XML, value = "true"))
-	@DomainModel(xmlMappings = MAPPING)
-	void testTransformed(DomainModelScope scope) {
-		verifyColumns( scope.getDomainModel() );
-	}
+
 
 	private static void verifyColumns(Metadata metadata) {
 		assertSoftly( softly -> {

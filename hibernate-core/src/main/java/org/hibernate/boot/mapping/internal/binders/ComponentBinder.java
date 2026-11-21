@@ -225,6 +225,8 @@ public class ComponentBinder {
 		for ( int i = 0; i < members.size(); i++ ) {
 			final ComponentMemberBinding componentMember = members.get( i );
 			final MemberDetails member = componentMember.member();
+			AttributeAnnotationValidation.validate( member, ownerBinding.getEntityName() + "." + componentMember.fullPath(), componentMember.nature(),
+					componentMember.valueIntent() instanceof EmbeddedValueIntent );
 			final String attributeName = componentMember.attributeName();
 			final String memberPath = componentMember.path();
 			if ( member.hasDirectAnnotationUsage( org.hibernate.annotations.Parent.class ) ) {

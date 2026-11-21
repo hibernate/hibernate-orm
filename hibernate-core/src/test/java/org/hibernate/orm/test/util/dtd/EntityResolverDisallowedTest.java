@@ -1,7 +1,12 @@
 package org.hibernate.orm.test.util.dtd;
 
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+
 import org.hibernate.boot.MappingException;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.jaxb.Origin;
+import org.hibernate.boot.jaxb.SourceType;
+import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -38,20 +43,19 @@ public class EntityResolverDisallowedTest {
 	}
 
 	@Test
-	public void testDoctypeWithoutEntitiesAcceptedByDefault(ServiceRegistryScope registryScope) {
+	public void testDoctypeWithoutEntitiesAcceptedByDefault(ServiceRegistryScope registryScope) throws Exception {
 		// DoctypeWithoutEntities.orm.xml declares an unreachable external DTD and an internal subset
 		// with no entities: the external DTD must not be fetched, and the document must still bind.
-		new MetadataSources( registryScope.getRegistry() )
-				.addResource( "org/hibernate/orm/test/util/dtd/DoctypeWithoutEntities.orm.xml" )
-				.buildMetadata();
+		try ( var stream = getClass().getResourceAsStream( "DoctypeWithoutEntities.orm.xml" ) ) {
+			new MappingBinder( registryScope.getRegistry() ).bind( stream,
+					new Origin( SourceType.RESOURCE, "DoctypeWithoutEntities.orm.xml" ) );
+		}
 	}
 
 	private static void assertRejected(ServiceRegistryScope registryScope, String resource) {
 		final var exception = assertThrows(
 				Exception.class,
-				() -> new MetadataSources( registryScope.getRegistry() )
-						.addResource( resource )
-						.buildMetadata()
+				() -> MetadataBuildingHelper.buildMetadata( registryScope.getRegistry(), new MappingSources().addMappingResource( resource ) )
 		);
 		final var mappingException = assertInstanceOf( MappingException.class, exception.getCause() );
 		assertTrue(

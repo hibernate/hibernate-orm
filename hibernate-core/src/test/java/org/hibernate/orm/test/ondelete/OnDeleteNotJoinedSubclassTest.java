@@ -1,12 +1,14 @@
 package org.hibernate.orm.test.ondelete;
 
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.OnDelete;
-import org.hibernate.boot.MetadataSources;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -25,9 +27,7 @@ public class OnDeleteNotJoinedSubclassTest {
 
 	@Test
 	void rootEntity(ServiceRegistryScope registryScope) {
-		assertThatThrownBy( () -> new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( AnnotatedRoot.class )
-				.buildMetadata() )
+		assertThatThrownBy( () -> MetadataBuildingHelper.buildMetadata( registryScope.getRegistry(), new MappingSources().addManagedClasses( AnnotatedRoot.class ) ) )
 				.isInstanceOf( AnnotationException.class )
 				.hasMessageContaining( AnnotatedRoot.class.getName() )
 				.hasMessageContaining( "may not be annotated '@OnDelete'" );
@@ -35,9 +35,7 @@ public class OnDeleteNotJoinedSubclassTest {
 
 	@Test
 	void singleTableSubclass(ServiceRegistryScope registryScope) {
-		assertThatThrownBy( () -> new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( SingleTableRoot.class, SingleTableChild.class )
-				.buildMetadata() )
+		assertThatThrownBy( () -> MetadataBuildingHelper.buildMetadata( registryScope.getRegistry(), new MappingSources().addManagedClasses( SingleTableRoot.class, SingleTableChild.class ) ) )
 				.isInstanceOf( AnnotationException.class )
 				.hasMessageContaining( SingleTableChild.class.getName() )
 				.hasMessageContaining( "may not be annotated '@OnDelete'" );
@@ -45,9 +43,7 @@ public class OnDeleteNotJoinedSubclassTest {
 
 	@Test
 	void joinedSubclass(ServiceRegistryScope registryScope) {
-		assertThatCode( () -> new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( JoinedRoot.class, JoinedChild.class )
-				.buildMetadata() )
+		assertThatCode( () -> MetadataBuildingHelper.buildMetadata( registryScope.getRegistry(), new MappingSources().addManagedClasses( JoinedRoot.class, JoinedChild.class ) ) )
 				.doesNotThrowAnyException();
 	}
 

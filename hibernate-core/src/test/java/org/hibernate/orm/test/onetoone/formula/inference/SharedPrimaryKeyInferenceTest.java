@@ -1,5 +1,13 @@
 package org.hibernate.orm.test.onetoone.formula.inference;
 
+import org.hibernate.boot.pipeline.internal.source.XmlMappingSource;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
+
+import org.hibernate.testing.orm.junit.SessionFactoryUtil;
+
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+
 import java.io.ByteArrayInputStream;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
@@ -25,11 +33,11 @@ import jakarta.persistence.Table;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinFormula;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategySnakeCaseImpl;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.ToOne;
+import org.hibernate.mapping.Component;
 import org.hibernate.type.SpecialOneToOneType;
 import org.hibernate.testing.orm.junit.DialectContext;
 
@@ -84,7 +92,7 @@ public class SharedPrimaryKeyInferenceTest {
 				</embedded-id><embedded name="lookup"/></attributes></entity>
 				""".formatted( PREFIX );
 		withXml( model( version, owner, target, "" ), false, metadata -> {
-			try ( var factory = metadata.buildSessionFactory() ) {
+			try ( var factory = SessionFactoryUtil.buildSessionFactory( metadata ) ) {
 				factory.inTransaction( session -> {
 					XmlTarget address = new XmlTarget();
 					address.key = new Key();
@@ -256,7 +264,9 @@ public class SharedPrimaryKeyInferenceTest {
 			assertSpecial( metadata, DerivedOwner.class );
 			var identityAssociation = metadata.getEntityBinding( DerivedOwner.class.getName() ).getProperty( "person" ).getValue();
 			assertThat( identityAssociation ).isInstanceOf( org.hibernate.mapping.ManyToOne.class );
-			assertThat( identityAssociation.getColumnInsertability() ).containsOnly( true );
+			// The entity-side IdClass projection is read-only; the identifier value owns inserts.
+			var identifier = (Component) metadata.getEntityBinding( DerivedOwner.class.getName() ).getIdentifier();
+			assertThat( identifier.getProperty( "person" ).getValue().getColumnInsertability() ).containsOnly( true );
 		}, FlagOwner.class, PropertyOwner.class, ImplicitOwner.class, IdClassOwner.class, AnnotatedEmbeddedOwner.class,
 				JoinedBase.class, JoinedOwner.class, DerivedOwner.class, Parent.class, AnnotatedTarget.class );
 	}
@@ -289,11 +299,11 @@ public class SharedPrimaryKeyInferenceTest {
 				.applySetting( "hibernate.dialect", "org.hibernate.dialect.H2Dialect" )
 				.applySetting( "hibernate.boot.allow_jdbc_metadata_access", false ).build();
 		try {
-			var sources = new MetadataSources( registry );
+			var sources = new MappingSources();
 			for ( var type : classes ) {
-				sources.addAnnotatedClass( type );
+				sources.addManagedClass( type );
 			}
-			var metadata = (MetadataImplementor) sources.buildMetadata();
+			var metadata = (MetadataImplementor) MetadataBuildingHelper.buildMetadata( registry, sources );
 			check.accept( metadata );
 			metadata.validate();
 		}
@@ -309,12 +319,11 @@ public class SharedPrimaryKeyInferenceTest {
 				.applySetting( "hibernate.hbm2ddl.auto", "create-drop" )
 				.applySetting( "hibernate.validate_xml", true ).build();
 		try {
-			var builder = new MetadataSources( registry )
-					.addInputStream( new ByteArrayInputStream( xml.getBytes( StandardCharsets.UTF_8 ) ) ).getMetadataBuilder();
-			if ( snakeCase ) {
-				builder.applyPhysicalNamingStrategy( new PhysicalNamingStrategySnakeCaseImpl() );
-			}
-			var metadata = (MetadataImplementor) builder.build();
+			var sources = new MappingSources().addXmlMappingSource(
+					XmlMappingSource.fromInputStream( new ByteArrayInputStream( xml.getBytes( StandardCharsets.UTF_8 ) ) ) );
+			var metadata = (MetadataImplementor) (snakeCase
+					? MetadataBuildingTestHelper.buildMetadataWithPhysicalNaming( registry, sources, new PhysicalNamingStrategySnakeCaseImpl() )
+					: MetadataBuildingHelper.buildMetadata( registry, sources ));
 			check.accept( metadata );
 			metadata.validate();
 		}

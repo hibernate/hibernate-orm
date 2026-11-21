@@ -71,6 +71,10 @@ public interface ColumnSource {
 
 	int scale(int defaultValue);
 
+	default int secondPrecision() {
+		return -1;
+	}
+
 	String options();
 
 	default String comment() {
@@ -84,6 +88,11 @@ public interface ColumnSource {
 	}
 
 	record JpaColumnSource(jakarta.persistence.Column column) implements ColumnSource {
+		@Override
+		public int secondPrecision() {
+			return column.secondPrecision();
+		}
+
 		@Override
 		public String name() {
 			return column.name();

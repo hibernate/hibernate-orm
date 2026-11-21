@@ -1,5 +1,8 @@
 package org.hibernate.boot.internal;
 
+import org.hibernate.cfg.SessionEventSettings;
+import org.hibernate.cfg.TransactionSettings;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -54,6 +57,7 @@ public class SessionFactoryOptionsCollector {
 	private Boolean statisticsSupport;
 	private final List<SessionFactoryObserver> sessionFactoryObservers = new ArrayList<>();
 	private Interceptor interceptor;
+	private boolean interceptorOverrideConfigured;
 	private Class<? extends Interceptor> statelessInterceptorClass;
 	private Supplier<? extends Interceptor> statelessInterceptorSupplier;
 	private StatementObserver statementObserver;
@@ -111,7 +115,7 @@ public class SessionFactoryOptionsCollector {
 
 	public ResolvedSessionFactorySettings applyTo(ResolvedSessionFactorySettings settings) {
 		return new ResolvedSessionFactorySettings(
-				settings.configurationValues(),
+				configurationValues( settings ),
 				settings.jpaBootstrap(),
 				settings.serviceRegistry(),
 				sessionFactoryName != null ? sessionFactoryName : settings.sessionFactoryName(),
@@ -143,7 +147,7 @@ public class SessionFactoryOptionsCollector {
 				settings.unownedAssociationTransientCheck(),
 				settings.bidirectionalAssociationManagementEnabled(),
 				statisticsSupport != null ? statisticsSupport : settings.statisticsEnabled(),
-				interceptor != null ? interceptor : settings.interceptor(),
+				interceptorOverrideConfigured ? interceptor : settings.interceptor(),
 				collectStatelessInterceptorSupplier( settings ),
 				collectSessionFactoryObservers( settings ),
 				validatorFactory != null ? validatorFactory : settings.validatorFactoryReference(),
@@ -238,14 +242,16 @@ public class SessionFactoryOptionsCollector {
 					sessionFactoryObservers.toArray( SessionFactoryObserver[]::new )
 			);
 		}
-		if ( interceptor != null ) {
-			optionsBuilder.applyInterceptor( interceptor );
-		}
-		if ( statelessInterceptorClass != null ) {
-			optionsBuilder.applyStatelessInterceptor( statelessInterceptorClass );
-		}
-		if ( statelessInterceptorSupplier != null ) {
-			optionsBuilder.applyStatelessInterceptorSupplier( statelessInterceptorSupplier );
+		if ( interceptorOverrideConfigured ) {
+			if ( statelessInterceptorClass != null ) {
+				optionsBuilder.applyStatelessInterceptor( statelessInterceptorClass );
+			}
+			else if ( statelessInterceptorSupplier != null ) {
+				optionsBuilder.applyStatelessInterceptorSupplier( statelessInterceptorSupplier );
+			}
+			else {
+				optionsBuilder.applyInterceptor( interceptor );
+			}
 		}
 		if ( statementObserver != null ) {
 			optionsBuilder.applyStatementObserver( statementObserver );
@@ -415,7 +421,7 @@ public class SessionFactoryOptionsCollector {
 				}
 			};
 		}
-		return settings.statelessInterceptorSupplier();
+		return interceptorOverrideConfigured ? null : settings.statelessInterceptorSupplier();
 	}
 
 	private Map<String, SqmFunctionDescriptor> collectSqlFunctions(ResolvedSessionFactorySettings settings) {
@@ -520,15 +526,22 @@ public class SessionFactoryOptionsCollector {
 
 	public void applyInterceptor(Interceptor interceptor) {
 		this.interceptor = interceptor;
+		interceptorOverrideConfigured = true;
+		statelessInterceptorClass = null;
+		statelessInterceptorSupplier = null;
 	}
 
 	public void applyStatelessInterceptor(Class<? extends Interceptor> statelessInterceptorClass) {
 		this.statelessInterceptorClass = statelessInterceptorClass;
+		interceptorOverrideConfigured = true;
+		interceptor = null;
 		this.statelessInterceptorSupplier = null;
 	}
 
 	public void applyStatelessInterceptorSupplier(Supplier<? extends Interceptor> statelessInterceptorSupplier) {
 		this.statelessInterceptorSupplier = statelessInterceptorSupplier;
+		interceptorOverrideConfigured = true;
+		interceptor = null;
 		this.statelessInterceptorClass = null;
 	}
 
@@ -720,5 +733,26 @@ public class SessionFactoryOptionsCollector {
 
 	public void disableJtaTransactionAccess() {
 		this.jtaTransactionAccessDisabled = true;
+	}
+
+	private Map<String, Object> configurationValues(ResolvedSessionFactorySettings settings) {
+		final var values = new LinkedHashMap<>( settings.configurationValues() );
+		if ( interceptorOverrideConfigured ) {
+			values.remove( SessionEventSettings.INTERCEPTOR );
+			values.remove( SessionEventSettings.SESSION_SCOPED_INTERCEPTOR );
+			if ( interceptor != null ) {
+				values.put( SessionEventSettings.INTERCEPTOR, interceptor );
+			}
+			else if ( statelessInterceptorClass != null ) {
+				values.put( SessionEventSettings.SESSION_SCOPED_INTERCEPTOR, statelessInterceptorClass );
+			}
+			else if ( statelessInterceptorSupplier != null ) {
+				values.put( SessionEventSettings.SESSION_SCOPED_INTERCEPTOR, statelessInterceptorSupplier );
+			}
+		}
+		if ( jtaTrackingByThread != null ) {
+			values.put( TransactionSettings.JTA_TRACK_BY_THREAD, jtaTrackingByThread );
+		}
+		return values;
 	}
 }

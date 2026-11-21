@@ -1,5 +1,10 @@
 package org.hibernate.orm.test.bootstrap.guide;
 
+import org.hibernate.testing.orm.junit.SessionFactoryUtil;
+
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+
 import java.net.URLClassLoader;
 import java.util.Map;
 
@@ -15,7 +20,6 @@ import jakarta.persistence.SchemaManagementAction;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
@@ -25,8 +29,7 @@ import org.hibernate.cfg.StatisticsSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.jpa.HibernatePersistenceProvider;
-import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
-import org.hibernate.jpa.boot.spi.PersistenceConfigurationDescriptor;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.jupiter.api.Test;
@@ -113,26 +116,15 @@ public class BootstrapGuideTests {
 
 	@ParameterizedTest
 	@ValueSource(booleans = { false, true })
-	void unitSettingOverridesControlledBaseline(boolean statisticsEnabled) {
+	void programmaticStatisticsSettingIsApplied(boolean statisticsEnabled) {
 		var configuration = new PersistenceConfiguration( "precedence" )
 				.managedClass( Document.class )
 				.property( JdbcSettings.URL, "jdbc:h2:mem:bootstrap_precedence" )
 				.property( JdbcSettings.USER, "sa" )
 				.property( JdbcSettings.PASS, "" )
 				.property( StatisticsSettings.GENERATE_STATISTICS, statisticsEnabled );
-		// Seed a conflicting baseline through the test hook; Environment is a process-wide snapshot.
-		var builder = new EntityManagerFactoryBuilderImpl(
-				new PersistenceConfigurationDescriptor( configuration ), Map.of(),
-				baseline -> baseline.getConfigurationValues().put(
-						StatisticsSettings.GENERATE_STATISTICS, !statisticsEnabled ) );
-		try {
-			try (var factory = builder.build()) {
-				assertThat( factory.unwrap( SessionFactory.class ).getStatistics().isStatisticsEnabled() )
-						.isEqualTo( statisticsEnabled );
-			}
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( builder.getStandardServiceRegistry() );
+		try (var factory = BootstrapPipeline.build( configuration )) {
+			assertThat( factory.getStatistics().isStatisticsEnabled() ).isEqualTo( statisticsEnabled );
 		}
 	}
 
@@ -186,10 +178,8 @@ public class BootstrapGuideTests {
 				.applySetting( SchemaToolingSettings.HBM2DDL_AUTO, "create-drop" )
 				.build();
 		try {
-			Metadata metadata = new MetadataSources( registry )
-					.addAnnotatedClass( Document.class )
-					.buildMetadata();
-			try (SessionFactory factory = metadata.buildSessionFactory()) {
+			Metadata metadata = MetadataBuildingHelper.buildMetadata( registry, new MappingSources().addManagedClass( Document.class ) );
+			try (SessionFactory factory = SessionFactoryUtil.buildSessionFactory( metadata )) {
 				persistDocument( factory );
 				//tag::bootstrap-guide-assertions[]
 				verifyDocument( factory );

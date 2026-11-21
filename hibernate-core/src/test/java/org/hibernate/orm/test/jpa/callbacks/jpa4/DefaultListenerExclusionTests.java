@@ -1,5 +1,10 @@
 package org.hibernate.orm.test.jpa.callbacks.jpa4;
 
+import org.hibernate.testing.orm.junit.SessionFactoryUtil;
+
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+
 import java.net.URLConnection;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -8,7 +13,6 @@ import java.util.stream.Stream;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.orm.test.jpa.callbacks.jpa4.exclusion.DefaultListenerEntities;
@@ -106,16 +110,16 @@ class DefaultListenerExclusionTests {
 			boolean excludeSuperclass,
 			boolean namedModule,
 			boolean discovered) throws Exception {
-		final var sources = new MetadataSources( registry )
+		final var sources = new MappingSources()
 				.addPackageDescriptor( fixtures.getPackageName() )
-				.addResource( "org/hibernate/orm/test/jpa/callbacks/jpa4/default-listener-exclusions.xml" );
+				.addMappingResource( "org/hibernate/orm/test/jpa/callbacks/jpa4/default-listener-exclusions.xml" );
 		if ( discovered ) {
-			sources.addAnnotatedClass( fixtures.getClassLoader().loadClass( fixtures.getName() + "$DiscoveredListener" ) );
+			sources.addManagedClass( fixtures.getClassLoader().loadClass( fixtures.getName() + "$DiscoveredListener" ) );
 		}
 		Class<?> entityClass = null;
 		for ( var type : fixtures.getDeclaredClasses() ) {
 			if ( type.isAnnotationPresent( Entity.class ) ) {
-				sources.addAnnotatedClass( type );
+				sources.addManagedClass( type );
 				if ( type.getSimpleName().equals( entityName ) ) {
 					entityClass = type;
 				}
@@ -126,7 +130,7 @@ class DefaultListenerExclusionTests {
 		@SuppressWarnings("unchecked")
 		final var events = (List<String>) fixtures.getField( "EVENTS" ).get( null );
 		events.clear();
-		try ( var factory = sources.buildMetadata().buildSessionFactory();
+		try ( var factory = SessionFactoryUtil.buildSessionFactory( MetadataBuildingHelper.buildMetadata( registry, sources ) );
 				var session = factory.openSession() ) {
 			var entity = entityClass.getConstructor().newInstance();
 			entityClass.getField( "id" ).setInt( entity, 1 );

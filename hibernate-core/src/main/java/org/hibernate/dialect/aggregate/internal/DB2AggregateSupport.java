@@ -426,6 +426,7 @@ public class DB2AggregateSupport extends AggregateSupportImpl implements Aggrega
 	}
 
 	private static String castTypeName(Column udtColumn, MappingContext mappingContext, TypeConfiguration typeConfiguration) {
+		final var size = udtColumn.getColumnSize( typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect(), mappingContext );
 		return getCastTypeName(
 				new SqlTypedMappingImpl(
 						size.getLength(),

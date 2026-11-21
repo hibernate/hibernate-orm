@@ -1,5 +1,9 @@
 package org.hibernate.orm.test.boot.settings;
 
+import org.hibernate.bytecode.enhance.spi.EnhancementModel;
+import org.hibernate.bytecode.enhance.spi.EnhancementOptions;
+import org.hibernate.bytecode.spi.BytecodeProvider;
+
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
@@ -237,7 +241,7 @@ public class BootstrapSettingsResolverTests {
 
 		@Override
 		public org.hibernate.bytecode.spi.ClassTransformer pushClassTransformer(
-				org.hibernate.bytecode.enhance.spi.EnhancementContext enhancementContext) {
+				EnhancementModel model, EnhancementOptions options, BytecodeProvider provider) {
 			return null;
 		}
 	}

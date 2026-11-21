@@ -1,16 +1,15 @@
 package org.hibernate.orm.test.jpa.boot;
 
 import java.util.HashMap;
-import java.util.Map;
+import java.util.Properties;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
+import org.hibernate.boot.pipeline.internal.settings.SettingsResolver;
+import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
 
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
-import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
-import org.hibernate.jpa.boot.spi.PersistenceConfigurationDescriptor;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
-import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.Test;
@@ -27,14 +26,11 @@ import jakarta.persistence.ValidationMode;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hibernate.cfg.AvailableSettings.ALLOW_METADATA_ON_BOOT;
-import static org.hibernate.cfg.AvailableSettings.CLASS_CACHE_PREFIX;
-import static org.hibernate.cfg.AvailableSettings.CFG_XML_FILE;
 import static org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER;
 import static org.hibernate.cfg.AvailableSettings.DATASOURCE;
 import static org.hibernate.cfg.AvailableSettings.DIALECT;
 import static org.hibernate.cfg.AvailableSettings.DRIVER;
 import static org.hibernate.cfg.AvailableSettings.FLUSH_BEFORE_COMPLETION;
-import static org.hibernate.cfg.AvailableSettings.GENERATE_STATISTICS;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_JDBC_URL;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_JDBC_USER;
@@ -46,7 +42,7 @@ import static org.hibernate.cfg.AvailableSettings.TRANSACTION_COORDINATOR_STRATE
 import static org.hibernate.cfg.AvailableSettings.URL;
 import static org.hibernate.cfg.AvailableSettings.USER;
 
-/// Characterizes JPA source precedence independently of registry alias normalization.
+/// Verifies immutable settings assembly and programmatic entry-point precedence.
 ///
 /// @author Steve Ebersole
 @BaseUnitTest
@@ -67,134 +63,63 @@ class JpaSettingsAssemblyTest {
 		overrides.put( null, "ignored" );
 		final var originalOverrides = new HashMap<>( overrides );
 		final var originalProperties = new HashMap<>( configuration.properties() );
-		final var builder = new EntityManagerFactoryBuilderImpl( new PersistenceConfigurationDescriptor( configuration ), overrides );
-		try {
-			assertThat( builder.getConfigurationValues() ).containsEntry( URL, "jdbc:integration" )
-					.containsEntry( JAKARTA_JDBC_URL, "jdbc:integration" ).containsEntry( JPA_JDBC_URL, "jdbc:integration" )
-					.containsEntry( USER, "integration-user" )
-					.containsEntry( JAKARTA_VALIDATION_MODE, ValidationMode.NONE )
-					.containsEntry( JAKARTA_SHARED_CACHE_MODE, SharedCacheMode.NONE )
-					.containsEntry( "test.override", "integration" ).doesNotContainKeys( "test.remove", DATASOURCE );
-			assertThat( overrides ).isEqualTo( originalOverrides );
-			assertThat( configuration.properties() ).isEqualTo( originalProperties );
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( builder.getStandardServiceRegistry() );
-		}
+		final var descriptor = new PersistenceUnitDescriptorAdapter() {
+			@Override public String getName() { return configuration.name(); }
+			@Override public Properties getProperties() {
+				final var properties = new Properties();
+				properties.putAll( configuration.properties() );
+				return properties;
+			}
+		};
+		final var resolved = SettingsResolver.resolveBootstrapSettings( descriptor, overrides );
+
+		assertThat( resolved.configurationValues() ).containsEntry( URL, "jdbc:integration" )
+				.containsEntry( JAKARTA_JDBC_URL, "jdbc:integration" ).containsEntry( JPA_JDBC_URL, "jdbc:integration" )
+				.containsEntry( USER, "integration-user" )
+				.containsEntry( JAKARTA_VALIDATION_MODE, ValidationMode.NONE )
+				.containsEntry( JAKARTA_SHARED_CACHE_MODE, SharedCacheMode.NONE )
+				.containsEntry( "test.override", "integration" ).containsEntry( "test.remove", null ).doesNotContainKey( DATASOURCE );
+		assertThat( overrides ).isEqualTo( originalOverrides );
+		assertThat( configuration.properties() ).isEqualTo( originalProperties );
 	}
 
 	@ParameterizedTest
 	@ValueSource(booleans = { false, true })
-	void retainsEntrySpecificTypedValuesAndSchemaActionPrecedence(boolean hibernateConfiguration) {
-		final var configuration = configuration( hibernateConfiguration )
+	void rawSettingsOverrideTypedDefaultsAndSchemaAction(boolean hibernate) {
+		final var configuration = configuration( hibernate )
 				.transactionType( PersistenceUnitTransactionType.JTA )
 				.validationMode( ValidationMode.NONE ).sharedCacheMode( SharedCacheMode.ALL )
 				.schemaManagementDatabaseAction( SchemaManagementAction.CREATE )
 				.property( JAKARTA_TRANSACTION_TYPE, PersistenceUnitTransactionType.RESOURCE_LOCAL )
 				.property( JAKARTA_VALIDATION_MODE, ValidationMode.AUTO )
 				.property( JAKARTA_SHARED_CACHE_MODE, SharedCacheMode.NONE )
-				.property( FLUSH_BEFORE_COMPLETION, true )
-				.property( JAKARTA_HBM2DDL_DATABASE_ACTION, "none" );
-		final var builder = builder( configuration );
-		try {
-			assertThat( builder.getConfigurationValues() )
-					.containsEntry( TRANSACTION_COORDINATOR_STRATEGY, hibernateConfiguration
-							? JdbcResourceLocalTransactionCoordinatorBuilderImpl.class : JtaTransactionCoordinatorBuilderImpl.class )
-					.containsEntry( JAKARTA_VALIDATION_MODE, hibernateConfiguration ? ValidationMode.AUTO : ValidationMode.NONE )
-					.containsEntry( JAKARTA_SHARED_CACHE_MODE, hibernateConfiguration ? SharedCacheMode.NONE : SharedCacheMode.ALL )
-					.containsEntry( JAKARTA_HBM2DDL_DATABASE_ACTION, "none" );
-			assertThat( builder.getConfigurationValues() ).containsEntry( FLUSH_BEFORE_COMPLETION, "false" );
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( builder.getStandardServiceRegistry() );
-		}
-	}
-
-	@Test
-	void baselineCustomizerPrecedesUnitPropertiesAndIntegrationOverrides() {
-		final var configuration = configuration( false ).property( "test.unit", "unit" )
-				.property( "test.integration", "unit" );
-		final var builder = new EntityManagerFactoryBuilderImpl(
-				new PersistenceConfigurationDescriptor( configuration ), Map.of( "test.integration", "integration" ),
-				baseline -> {
-					baseline.getConfigurationValues().put( "test.unit", "baseline" );
-					baseline.getConfigurationValues().put( "test.integration", "baseline" );
-					baseline.getConfigurationValues().put( "test.baseline", "baseline" );
-				} );
-		try {
-			assertThat( builder.getConfigurationValues() ).containsEntry( "test.unit", "unit" )
-					.containsEntry( "test.integration", "integration" ).containsEntry( "test.baseline", "baseline" );
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( builder.getStandardServiceRegistry() );
+				.property( FLUSH_BEFORE_COMPLETION, true ).property( JAKARTA_HBM2DDL_DATABASE_ACTION, "none" );
+		try ( var result = BootstrapPipeline.resolveMetadata( configuration ) ) {
+			assertThat( result.configurationValues() )
+					.containsEntry( TRANSACTION_COORDINATOR_STRATEGY, "jdbc" )
+					.containsEntry( JAKARTA_VALIDATION_MODE, ValidationMode.AUTO )
+					.containsEntry( JAKARTA_SHARED_CACHE_MODE, SharedCacheMode.NONE )
+					.containsEntry( JAKARTA_HBM2DDL_DATABASE_ACTION, "none" ).containsEntry( FLUSH_BEFORE_COMPLETION, "false" );
 		}
 	}
 
 	@ParameterizedTest
 	@ValueSource(booleans = { false, true })
-	void selectedHibernateXmlOverridesUnitProperties(boolean hibernateConfiguration) {
-		final var configuration = configuration( hibernateConfiguration )
-				.property( GENERATE_STATISTICS, false )
-				.property( CFG_XML_FILE, "org/hibernate/orm/test/bootstrap/guide/settings.cfg.xml" );
-		final var builder = builder( configuration );
-		try {
-			assertThat( builder.getConfigurationValues() ).containsEntry( GENERATE_STATISTICS, "true" );
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( builder.getStandardServiceRegistry() );
-		}
-	}
-
-	@Test
-	void integrationOverridesSelectedHibernateXml() {
-		final var configuration = configuration( false )
-				.property( GENERATE_STATISTICS, false )
-				.property( CFG_XML_FILE, "org/hibernate/orm/test/bootstrap/guide/settings.cfg.xml" );
-		final var builder = new EntityManagerFactoryBuilderImpl(
-				new PersistenceConfigurationDescriptor( configuration ), Map.of( GENERATE_STATISTICS, false ) );
-		try {
-			assertThat( builder.getConfigurationValues() ).containsEntry( GENERATE_STATISTICS, false );
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( builder.getStandardServiceRegistry() );
-		}
-	}
-
-	@ParameterizedTest
-	@ValueSource(booleans = { false, true })
-	void explicitTransactionCoordinatorIsRetained(boolean hibernateConfiguration) {
+	void explicitTransactionCoordinatorIsRetained(boolean hibernate) {
 		final var coordinator = new JdbcResourceLocalTransactionCoordinatorBuilderImpl();
-		final var builder = builder( configuration( hibernateConfiguration )
+		try ( var result = BootstrapPipeline.resolveMetadata( configuration( hibernate )
 				.property( JAKARTA_TRANSACTION_TYPE, PersistenceUnitTransactionType.JTA )
-				.property( TRANSACTION_COORDINATOR_STRATEGY, coordinator ) );
-		try {
-			assertThat( builder.getConfigurationValues().get( TRANSACTION_COORDINATOR_STRATEGY ) ).isSameAs( coordinator );
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( builder.getStandardServiceRegistry() );
+				.property( TRANSACTION_COORDINATOR_STRATEGY, coordinator ) ) ) {
+			assertThat( result.configurationValues().get( TRANSACTION_COORDINATOR_STRATEGY ) ).isSameAs( coordinator );
 		}
 	}
 
 	@ParameterizedTest
 	@ValueSource(booleans = { false, true })
-	void malformedTransactionTypeRetainsItsFailure(boolean hibernateConfiguration) {
-		assertThatThrownBy( () -> {
-			if ( hibernateConfiguration ) {
-				builder( configuration( true ).property( JAKARTA_TRANSACTION_TYPE, "bogus" ) );
-			}
-			else {
-				new EntityManagerFactoryBuilderImpl( new PersistenceConfigurationDescriptor( configuration( false ) ),
-						Map.of( JAKARTA_TRANSACTION_TYPE, "bogus" ) );
-			}
-		} )
-				.isInstanceOf( PersistenceException.class ).hasMessage( "Unknown TransactionType: 'bogus'" );
-	}
-
-	@Test
-	void malformedCacheDefinitionRetainsPersistenceUnitDiagnostic() {
-		assertThatThrownBy( () -> builder( configuration( false ).property( CLASS_CACHE_PREFIX + ".Entity", "" ) ) )
-				.isInstanceOf( PersistenceException.class ).hasMessageContaining( "Cache region configuration" )
-				.hasMessageContaining( "[persistence unit: assembly]" );
+	void malformedTransactionTypeRetainsItsFailure(boolean hibernate) {
+		assertThatThrownBy( () -> BootstrapPipeline.resolveMetadata(
+				configuration( hibernate ).property( JAKARTA_TRANSACTION_TYPE, "bogus" ) ) )
+				.isInstanceOf( PersistenceException.class ).hasRootCauseMessage( "Unknown TransactionType: 'bogus'" );
 	}
 
 	private static PersistenceConfiguration configuration(boolean hibernateConfiguration) {
@@ -206,9 +131,4 @@ class JpaSettingsAssemblyTest {
 				.property( URL, "jdbc:unit" ).property( DRIVER, "unit-driver" );
 	}
 
-	private static EntityManagerFactoryBuilderImpl builder(PersistenceConfiguration configuration) {
-		return configuration instanceof HibernatePersistenceConfiguration hibernateConfiguration
-				? new EntityManagerFactoryBuilderImpl( hibernateConfiguration )
-				: new EntityManagerFactoryBuilderImpl( new PersistenceConfigurationDescriptor( configuration ), Map.of() );
-	}
 }

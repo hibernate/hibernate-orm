@@ -14,6 +14,7 @@ import jakarta.persistence.PrimaryKeyJoinColumns;
 import jakarta.persistence.SharedCacheMode;
 import org.hibernate.MappingException;
 import org.hibernate.AnnotationException;
+import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.Checks;
@@ -234,6 +235,16 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 	/// table-per-class subclasses, and creates secondary table joins.  It deliberately
 	/// does not bind identifier columns or table foreign keys.
 	public void bindTables() {
+		final var classDetails = getManagedType().getClassDetails();
+		if ( classDetails.hasDirectAnnotationUsage( OnDelete.class ) && !(binding instanceof JoinedSubclass) ) {
+			throw new AnnotationException( "Entity '" + classDetails.getName() + "' may not be annotated '@OnDelete' because it is not a joined subclass" );
+		}
+		if ( classDetails.isAbstract() && getManagedType().hasSubTypes()
+				&& getManagedType().getHierarchy().getInheritanceType() == InheritanceType.TABLE_PER_CLASS
+				&& classDetails.hasDirectAnnotationUsage( jakarta.persistence.Table.class ) ) {
+			throw new AnnotationException( "Entity '" + classDetails.getName()
+					+ "' is an abstract class with subclasses in a 'TABLE_PER_CLASS' hierarchy and may not be annotated '@Table'" );
+		}
 		validatePrimaryKeyJoinColumns();
 		validateSingleTableSubclassTable();
 

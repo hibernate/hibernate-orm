@@ -1,5 +1,9 @@
 package org.hibernate.orm.test.boot.models.source;
 
+import org.hibernate.bytecode.enhance.spi.EnhancementModel;
+import org.hibernate.bytecode.enhance.spi.EnhancementOptions;
+import org.hibernate.bytecode.spi.BytecodeProvider;
+
 import org.hibernate.boot.pipeline.internal.source.PersistenceUnitSources;
 import org.hibernate.boot.pipeline.internal.source.ConfigurationMappingProcessor;
 import java.io.File;
@@ -348,7 +352,7 @@ public class MappingSourcesTests {
 
 		@Override
 		public org.hibernate.bytecode.spi.ClassTransformer pushClassTransformer(
-				org.hibernate.bytecode.enhance.spi.EnhancementContext enhancementContext) {
+				EnhancementModel model, EnhancementOptions options, BytecodeProvider provider) {
 			return null;
 		}
 	}

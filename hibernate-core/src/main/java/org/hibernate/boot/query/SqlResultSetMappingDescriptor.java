@@ -218,7 +218,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		@Nonnull
 		@Override
 		public ResultMemento resolve(@Nonnull ResultSetMappingResolutionContext resolutionContext) {
-			BOOT_QUERY_LOGGER.generatingInstantiationResultMemento( targetJavaType.getName(), mappingName );
+			BOOT_QUERY_LOGGER.generatingInstantiationResultMemento( constructorResult.targetClass().getName(), mappingName );
 
 			final List<ArgumentMemento> argumentResultMementos = arrayList( constructorResult.columns().length );
 			for ( ColumnResult columnResult : constructorResult.columns() ) {

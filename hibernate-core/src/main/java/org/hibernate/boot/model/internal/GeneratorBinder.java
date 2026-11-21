@@ -48,7 +48,6 @@ import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.property.access.spi.PropertyValueAccessor;
-import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -1176,6 +1175,7 @@ public class GeneratorBinder {
 		if ( identifierValue instanceof Component component
 				&& component.getCustomIdGeneratorCreator().isAssigned() ) {
 			return PreparedGenerator.fromGenerator( buildIdentifierGenerator(
+					serviceRegistry.requireService( PropertyAccessorService.class ),
 					component,
 					dialect,
 					rootClass,

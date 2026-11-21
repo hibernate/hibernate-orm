@@ -1,5 +1,7 @@
 package org.hibernate.boot.mapping.internal.binders;
 
+import org.hibernate.property.access.spi.PropertyAccessorService;
+
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
@@ -196,7 +198,8 @@ class EmbeddableAttributeBinder {
 				contribution
 		);
 		if ( compositeUserType != null ) {
-			processCompositeUserType( component, compositeUserType );
+			processCompositeUserType( component, compositeUserType,
+					bindingContext.getServiceRegistry().requireService( PropertyAccessorService.class ) );
 		}
 		property.setOptional( true );
 		return component;
@@ -245,7 +248,7 @@ class EmbeddableAttributeBinder {
 		);
 	}
 
-	static void processCompositeUserType(Component component, CompositeUserType<?> compositeUserType) {
+	static void processCompositeUserType(Component component, CompositeUserType<?> compositeUserType, PropertyAccessorService propertyAccessorService) {
 		component.completeShape();
 		final List<String> sortedPropertyNames = new ArrayList<>( component.getPropertySpan() );
 		final List<Type> sortedPropertyTypes = new ArrayList<>( component.getPropertySpan() );
@@ -259,6 +262,7 @@ class EmbeddableAttributeBinder {
 			sortedPropertyNames.add( propertyName );
 			sortedPropertyTypes.add(
 					PropertyAccessStrategyGetterImpl.INSTANCE.buildPropertyAccess(
+							propertyAccessorService,
 							compositeUserType.embeddable(),
 							propertyName,
 							false

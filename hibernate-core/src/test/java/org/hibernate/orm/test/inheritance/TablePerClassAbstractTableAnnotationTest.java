@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.inheritance;
 
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
@@ -8,7 +11,6 @@ import jakarta.persistence.Table;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -29,9 +31,7 @@ public class TablePerClassAbstractTableAnnotationTest {
 
 	@Test
 	void abstractRoot(ServiceRegistryScope registryScope) {
-		assertThatThrownBy( () -> new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( AnnotatedRoot.class, AnnotatedRootChild.class )
-				.buildMetadata() )
+		assertThatThrownBy( () -> MetadataBuildingHelper.buildMetadata( registryScope.getRegistry(), new MappingSources().addManagedClasses( AnnotatedRoot.class, AnnotatedRootChild.class ) ) )
 				.isInstanceOf( AnnotationException.class )
 				.hasMessageContaining( AnnotatedRoot.class.getName() )
 				.hasMessageContaining( MESSAGE );
@@ -39,9 +39,7 @@ public class TablePerClassAbstractTableAnnotationTest {
 
 	@Test
 	void abstractIntermediate(ServiceRegistryScope registryScope) {
-		assertThatThrownBy( () -> new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( Root.class, AnnotatedIntermediate.class, AnnotatedIntermediateChild.class )
-				.buildMetadata() )
+		assertThatThrownBy( () -> MetadataBuildingHelper.buildMetadata( registryScope.getRegistry(), new MappingSources().addManagedClasses( Root.class, AnnotatedIntermediate.class, AnnotatedIntermediateChild.class ) ) )
 				.isInstanceOf( AnnotationException.class )
 				.hasMessageContaining( AnnotatedIntermediate.class.getName() )
 				.hasMessageContaining( MESSAGE );
@@ -49,9 +47,7 @@ public class TablePerClassAbstractTableAnnotationTest {
 
 	@Test
 	void abstractRootWithoutSubclasses(ServiceRegistryScope registryScope) {
-		final Metadata metadata = new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( AnnotatedRootWithoutSubclasses.class )
-				.buildMetadata();
+		final Metadata metadata = MetadataBuildingHelper.buildMetadata( registryScope.getRegistry(), new MappingSources().addManagedClasses( AnnotatedRootWithoutSubclasses.class ) );
 		assertThat( metadata.getEntityBinding( AnnotatedRootWithoutSubclasses.class.getName() )
 				.getTable().getName() )
 				.isEqualTo( "lonely_t" );
@@ -59,9 +55,7 @@ public class TablePerClassAbstractTableAnnotationTest {
 
 	@Test
 	void indexOnConcreteSubclass(ServiceRegistryScope registryScope) {
-		final Metadata metadata = new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( Root.class, Child.class )
-				.buildMetadata();
+		final Metadata metadata = MetadataBuildingHelper.buildMetadata( registryScope.getRegistry(), new MappingSources().addManagedClasses( Root.class, Child.class ) );
 		final var table = metadata.getEntityBinding( Child.class.getName() ).getTable();
 		assertThat( table.getName() ).isEqualTo( "child_t" );
 		assertThat( table.getIndexes() ).containsKey( "idx_child_name" );

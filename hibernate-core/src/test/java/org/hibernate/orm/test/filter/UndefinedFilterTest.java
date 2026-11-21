@@ -1,10 +1,14 @@
 package org.hibernate.orm.test.filter;
 
+import org.hibernate.testing.orm.junit.SessionFactoryUtil;
+
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+
 import java.util.Set;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Filter;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -27,12 +31,9 @@ class UndefinedFilterTest {
 	@ParameterizedTest
 	@ValueSource(classes = { FilteredEntity.class, OneToManyOwner.class, ManyToManyOwner.class })
 	void undefinedFilter(Class<?> filteredType, ServiceRegistryScope scope) {
-		final var metadata = new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( filteredType )
-				.addAnnotatedClass( Item.class )
-				.buildMetadata();
+		final var metadata = MetadataBuildingHelper.buildMetadata( scope.getRegistry(), new MappingSources().addManagedClass( filteredType ).addManagedClass( Item.class ) );
 		final var failure = assertThrows( MappingException.class, () -> {
-			try ( var factory = metadata.buildSessionFactory() ) {
+			try ( var factory = SessionFactoryUtil.buildSessionFactory( metadata ) ) {
 				// An explicit condition does not replace the filter definition.
 			}
 		} );

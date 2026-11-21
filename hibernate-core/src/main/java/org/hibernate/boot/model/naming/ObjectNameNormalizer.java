@@ -1,6 +1,5 @@
 package org.hibernate.boot.model.naming;
 
-import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
 import org.hibernate.dialect.Dialect;

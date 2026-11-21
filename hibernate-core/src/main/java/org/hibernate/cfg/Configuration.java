@@ -1,5 +1,7 @@
 package org.hibernate.cfg;
 
+import org.hibernate.boot.internal.BootstrapRegistryLifecycle;
+
 import java.io.File;
 import java.io.InputStream;
 import java.net.URL;

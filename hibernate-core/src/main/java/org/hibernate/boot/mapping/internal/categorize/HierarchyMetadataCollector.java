@@ -257,12 +257,33 @@ public class HierarchyMetadataCollector {
 		);
 	}
 
+	private void validateInheritedIdentifier(ClassDetails entity) {
+		ClassDetails declaringType = entity;
+		while ( declaringType != null && declaringType != rootEntityClassDetails ) {
+			final List<MemberDetails> members = new ArrayList<>( declaringType.getFields() );
+			members.addAll( declaringType.getMethods() );
+			for ( MemberDetails member : members ) {
+				if ( member.hasDirectAnnotationUsage( Id.class ) || member.hasDirectAnnotationUsage( EmbeddedId.class ) ) {
+					throw new AnnotationException( "Entity '" + entity.getName()
+							+ "' is a subclass in an entity hierarchy and may not declare an identifier, but attribute '"
+							+ member.resolveAttributeName() + "' of '" + declaringType.getName()
+							+ "' is annotated '" + (member.hasDirectAnnotationUsage( EmbeddedId.class ) ? "@EmbeddedId" : "@Id")
+							+ "' (the identifier is inherited from the root entity '" + rootEntityClassDetails.getName() + "')" );
+				}
+			}
+			declaringType = declaringType.getSuperClass();
+		}
+	}
+
 	public void collectType(AbstractIdentifiableTypeMetadata typeMetadata) {
 		if ( typeMetadata instanceof MappedSuperclassTypeMetadataImpl mappedSuperclass ) {
 			mappedSuperclassTracker.markVisited( mappedSuperclass );
 		}
 
 		if ( belowRootEntity ) {
+			if ( typeMetadata instanceof EntityTypeMetadataImpl ) {
+				validateInheritedIdentifier( typeMetadata.getClassDetails() );
+			}
 			if ( hasNaturalIdAttribute( typeMetadata ) ) {
 				throw new AnnotationException(
 						String.format(

@@ -31,6 +31,7 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
+import org.hibernate.property.access.spi.PropertyAccessorService;
 
 import static org.hibernate.boot.mapping.internal.binders.GenericComponentHelper.genericComponentCopy;
 
@@ -336,7 +337,8 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 						getBindingContext().getServiceRegistry().requireService( PropertyAccessStrategyResolver.class );
 				component.removePropertiesIf( property -> {
 					try {
-						property.getGetter( componentClass, propertyAccessStrategyResolver );
+						property.getGetter( componentClass, propertyAccessStrategyResolver,
+							getBindingContext().getServiceRegistry().requireService( PropertyAccessorService.class ) );
 						return false;
 					}
 					catch (PropertyNotFoundException e) {

@@ -1,5 +1,11 @@
 package org.hibernate.orm.test.multitenancy;
 
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
+
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.testing.orm.junit.SessionFactoryUtil;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -15,7 +21,6 @@ import javax.sql.DataSource;
 
 import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
@@ -175,8 +180,8 @@ class TenantDataSourceMapperTest {
 			statement.execute( "create schema " + schema );
 			try ( var registry = registryBuilder()
 					.applySetting( MULTI_TENANT_DATASOURCE_MAPPER, new Mapper() ).build();
-				var factory = new MetadataSources( registry ).buildMetadata().getSessionFactoryBuilder()
-						.applyTenantSchemaMapper( tenant -> schema ).build();
+				var factory = MetadataBuildingTestHelper.buildSessionFactory( registry, new MappingSources(),
+						options -> options.applyTenantSchemaMapper( tenant -> schema ) );
 				var session = factory.withOptions().tenantIdentifier( 42 ).openSession() ) {
 				session.doWork( tenantConnection -> {
 					assertConnection( tenantConnection, tenantDataSource );
@@ -334,7 +339,7 @@ class TenantDataSourceMapperTest {
 				.applySetting( ALLOW_EXTENSIONS_IN_CDI, true )
 				.applySetting( BEAN_CONTAINER, new MapperBeanContainer( mapper ) )
 				.build();
-			var factory = (SessionFactoryImplementor) new MetadataSources( registry ).buildMetadata().buildSessionFactory() ) {
+			var factory = (SessionFactoryImplementor) SessionFactoryUtil.buildSessionFactory( MetadataBuildingHelper.buildMetadata( registry, new MappingSources() ) ) ) {
 			assertSame( mapper, factory.getSessionFactoryOptions().getTenantDataSourceMapper() );
 			assertTenantSession( factory );
 		}
@@ -388,7 +393,7 @@ class TenantDataSourceMapperTest {
 	}
 
 	private SessionFactoryImplementor factory(StandardServiceRegistry registry) {
-		return (SessionFactoryImplementor) new MetadataSources( registry ).buildMetadata().buildSessionFactory();
+		return (SessionFactoryImplementor) SessionFactoryUtil.buildSessionFactory( MetadataBuildingHelper.buildMetadata( registry, new MappingSources() ) );
 	}
 
 	private void assertTenantConnection(SessionFactoryImplementor factory, Object tenant, TrackingDataSource dataSource) {

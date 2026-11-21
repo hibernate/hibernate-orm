@@ -1,10 +1,14 @@
 package org.hibernate.orm.test.boot.jaxb.mapping;
 
+import org.hibernate.boot.jaxb.Origin;
+import org.hibernate.boot.jaxb.SourceType;
+import org.hibernate.boot.jaxb.internal.MappingBinder;
+
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 
 import org.hibernate.boot.InvalidMappingException;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.MappingException;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.MappingSettings;
 
@@ -21,27 +25,12 @@ class XmlValidationTests {
 
 	@ParameterizedTest
 	@CsvSource({ ", true", "true, true", "false, false" })
-	void hbmXml(String setting, boolean validate) {
-		final String xml = """
-				<?xml version="1.0"?>
-				<!DOCTYPE hibernate-mapping PUBLIC
-					"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-					"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
-				<hibernate-mapping>
-					<class name="Price">
-						<composite-id>
-							<key-property name="code" length="20"/>
-							<key-property name="amount">
-								<column name="amount" precision="12" scale="3"/>
-							</key-property>
-						</composite-id>
-					</class>
-				</hibernate-mapping>
-				""";
-		assertValidation( setting, validate, xml,
-				xml.replace( "<key-property name=\"amount\">",
-						"<key-property name=\"amount\" precision=\"12\" scale=\"3\">" ),
-				"Attribute 'precision' is not allowed to appear in element 'key-property'" );
+	void hbmXmlIsRejectedRegardlessOfValidation(String setting, boolean validate) {
+		try ( var registry = new StandardServiceRegistryBuilder().build() ) {
+			final var binder = new MappingBinder( registry );
+			assertThrows( MappingException.class, () -> binder.bind(
+					stream( "<hibernate-mapping/>" ), new Origin( SourceType.INPUT_STREAM, "legacy" ) ) );
+		}
 	}
 
 	@ParameterizedTest
@@ -80,15 +69,15 @@ class XmlValidationTests {
 			builder.applySetting( MappingSettings.VALIDATE_XML, setting );
 		}
 		try ( var registry = builder.build() ) {
-			final var sources = new MetadataSources( registry );
-			assertDoesNotThrow( () -> sources.addInputStream( stream( validXml ) ) );
+			final var binder = new MappingBinder( registry );
+			assertDoesNotThrow( () -> binder.bind( stream( validXml ), new Origin( SourceType.INPUT_STREAM, "valid" ) ) );
 			if ( validate ) {
 				final var exception = assertThrows( InvalidMappingException.class,
-						() -> sources.addInputStream( stream( invalidXml ) ) );
+						() -> binder.bind( stream( invalidXml ), new Origin( SourceType.INPUT_STREAM, "invalid" ) ) );
 				assertThat( exception ).hasStackTraceContaining( errorMessage );
 			}
 			else {
-				assertDoesNotThrow( () -> sources.addInputStream( stream( invalidXml ) ) );
+				assertDoesNotThrow( () -> binder.bind( stream( invalidXml ), new Origin( SourceType.INPUT_STREAM, "invalid" ) ) );
 			}
 		}
 	}

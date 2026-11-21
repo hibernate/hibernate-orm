@@ -921,7 +921,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	@SuppressWarnings("unchecked")
 	@Nonnull
-	private static ConfiguredInterceptor determineConfiguredInterceptor(
+	public static ConfiguredInterceptor determineConfiguredInterceptor(
 			Map<String, Object> configurationSettings,
 			StrategySelector strategySelector) {
 		final Object interceptorSetting = configurationSettings.get( INTERCEPTOR );

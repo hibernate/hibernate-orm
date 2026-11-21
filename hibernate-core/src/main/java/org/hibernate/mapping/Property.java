@@ -1,5 +1,7 @@
 package org.hibernate.mapping;
 
+import org.hibernate.property.access.spi.PropertyAccessorService;
+
 import org.hibernate.boot.mapping.spi.DeclarationRole;
 import org.hibernate.boot.mapping.spi.MappingRole;
 import org.hibernate.Internal;
@@ -447,24 +449,26 @@ public class Property implements Serializable, MetaAttributable, AppliedMappingP
 		this.selectable = selectable;
 	}
 
-	private PropertyAccess buildPropertyAccess(Class<?> clazz, PropertyAccessStrategyResolver propertyAccessStrategyResolver) {
-		return getPropertyAccessStrategy( clazz, propertyAccessStrategyResolver ).buildPropertyAccess( clazz, name, true );
+	private PropertyAccess buildPropertyAccess(Class<?> clazz, PropertyAccessStrategyResolver propertyAccessStrategyResolver, PropertyAccessorService propertyAccessorService) {
+		return getPropertyAccessStrategy( clazz, propertyAccessStrategyResolver ).buildPropertyAccess( propertyAccessorService, clazz, name, true );
 	}
 
 	// todo : remove
 	@Internal
 	public Getter getGetter(
 			Class<?> clazz,
-			PropertyAccessStrategyResolver propertyAccessStrategyResolver) throws MappingException {
-		return buildPropertyAccess( clazz, propertyAccessStrategyResolver ).getGetter();
+			PropertyAccessStrategyResolver propertyAccessStrategyResolver,
+			PropertyAccessorService propertyAccessorService) throws MappingException {
+		return buildPropertyAccess( clazz, propertyAccessStrategyResolver, propertyAccessorService ).getGetter();
 	}
 
 	// todo : remove
 	@Internal
 	public Setter getSetter(
 			Class<?> clazz,
-			PropertyAccessStrategyResolver propertyAccessStrategyResolver) throws MappingException {
-		return buildPropertyAccess( clazz, propertyAccessStrategyResolver ).getSetter();
+			PropertyAccessStrategyResolver propertyAccessStrategyResolver,
+			PropertyAccessorService propertyAccessorService) throws MappingException {
+		return buildPropertyAccess( clazz, propertyAccessStrategyResolver, propertyAccessorService ).getSetter();
 	}
 
 	// todo : remove

@@ -28,6 +28,74 @@ import static org.hibernate.models.spi.AnnotationTarget.Kind;
  */
 @SuppressWarnings({ "deprecation", "removal", "unused" })
 public interface HibernateAnnotations {
+	MutableAnnotationDescriptor<Audited.Table,AuditedTableAnnotation> AUDITED_TABLE =
+			Creator.createCompleteAnnotationDescriptor(
+					Audited.Table.class,
+					AuditedTableAnnotation.class,
+					EnumSet.of( Kind.ANNOTATION, Kind.CLASS, Kind.PACKAGE ),
+					false
+			);
+
+	MutableAnnotationDescriptor<Audited.Excluded,AuditedExcludedAnnotation> AUDITED_EXCLUDED =
+			Creator.createCompleteAnnotationDescriptor(
+					Audited.Excluded.class,
+					AuditedExcludedAnnotation.class,
+					EnumSet.of( Kind.FIELD, Kind.METHOD ),
+					false
+			);
+
+	MutableAnnotationDescriptor<Changelog.ChangesetId,ChangelogChangesetIdAnnotation> CHANGELOG_CHANGESET_ID =
+			Creator.createCompleteAnnotationDescriptor(
+					Changelog.ChangesetId.class,
+					ChangelogChangesetIdAnnotation.class,
+					EnumSet.of( Kind.FIELD, Kind.METHOD ),
+					false
+			);
+
+	MutableAnnotationDescriptor<Changelog.Timestamp,ChangelogTimestampAnnotation> CHANGELOG_TIMESTAMP =
+			Creator.createCompleteAnnotationDescriptor(
+					Changelog.Timestamp.class,
+					ChangelogTimestampAnnotation.class,
+					EnumSet.of( Kind.FIELD, Kind.METHOD ),
+					false
+			);
+
+	MutableAnnotationDescriptor<Changelog.ModifiedEntities,ChangelogModifiedEntitiesAnnotation> CHANGELOG_MODIFIED_ENTITIES =
+			Creator.createCompleteAnnotationDescriptor(
+					Changelog.ModifiedEntities.class,
+					ChangelogModifiedEntitiesAnnotation.class,
+					EnumSet.of( Kind.FIELD, Kind.METHOD ),
+					false
+			);
+
+	MutableAnnotationDescriptor<Audited, AuditedAnnotation> AUDITED = Creator.createCompleteAnnotationDescriptor(
+			Audited.class,
+			AuditedAnnotation.class,
+			EnumSet.of( Kind.ANNOTATION, Kind.CLASS, Kind.FIELD, Kind.METHOD, Kind.PACKAGE ),
+			false
+	);
+
+	MutableAnnotationDescriptor<Changelog, ChangelogAnnotation> CHANGELOG = Creator.createCompleteAnnotationDescriptor(
+			Changelog.class,
+			ChangelogAnnotation.class,
+			EnumSet.of( Kind.CLASS ),
+			false
+	);
+
+	MutableAnnotationDescriptor<MapKeyFormula, MapKeyFormulaAnnotation> MAP_KEY_FORMULA = Creator.createCompleteAnnotationDescriptor(
+			MapKeyFormula.class,
+			MapKeyFormulaAnnotation.class,
+			EnumSet.of( Kind.METHOD, Kind.FIELD ),
+			false
+	);
+
+	MutableAnnotationDescriptor<GeneratorOptimizer, GeneratorOptimizerAnnotation> OPTIMIZER = Creator.createCompleteAnnotationDescriptor(
+			GeneratorOptimizer.class,
+			GeneratorOptimizerAnnotation.class,
+			EnumSet.of( Kind.METHOD, Kind.FIELD ),
+			false
+	);
+
 	MutableAnnotationDescriptor<Any, AnyAnnotation> ANY = Creator.createCompleteAnnotationDescriptor(
 			Any.class,
 			AnyAnnotation.class,

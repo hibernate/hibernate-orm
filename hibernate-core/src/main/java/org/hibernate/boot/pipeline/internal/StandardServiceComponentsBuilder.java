@@ -33,7 +33,7 @@ public final class StandardServiceComponentsBuilder {
 		final var serviceRegistry = options.getServiceRegistry();
 		final var classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 		final var configurationService = serviceRegistry.requireService( ConfigurationService.class );
-		final boolean multiTenancyEnabled = options.isMultiTenancyEnabled();
+		final var multiTenantProvider = serviceRegistry.getService( MultiTenantConnectionProvider.class );
 		return new StandardServiceComponents(
 				serviceRegistry,
 				configurationService,
@@ -48,8 +48,8 @@ public final class StandardServiceComponentsBuilder {
 				serviceRegistry.requireService( ParameterMarkerStrategy.class ),
 				serviceRegistry.requireService( BatchBuilder.class ),
 				serviceRegistry.getService( ManagedBeanRegistry.class ),
-				multiTenancyEnabled ? null : serviceRegistry.requireService( ConnectionProvider.class ),
-				multiTenancyEnabled ? serviceRegistry.requireService( MultiTenantConnectionProvider.class ) : null,
+				multiTenantProvider != null ? null : serviceRegistry.requireService( ConnectionProvider.class ),
+				multiTenantProvider,
 				loadEventMonitor( classLoaderService ),
 				serviceRegistry.requireService( ActionQueueFactoryService.class )
 		);

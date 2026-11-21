@@ -1,7 +1,9 @@
 package org.hibernate.orm.test.mapping.enumeratedvalue;
 
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+
 import org.hibernate.MappingException;
-import org.hibernate.boot.MetadataSources;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -40,8 +42,7 @@ public class ImplicitEnumeratedValueValidationTests {
 	}
 
 	private void assertInvalidOrdinal(Class<?> entityClass, ServiceRegistryScope scope) {
-		assertThatThrownBy( () -> new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( entityClass ).buildMetadata() )
+		assertThatThrownBy( () -> MetadataBuildingHelper.buildMetadata( scope.getRegistry(), new MappingSources().addManagedClass( entityClass ) ) )
 				.isInstanceOf( MappingException.class )
 				.hasMessageStartingWith( "@EnumeratedValue for EnumType.ORDINAL" );
 	}

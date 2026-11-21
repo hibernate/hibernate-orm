@@ -1,5 +1,7 @@
 package org.hibernate.mapping;
 
+import org.hibernate.property.access.spi.PropertyAccessorService;
+
 import org.hibernate.boot.mapping.spi.MappingRole;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -800,7 +802,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	public void reattachCompositeUserType(
 			ClassLoaderAccess classLoaderAccess,
 			ManagedBeanRegistry managedBeanRegistry,
-			boolean allowExtensionsInCdi) {
+			boolean allowExtensionsInCdi, PropertyAccessorService propertyAccessorService) {
 		if ( getTypeName() == null ) {
 			return;
 		}
@@ -822,6 +824,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 			propertyNames.add( property.getName() );
 			propertyTypes.add(
 					PropertyAccessStrategyGetterImpl.INSTANCE.buildPropertyAccess(
+							propertyAccessorService,
 							compositeUserType.embeddable(),
 							property.getName(),
 							false

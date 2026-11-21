@@ -1462,7 +1462,7 @@ abstract class AbstractSharedSessionContract
 	public JdbcConnectionAccess getJdbcConnectionAccess() {
 		// See class-level Javadoc for a discussion of the concurrent-access safety of this method
 		if ( jdbcConnectionAccess == null ) {
-			if ( factory.multiTenantConnectionProvider == null ) {
+			if ( factory.getMultiTenantConnectionProvider() == null ) {
 				jdbcConnectionAccess = new NonContextualJdbcConnectionAccess(
 						readOnly,
 						sessionEventsManager,

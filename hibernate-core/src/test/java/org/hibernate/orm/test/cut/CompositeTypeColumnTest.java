@@ -1,8 +1,10 @@
 package org.hibernate.orm.test.cut;
 
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.CompositeType;
-import org.hibernate.boot.MetadataSources;
 
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -45,18 +47,18 @@ public class CompositeTypeColumnTest {
 	public void testAttributeOverride() {
 		try (var registry = ServiceRegistryUtil.serviceRegistry()) {
 			final var metadataSources =
-					new MetadataSources( registry )
-							.addAnnotatedClass( WalletWithOverride.class );
-			assertDoesNotThrow( () -> metadataSources.buildMetadata() );
+					new MappingSources()
+							.addManagedClass( WalletWithOverride.class );
+			assertDoesNotThrow( () -> MetadataBuildingHelper.buildMetadata( registry, metadataSources ) );
 		}
 	}
 
 	private static void assertRejected(Class<?> entityClass, String path) {
 		try (var registry = ServiceRegistryUtil.serviceRegistry()) {
 			final var metadataSources =
-					new MetadataSources( registry )
-							.addAnnotatedClass( entityClass );
-			final var thrown = assertThrows( AnnotationException.class, metadataSources::buildMetadata );
+					new MappingSources()
+							.addManagedClass( entityClass );
+			final var thrown = assertThrows( AnnotationException.class, () -> MetadataBuildingHelper.buildMetadata( registry, metadataSources ) );
 			assertThat( thrown.getMessage() )
 					.contains( path )
 					.contains( "may not be annotated '@Column'" )

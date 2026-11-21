@@ -450,11 +450,10 @@ public class AdditionalMappingContributorTests {
 		@Override
 		public void contribute(
 				AdditionalMappingContributions contributions,
-				InFlightMetadataCollector metadata,
-				ResourceStreamLocator resourceStreamLocator,
-				MetadataBuildingContext buildingContext) {
+				ProcessedMappings processedMappings,
+				AdditionalMappingContributorContext contributorContext) {
 			contributions.contributeEntity( Entity6.class );
-			try (final InputStream stream = resourceStreamLocator.locateResourceStream(
+			try (final InputStream stream = contributorContext.getResourceStreamLocator().locateResourceStream(
 					"mappings/intg/contributed-mapping-another.xml" )) {
 				contributions.contributeBinding( stream );
 			}

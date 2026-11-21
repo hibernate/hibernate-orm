@@ -1,5 +1,9 @@
 package org.hibernate.orm.test.jpa;
 
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.testing.orm.junit.SessionFactoryUtil;
+
 import java.sql.DriverManager;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +19,6 @@ import jakarta.persistence.Table;
 import org.hibernate.FlushMode;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.Session;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
@@ -61,8 +64,7 @@ class FactoryClosedBeforeCompletionTest {
 		}
 		final var registry = builder.build();
 		final var tm = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
-		try (var factory = new MetadataSources( registry ).addAnnotatedClass( Item.class )
-				.addAnnotatedClass( QueuedItem.class ).buildMetadata().buildSessionFactory();
+		try (var factory = SessionFactoryUtil.buildSessionFactory( MetadataBuildingHelper.buildMetadata( registry, new MappingSources().addManagedClass( Item.class ).addManagedClass( QueuedItem.class ) ) );
 				var verification = DriverManager.getConnection( url, "sa", "" )) {
 			if ( scenario == Scenario.READ_ONLY ) {
 				factory.inTransaction( session -> session.persist( new Item() ) );

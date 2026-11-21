@@ -1,8 +1,11 @@
 package org.hibernate.orm.test.id.hhh12973;
 
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.testing.orm.junit.SessionFactoryUtil;
+
 import java.util.EnumSet;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.id.enhanced.SequenceGeneratorLogger;
 import org.hibernate.testing.logger.Triggerable;
@@ -46,8 +49,7 @@ public class SequenceMismatchStrategyFixLoggingTest {
 	@Test
 	public void testOriginalMappingIncrementInLog() {
 		try (var schemaRegistry = ServiceRegistryUtil.serviceRegistry()) {
-			final var schemaMetadata = new MetadataSources( schemaRegistry )
-					.addAnnotatedClass( DatabaseMapping.class ).buildMetadata();
+			final var schemaMetadata = MetadataBuildingHelper.buildMetadata( schemaRegistry, new MappingSources().addManagedClass( DatabaseMapping.class ) );
 			final var schemaExport = new SchemaExport();
 			schemaExport.create( EnumSet.of( TargetType.DATABASE ), schemaMetadata );
 			try (var logLevel = withLevel( SequenceGeneratorLogger.NAME, Logger.Level.TRACE );
@@ -55,8 +57,7 @@ public class SequenceMismatchStrategyFixLoggingTest {
 							.applySetting( AvailableSettings.HBM2DDL_AUTO, "none" )
 							.applySetting( AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY, "fix" )
 							.build();
-					var factory = new MetadataSources( registry ).addAnnotatedClass( EntityMapping.class )
-							.buildMetadata().buildSessionFactory()) {
+					var factory = SessionFactoryUtil.buildSessionFactory( MetadataBuildingHelper.buildMetadata( registry, new MappingSources().addManagedClass( EntityMapping.class ) ) )) {
 				assertTrue( mismatch.wasTriggered() );
 				assertTrue( mismatch.triggerMessage().contains( "[50] in the entity mapping" ), mismatch.triggerMessage() );
 				assertTrue( mismatch.triggerMessage().contains( "database sequence increment size is [5]" ), mismatch.triggerMessage() );

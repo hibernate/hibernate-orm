@@ -24,6 +24,7 @@ import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.GetterFieldImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
+import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.property.access.spi.SetterFieldImpl;
 
@@ -34,8 +35,8 @@ class PropertyAccessHelper {
 	static PropertyAccessStrategy propertyAccessStrategy(
 			Property bootAttributeDescriptor,
 			Class<?> mappedClass,
-			StrategySelector strategySelector) {
-		final var strategy = bootAttributeDescriptor.getPropertyAccessStrategy( mappedClass );
+			StrategySelector strategySelector, PropertyAccessStrategyResolver propertyAccessStrategyResolver) {
+		final var strategy = bootAttributeDescriptor.getPropertyAccessStrategy( mappedClass, propertyAccessStrategyResolver );
 		if ( strategy != null ) {
 			return strategy;
 		}

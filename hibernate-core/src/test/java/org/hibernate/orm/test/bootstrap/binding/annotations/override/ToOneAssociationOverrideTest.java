@@ -1,5 +1,9 @@
 package org.hibernate.orm.test.bootstrap.binding.annotations.override;
 
+
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.AssociationOverride;
@@ -14,7 +18,6 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToOne;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.mapping.Column;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -32,10 +35,10 @@ class ToOneAssociationOverrideTest {
 	@ParameterizedTest
 	@ValueSource(classes = { BareOverride.class, NamedForeignKey.class, EmbeddedOwner.class })
 	void missingJoinColumns(Class<?> owner, ServiceRegistryScope scope) {
-		var sources = new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( Event.class )
-				.addAnnotatedClass( owner );
-		var failure = assertThrows( AnnotationException.class, sources::buildMetadata );
+		var sources = new MappingSources()
+				.addManagedClass( Event.class )
+				.addManagedClass( owner );
+		var failure = assertThrows( AnnotationException.class, () -> MetadataBuildingHelper.buildMetadata( scope.getRegistry(), sources ) );
 		String property = owner == EmbeddedOwner.class ? ".details.event" : ".event";
 		assertThat( failure ).hasMessageContaining( owner.getName() + property ).hasMessageContaining( "joinColumns" );
 		if ( owner != BareOverride.class ) {
@@ -45,10 +48,7 @@ class ToOneAssociationOverrideTest {
 
 	@Test
 	void inheritedAssociationOnImplicitJoinTable(ServiceRegistryScope scope) {
-		var metadata = new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( Event.class )
-				.addAnnotatedClass( TableOverride.class )
-				.buildMetadata();
+		var metadata = MetadataBuildingHelper.buildMetadata( scope.getRegistry(), new MappingSources().addManagedClass( Event.class ).addManagedClass( TableOverride.class ) );
 		var owner = metadata.getEntityBinding( TableOverride.class.getName() );
 		var event = owner.getProperty( "event" );
 		assertThat( owner.getJoins() ).singleElement().satisfies( join -> {
@@ -62,11 +62,7 @@ class ToOneAssociationOverrideTest {
 
 	@Test
 	void overridingAnExistingJoinTable(ServiceRegistryScope scope) {
-		var metadata = new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( Event.class )
-				.addAnnotatedClass( DefaultTableOverride.class )
-				.addAnnotatedClass( ColumnOverride.class )
-				.buildMetadata();
+		var metadata = MetadataBuildingHelper.buildMetadata( scope.getRegistry(), new MappingSources().addManagedClass( Event.class ).addManagedClass( DefaultTableOverride.class ).addManagedClass( ColumnOverride.class ) );
 		var tableOwner = metadata.getEntityBinding( DefaultTableOverride.class.getName() );
 		assertThat( tableOwner.getJoins() ).singleElement();
 		var columnOwner = metadata.getEntityBinding( ColumnOverride.class.getName() );
@@ -77,10 +73,7 @@ class ToOneAssociationOverrideTest {
 
 	@Test
 	void joinTableOverrideWithPropertyAccess(ServiceRegistryScope scope) {
-		var metadata = new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( Event.class )
-				.addAnnotatedClass( PropertyAccessOverride.class )
-				.buildMetadata();
+		var metadata = MetadataBuildingHelper.buildMetadata( scope.getRegistry(), new MappingSources().addManagedClass( Event.class ).addManagedClass( PropertyAccessOverride.class ) );
 		var owner = metadata.getEntityBinding( PropertyAccessOverride.class.getName() );
 		assertThat( owner.getJoins() ).singleElement()
 				.satisfies( join -> assertThat( join.getTable().getName() ).isEqualTo( "getter_events" ) );

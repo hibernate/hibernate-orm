@@ -1,5 +1,9 @@
 package org.hibernate.orm.test.type.contributor;
 
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.testing.orm.junit.SessionFactoryUtil;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.net.URL;
@@ -10,20 +14,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.MetadataBuilderImplementor;
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
+import org.hibernate.boot.pipeline.internal.MappingCustomizations;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.jpa.HibernatePersistenceProvider;
-import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
-import org.hibernate.jpa.boot.spi.PersistenceConfigurationDescriptor;
 import org.hibernate.jpa.boot.spi.TypeContributorList;
 import org.hibernate.orm.test.type.contributor.usertype.MyCompositeValue;
 import org.hibernate.orm.test.type.contributor.usertype.MyCompositeValueType;
@@ -102,38 +103,27 @@ public class TypeContributionLifecycleTest {
 
 	@ParameterizedTest
 	@EnumSource(value = EntryPoint.class, names = { "JPA_CONFIGURATION", "HIBERNATE_CONFIGURATION" })
-	void jpaPreparationDoesNotInvokeServicesAndMetadataIsReused(EntryPoint entryPoint) throws Exception {
-		try ( var loader = serviceLoader() ) {
-			final var builder = jpaBuilder( entryPoint, loader );
-			try {
-				assertThat( EVENTS.get() ).isEmpty();
-				final var metadata = builder.metadata();
-				assertThat( metadata.getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( TYPE_NAME ) )
-						.isSameAs( LAST_HIGH_TYPE );
-				assertThat( builder.metadata() ).isSameAs( metadata );
-				try ( var factory = builder.build() ) {
-					assertContributions( factory );
-					assertThat( EVENTS.get() ).containsExactly( "dialect", "low", "first-high", "last-high" );
-				}
-			}
-			finally {
-				StandardServiceRegistryBuilder.destroy( builder.getStandardServiceRegistry() );
+	void resolvedMetadataIsReusedForFactoryConstruction(EntryPoint entryPoint) throws Exception {
+		try ( var loader = serviceLoader();
+				var result = BootstrapPipeline.resolveMetadata( persistenceConfiguration( entryPoint, loader ) ) ) {
+			assertThat( result.metadata().getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( TYPE_NAME ) ).isSameAs( LAST_HIGH_TYPE );
+			try ( var factory = SessionFactoryUtil.buildSessionFactory( result.metadata() ) ) {
+				assertContributions( factory );
+				assertThat( EVENTS.get() ).containsExactly( "dialect", "low", "first-high", "last-high" );
 			}
 		}
 	}
 
 	@Test
-	void applyTypesRemainsImmediateAndExplicitBasicTypesOverrideServices() throws Exception {
+	void explicitBasicTypesOverrideServices() throws Exception {
 		try ( var loader = serviceLoader();
 				var bootstrapRegistry = new BootstrapServiceRegistryBuilder().applyClassLoader( loader ).build();
 				var registry = new StandardServiceRegistryBuilder( bootstrapRegistry ).applySettings( settings( loader ) ).build() ) {
-			final var builder = (MetadataBuilderImplementor) new MetadataSources( registry ).getMetadataBuilder();
-			builder.applyTypes( explicitContributor( "explicit", EXPLICIT_TYPE ) );
-			assertThat( EVENTS.get() ).containsExactly( "explicit" );
-			final var metadata = (MetadataImplementor) builder.build();
-			assertThat( metadata.getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( TYPE_NAME ) )
-					.isSameAs( EXPLICIT_TYPE );
-			assertThat( EVENTS.get() ).containsExactly( "explicit", "dialect", "low", "first-high", "last-high" );
+			final var customizations = new MappingCustomizations( Map.of(), List.of( explicitContributor( "explicit", EXPLICIT_TYPE, 3000 ) ), List.of() );
+			assertThat( EVENTS.get() ).isEmpty();
+			final var metadata = MetadataBuildingHelper.buildMetadata( registry, new MappingSources(), customizations );
+			assertThat( metadata.getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( TYPE_NAME ) ).isSameAs( EXPLICIT_TYPE );
+			assertThat( EVENTS.get() ).containsExactly( "dialect", "low", "first-high", "last-high", "explicit" );
 		}
 	}
 
@@ -143,37 +133,31 @@ public class TypeContributionLifecycleTest {
 				var bootstrapRegistry = new BootstrapServiceRegistryBuilder().applyClassLoader( loader ).build() ) {
 			final var configuration = new Configuration( bootstrapRegistry );
 			configuration.getProperties().putAll( settings( loader ) );
-			configuration.registerTypeContributor( explicitContributor( "explicit", EXPLICIT_TYPE ) );
+			configuration.registerTypeContributor( explicitContributor( "explicit", EXPLICIT_TYPE, 3000 ) );
 			assertThat( EVENTS.get() ).isEmpty();
 			try ( var factory = configuration.buildSessionFactory() ) {
 				assertThat( typeConfiguration( factory ).getBasicTypeRegistry().getRegisteredType( TYPE_NAME ) )
 						.isSameAs( EXPLICIT_TYPE );
-				assertThat( EVENTS.get() ).containsExactly( "explicit", "dialect", "low", "first-high", "last-high" );
+				assertThat( EVENTS.get() ).containsExactly( "dialect", "low", "first-high", "last-high", "explicit" );
 			}
 		}
 	}
 
 	@ParameterizedTest
 	@EnumSource(value = EntryPoint.class, names = { "JPA_CONFIGURATION", "HIBERNATE_CONFIGURATION" })
-	void explicitJpaContributorsRetainListOrderAndOverrideServiceBasicTypes(EntryPoint entryPoint) throws Exception {
+	void explicitJpaContributorsFollowOrdinalPrecedence(EntryPoint entryPoint) throws Exception {
 		try ( var loader = serviceLoader() ) {
 			final var configuration = persistenceConfiguration( entryPoint, loader );
 			configuration.property( TYPE_CONTRIBUTORS, (TypeContributorList) () -> List.of(
 					explicitContributor( "explicit-first", FIRST_HIGH_TYPE, 2000 ),
 					explicitContributor( "explicit-last", EXPLICIT_TYPE, 500 )
 			) );
-			final var builder = jpaBuilder( configuration );
-			try {
-				assertThat( EVENTS.get() ).containsExactly( "explicit-first", "explicit-last" );
-				try ( var factory = builder.build() ) {
-					assertThat( typeConfiguration( factory ).getBasicTypeRegistry().getRegisteredType( TYPE_NAME ) )
-							.isSameAs( EXPLICIT_TYPE );
-					assertThat( EVENTS.get() ).containsExactly(
-							"explicit-first", "explicit-last", "dialect", "low", "first-high", "last-high" );
-				}
-			}
-			finally {
-				StandardServiceRegistryBuilder.destroy( builder.getStandardServiceRegistry() );
+
+			try ( var factory = BootstrapPipeline.build( configuration ) ) {
+				assertThat( typeConfiguration( factory ).getBasicTypeRegistry().getRegisteredType( TYPE_NAME ) )
+						.isSameAs( FIRST_HIGH_TYPE );
+				assertThat( EVENTS.get() ).containsExactly(
+						"dialect", "explicit-last", "low", "first-high", "last-high", "explicit-first" );
 			}
 		}
 	}
@@ -184,17 +168,11 @@ public class TypeContributionLifecycleTest {
 			final var configuration = persistenceConfiguration( EntryPoint.JPA_CONFIGURATION, loader );
 			final var contributor = new LastHighContributor();
 			configuration.property( TYPE_CONTRIBUTORS, (TypeContributorList) () -> List.of( contributor, contributor ) );
-			final var builder = jpaBuilder( configuration );
-			try {
-				assertThat( EVENTS.get() ).containsExactly( "last-high", "last-high" );
-				try ( var factory = builder.build() ) {
-					assertContributions( factory );
-					assertThat( EVENTS.get() ).containsExactly(
-							"last-high", "last-high", "dialect", "low", "first-high", "last-high" );
-				}
-			}
-			finally {
-				StandardServiceRegistryBuilder.destroy( builder.getStandardServiceRegistry() );
+
+			try ( var factory = BootstrapPipeline.build( configuration ) ) {
+				assertContributions( factory );
+				assertThat( EVENTS.get() ).containsExactly(
+						"dialect", "low", "first-high", "last-high", "last-high", "last-high" );
 			}
 		}
 	}
@@ -207,15 +185,10 @@ public class TypeContributionLifecycleTest {
 			final var configuration = persistenceConfiguration( entryPoint, loader )
 					.property( JAKARTA_HBM2DDL_SCRIPTS_ACTION, "create" )
 					.property( JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET, script );
-			final var builder = jpaBuilder( configuration );
-			try {
-				builder.generateSchema();
-				assertThat( EVENTS.get() ).containsExactly( "dialect", "low", "first-high", "last-high" );
-				assertThat( script.toString() ).containsIgnoringCase( "create table ContributionEntity" );
-			}
-			finally {
-				StandardServiceRegistryBuilder.destroy( builder.getStandardServiceRegistry() );
-			}
+
+			BootstrapPipeline.generateSchema( configuration );
+			assertThat( EVENTS.get() ).containsExactly( "dialect", "low", "first-high", "last-high" );
+			assertThat( script.toString() ).containsIgnoringCase( "create table ContributionEntity" );
 		}
 	}
 
@@ -223,17 +196,12 @@ public class TypeContributionLifecycleTest {
 	@EnumSource(value = EntryPoint.class, names = { "JPA_CONFIGURATION", "HIBERNATE_CONFIGURATION" })
 	void serviceFailuresOccurDuringMetadataResolution(EntryPoint entryPoint) throws Exception {
 		try ( var loader = serviceLoader( FailingContributor.class.getName() ) ) {
-			final var builder = jpaBuilder( entryPoint, loader );
-			try {
-				assertThat( EVENTS.get() ).isEmpty();
-				assertThatThrownBy( builder::metadata )
-						.isInstanceOf( IllegalStateException.class )
-						.hasMessage( "contribution failure" );
-				assertThat( EVENTS.get() ).containsExactly( "dialect", "failure" );
-			}
-			finally {
-				StandardServiceRegistryBuilder.destroy( builder.getStandardServiceRegistry() );
-			}
+			final var configuration = persistenceConfiguration( entryPoint, loader );
+			assertThat( EVENTS.get() ).isEmpty();
+			assertThatThrownBy( () -> BootstrapPipeline.resolveMetadata( configuration ) )
+					.hasRootCauseInstanceOf( IllegalStateException.class )
+					.hasRootCauseMessage( "contribution failure" );
+			assertThat( EVENTS.get() ).containsExactly( "dialect", "failure" );
 		}
 	}
 
@@ -247,7 +215,7 @@ public class TypeContributionLifecycleTest {
 					yield configuration.buildSessionFactory();
 				}
 				final var registry = new StandardServiceRegistryBuilder( bootstrapRegistry ).applySettings( settings( loader ) ).build();
-				yield new MetadataSources( registry ).addAnnotatedClass( ContributionEntity.class ).buildMetadata().buildSessionFactory();
+				yield SessionFactoryUtil.buildSessionFactory( MetadataBuildingHelper.buildMetadata( registry, new MappingSources().addManagedClass( ContributionEntity.class ) ) );
 			}
 			case JPA_CONFIGURATION, HIBERNATE_CONFIGURATION -> new HibernatePersistenceProvider()
 					.createEntityManagerFactory( persistenceConfiguration( entryPoint, loader ) );
@@ -278,15 +246,6 @@ public class TypeContributionLifecycleTest {
 		return configuration.properties( settings( loader ) ).managedClass( ContributionEntity.class );
 	}
 
-	private static EntityManagerFactoryBuilderImpl jpaBuilder(EntryPoint entryPoint, ClassLoader loader) {
-		return jpaBuilder( persistenceConfiguration( entryPoint, loader ) );
-	}
-
-	private static EntityManagerFactoryBuilderImpl jpaBuilder(PersistenceConfiguration configuration) {
-		return configuration instanceof HibernatePersistenceConfiguration hibernateConfiguration
-				? new EntityManagerFactoryBuilderImpl( hibernateConfiguration )
-				: new EntityManagerFactoryBuilderImpl( new PersistenceConfigurationDescriptor( configuration ), Map.of() );
-	}
 
 	private URLClassLoader serviceLoader() throws IOException {
 		// Deliberately reverse ordinal and name order in the service declaration.

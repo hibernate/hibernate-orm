@@ -1,0 +1,12 @@
+<entity-mappings xmlns="https://www.hibernate.org/xsd/orm/mapping" version="9.0">
+    <package>org.hibernate.orm.test.boot.models.hbm.onetoone</package>
+    <access>FIELD</access>
+    <entity class="ConstrainedOneToOneTests$Parent"><table name="parent_t"/><attributes><id name="id"/></attributes></entity>
+    <entity class="ConstrainedOneToOneTests$Child"><table name="child_t"/><attributes>
+        <id name="id"/>
+        <one-to-one name="parent" optional="false">
+            <primary-key-join-column name="id"/>
+            <on-delete>CASCADE</on-delete>
+        </one-to-one>
+    </attributes></entity>
+</entity-mappings>

@@ -1,9 +1,14 @@
 package org.hibernate.orm.test.boot;
 
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
+
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.testing.orm.junit.SessionFactoryUtil;
+
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.H2Dialect;
@@ -11,9 +16,6 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
-import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
-import org.hibernate.jpa.boot.spi.PersistenceConfigurationDescriptor;
-import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.Test;
@@ -65,11 +67,19 @@ class BootstrapSettingsNormalizationTest {
 				.containsEntry( DRIVER, "driver" ).containsEntry( USER, "user" ).containsEntry( PASS, "password" );
 		if ( path.jpa ) {
 			assertThat( settings ).containsEntry( JPA_JDBC_URL, "jdbc:canonical" )
-					.containsEntry( TRANSACTION_COORDINATOR_STRATEGY, JdbcResourceLocalTransactionCoordinatorBuilderImpl.class );
+					.containsEntry( TRANSACTION_COORDINATOR_STRATEGY, "jdbc" );
 		}
 		else {
 			assertThat( settings ).doesNotContainKeys( JPA_JDBC_URL, TRANSACTION_COORDINATOR_STRATEGY );
 		}
+	}
+
+	@ParameterizedTest
+	@EnumSource(value = Path.class, names = { "PERSISTENCE_CONFIGURATION", "HIBERNATE_CONFIGURATION" })
+	void explicitJakartaJdbcAliasesOverrideEnvironmentDefaults(Path path) {
+		assertThat( readSettings( path, Map.of( JAKARTA_JDBC_URL, "jdbc:explicit", JAKARTA_JDBC_USER, "explicit-user" ) ) )
+				.containsEntry( URL, "jdbc:explicit" ).containsEntry( JAKARTA_JDBC_URL, "jdbc:explicit" )
+				.containsEntry( USER, "explicit-user" ).containsEntry( JAKARTA_JDBC_USER, "explicit-user" );
 	}
 
 	@ParameterizedTest
@@ -177,14 +187,9 @@ class BootstrapSettingsNormalizationTest {
 						? new HibernatePersistenceConfiguration( "settings" )
 						: new PersistenceConfiguration( "settings" );
 				configuration.properties( settings );
-				final var builder = configuration instanceof HibernatePersistenceConfiguration hibernateConfiguration
-						? new EntityManagerFactoryBuilderImpl( hibernateConfiguration )
-						: new EntityManagerFactoryBuilderImpl( new PersistenceConfigurationDescriptor( configuration ), Map.of() );
-				try {
-					return new HashMap<>( builder.getStandardServiceRegistry().requireService( ConfigurationService.class ).getSettings() );
-				}
-				finally {
-					StandardServiceRegistryBuilder.destroy( builder.getStandardServiceRegistry() );
+				try ( var result = BootstrapPipeline.resolveMetadata( configuration ) ) {
+					return new HashMap<>( result.metadata().getMappingResolutionOptions().getServiceRegistry()
+							.requireService( ConfigurationService.class ).getSettings() );
 				}
 			}
 			if ( path == Path.CONFIGURATION ) {
@@ -199,7 +204,7 @@ class BootstrapSettingsNormalizationTest {
 			}
 			try ( var registry = new StandardServiceRegistryBuilder().clearSettings().applySettings( settings ).build() ) {
 				if ( path == Path.METADATA_SOURCES ) {
-					try ( var factory = new MetadataSources( registry ).buildMetadata().buildSessionFactory() ) {
+					try ( var factory = SessionFactoryUtil.buildSessionFactory( MetadataBuildingHelper.buildMetadata( registry, new MappingSources() ) ) ) {
 						return new HashMap<>( registry.requireService( ConfigurationService.class ).getSettings() );
 					}
 				}

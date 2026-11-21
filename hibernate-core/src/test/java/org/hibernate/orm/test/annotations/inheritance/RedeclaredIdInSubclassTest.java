@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.annotations.inheritance;
 
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.Embeddable;
@@ -11,7 +14,6 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.MappedSuperclass;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -75,10 +77,10 @@ public class RedeclaredIdInSubclassTest {
 			Class<?> declaringClass,
 			String attribute,
 			Class<?>... superclasses) {
-		final var sources = new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClasses( superclasses )
-				.addAnnotatedClass( subclass );
-		final var exception = assertThrows( AnnotationException.class, sources::buildMetadata );
+		final var sources = new MappingSources()
+				.addManagedClasses( superclasses )
+				.addManagedClass( subclass );
+		final var exception = assertThrows( AnnotationException.class, () -> MetadataBuildingHelper.buildMetadata( scope.getRegistry(), sources ) );
 		final String message = exception.getMessage();
 		assertTrue( message.contains( "Entity '" + subclass.getName() + "'" ), message );
 		assertTrue( message.contains( "'" + attribute + "' of '" + declaringClass.getName() + "'" ), message );

@@ -29,6 +29,7 @@ import org.hibernate.accessor.MultiValueReader;
 import org.hibernate.accessor.MultiValueWriter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessorService;
+import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.property.access.spi.SetterFieldImpl;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.internal.CompositeUserTypeJavaTypeWrapper;
@@ -44,6 +45,7 @@ import static org.hibernate.metamodel.internal.PropertyAccessHelper.propertyAcce
  * @author Steve Ebersole
  */
 public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresentationStrategy {
+	private final PropertyAccessStrategyResolver propertyAccessStrategyResolver;
 	private final JavaType<?> embeddableJavaType;
 	private final PropertyAccess[] propertyAccesses;
 	private final Map<String, Integer> attributeNameToPositionMap;
@@ -60,6 +62,7 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 			EmbeddableInstantiator customInstantiator,
 			CompositeUserType<Object> compositeUserType,
 			RuntimeModelCreationContext creationContext) {
+		propertyAccessStrategyResolver = creationContext.getServiceRegistry().requireService( PropertyAccessStrategyResolver.class );
 		bootDescriptor.requireShapeComplete();
 		embeddableJavaType = resolveEmbeddableJavaType( bootDescriptor, compositeUserType, creationContext );
 
@@ -217,7 +220,7 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 			@Nonnull Class<?> embeddableClass,
 			boolean requireSetters,
 			@Nonnull StrategySelector strategySelector) {
-		final var strategy = propertyAccessStrategy( property, embeddableClass, strategySelector );
+		final var strategy = propertyAccessStrategy( property, embeddableClass, strategySelector, propertyAccessStrategyResolver );
 		if ( strategy == null ) {
 			throw new HibernateException(
 					String.format(

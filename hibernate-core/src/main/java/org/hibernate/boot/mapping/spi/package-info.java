@@ -1,8 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
-
 /// Supported, read-only views of the semantic domain model produced during
 /// mapping bootstrap.
 ///

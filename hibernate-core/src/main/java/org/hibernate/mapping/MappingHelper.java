@@ -1,5 +1,7 @@
 package org.hibernate.mapping;
 
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;

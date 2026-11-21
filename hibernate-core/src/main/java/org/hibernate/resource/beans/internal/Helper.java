@@ -4,7 +4,7 @@ import jakarta.annotation.Nullable;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.container.spi.ContainedBean;
-import org.hibernate.resource.beans.container.spi.FallbackContainedBean;
+import org.hibernate.resource.beans.container.internal.FallbackContainedBean;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;

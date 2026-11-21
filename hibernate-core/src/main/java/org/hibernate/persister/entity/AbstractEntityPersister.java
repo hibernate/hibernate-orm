@@ -1,5 +1,8 @@
 package org.hibernate.persister.entity;
 
+
+import org.hibernate.boot.spi.MetadataImplementor;
+
 import org.hibernate.ObjectNotFoundException;
 
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
@@ -3225,7 +3228,9 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void forEachTableDetails(@Nonnull Consumer<TableDetails> consumer) {
-		CollectionHelper.forEach( getTableMappings(), consumer );
+		for ( var tableMapping : getTableMappings() ) {
+			consumer.accept( tableMapping );
+		}
 	}
 
 	/**
@@ -5872,10 +5877,6 @@ public abstract class AbstractEntityPersister
 		return persister.findDeclaredAttributeMapping( property.getName() );
 	}
 
-	private static ReflectionOptimizer.AccessOptimizer accessOptimizer(EntityRepresentationStrategy strategy) {
-		final var reflectionOptimizer = strategy.getReflectionOptimizer();
-		return reflectionOptimizer == null ? null : reflectionOptimizer.getAccessOptimizer();
-	}
 
 	private void prepareMappings(@Nonnull MappingModelCreationProcess creationProcess) {
 		final var persistentClass =
@@ -6917,17 +6918,6 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Nullable
-	@Override
-	public TenantIdLoader getTenantIdLoader() {
-		return tenantIdLoader;
-	}
-
-	@Nullable
-	@Override
-	public TenantIdMapping getTenantIdMapping() {
-		return tenantIdMapping;
-	}
-
 	@Override
 	public TenantIdLoader getTenantIdLoader() {
 		return tenantIdLoader;

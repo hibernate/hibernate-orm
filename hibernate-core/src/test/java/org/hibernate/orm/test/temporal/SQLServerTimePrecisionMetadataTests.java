@@ -1,5 +1,10 @@
 package org.hibernate.orm.test.temporal;
 
+import org.hibernate.testing.orm.junit.SessionFactoryUtil;
+
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+
 import java.sql.SQLException;
 import java.sql.Time;
 import java.util.Date;
@@ -19,7 +24,6 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import org.hibernate.annotations.FractionalSeconds;
 import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -152,10 +156,10 @@ class SQLServerTimePrecisionMetadataTests {
 				.applySetting( JdbcSettings.JDBC_TIME_ZONE, "America/Los_Angeles" )
 				.applySetting( "hibernate.cache.use_second_level_cache", false )
 				.addService( ConnectionProvider.class, guard ).build() ) {
-			final var model = (MetadataImplementor) new MetadataSources( registry ).addAnnotatedClass( entity ).buildMetadata();
+			final var model = (MetadataImplementor) MetadataBuildingHelper.buildMetadata( registry, new MappingSources().addManagedClass( entity ) );
 			model.validate();
 			check.accept( model );
-			model.buildSessionFactory().close();
+			SessionFactoryUtil.buildSessionFactory( model ).close();
 		}
 		finally { verify( guard, never() ).getConnection(); }
 	}

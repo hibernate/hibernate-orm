@@ -1,8 +1,8 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.boot.mapping.internal.materialize;
+
+import java.util.HashMap;
+import org.hibernate.annotations.GeneratorOptimizer;
+import static org.hibernate.id.OptimizableGenerator.OPT_PARAM;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.UuidGenerator;
@@ -88,7 +88,16 @@ final class IdentifierGeneratorMaterializer {
 			idValue.setCustomIdGeneratorCreator( GeneratorAnnotationHelper.uuidGeneratorDescriptor( null ) );
 		}
 		else {
-			GeneratorBinder.createGeneratorFrom( resolution.registration(), idValue, buildingContext );
+			var registration = resolution.registration();
+			final var optimizer = member.getDirectAnnotationUsage( GeneratorOptimizer.class );
+			if ( optimizer != null && (registration.getKind() == IdentifierGeneratorRegistration.Kind.SEQUENCE
+					|| registration.getKind() == IdentifierGeneratorRegistration.Kind.TABLE) ) {
+				final var parameters = new HashMap<>( registration.getParameters() );
+				parameters.put( OPT_PARAM, optimizer.value().getExternalName() );
+				registration = new IdentifierGeneratorRegistration(
+						registration.getName(), registration.getKind(), registration.getGeneratorClass(), parameters );
+			}
+			GeneratorBinder.createGeneratorFrom( registration, idValue, buildingContext );
 		}
 	}
 }

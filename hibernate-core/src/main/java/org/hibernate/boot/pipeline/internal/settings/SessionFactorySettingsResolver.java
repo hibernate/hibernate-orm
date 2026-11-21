@@ -205,7 +205,7 @@ public class SessionFactorySettingsResolver {
 					asBoolean( configurationValues.get( JdbcSettings.USE_SQL_COMMENTS ), false ),
 					resolveTemporalTableStrategy( configurationValues, context ),
 						resolveAuditStrategy( configurationValues ),
-						MultiTenancy.isMultiTenancyEnabled( context.serviceRegistry() ),
+						context.serviceRegistry().requireService( MultiTenancy.class ).isMultiTenancyEnabled(),
 						MultiTenancy.getTenantIdentifierResolver( configurationValues, context.serviceRegistry() ),
 						MultiTenancy.getTenantSchemaMapper( configurationValues, context.serviceRegistry() ),
 						MultiTenancy.getTenantCredentialsMapper( configurationValues, context.serviceRegistry() ),
@@ -255,8 +255,8 @@ public class SessionFactorySettingsResolver {
 	private static Interceptor resolveInterceptor(
 			Map<String, Object> configurationValues,
 			SessionFactorySettingsResolutionContext context) {
-		return context.strategySelector()
-				.resolveStrategy( Interceptor.class, configurationValues.get( SessionEventSettings.INTERCEPTOR ) );
+		final Object setting = configurationValues.get( SessionEventSettings.INTERCEPTOR );
+		return setting instanceof Interceptor interceptor ? interceptor : null;
 	}
 
 	@SuppressWarnings("unchecked")

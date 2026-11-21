@@ -88,7 +88,13 @@ public class BootstrapSettingsResolver {
 			boolean jpaBootstrap) {
 		final var resolvedConfigurationValues = copyEnvironmentProperties();
 		overlay( configurationValues, resolvedConfigurationValues );
+		if ( jpaBootstrap ) {
+			normalizeJpaJdbcAliases( resolvedConfigurationValues, configurationValues );
+		}
 		normalizeConfiguredTransactionType( resolvedConfigurationValues );
+		if ( jpaBootstrap ) {
+			resolvedConfigurationValues.putIfAbsent( TRANSACTION_COORDINATOR_STRATEGY, "jdbc" );
+		}
 		return createResolvedSettings(
 				resolvedConfigurationValues,
 				jpaBootstrap
@@ -180,6 +186,21 @@ public class BootstrapSettingsResolver {
 				configurationValues,
 				jpaBootstrap
 		);
+	}
+
+	private static void normalizeJpaJdbcAliases(Map<String, Object> values, Map<?, ?> explicitValues) {
+		for ( String[] aliases : new String[][] {
+				{ URL, JAKARTA_JDBC_URL, JPA_JDBC_URL }, { DRIVER, JAKARTA_JDBC_DRIVER, JPA_JDBC_DRIVER },
+				{ USER, JAKARTA_JDBC_USER, JPA_JDBC_USER }, { PASS, JAKARTA_JDBC_PASSWORD, JPA_JDBC_PASSWORD } } ) {
+			final var value = coalesce(
+					() -> explicitValues == null ? null : explicitValues.get( aliases[0] ),
+					() -> explicitValues == null ? null : explicitValues.get( aliases[1] ),
+					() -> explicitValues == null ? null : explicitValues.get( aliases[2] ),
+					() -> values.get( aliases[0] ), () -> values.get( aliases[1] ), () -> values.get( aliases[2] ) );
+			if ( value != null ) {
+				for ( String alias : aliases ) { values.put( alias, value ); }
+			}
+		}
 	}
 
 	private static void normalizeDescriptorSettings(

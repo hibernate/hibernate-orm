@@ -1,5 +1,9 @@
 package org.hibernate.orm.test.mapping.converted.converter.generics;
 
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.testing.orm.junit.SessionFactoryUtil;
+
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Converter;
@@ -8,7 +12,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -32,11 +35,7 @@ public class GenericInheritedAttributeConverterTest {
 		try (var registry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( SchemaToolingSettings.HBM2DDL_AUTO, "create-drop" )
 				.build()) {
-			try (var factory = new MetadataSources( registry )
-					.addAnnotatedClass( FooContainer.class )
-					.addAnnotatedClass( FooConverter.class )
-					.buildMetadata()
-					.buildSessionFactory()) {
+			try (var factory = SessionFactoryUtil.buildSessionFactory( MetadataBuildingHelper.buildMetadata( registry, new MappingSources().addManagedClass( FooContainer.class ).addManagedClass( FooConverter.class ) ) )) {
 				final FooContainer container = new FooContainer( Foo.from( "42" ) );
 				factory.inTransaction( session -> session.persist( container ) );
 

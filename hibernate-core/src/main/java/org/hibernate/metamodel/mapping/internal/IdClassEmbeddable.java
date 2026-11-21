@@ -29,6 +29,7 @@ import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessorService;
+import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.property.access.spi.SetterFieldImpl;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.query.from.TableGroup;
@@ -86,8 +87,9 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 				propertyAccessorService,
 				this,
 				idClassSource,
-				idClassSource.sortProperties() == null,
-				idClassSource::getPropertyNames
+				idClassSource.completeShape() == null,
+				idClassSource::getPropertyNames,
+				creationProcess.getCreationContext().getServiceRegistry().requireService( PropertyAccessStrategyResolver.class )
 		);
 
 		warnOnFinalFields( idClassSource, representationStrategy,
@@ -153,7 +155,8 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 				creationProcess.getCreationContext().getServiceRegistry()
 						.requireService( PropertyAccessorService.class ),
 				this,
-				inverseMappingType.getRepresentationStrategy().getInstantiator()
+				inverseMappingType.getRepresentationStrategy().getInstantiator(),
+				creationProcess.getCreationContext().getServiceRegistry().requireService( PropertyAccessStrategyResolver.class )
 		);
 		this.embedded = valueMapping;
 		this.selectableMappings = selectableMappings;

@@ -1,5 +1,7 @@
 package org.hibernate.boot.mapping.internal.categorize;
 
+import jakarta.persistence.EntityListener;
+
 import org.hibernate.models.spi.AnnotationTarget;
 
 import jakarta.persistence.Access;
@@ -235,24 +237,26 @@ public abstract class AbstractIdentifiableTypeMetadata
 
 		final List<JpaEventListener> combined = new ArrayList<>();
 
-		if ( classDetails.getDirectAnnotationUsage( ExcludeSuperclassListeners.class ) == null ) {
-			final AbstractIdentifiableTypeMetadata superType = getSuperType();
-			if ( superType != null ) {
-				combined.addAll( superType.getHierarchyJpaEventListeners() );
-			}
+		final AbstractIdentifiableTypeMetadata superType = getSuperType();
+		if ( superType != null ) {
+			final boolean exclude = classDetails.hasDirectAnnotationUsage( ExcludeSuperclassListeners.class );
+			superType.getHierarchyJpaEventListeners().stream()
+					.filter( listener -> !exclude || listener.getStyle() == JpaEventListenerStyle.CALLBACK )
+					.forEach( combined::add );
 		}
-
 		if ( localCallback != null ) {
 			combined.replaceAll( listener -> listener.withoutCallbacksOverriddenBy( localCallback ) );
 			combined.removeIf( listener -> !listener.hasCallbackMethods() );
 		}
 
-		applyLocalEventListeners( combined::add );
+		applyEventListeners( classDetails, combined::add );
 
 		if ( localCallback != null ) {
 			combined.add( localCallback );
 		}
 
+		combined.sort( (left, right) -> Boolean.compare( left.getStyle() == JpaEventListenerStyle.CALLBACK,
+				right.getStyle() == JpaEventListenerStyle.CALLBACK ) );
 		return combined;
 	}
 
@@ -269,7 +273,6 @@ public abstract class AbstractIdentifiableTypeMetadata
 		if ( packageInfo != null ) {
 			applyEventListeners( packageInfo, consumer );
 		}
-		applyEventListeners( classDetails, consumer );
 	}
 
 	private void applyEventListeners(AnnotationTarget listenerSource, Consumer<JpaEventListener> consumer) {
@@ -307,13 +310,22 @@ public abstract class AbstractIdentifiableTypeMetadata
 	}
 
 	protected List<JpaEventListener> collectCompleteEventListeners(CategorizationContext modelContext) {
-		final ClassDetails classDetails = getClassDetails();
-		if ( classDetails.getDirectAnnotationUsage( ExcludeDefaultListeners.class ) != null ) {
-			return getHierarchyJpaEventListeners();
+		boolean excludeDefaults = false;
+		for ( AbstractIdentifiableTypeMetadata type = this; type != null; type = type.getSuperType() ) {
+			if ( type.getClassDetails().hasDirectAnnotationUsage( ExcludeDefaultListeners.class ) ) {
+				excludeDefaults = true;
+				break;
+			}
 		}
-
 		final List<JpaEventListener> combined = new ArrayList<>();
-		combined.addAll( modelContext.getDefaultEventListeners() );
+		for ( JpaEventListener listener : modelContext.getDefaultEventListeners() ) {
+			if ( !excludeDefaults || listener.getCallbackClass().hasDirectAnnotationUsage( EntityListener.class ) ) {
+				combined.add( listener );
+			}
+		}
+		if ( !excludeDefaults ) {
+			applyLocalEventListeners( combined::add );
+		}
 		combined.addAll( getHierarchyJpaEventListeners() );
 		return combined;
 	}

@@ -127,6 +127,9 @@ public class ColumnBinder {
 		result.setPrecision( precision > 0 ? precision : null );
 		final int scale = columnSource == null ? scaleByDefault : columnSource.scale( scaleByDefault );
 		result.setScale( precision > 0 ? scale : null );
+		if ( columnSource != null && columnSource.secondPrecision() != -1 ) {
+			result.setTemporalPrecision( columnSource.secondPrecision() );
+		}
 		applyCheckConstraints( result, columnSource );
 		applyComment( result, columnSource );
 		applyOptions( result, columnSource );

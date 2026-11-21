@@ -1,10 +1,12 @@
 package org.hibernate.orm.test.collection.map;
 
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+
 import java.util.Map;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.MapKeyFormula;
-import org.hibernate.boot.MetadataSources;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -30,55 +32,55 @@ public class MapKeyFormulaConflictTest {
 
 	@Test
 	void testMapKeyFormulaWithMapKeyColumn(ServiceRegistryScope scope) {
-		final MetadataSources sources = new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( FormulaAndColumnParent.class )
-				.addAnnotatedClass( Item.class );
+		final MappingSources sources = new MappingSources()
+				.addManagedClass( FormulaAndColumnParent.class )
+				.addManagedClass( Item.class );
 
-		assertThatThrownBy( sources::buildMetadata )
+		assertThatThrownBy( () -> MetadataBuildingHelper.buildMetadata( scope.getRegistry(), sources ) )
 				.isInstanceOf( AnnotationException.class )
 				.hasMessageContaining( "is annotated both '@MapKeyFormula' and '@MapKeyColumn'" );
 	}
 
 	@Test
 	void testMapKeyFormulaWithMapKey(ServiceRegistryScope scope) {
-		final MetadataSources sources = new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( FormulaAndMapKeyParent.class )
-				.addAnnotatedClass( Item.class );
+		final MappingSources sources = new MappingSources()
+				.addManagedClass( FormulaAndMapKeyParent.class )
+				.addManagedClass( Item.class );
 
-		assertThatThrownBy( sources::buildMetadata )
+		assertThatThrownBy( () -> MetadataBuildingHelper.buildMetadata( scope.getRegistry(), sources ) )
 				.isInstanceOf( AnnotationException.class )
 				.hasMessageContaining( "is annotated both '@MapKey' and '@MapKeyFormula'" );
 	}
 
 	@Test
 	void testMapKeyFormulaWithMapKeyJoinColumn(ServiceRegistryScope scope) {
-		final MetadataSources sources = new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( FormulaAndJoinColumnParent.class )
-				.addAnnotatedClass( Item.class );
+		final MappingSources sources = new MappingSources()
+				.addManagedClass( FormulaAndJoinColumnParent.class )
+				.addManagedClass( Item.class );
 
-		assertThatThrownBy( sources::buildMetadata )
+		assertThatThrownBy( () -> MetadataBuildingHelper.buildMetadata( scope.getRegistry(), sources ) )
 				.isInstanceOf( AnnotationException.class )
 				.hasMessageContaining( "is annotated both '@MapKeyFormula' and '@MapKeyJoinColumn'" );
 	}
 
 	@Test
 	void testMapKeyFormulaWithMapKeyJoinColumns(ServiceRegistryScope scope) {
-		final MetadataSources sources = new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( FormulaAndJoinColumnsParent.class )
-				.addAnnotatedClass( Item.class );
+		final MappingSources sources = new MappingSources()
+				.addManagedClass( FormulaAndJoinColumnsParent.class )
+				.addManagedClass( Item.class );
 
-		assertThatThrownBy( sources::buildMetadata )
+		assertThatThrownBy( () -> MetadataBuildingHelper.buildMetadata( scope.getRegistry(), sources ) )
 				.isInstanceOf( AnnotationException.class )
 				.hasMessageContaining( "is annotated both '@MapKeyFormula' and '@MapKeyJoinColumn'" );
 	}
 
 	@Test
 	void testMapKeyFormulaWithEntityKey(ServiceRegistryScope scope) {
-		final MetadataSources sources = new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( FormulaAndEntityKeyParent.class )
-				.addAnnotatedClass( Item.class );
+		final MappingSources sources = new MappingSources()
+				.addManagedClass( FormulaAndEntityKeyParent.class )
+				.addManagedClass( Item.class );
 
-		assertThatThrownBy( sources::buildMetadata )
+		assertThatThrownBy( () -> MetadataBuildingHelper.buildMetadata( scope.getRegistry(), sources ) )
 				.isInstanceOf( AnnotationException.class )
 				.hasMessageContaining( "is annotated '@MapKeyFormula' but its key is an entity" );
 	}

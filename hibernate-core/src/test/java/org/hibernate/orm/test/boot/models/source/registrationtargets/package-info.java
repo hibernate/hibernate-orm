@@ -1,7 +1,3 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 /// Registration parity fixture.
 /// @author Steve Ebersole
 @org.hibernate.annotations.FilterDef(name = "first", defaultCondition = "1=1")

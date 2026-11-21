@@ -1,5 +1,10 @@
 package org.hibernate.orm.test.locking;
 
+import org.hibernate.testing.orm.junit.SessionFactoryUtil;
+
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -11,7 +16,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.dialect.*;
@@ -239,11 +243,11 @@ public record ConcurrencyConfiguration(int isolation, Boolean rcsi, Boolean mari
 					}
 				}
 				registry = builder.build();
-				final var metadata = new MetadataSources( registry ).addAnnotatedClass( Row.class ).buildMetadata();
+				final var metadata = MetadataBuildingHelper.buildMetadata( registry, new MappingSources().addManagedClass( Row.class ) );
 				if ( dialect instanceof OracleDialect && configuration.isolation == TRANSACTION_SERIALIZABLE ) {
 					metadata.getEntityBinding( Row.class.getName() ).getTable().setOptions( "segment creation immediate" );
 				}
-				factory = (SessionFactoryImplementor) metadata.buildSessionFactory();
+				factory = (SessionFactoryImplementor) SessionFactoryUtil.buildSessionFactory( metadata );
 				assertEquals( configuration.isolation, factory.getJdbcServices().getJdbcEnvironment()
 						.getJdbcMetadata().getTransactionIsolation(), "Bootstrap isolation: " + configuration );
 				try ( var session = factory.openSession() ) {

@@ -2,6 +2,7 @@ package org.hibernate.boot.model.process.internal;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.util.Locale;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -53,9 +54,10 @@ public class InferredBasicValueResolver {
 	public static <T> BasicValue.Resolution<T> from(
 			BasicJavaType<T> explicitJavaType,
 			JdbcType explicitJdbcType,
+			Type resolvedJavaType,
 			Supplier<JavaType<T>> reflectedJtdResolver,
 			Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess,
-			BasicValue basicValue,
+			JdbcTypeIndicators stdIndicators,
 			Table table,
 			Selectable selectable,
 			String ownerName,
@@ -82,7 +84,7 @@ public class InferredBasicValueResolver {
 						null,
 						explicitJdbcType,
 						explicitMutabilityPlanAccess,
-						basicValue
+						stdIndicators
 				);
 			}
 			else if ( explicitJdbcType != null ) {
@@ -91,7 +93,7 @@ public class InferredBasicValueResolver {
 			}
 			else {
 				// we need to infer the JdbcType and use that to build the value-mapping
-				final var inferredJdbcType = explicitJavaType.getRecommendedJdbcType( basicValue );
+				final var inferredJdbcType = explicitJavaType.getRecommendedJdbcType( stdIndicators );
 				if ( inferredJdbcType instanceof ObjectJdbcType
 						&& ( explicitJavaType instanceof SerializableJavaType
 							|| explicitJavaType.getJavaType() instanceof Serializable ) ) {
@@ -100,7 +102,7 @@ public class InferredBasicValueResolver {
 				}
 				else {
 					jdbcMapping = resolveSqlTypeIndicators(
-							basicValue,
+							stdIndicators,
 							basicTypeRegistry.resolve( explicitJavaType, inferredJdbcType ),
 							explicitJavaType
 					);
@@ -125,7 +127,7 @@ public class InferredBasicValueResolver {
 						null,
 						explicitJdbcType,
 						explicitMutabilityPlanAccess,
-						basicValue
+						stdIndicators
 				);
 			}
 			else if ( explicitJdbcType != null ) {
@@ -150,7 +152,7 @@ public class InferredBasicValueResolver {
 				if ( registeredType != null ) {
 					// so here is the legacy resolution
 					jdbcMapping =
-							resolveSqlTypeIndicators( basicValue, registeredType,
+							resolveSqlTypeIndicators( stdIndicators, registeredType,
 									registeredType.getJavaTypeDescriptor() );
 				}
 				else {
@@ -158,10 +160,11 @@ public class InferredBasicValueResolver {
 					// so use `JavaType#getRecommendedJdbcType`, if one,
 					// to create a mapping
 						final var recommendedJdbcType =
-								recommendedJdbcType( resolvedJavaType, stdIndicators, state, reflectedJtd );
+								recommendedJdbcType( resolvedJavaType, stdIndicators, state, reflectedJtd,
+								ownerName == null || propertyName == null ? null : ownerName + "." + propertyName );
 					if ( recommendedJdbcType != null ) {
 						jdbcMapping = resolveSqlTypeIndicators(
-								basicValue,
+								stdIndicators,
 								basicTypeRegistry.resolve( reflectedJtd, recommendedJdbcType ),
 								reflectedJtd
 						);
@@ -186,7 +189,7 @@ public class InferredBasicValueResolver {
 				// TODO: check this type cast
 				final var recommendedJtd = (JavaType<T>) recommendedJavaType;
 				jdbcMapping = resolveSqlTypeIndicators(
-						basicValue,
+						stdIndicators,
 						basicTypeRegistry.resolve( recommendedJtd, explicitJdbcType ),
 						recommendedJtd
 				);
@@ -257,18 +260,20 @@ public class InferredBasicValueResolver {
 			Type resolvedJavaType,
 			JdbcTypeIndicators stdIndicators,
 			MappingResolutionState state,
-			JavaType<T> reflectedJtd) {
+			JavaType<T> reflectedJtd, String attribute) {
 		try {
-			return reflectedJtd.getRecommendedJdbcType( basicValue );
+			return reflectedJtd.getRecommendedJdbcType( stdIndicators );
 		}
 		catch (JdbcTypeRecommendationException jtre) {
 			if ( state.metadataCollector()
 					.getEntityBindingMap().values().stream()
 					.anyMatch( pc -> pc.getMappedClass().equals( resolvedJavaType ) ) ) {
-				final String attribute = basicValue.getQualifiedAttributeName();
 				throw new MappingException( "Incorrect use of entity type '" + resolvedJavaType.getTypeName() + "'"
 						+ ( attribute == null ? "" : " for attribute '" + attribute + "'" )
 						+ " (possibly due to missing association mapping annotation)", jtre );
+			}
+			else if ( attribute != null ) {
+				throw new JdbcTypeRecommendationException( jtre.getMessage() + " for attribute '" + attribute + "'", jtre );
 			}
 			else {
 				throw jtre;

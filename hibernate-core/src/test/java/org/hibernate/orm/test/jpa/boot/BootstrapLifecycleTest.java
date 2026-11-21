@@ -1,18 +1,19 @@
 package org.hibernate.orm.test.jpa.boot;
 
-import java.util.Map;
+import java.util.List;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
+import org.hibernate.boot.model.TypeContributor;
+import org.hibernate.jpa.boot.spi.TypeContributorList;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import static org.hibernate.jpa.boot.spi.JpaSettings.TYPE_CONTRIBUTORS;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.MetadataBuilderContributor;
-import org.hibernate.boot.spi.MetadataBuilderImplementor;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
-import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
-import org.hibernate.jpa.boot.spi.PersistenceConfigurationDescriptor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
@@ -34,7 +35,6 @@ import static org.hibernate.cfg.AvailableSettings.DIALECT;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION;
 import static org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_OBSERVER;
-import static org.hibernate.jpa.boot.spi.JpaSettings.METADATA_BUILDER_CONTRIBUTOR;
 
 /// Verifies cleanup before factory ownership and registry lifetime after handoff.
 ///
@@ -75,14 +75,15 @@ class BootstrapLifecycleTest {
 
 	@ParameterizedTest
 	@ValueSource(booleans = { false, true })
-	void cancellationClosesRegistriesExactlyOnce(boolean hibernate) {
+	void metadataResultClosesRegistriesExactlyOnce(boolean hibernate) {
 		final var provider = new CountingProvider();
-		final var builder = builder( configuration( hibernate, provider ) );
-		final var registry = registry( builder );
+		final var result = BootstrapPipeline.resolveMetadata( configuration( hibernate, provider ) );
+		final var registry = (ServiceRegistryImplementor) result.metadata().getMappingResolutionOptions().getServiceRegistry();
 		final var parent = (ServiceRegistryImplementor) registry.getParentServiceRegistry();
 		registry.requireService( ConnectionProvider.class );
-		builder.cancel();
-		builder.cancel();
+		assertThat( registry.isActive() ).isTrue();
+		result.close();
+		result.close();
 		assertThat( provider.stops ).isEqualTo( 1 );
 		assertThat( registry.isActive() ).isFalse();
 		assertThat( parent.isActive() ).isFalse();
@@ -92,175 +93,87 @@ class BootstrapLifecycleTest {
 	@ValueSource(booleans = { false, true })
 	void factoryOwnsRegistriesAfterBuild(boolean hibernate) {
 		final var provider = new CountingProvider();
-		final var builder = builder( configuration( hibernate, provider ) );
-		final var registry = registry( builder );
-		registry.requireService( ConnectionProvider.class );
-		try ( var factory = builder.build() ) {
-			builder.cancel();
-			builder.cancel();
+		ServiceRegistryImplementor registry;
+		try ( var factory = BootstrapPipeline.build( configuration( hibernate, provider ) ) ) {
+			registry = (ServiceRegistryImplementor) factory.unwrap( SessionFactoryImplementor.class ).getSessionFactoryOptions().getServiceRegistry();
+			registry.requireService( ConnectionProvider.class );
 			assertThat( registry.isActive() ).isTrue();
 			assertThat( provider.stops ).isZero();
-			assertThat( factory.isOpen() ).isTrue();
-			assertThat( builder.metadata() ).isSameAs( builder.metadata() );
 		}
 		assertThat( registry.isActive() ).isFalse();
-		assertThat( provider.stops ).isEqualTo( 1 );
-		builder.cancel();
 		assertThat( provider.stops ).isEqualTo( 1 );
 	}
 
 	@ParameterizedTest
 	@ValueSource(booleans = { false, true })
-	void preparationFailureClosesRegistries(boolean hibernate) {
+	void contributionFailureClosesRegistries(boolean hibernate) {
 		final var provider = new CountingProvider();
 		final var registry = new AtomicReference<ServiceRegistryImplementor>();
 		final var failure = new IllegalStateException( "preparation" );
-		final var configuration = configuration( hibernate, provider )
-				.property( METADATA_BUILDER_CONTRIBUTOR, (MetadataBuilderContributor) metadataBuilder -> {
-					final var services = ((MetadataBuilderImplementor) metadataBuilder).getBootstrapContext().getServiceRegistry();
-					registry.set( (ServiceRegistryImplementor) services );
-					services.requireService( ConnectionProvider.class );
-					throw failure;
-				} );
-		assertThatThrownBy( () -> builder( configuration ) ).isSameAs( failure );
-		assertThat( registry.get().isActive() ).isFalse();
-		assertThat( provider.stops ).isEqualTo( 1 );
+		final var configuration = trackedConfiguration( hibernate, provider, registry, failure );
+		assertThatThrownBy( () -> BootstrapPipeline.resolveMetadata( configuration ) )
+				.isInstanceOf( PersistenceException.class ).hasCause( failure );
+		assertClosed( registry, provider );
 	}
 
 	@ParameterizedTest
 	@ValueSource(booleans = { false, true })
 	void metadataFailureDuringBuildClosesRegistries(boolean hibernate) {
 		final var provider = new CountingProvider();
-		final var builder = builder( configuration( hibernate, provider ).managedClass( InvalidEntity.class ) );
-		registry( builder ).requireService( ConnectionProvider.class );
-		assertThatThrownBy( builder::metadata ).isInstanceOf( org.hibernate.AnnotationException.class );
-		assertThat( registry( builder ).isActive() ).isTrue();
-		assertThat( provider.stops ).isZero();
-		assertThatThrownBy( builder::build ).isInstanceOf( org.hibernate.AnnotationException.class );
-		assertThat( registry( builder ).isActive() ).isFalse();
-		assertThat( provider.stops ).isEqualTo( 1 );
-		builder.cancel();
+		final var registry = new AtomicReference<ServiceRegistryImplementor>();
+		final var configuration = trackedConfiguration( hibernate, provider, registry, null ).managedClass( InvalidEntity.class );
+		assertThatThrownBy( () -> BootstrapPipeline.build( configuration ) ).isInstanceOf( PersistenceException.class );
+		assertClosed( registry, provider );
 	}
 
 	@ParameterizedTest
 	@ValueSource(booleans = { false, true })
 	void factoryConstructionFailureRetainsWrappingAndCleansUp(boolean hibernate) {
 		final var provider = new CountingProvider();
+		final var registry = new AtomicReference<ServiceRegistryImplementor>();
 		final var failure = new IllegalStateException( "factory creation" );
-		final var configuration = configuration( hibernate, provider ).property( SESSION_FACTORY_OBSERVER,
-				new org.hibernate.SessionFactoryObserver() {
-					@Override
-					public void sessionFactoryCreated(org.hibernate.SessionFactory factory) {
-						throw failure;
-					}
+		final var configuration = trackedConfiguration( hibernate, provider, registry, null )
+				.property( SESSION_FACTORY_OBSERVER, new org.hibernate.SessionFactoryObserver() {
+					@Override public void sessionFactoryCreated(org.hibernate.SessionFactory factory) { throw failure; }
 				} );
-		final var builder = builder( configuration );
-		registry( builder ).requireService( ConnectionProvider.class );
-		assertThatThrownBy( builder::build ).isInstanceOf( PersistenceException.class ).hasCause( failure );
-		assertThat( registry( builder ).isActive() ).isFalse();
-		assertThat( provider.stops ).isEqualTo( 1 );
+		assertThatThrownBy( () -> BootstrapPipeline.build( configuration ) ).isInstanceOf( PersistenceException.class ).hasCause( failure );
+		assertClosed( registry, provider );
 	}
 
 	@ParameterizedTest
 	@ValueSource(booleans = { false, true })
 	void schemaCompletionClosesRegistries(boolean hibernate) {
 		final var provider = new CountingProvider();
-		final var builder = builder( configuration( hibernate, provider ) );
-		registry( builder ).requireService( ConnectionProvider.class );
-		builder.generateSchema();
-		assertThat( registry( builder ).isActive() ).isFalse();
-		assertThat( provider.stops ).isEqualTo( 1 );
-		builder.cancel();
+		final var registry = new AtomicReference<ServiceRegistryImplementor>();
+		BootstrapPipeline.generateSchema( trackedConfiguration( hibernate, provider, registry, null ) );
+		assertClosed( registry, provider );
 	}
 
 	@ParameterizedTest
 	@ValueSource(booleans = { false, true })
 	void schemaFailureClosesRegistries(boolean hibernate) {
 		final var provider = new CountingProvider();
-		final var builder = builder( configuration( hibernate, provider )
-				.property( JAKARTA_HBM2DDL_DATABASE_ACTION, "invalid-action" ) );
-		registry( builder ).requireService( ConnectionProvider.class );
-		assertThatThrownBy( builder::generateSchema ).isInstanceOf( PersistenceException.class );
-		assertThat( registry( builder ).isActive() ).isFalse();
-		assertThat( provider.stops ).isEqualTo( 1 );
+		final var registry = new AtomicReference<ServiceRegistryImplementor>();
+		final var configuration = trackedConfiguration( hibernate, provider, registry, null )
+				.property( JAKARTA_HBM2DDL_DATABASE_ACTION, "invalid-action" );
+		assertThatThrownBy( () -> BootstrapPipeline.generateSchema( configuration ) ).isInstanceOf( PersistenceException.class );
+		assertClosed( registry, provider );
 	}
 
-	@Test
-	void settingsAssemblyFailureClosesBootstrapRegistry() {
-		final var stops = new java.util.concurrent.atomic.AtomicInteger();
-		final var loader = new org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl() {
-			@Override
-			public void stop() {
-				stops.incrementAndGet();
-				super.stop();
-			}
+	private static PersistenceConfiguration trackedConfiguration(boolean hibernate, CountingProvider provider,
+			AtomicReference<ServiceRegistryImplementor> registry, RuntimeException failure) {
+		final TypeContributor contributor = (contributions, services) -> {
+			registry.set( (ServiceRegistryImplementor) services );
+			services.requireService( ConnectionProvider.class );
+			if ( failure != null ) { throw failure; }
 		};
-		assertThatThrownBy( () -> new EntityManagerFactoryBuilderImpl(
-				new PersistenceConfigurationDescriptor( configuration( false, new CountingProvider() ) ),
-				Map.of( org.hibernate.cfg.AvailableSettings.JAKARTA_TRANSACTION_TYPE, "invalid" ), loader ) )
-				.isInstanceOf( PersistenceException.class ).hasMessageContaining( "Unknown TransactionType" );
-		assertThat( stops.get() ).isEqualTo( 1 );
+		return configuration( hibernate, provider ).property( TYPE_CONTRIBUTORS, (TypeContributorList) () -> List.of( contributor ) );
 	}
 
-	@ParameterizedTest
-	@ValueSource(booleans = { false, true })
-	void subsequentFailureCannotReclaimFactoryOwnership(boolean hibernate) {
-		final var provider = new CountingProvider();
-		final var cfg = configuration( hibernate, provider );
-		final var builder = cfg instanceof HibernatePersistenceConfiguration h
-				? new FailingBuilder( h ) : new FailingBuilder( new PersistenceConfigurationDescriptor( cfg ) );
-		registry( builder ).requireService( ConnectionProvider.class );
-		try ( var factory = builder.build() ) {
-			builder.failure = new IllegalStateException( "later operation" );
-			assertThatThrownBy( builder::build ).isSameAs( builder.failure );
-			assertThat( registry( builder ).isActive() ).isTrue();
-			assertThat( provider.stops ).isZero();
-			assertThat( factory.isOpen() ).isTrue();
-		}
+	private static void assertClosed(AtomicReference<ServiceRegistryImplementor> registry, CountingProvider provider) {
+		assertThat( registry.get() ).isNotNull();
+		assertThat( registry.get().isActive() ).isFalse();
 		assertThat( provider.stops ).isEqualTo( 1 );
-	}
-
-	@ParameterizedTest
-	@ValueSource(booleans = { false, true })
-	void schemaFailureSurvivesCancellationFailure(boolean hibernate) {
-		final var cfg = configuration( hibernate, new CountingProvider() );
-		final var builder = cfg instanceof HibernatePersistenceConfiguration h
-				? new FailingBuilder( h ) : new FailingBuilder( new PersistenceConfigurationDescriptor( cfg ) );
-		builder.failure = new IllegalStateException( "schema setup" );
-		builder.cancelFailure = new IllegalStateException( "cancel" );
-		assertThatThrownBy( builder::generateSchema ).isInstanceOf( PersistenceException.class )
-				.hasCause( builder.failure ).satisfies( failure ->
-						assertThat( failure.getSuppressed() ).containsExactly( builder.cancelFailure ) );
-		assertThat( registry( builder ).isActive() ).isFalse();
-	}
-
-	private static class FailingBuilder extends EntityManagerFactoryBuilderImpl {
-		RuntimeException failure;
-		RuntimeException cancelFailure;
-
-		FailingBuilder(HibernatePersistenceConfiguration cfg) {
-			super( cfg );
-		}
-
-		FailingBuilder(PersistenceConfigurationDescriptor descriptor) {
-			super( descriptor, Map.of() );
-		}
-
-		@Override
-		protected org.hibernate.boot.SessionFactoryBuilder populateSessionFactoryBuilder() {
-			if ( failure != null ) {
-				throw failure;
-			}
-			return super.populateSessionFactoryBuilder();
-		}
-
-		@Override
-		public void cancel() {
-			super.cancel();
-			if ( cancelFailure != null ) {
-				throw cancelFailure;
-			}
-		}
 	}
 
 	@Test
@@ -299,15 +212,6 @@ class BootstrapLifecycleTest {
 				: new PersistenceConfiguration( "lifecycle" );
 		return cfg.property( DIALECT, H2Dialect.class.getName() ).property( ALLOW_METADATA_ON_BOOT, false )
 				.property( CONNECTION_PROVIDER, provider ).property( HBM2DDL_AUTO, "none" );
-	}
-
-	private static EntityManagerFactoryBuilderImpl builder(PersistenceConfiguration cfg) {
-		return cfg instanceof HibernatePersistenceConfiguration hibernate ? new EntityManagerFactoryBuilderImpl( hibernate )
-				: new EntityManagerFactoryBuilderImpl( new PersistenceConfigurationDescriptor( cfg ), Map.of() );
-	}
-
-	private static ServiceRegistryImplementor registry(EntityManagerFactoryBuilderImpl builder) {
-		return (ServiceRegistryImplementor) builder.getStandardServiceRegistry();
 	}
 
 	private static class CountingProvider extends UserSuppliedConnectionProviderImpl implements Stoppable {

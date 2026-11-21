@@ -1,5 +1,13 @@
 package org.hibernate.boot.pipeline.internal;
 
+import org.hibernate.boot.internal.SessionFactoryOptionsBuilder;
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.context.spi.MultiTenancy;
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.cfg.TransactionSettings;
+import org.hibernate.cfg.CheckHandling;
+import org.hibernate.internal.util.config.ConfigurationHelper;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -104,12 +112,18 @@ public final class SessionFactoryOptionsAdapter {
 				case "isJtaTransactionAccessEnabled" -> settings.jtaTransactionAccessEnabled();
 				case "isPreferUserTransaction" -> false;
 				case "isAllowOutOfTransactionUpdateOperations" -> false;
-				case "isJtaTrackByThread" -> true;
+				case "isJtaTrackByThread" -> ConfigurationHelper.getBoolean(
+						TransactionSettings.JTA_TRACK_BY_THREAD, settings.configurationValues(), true );
 				case "isIdentifierRollbackEnabled" -> settings.identifierRollbackEnabled();
 				case "isInitializeLazyStateOutsideTransactionsEnabled" ->
 						settings.initializeLazyStateOutsideTransactionsEnabled();
 				case "isUnownedAssociationTransientCheck" -> settings.unownedAssociationTransientCheck();
 				case "isBidirectionalAssociationManagementEnabled" -> settings.bidirectionalAssociationManagementEnabled();
+				case "getConfiguredInterceptor" -> SessionFactoryOptionsBuilder.determineConfiguredInterceptor(
+						settings.configurationValues(), settings.serviceRegistry().requireService( StrategySelector.class ) );
+				case "getFinalPersistentFieldsHandling" -> CheckHandling.interpret(
+						settings.configurationValues().get( MappingSettings.FINAL_PERSISTENT_FIELDS ), CheckHandling.WARN );
+				case "getTenantDataSourceMapper" -> settings.serviceRegistry().requireService( MultiTenancy.class ).getTenantDataSourceMapper();
 				case "getInterceptor" -> settings.interceptor();
 				case "getStatelessInterceptorImplementorSupplier" -> settings.statelessInterceptorSupplier();
 				case "buildSessionEventListeners" -> new org.hibernate.SessionEventListener[0];

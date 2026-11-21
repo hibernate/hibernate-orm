@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.query.named;
 
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -8,7 +11,6 @@ import jakarta.persistence.TypedQuery;
 import jakarta.persistence.query.JakartaQuery;
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.processing.Exclude;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -38,10 +40,7 @@ class UnsupportedReactiveStaticQueryTest {
 		try {
 			final var exception = assertThrows(
 					AnnotationException.class,
-					() -> new MetadataSources( serviceRegistry )
-							.addAnnotatedClass( Book.class )
-							.addAnnotatedClass( repository )
-							.buildMetadata()
+					() -> MetadataBuildingHelper.buildMetadata( serviceRegistry, new MappingSources().addManagedClass( Book.class ).addManagedClass( repository ) )
 			);
 			assertThat( exception.getMessage() )
 					.contains( "wrapped in 'Uni'" )

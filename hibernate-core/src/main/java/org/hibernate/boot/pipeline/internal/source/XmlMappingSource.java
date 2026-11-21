@@ -12,6 +12,7 @@ import org.hibernate.Internal;
 import org.hibernate.InvalidMappingException;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
 import org.hibernate.boot.jaxb.Origin;
+import org.hibernate.boot.MappingNotFoundException;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.internal.CacheableFileXmlSource;
 import org.hibernate.boot.jaxb.internal.InputStreamAccessXmlSource;
@@ -114,6 +115,9 @@ public interface XmlMappingSource {
 		public void bind(MappingBinder binder, ClassLoaderService loading, Consumer<Binding<JaxbEntityMappingsImpl>> consumer) {
 			final var origin = origin();
 			try (var stream = loading.locateResourceStream( name )) {
+				if ( stream == null ) {
+					throw new MappingNotFoundException( origin );
+				}
 				consumer.accept( binder.bind( stream, origin ) );
 			}
 			catch (org.hibernate.boot.MappingException e) {

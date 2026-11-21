@@ -1,5 +1,7 @@
 package org.hibernate.orm.test.type.temporal;
 
+import org.hibernate.property.access.spi.PropertyAccessorService;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -56,7 +58,8 @@ public class Java8DateTimeTests {
 					theEntity,
 					factoryScope.getSessionFactory()
 							.getServiceRegistry()
-							.requireService( PropertyAccessStrategyResolver.class )
+							.requireService( PropertyAccessStrategyResolver.class ),
+					factoryScope.getSessionFactory().getServiceRegistry().requireService( PropertyAccessorService.class )
 			);
 			assertNotNull( theEntity );
 			session.remove( theEntity );
@@ -67,14 +70,15 @@ public class Java8DateTimeTests {
 	private void dump(
 			PersistentClass entityBinding,
 			TheEntity theEntity,
-			PropertyAccessStrategyResolver propertyAccessStrategyResolver) {
+			PropertyAccessStrategyResolver propertyAccessStrategyResolver,
+			PropertyAccessorService propertyAccessorService) {
 		for ( Property propertyBinding : entityBinding.getPropertyClosure() ) {
 			final JavaType javaType = ( (AbstractStandardBasicType) propertyBinding.getType() ).getJavaTypeDescriptor();
 			System.out.printf(
 					"%s (%s) -> %s%n",
 					propertyBinding.getName(),
 					javaType.getJavaTypeClass().getSimpleName(),
-					javaType.toString( propertyBinding.getGetter( TheEntity.class, propertyAccessStrategyResolver ).get( theEntity ) )
+					javaType.toString( propertyBinding.getGetter( TheEntity.class, propertyAccessStrategyResolver, propertyAccessorService ).get( theEntity ) )
 			);
 		}
 	}

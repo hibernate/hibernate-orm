@@ -1,0 +1,13 @@
+<entity-mappings xmlns="https://www.hibernate.org/xsd/orm/mapping" version="9.0">
+    <package>org.hibernate.orm.test.boot.models.hbm.manytoone</package><access>FIELD</access>
+    <entity class="ManyToOneColumnTests$Target"><table name="target_t"/><attributes><id name="id"/></attributes></entity>
+    <entity class="ManyToOneColumnTests$UniqueSource"><table name="unique_source_t"/><attributes>
+        <id name="id"/><many-to-one name="target"><join-column name="target" unique="true"/></many-to-one>
+    </attributes></entity>
+    <entity class="ManyToOneColumnTests$UniqueColumnSource"><table name="unique_column_source_t"/><attributes>
+        <id name="id"/><many-to-one name="target"><join-column name="target" unique="true"/></many-to-one>
+    </attributes></entity>
+    <entity class="ManyToOneColumnTests$TypedColumnSource"><table name="typed_column_source_t"/><attributes>
+        <id name="id"/><many-to-one name="target"><join-column name="target" column-definition="numeric(19,0)"/></many-to-one>
+    </attributes></entity>
+</entity-mappings>

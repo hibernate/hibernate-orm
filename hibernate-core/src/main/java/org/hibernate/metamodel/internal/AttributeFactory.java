@@ -1,5 +1,7 @@
 package org.hibernate.metamodel.internal;
 
+import org.hibernate.property.access.spi.PropertyAccessorService;
+
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
@@ -818,7 +820,8 @@ public class AttributeFactory {
 			Property property,
 			MappedSuperclassDomainType<?> ownerType,
 			MetadataContext context) {
-		return property.getGetter( ownerType.getJavaType(), propertyAccessStrategyResolver( context ) ).getMember();
+		return property.getGetter( ownerType.getJavaType(), propertyAccessStrategyResolver( context ),
+				context.getRuntimeModelCreationContext().getServiceRegistry().requireService( PropertyAccessorService.class ) ).getMember();
 //		final EntityPersister declaringEntity =
 //				getDeclaringEntity( (AbstractIdentifiableType<?>) ownerType, context );
 //		if ( declaringEntity != null ) {
@@ -844,7 +847,8 @@ public class AttributeFactory {
 		final var identifiableType = (AbstractIdentifiableType<?>) attributeContext.getOwnerType();
 		if ( identifiableType instanceof SqmMappedSuperclassDomainType<?> ) {
 			return attributeContext.getPropertyMapping()
-					.getGetter( identifiableType.getJavaType(), propertyAccessStrategyResolver( metadataContext ) )
+					.getGetter( identifiableType.getJavaType(), propertyAccessStrategyResolver( metadataContext ),
+						metadataContext.getRuntimeModelCreationContext().getServiceRegistry().requireService( PropertyAccessorService.class ) )
 					.getMember();
 		}
 		else {
@@ -868,7 +872,8 @@ public class AttributeFactory {
 		final var identifiableType = (AbstractIdentifiableType<?>) attributeContext.getOwnerType();
 		if ( identifiableType instanceof SqmMappedSuperclassDomainType<?> ) {
 			return attributeContext.getPropertyMapping()
-					.getGetter( identifiableType.getJavaType(), propertyAccessStrategyResolver( metadataContext ) )
+					.getGetter( identifiableType.getJavaType(), propertyAccessStrategyResolver( metadataContext ),
+						metadataContext.getRuntimeModelCreationContext().getServiceRegistry().requireService( PropertyAccessorService.class ) )
 					.getMember();
 		}
 		else {

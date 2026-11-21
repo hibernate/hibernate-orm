@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.mapping.access;
 
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+
 import java.util.List;
 import java.util.Map;
 
@@ -13,7 +16,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Transient;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.testing.orm.junit.Jira;
@@ -72,9 +74,7 @@ class CollectionEmbeddableAccessTest {
 	}
 
 	private void verify(ServiceRegistryScope scope, Class<?> owner, String path, String access, boolean mapKey) {
-		var metadata = new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( owner )
-				.buildMetadata();
+		var metadata = MetadataBuildingHelper.buildMetadata( scope.getRegistry(), new MappingSources().addManagedClass( owner ) );
 		var collection = (Collection) metadata.getEntityBinding( owner.getName() ).getRecursiveProperty( path ).getValue();
 		var component = (Component) ( mapKey ? ( (org.hibernate.mapping.Map) collection ).getIndex() : collection.getElement() );
 		assertThat( component.getPropertySpan() ).isEqualTo( 1 );

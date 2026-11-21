@@ -109,7 +109,7 @@ public class CommonAttributeProcessing {
 		if ( jaxbAttribute.getExcludeFromVersioning() != null ) {
 			memberDetails.applyAnnotationUsage(
 					JpaAnnotations.EXCLUDE_FROM_VERSIONING,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 		}
 	}

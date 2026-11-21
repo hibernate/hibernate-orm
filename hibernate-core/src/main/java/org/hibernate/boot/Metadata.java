@@ -7,7 +7,6 @@ import java.util.function.Consumer;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
-import org.hibernate.Remove;
 import org.hibernate.boot.model.IdentifierGeneratorRegistration;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeDefinition;

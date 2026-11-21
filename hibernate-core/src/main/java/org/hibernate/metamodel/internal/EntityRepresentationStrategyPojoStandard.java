@@ -31,6 +31,7 @@ import org.hibernate.accessor.MultiValueWriter;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessorService;
+import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.property.access.spi.SetterFieldImpl;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
@@ -48,6 +49,7 @@ import static org.hibernate.metamodel.internal.PropertyAccessHelper.propertyAcce
  * @author Steve Ebersole
  */
 public class EntityRepresentationStrategyPojoStandard implements EntityRepresentationStrategy {
+	private final PropertyAccessStrategyResolver propertyAccessStrategyResolver;
 
 	private final JavaType<?> mappedJtd;
 	private final JavaType<?> proxyJtd;
@@ -68,6 +70,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			@Nonnull PersistentClass bootDescriptor,
 			@Nonnull EntityPersister runtimeDescriptor,
 			@Nonnull RuntimeModelCreationContext creationContext) {
+		propertyAccessStrategyResolver = creationContext.getServiceRegistry().requireService( PropertyAccessStrategyResolver.class );
 		final var registry = creationContext.getTypeConfiguration().getJavaTypeRegistry();
 
 		final var mappedJavaType = bootDescriptor.getMappedClass();
@@ -256,9 +259,11 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		try {
 			for ( var property : bootDescriptor.getProperties() ) {
 				validateGetterSetterMethodProxyability( "Getter",
-						property.getGetter( clazz ).getMethod() );
+						property.getGetter( clazz, propertyAccessStrategyResolver,
+							creationContext.getServiceRegistry().requireService( PropertyAccessorService.class ) ).getMethod() );
 				validateGetterSetterMethodProxyability( "Setter",
-						property.getSetter( clazz ).getMethod() );
+						property.getSetter( clazz, propertyAccessStrategyResolver,
+							creationContext.getServiceRegistry().requireService( PropertyAccessorService.class ) ).getMethod() );
 			}
 			if ( identifierPropertyAccess != null ) {
 				idGetterMethod = identifierPropertyAccess.getGetter().getMethod();
@@ -352,7 +357,6 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		final var proxyFactory =
 				bytecodeProvider.getProxyFactoryFactory()
 						.buildProxyFactory();
-		final String entityName = bootDescriptor.getEntityName();
 		try {
 			proxyFactory.postInstantiate(
 					entityName,
@@ -400,7 +404,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			@Nonnull StrategySelector strategySelector) {
 		final var mappedClass = mappedJtd.getJavaTypeClass();
 		final String descriptorName = bootAttributeDescriptor.getName();
-		final var strategy = propertyAccessStrategy( bootAttributeDescriptor, mappedClass, strategySelector );
+		final var strategy = propertyAccessStrategy( bootAttributeDescriptor, mappedClass, strategySelector, propertyAccessStrategyResolver );
 		if ( strategy == null ) {
 			throw new HibernateException(
 					String.format(

@@ -19,7 +19,6 @@ import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 
-import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.query.internal.QueryLogging.QUERY_MESSAGE_LOGGER;
 
 /**

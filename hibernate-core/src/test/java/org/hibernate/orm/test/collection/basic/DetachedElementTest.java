@@ -22,6 +22,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -55,12 +56,21 @@ public class DetachedElementTest {
 								assertEquals( 1, parent.children.size() );
 								assertFalse( parent.children.isEmpty() );
 								assertTrue( parent.children.contains(element) );
+								// the collection is initialized, so these read its state in memory
+								assertEquals( 1, Hibernate.size(parent.children) );
+								assertFalse( Hibernate.isEmpty(parent.children) );
+								assertTrue( Hibernate.contains(parent.children, element) );
+								assertSame( element, Hibernate.get(parent.children, 0) );
 								assertTrue( parent.children.remove(element) );
 							}
 					);
 
+					// an uninitialized collection of a detached entity can't be read
+					final EntityWithList loaded = session.find( EntityWithList.class, 1L );
+					session.clear();
+					assertFalse( Hibernate.isInitialized(loaded.children) );
 					assertThrows( LazyInitializationException.class,
-							() -> Hibernate.get(parent.children, 0)
+							() -> Hibernate.get(loaded.children, 0)
 					);
 				}
 		);
@@ -85,11 +95,17 @@ public class DetachedElementTest {
 								assertFalse( parent.children.isEmpty() );
 								assertTrue( parent.children.containsKey(element.id) );
 								assertTrue( parent.children.containsValue(element) );
+								// the map is initialized, so this reads its state in memory
+								assertSame( element, Hibernate.get(parent.children, 2L) );
 							}
 					);
 
+					// an uninitialized map of a detached entity can't be read
+					final EntityWithMap loaded = session.find( EntityWithMap.class, 1L );
+					session.clear();
+					assertFalse( Hibernate.isInitialized(loaded.children) );
 					assertThrows( LazyInitializationException.class,
-							() -> Hibernate.get(parent.children, 2L)
+							() -> Hibernate.get(loaded.children, 2L)
 					);
 			}
 		);

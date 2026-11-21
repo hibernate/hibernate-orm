@@ -111,6 +111,18 @@ class SQLJoinTableRestrictionQueryTest {
 		} );
 	}
 
+	@ParameterizedTest
+	@ValueSource(strings = {"cart.id", "item.id"})
+	void innerJoinIdSelectionAppliesJoinTableFilter(String selection, SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.enableFilter( "itemOneOnly" );
+			assertEquals( List.of( 1L ), session.createQuery(
+					"select " + selection + " from Cart cart join cart.filteredPkItems item where cart.id = 1",
+					Long.class
+			).getResultList() );
+		} );
+	}
+
 	@Test
 	void innerJoinWithTargetColumnAppliesJoinTableFilter(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
@@ -134,6 +146,23 @@ class SQLJoinTableRestrictionQueryTest {
 			).setParameter( "id", cartId ).getSingleResult();
 			assertEquals( expectedItems, counts[0] );
 			assertEquals( 1L, counts[1] );
+		} );
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {"unrestrictedItems"})
+	void rightJoinPreservesUnassociatedItems(String collection, SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.enableFilter( "itemOneOnly" );
+			assertEquals( List.of( 1L, 2L, 3L, 4L, 5L ), session.createQuery(
+					"select item.id from Cart cart right join cart." + collection
+					+ " item order by item.id",
+					Long.class
+			).getResultList() );
+			assertNull( session.createQuery(
+					"select cart.id from Cart cart right join cart." + collection + " item where item.id = 5",
+					Long.class
+			).getSingleResult() );
 		} );
 	}
 

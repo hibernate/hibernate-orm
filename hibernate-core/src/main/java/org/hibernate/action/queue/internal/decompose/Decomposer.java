@@ -296,8 +296,8 @@ public class Decomposer implements DecompositionContext {
 			if ( operation.getKind() == MutationKind.INSERT ) {
 				inserts.put( operation.getTableExpression(), operation );
 			}
-			else if ( operation.getKind() == MutationKind.UPDATE && operation.getExecutionPrerequisite() == null ) {
-				operation.setExecutionPrerequisite( inserts.get( operation.getTableExpression() ) );
+			else if ( operation.getKind() == MutationKind.UPDATE ) {
+				operation.addExecutionPrerequisite( inserts.get( operation.getTableExpression() ) );
 			}
 			consumer.accept( operation );
 		};

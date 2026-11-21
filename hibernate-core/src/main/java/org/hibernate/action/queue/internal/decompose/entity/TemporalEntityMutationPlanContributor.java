@@ -93,7 +93,7 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 		operationConsumer.accept( end );
 		contributeReplacementInsert( context, insert -> {
 			// Inserts may be batched with a different entity's insert from the same flush.
-			insert.setExecutionPrerequisite( end );
+			insert.addExecutionPrerequisite( end );
 			operationConsumer.accept( insert );
 		} );
 		return true;

@@ -129,7 +129,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 					context.state(),
 					entityPersister.getPropertyInsertability()
 			);
-			insert.setExecutionPrerequisite( end );
+			insert.addExecutionPrerequisite( end );
 			operationConsumer.accept( end );
 			operationConsumer.accept( insert );
 		}

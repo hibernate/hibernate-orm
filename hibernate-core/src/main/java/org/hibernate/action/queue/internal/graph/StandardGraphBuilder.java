@@ -96,7 +96,7 @@ public class StandardGraphBuilder implements GraphBuilder {
 			outgoing.put( node, new ArrayList<>() );
 			if ( !hasExecutionPrerequisites ) {
 				for ( var operation : group.operations() ) {
-					if ( operation.getExecutionPrerequisite() != null ) {
+					if ( !operation.getExecutionPrerequisites().isEmpty() ) {
 						hasExecutionPrerequisites = true;
 						break;
 					}
@@ -175,8 +175,7 @@ public class StandardGraphBuilder implements GraphBuilder {
 		for ( var node : nodes ) {
 			final Set<GroupNode> prerequisites = new HashSet<>();
 			for ( var operation : node.group().operations() ) {
-				final var prerequisite = operation.getExecutionPrerequisite();
-				if ( prerequisite != null ) {
+				for ( var prerequisite : operation.getExecutionPrerequisites() ) {
 					final var prerequisiteNode = nodesByOperation.get( prerequisite );
 					if ( prerequisiteNode == null ) {
 						throw new IllegalStateException( "Flush operation prerequisite is missing from the execution graph" );

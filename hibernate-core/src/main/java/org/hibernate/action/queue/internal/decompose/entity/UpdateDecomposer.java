@@ -160,10 +160,8 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 				if ( flushOperation.getKind() == MutationKind.UPDATE
 						&& TenantIdHelper.checksTenantId( entityPersister, flushOperation.getJdbcOperation() ) ) {
 					for ( var operation : operations ) {
-						// A dependent operation inherits the ownership check from its prerequisite.
-						if ( operation.getKind() != MutationKind.NO_OP && operation != flushOperation
-								&& operation.getExecutionPrerequisite() == null ) {
-							operation.setExecutionPrerequisite( flushOperation );
+						if ( operation.getKind() != MutationKind.NO_OP && operation != flushOperation ) {
+							operation.addExecutionPrerequisite( flushOperation );
 						}
 					}
 					return;

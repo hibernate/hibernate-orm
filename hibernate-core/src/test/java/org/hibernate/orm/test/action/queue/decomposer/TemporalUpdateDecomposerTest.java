@@ -29,7 +29,6 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * Tests graph decomposition for temporal updates.
@@ -105,8 +104,8 @@ public class TemporalUpdateDecomposerTest {
 			final var ownershipCheck = operation( operations, currentTable, MutationKind.UPDATE );
 			final var closeHistory = operation( operations, historyTable, MutationKind.UPDATE );
 			final var insertHistory = operation( operations, historyTable, MutationKind.INSERT );
-			assertSame( ownershipCheck, closeHistory.getExecutionPrerequisite() );
-			assertSame( closeHistory, insertHistory.getExecutionPrerequisite() );
+			assertEquals( List.of( ownershipCheck ), closeHistory.getExecutionPrerequisites() );
+			assertEquals( List.of( closeHistory, ownershipCheck ), insertHistory.getExecutionPrerequisites() );
 			item.name = "before";
 		} );
 	}

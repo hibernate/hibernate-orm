@@ -56,7 +56,16 @@ public final class CollectionScalarLoader {
 	}
 
 	public int select(Object key, @Nullable Object value, SharedSessionContractImplementor session) {
-		final var result = (Integer) load( collection, key, match, value, jdbcSelect, parameters, session );
+		final ModelPart bindable;
+		if ( match instanceof EntityCollectionPart part ) {
+			final var entity = part.getAssociatedEntityMappingType();
+			bindable = entity.getIdentifierMapping();
+			value = getEntityIdentifierIfNotUnsaved( entity.getEntityName(), value, session );
+		}
+		else {
+			bindable = match;
+		}
+		final var result = (Integer) load( collection, key, bindable, value, jdbcSelect, parameters, session );
 		if ( result == null ) {
 			return 0;
 		}
@@ -65,23 +74,14 @@ public final class CollectionScalarLoader {
 	}
 
 	static @Nullable Object load(
-			PluralAttributeMapping collection, Object key, @Nullable CollectionPart match, @Nullable Object value,
+			PluralAttributeMapping collection, Object key, @Nullable ModelPart match, @Nullable Object value,
 			JdbcSelect jdbcSelect, JdbcParametersList jdbcParameters, SharedSessionContractImplementor session) {
 		final var jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(
 				key, collection.getKeyDescriptor(), jdbcParameters, session );
 		if ( match != null ) {
-			final ModelPart bindable;
-			if ( match instanceof EntityCollectionPart part ) {
-				final var entity = part.getAssociatedEntityMappingType();
-				bindable = entity.getIdentifierMapping();
-				value = getEntityIdentifierIfNotUnsaved( entity.getEntityName(), value, session );
-			}
-			else {
-				bindable = match;
-			}
 			offset += jdbcParameterBindings.registerParametersForEachJdbcValue(
-					value, offset, bindable, jdbcParameters, session );
+					value, offset, match, jdbcParameters, session );
 		}
 		assert offset == jdbcParameters.size();
 

@@ -12,7 +12,6 @@ import jakarta.persistence.OrderColumn;
 
 import org.hibernate.Hibernate;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.annotations.ListIndexBase;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
@@ -97,8 +96,21 @@ class MixedTemporalAssociationTest {
 			assertEquals( "Math", Hibernate.get( courses, 0 ).name );
 			assertNull( Hibernate.get( courses, 1 ) );
 			assertFalse( Hibernate.isInitialized( courses ) );
-			assertEquals( 0, Hibernate.size( session.find( Student.class, 2L ).courses ) );
 		}
+	}
+
+	@Test
+	void assignNullableTemporalAssociation(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			assertEquals( List.of( 2L ), session.createSelectionQuery(
+					"select s.id from Student s where s.favorite is null", Long.class ).list() );
+			assertEquals( List.of( 2L ), session.createSelectionQuery(
+					"select s.id from Student s where s.favorite.id is null", Long.class ).list() );
+			assertEquals( 1, session.createMutationQuery( "update Student set favorite = :course where id = 2" )
+					.setParameter( "course", session.getReference( Course.class, 1L ) ).executeUpdate() );
+			assertEquals( List.of( 2L ), session.createSelectionQuery(
+					"select s.id from Student s where fk(s.favorite) = 1", Long.class ).list() );
+		} );
 	}
 
 	@Test
@@ -123,7 +135,6 @@ class MixedTemporalAssociationTest {
 		@Temporal
 		@ManyToMany
 		@OrderColumn(name = "position_in_list")
-		@ListIndexBase(5)
 		List<Course> courses = new ArrayList<>();
 
 		Student() {

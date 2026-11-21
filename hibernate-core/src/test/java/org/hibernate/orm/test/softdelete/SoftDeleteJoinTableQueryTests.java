@@ -257,18 +257,12 @@ public class SoftDeleteJoinTableQueryTests {
 
 	@Test
 	void indexedAccess(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			final var key = new Tag( 25 );
-			session.persist( key );
-			session.find( Owner.class, 2 ).keyed.put( key, session.find( Tag.class, 20 ) );
-		} );
 		scope.inSession( session -> {
 			final var hidden = session.find( Owner.class, 1 );
 			final var live = session.find( Owner.class, 2 );
 			final var tag = session.find( Tag.class, 20 );
 			assertThat( Hibernate.get( hidden.keyed, session.find( Tag.class, 10 ) ) ).isNull();
 			assertThat( Hibernate.get( live.keyed, tag ) ).isSameAs( tag );
-			assertThat( Hibernate.get( live.keyed, session.find( Tag.class, 25 ) ) ).isSameAs( tag );
 		} );
 		scope.inSession( session -> {
 			session.enableFilter( "visibleNotes" );

@@ -71,6 +71,11 @@ public interface PluralAttributeMapping
 			@Nonnull LoadQueryInfluencers influencers,
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator);
 
+	/// Whether reading collection rows needs restrictions beyond the plain collection table.
+	default boolean hasRowRestrictions(@Nonnull LoadQueryInfluencers influencers) {
+		return hasWhereRestrictions() || isAffectedByEnabledFilters( influencers, true );
+	}
+
 	/// Apply the row restrictions shared by collection loads, joins and subqueries.
 	/// Joins collect auxiliary restrictions separately to recognize joins eligible for a fetch.
 	/// Subqueries apply both kinds directly to their where clause.

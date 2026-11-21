@@ -1301,7 +1301,7 @@ public class PluralAttributeMappingImpl
 					tableGroup,
 					null,
 					sqlAliasBase,
-					nested ? SqlAstJoinType.INNER : joinType,
+					nested && hasIndexRestriction( creationState.getLoadQueryInfluencers() ) ? SqlAstJoinType.INNER : joinType,
 					fetched,
 					false,
 					creationState
@@ -1310,6 +1310,12 @@ public class PluralAttributeMappingImpl
 		}
 
 		return tableGroup;
+	}
+
+	private boolean hasIndexRestriction(LoadQueryInfluencers influencers) {
+		return hasPartRestriction( indexDescriptor, influencers )
+			|| indexDescriptor instanceof EntityCollectionPart index
+				&& index.getAssociatedEntityMappingType().isAffectedByEnabledFilters( influencers, true );
 	}
 
 	private boolean hasAuxiliaryRestriction(LoadQueryInfluencers influencers) {
@@ -1328,6 +1334,11 @@ public class PluralAttributeMappingImpl
 		return false;
 	}
 
+	@Override
+	public boolean hasRowRestrictions(@Nonnull LoadQueryInfluencers influencers) {
+		return hasAuxiliaryRestriction( influencers ) || PluralAttributeMapping.super.hasRowRestrictions( influencers );
+	}
+
 	private boolean isNestedJoin(SqlAstJoinType joinType, boolean addsPredicate, SqlAstCreationState creationState) {
 		// For inner joins we never need join nesting
 		return joinType != SqlAstJoinType.INNER
@@ -1335,9 +1346,7 @@ public class PluralAttributeMappingImpl
 			// A restriction which hides an element hides the whole row of the collection table, along with the
 			// key of the element or index which is read from it, and the index of a hidden element of a map.
 			&& ( addsPredicate
-					|| hasAuxiliaryRestriction( creationState.getLoadQueryInfluencers() )
-					|| collectionDescriptor.hasWhereRestrictions()
-					|| isAffectedByEnabledFilters( creationState.getLoadQueryInfluencers(), true ) );
+					|| hasRowRestrictions( creationState.getLoadQueryInfluencers() ) );
 	}
 
 	private TableGroup createCollectionTableGroup(

@@ -276,7 +276,8 @@ public class SqmUtil {
 		if ( modelPart instanceof ToOneAttributeMapping toOne ) {
 			final var influencers = creationState.getLoadQueryInfluencers();
 			final var auxiliary = toOne.getAssociatedEntityMappingType().getAuxiliaryMapping();
-			return auxiliary != null && auxiliary.requiresTargetTable( influencers )
+			return auxiliary != null && auxiliary.isAffectedByInfluencers( influencers )
+					&& creationState.getCurrentClauseStack().getCurrent() != Clause.SET
 				|| influencers.hasEnabledFilters() && toOne.hasFilterForLoadByKey()
 						&& toOne.isAffectedByEnabledFilters( influencers );
 		}

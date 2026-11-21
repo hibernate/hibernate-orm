@@ -46,6 +46,7 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.engine.spi.TemporalEntityKey;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
@@ -2251,6 +2252,11 @@ class StatefulPersistenceContext implements PersistenceContext {
 		@Override
 		public void setEntityEntry(@Nullable EntityEntry entityEntry) {
 			this.entityEntry = entityEntry;
+			// The entry must report the key it is actually registered under
+			if ( entityKey instanceof TemporalEntityKey temporalKey
+					&& entityEntry instanceof EntityEntryImpl entry ) {
+				entry.setChangesetId( temporalKey.getChangesetId() );
+			}
 		}
 
 		@Override

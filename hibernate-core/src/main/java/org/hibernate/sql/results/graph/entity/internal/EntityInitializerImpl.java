@@ -151,6 +151,7 @@ public class EntityInitializerImpl
 		protected final boolean hasCallbackActions;
 		protected final @Nullable EntityPersister defaultConcreteDescriptor;
 		protected final boolean allRevisions;
+		private final boolean allRevisionsQuery;
 
 		// per-row state
 		protected @Nullable EntityPersister concreteDescriptor;
@@ -179,8 +180,8 @@ public class EntityInitializerImpl
 				canUseEmbeddedIdentifierInstanceAsEntity = false;
 			}
 			hasCallbackActions = rowProcessingState.hasCallbackActions();
-			allRevisions = initializer.auditChangesetIdAssembler != null
-					&& rowProcessingState.getSession().getLoadQueryInfluencers().isAllRevisions();
+			allRevisionsQuery = rowProcessingState.getSession().getLoadQueryInfluencers().isAllRevisions();
+			allRevisions = allRevisionsQuery && initializer.auditChangesetIdAssembler != null;
 			defaultConcreteDescriptor =
 					hasConcreteDescriptor( rowProcessingState, initializer.discriminatorAssembler, entityDescriptor )
 							? entityDescriptor
@@ -199,6 +200,7 @@ public class EntityInitializerImpl
 			this.canUseEmbeddedIdentifierInstanceAsEntity = original.canUseEmbeddedIdentifierInstanceAsEntity;
 			this.hasCallbackActions = original.hasCallbackActions;
 			this.allRevisions = original.allRevisions;
+			this.allRevisionsQuery = original.allRevisionsQuery;
 			this.defaultConcreteDescriptor = original.defaultConcreteDescriptor;
 			this.concreteDescriptor = original.concreteDescriptor;
 			this.entityKey = original.entityKey;
@@ -879,28 +881,18 @@ public class EntityInitializerImpl
 							discriminatorAssembler, entityDescriptor );
 			assert concreteDescriptor != null;
 		}
-		final Object changesetId = resolveChangesetId( data );
-		data.entityKey = changesetId != null
-				? new TemporalEntityKey( id, concreteDescriptor, changesetId )
-				: new EntityKey( id, concreteDescriptor );
-	}
-
-	protected Object resolveChangesetId(EntityInitializerData data) {
-		// For audited entities, include the per-row changeset identifier in the key
-		// so the PC distinguishes the same entity at different points in time
-		final var temporalIdentifier =
-				data.getRowProcessingState().getLoadQueryInfluencers()
-						.getTemporalIdentifier();
+		final var rowProcessingState = data.getRowProcessingState();
 		if ( auditChangesetIdAssembler != null ) {
-			return auditChangesetIdAssembler.assemble( data.getRowProcessingState() );
+			final Object changesetId = auditChangesetIdAssembler.assemble( rowProcessingState );
+			if ( changesetId != null ) {
+				data.entityKey = new TemporalEntityKey( id, concreteDescriptor, changesetId );
+				return;
+			}
 		}
-		else if ( entityDescriptor.getAuditMapping() != null
-				&& temporalIdentifier != null && temporalIdentifier != ALL_CHANGESETS ) {
-			return temporalIdentifier;
-		}
-		else {
-			return null;
-		}
+		// An all-revisions query also returns current rows for entities without an audit mapping.
+		data.entityKey = data.allRevisionsQuery
+				? new EntityKey( id, concreteDescriptor )
+				: rowProcessingState.getSession().generateEntityKey( id, concreteDescriptor );
 	}
 
 	@Override
@@ -1288,8 +1280,8 @@ public class EntityInitializerImpl
 									this
 							);
 
-			if ( data.allRevisions && data.entityKey.isTemporal() ) {
-				// Set the per-row temporal identifier so that association loads use the correct revision
+			if ( isResultInitializer && data.allRevisions && data.entityKey.isTemporal() ) {
+				// Association loads use the root revision even when a fetch joins an older audit row.
 				data.getRowProcessingState().getSession()
 						.getLoadQueryInfluencers()
 						.setTemporalIdentifier( data.entityKey.getChangesetId() );
@@ -1669,7 +1661,7 @@ public class EntityInitializerImpl
 
 	@Override
 	public void endLoading(EntityInitializerData data) {
-		if ( data.allRevisions ) {
+		if ( isResultInitializer && data.allRevisions ) {
 			data.getRowProcessingState().getSession()
 					.getLoadQueryInfluencers()
 					.setTemporalIdentifier( ALL_CHANGESETS );
@@ -1887,7 +1879,7 @@ public class EntityInitializerImpl
 					entityDescriptor.getNaturalIdMapping()
 							.extractNaturalIdFromEntityState( resolvedEntityState );
 			persistenceContext.getNaturalIdResolutions()
-					.cacheResolutionFromLoad( data.entityKey.getIdentifier(), naturalId, entityDescriptor );
+					.cacheResolutionFromLoad( data.entityKey, naturalId );
 		}
 	}
 

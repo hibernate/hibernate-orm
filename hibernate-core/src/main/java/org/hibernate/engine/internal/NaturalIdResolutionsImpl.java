@@ -6,6 +6,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.NaturalIdResolutions;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.Resolution;
@@ -27,6 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableCollection;
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
+import static org.hibernate.engine.internal.CacheHelper.readsHistory;
 import static org.hibernate.engine.internal.NaturalIdLogging.NATURAL_ID_LOGGER;
 
 public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializable {
@@ -68,6 +70,15 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 
 	@Override
 	public void cacheResolutionFromLoad(Object id, Object naturalId, EntityMappingType entityDescriptor) {
+		cacheResolutionFromLoad( id, naturalId, entityDescriptor, readsHistory( session(), entityDescriptor.getEntityPersister() ) );
+	}
+
+	@Override
+	public void cacheResolutionFromLoad(EntityKey entityKey, Object naturalId) {
+		cacheResolutionFromLoad( entityKey.getIdentifier(), naturalId, entityKey.getPersister(), entityKey.isTemporal() );
+	}
+
+	private void cacheResolutionFromLoad(Object id, Object naturalId, EntityMappingType entityDescriptor, boolean historical) {
 		if ( NATURAL_ID_LOGGER.isTraceEnabled() ) {
 			NATURAL_ID_LOGGER.cachingNaturalIdResolutionFromLoad(
 					entityDescriptor.getEntityName(),
@@ -82,7 +93,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			// the second comes from the entity loading. In this condition, we want to avoid the multiple
 			// 'put' stats incrementing.
 			final boolean justAddedLocally = cacheResolution( id, naturalId, entityDescriptor );
-			if ( justAddedLocally && naturalIdMapping.getCacheAccess() != null ) {
+			if ( justAddedLocally && !historical && naturalIdMapping.getCacheAccess() != null ) {
 				final var persister = locatePersisterForKey( entityDescriptor.getEntityPersister() );
 				manageSharedResolution( persister, id, naturalId, (Object) null, CachedNaturalIdValueSource.LOAD );
 			}
@@ -217,7 +228,8 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			EntityMappingType entityDescriptor,
 			CachedNaturalIdValueSource source) {
 		final var naturalIdMapping = entityDescriptor.getNaturalIdMapping();
-		if ( naturalIdMapping != null && naturalIdMapping.getCacheAccess() != null ) {
+		if ( naturalIdMapping != null && naturalIdMapping.getCacheAccess() != null
+				&& ( source != CachedNaturalIdValueSource.LOAD || !readsHistory( session(), entityDescriptor.getEntityPersister() ) ) ) {
 			manageSharedResolution(
 					entityDescriptor.getEntityPersister(),
 					id,
@@ -234,14 +246,15 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			Object naturalIdValues,
 			Object previousNaturalIdValues,
 			CachedNaturalIdValueSource source) {
-		if ( session().isRootTenant() ) {
+		final var session = session();
+		if ( session.isRootTenant() ) {
 			return;
 		}
 		final var cacheAccess = persister.getNaturalIdMapping().getCacheAccess();
 		if ( cacheAccess != null ) {
 			final var rootEntityDescriptor = persister.getRootEntityDescriptor();
 			final var rootEntityPersister = rootEntityDescriptor.getEntityPersister();
-			final Object cacheKey = cacheAccess.generateCacheKey( naturalIdValues, rootEntityPersister, session() );
+			final Object cacheKey = cacheAccess.generateCacheKey( naturalIdValues, rootEntityPersister, session );
 			switch ( source ) {
 				case LOAD:
 					cacheFromLoad(
@@ -609,7 +622,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 		}
 
 		// Session cache miss, see if second-level caching is enabled
-		if ( !persister.hasNaturalIdCache() ) {
+		if ( !persister.hasNaturalIdCache() || readsHistory( session(), persister ) ) {
 			return null;
 		}
 		else {

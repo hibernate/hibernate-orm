@@ -23,6 +23,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
+import static org.hibernate.engine.internal.CacheHelper.readsHistory;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isManagedEntity;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
@@ -133,7 +134,8 @@ public class CacheLoadHelper {
 						&& source.getCacheMode().isGetEnabled()
 						&& lockMode.lessThan( LockMode.READ )
 						&& !persister.hasSqlRestrictedAssociations()
-						&& !persister.isAffectedByEnabledFiltersForCache( source.getLoadQueryInfluencers() );
+						&& !persister.isAffectedByEnabledFiltersForCache( source.getLoadQueryInfluencers() )
+						&& !readsHistory( source, persister );
 		if ( useCache ) {
 			final Object cacheEntry = getFromSharedCache( entityKey.getIdentifier(), persister, source );
 			return cacheEntry == null ? null : processCachedEntry( entity, persister, cacheEntry, source, entityKey );
@@ -387,7 +389,7 @@ public class CacheLoadHelper {
 			@Nonnull CollectionPersister persister,
 			@Nonnull PersistentCollection<?> collection,
 			@Nonnull SharedSessionContractImplementor source) {
-		if ( persister.hasCache() && source.getCacheMode().isGetEnabled() ) {
+		if ( persister.hasCache() && source.getCacheMode().isGetEnabled() && !readsHistory( source, persister ) ) {
 			final Object cachedEntry = getFromSharedCache( key, persister, source );
 			if ( cachedEntry == null ) {
 				return false;

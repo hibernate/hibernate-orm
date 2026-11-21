@@ -1,14 +1,18 @@
 package org.hibernate.temporal;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.MapKeyJoinColumn;
+import jakarta.persistence.OrderColumn;
 
 import org.hibernate.Hibernate;
 import org.hibernate.SharedSessionContract;
@@ -27,6 +31,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -36,8 +41,12 @@ import java.util.Set;
 import static jakarta.persistence.FetchType.LAZY;
 import static org.hibernate.audit.AuditLog.ALL_CHANGESETS;
 import static org.hibernate.cfg.StateManagementSettings.CHANGESET_ID_SUPPLIER;
+import static org.hibernate.cfg.StateManagementSettings.TEMPORAL_TABLE_STRATEGY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -61,8 +70,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		AllChangesetsRevisionStateTest.Book.class,
 		AllChangesetsRevisionStateTest.Writer.class
 })
-@ServiceRegistry(settings = @Setting(name = CHANGESET_ID_SUPPLIER,
-		value = "org.hibernate.temporal.AllChangesetsRevisionStateTest$ChangesetIds"))
+@ServiceRegistry(settings = {
+		@Setting(name = TEMPORAL_TABLE_STRATEGY, value = "HISTORY_TABLE"),
+		@Setting(name = CHANGESET_ID_SUPPLIER,
+				value = "org.hibernate.temporal.AllChangesetsRevisionStateTest$ChangesetIds")
+})
 class AllChangesetsRevisionStateTest {
 
 	private static Object historyCreatedFor;
@@ -87,6 +99,7 @@ class AllChangesetsRevisionStateTest {
 			doc.id = 1;
 			doc.title = "D1";
 			doc.tags.add( "one" );
+			doc.lines.addAll( Arrays.asList( "a", null, "c" ) );
 			session.persist( doc );
 			final var author = new Author();
 			author.id = 1;
@@ -107,6 +120,8 @@ class AllChangesetsRevisionStateTest {
 			link.image = image;
 			event.links.add( link );
 			event.notes.put( image, "note" );
+			event.gallery.put( "cover", image );
+			event.pairs.put( image, other );
 			event.images.add( image );
 			session.persist( event );
 			final var edition = new Edition();
@@ -115,6 +130,8 @@ class AllChangesetsRevisionStateTest {
 			final var editionLink = new Link();
 			editionLink.image = image;
 			edition.links.add( editionLink );
+			edition.notes.put( image, "note" );
+			edition.covers.add( image );
 			session.persist( edition );
 			final var writer = new Writer();
 			writer.id = 1;
@@ -220,6 +237,7 @@ class AllChangesetsRevisionStateTest {
 			assertFalse( Hibernate.isInitialized( second.images ) );
 			final var added = second.images.stream().filter( image -> image.id == 2 ).findFirst().orElseThrow();
 			assertFalse( Hibernate.contains( first.images, added ) );
+			assertFalse( Hibernate.isInitialized( first.images ) );
 			assertTrue( Hibernate.contains( second.images, added ) );
 		}
 		try (var session = scope.getSessionFactory().withOptions().atChangeset( 1 ).openSession()) {
@@ -227,7 +245,10 @@ class AllChangesetsRevisionStateTest {
 			assertEquals( 1, Hibernate.size( event.images ) );
 			assertFalse( Hibernate.isInitialized( event.images ) );
 			assertFalse( Hibernate.contains( event.images, session.find( Image.class, 2 ) ) );
+			assertTrue( Hibernate.contains( event.images, session.find( Image.class, 1 ) ) );
+			assertFalse( Hibernate.isInitialized( event.images ) );
 			assertEquals( "note", Hibernate.get( event.notes, session.find( Image.class, 1 ) ) );
+			assertFalse( Hibernate.isInitialized( event.notes ) );
 		}
 	}
 
@@ -238,6 +259,90 @@ class AllChangesetsRevisionStateTest {
 			assertEquals( 1, Hibernate.size( doc.tags ) );
 			assertFalse( Hibernate.isInitialized( doc.tags ) );
 			assertEquals( Set.of( "one" ), doc.tags );
+		}
+	}
+
+	@Test
+	void entityMapValueAtChangeset(SessionFactoryScope scope) {
+		for ( int changeset = 1; changeset <= 2; changeset++ ) {
+			try (var session = scope.getSessionFactory().withOptions().atChangeset( changeset ).openSession()) {
+				final var event = session.find( Event.class, 1 );
+				final var cover = Hibernate.get( event.gallery, "cover" );
+				assertEquals( "I" + changeset, Hibernate.unproxy( cover, Image.class ).title );
+				assertFalse( Hibernate.isInitialized( event.gallery ) );
+			}
+		}
+	}
+
+	@Test
+	void entityMapKeyAndValueOfSameTypeAtChangeset(SessionFactoryScope scope) {
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( 1 ).openSession()) {
+			final var event = session.find( Event.class, 1 );
+			final var image = session.find( Image.class, 1 );
+			final var other = session.find( Image.class, 2 );
+			assertSame( other, Hibernate.get( event.pairs, image ) );
+			// the value is not a key
+			assertNull( Hibernate.get( event.pairs, other ) );
+			assertFalse( Hibernate.isInitialized( event.pairs ) );
+		}
+	}
+
+	@Test
+	void lookupsMatchSnapshots(SessionFactoryScope scope) {
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( ALL_CHANGESETS ).openSession()) {
+			final var current = session.find( Image.class, 1 );
+			// the snapshot of the image held by the first revision of the event
+			final var snapshot = session.createSelectionQuery(
+					"select i from Event e join e.images i where e.id = 1 and i.id = 1 order by changesetId(e)",
+					Image.class ).getResultList().get( 0 );
+			assertNotSame( current, snapshot );
+			final var first = session.createSelectionQuery(
+					"from Event e where e.id = 1 order by changesetId(e)", Event.class ).getResultList().get( 0 );
+			final var edition = session.find( Edition.class, 1 );
+
+			// a collection of a revision holds the snapshot, and a collection of current state the current image
+			assertTrue( Hibernate.contains( first.images, snapshot ) );
+			assertFalse( Hibernate.contains( first.images, current ) );
+			assertEquals( "note", Hibernate.get( first.notes, snapshot ) );
+			assertNull( Hibernate.get( first.notes, current ) );
+			assertTrue( Hibernate.contains( edition.covers, current ) );
+			assertFalse( Hibernate.contains( edition.covers, snapshot ) );
+			assertEquals( "note", Hibernate.get( edition.notes, current ) );
+			assertNull( Hibernate.get( edition.notes, snapshot ) );
+			assertFalse( Hibernate.isInitialized( first.images ) );
+			assertFalse( Hibernate.isInitialized( first.notes ) );
+			assertFalse( Hibernate.isInitialized( edition.covers ) );
+			assertFalse( Hibernate.isInitialized( edition.notes ) );
+
+			// just as the initialized collections find
+			assertTrue( first.images.contains( snapshot ) );
+			assertFalse( first.images.contains( current ) );
+			assertEquals( "note", first.notes.get( snapshot ) );
+			assertNull( first.notes.get( current ) );
+			assertTrue( edition.covers.contains( current ) );
+			assertFalse( edition.covers.contains( snapshot ) );
+			assertEquals( "note", edition.notes.get( current ) );
+			assertNull( edition.notes.get( snapshot ) );
+		}
+	}
+
+	@Test
+	void listWithGapAtChangeset(SessionFactoryScope scope) {
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( 1 ).openSession()) {
+			final var doc = session.find( Doc.class, 1 );
+			assertEquals( 3, Hibernate.size( doc.lines ) );
+			assertEquals( "c", Hibernate.get( doc.lines, 2 ) );
+			assertFalse( Hibernate.isInitialized( doc.lines ) );
+			assertEquals( Arrays.asList( "a", null, "c" ), doc.lines );
+		}
+	}
+
+	@Test
+	void entityMapKeyOfCurrentOwner(SessionFactoryScope scope) {
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( ALL_CHANGESETS ).openSession()) {
+			assertEquals( List.of( "I3" ), session.createSelectionQuery(
+					"select key(n).title from Edition e join e.notes n where e.id = 1",
+					String.class ).getResultList() );
 		}
 	}
 
@@ -352,6 +457,14 @@ class AllChangesetsRevisionStateTest {
 		Map<Image, String> notes = new HashMap<>();
 		@ManyToMany
 		Set<Image> images = new HashSet<>();
+		@ManyToMany
+		@MapKeyColumn(name = "label")
+		@JoinTable(name = "Event_gallery")
+		Map<String, Image> gallery = new HashMap<>();
+		@ManyToMany
+		@MapKeyJoinColumn(name = "key_id")
+		@JoinTable(name = "Event_pairs", inverseJoinColumns = @JoinColumn(name = "val_id"))
+		Map<Image, Image> pairs = new HashMap<>();
 	}
 
 	@Entity(name = "Edition")
@@ -361,6 +474,13 @@ class AllChangesetsRevisionStateTest {
 		String name;
 		@ElementCollection
 		List<Link> links = new ArrayList<>();
+		@ElementCollection
+		@CollectionTable(name = "Edition_notes")
+		@MapKeyJoinColumn(name = "image_key")
+		Map<Image, String> notes = new HashMap<>();
+		@ManyToMany
+		@JoinTable(name = "Edition_covers")
+		Set<Image> covers = new HashSet<>();
 	}
 
 	@Audited
@@ -416,6 +536,10 @@ class AllChangesetsRevisionStateTest {
 		String title;
 		@ElementCollection
 		Set<String> tags = new HashSet<>();
+		@ElementCollection
+		@OrderColumn
+		@Column(name = "line")
+		List<String> lines = new ArrayList<>();
 	}
 
 	public static class ChangesetIds implements ChangesetIdentifierSupplier<Integer> {

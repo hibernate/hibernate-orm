@@ -1451,6 +1451,12 @@ public class SelectionQueryImpl<R>
 				}
 			}
 		}
+		// Joins created on a treat() are registered on the treated path, not on the original one.
+		for ( var treat : from.getSqmTreats() ) {
+			if ( hasReachableFetchedPluralJoin( treat ) ) {
+				return true;
+			}
+		}
 		return false;
 	}
 

@@ -12,7 +12,6 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.Generator;
 import org.hibernate.spi.IndexedConsumer;
-import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.List;
 import org.hibernate.mapping.Map;
@@ -58,8 +57,6 @@ import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.ast.spi.query.select.SqlSelection;
-import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
-import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.QueryLiteral;
 import org.hibernate.sql.ast.spi.query.from.CollectionTableGroup;
 import org.hibernate.sql.ast.spi.query.from.AuxiliaryTableReference;
@@ -597,7 +594,7 @@ public class PluralAttributeMappingImpl
 
 	private void applyCollectionRestrictions(
 			@Nullable TableGroup ownerGroup, TableGroup group, Consumer<Predicate> restrictions,
-			Consumer<Predicate> auxiliaryRestrictions, Consumer<Predicate> revisionRestrictions, SqlAstCreationState state) {
+			Consumer<Predicate> auxiliaryRestrictions, Consumer<Predicate> ownerRestrictions, SqlAstCreationState state) {
 		final var influencers = state.getLoadQueryInfluencers();
 		final var filters = influencers.getEnabledFilters();
 		applyBaseRestrictions( restrictions, group, true, filters, false, null, state );
@@ -608,9 +605,8 @@ public class PluralAttributeMappingImpl
 			index.getAssociatedEntityMappingType().applyBaseRestrictions( restrictions, pluralGroup.getIndexTableGroup(),
 					true, filters, true, null, state );
 		}
-		final var ownerRevision = ownerGroup != null && influencers.isAllRevisions() ? getOwnerRevision( ownerGroup ) : null;
 		applyAuxiliaryRestrictions( pluralGroup, auxiliaryRestrictions, influencers, state.getSqlAliasBaseGenerator(),
-				ownerRevision, revisionRestrictions );
+				ownerGroup, ownerRestrictions );
 	}
 
 	@Override
@@ -625,46 +621,29 @@ public class PluralAttributeMappingImpl
 
 	private void applyAuxiliaryRestrictions(
 			PluralTableGroup group, Consumer<Predicate> restrictions, LoadQueryInfluencers influencers,
-			SqlAliasBaseGenerator aliases, @Nullable Expression ownerRevision, Consumer<Predicate> revisionRestrictions) {
-		applyPartRestriction( elementDescriptor, group.getElementTableGroup(), restrictions, influencers, aliases,
-				ownerRevision, revisionRestrictions );
-		applyPartRestriction( indexDescriptor, group.getIndexTableGroup(), restrictions, influencers, aliases,
-				ownerRevision, revisionRestrictions );
-		if ( ownerRevision != null && auxiliaryMapping instanceof AuditMapping audit ) {
-			AuditMappingImpl.applyAtRevision( audit, this, group, aliases, ownerRevision, revisionRestrictions, restrictions );
-		}
-		else if ( auxiliaryMapping != null ) {
-			auxiliaryMapping.applyPredicate( this, restrictions, group, aliases, influencers );
+			SqlAliasBaseGenerator aliases, @Nullable TableGroup ownerGroup, Consumer<Predicate> ownerRestrictions) {
+		applyPartRestriction( elementDescriptor, group.getElementTableGroup(), ownerGroup,
+				restrictions, ownerRestrictions, aliases, influencers );
+		applyPartRestriction( indexDescriptor, group.getIndexTableGroup(), ownerGroup,
+				restrictions, ownerRestrictions, aliases, influencers );
+		if ( auxiliaryMapping != null ) {
+			auxiliaryMapping.applyAssociationRestrictions( this, group, ownerGroup,
+					restrictions, ownerRestrictions, aliases, influencers );
 		}
 	}
 
 	private static void applyPartRestriction(
-			@Nullable CollectionPart part, @Nullable TableGroup group, Consumer<Predicate> restrictions,
-			LoadQueryInfluencers influencers, SqlAliasBaseGenerator aliases,
-			@Nullable Expression ownerRevision, Consumer<Predicate> revisionRestrictions) {
+			@Nullable CollectionPart part, @Nullable TableGroup group, @Nullable TableGroup ownerGroup,
+			Consumer<Predicate> restrictions, Consumer<Predicate> ownerRestrictions,
+			SqlAliasBaseGenerator aliases, LoadQueryInfluencers influencers) {
 		if ( part instanceof EntityCollectionPart entityPart ) {
 			final var entity = entityPart.getAssociatedEntityMappingType();
 			final var auxiliary = entity.getAuxiliaryMapping();
-			if ( ownerRevision != null && auxiliary instanceof AuditMapping audit ) {
-				AuditMappingImpl.applyAtRevision( audit, entity, castNonNull( group ), aliases, ownerRevision,
-						revisionRestrictions, restrictions );
-			}
-			else if ( auxiliary != null ) {
-				final var partGroup = castNonNull( group );
-				if ( !partGroup.isInitialized() && auxiliary.isAffectedByInfluencers( influencers )
-						&& !auxiliary.hasRowRestriction( influencers ) ) {
-					// Native temporal tables restrict rows in the table expression itself.
-					partGroup.getPrimaryTableReference();
-				}
-				auxiliary.applyPredicate( entity, restrictions, partGroup, aliases, influencers );
+			if ( auxiliary != null ) {
+				auxiliary.applyAssociationRestrictions( entity, castNonNull( group ), ownerGroup,
+						restrictions, ownerRestrictions, aliases, influencers );
 			}
 		}
-	}
-
-	private @Nullable ColumnReference getOwnerRevision(TableGroup ownerTableGroup) {
-		final var owner = collectionDescriptor.getOwnerEntityPersister();
-		final var auditMapping = owner.getAuditMapping();
-		return auditMapping == null ? null : auditMapping.getChangesetIdColumn( owner, ownerTableGroup );
 	}
 
 	@Nonnull
@@ -1323,7 +1302,7 @@ public class PluralAttributeMappingImpl
 		if ( part instanceof EntityCollectionPart entityPart ) {
 			final var entity = entityPart.getAssociatedEntityMappingType();
 			final var auxiliary = entity.getAuxiliaryMapping();
-			return auxiliary != null && ( auxiliary.hasRowRestriction( influencers ) || auxiliary.isAffectedByInfluencers( influencers ) )
+			return auxiliary != null && ( auxiliary.hasRowRestriction( influencers ) || auxiliary.requiresTargetTableForKeyRead( influencers ) )
 				|| entity.hasWhereRestrictions()
 				|| part.getNature() == CollectionPart.Nature.INDEX && entity.isAffectedByEnabledFilters( influencers, true );
 		}
@@ -1483,24 +1462,21 @@ public class PluralAttributeMappingImpl
 	}
 
 	private static boolean isAuxiliaryMappingAffected(@Nullable AuxiliaryMapping mapping, LoadQueryInfluencers influencers) {
-		// ALL_CHANGESETS also disables a current-row temporal restriction.
-		return mapping != null && ( mapping.isAffectedByInfluencers( influencers )
-			|| mapping instanceof TemporalMapping && influencers.isAllRevisions() );
+		return mapping != null && mapping.isAffectedByRowRestrictions( influencers );
 	}
 
 	@Override
 	public boolean isAffectedByInfluencers(@Nonnull LoadQueryInfluencers influencers, boolean onlyLoadByKeyFilters) {
-		return isAffectedByRowRestrictions( influencers, onlyLoadByKeyFilters )
-			|| isFetchAffectedByInfluencers( this, influencers )
-			|| elementDescriptor instanceof EntityCollectionPart element
-				&& isFetchAffectedByInfluencers( element.getAssociatedEntityMappingType(), influencers )
-			|| indexDescriptor instanceof EntityCollectionPart index
-				&& isFetchAffectedByInfluencers( index.getAssociatedEntityMappingType(), influencers );
+		return PluralAttributeMapping.super.isAffectedByInfluencers( influencers, onlyLoadByKeyFilters )
+			|| auxiliaryMapping != null && auxiliaryMapping.isAffectedByInfluencers( influencers )
+			|| isPartAffectedByInfluencers( elementDescriptor, influencers, onlyLoadByKeyFilters )
+			|| isPartAffectedByInfluencers( indexDescriptor, influencers, onlyLoadByKeyFilters );
 	}
 
-	private static boolean isFetchAffectedByInfluencers(Loadable mapping, LoadQueryInfluencers influencers) {
-		return mapping.isAffectedByBatchSize( influencers ) || mapping.isAffectedByEntityGraph( influencers )
-			|| mapping.isAffectedByEnabledFetchProfiles( influencers );
+	private static boolean isPartAffectedByInfluencers(
+			@Nullable CollectionPart part, LoadQueryInfluencers influencers, boolean onlyLoadByKeyFilters) {
+		return part instanceof EntityCollectionPart entityPart
+			&& entityPart.getAssociatedEntityMappingType().isAffectedByInfluencers( influencers, onlyLoadByKeyFilters );
 	}
 
 	@Override

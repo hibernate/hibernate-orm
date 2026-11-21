@@ -1,6 +1,7 @@
 package org.hibernate.metamodel.mapping;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -8,6 +9,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.creation.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
@@ -91,6 +93,21 @@ public interface AuxiliaryMapping {
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
 			@Nonnull LoadQueryInfluencers influencers);
 
+	/// Contributes restrictions for a collection or an associated entity. Predicates
+	/// on the associated row alone may be applied inside a preserved join operand.
+	/// Predicates which also reference the owner must be applied where both are in scope.
+	default void applyAssociationRestrictions(
+			@Nonnull Loadable mapping, @Nonnull TableGroup tableGroup, @Nullable TableGroup ownerGroup,
+			@Nonnull Consumer<Predicate> rowRestrictions, @Nonnull Consumer<Predicate> ownerRestrictions,
+			@Nonnull SqlAliasBaseGenerator aliases, @Nonnull LoadQueryInfluencers influencers) {
+		if ( mapping instanceof PluralAttributeMapping collection ) {
+			applyPredicate( collection, rowRestrictions, tableGroup, aliases, influencers );
+		}
+		else {
+			applyPredicate( (EntityMappingType) mapping, rowRestrictions, tableGroup, aliases, influencers );
+		}
+	}
+
 	/// Applies the auxiliary row restriction directly to a table-group join.
 	///
 	/// This form is used when the restriction belongs on the join predicate
@@ -149,6 +166,18 @@ public interface AuxiliaryMapping {
 	/// Whether this mapping can contribute a row restriction to an association join.
 	default boolean hasRowRestriction(@Nonnull LoadQueryInfluencers influencers) {
 		return true;
+	}
+
+	/// Whether these session settings require a target table read for an association
+	/// key that could otherwise be read from the foreign key.
+	default boolean requiresTargetTableForKeyRead(@Nonnull LoadQueryInfluencers influencers) {
+		return isAffectedByRowRestrictions( influencers );
+	}
+
+	/// Whether row visibility differs from a load using the default session settings.
+	/// Mappings whose SQL varies for other reasons may refine the conservative default.
+	default boolean isAffectedByRowRestrictions(@Nonnull LoadQueryInfluencers influencers) {
+		return isAffectedByInfluencers( influencers );
 	}
 
 	/// Whether this mapping should use its auxiliary table for the supplied

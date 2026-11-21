@@ -277,6 +277,17 @@ class AuditBidirectionalOneToManyTest {
 	}
 
 	@Test
+	void testSizeAtJoinedParentsRevision(SessionFactoryScope scope) {
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
+			// The child was updated when its sibling was added. The parent's only revision predates both changes.
+			assertEquals( List.of( 1 ), session.createSelectionQuery(
+					"select size(p.children) from Child c join c.parent p "
+							+ "where c.id = 1 and changesetId(c) = :revision",
+					Integer.class ).setParameter( "revision", revAddChild ).list() );
+		}
+	}
+
+	@Test
 	void testSizeWithMultipleChildRevisions(SessionFactoryScope scope) {
 		try (var session = scope.getSessionFactory().withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
 			// Only the child changed after the sole revision of this parent.

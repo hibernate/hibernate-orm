@@ -280,7 +280,7 @@ public class SqmUtil {
 				&& creationState.getCurrentClauseStack().getCurrent() != Clause.SET ) {
 			final var influencers = creationState.getLoadQueryInfluencers();
 			final var auxiliary = toOne.getAssociatedEntityMappingType().getAuxiliaryMapping();
-			return auxiliary != null && auxiliary.isAffectedByInfluencers( influencers )
+			return auxiliary != null && auxiliary.requiresTargetTableForKeyRead( influencers )
 				|| influencers.hasEnabledFilters() && toOne.hasFilterForLoadByKey()
 						&& toOne.isAffectedByEnabledFilters( influencers );
 		}

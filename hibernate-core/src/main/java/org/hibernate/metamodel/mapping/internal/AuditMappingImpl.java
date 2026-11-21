@@ -34,6 +34,7 @@ import org.hibernate.sql.ast.spi.query.expression.JdbcLiteral;
 import org.hibernate.sql.ast.spi.query.expression.SelfRenderingSqlFragmentExpression;
 import org.hibernate.sql.ast.spi.query.from.LazyTableGroup;
 import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.from.PluralTableGroup;
 import org.hibernate.sql.ast.spi.query.from.StandardTableGroup;
 import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.ast.spi.query.from.TableGroupJoin;
@@ -419,23 +420,26 @@ public class AuditMappingImpl implements AuditMapping {
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull SqlAstCreationState creationState) {
 		final var influencers = creationState.getLoadQueryInfluencers();
-		final var ownerRevision = influencers.isAllRevisions()
-				? findParentRevColumn( navigablePath, creationState )
+		final var parentPath = navigablePath.getParent();
+		final var ownerGroup = influencers.isAllRevisions() && parentPath != null
+				? creationState.getFromClauseAccess().findTableGroup( parentPath )
 				: null;
-		if ( ownerRevision != null ) {
-			applyAtRevision( this, associatedEntityMappingType, lazyTableGroup, creationState.getSqlAliasBaseGenerator(),
-					ownerRevision, predicateConsumer, predicateConsumer );
-		}
-		else {
-			applyPredicate( associatedEntityMappingType, predicateConsumer, lazyTableGroup,
-					creationState.getSqlAliasBaseGenerator(), influencers );
-		}
+		applyAssociationRestrictions( associatedEntityMappingType, lazyTableGroup, ownerGroup,
+				predicateConsumer, predicateConsumer, creationState.getSqlAliasBaseGenerator(), influencers );
 	}
 
-	/** The revision bound references the owner. The deletion check references only the audited row. */
-	static void applyAtRevision(
-			AuditMapping audit, Loadable mapping, TableGroup group, SqlAliasBaseGenerator aliases, Expression revision,
-			Consumer<Predicate> revisionConsumer, Consumer<Predicate> rowConsumer) {
+	@Override
+	public void applyAssociationRestrictions(
+			@Nonnull Loadable mapping, @Nonnull TableGroup group, @Nullable TableGroup ownerGroup,
+			@Nonnull Consumer<Predicate> rowRestrictions, @Nonnull Consumer<Predicate> ownerRestrictions,
+			@Nonnull SqlAliasBaseGenerator aliases, @Nonnull LoadQueryInfluencers influencers) {
+		final var revision = influencers.isAllRevisions() ? getOwnerRevision( ownerGroup ) : null;
+		if ( revision == null ) {
+			AuditMapping.super.applyAssociationRestrictions( mapping, group, ownerGroup,
+					rowRestrictions, ownerRestrictions, aliases, influencers );
+			return;
+		}
+
 		final String table;
 		final List<SelectableMapping> keys;
 		if ( mapping instanceof PluralAttributeMapping collection ) {
@@ -447,11 +451,11 @@ public class AuditMappingImpl implements AuditMapping {
 			table = entity.getEntityPersister().getTableName();
 			keys = collectEntityKeySelectables( entity );
 		}
-		final var reference = group.resolveTableReference( audit.resolveTableName( table ) );
-		revisionConsumer.accept( audit.createRestriction( mapping, reference, keys, aliases, table, revision, true ) );
-		final var modificationType = audit.getModificationTypeMapping( table );
+		final var reference = group.resolveTableReference( resolveTableName( table ) );
+		ownerRestrictions.accept( createRestriction( mapping, reference, keys, aliases, table, revision, true ) );
+		final var modificationType = getModificationTypeMapping( table );
 		if ( modificationType != null ) {
-			rowConsumer.accept( excludeDeletions( reference, modificationType ) );
+			rowRestrictions.accept( excludeDeletions( reference, modificationType ) );
 		}
 	}
 
@@ -559,28 +563,18 @@ public class AuditMappingImpl implements AuditMapping {
 		}
 	}
 
-	/**
-	 * Walk up the navigable path to find a parent table group with an
-	 * audit mapping, and return a column reference to its REV column.
-	 */
 	@Nullable
-	private static ColumnReference findParentRevColumn(
-			NavigablePath navigablePath,
-			SqlAstCreationState creationState) {
-		final var parentPath = navigablePath.getParent();
-		if ( parentPath == null ) {
+	private static ColumnReference getOwnerRevision(@Nullable TableGroup ownerGroup) {
+		// A collection join alias denotes its element. An embeddable shares its containing entity's row.
+		final var group = ownerGroup instanceof PluralTableGroup plural ? plural.getElementTableGroup() : ownerGroup;
+		if ( group == null ) {
 			return null;
 		}
-		final var parentTableGroup = creationState.getFromClauseAccess()
-				.findTableGroup( parentPath );
-		if ( parentTableGroup != null
-				&& parentTableGroup.getModelPart() instanceof EntityValuedModelPart entityPart ) {
-			final var parentAuditMapping = entityPart.getEntityMappingType().getAuditMapping();
-			if ( parentAuditMapping != null ) {
-				return parentAuditMapping.getChangesetIdColumn( entityPart.getEntityMappingType(), parentTableGroup );
-			}
-		}
-		return null;
+		final var owner = group.getModelPart() instanceof EntityValuedModelPart entityPart
+				? entityPart.getEntityMappingType()
+				: group.getModelPart().findContainingEntityMapping();
+		final var auditMapping = owner == null ? null : owner.getAuditMapping();
+		return auditMapping == null ? null : auditMapping.getChangesetIdColumn( owner, group );
 	}
 
 	@Override
@@ -595,6 +589,11 @@ public class AuditMappingImpl implements AuditMapping {
 
 	@Override
 	public boolean isAffectedByInfluencers(@Nonnull LoadQueryInfluencers influencers) {
+		return isAffectedByRowRestrictions( influencers );
+	}
+
+	@Override
+	public boolean isAffectedByRowRestrictions(@Nonnull LoadQueryInfluencers influencers) {
 		return useAuxiliaryTable( influencers );
 	}
 

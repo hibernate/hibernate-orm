@@ -302,6 +302,10 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 					? createCurrentRestriction( primaryTableReference )
 					: createRestriction( primaryTableReference, instant ) );
 		}
+		else if ( !tableGroup.isInitialized() && requiresTargetTableForKeyRead( influencers ) ) {
+			// Native temporal SQL applies the changeset to the table reference itself.
+			tableGroup.getPrimaryTableReference();
+		}
 	}
 
 	@Override
@@ -383,7 +387,18 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 
 	@Override
 	public boolean isAffectedByInfluencers(@Nonnull LoadQueryInfluencers influencers) {
+		return isAffectedByRowRestrictions( influencers );
+	}
+
+	@Override
+	public boolean requiresTargetTableForKeyRead(@Nonnull LoadQueryInfluencers influencers) {
 		return influencers.getTemporalIdentifier() != null
 			&& !influencers.isAllRevisions();
+	}
+
+	@Override
+	public boolean isAffectedByRowRestrictions(@Nonnull LoadQueryInfluencers influencers) {
+		// ALL_CHANGESETS also disables the current-row restriction.
+		return influencers.getTemporalIdentifier() != null;
 	}
 }

@@ -1211,12 +1211,9 @@ public class PluralAttributeMappingImpl
 	}
 
 	private boolean useCollectionTableGroup(SqlAstCreationState creationState) {
-		// For temporal OTM @JoinColumn reads, use CollectionTableGroup with the middle
-		// audit table as primary (like M2M). The FK column isn't in the entity audit table,
-		// so the key must resolve from the middle audit table instead.
 		return !getCollectionDescriptor().isOneToMany()
-				|| auxiliaryMapping instanceof AuditMapping auditMapping
-				&& auditMapping.useAuxiliaryTable( creationState.getLoadQueryInfluencers() );
+				|| auxiliaryMapping != null
+					&& auxiliaryMapping.requiresSeparateMembershipTable( creationState.getLoadQueryInfluencers() );
 	}
 
 	private TableGroup rootTableGroup(

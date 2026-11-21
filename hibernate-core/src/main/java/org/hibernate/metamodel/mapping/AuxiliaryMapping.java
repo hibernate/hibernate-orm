@@ -196,6 +196,11 @@ public interface AuxiliaryMapping {
 	/// auxiliary table only for historical or audit views.
 	boolean useAuxiliaryTable(@Nonnull LoadQueryInfluencers influencers);
 
+	/// Whether a one-to-many read must join a separate membership table to the element table.
+	default boolean requiresSeparateMembershipTable(@Nonnull LoadQueryInfluencers influencers) {
+		return false;
+	}
+
 	/// Whether query plans involving this mapping are affected by the supplied
 	/// influencers.
 	///

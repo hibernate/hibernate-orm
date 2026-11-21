@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.hibernate.Incubating;
 import org.hibernate.audit.spi.AuditEntityLoader;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.sql.ast.spi.creation.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
@@ -25,6 +26,12 @@ import jakarta.annotation.Nullable;
  */
 @Incubating(since = "5.4")
 public interface AuditMapping extends AuxiliaryMapping {
+
+	@Override
+	default boolean requiresSeparateMembershipTable(@Nonnull LoadQueryInfluencers influencers) {
+		// Historical membership is recorded in the collection audit table.
+		return useAuxiliaryTable( influencers );
+	}
 
 	/**
 	 * Get the changeset ID selectable mapping for the given original table.

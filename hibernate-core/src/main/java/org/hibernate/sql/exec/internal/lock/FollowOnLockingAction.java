@@ -158,7 +158,7 @@ public class FollowOnLockingAction implements PostAction {
 						entry.setVersion( persister.getVersion( entityDetails.instance() ) );
 					}
 					if ( lockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT ) {
-						OptimisticLockHelper.forceVersionIncrement(
+						OptimisticLockHelper.forceVersionIncrementImmediately(
 								entityDetails.instance(),
 								entityDetails.entry(),
 								session

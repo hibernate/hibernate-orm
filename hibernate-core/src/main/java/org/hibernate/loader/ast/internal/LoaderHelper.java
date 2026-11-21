@@ -117,7 +117,7 @@ public class LoaderHelper {
 						// Complete scope acquisition before changing any version state.
 						acquireLock( object, entry, lockOptions.makeCopy().setLockMode( LockMode.PESSIMISTIC_WRITE ), session );
 					}
-					OptimisticLockHelper.forceVersionIncrement( object, entry, session );
+					OptimisticLockHelper.forceVersionIncrementImmediately( object, entry, session );
 				}
 				else if ( entry.isExistsInDatabase() ) {
 					acquireLock( object, entry, acquisitionOptions, session );

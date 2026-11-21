@@ -3,7 +3,6 @@ package org.hibernate.processor.annotation;
 import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 
-
 /**
  * A JPA entity listener callback that fires a Jakarta Data lifecycle event.
  *

@@ -1142,7 +1142,7 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 
 	private void addLifecycleEventListener() {
 		lifecycleEventListener = true;
-		addLifecycleEventCallbacks( getQualifiedName() );
+		addLifecycleEventCallbacks();
 	}
 
 	/**
@@ -2340,24 +2340,23 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 		}
 	}
 
-	private void addLifecycleEventCallbacks(String entity) {
+	private void addLifecycleEventCallbacks() {
 		final var fieldNames = new HashSet<String>();
 		for ( var member : members.values() ) {
 			if ( member instanceof DataAnnotationMetaAttribute attribute ) {
 				fieldNames.add( attribute.getPropertyName().replace( '.', '_' ) );
-				fieldNames.add( attribute.fieldName() );
 			}
 		}
 		String eventFieldName = "event";
 		while ( !fieldNames.add( eventFieldName ) ) {
 			eventFieldName += "$";
 		}
-		members.putIfAbsent( "<event>", new EventField( this, entity, eventFieldName ) );
+		members.putIfAbsent( "<event>", new EventField( this, getQualifiedName(), eventFieldName ) );
 		for ( String callback : List.of( PRE_INSERT, POST_INSERT, PRE_UPDATE, POST_UPDATE,
 				PRE_DELETE, POST_DELETE, PRE_UPSERT, POST_UPSERT ) ) {
 			final var callbackName = unqualify( callback );
-			members.putIfAbsent( "event." + callbackName + "Event." + entity,
-					new LifecycleEventCallback( this, entity, callback, callbackName, eventFieldName ) );
+			members.putIfAbsent( "event." + callbackName,
+					new LifecycleEventCallback( this, getQualifiedName(), callback, callbackName, eventFieldName ) );
 		}
 	}
 

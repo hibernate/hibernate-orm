@@ -15,6 +15,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import java.util.List;
 import java.util.function.Consumer;
 
+import static org.hibernate.metamodel.mapping.internal.CurrentState.loadByKey;
 import static java.util.Collections.emptyList;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
@@ -34,6 +35,10 @@ public abstract class AbstractMultiNaturalIdLoader<E> implements MultiNaturalIdL
 	@Nonnull
 	@Override
 	public <K> List<E> multiLoad(@Nonnull K[] naturalIds, @Nonnull MultiNaturalIdLoadOptions options, @Nonnull SharedSessionContractImplementor session) {
+		return loadByKey( entityDescriptor, session, () -> loadNaturalIds( naturalIds, options, session ) );
+	}
+
+	private <K> List<E> loadNaturalIds(@Nonnull K[] naturalIds, @Nonnull MultiNaturalIdLoadOptions options, @Nonnull SharedSessionContractImplementor session) {
 		assert naturalIds != null;
 		if ( naturalIds.length == 0 ) {
 			return emptyList();

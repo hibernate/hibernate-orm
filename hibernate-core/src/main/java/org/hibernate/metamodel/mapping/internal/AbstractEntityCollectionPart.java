@@ -313,6 +313,10 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 		final var primaryTableReference =
 				getEntityMappingType()
 						.createPrimaryTableReference( sqlAliasBase, creationState );
+		// table reference joins are built lazily, but in the context of this table group
+		final var influencers = creationState.getLoadQueryInfluencers();
+		final Object changesetId = influencers.getTemporalIdentifier();
+		final boolean historyTables = influencers.readsHistoryTables();
 
 		final var tableGroup = new StandardTableGroup(
 				canUseInnerJoins,
@@ -324,12 +328,13 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 				true,
 				sqlAliasBase,
 				getEntityMappingType().getRootEntityDescriptor()::containsTableReference,
-				(tableExpression, group) -> getEntityMappingType().createTableReferenceJoin(
-						tableExpression,
-						sqlAliasBase,
-						primaryTableReference,
-						creationState
-				),
+				(tableExpression, group) -> influencers.withTemporalIdentifier( changesetId, historyTables,
+						() -> getEntityMappingType().createTableReferenceJoin(
+								tableExpression,
+								sqlAliasBase,
+								primaryTableReference,
+								creationState
+						) ),
 				creationContext.getSessionFactory()
 		);
 		// Make sure the association key's table is resolved in the table group

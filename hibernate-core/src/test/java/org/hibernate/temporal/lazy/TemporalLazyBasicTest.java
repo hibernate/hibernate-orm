@@ -3,14 +3,18 @@ package org.hibernate.temporal.lazy;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Tuple;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Audited;
 import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
@@ -213,7 +217,7 @@ class TemporalLazyBasicTest {
 	}
 
 	@Test
-	void joinFetchedArticleFromAuditedEvent(SessionFactoryScope scope) {
+	void joinFetchedArticleAtRevisionOfAuditedEvent(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final var article = new Document();
 			article.id = 4;
@@ -232,18 +236,56 @@ class TemporalLazyBasicTest {
 		} );
 
 		try (var session = scope.getSessionFactory().withOptions().atChangeset( ALL_CHANGESETS ).openSession()) {
+			// the article of an event revision is the article as of that revision
 			final var event = session.createSelectionQuery(
 					"from AuditEvent e join fetch e.article where e.id = 4", AuditEvent.class ).getSingleResult();
 			final var article = event.article;
 			assertTrue( isInitialized( article ) );
-			assertEquals( "Current title", article.title );
+			assertTrue( session.isReadOnly( article ) );
+			assertEquals( "Old title", article.title );
 			assertFalse( isPropertyInitialized( article, "body" ) );
-			assertEquals( "Current body", article.body );
+			assertEquals( "Old body", article.body );
 		}
 	}
 
 	@Test
-	void auditedArticleFetchedThroughNonAuditedEdition(SessionFactoryScope scope) {
+	void temporalCollectionAtRevisionOfAuditedEvent(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var article = new Document();
+			article.id = 9;
+			article.title = "First title";
+			session.persist( article );
+			final var event = new AuditEvent();
+			event.id = 9;
+			event.label = "First event";
+			event.articles.add( article );
+			session.persist( event );
+		} );
+		scope.inTransaction( session -> {
+			session.find( Document.class, 9 ).title = "Second title";
+			session.find( AuditEvent.class, 9 ).label = "Second event";
+		} );
+		scope.inTransaction( session -> session.find( Document.class, 9 ).title = "Current title" );
+
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( ALL_CHANGESETS ).openSession()) {
+			final var events = session.createSelectionQuery(
+					"from AuditEvent e where e.id = 9 order by changesetId(e)", AuditEvent.class ).getResultList();
+			assertEquals( 2, events.size() );
+			assertEquals( List.of( "First title" ), events.get( 0 ).articles.stream().map( a -> a.title ).toList() );
+			assertEquals( List.of( "Second title" ), events.get( 1 ).articles.stream().map( a -> a.title ).toList() );
+		}
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( ALL_CHANGESETS ).openSession()) {
+			final var events = session.createSelectionQuery(
+					"from AuditEvent e join fetch e.articles where e.id = 9 order by changesetId(e)",
+					AuditEvent.class ).getResultList();
+			assertEquals( 2, events.size() );
+			assertEquals( List.of( "First title" ), events.get( 0 ).articles.stream().map( a -> a.title ).toList() );
+			assertEquals( List.of( "Second title" ), events.get( 1 ).articles.stream().map( a -> a.title ).toList() );
+		}
+	}
+
+	@Test
+	void currentArticleFetchedThroughNonAuditedEdition(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final var article = new AuditedDocument();
 			article.id = 5;
@@ -271,15 +313,36 @@ class TemporalLazyBasicTest {
 		} );
 
 		try (var session = scope.getSessionFactory().withOptions().atChangeset( ALL_CHANGESETS ).openSession()) {
-			final var event = session.createSelectionQuery( """
-					from AuditEvent e join fetch e.edition ed join fetch ed.auditedArticle a
-					where e.id = 5 and a.title = 'Revised title'
-					""", AuditEvent.class ).getSingleResult();
+			// The non-audited edition is current, so its article is too
+			final var event = session.createSelectionQuery(
+					"from AuditEvent e join fetch e.edition ed join fetch ed.auditedArticle where e.id = 5",
+					AuditEvent.class ).getSingleResult();
 			final var article = event.edition.auditedArticle;
 			assertTrue( isInitialized( article ) );
-			assertEquals( "Revised title", article.title );
+			assertEquals( "Published title", article.title );
 			assertFalse( isPropertyInitialized( article, "body" ) );
-			assertEquals( "Second draft", article.body );
+			assertEquals( "Final draft", article.body );
+		}
+	}
+
+	@Test
+	void excludedLazyGroupOfAuditRevision(SessionFactoryScope scope) {
+		final var firstChangeset = scope.fromTransaction( session -> {
+			final var document = new AuditedDocument();
+			document.id = 8;
+			document.body = "First draft";
+			document.priority = 5;
+			session.persist( document );
+			return session.getCurrentChangesetIdentifier();
+		} );
+		scope.inTransaction( session -> session.find( AuditedDocument.class, 8 ).body = "Final draft" );
+
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( firstChangeset ).openSession()) {
+			final var document = session.getReference( AuditedDocument.class, 8 );
+			assertFalse( isInitialized( document ) );
+			// the audit row has no column for the group's only attribute, so it reads as absent
+			assertEquals( 0, document.priority );
+			assertEquals( "First draft", document.body );
 		}
 	}
 
@@ -290,6 +353,7 @@ class TemporalLazyBasicTest {
 		String label;
 		@ManyToOne(fetch = LAZY) Document article;
 		@ManyToOne(fetch = LAZY) Edition edition;
+		@ManyToMany Set<Document> articles = new HashSet<>();
 	}
 
 	@Entity(name = "Edition")
@@ -306,6 +370,7 @@ class TemporalLazyBasicTest {
 		String title;
 		@Basic(fetch = LAZY) String body;
 		@Audited.Excluded @Basic(fetch = LAZY) String note;
+		@Audited.Excluded @Basic(fetch = LAZY) @LazyGroup("ranking") int priority;
 	}
 
 	@Entity(name = "Document")

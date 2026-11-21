@@ -55,6 +55,7 @@ import java.util.Locale;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import static org.hibernate.metamodel.mapping.internal.CurrentState.loadByKey;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.hibernate.engine.internal.NaturalIdLogging.NATURAL_ID_LOGGER;
@@ -118,6 +119,10 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 
 	@Nullable
 	private T load(@Nullable Object naturalIdValue, @Nonnull LockOptions lockOptions, @Nonnull SharedSessionContractImplementor session) {
+		return loadByKey( entityDescriptor, session, () -> loadNaturalId( naturalIdValue, lockOptions, session ) );
+	}
+
+	private T loadNaturalId(@Nullable Object naturalIdValue, @Nonnull LockOptions lockOptions, @Nonnull SharedSessionContractImplementor session) {
 		final var factory = session.getFactory();
 
 		final var sqlSelect = LoaderSelectBuilder.createSelect(
@@ -205,6 +210,10 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 	@Nullable
 	@Override
 	public Object resolveNaturalIdToId(@Nullable Object naturalIdValue, @Nonnull SharedSessionContractImplementor session) {
+		return loadByKey( entityDescriptor, session, () -> resolveId( naturalIdValue, session ) );
+	}
+
+	private @Nullable Object resolveId(@Nullable Object naturalIdValue, @Nonnull SharedSessionContractImplementor session) {
 		if ( NATURAL_ID_LOGGER.isTraceEnabled() ) {
 			NATURAL_ID_LOGGER.retrievingIdForNaturalId(
 					entityDescriptor.getEntityName(),
@@ -347,6 +356,10 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 	@Nullable
 	@Override
 	public Object resolveIdToNaturalId(@Nonnull Object id, @Nonnull SharedSessionContractImplementor session) {
+		return loadByKey( entityDescriptor, session, () -> resolveNaturalId( id, session ) );
+	}
+
+	private @Nullable Object resolveNaturalId(@Nonnull Object id, @Nonnull SharedSessionContractImplementor session) {
 		final var factory = session.getFactory();
 		final var identifierMapping = entityDescriptor().getIdentifierMapping();
 

@@ -6,7 +6,7 @@ import java.util.List;
 import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import org.hibernate.audit.ModificationType;
-import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.spi.NodeBuilder;
@@ -25,12 +25,15 @@ import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.from.PluralTableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Collections.singletonList;
+import static org.hibernate.metamodel.mapping.internal.CurrentState.readsCurrentState;
 
 /**
  * HQL function for accessing audit columns of temporal entities.
@@ -160,12 +163,12 @@ public class AuditColumnFunction extends AbstractSqmFunctionDescriptor {
 		@Nonnull
 		@Override
 		public Expression convertToSqlAst(@Nonnull SqmToSqlAstConverter walker) {
-			final var entityPath = (SqmPath<?>) getArguments().get( 0 );
-
-			final var tableGroup = walker.getFromClauseAccess()
-					.findTableGroup( entityPath.getNavigablePath() );
-
-			final var entityMapping = (EntityMappingType) tableGroup.getModelPart();
+			final var entityTableGroup = entityTableGroup( (SqmPath<?>) getArguments().get( 0 ), walker );
+			if ( entityTableGroup == null
+					|| !(entityTableGroup.getModelPart() instanceof EntityValuedModelPart entityPart) ) {
+				throw new IllegalArgumentException( "Argument of '" + getFunctionName() + "()' is not an entity" );
+			}
+			final var entityMapping = entityPart.getEntityMappingType();
 			final var auditMapping = entityMapping.getAuditMapping();
 			if ( auditMapping == null ) {
 				throw new IllegalArgumentException(
@@ -182,11 +185,20 @@ public class AuditColumnFunction extends AbstractSqmFunctionDescriptor {
 					? auditMapping.getChangesetIdMapping( originalTable )
 					: auditMapping.getModificationTypeMapping( originalTable );
 
-			final var tableReference = tableGroup.resolveTableReference(
-					entityPath.getNavigablePath(),
+			final var influencers = walker.getLoadQueryInfluencers();
+			if ( !auditMapping.useAuxiliaryTable( influencers )
+					|| readsCurrentState( entityTableGroup, walker ) ) {
+				throw new IllegalArgumentException(
+						"Entity '" + entityMapping.getEntityName()
+								+ "' is read as its current state here, so '" + getFunctionName()
+								+ "()' has no audit row to read"
+				);
+			}
+
+			final var tableReference = entityTableGroup.resolveTableReference(
+					entityTableGroup.getNavigablePath(),
 					originalTable
 			);
-
 			final var columnReference =
 					new ColumnReference( tableReference, selectableMapping );
 			return new SelfRenderingFunctionSqlAstExpression<>(
@@ -196,6 +208,23 @@ public class AuditColumnFunction extends AbstractSqmFunctionDescriptor {
 					null,
 					selectableMapping.getJdbcMapping()
 			);
+		}
+
+		/**
+		 * The table group of the entity the path refers to, which for a
+		 * collection join is the element's.
+		 */
+		private static @Nullable TableGroup entityTableGroup(SqmPath<?> entityPath, SqmToSqlAstConverter walker) {
+			final var fromClauseAccess = walker.getFromClauseAccess();
+			var tableGroup = fromClauseAccess.findTableGroup( entityPath.getNavigablePath() );
+			if ( tableGroup == null ) {
+				// an implicit join gets its table group when the path is visited
+				entityPath.accept( walker );
+				tableGroup = fromClauseAccess.findTableGroup( entityPath.getNavigablePath() );
+			}
+			return tableGroup instanceof PluralTableGroup pluralTableGroup
+					? pluralTableGroup.getElementTableGroup()
+					: tableGroup;
 		}
 	}
 }

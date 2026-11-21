@@ -30,10 +30,12 @@ import org.hibernate.type.Type;
 
 import jakarta.annotation.Nullable;
 
+import static org.hibernate.metamodel.mapping.internal.CurrentState.keyChangesetId;
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 import static org.hibernate.sql.results.graph.entity.internal.EntityInitializerImpl.determineConcreteEntityDescriptor;
+import static org.hibernate.sql.results.graph.entity.internal.OwnerChangeset.resolveAtOwnerChangeset;
 
 /**
  * @author Andrea Boriero
@@ -173,7 +175,7 @@ public class EntityDelayedFetchInitializer
 					concreteDescriptor = entityPersister;
 				}
 
-				initialize( data, null, concreteDescriptor );
+				resolveAtOwnerChangeset( getParent(), concreteDescriptor, rowProcessingState, () -> initialize( data, null, concreteDescriptor ) );
 			}
 		}
 	}
@@ -242,6 +244,7 @@ public class EntityDelayedFetchInitializer
 						uniqueKeyPropertyName,
 						data.entityIdentifier,
 						getUniqueKeyPropertyType( concreteDescriptor, session, uniqueKeyPropertyName ),
+						keyChangesetId( session, concreteDescriptor ),
 						session.getFactory()
 				);
 
@@ -328,6 +331,11 @@ public class EntityDelayedFetchInitializer
 
 	@Override
 	public void resolveInstance(Object instance, EntityDelayedFetchInitializerData data) {
+		final var rowProcessingState = data.getRowProcessingState();
+		resolveAtOwnerChangeset( getParent(), getEntityDescriptor(), rowProcessingState, () -> resolveExistingInstance( instance, data ) );
+	}
+
+	private void resolveExistingInstance(Object instance, EntityDelayedFetchInitializerData data) {
 		if ( instance == null ) {
 			data.setState( State.MISSING );
 			data.entityIdentifier = null;

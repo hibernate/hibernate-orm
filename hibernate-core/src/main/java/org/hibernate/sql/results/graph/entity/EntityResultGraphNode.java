@@ -42,6 +42,14 @@ public interface EntityResultGraphNode extends DomainResultGraphNode, FetchParen
 		return getEntityValuedModelPart().getEntityMappingType();
 	}
 
+	/**
+	 * Whether this audited entity is read as its current state in an
+	 * all-changesets session, rather than as a snapshot at a changeset.
+	 */
+	default boolean readsCurrentState() {
+		return false;
+	}
+
 	@Override
 	default boolean appliesTo(GraphImplementor<?> graphImplementor, JpaMetamodel metamodel) {
 		final String entityName = getEntityValuedModelPart().getEntityMappingType().getEntityName();

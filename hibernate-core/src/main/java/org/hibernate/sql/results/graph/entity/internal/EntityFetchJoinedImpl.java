@@ -151,6 +151,11 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 	}
 
 	@Override
+	public boolean readsCurrentState() {
+		return entityResult.readsCurrentState();
+	}
+
+	@Override
 	public EntityInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
 		return new EntityInitializerImpl(
 				this,

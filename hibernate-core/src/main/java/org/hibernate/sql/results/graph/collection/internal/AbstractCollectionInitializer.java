@@ -19,11 +19,13 @@ import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.graph.entity.internal.OwnerChangeset;
 import org.hibernate.sql.results.graph.internal.AbstractInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.Type;
 
 import jakarta.annotation.Nullable;
+
 
 /**
  * Base support for CollectionInitializer implementations
@@ -148,6 +150,17 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 				data.setState( State.RESOLVED );
 			}
 		}
+	}
+
+	/**
+	 * Performs the action at the changeset where this collection resolves. In an
+	 * all-changesets session that is the changeset of the snapshot that owns it, so
+	 * that each snapshot has its own collection, even one without history, and current
+	 * state for a current owner. Without an owner, as in the load of the collection
+	 * itself, it resolves where the load reads.
+	 */
+	protected void resolveAtOwnerChangeset(Data data, Runnable action) {
+		OwnerChangeset.resolveAtOwnerChangeset( getParent(), true, data.getRowProcessingState(), action );
 	}
 
 	protected void setMissing(Data data) {

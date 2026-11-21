@@ -45,6 +45,7 @@ import org.hibernate.loader.ast.internal.CollectionElementLoaderByIndex;
 import org.hibernate.loader.ast.internal.CollectionLoaderNamedQuery;
 import org.hibernate.loader.ast.internal.CollectionLoaderSingleKey;
 import org.hibernate.loader.ast.internal.CollectionLoaderSubSelectFetch;
+import org.hibernate.loader.ast.internal.CollectionSizeLoader;
 import org.hibernate.loader.ast.internal.LoaderSqlAstCreationState;
 import org.hibernate.loader.ast.spi.BatchLoaderFactory;
 import org.hibernate.loader.ast.spi.CollectionLoader;
@@ -139,6 +140,7 @@ import static org.hibernate.internal.util.StringHelper.replace;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.jdbc.Expectations.createExpectation;
+import static org.hibernate.metamodel.mapping.internal.CurrentState.hasHistory;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getTableIdentifierExpression;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 import static org.hibernate.sql.Template.renderWhereStringTemplate;
@@ -1524,6 +1526,12 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public int getSize(@Nonnull Object key, @Nonnull SharedSessionContractImplementor session) {
+		final var influencers = session.getLoadQueryInfluencers();
+		if ( influencers.getTemporalIdentifier() != null && !influencers.isAllRevisions()
+				&& hasHistory( attributeMapping ) ) {
+			// count the rows as of the changeset the session reads at
+			return new CollectionSizeLoader( attributeMapping, influencers, factory ).load( key, session );
+		}
 		try {
 			final var jdbcCoordinator = session.getJdbcCoordinator();
 			final var statement = jdbcCoordinator.getStatementPreparer().prepareStatement( sqlSelectSizeString );

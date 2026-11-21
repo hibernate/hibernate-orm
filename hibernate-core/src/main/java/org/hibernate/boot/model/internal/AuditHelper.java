@@ -20,7 +20,6 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.mapping.AuxiliaryTableHolder;
 import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.BasicValue;
@@ -39,6 +38,8 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.persister.state.internal.AuditStateManagement;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
+import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.temporal.spi.ChangesetCoordinator;
 
@@ -51,6 +52,7 @@ import static org.hibernate.audit.AuditStrategy.VALIDITY;
 import static org.hibernate.cfg.StateManagementSettings.AUDIT_STRATEGY;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.nullIfBlank;
+import static org.hibernate.metamodel.mapping.internal.CurrentState.readsCurrentState;
 
 /**
  * Helper for building audit log tables in the boot model.
@@ -839,7 +841,9 @@ public final class AuditHelper {
 	 * {@code false} immediately when there is no temporal identifier
 	 * (the common case for non-audit queries).
 	 */
-	public static boolean isFetchableAuditExcluded(Fetchable fetchable, LoadQueryInfluencers influencers) {
+	public static boolean isFetchableAuditExcluded(
+			FetchParent fetchParent, Fetchable fetchable, SqlAstCreationState creationState) {
+		final var influencers = creationState.getLoadQueryInfluencers();
 		if ( influencers.getTemporalIdentifier() == null ) {
 			return false;
 		}
@@ -849,7 +853,10 @@ public final class AuditHelper {
 				&& attr.getDeclaringType() instanceof EntityMappingType entityMappingType ) {
 			final var persister = entityMappingType.getEntityPersister();
 			return persister.getAuditMapping() != null
-					&& persister.isPropertyAuditedExcluded( attr.getStateArrayPosition() );
+					&& persister.isPropertyAuditedExcluded( attr.getStateArrayPosition() )
+					&& !readsCurrentState(
+							creationState.getFromClauseAccess().findTableGroup( fetchParent.getNavigablePath() ),
+							creationState );
 		}
 		return false;
 	}

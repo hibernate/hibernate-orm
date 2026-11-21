@@ -145,6 +145,13 @@ public interface CollectionPersister extends Restrictable {
 	@Internal
 	RowMutationOperations getRowMutationOperations();
 
+	/// Removal plan and parameter binder for a physical table in the legacy queue.
+	@Internal
+	@Nonnull
+	default CollectionRemovalSupport getCollectionRemovalSupport(@Nonnull String tableName) {
+		return CollectionRemovalSupport.STANDARD;
+	}
+
 	@Internal
 	boolean isRowInsertEnabled();
 

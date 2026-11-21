@@ -14,6 +14,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.TemporalMapping;
+import org.hibernate.persister.collection.CollectionRemovalSupport;
 import org.hibernate.persister.entity.mutation.TemporalMutationHelper;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
@@ -25,6 +26,7 @@ final class HistoryCollectionRowMutationHelper {
 	private final PluralAttributeMapping attributeMapping;
 	private final TemporalMapping temporalMapping;
 	private final String historyTableName;
+	private final CollectionRemovalSupport removalSupport;
 	private final String currentTableName;
 	@Nullable
 	private final boolean[] indexColumnIsSettable;
@@ -41,6 +43,7 @@ final class HistoryCollectionRowMutationHelper {
 		this.attributeMapping = mutationTarget.getTargetPart();
 		this.temporalMapping = castNonNull( attributeMapping.getTemporalMapping() );
 		this.historyTableName = historyTableName;
+		this.removalSupport = attributeMapping.getCollectionDescriptor().getCollectionRemovalSupport( historyTableName );
 		this.currentTableName = mutationTarget.getCollectionTableMapping().getTableName();
 		this.indexColumnIsSettable = indexColumnIsSettable;
 		this.elementColumnIsSettable = elementColumnIsSettable;
@@ -142,14 +145,7 @@ final class HistoryCollectionRowMutationHelper {
 			int rowPosition,
 			@Nonnull SharedSessionContractImplementor session,
 			@Nonnull JdbcValueBindings jdbcValueBindings) {
-		if ( temporalMapping != null && TemporalMutationHelper.isUsingParameters( session ) ) {
-			jdbcValueBindings.bindValue(
-					session.getCurrentChangesetIdentifier(),
-					historyTableName,
-					temporalMapping.getEndingColumnMapping().getSelectionExpression(),
-					ParameterUsage.SET
-			);
-		}
+		removalSupport.bindValues( attributeMapping, historyTableName, session, jdbcValueBindings );
 
 		final var identifierDescriptor = attributeMapping.getIdentifierDescriptor();
 		if ( identifierDescriptor != null ) {
@@ -220,14 +216,7 @@ final class HistoryCollectionRowMutationHelper {
 						bindRestrictValue( valueIndex, castNonNull( bindings ), unused, jdbcValue, mapping ),
 				session
 		);
-		if ( temporalMapping != null && TemporalMutationHelper.isUsingParameters( session ) ) {
-			jdbcValueBindings.bindValue(
-					session.getCurrentChangesetIdentifier(),
-					historyTableName,
-					temporalMapping.getEndingColumnMapping().getSelectionExpression(),
-					ParameterUsage.SET
-			);
-		}
+		removalSupport.bindValues( attributeMapping, historyTableName, session, jdbcValueBindings );
 	}
 
 	private void bindSetValue(

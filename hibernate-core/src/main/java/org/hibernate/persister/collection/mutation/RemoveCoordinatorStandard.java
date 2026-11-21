@@ -7,11 +7,9 @@ import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationTarget;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
-import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
-import org.hibernate.persister.entity.mutation.TemporalMutationHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.spi.mutation.MutationType;
@@ -102,14 +100,9 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 					RowMutationOperations.DEFAULT_RESTRICTOR,
 					session
 			);
-			final var temporalMapping = mutationTarget.getTargetPart().getTemporalMapping();
-			if ( temporalMapping != null && TemporalMutationHelper.isUsingParameters( session ) ) {
-				jdbcValueBindings.bindValue(
-						session.getCurrentChangesetIdentifier(),
-						temporalMapping.getEndingColumnMapping(),
-						ParameterUsage.SET
-				);
-			}
+			final String tableName = mutationTarget.getCollectionTableMapping().getTableName();
+			mutationTarget.getCollectionRemovalSupport( tableName )
+					.bindValues( mutationTarget.getTargetPart(), tableName, session, jdbcValueBindings );
 
 			mutationExecutor.execute(
 					key,

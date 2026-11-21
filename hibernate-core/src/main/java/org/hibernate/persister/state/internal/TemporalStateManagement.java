@@ -10,6 +10,7 @@ import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.TemporalMappingImpl;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.CollectionRemovalSupport;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinator;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorNoOp;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorTemporal;
@@ -73,6 +74,14 @@ public final class TemporalStateManagement extends AbstractStateManagement {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Legacy ActionQueue integration
+
+	@Nonnull
+	@Override
+	public CollectionRemovalSupport getCollectionRemovalSupport(@Nonnull PluralAttributeMapping mapping, @Nonnull String tableName) {
+		return mapping.getTemporalMapping() == null
+				? CollectionRemovalSupport.STANDARD
+				: CollectionRemovalSupport.TEMPORAL;
+	}
 
 	@Nonnull
 	@Override

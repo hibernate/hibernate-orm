@@ -14,6 +14,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.TemporalMappingImpl;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.CollectionRemovalSupport;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinator;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorHistory;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorNoOp;
@@ -95,6 +96,15 @@ public final class HistoryStateManagement implements StateManagement, StateManag
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Legacy ActionQueue integration
+
+	@Nonnull
+	@Override
+	public CollectionRemovalSupport getCollectionRemovalSupport(@Nonnull PluralAttributeMapping mapping, @Nonnull String tableName) {
+		final var temporal = mapping.getTemporalMapping();
+		return temporal != null && tableName.equals( temporal.getTableName() )
+				? CollectionRemovalSupport.TEMPORAL
+				: CollectionRemovalSupport.STANDARD;
+	}
 
 	@Nonnull
 	@Override

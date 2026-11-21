@@ -33,25 +33,21 @@ import org.hibernate.persister.filter.internal.StaticFilterAliasGenerator;
 import org.hibernate.persister.state.spi.StateManagement;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.query.from.TableGroup;
-import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
-import org.hibernate.sql.ast.spi.model.ColumnValueParameterList;
 import org.hibernate.sql.ast.spi.model.MutatingTableReference;
 import org.hibernate.sql.ast.spi.model.RestrictedTableMutation;
 import org.hibernate.sql.ast.spi.model.TableMutation;
 import org.hibernate.sql.ast.internal.model.builder.CollectionRowDeleteBuilder;
+import org.hibernate.sql.ast.spi.model.builder.RestrictedTableMutationBuilder;
 import org.hibernate.sql.ast.spi.model.builder.TableInsertBuilderStandard;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
-import org.hibernate.sql.ast.spi.model.TableUpdateStandard;
 import org.hibernate.sql.spi.mutation.jdbc.JdbcMutationOperation;
 import org.hibernate.type.EntityType;
 
-import java.util.List;
 import java.util.function.Consumer;
 
 import static org.hibernate.temporal.TemporalTableStrategy.NATIVE;
 import static org.hibernate.temporal.TemporalTableStrategy.SINGLE_TABLE;
 import static org.hibernate.internal.util.collections.ArrayHelper.isAnyTrue;
-import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.persister.collection.mutation.RowMutationOperations.DEFAULT_RESTRICTOR;
 import static org.hibernate.persister.collection.mutation.RowMutationOperations.DEFAULT_VALUE_SETTER;
 
@@ -186,65 +182,22 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	@Nonnull
 	@Override
 	public RestrictedTableMutation<JdbcMutationOperation> generateDeleteAllAst(@Nonnull MutatingTableReference tableReference) {
-		final var attributeMapping = getAttributeMapping();
-		assert attributeMapping != null;
-		final var temporalMapping = attributeMapping.getTemporalMapping();
-		if ( temporalMapping != null && shouldApplyTemporalOperations( tableReference ) ) {
-			return generateTemporalDeleteAllAst( tableReference );
-		}
-		final var softDeleteMapping = attributeMapping.getSoftDeleteMapping();
-		if ( softDeleteMapping == null ) {
-			return super.generateDeleteAllAst( tableReference );
-		}
-		else {
-			final var foreignKeyDescriptor = attributeMapping.getKeyDescriptor();
-			assert foreignKeyDescriptor != null;
-			final int keyColumnCount = foreignKeyDescriptor.getJdbcTypeCount();
-			final var parameterBinders =
-					new ColumnValueParameterList( tableReference, ParameterUsage.RESTRICT, keyColumnCount );
-			final List<ColumnValueBinding> restrictionBindings = arrayList( keyColumnCount );
-			applyKeyRestrictions( parameterBinders, restrictionBindings );
-			final var softDeleteColumn = new ColumnReference( tableReference, softDeleteMapping );
-			final var nonDeletedBinding = softDeleteMapping.createNonDeletedValueBinding( softDeleteColumn );
-			final var deletedBinding = softDeleteMapping.createDeletedValueBinding( softDeleteColumn );
-			return new TableUpdateStandard(
-					tableReference,
-					this,
-					"soft-delete removal",
-					List.of( deletedBinding ),
-					restrictionBindings,
-					List.of( nonDeletedBinding )
-			);
-		}
+		return getCollectionRemovalSupport( tableReference.getTableName() ).buildRemoveAll( this, tableReference );
+	}
+
+	@Nonnull
+	@Override
+	public CollectionRemovalSupport getCollectionRemovalSupport(@Nonnull String tableName) {
+		return stateManagement.getLegacyIntegration().getCollectionRemovalSupport( getAttributeMapping(), tableName );
+	}
+
+	RestrictedTableMutation<JdbcMutationOperation> generatePhysicalDeleteAllAst(MutatingTableReference tableReference) {
+		return super.generateDeleteAllAst( tableReference );
 	}
 
 	@Nonnull
 	protected RestrictedTableMutation<JdbcMutationOperation> generateTemporalDeleteAllAst(@Nonnull MutatingTableReference tableReference) {
-		final var attributeMapping = getAttributeMapping();
-		final var temporalMapping = attributeMapping.getTemporalMapping();
-		assert temporalMapping != null;
-		final var foreignKeyDescriptor = attributeMapping.getKeyDescriptor();
-		assert foreignKeyDescriptor != null;
-		final int keyColumnCount = foreignKeyDescriptor.getJdbcTypeCount();
-		final var parameterBinders =
-				new ColumnValueParameterList( tableReference, ParameterUsage.RESTRICT, keyColumnCount );
-		final List<ColumnValueBinding> restrictionBindings = arrayList( keyColumnCount );
-		applyKeyRestrictions( parameterBinders, restrictionBindings );
-		final var endingColumn = new ColumnReference( tableReference, temporalMapping.getEndingColumnMapping() );
-		final var endingBinding = temporalMapping.createEndingValueBinding( endingColumn );
-		final var nullEndingBinding = temporalMapping.createNullEndingValueBinding( endingColumn );
-		return new TableUpdateStandard(
-				tableReference,
-				this,
-				"temporal removal",
-				List.of( endingBinding ),
-				restrictionBindings,
-				List.of( nullEndingBinding ),
-				null,
-				// Closing a collection is a remove-all, even though its SQL is an UPDATE.
-				tableReference.getTableMapping().getDeleteDetails().getExpectation(),
-				List.of()
-		);
+		return CollectionRemovalUpdate.temporal( this, tableReference ).buildRemoveAll( this, tableReference );
 	}
 
 	@Nonnull
@@ -588,120 +541,47 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 	@Nonnull
 	private JdbcMutationOperation generateDeleteRowOperation(@Nonnull MutatingTableReference tableReference) {
+		final var mutation = getCollectionRemovalSupport( tableReference.getTableName() ).buildDeleteRow( this, tableReference );
 		return getSqlAstTranslatorFactory()
-				.buildTranslator( new SqlAstTranslationRequest.ModelMutation<>( getFactory(), generateDeleteRowAst( tableReference ) ) )
+				.buildTranslator( new SqlAstTranslationRequest.ModelMutation<>( getFactory(), mutation ) )
 				.translate( null, MutationQueryOptions.INSTANCE );
 	}
 
 	@Nonnull
-	private RestrictedTableMutation<JdbcMutationOperation> generateDeleteRowAst(@Nonnull MutatingTableReference tableReference) {
-		final var pluralAttribute = getAttributeMapping();
-		assert pluralAttribute != null;
-		final var temporalMapping = pluralAttribute.getTemporalMapping();
-		if ( temporalMapping != null && shouldApplyTemporalOperations( tableReference ) ) {
-			return generateTemporalDeleteRowsAst( tableReference );
-		}
-		final var softDeleteMapping = pluralAttribute.getSoftDeleteMapping();
-		if ( softDeleteMapping != null ) {
-			return generateSoftDeleteRowsAst( tableReference );
+	RestrictedTableMutation<JdbcMutationOperation> generatePhysicalDeleteRowAst(@Nonnull MutatingTableReference tableReference) {
+		// CollectionRowDeleteBuilder handles custom row-delete SQL.
+		final var builder = new CollectionRowDeleteBuilder( this, tableReference, getFactory(), sqlWhereString );
+		applyRowDeleteRestrictions( builder );
+		//noinspection unchecked,rawtypes
+		return (RestrictedTableMutation) builder.buildMutation();
+	}
+
+	void applyRowDeleteRestrictions(RestrictedTableMutationBuilder<?, ?> builder) {
+		final var attribute = getAttributeMapping();
+		final var identifier = attribute.getIdentifierDescriptor();
+		if ( identifier != null ) {
+			builder.addKeyRestrictionsLeniently( identifier );
 		}
 		else {
-			final var foreignKeyDescriptor = pluralAttribute.getKeyDescriptor();
-			assert foreignKeyDescriptor != null;
-			// note that custom SQL delete row details are handled by CollectionRowDeleteBuilder
-			final var deleteBuilder = new CollectionRowDeleteBuilder(
-					this,
-					tableReference,
-					getFactory(),
-					sqlWhereString
-			);
-			final var identifierDescriptor = pluralAttribute.getIdentifierDescriptor();
-			if ( identifierDescriptor != null ) {
-				deleteBuilder.addKeyRestrictionsLeniently( identifierDescriptor );
+			builder.addKeyRestrictionsLeniently( attribute.getKeyDescriptor().getKeyPart() );
+			if ( hasPhysicalIndexColumn() ) {
+				assert attribute.getIndexDescriptor() != null;
+				builder.addKeyRestrictionsLeniently( attribute.getIndexDescriptor() );
 			}
 			else {
-				deleteBuilder.addKeyRestrictionsLeniently( foreignKeyDescriptor.getKeyPart() );
-				if ( hasIndex() && !indexContainsFormula ) {
-					assert pluralAttribute.getIndexDescriptor() != null;
-					deleteBuilder.addKeyRestrictionsLeniently( pluralAttribute.getIndexDescriptor() );
-				}
-				else {
-					deleteBuilder.addKeyRestrictions( pluralAttribute.getElementDescriptor() );
-				}
+				builder.addKeyRestrictions( attribute.getElementDescriptor() );
 			}
-			//noinspection unchecked,rawtypes
-			return (RestrictedTableMutation) deleteBuilder.buildMutation();
 		}
 	}
 
 	@Nonnull
 	protected RestrictedTableMutation<JdbcMutationOperation> generateSoftDeleteRowsAst(@Nonnull MutatingTableReference tableReference) {
-		final var attributeMapping = getAttributeMapping();
-		final var softDeleteMapping = attributeMapping.getSoftDeleteMapping();
-		assert softDeleteMapping != null;
-		final var foreignKeyDescriptor = attributeMapping.getKeyDescriptor();
-		assert foreignKeyDescriptor != null;
-		final TableUpdateBuilderStandard<JdbcMutationOperation> updateBuilder = new TableUpdateBuilderStandard<>(
-				this,
-				tableReference,
-				getFactory(),
-				sqlWhereString
-		);
-		final var identifierDescriptor = attributeMapping.getIdentifierDescriptor();
-		if ( identifierDescriptor != null ) {
-			updateBuilder.addKeyRestrictionsLeniently( identifierDescriptor );
-		}
-		else {
-			updateBuilder.addKeyRestrictionsLeniently( foreignKeyDescriptor.getKeyPart() );
-			if ( hasIndex() && !indexContainsFormula ) {
-				assert attributeMapping.getIndexDescriptor() != null;
-				updateBuilder.addKeyRestrictionsLeniently( attributeMapping.getIndexDescriptor() );
-			}
-			else {
-				updateBuilder.addKeyRestrictions( attributeMapping.getElementDescriptor() );
-			}
-		}
-
-		final var softDeleteColumnReference = new ColumnReference( tableReference, softDeleteMapping );
-		// apply the assignment
-		updateBuilder.addValueColumn( softDeleteMapping.createDeletedValueBinding( softDeleteColumnReference ) );
-		// apply the restriction
-		updateBuilder.addNonKeyRestriction( softDeleteMapping.createNonDeletedValueBinding( softDeleteColumnReference ) );
-		return updateBuilder.buildMutation();
+		return CollectionRemovalUpdate.softDelete( this, tableReference ).buildRow( this, tableReference );
 	}
 
 	@Nonnull
 	protected RestrictedTableMutation<JdbcMutationOperation> generateTemporalDeleteRowsAst(@Nonnull MutatingTableReference tableReference) {
-		final var attributeMapping = getAttributeMapping();
-		final var temporalMapping = attributeMapping.getTemporalMapping();
-		assert temporalMapping != null;
-		final var foreignKeyDescriptor = attributeMapping.getKeyDescriptor();
-		assert foreignKeyDescriptor != null;
-		final TableUpdateBuilderStandard<JdbcMutationOperation> updateBuilder = new TableUpdateBuilderStandard<>(
-				this,
-				tableReference,
-				getFactory(),
-				sqlWhereString
-		);
-		final var identifierDescriptor = attributeMapping.getIdentifierDescriptor();
-		if ( identifierDescriptor != null ) {
-			updateBuilder.addKeyRestrictionsLeniently( identifierDescriptor );
-		}
-		else {
-			updateBuilder.addKeyRestrictionsLeniently( foreignKeyDescriptor.getKeyPart() );
-			if ( hasIndex() && !indexContainsFormula ) {
-				assert attributeMapping.getIndexDescriptor() != null;
-				updateBuilder.addKeyRestrictionsLeniently( attributeMapping.getIndexDescriptor() );
-			}
-			else {
-				updateBuilder.addKeyRestrictions( attributeMapping.getElementDescriptor() );
-			}
-		}
-
-		final var endingColumnReference = new ColumnReference( tableReference, temporalMapping.getEndingColumnMapping() );
-		updateBuilder.addValueColumn( temporalMapping.createEndingValueBinding( endingColumnReference ) );
-		updateBuilder.addNonKeyRestriction( temporalMapping.createNullEndingValueBinding( endingColumnReference ) );
-		return updateBuilder.buildMutation();
+		return CollectionRemovalUpdate.temporal( this, tableReference ).buildRow( this, tableReference );
 	}
 
 	private void applyDeleteRowRestrictions(
@@ -712,14 +592,8 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			@Nonnull SharedSessionContractImplementor session,
 			@Nonnull JdbcValueBindings jdbcValueBindings) {
 		final var attributeMapping = getAttributeMapping();
-		final var temporalMapping = attributeMapping.getTemporalMapping();
-		if ( temporalMapping != null && isUsingTransactionIdParameters( session ) ) {
-			jdbcValueBindings.bindValue(
-					session.getCurrentChangesetIdentifier(),
-					temporalMapping.getEndingColumnMapping(),
-					ParameterUsage.SET
-			);
-		}
+		final String tableName = getCollectionTableMapping().getTableName();
+		getCollectionRemovalSupport( tableName ).bindValues( attributeMapping, tableName, session, jdbcValueBindings );
 		final var identifierDescriptor = attributeMapping.getIdentifierDescriptor();
 		if ( identifierDescriptor != null ) {
 			identifierDescriptor.decompose(

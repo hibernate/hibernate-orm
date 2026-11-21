@@ -12,6 +12,23 @@ Describes the new features and capabilities added to Hibernate ORM in {version}.
 
 IMPORTANT: If migrating from earlier versions, be sure to also check out the link:{migrationGuide}[Migration Guide] for discussion of impactful changes.
 
+[[nested-collection-fetching]]
+== Fetching collections nested in the query of their owner
+
+The new fetch method `FetchMethod.NESTED` may be used in an entity graph to fetch a collection in the same SQL query as its owner, aggregated into a single value of the row of the owner using `json_arrayagg(json_array(...))`.
+Since the collection does not add rows to the result set, several collections, including bags, may be fetched at once without a cartesian product, and pagination is still applied by the database.
+
+[source,java]
+----
+var graph = session.createEntityGraph(Author.class);
+graph.addAttributeNode(Author_.books).addOption(FetchMethod.NESTED);
+graph.addAttributeNode(Author_.royaltyStatements).addOption(FetchMethod.NESTED);
+Author author = session.find(graph, id);
+----
+
+This is currently supported on H2, PostgreSQL, MySQL, and MariaDB, for element collections and one-to-many associations without a join table.
+See the link:{userGuideBase}#fetching-graph-method-nested[user guide] for details and limitations.
+
 [[to-one-association-restrictions]]
 == Restrictions on to-one associations
 

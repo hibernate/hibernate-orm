@@ -101,7 +101,7 @@ public class SqlAstQueryPartProcessingStateImpl
 			else {
 				throw new IllegalArgumentException( "Illegal expression passed for nested fetching: " + expression );
 			}
-			final int selectableIndex = nestingFetchParent.getReferencedMappingType().getSelectableIndex( selectableName );
+			final int selectableIndex = nestingFetchParent.getNestedSelectableIndex( selectableName );
 			if ( selectableIndex != -1 ) {
 				return expression.createSqlSelection(
 						-1,

@@ -93,5 +93,26 @@ public enum FetchMethod implements FetchOption {
 	 *     re-execution of the initial query within a SQL subselect.
 	 * </ul>
 	 */
-	BY_SUBQUERY
+	BY_SUBQUERY,
+
+	/**
+	 * Use a correlated subquery in the projection list of the initial
+	 * query to load all instances of the related collection as a single
+	 * aggregated value per owner, for example, using
+	 * {@code json_arrayagg(json_array(...))}. No subsequent queries are
+	 * executed, and, unlike {@link #JOIN}, the result set does not grow
+	 * with the size of the collection, so that several collections may
+	 * be fetched at once without a cartesian product.
+	 * <p>
+	 * This fetching strategy is only available for element collections and
+	 * for one-to-many associations without a join table, mapped as a set,
+	 * bag, or list, and only when the {@linkplain org.hibernate.dialect.Dialect#supportsNestedCollectionFetch
+	 * dialect supports it}. Where it is not available, the collection is
+	 * fetched using a secondary select. Associations of the elements of the
+	 * collection are never joined.
+	 *
+	 * @since 8.1
+	 */
+	@Incubating(since = "8.1")
+	NESTED
 }

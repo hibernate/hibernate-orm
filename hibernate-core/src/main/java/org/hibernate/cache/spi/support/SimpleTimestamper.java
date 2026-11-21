@@ -19,14 +19,18 @@ public final class SimpleTimestamper {
 	public static final short ONE_MS = 1 << BIN_DIGITS;
 
 	public static long next() {
+		final long base = System.currentTimeMillis() << BIN_DIGITS;
+		final long maxValue = base + ONE_MS - 1;
 		while ( true ) {
-			long base = System.currentTimeMillis() << BIN_DIGITS;
-			long maxValue = base + ONE_MS - 1;
-			for ( long current = VALUE.get(), update = Math.max( base, current + 1 ); update < maxValue;
-					current = VALUE.get(), update = Math.max( base, current + 1 ) ) {
-				if ( VALUE.compareAndSet( current, update ) ) {
-					return update;
-				}
+			final long current = VALUE.get();
+			final long update = Math.max( base, current + 1 );
+			if ( update >= maxValue ) {
+				// Either the sequence for the current millisecond is exhausted, or the system clock moved
+				// backwards. Never wait for the clock, as that could take arbitrarily long; keep increasing instead.
+				return VALUE.incrementAndGet();
+			}
+			if ( VALUE.compareAndSet( current, update ) ) {
+				return update;
 			}
 		}
 	}

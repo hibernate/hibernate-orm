@@ -270,14 +270,17 @@ public class SqmUtil {
 		return modelPartContainer;
 	}
 
-	/** Read the key from the joined target whenever session restrictions can hide that target. */
+	/**
+	 * Read the key from the joined target whenever session restrictions can hide that target.
+	 * An assignment in a {@code set} clause always writes the foreign key itself.
+	 */
 	public static boolean hasRestrictedTarget(
 			ModelPart modelPart, SqmToSqlAstConverter creationState) {
-		if ( modelPart instanceof ToOneAttributeMapping toOne ) {
+		if ( modelPart instanceof ToOneAttributeMapping toOne
+				&& creationState.getCurrentClauseStack().getCurrent() != Clause.SET ) {
 			final var influencers = creationState.getLoadQueryInfluencers();
 			final var auxiliary = toOne.getAssociatedEntityMappingType().getAuxiliaryMapping();
 			return auxiliary != null && auxiliary.isAffectedByInfluencers( influencers )
-					&& creationState.getCurrentClauseStack().getCurrent() != Clause.SET
 				|| influencers.hasEnabledFilters() && toOne.hasFilterForLoadByKey()
 						&& toOne.isAffectedByEnabledFilters( influencers );
 		}

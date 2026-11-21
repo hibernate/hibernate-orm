@@ -210,6 +210,21 @@ public class BasicCollectionJavaType<C extends Collection<E>, E>
 						return false;
 					}
 				}
+				return true;
+			case BAG: {
+				final var remainingElements = new ArrayList<>( another );
+				OUTER: for ( E element : one ) {
+					final var iterator = remainingElements.iterator();
+					while ( iterator.hasNext() ) {
+						if ( componentJavaType.areEqual( element, iterator.next() ) ) {
+							iterator.remove();
+							continue OUTER;
+						}
+					}
+					return false;
+				}
+				return true;
+			}
 			default: {
 				OUTER: for ( E e1 : one ) {
 					for ( E e2 : another ) {

@@ -572,11 +572,10 @@ public class AuditMappingImpl implements AuditMapping {
 	}
 
 	/**
-	 * Walk up the navigable path to find a parent table group with an
-	 * audit mapping, and return a column reference to its REV column.
+	 * The parent revision that bounds an audited to-one join in an all-revisions query.
 	 */
 	@Nullable
-	private static ColumnReference findParentRevColumn(
+	public static ColumnReference findParentRevColumn(
 			NavigablePath navigablePath,
 			SqlAstCreationState creationState) {
 		final var parentPath = navigablePath.getParent();

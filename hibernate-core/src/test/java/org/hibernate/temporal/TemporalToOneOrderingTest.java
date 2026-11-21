@@ -9,8 +9,10 @@ import jakarta.persistence.Version;
 
 import org.hibernate.annotations.Temporal;
 import org.hibernate.audit.AuditLog;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -23,7 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @JiraKey("HHH-21217")
 @SessionFactory
-@DomainModel(annotatedClasses = { TemporalToOneOrderingTest.Node.class, TemporalToOneOrderingTest.Peer.class })
+@DomainModel(annotatedClasses = { TemporalToOneOrderingTest.Node.class, TemporalToOneOrderingTest.Peer.class,
+		TemporalToOneOrderingTest.VersionedNode.class, TemporalToOneOrderingTest.PersistPeer.class })
 @ServiceRegistry(settings = {
 		@Setting(name = TEMPORAL_TABLE_STRATEGY, value = "SINGLE_TABLE"),
 		@Setting(name = CHANGESET_ID_SUPPLIER, value = "org.hibernate.temporal.TemporalInsertUpdateOrderingTest$Changesets")
@@ -51,10 +54,11 @@ class TemporalToOneOrderingTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsPrimaryKeyUpdate.class)
 	void persistMutualReferences(SessionFactoryScope scope) {
 		final var changeset = scope.fromTransaction( session -> {
-			final var node = new Node( 3 );
-			final var peer = new Peer();
+			final var node = new VersionedNode( 3 );
+			final var peer = new PersistPeer();
 			peer.id = 4;
 			node.peer = peer;
 			peer.node = node;
@@ -63,7 +67,7 @@ class TemporalToOneOrderingTest {
 			session.flush();
 			return session.getCurrentChangesetIdentifier();
 		} );
-		final String hql = "select n.version from Node n join n.peer p where n.id = 3 and p.id = 4 and p.node.id = n.id";
+		final String hql = "select n.version from VersionedNode n join n.peer p where n.id = 3 and p.id = 4 and p.node.id = n.id";
 		final var version = scope.fromSession( session -> session.createSelectionQuery( hql, Integer.class ).getSingleResult() );
 		try (var session = scope.getSessionFactory().withOptions().atChangeset( changeset ).openSession()) {
 			assertEquals( version, session.createSelectionQuery( hql, Integer.class ).getSingleResult() );
@@ -71,10 +75,11 @@ class TemporalToOneOrderingTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsPrimaryKeyUpdate.class)
 	void persistMutualReferencesOfSameType(SessionFactoryScope scope) {
 		final var changeset = scope.fromTransaction( session -> {
-			final var first = new Node( 5 );
-			final var second = new Node( 6 );
+			final var first = new VersionedNode( 5 );
+			final var second = new VersionedNode( 6 );
 			first.parent = second;
 			second.parent = first;
 			session.persist( first );
@@ -82,7 +87,7 @@ class TemporalToOneOrderingTest {
 			session.flush();
 			return session.getCurrentChangesetIdentifier();
 		} );
-		final String hql = "select p.id from Node n join n.parent p where n.id = 5 and p.parent.id = n.id";
+		final String hql = "select p.id from VersionedNode n join n.parent p where n.id = 5 and p.parent.id = n.id";
 		scope.inSession( session -> assertEquals( List.of( 6 ),
 				session.createSelectionQuery( hql, Integer.class ).list() ) );
 		try (var session = scope.getSessionFactory().withOptions().atChangeset( changeset ).openSession()) {
@@ -90,7 +95,7 @@ class TemporalToOneOrderingTest {
 		}
 		try (var session = scope.getSessionFactory().withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
 			assertEquals( List.of( 5, 6 ), session.createSelectionQuery(
-					"select n.id from Node n where n.id in (5, 6) order by n.id", Integer.class ).list() );
+					"select n.id from VersionedNode n where n.id in (5, 6) order by n.id", Integer.class ).list() );
 		}
 	}
 
@@ -125,7 +130,6 @@ class TemporalToOneOrderingTest {
 	@Temporal
 	static class Node {
 		@Id int id;
-		@Version int version;
 		int revision;
 		@ManyToOne Node parent;
 		@ManyToOne Peer peer;
@@ -142,5 +146,26 @@ class TemporalToOneOrderingTest {
 		@Id int id;
 		int revision;
 		@ManyToOne Node node;
+	}
+
+	@Entity(name = "VersionedNode")
+	@Temporal
+	static class VersionedNode {
+		@Id int id;
+		@Version int version;
+		@ManyToOne VersionedNode parent;
+		@ManyToOne PersistPeer peer;
+
+		VersionedNode() {}
+		VersionedNode(int id) {
+			this.id = id;
+		}
+	}
+
+	@Entity(name = "PersistPeer")
+	@Temporal
+	static class PersistPeer {
+		@Id int id;
+		@ManyToOne VersionedNode node;
 	}
 }

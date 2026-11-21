@@ -7,6 +7,7 @@ import jakarta.persistence.Id;
 
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Temporal;
+import org.hibernate.audit.AuditLog;
 import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -24,6 +25,33 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @JiraKey("HHH-21217")
 class TemporalInsertUpdateOrderingTest {
 	private static final String SUPPLIER = "org.hibernate.temporal.TemporalInsertUpdateOrderingTest$Changesets";
+
+	@Test
+	@SessionFactory
+	@DomainModel(annotatedClasses = Item.class)
+	@ServiceRegistry(settings = {
+			@Setting(name = TEMPORAL_TABLE_STRATEGY, value = "SINGLE_TABLE"),
+			@Setting(name = CHANGESET_ID_SUPPLIER, value = SUPPLIER)
+	})
+	void excludedUpdatePreservesClosedRow(SessionFactoryScope scope) {
+		final var before = scope.fromTransaction( session -> {
+			final var item = new Item( 1, "first" );
+			item.note = "original";
+			session.persist( item );
+			return session.getCurrentChangesetIdentifier();
+		} );
+		scope.inTransaction( session -> session.find( Item.class, 1 ).name = "second" );
+		scope.inTransaction( session -> session.find( Item.class, 1 ).note = "edited" );
+
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( before ).openSession()) {
+			assertEquals( "original", session.find( Item.class, 1 ).note );
+		}
+		scope.inSession( session -> assertEquals( "edited", session.find( Item.class, 1 ).note ) );
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
+			assertEquals( List.of( "first", "second" ), session.createSelectionQuery(
+					"select i.name from Item i order by i.name", String.class ).list() );
+		}
+	}
 
 	@Test
 	@SessionFactory
@@ -87,6 +115,7 @@ class TemporalInsertUpdateOrderingTest {
 		@Id
 		int id;
 		String name;
+		@Temporal.Excluded String note;
 
 		Item() {
 		}

@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ExecutionPrerequisiteCycleTest {
 	@Test
@@ -27,6 +28,20 @@ class ExecutionPrerequisiteCycleTest {
 				() -> new CycleBreaker().applyCycleBreaks( graph, options, DeferrableConstraintMode.DEFAULT ) );
 		assertFalse( first.isBroken() );
 		assertFalse( second.isBroken() );
+	}
+
+	@Test
+	void inferredOrderYieldsToExecutionPrerequisite() {
+		final var end = node( MutationKind.UPDATE, 1 );
+		final var insert = node( MutationKind.INSERT, 2 );
+		final var prerequisite = GraphEdge.executionPrerequisite( end, insert, 0 );
+		final var inferred = GraphEdge.requiredOrder( insert, end, insert, end, Util.EMPTY_SELECTABLES, null, 1 );
+		final var graph = new Graph( List.of( insert, end ),
+				Map.of( end, List.of( prerequisite ), insert, List.of( inferred ) ) );
+		final var options = new PlanningOptions( true, true, true, false, PlanningOptions.UniqueCycleStrategy.FAIL );
+		new CycleBreaker().applyCycleBreaks( graph, options, DeferrableConstraintMode.DEFAULT );
+		assertFalse( prerequisite.isBroken() );
+		assertTrue( inferred.isBroken() );
 	}
 
 	private static GroupNode node(MutationKind kind, int ordinal) {

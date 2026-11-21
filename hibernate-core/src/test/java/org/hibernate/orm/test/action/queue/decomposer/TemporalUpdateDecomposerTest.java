@@ -3,15 +3,20 @@ package org.hibernate.orm.test.action.queue.decomposer;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
 
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.QueueType;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
+import org.hibernate.annotations.Temporal;
+import org.hibernate.annotations.TenantId;
 import org.hibernate.cfg.FlushSettings;
+import org.hibernate.cfg.MultiTenancySettings;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -24,6 +29,7 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * Tests graph decomposition for temporal updates.
@@ -70,6 +76,46 @@ public class TemporalUpdateDecomposerTest {
 		} );
 	}
 
+	@Test
+	@Jpa(annotatedClasses = TenantItem.class, properties = {
+			@Setting(name = FlushSettings.FLUSH_QUEUE_TYPE, value = "graph"),
+			@Setting(name = StateManagementSettings.TEMPORAL_TABLE_STRATEGY, value = "HISTORY_TABLE"),
+			@Setting(name = MultiTenancySettings.MULTI_TENANT_IDENTIFIER_RESOLVER,
+					value = "org.hibernate.orm.test.tenantid.TenantIdMutationTest$Resolver"),
+			@Setting(name = MultiTenancySettings.MULTI_TENANT_RLS_ENABLED, value = "false")
+	})
+	void tenantOwnershipCheckPreservesHistoryPrerequisite(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			final var session = em.unwrap( SessionImplementor.class );
+			final var item = new TenantItem();
+			item.id = 1L;
+			item.name = "before";
+			em.persist( item );
+			em.flush();
+
+			final var persister = session.getFactory().getMappingMetamodel().getEntityDescriptor( TenantItem.class );
+			final var previous = persister.getValues( item );
+			item.name = "after";
+			final List<FlushOperation> operations = new ArrayList<>();
+			persister.getUpdateDecomposer().decompose( createUpdateAction( item, previous, session, persister ),
+					0, session, null, operations::add );
+
+			final var currentTable = persister.getIdentifierTableDetails().getTableName();
+			final var historyTable = persister.getTemporalMapping().getTableName();
+			final var ownershipCheck = operation( operations, currentTable, MutationKind.UPDATE );
+			final var closeHistory = operation( operations, historyTable, MutationKind.UPDATE );
+			final var insertHistory = operation( operations, historyTable, MutationKind.INSERT );
+			assertSame( ownershipCheck, closeHistory.getExecutionPrerequisite() );
+			assertSame( closeHistory, insertHistory.getExecutionPrerequisite() );
+			item.name = "before";
+		} );
+	}
+
+	private static FlushOperation operation(List<FlushOperation> operations, String table, MutationKind kind) {
+		return operations.stream().filter( op -> op.getKind() == kind && table.equals( op.getTableExpression() ) )
+				.findFirst().orElseThrow();
+	}
+
 	private static EntityUpdateAction createUpdateAction(
 			Object entity,
 			Object[] previousState,
@@ -78,7 +124,7 @@ public class TemporalUpdateDecomposerTest {
 		return new EntityUpdateAction(
 				persister.getIdentifier( entity, session ),
 				persister.getValues( entity ),
-				new int[] { 0 },
+				new int[] { persister.findAttributeMapping( "name" ).getStateArrayPosition() },
 				false,
 				previousState,
 				persister.getVersion( entity ),
@@ -98,5 +144,16 @@ public class TemporalUpdateDecomposerTest {
 		Long id;
 
 		String name;
+	}
+
+	@Entity(name = "TenantItem")
+	@Table(name = "tenant_item")
+	@SecondaryTable(name = "tenant_item_details")
+	@Temporal
+	static class TenantItem {
+		@Id Long id;
+		@TenantId String tenant;
+		String name;
+		@Column(table = "tenant_item_details") String detail;
 	}
 }

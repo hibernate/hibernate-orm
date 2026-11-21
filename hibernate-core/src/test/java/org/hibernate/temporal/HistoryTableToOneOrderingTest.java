@@ -17,6 +17,6 @@ class HistoryTableToOneOrderingTest extends TemporalToOneOrderingTest {
 	@Override
 	@Test
 	void foreignKeys(SessionFactoryScope scope) {
-		assertEquals( 3, scope.getSessionFactory().getMappingMetamodel().getConstraintModel().foreignKeys().size() );
+		assertEquals( 6, scope.getSessionFactory().getMappingMetamodel().getConstraintModel().foreignKeys().size() );
 	}
 }

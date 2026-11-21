@@ -12,6 +12,7 @@ import org.hibernate.action.queue.internal.PreparedCollectionMutation;
 import org.hibernate.action.queue.spi.decompose.DecompositionContext;
 import org.hibernate.action.queue.internal.decompose.collection.BasicCollectionDecomposer;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionDecomposer;
+import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPlanContributor;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
@@ -104,11 +105,12 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 	@Nonnull
 	protected CollectionDecomposer buildCollectionDecomposer() {
-		return new BasicCollectionDecomposer(
-				this,
-				getFactory(),
-				stateManagement.getGraphIntegration().createCollectionMutationPlanContributor( this )
-		);
+		return new BasicCollectionDecomposer( this, getFactory() );
+	}
+
+	@Nonnull
+	public CollectionMutationPlanContributor createMutationPlanContributor() {
+		return stateManagement.getGraphIntegration().createCollectionMutationPlanContributor( this );
 	}
 
 	@Nonnull

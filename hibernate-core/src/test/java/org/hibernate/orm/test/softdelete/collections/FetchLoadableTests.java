@@ -58,6 +58,23 @@ public class FetchLoadableTests {
 	}
 
 	@Test
+	void removeOneElementThenClear(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.find( CollectionOwner2.class, 1 )
+				.getBatchLoadable().remove( "batchable1" ) );
+		final String inactiveCount = "select count(*) from batch_loadables where owner_fk = 1 and active = 'N'";
+		scope.inTransaction( session -> {
+			assertThat( session.createNativeQuery( inactiveCount, Long.class ).getSingleResult() ).isEqualTo( 1L );
+			final var remaining = session.find( CollectionOwner2.class, 1 ).getBatchLoadable();
+			assertThat( remaining ).containsExactlyInAnyOrder( "batchable2", "batchable3" );
+			remaining.clear();
+		} );
+		scope.inTransaction( session -> {
+			assertThat( session.createNativeQuery( inactiveCount, Long.class ).getSingleResult() ).isEqualTo( 3L );
+			assertThat( session.find( CollectionOwner2.class, 2 ).getBatchLoadable() ).hasSize( 3 );
+		} );
+	}
+
+	@Test
 	void testBatchLoading(SessionFactoryScope scope) {
 		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 

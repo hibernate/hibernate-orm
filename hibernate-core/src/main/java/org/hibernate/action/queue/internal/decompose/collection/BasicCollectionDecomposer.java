@@ -52,7 +52,6 @@ import static org.hibernate.action.queue.internal.decompose.collection.Collectio
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionOrdinalSupport.calculateOrdinal;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionMutationPlanSupport.applyRemoveRestrictions;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionMutationPlanSupport.applyRowDeleteRestrictions;
-import static org.hibernate.action.queue.internal.decompose.collection.CollectionMutationPlanSupport.buildSoftDeleteMutation;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionMutationPlanSupport.createTableMapping;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 import static org.hibernate.temporal.TemporalTableStrategy.SINGLE_TABLE;
@@ -79,7 +78,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 	public BasicCollectionDecomposer(
 			BasicCollectionPersister persister,
 			SessionFactoryImplementor factory) {
-		this( persister, factory, CollectionMutationPlanContributor.STANDARD );
+		this( persister, factory, persister.createMutationPlanContributor() );
 	}
 
 	public BasicCollectionDecomposer(
@@ -1814,32 +1813,11 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 	}
 
 	private CollectionJdbcOperations.DeleteRowPlan buildStandardDeleteRowPlan(SessionFactoryImplementor factory) {
-		final var attribute = persister.getAttributeMapping();
-		final var tableMapping = createTableMapping( persister.getCollectionTableDescriptor() );
-		final var mutatingTable = new MutatingTableReference( tableMapping );
-		final var softDeleteMapping = attribute.getSoftDeleteMapping();
-		final var deleteBuilder = softDeleteMapping == null
-				? new TableDeleteBuilderStandard(
-						persister,
-						mutatingTable,
-						factory,
-						persister.getSqlWhereString()
-					)
-				: null;
-		final var updateBuilder = softDeleteMapping == null
-				? null
-				: new TableUpdateBuilderStandard<>(
-						persister,
-						mutatingTable,
-						factory,
-						persister.getSqlWhereString()
-				);
-
-		applyRowDeleteRestrictions( persister, deleteBuilder, updateBuilder );
-
-		final var mutation = softDeleteMapping == null
-				? deleteBuilder.buildMutation()
-				: buildSoftDeleteMutation( updateBuilder, mutatingTable, softDeleteMapping );
+		final var tableMapping = createTableMapping( tableDescriptor );
+		final var deleteBuilder = new TableDeleteBuilderStandard(
+				persister, new MutatingTableReference( tableMapping ), factory, persister.getSqlWhereString() );
+		applyRowDeleteRestrictions( persister, deleteBuilder, null );
+		final var mutation = deleteBuilder.buildMutation();
 		return new CollectionJdbcOperations.DeleteRowPlan(
 				mutation.createMutationOperation( null, factory ),
 				this::bindDeleteRestrictions
@@ -1970,35 +1948,12 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 	}
 
 	private MutationOperation buildStandardRemoveOperation(SessionFactoryImplementor factory) {
-		final var tableDescriptor = persister.getCollectionTableDescriptor();
-		final var attribute = persister.getAttributeMapping();
 		final var tableMapping = createTableMapping( tableDescriptor );
-		final var mutatingTable = new MutatingTableReference( tableMapping );
-		final var softDeleteMapping = attribute.getSoftDeleteMapping();
-		final var deleteBuilder = softDeleteMapping == null
-				? new TableDeleteBuilderStandard(
-						persister,
-						mutatingTable,
-						tableDescriptor.deleteAllDetails(),
-						persister.getSqlWhereString(),
-						factory
-					)
-				: null;
-		final var updateBuilder = softDeleteMapping == null
-				? null
-				: new TableUpdateBuilderStandard<>(
-						persister,
-						mutatingTable,
-						factory,
-						persister.getSqlWhereString()
-				);
-
-		applyRemoveRestrictions( persister, deleteBuilder, updateBuilder );
-
-		final var mutation = softDeleteMapping == null
-				? deleteBuilder.buildMutation()
-				: buildSoftDeleteMutation( updateBuilder, mutatingTable, softDeleteMapping );
-		return mutation.createMutationOperation(null, factory);
+		final var deleteBuilder = new TableDeleteBuilderStandard(
+				persister, new MutatingTableReference( tableMapping ), tableDescriptor.deleteAllDetails(),
+				persister.getSqlWhereString(), factory );
+		applyRemoveRestrictions( persister, deleteBuilder, null );
+		return deleteBuilder.buildMutation().createMutationOperation( null, factory );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

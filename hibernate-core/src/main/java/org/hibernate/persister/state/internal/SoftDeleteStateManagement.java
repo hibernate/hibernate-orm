@@ -3,6 +3,9 @@ package org.hibernate.persister.state.internal;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
+import org.hibernate.action.queue.internal.decompose.collection.SoftDeleteCollectionMutationPlanContributor;
+import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPlanContributor;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor;
@@ -30,6 +33,14 @@ public final class SoftDeleteStateManagement extends AbstractStateManagement {
 		@Override
 		public EntityMutationPlanContributor createEntityMutationPlanContributor(@Nonnull EntityPersister persister) {
 			return new SoftDeleteEntityMutationPlanContributor( persister, persister.getFactory() );
+		}
+
+		@Nonnull
+		@Override
+		public CollectionMutationPlanContributor createCollectionMutationPlanContributor(@Nonnull CollectionPersister persister) {
+			final var mapping = persister.getAttributeMapping().getSoftDeleteMapping();
+			return mapping == null ? CollectionMutationPlanContributor.STANDARD
+					: new SoftDeleteCollectionMutationPlanContributor( mapping );
 		}
 	};
 

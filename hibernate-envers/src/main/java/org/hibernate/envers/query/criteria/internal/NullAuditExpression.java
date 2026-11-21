@@ -37,8 +37,8 @@ public class NullAuditExpression extends AbstractAtomicExpression {
 				entityName,
 				propertyNameGetter
 		);
-		RelationDescription relatedEntity = CriteriaTools.getRelatedEntity( enversService, entityName, propertyName );
 		String prefixedPropertyName = componentPrefix.concat( propertyName );
+		RelationDescription relatedEntity = CriteriaTools.getRelatedEntity( enversService, entityName, prefixedPropertyName );
 
 		if ( relatedEntity == null ) {
 			parameters.addNullRestriction( alias, prefixedPropertyName );

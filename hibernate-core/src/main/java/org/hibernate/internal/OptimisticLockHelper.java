@@ -100,14 +100,19 @@ public final class OptimisticLockHelper {
 			Object id,
 			Object previousVersion,
 			SharedSessionContractImplementor session) {
-		final Integer batchSize = session.getJdbcBatchSize();
+		// A shared coordinator reads the batch size from its owner, not the calling session.
+		final var jdbcSessionOwner = session.getJdbcCoordinator().getJdbcSessionOwner();
+		final var batchSizeSession = jdbcSessionOwner instanceof SharedSessionContractImplementor ownerSession
+				? ownerSession
+				: session;
+		final Integer batchSize = batchSizeSession.getJdbcBatchSize();
 		// Use the original overload so custom persisters still see pessimistic increments.
-		session.setJdbcBatchSize( 0 );
+		batchSizeSession.setJdbcBatchSize( 0 );
 		try {
 			return persister.forceVersionIncrement( id, previousVersion, session );
 		}
 		finally {
-			session.setJdbcBatchSize( batchSize );
+			batchSizeSession.setJdbcBatchSize( batchSize );
 		}
 	}
 

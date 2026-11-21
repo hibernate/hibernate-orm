@@ -58,6 +58,7 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
+import org.hibernate.metamodel.mapping.internal.CurrentState.TargetRead;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.spi.TreatedNavigablePath;
 import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
@@ -112,6 +113,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import static org.hibernate.metamodel.mapping.internal.CurrentState.hasHistory;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.createInverseModelPart;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getTableIdentifierExpression;
@@ -2402,6 +2404,7 @@ public class ToOneAttributeMapping
 				this,
 				identifyingColumnsTableExpression
 		);
+		final var targetRead = targetRead( lhs, navigablePath, creationState );
 
 		lazyTableGroup.setTableGroupInitializerCallback(
 				tableGroup -> {
@@ -2453,18 +2456,32 @@ public class ToOneAttributeMapping
 					final var auxiliaryMapping =
 							associatedEntityMappingType.getAuxiliaryMapping();
 					if ( auxiliaryMapping != null ) {
-						auxiliaryMapping.applyPredicate(
+						targetRead.read( creationState.getLoadQueryInfluencers(), () -> auxiliaryMapping.applyPredicate(
 								associatedEntityMappingType,
 								join::applyPredicate,
 								lazyTableGroup,
 								navigablePath,
 								creationState
-						);
+						) );
 					}
 				}
 		);
 
 		return join;
+	}
+
+	/**
+	 * How the tables of the target of this association, held by the given owner, are read.
+	 */
+	private TargetRead targetRead(TableGroup lhs, NavigablePath navigablePath, SqlAstCreationState creationState) {
+		final var target = getAssociatedEntityMappingType();
+		return TargetRead.of(
+				hasHistory( target ),
+				lhs,
+				target.getTemporalMapping() instanceof TemporalMappingImpl temporalMapping
+						&& temporalMapping.ownerRevision( navigablePath, creationState ) != null,
+				creationState
+		);
 	}
 
 	/**
@@ -2573,6 +2590,7 @@ public class ToOneAttributeMapping
 			tableGroupProducer = this;
 		}
 
+		final var targetRead = targetRead( lhs, navigablePath, creationState );
 		final var lazyTableGroup = new LazyTableGroup(
 				canUseInnerJoin,
 				navigablePath,
@@ -2583,6 +2601,7 @@ public class ToOneAttributeMapping
 						fetched,
 						null,
 						sqlAliasBase,
+						targetRead,
 						creationState
 				),
 				this,
@@ -2611,13 +2630,13 @@ public class ToOneAttributeMapping
 				final var auxiliaryMapping =
 						getAssociatedEntityMappingType().getAuxiliaryMapping();
 				if ( auxiliaryMapping != null ) {
-					auxiliaryMapping.applyPredicate(
+					targetRead.read( creationState.getLoadQueryInfluencers(), () -> auxiliaryMapping.applyPredicate(
 							getAssociatedEntityMappingType(),
 							predicateConsumer,
 							lazyTableGroup,
 							navigablePath,
 							creationState
-					);
+					) );
 				}
 			}
 		}
@@ -2689,9 +2708,22 @@ public class ToOneAttributeMapping
 			@Nullable String sourceAlias,
 			final SqlAliasBase sqlAliasBase,
 			SqlAstCreationState creationState) {
-		final var primaryTableReference =
-				getEntityMappingType()
-						.createPrimaryTableReference( sqlAliasBase, creationState );
+		return createTableGroupInternal( canUseInnerJoins, navigablePath, fetched, sourceAlias,
+				sqlAliasBase, TargetRead.QUERY, creationState );
+	}
+
+	private TableGroup createTableGroupInternal(
+			boolean canUseInnerJoins,
+			NavigablePath navigablePath,
+			boolean fetched,
+			@Nullable String sourceAlias,
+			final SqlAliasBase sqlAliasBase,
+			TargetRead targetRead,
+			SqlAstCreationState creationState) {
+		final var entityMappingType = getEntityMappingType();
+		final var influencers = creationState.getLoadQueryInfluencers();
+		final var primaryTableReference = targetRead.read( influencers,
+				() -> entityMappingType.createPrimaryTableReference( sqlAliasBase, creationState ) );
 
 		return new StandardTableGroup(
 				canUseInnerJoins,
@@ -2702,13 +2734,10 @@ public class ToOneAttributeMapping
 				primaryTableReference,
 				true,
 				sqlAliasBase,
-				getEntityMappingType().getRootEntityDescriptor()::containsTableReference,
-				(tableExpression, tg) -> getEntityMappingType().createTableReferenceJoin(
-						tableExpression,
-						sqlAliasBase,
-						primaryTableReference,
-						creationState
-				),
+				entityMappingType.getRootEntityDescriptor()::containsTableReference,
+				(tableExpression, tg) -> targetRead.read( influencers,
+						() -> entityMappingType.createTableReferenceJoin( tableExpression, sqlAliasBase,
+								primaryTableReference, creationState ) ),
 				creationState.getCreationContext().getSessionFactory()
 		);
 	}

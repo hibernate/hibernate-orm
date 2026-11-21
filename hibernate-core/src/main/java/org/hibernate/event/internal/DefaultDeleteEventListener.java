@@ -286,6 +286,8 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 	private boolean canBeDeletedWithoutLoading(@Nonnull EventSource source, @Nonnull EntityPersister persister) {
 		return source.getInterceptor() == EmptyInterceptor.INSTANCE
 			&& TenantIdHelper.tenantIdAttribute( persister ) == null
+			// the audit log records the state of a deleted entity
+			&& persister.getAuditMapping() == null
 			&& !persister.hasSubclasses() //TODO: should be unnecessary, using EntityPersister.getSubclassPropertyTypeClosure(), etc
 			&& !persister.hasCascadeDelete()
 			&& !persister.hasNaturalIdentifier()

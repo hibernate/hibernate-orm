@@ -22,6 +22,7 @@ import jakarta.annotation.Nullable;
 
 import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
+import static org.hibernate.sql.results.graph.entity.internal.OwnerChangeset.resolveAtOwnerChangeset;
 
 /**
  * Initializer for discriminated mappings.
@@ -147,29 +148,35 @@ public class DiscriminatedEntityInitializer
 	public void resolveInstance(DiscriminatedEntityInitializerData data) {
 		if ( data.getState() == State.KEY_RESOLVED ) {
 			data.setState( State.INITIALIZED );
-			final var session = data.getRowProcessingState().getSession();
-			final Object identifier = data.entityIdentifier;
-			final var concreteDescriptor = data.concreteDescriptor;
-			final var entityKey = data.getRowProcessingState().getSession().generateEntityKey( identifier, concreteDescriptor );
-			final var persistenceContext = session.getPersistenceContextInternal();
-			final var holder = persistenceContext.getEntityHolder( entityKey );
-			final Object instance;
-			if ( holder != null ) {
-				instance = holder.getEntity();
-				data.setInstance( instance );
-			}
-			else {
-				instance = null;
-			}
-			if ( !isResolved( holder, instance ) ) {
-				data.setInstance( session.internalLoad(
-						concreteDescriptor.getEntityName(),
-						identifier,
-						eager,
-						// should not be null since we checked already.  null would indicate bad data (ala, not-found handling)
-						false
-				) );
-			}
+			// the target is read at the changeset of the owner of the association
+			resolveAtOwnerChangeset( parent, data.concreteDescriptor, data.getRowProcessingState(),
+					() -> resolveTarget( data ) );
+		}
+	}
+
+	private void resolveTarget(DiscriminatedEntityInitializerData data) {
+		final var session = data.getRowProcessingState().getSession();
+		final Object identifier = data.entityIdentifier;
+		final var concreteDescriptor = data.concreteDescriptor;
+		final var entityKey = session.generateEntityKey( identifier, concreteDescriptor );
+		final var persistenceContext = session.getPersistenceContextInternal();
+		final var holder = persistenceContext.getEntityHolder( entityKey );
+		final Object instance;
+		if ( holder != null ) {
+			instance = holder.getEntity();
+			data.setInstance( instance );
+		}
+		else {
+			instance = null;
+		}
+		if ( !isResolved( holder, instance ) ) {
+			data.setInstance( session.internalLoad(
+					concreteDescriptor.getEntityName(),
+					identifier,
+					eager,
+					// should not be null since we checked already.  null would indicate bad data (ala, not-found handling)
+					false
+			) );
 		}
 	}
 
@@ -272,15 +279,16 @@ public class DiscriminatedEntityInitializer
 	public void initializeInstance(DiscriminatedEntityInitializerData data) {
 		if ( data.getState() == State.RESOLVED ) {
 			data.setState( State.INITIALIZED );
-			data.setInstance( data.getRowProcessingState().getSession()
-					.internalLoad(
-							data.concreteDescriptor.getEntityName(),
-							data.entityIdentifier,
-							eager,
-							// should not be null since we checked already.
-							// null would indicate bad data (ala, not-found handling)
-							false
-					) );
+			resolveAtOwnerChangeset( parent, data.concreteDescriptor, data.getRowProcessingState(),
+					() -> data.setInstance( data.getRowProcessingState().getSession()
+							.internalLoad(
+									data.concreteDescriptor.getEntityName(),
+									data.entityIdentifier,
+									eager,
+									// should not be null since we checked already.
+									// null would indicate bad data (ala, not-found handling)
+									false
+							) ) );
 		}
 	}
 

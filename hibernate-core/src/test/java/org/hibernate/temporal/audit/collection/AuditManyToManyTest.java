@@ -254,6 +254,31 @@ class AuditManyToManyTest {
 		}
 	}
 
+	@Test
+	@Order(6)
+	void testJoinFetchedCollectionRevisionIsolation(SessionFactoryScope scope) {
+		final var sf = scope.getSessionFactory();
+		final List<Integer> lazySizes;
+		try (var s = sf.withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
+			lazySizes = s.createSelectionQuery( "from Student s where s.id = :id order by changesetId(s)", Student.class )
+					.setParameter( "id", 1L )
+					.getResultList()
+					.stream().map( st -> st.courses.size() ).toList();
+		}
+		try (var s = sf.withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
+			// each revision fetches the collection as of that revision, like the lazy load
+			var students = s.createSelectionQuery(
+							"from Student s left join fetch s.courses where s.id = :id order by changesetId(s)",
+							Student.class )
+					.setParameter( "id", 1L )
+					.getResultList();
+			assertEquals( 4, students.size(), "Expected 4 revisions including DEL" );
+			final var fetchedSizes = students.stream().map( st -> st.courses.size() ).toList();
+			assertEquals( List.of( 1, 2, 1 ), fetchedSizes.subList( 0, 3 ) );
+			assertEquals( lazySizes, fetchedSizes );
+		}
+	}
+
 	// ---- Entity classes ----
 
 	@Audited

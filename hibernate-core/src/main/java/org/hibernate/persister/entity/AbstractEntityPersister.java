@@ -259,6 +259,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static org.hibernate.metamodel.mapping.internal.CurrentState.loadByKey;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 import static java.util.Collections.emptyList;
@@ -1603,14 +1604,26 @@ public abstract class AbstractEntityPersister
 			boolean innerJoin,
 			@Nonnull String[] targetColumns,
 			@Nonnull SqlAstCreationState creationState) {
-		final var joinedTableReference = new NamedTableReference(
-				joinTableExpression,
-				sqlAliasBase.generateNewAlias(),
-				!innerJoin
-		);
-		joinedTableReference.applyAuxiliaryTable( auxiliaryMapping,
-				creationState.getLoadQueryInfluencers() );
-		return new TableReferenceJoin(
+		final var loadQueryInfluencers = creationState.getLoadQueryInfluencers();
+		// a joined table of a snapshot is read from the auxiliary table, like the root table
+		final String auxiliaryTableName =
+				auxiliaryMapping != null && auxiliaryMapping.useAuxiliaryTable( loadQueryInfluencers )
+						? auxiliaryMapping.resolveTableName( joinTableExpression )
+						: null;
+		final var joinedTableReference = auxiliaryTableName != null
+				? new AuxiliaryTableReference(
+						auxiliaryTableName,
+						joinTableExpression,
+						sqlAliasBase.generateNewAlias(),
+						!innerJoin
+				)
+				: new NamedTableReference(
+						joinTableExpression,
+						sqlAliasBase.generateNewAlias(),
+						!innerJoin
+				);
+		joinedTableReference.applyAuxiliaryTable( auxiliaryMapping, loadQueryInfluencers );
+		final var tableReferenceJoin = new TableReferenceJoin(
 				innerJoin,
 				joinedTableReference,
 				generateJoinPredicate(
@@ -1621,6 +1634,17 @@ public abstract class AbstractEntityPersister
 						creationState
 				)
 		);
+		if ( auxiliaryTableName != null && lhs instanceof NamedTableReference primaryTableReference ) {
+			castNonNull( auxiliaryMapping ).applyPredicate(
+					tableReferenceJoin,
+					primaryTableReference,
+					joinTableExpression,
+					this,
+					creationState.getSqlAliasBaseGenerator(),
+					loadQueryInfluencers
+			);
+		}
+		return tableReferenceJoin;
 	}
 
 	@Nonnull
@@ -1874,20 +1898,41 @@ public abstract class AbstractEntityPersister
 		final String fetchGroup = lazyAttributesMetadata.getFetchGroupName( fieldName );
 		final var historical = entry.getEntityKey().isTemporal();
 		final var groupAttributes = lazyAttributesMetadata.getFetchGroupAttributeDescriptors( fetchGroup );
-		final var fetchGroupAttributeDescriptors = historical && getAuditMapping() != null
+		final boolean auditSnapshot = historical && getAuditMapping() != null;
+		final var fetchGroupAttributeDescriptors = auditSnapshot
 				? groupAttributes.stream()
 						.filter( attribute -> !isPropertyAuditedExcluded( attribute.getAttributeIndex() ) )
 						.toList()
 				: groupAttributes;
 		try {
 			Object finalResult = null;
+			final var initializedLazyAttributeNames = interceptor.getInitializedLazyAttributeNames();
+			if ( auditSnapshot ) {
+				// An audit row has no columns for excluded attributes: they read as absent
+				for ( var attribute : groupAttributes ) {
+					final String attributeName = attribute.getName();
+					if ( isPropertyAuditedExcluded( attribute.getAttributeIndex() ) ) {
+						final int propertyIndex = getPropertyIndex( attributeName );
+						final Object absentValue = absentValue( getAttributeMapping( propertyIndex ) );
+						if ( fieldName.equals( attributeName ) ) {
+							finalResult = absentValue;
+						}
+						if ( !initializedLazyAttributeNames.contains( attributeName ) ) {
+							initializeLazyProperty( entity, entry, absentValue, propertyIndex, attribute.getType() );
+						}
+					}
+				}
+				if ( fetchGroupAttributeDescriptors.isEmpty() ) {
+					CORE_LOGGER.doneInitializingLazyProperties();
+					return finalResult;
+				}
+			}
 			final var results = historical
 					? loadHistoricalLazyAttributes( getLazyFetchGroupParts( fetchGroupAttributeDescriptors ), entry, session )
 					: castNonNull( getSQLLazySelectLoadPlan( fetchGroup ) ).load( id, session );
 			if ( results == null ) {
 				throw new ObjectNotFoundException( id, getEntityName() );
 			}
-			final var initializedLazyAttributeNames = interceptor.getInitializedLazyAttributeNames();
 			int i = 0;
 			for ( var fetchGroupAttributeDescriptor : fetchGroupAttributeDescriptors ) {
 				final String attributeName = fetchGroupAttributeDescriptor.getName();
@@ -1974,6 +2019,17 @@ public abstract class AbstractEntityPersister
 		final var newLazyLoanPlan = createLazyLoadPlan( partsToSelect, new LoadQueryInfluencers( factory ) );
 		plans.put( fieldName, newLazyLoanPlan );
 		return newLazyLoanPlan;
+	}
+
+	/**
+	 * The value of an attribute whose column is absent: {@code null}, or the
+	 * default for a primitive.
+	 */
+	private static @Nullable Object absentValue(@Nonnull AttributeMapping attributeMapping) {
+		final var propertyAccess = attributeMapping.getPropertyAccess();
+		return propertyAccess != null && propertyAccess.getGetter().getReturnTypeClass().isPrimitive()
+				? attributeMapping.getMappedType().getMappedJavaType().getDefaultValue()
+				: null;
 	}
 
 	@Nullable
@@ -4572,11 +4628,22 @@ public abstract class AbstractEntityPersister
 			CORE_LOGGER.fetchingEntity( infoString( this, id, getFactory() ) );
 		}
 
+		return loadByKey( this, session, () -> loadWithLoader( id, optionalObject, lockOptions, readOnly, session ) );
+	}
+
+	@Nullable
+	private Object loadWithLoader(
+			@Nonnull Object id,
+			@Nullable Object optionalObject,
+			@Nonnull LockOptions lockOptions,
+			@Nullable Boolean readOnly,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var loader = determineLoaderToUse( session, lockOptions );
 		return optionalObject == null
 				? loader.load( id, lockOptions, readOnly, session )
 				: loader.load( id, optionalObject, lockOptions, readOnly, session );
 	}
+
 
 	@Nonnull
 	protected SingleIdEntityLoader<?> determineLoaderToUse(@Nonnull SharedSessionContractImplementor session, @Nonnull LockOptions lockOptions) {
@@ -4625,10 +4692,10 @@ public abstract class AbstractEntityPersister
 				instanceof EnhancementAsProxyLazinessInterceptor proxyInterceptor ) {
 			final var entityKey = proxyInterceptor.getEntityKey();
 			final Object id = entityKey.getIdentifier();
-			final Object loaded = entityKey.isTemporal()
-					? session.getLoadQueryInfluencers().withTemporalIdentifier( entityKey.getChangesetId(),
-							() -> loadEnhancedEntityUsedAsProxy( entity, session, entityKey ) )
-					: loadEnhancedEntityUsedAsProxy( entity, session, entityKey );
+			// An enhanced proxy loads at the changeset of its key
+			final Object loaded = session.getLoadQueryInfluencers()
+					.withCapturedTemporalIdentifier( entityKey.getChangesetId(),
+							() -> loadEnhancedEntityUsedAsProxy( entity, session, entityKey ) );
 			if ( loaded == null ) {
 				final var persistenceContext = session.getPersistenceContext();
 				persistenceContext.removeEntry( entity );
@@ -4682,7 +4749,7 @@ public abstract class AbstractEntityPersister
 	@Nonnull
 	@Override
 	public List<?> multiLoad(@Nonnull Object[] ids, @Nonnull SharedSessionContractImplementor session, @Nonnull MultiIdLoadOptions loadOptions) {
-		return multiIdLoader.load( ids, loadOptions, session );
+		return loadByKey( this, session, () -> multiIdLoader.load( ids, loadOptions, session ) );
 	}
 
 	@Override

@@ -85,7 +85,7 @@ public class BatchInitializeEntitySelectFetchInitializer extends AbstractBatchEn
 		if ( keysToBatchLoad != null ) {
 			final var session = data.getRowProcessingState().getSession();
 			for ( var entityKey : keysToBatchLoad ) {
-				loadInstance( entityKey, session );
+				loadInstance( entityKey, data );
 			}
 			data.toBatchLoad = null;
 		}

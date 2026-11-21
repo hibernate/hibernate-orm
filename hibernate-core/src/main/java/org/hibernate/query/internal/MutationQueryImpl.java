@@ -66,6 +66,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.hibernate.metamodel.mapping.internal.CurrentState.hasHistory;
 import static org.hibernate.query.sqm.internal.SqmInterpretationsKey.generateNonSelectKey;
 import static org.hibernate.query.sqm.tree.spi.SqmCopyContext.simpleContext;
 
@@ -274,6 +275,20 @@ public class MutationQueryImpl<T>
 		}
 	}
 
+	/**
+	 * The persister for the target of a mutation, which may not be an
+	 * entity with history when the session reads at a changeset, since
+	 * the statement would be applied to the history.
+	 */
+	private EntityPersister mutationTarget(String entityName) {
+		final var persister = getMappingMetamodel().getEntityDescriptor( entityName );
+		if ( isHistorical() && hasHistory( persister ) ) {
+			throw new IllegalStateException( "Mutation query targeting entity with history disallowed for historical session: "
+					+ entityName );
+		}
+		return persister;
+	}
+
 	private NonSelectQueryPlan buildDeleteQueryPlan() {
 		final var concreteSqmStatements =
 				QuerySplitter.split( (SqmDeleteStatement<?>) getSqmStatement() );
@@ -285,7 +300,7 @@ public class MutationQueryImpl<T>
 	private NonSelectQueryPlan buildConcreteDeleteQueryPlan(SqmDeleteStatement<?> deleteStatement) {
 		final var entityDomainType = deleteStatement.getTarget().getModel();
 		final String entityName = entityDomainType.getHibernateEntityName();
-		final var persister = getMappingMetamodel().getEntityDescriptor( entityName );
+		final var persister = mutationTarget( entityName );
 		final var multiTableStrategy = persister.getSqmMultiTableMutationStrategy();
 		return multiTableStrategy != null
 				// NOTE: MultiTableDeleteQueryPlan and SqmMultiTableMutationStrategy already handle soft-deletes internally
@@ -304,7 +319,7 @@ public class MutationQueryImpl<T>
 	private NonSelectQueryPlan buildUpdateQueryPlan() {
 		final var sqmUpdate = (SqmUpdateStatement<?>) getSqmStatement();
 		final String entityName = sqmUpdate.getTarget().getModel().getHibernateEntityName();
-		final var persister = getMappingMetamodel().getEntityDescriptor( entityName );
+		final var persister = mutationTarget( entityName );
 		final var multiTableStrategy = persister.getSqmMultiTableMutationStrategy();
 		return multiTableStrategy == null
 				? new SimpleNonSelectQueryPlan( sqmUpdate, domainParameterXref )
@@ -314,7 +329,7 @@ public class MutationQueryImpl<T>
 	private NonSelectQueryPlan buildInsertQueryPlan() {
 		final var sqmInsert = (SqmInsertStatement<?>) getSqmStatement();
 		final String entityName = sqmInsert.getTarget().getModel().getHibernateEntityName();
-		final var persister = getMappingMetamodel().getEntityDescriptor( entityName );
+		final var persister = mutationTarget( entityName );
 		if ( useMultiTableInsert( persister, sqmInsert ) ) {
 			return new MultiTableInsertQueryPlan(
 					sqmInsert,

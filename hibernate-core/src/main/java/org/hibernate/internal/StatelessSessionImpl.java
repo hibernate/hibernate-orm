@@ -33,6 +33,7 @@ import org.hibernate.UnresolvableObjectException;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.internal.StandardArraySemantics;
 import org.hibernate.collection.spi.CollectionSemantics;
+import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
 import org.hibernate.engine.creation.internal.options.StatelessOptions;
@@ -1641,41 +1642,52 @@ public class StatelessSessionImpl
 		}
 		else if ( association instanceof PersistentCollection<?> collection ) {
 			if ( !collection.wasInitialized() ) {
-				final var collectionDescriptor = requireCollectionPersister( collection.getRole() );
-				final Object key = collection.getKey();
-				if ( key == null ) {
-					throw new AssertionFailure( "collection entry has no loaded key" );
-				}
-				persistenceContext.addUninitializedCollection( collectionDescriptor, collection, key );
-				collection.setCurrentSession( this );
-				try {
-					final boolean foundInCache =
-							initializeCollectionFromCache( key, collectionDescriptor, collection, this );
-					if ( foundInCache ) {
-						SESSION_LOGGER.collectionFetchedFromCache();
-					}
-					else {
-						collectionDescriptor.initialize( key, this );
-						handlePotentiallyEmptyCollection( collection, persistenceContext, key, collectionDescriptor );
-						SESSION_LOGGER.collectionFetched();
-						final var statistics = getStatistics();
-						if ( statistics.isStatisticsEnabled() ) {
-							statistics.fetchCollection( collectionDescriptor.getRole() );
-						}
-					}
-				}
-				finally {
-					collection.$$_hibernate_setInstanceId( 0 );
-					collection.unsetSession( this );
-					if ( persistenceContext.isLoadFinished() ) {
-						persistenceContext.clear();
-					}
-				}
+				// a collection loads at the changeset it was created at
+				final Object changesetId =
+						collection instanceof AbstractPersistentCollection<?> persistentCollection
+								? persistentCollection.getTemporalIdentifier()
+								: null;
+				getLoadQueryInfluencers().withCapturedTemporalIdentifier( changesetId,
+						() -> fetchCollection( collection ) );
 			}
 		}
 
 		// per JPA, always just returns the argument
 		return association;
+	}
+
+	private void fetchCollection(PersistentCollection<?> collection) {
+		final var persistenceContext = getPersistenceContext();
+		final var collectionDescriptor = requireCollectionPersister( collection.getRole() );
+		final Object key = collection.getKey();
+		if ( key == null ) {
+			throw new AssertionFailure( "collection entry has no loaded key" );
+		}
+		persistenceContext.addUninitializedCollection( collectionDescriptor, collection, key );
+		collection.setCurrentSession( this );
+		try {
+			final boolean foundInCache =
+					initializeCollectionFromCache( key, collectionDescriptor, collection, this );
+			if ( foundInCache ) {
+				SESSION_LOGGER.collectionFetchedFromCache();
+			}
+			else {
+				collectionDescriptor.initialize( key, this );
+				handlePotentiallyEmptyCollection( collection, persistenceContext, key, collectionDescriptor );
+				SESSION_LOGGER.collectionFetched();
+				final var statistics = getStatistics();
+				if ( statistics.isStatisticsEnabled() ) {
+					statistics.fetchCollection( collectionDescriptor.getRole() );
+				}
+			}
+		}
+		finally {
+			collection.$$_hibernate_setInstanceId( 0 );
+			collection.unsetSession( this );
+			if ( persistenceContext.isLoadFinished() ) {
+				persistenceContext.clear();
+			}
+		}
 	}
 
 	@Override

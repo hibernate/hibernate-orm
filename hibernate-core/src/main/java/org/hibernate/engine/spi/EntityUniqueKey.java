@@ -5,6 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
+import java.util.Objects;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
 
@@ -25,6 +26,7 @@ public class EntityUniqueKey implements Serializable {
 	private final String entityName;
 	private final Object key;
 	private final Type keyType;
+	private final @Nullable Object changesetId;
 	private final int hashCode;
 
 	public EntityUniqueKey(
@@ -33,11 +35,31 @@ public class EntityUniqueKey implements Serializable {
 			final Object key,
 			final Type keyType,
 			final SessionFactoryImplementor factory) {
+		this( entityName, uniqueKeyName, key, keyType, null, factory );
+	}
+
+	/**
+	 * @param changesetId the changeset of the snapshot identified by the key,
+	 * or {@code null} for current state
+	 */
+	public EntityUniqueKey(
+			final String entityName,
+			final String uniqueKeyName,
+			final Object key,
+			final Type keyType,
+			final @Nullable Object changesetId,
+			final SessionFactoryImplementor factory) {
 		this.uniqueKeyName = uniqueKeyName;
 		this.entityName = entityName;
 		this.key = key;
 		this.keyType = keyType;
-		this.hashCode = generateHashCode( entityName, uniqueKeyName, keyType, key, factory );
+		this.changesetId = changesetId;
+		this.hashCode = 37 * generateHashCode( entityName, uniqueKeyName, keyType, key, factory )
+				+ Objects.hashCode( changesetId );
+	}
+
+	public @Nullable Object getChangesetId() {
+		return changesetId;
 	}
 
 	public String getEntityName() {
@@ -73,6 +95,7 @@ public class EntityUniqueKey implements Serializable {
 		EntityUniqueKey that = (EntityUniqueKey) other;
 		return that != null && that.entityName.equals( entityName )
 				&& that.uniqueKeyName.equals( uniqueKeyName )
+				&& Objects.equals( that.changesetId, changesetId )
 				&& keyType.isEqual( that.key, key );
 	}
 
@@ -111,6 +134,7 @@ public class EntityUniqueKey implements Serializable {
 		oos.writeObject( entityName );
 		oos.writeObject( key );
 		oos.writeObject( keyType );
+		oos.writeObject( changesetId );
 	}
 
 	/**
@@ -131,6 +155,7 @@ public class EntityUniqueKey implements Serializable {
 				(String) ois.readObject(),
 				ois.readObject(),
 				(Type) ois.readObject(),
+				ois.readObject(),
 				session.getFactory()
 		);
 	}

@@ -55,11 +55,13 @@ public class NamedTableReference extends AbstractTableReference {
 			final var temporalTableStrategy =
 					influencers.getSessionFactory().getSessionFactoryOptions()
 							.getTemporalTableStrategy();
-			if ( influencers.getTemporalIdentifier() == null
-					&& !temporalTableSupport.useAsOfOperatorForCurrent( temporalTableStrategy ) ) {
+			// a temporal entity in an all-revisions query is read as its current state
+			final boolean current = influencers.getTemporalIdentifier() == null
+					|| mapping instanceof TemporalMapping && influencers.isAllRevisions();
+			if ( current && !temporalTableSupport.useAsOfOperatorForCurrent( temporalTableStrategy ) ) {
 				return;
 			}
-			if ( influencers.getTemporalIdentifier() == null
+			if ( current
 					&& influencers.getSessionFactory().getChangesetCoordinator()
 							.useServerTimestamp( dialect ) ) {
 				// we are querying current data,
@@ -71,7 +73,7 @@ public class NamedTableReference extends AbstractTableReference {
 						);
 			}
 			else if ( mapping instanceof TemporalMapping temporalMapping ) {
-				asOfTransactionIdentifier = new TemporalJdbcParameter( temporalMapping.getEndingColumnMapping() );
+				asOfTransactionIdentifier = new TemporalJdbcParameter( temporalMapping.getEndingColumnMapping(), current );
 			}
 			else if ( mapping instanceof AuditMapping auditMapping ) {
 				asOfTransactionIdentifier = new TemporalJdbcParameter( auditMapping.getChangesetIdMapping( getTableExpression() ) );

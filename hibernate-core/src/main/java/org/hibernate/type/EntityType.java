@@ -2,6 +2,7 @@ package org.hibernate.type;
 
 import org.hibernate.SPI;
 
+import static org.hibernate.metamodel.mapping.internal.CurrentState.keyChangesetId;
 import static org.hibernate.SPI.Role.IMPLEMENT;
 import static org.hibernate.SPI.Role.USE;
 
@@ -718,6 +719,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 				uniqueKeyPropertyName,
 				key,
 				getIdentifierOrUniqueKeyType( factory.getRuntimeMetamodels() ),
+				keyChangesetId( session, factory.getMappingMetamodel().getEntityDescriptor( entityName ) ),
 				session.getFactory()
 		);
 

@@ -9,6 +9,7 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.InitializerParent;
 
+import static org.hibernate.metamodel.mapping.internal.CurrentState.keyChangesetId;
 import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 
 /**
@@ -57,6 +58,7 @@ public class EntitySelectFetchByUniqueKeyInitializer
 						uniqueKeyPropertyName,
 						data.entityIdentifier,
 						concreteDescriptor.getPropertyType( uniqueKeyPropertyName ),
+						keyChangesetId( session, concreteDescriptor ),
 						session.getFactory()
 				);
 		data.setInstance( persistenceContext.getEntity( entityUniqueKey ) );

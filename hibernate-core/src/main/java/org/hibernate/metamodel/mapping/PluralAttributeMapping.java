@@ -69,6 +69,34 @@ public interface PluralAttributeMapping
 			@Nonnull LoadQueryInfluencers influencers,
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator);
 
+	/**
+	 * Create the root table group of a subquery over this collection, belonging
+	 * to the table group with the parent of the given path in an enclosing query,
+	 * and apply the restrictions of the auxiliary mappings which a join of the
+	 * collection would be subject to.
+	 */
+	@Nonnull
+	default TableGroup createSubqueryRootTableGroup(
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull PredicateConsumer predicateConsumer,
+			@Nonnull SqlAstCreationState creationState) {
+		final var tableGroup = createRootTableGroup(
+				true,
+				navigablePath,
+				null,
+				null,
+				() -> predicateConsumer::applyPredicate,
+				creationState
+		);
+		applyAuxiliaryRestrictions(
+				tableGroup,
+				predicateConsumer,
+				creationState.getLoadQueryInfluencers(),
+				creationState.getSqlAliasBaseGenerator()
+		);
+		return tableGroup;
+	}
+
 	interface IndexMetadata {
 		@Nullable
 		CollectionPart getIndexDescriptor();

@@ -221,7 +221,7 @@ class SQLJoinTableRestrictionQueryTest {
 
 	@ParameterizedTest
 	@ValueSource(strings = {"element(cart.items) = i", "i = element(cart.items)"})
-	void entityPathComparisonsApplyRestriction(String predicate, SessionFactoryScope scope) {
+	void collectionElementEqualityAppliesRestriction(String predicate, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final String query = "select count(cart) from Cart cart, Item i where " + predicate;
 			assertEquals( 1L, session.createQuery(
@@ -240,7 +240,7 @@ class SQLJoinTableRestrictionQueryTest {
 	}
 
 	@Test
-	void entityPathInequalityAppliesRestriction(SessionFactoryScope scope) {
+	void collectionElementInequalityAppliesRestriction(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			assertEquals( 1L, session.createQuery(
 					"select count(cart) from Cart cart, Item i "
@@ -251,7 +251,7 @@ class SQLJoinTableRestrictionQueryTest {
 	}
 
 	@Test
-	void entityPathComparisonAppliesRestrictionToCartIdSelection(SessionFactoryScope scope) {
+	void collectionElementEqualityAppliesRestrictionToCartIdSelection(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			assertEquals( List.of( 1L ), session.createQuery(
 					"select cart.id from Cart cart, Item i "

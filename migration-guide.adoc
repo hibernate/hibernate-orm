@@ -85,6 +85,14 @@ and an `is null` predicate could incorrectly exclude a null child or null parent
 Stored XML is unchanged and no data migration is required.
 Explicitly present aggregates with all-null members retain their existing behavior.
 
+[[native-query-entity-type-casts]]
+=== Native query entity type casts
+
+Calling `ofType(Entity.class)` or `asSelectionQuery(Entity.class)` on a native query with implicit JDBC results now throws `IllegalArgumentException` immediately if `Entity` is a mapped entity class and no tuple or result-list transformer is configured.
+These methods validate a type cast; they do not configure an entity result mapping.
+Use `createNativeQuery(sql, Entity.class)` or `withResultSetMapping()` to request entity results.
+Existing explicitly mapped queries, implicit scalar results, and custom result transformers retain their existing processing.
+
 [[xml-validation]]
 === XML mapping validation
 

@@ -6,6 +6,7 @@ import jakarta.persistence.ManyToMany;
 import org.hibernate.annotations.Audited;
 import org.hibernate.audit.AuditLog;
 import org.hibernate.audit.AuditLogFactory;
+import org.hibernate.audit.ModificationType;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.Hibernate;
 import org.hibernate.SharedSessionContract;
@@ -195,6 +196,21 @@ class AuditManyToManyTest {
 			assertEquals( List.of( "Math" ), session.createSelectionQuery(
 					"select c.name from Student s right join s.courses c where s.id = 1 and changesetId(s) = :revision",
 					String.class ).setParameter( "revision", revCreate ).list() );
+		}
+	}
+
+	@Test
+	void testAuditColumnsOfJoinedCourse(SessionFactoryScope scope) {
+		// The course predates both this student and the membership row.
+		scope.inTransaction( session -> {
+			var student = new Student( 30L, "Bob" );
+			student.courses.add( session.find( Course.class, 1L ) );
+			session.persist( student );
+		} );
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
+			assertEquals( List.of( revCreate ), session.createSelectionQuery(
+					"select changesetId(c) from Student s join s.courses c where s.id = 30 and modificationType(c) = :type",
+					Integer.class ).setParameter( "type", ModificationType.ADD ).list() );
 		}
 	}
 

@@ -20,6 +20,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.ast.spi.model.MutatingTableReference;
+import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilder;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 
 import static org.hibernate.generator.EventType.UPDATE;
@@ -45,12 +46,18 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 	}
 
 	@Override
+	public void applyUpdateRestriction(EntityTableDescriptor table, TableUpdateBuilder<?> builder) {
+		if ( table.name().equals( temporalMapping.getTableName() ) ) {
+			final var endingColumn = new ColumnReference( builder.getMutatingTable(), temporalMapping.getEndingColumnMapping() );
+			builder.addNonKeyRestriction( temporalMapping.createNullEndingValueBinding( endingColumn ) );
+		}
+	}
+
+	@Override
 	public boolean contributeReplacementUpdate(
 			UpdateContext context,
 			Consumer<FlushOperation> operationConsumer) {
-		if ( entityPersister.excludedFromTemporalVersioning(
-				context.action().getDirtyFields(),
-				context.action().hasDirtyCollection() ) ) {
+		if ( !context.requiresNewTemporalVersion() ) {
 			return false;
 		}
 

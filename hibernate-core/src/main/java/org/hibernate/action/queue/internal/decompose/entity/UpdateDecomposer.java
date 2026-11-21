@@ -1050,6 +1050,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		else {
 			tableUpdateBuilder.addKeyRestrictions( tableDescriptor.keyDescriptor() );
 		}
+		mutationPlanContributor.applyUpdateRestriction( tableDescriptor, tableUpdateBuilder );
 	}
 
 	private void applyOptimisticLocking(

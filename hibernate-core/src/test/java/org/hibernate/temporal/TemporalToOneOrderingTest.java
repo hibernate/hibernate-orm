@@ -5,8 +5,10 @@ import java.util.List;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Version;
 
 import org.hibernate.annotations.Temporal;
+import org.hibernate.audit.AuditLog;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -49,6 +51,50 @@ class TemporalToOneOrderingTest {
 	}
 
 	@Test
+	void persistMutualReferences(SessionFactoryScope scope) {
+		final var changeset = scope.fromTransaction( session -> {
+			final var node = new Node( 3 );
+			final var peer = new Peer();
+			peer.id = 4;
+			node.peer = peer;
+			peer.node = node;
+			session.persist( node );
+			session.persist( peer );
+			session.flush();
+			return session.getCurrentChangesetIdentifier();
+		} );
+		final String hql = "select n.version from Node n join n.peer p where n.id = 3 and p.id = 4 and p.node.id = n.id";
+		final var version = scope.fromSession( session -> session.createSelectionQuery( hql, Integer.class ).getSingleResult() );
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( changeset ).openSession()) {
+			assertEquals( version, session.createSelectionQuery( hql, Integer.class ).getSingleResult() );
+		}
+	}
+
+	@Test
+	void persistMutualReferencesOfSameType(SessionFactoryScope scope) {
+		final var changeset = scope.fromTransaction( session -> {
+			final var first = new Node( 5 );
+			final var second = new Node( 6 );
+			first.parent = second;
+			second.parent = first;
+			session.persist( first );
+			session.persist( second );
+			session.flush();
+			return session.getCurrentChangesetIdentifier();
+		} );
+		final String hql = "select p.id from Node n join n.parent p where n.id = 5 and p.parent.id = n.id";
+		scope.inSession( session -> assertEquals( List.of( 6 ),
+				session.createSelectionQuery( hql, Integer.class ).list() ) );
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( changeset ).openSession()) {
+			assertEquals( List.of( 6 ), session.createSelectionQuery( hql, Integer.class ).list() );
+		}
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
+			assertEquals( List.of( 5, 6 ), session.createSelectionQuery(
+					"select n.id from Node n where n.id in (5, 6) order by n.id", Integer.class ).list() );
+		}
+	}
+
+	@Test
 	void updateMutualReferences(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			session.persist( new Node( 2 ) );
@@ -68,7 +114,7 @@ class TemporalToOneOrderingTest {
 			node.revision = 1;
 			node.peer.revision = 2;
 		} );
-		final String hql = "select n.revision + p.revision from Node n join n.peer p where p.node.id = n.id";
+		final String hql = "select n.revision + p.revision from Node n join n.peer p where n.id = 2 and p.node.id = n.id";
 		try (var session = scope.getSessionFactory().withOptions().atChangeset( before ).openSession()) {
 			assertEquals( List.of( 0 ), session.createSelectionQuery( hql, Integer.class ).list() );
 		}
@@ -79,6 +125,7 @@ class TemporalToOneOrderingTest {
 	@Temporal
 	static class Node {
 		@Id int id;
+		@Version int version;
 		int revision;
 		@ManyToOne Node parent;
 		@ManyToOne Peer peer;

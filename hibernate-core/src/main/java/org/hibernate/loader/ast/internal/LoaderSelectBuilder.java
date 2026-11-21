@@ -602,16 +602,10 @@ public class LoaderSelectBuilder {
 		}
 
 		for ( var restrictedPart : restrictedParts ) {
-			// For an indexed collection lookup, the identifier belongs to the index.
-			// The element may map the same table under a different alias.
-			final var restrictionGroup = restrictedPart instanceof EntityIdentifierMapping
-					&& rootTableGroup instanceof PluralTableGroup collectionGroup
-					? collectionGroup.getIndexTableGroup()
-					: rootTableGroup;
 			applyRestriction(
 					rootQuerySpec,
-					restrictionGroup.getNavigablePath(),
-					restrictionGroup,
+					rootNavigablePath,
+					rootTableGroup,
 					restrictedPart,
 					restrictedPart.getJdbcTypeCount(),
 					castNonNull( jdbcParameterConsumer ),
@@ -640,8 +634,14 @@ public class LoaderSelectBuilder {
 		final List<DomainResult<?>> domainResults = new ArrayList<>( partsToSelect.size() );
 		for ( var part : partsToSelect ) {
 			final var navigablePath = rootNavigablePath.append( part.getPartName() );
+			// the element or index of a collection root has its table group already,
+			// which is subject to the restrictions of the collection
+			final var partTableGroup = sqlAstCreationState.getFromClauseAccess().findTableGroup( navigablePath );
 			final TableGroup tableGroup;
-			if ( part instanceof TableGroupJoinProducer tableGroupJoinProducer ) {
+			if ( partTableGroup != null ) {
+				tableGroup = partTableGroup;
+			}
+			else if ( part instanceof TableGroupJoinProducer tableGroupJoinProducer ) {
 				final var tableGroupJoin = tableGroupJoinProducer.createTableGroupJoin(
 						navigablePath,
 						rootTableGroup,

@@ -45,7 +45,7 @@ import org.hibernate.loader.ast.internal.CollectionElementLoaderByIndex;
 import org.hibernate.loader.ast.internal.CollectionLoaderNamedQuery;
 import org.hibernate.loader.ast.internal.CollectionLoaderSingleKey;
 import org.hibernate.loader.ast.internal.CollectionLoaderSubSelectFetch;
-import org.hibernate.loader.ast.internal.CollectionSizeLoader;
+import org.hibernate.loader.ast.internal.CollectionLookupLoader;
 import org.hibernate.loader.ast.internal.LoaderSqlAstCreationState;
 import org.hibernate.loader.ast.spi.BatchLoaderFactory;
 import org.hibernate.loader.ast.spi.CollectionLoader;
@@ -1524,13 +1524,22 @@ public abstract class AbstractCollectionPersister
 		return listIndexBase < 0 ? 0 : listIndexBase;
 	}
 
+	/**
+	 * Whether the session reads this collection as of a changeset, which the
+	 * statements counting and detecting its rows do not, since they read its
+	 * current state.
+	 */
+	private boolean readsHistory(@Nonnull SharedSessionContractImplementor session) {
+		final var influencers = session.getLoadQueryInfluencers();
+		return influencers.getTemporalIdentifier() != null
+			&& !influencers.isAllRevisions()
+			&& hasHistory( attributeMapping );
+	}
+
 	@Override
 	public int getSize(@Nonnull Object key, @Nonnull SharedSessionContractImplementor session) {
-		final var influencers = session.getLoadQueryInfluencers();
-		if ( influencers.getTemporalIdentifier() != null && !influencers.isAllRevisions()
-				&& hasHistory( attributeMapping ) ) {
-			// count the rows as of the changeset the session reads at
-			return new CollectionSizeLoader( attributeMapping, influencers, factory ).load( key, session );
+		if ( readsHistory( session ) ) {
+			return CollectionLookupLoader.size( attributeMapping, hasIndex() && !isMap(), baseIndex(), key, session );
 		}
 		try {
 			final var jdbcCoordinator = session.getJdbcCoordinator();
@@ -1567,12 +1576,19 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public boolean indexExists(@Nonnull Object key, @Nonnull Object index, @Nonnull SharedSessionContractImplementor session) {
-		return exists( key, incrementIndexByBase( index ), castNonNull( getIndexType() ), castNonNull( sqlDetectRowByIndexString ), session );
+		return readsHistory( session )
+				? CollectionLookupLoader.exists( attributeMapping, castNonNull( attributeMapping.getIndexDescriptor() ),
+						key, incrementIndexByBase( index ), session )
+				: exists( key, incrementIndexByBase( index ), castNonNull( getIndexType() ),
+						castNonNull( sqlDetectRowByIndexString ), session );
 	}
 
 	@Override
 	public boolean elementExists(@Nonnull Object key, @Nullable Object element, @Nonnull SharedSessionContractImplementor session) {
-		return exists( key, element, getElementType(), sqlDetectRowByElementString, session );
+		return readsHistory( session )
+				? CollectionLookupLoader.exists( attributeMapping, attributeMapping.getElementDescriptor(),
+						key, element, session )
+				: exists( key, element, getElementType(), sqlDetectRowByElementString, session );
 	}
 
 	private boolean exists(@Nonnull Object key, @Nullable Object indexOrElement, @Nonnull Type indexOrElementType, @Nonnull String sql, @Nonnull SharedSessionContractImplementor session) {
@@ -1613,8 +1629,9 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public Object getElementByIndex(@Nonnull Object key, @Nonnull Object index, @Nonnull SharedSessionContractImplementor session, @Nullable Object owner) {
 		final var influencers = session.getLoadQueryInfluencers();
-		if ( influencers.hasEnabledFilters()
-			&& isAffectedByFilters( new HashSet<>(), attributeMapping.getElementDescriptor(), influencers, true ) ) {
+		if ( readsHistory( session )
+			|| influencers.hasEnabledFilters()
+				&& isAffectedByFilters( new HashSet<>(), attributeMapping.getElementDescriptor(), influencers, true ) ) {
 			return new CollectionElementLoaderByIndex( attributeMapping, influencers, factory )
 					.load( key, index, session );
 		}

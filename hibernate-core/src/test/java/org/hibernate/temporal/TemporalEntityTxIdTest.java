@@ -313,6 +313,7 @@ class TemporalEntityTxIdTest {
 			entity.list.remove( "N" );
 			entity.list.add( 0, "P" );
 		} );
+		final int afterRowRemoval = currentTxId;
 		scope.inTransaction( s -> {
 			TemporalEntity1 entity = s.find(TemporalEntity1.class, 3L);
 			assertEquals( Set.of("w", "y", "z"), entity.strings );
@@ -334,6 +335,7 @@ class TemporalEntityTxIdTest {
 			entity.map = null;
 			entity.list = null;
 		} );
+		final int afterRemoveAll = currentTxId;
 		scope.inTransaction( s -> {
 			TemporalEntity1 entity = s.find(TemporalEntity1.class, 3L);
 			assertEquals( Set.of(), entity.strings );
@@ -348,6 +350,18 @@ class TemporalEntityTxIdTest {
 				assertEquals( Map.of("a", "A", "b", "B"), entity.map );
 				assertEquals( List.of("M", "N"), entity.list );
 			} );
+		}
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( afterRowRemoval ).open()) {
+			var entity = s.find( TemporalEntity1.class, 3L );
+			assertEquals( Set.of( "w", "y", "z" ), entity.strings );
+			assertEquals( Map.of( "a", "A", "c", "C" ), entity.map );
+			assertEquals( List.of( "P", "M", "K" ), entity.list );
+		}
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( afterRemoveAll ).open()) {
+			var entity = s.find( TemporalEntity1.class, 3L );
+			assertTrue( entity.strings.isEmpty() );
+			assertTrue( entity.map.isEmpty() );
+			assertTrue( entity.list.isEmpty() );
 		}
 	}
 

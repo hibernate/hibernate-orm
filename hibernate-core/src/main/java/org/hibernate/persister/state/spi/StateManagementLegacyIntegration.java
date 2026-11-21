@@ -3,7 +3,9 @@ package org.hibernate.persister.state.spi;
 import jakarta.annotation.Nonnull;
 
 import org.hibernate.Incubating;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.CollectionRemovalSupport;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinator;
 import org.hibernate.persister.collection.mutation.InsertRowsCoordinator;
 import org.hibernate.persister.collection.mutation.RemoveCoordinator;
@@ -40,6 +42,12 @@ public interface StateManagementLegacyIntegration {
 	/// Creates the entity delete coordinator for the given persister.
 	@Nonnull
 	DeleteCoordinator createDeleteCoordinator(@Nonnull EntityPersister persister);
+
+	/// Selects the removal SQL and assignment binder for the physical collection table being mutated.
+	@Nonnull
+	default CollectionRemovalSupport getCollectionRemovalSupport(@Nonnull PluralAttributeMapping mapping, @Nonnull String tableName) {
+		return CollectionRemovalSupport.STANDARD;
+	}
 
 	/// Creates the collection row-insert coordinator for the given persister.
 	@Nonnull

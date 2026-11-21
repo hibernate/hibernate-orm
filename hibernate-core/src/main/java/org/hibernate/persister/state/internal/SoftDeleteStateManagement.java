@@ -10,6 +10,7 @@ import org.hibernate.action.queue.internal.decompose.entity.SoftDeleteEntityMuta
 import org.hibernate.metamodel.mapping.AuxiliaryMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.persister.collection.CollectionRemovalSupport;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
 import org.hibernate.persister.entity.mutation.DeleteCoordinatorSoft;
@@ -49,6 +50,14 @@ public final class SoftDeleteStateManagement extends AbstractStateManagement {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Legacy ActionQueue integration
+
+	@Nonnull
+	@Override
+	public CollectionRemovalSupport getCollectionRemovalSupport(@Nonnull PluralAttributeMapping mapping, @Nonnull String tableName) {
+		return mapping.getSoftDeleteMapping() == null
+				? CollectionRemovalSupport.STANDARD
+				: CollectionRemovalSupport.SOFT_DELETE;
+	}
 
 	@Nonnull
 	@Override

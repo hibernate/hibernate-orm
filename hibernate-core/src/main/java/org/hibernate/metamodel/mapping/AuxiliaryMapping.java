@@ -177,6 +177,11 @@ public interface AuxiliaryMapping {
 		return true;
 	}
 
+	/// Whether fetching a collection must keep its owner when this mapping hides every row.
+	default boolean requiresOwnerPreservationOnCollectionFetch() {
+		return false;
+	}
+
 	/// Whether these session settings require a target table read for an association
 	/// key that could otherwise be read from the foreign key.
 	default boolean requiresTargetTableForKeyRead(@Nonnull LoadQueryInfluencers influencers) {

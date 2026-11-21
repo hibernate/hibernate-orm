@@ -1132,17 +1132,19 @@ public class PluralAttributeMappingImpl
 		return join;
 	}
 
-	private boolean hasSoftDelete() {
-		// NOTE: this needs to be done lazily because the associated entity mapping (if one)
-		// does not know its SoftDeleteMapping yet when this is created
-		return auxiliaryMapping instanceof SoftDeleteMapping
-			|| getElementDescriptor() instanceof EntityCollectionPart collectionPart
-					&& collectionPart.getAssociatedEntityMappingType().getSoftDeleteMapping() != null;
+	private boolean requiresOwnerPreservationOnFetch() {
+		if ( auxiliaryMapping != null && auxiliaryMapping.requiresOwnerPreservationOnCollectionFetch() ) {
+			return true;
+		}
+		final var elementMapping = getElementDescriptor() instanceof EntityCollectionPart entityPart
+				? entityPart.getAssociatedEntityMappingType().getAuxiliaryMapping()
+				: null;
+		return elementMapping != null && elementMapping.requiresOwnerPreservationOnCollectionFetch();
 	}
 
 	public SqlAstJoinType determineSqlJoinType(TableGroup lhs, @Nullable SqlAstJoinType requestedJoinType, boolean fetched) {
-		if ( fetched && hasSoftDelete() && requestedJoinType != SqlAstJoinType.RIGHT && requestedJoinType != SqlAstJoinType.FULL ) {
-			// A fetch keeps the owner when all its elements have been deleted.
+		if ( fetched && requestedJoinType != SqlAstJoinType.RIGHT && requestedJoinType != SqlAstJoinType.FULL
+				&& requiresOwnerPreservationOnFetch() ) {
 			return SqlAstJoinType.LEFT;
 		}
 		else if ( requestedJoinType == null ) {

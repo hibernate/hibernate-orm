@@ -217,12 +217,30 @@ public class SharedDriverManagerConnectionProvider extends DriverManagerConnecti
 
 	private static final Set<String> DRIVER_REQUIRES_NEW_CONNECTION_ON_TIMEZONE_CHANGE = Set.of(
 			"org.h2.Driver", "org.hsqldb.jdbc.JDBCDriver", "org.firebirdsql.jdbc.FBDriver",
+			"com.mysql.cj.jdbc.Driver",
 			"cubrid.jdbc.driver.CUBRIDDriver" );
 
 	public void onDefaultTimeZoneChange() {
+		resetH2TimeZoneCache();
 		if ( DRIVER_REQUIRES_NEW_CONNECTION_ON_TIMEZONE_CHANGE.contains( config.driverClassName ) ) {
-			// Clear the connection pool to avoid issues with drivers that initialize the session TZ to the system TZ
+			// Clear the pool for drivers that capture the default timezone when creating a connection.
+			// This includes Connector/J's client-side timezone used for legacy Time/Timestamp binding.
 			super.stop();
+		}
+	}
+
+	private static void resetH2TimeZoneCache() {
+		try {
+			java.lang.reflect.Field local = Class.forName( "org.h2.util.DateTimeUtils" )
+					.getDeclaredField( "LOCAL" );
+			local.setAccessible( true );
+			local.set( null, null );
+		}
+		catch (ClassNotFoundException e) {
+			// H2 is not on the classpath — nothing to reset
+		}
+		catch (ReflectiveOperationException e) {
+			throw new RuntimeException( "Failed to reset H2 timezone cache", e );
 		}
 	}
 

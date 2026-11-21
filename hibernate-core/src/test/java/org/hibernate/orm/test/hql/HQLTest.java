@@ -7,7 +7,6 @@ import jakarta.persistence.TypedQuery;
 import org.hibernate.CacheMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
-import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.CockroachDialect;
@@ -3081,7 +3080,6 @@ public class HQLTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsRecursiveCtes.class )
-	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "the search clause emulation puts an unquoted 'depth' column in the CTE column list and DEPTH is a CUBRID reserved word; left skipped rather than failing because this class shares data and one failure takes the rest of it down")
 	public void test_hql_cte_recursive_search_example(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-cte-recursive-search-example[]

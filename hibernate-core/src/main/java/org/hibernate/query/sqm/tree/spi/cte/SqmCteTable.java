@@ -5,6 +5,7 @@ import jakarta.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.UnaryOperator;
 
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -61,7 +62,21 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 			String aliasStem,
 			List<SqlSelection> sqlSelections,
 			FromClauseAccess fromClauseAccess) {
-		return new CteTupleTableGroupProducer( this, aliasStem, toSqlTypedMappings( this, sqlSelections ), fromClauseAccess );
+		return resolveTableGroupProducer( aliasStem, sqlSelections, fromClauseAccess, UnaryOperator.identity() );
+	}
+
+	public CteTupleTableGroupProducer resolveTableGroupProducer(
+			String aliasStem,
+			List<SqlSelection> sqlSelections,
+			FromClauseAccess fromClauseAccess,
+			UnaryOperator<String> columnNameRenderer) {
+		return new CteTupleTableGroupProducer(
+				this,
+				aliasStem,
+				toSqlTypedMappings( this, sqlSelections, columnNameRenderer ),
+				fromClauseAccess,
+				columnNameRenderer
+		);
 	}
 
 	@Override

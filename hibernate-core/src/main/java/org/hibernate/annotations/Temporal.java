@@ -117,6 +117,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * {@linkplain jakarta.persistence.SecondaryTable Secondary tables} and
  * {@linkplain org.hibernate.boot.model.source.spi.InheritanceType#JOINED
  * joined inheritance mappings} are not supported for temporal entities.
+ * A temporal entity or collection may not specify custom SQL using
+ * {@link SQLInsert}, {@link SQLUpdate}, {@link SQLDelete}, or
+ * {@link SQLDeleteAll}.
  *
  * @see org.hibernate.engine.creation.CommonBuilder#asOf(Instant)
  * @see org.hibernate.engine.creation.CommonBuilder#atChangeset(Object)

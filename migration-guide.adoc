@@ -1825,6 +1825,13 @@ Indexes and constraints should instead be declared by the `@Table` annotation of
 An `@OnDelete` annotation on an entity class which is not a subclass in a `JOINED` hierarchy is now rejected with
 an `AnnotationException` when the metadata is built. Previously the annotation was silently ignored.
 
+[[custom-sql-temporal-audited]]
+=== Custom SQL for a temporal or audited entity or collection
+
+Custom SQL specified using `@SQLInsert`, `@SQLUpdate`, `@SQLDelete`, or `@SQLDeleteAll` for a `@Temporal` or `@Audited`
+entity or collection is now rejected with an `UnsupportedMappingException` when the session factory is built.
+Previously, such a mapping usually failed when the entity or collection was written.
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // XSD changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

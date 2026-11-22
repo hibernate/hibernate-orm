@@ -6,7 +6,6 @@ import java.util.Locale;
 import java.util.function.Function;
 
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.metamodel.mapping.AuditMapping;
 import org.hibernate.metamodel.mapping.AuxiliaryMapping;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.spi.NavigablePath;
@@ -48,51 +47,25 @@ public class NamedTableReference extends AbstractTableReference {
 	}
 
 	public void applyAuxiliaryTable(AuxiliaryMapping mapping, LoadQueryInfluencers influencers) {
-		if ( useAsOfOperator( influencers, mapping )
-				&& mapping.getTableName().equals( getTableExpression() ) ) {
-			final var dialect = influencers.getSessionFactory().getJdbcServices().getDialect();
+		if ( mapping instanceof TemporalMapping temporalMapping
+				&& temporalMapping.getTableName().equals( getTableExpression() ) ) {
+			final var factory = influencers.getSessionFactory();
+			final var changesets = factory.getChangesetCoordinator();
+			final var dialect = factory.getJdbcServices().getDialect();
 			final var temporalTableSupport = dialect.getTemporalTableSupport();
-			final var temporalTableStrategy =
-					influencers.getSessionFactory().getSessionFactoryOptions()
-							.getTemporalTableStrategy();
+			final var temporalTableStrategy = factory.getSessionFactoryOptions().getTemporalTableStrategy();
 			// a temporal entity in an all-revisions query is read as its current state
-			final boolean current = influencers.getTemporalIdentifier() == null
-					|| mapping instanceof TemporalMapping && influencers.isAllRevisions();
-			if ( current && !temporalTableSupport.useAsOfOperatorForCurrent( temporalTableStrategy ) ) {
-				return;
-			}
-			if ( current
-					&& influencers.getSessionFactory().getChangesetCoordinator()
-							.useServerTimestamp( dialect ) ) {
-				// we are querying current data,
-				// so we can use the server timestamp
-				asOfTransactionIdentifier =
-						new SelfRenderingSqlFragmentExpression(
+			final boolean current = influencers.getTemporalIdentifier() == null || influencers.isAllRevisions();
+			if ( changesets.isIdentifierTypeInstant()
+					&& temporalTableSupport.useAsOfOperator( temporalTableStrategy )
+					&& ( !current || temporalTableSupport.useAsOfOperatorForCurrent( temporalTableStrategy ) ) ) {
+				asOfTransactionIdentifier = current && changesets.useServerTimestamp( dialect )
+						? new SelfRenderingSqlFragmentExpression(
 								dialect.getCurrentTemporalSupport().currentTimestamp(),
-								mapping.getJdbcMapping()
-						);
+								temporalMapping.getJdbcMapping()
+						)
+						: new TemporalJdbcParameter( temporalMapping.getEndingColumnMapping(), current );
 			}
-			else if ( mapping instanceof TemporalMapping temporalMapping ) {
-				asOfTransactionIdentifier = new TemporalJdbcParameter( temporalMapping.getEndingColumnMapping(), current );
-			}
-			else if ( mapping instanceof AuditMapping auditMapping ) {
-				asOfTransactionIdentifier = new TemporalJdbcParameter( auditMapping.getChangesetIdMapping( getTableExpression() ) );
-			}
-			else {
-				asOfTransactionIdentifier = null;
-			}
-		}
-	}
-
-	private boolean useAsOfOperator(LoadQueryInfluencers influencers, AuxiliaryMapping mapping) {
-		if ( mapping == null ) {
-			return false;
-		}
-		else {
-			final var sessionFactory = influencers.getSessionFactory();
-			return sessionFactory.getChangesetCoordinator().isIdentifierTypeInstant()
-				&& sessionFactory.getJdbcServices().getDialect().getTemporalTableSupport()
-						.useAsOfOperator( sessionFactory.getSessionFactoryOptions().getTemporalTableStrategy() );
 		}
 	}
 

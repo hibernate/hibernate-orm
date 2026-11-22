@@ -212,6 +212,11 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 						"EntityUpdateAction(" + entityPersister.getEntityName() + ")"
 				);
 
+				// A replacement supplies the existing ID rather than using the mapped identity delegate.
+				if ( reusingGeneratedIdentifier && generatedValuesCollector == null && tableDescriptor.isIdentifierTable() ) {
+					op.disableBatching();
+				}
+
 				if ( previousOperation != null ) {
 					operationConsumer.accept( previousOperation );
 				}

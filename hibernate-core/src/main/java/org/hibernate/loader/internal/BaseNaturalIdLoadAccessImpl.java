@@ -1,5 +1,6 @@
 package org.hibernate.loader.internal;
 
+import static org.hibernate.metamodel.mapping.internal.CurrentState.loadByKey;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 import jakarta.annotation.Nonnull;
@@ -174,6 +175,13 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 
 	@Nullable
 	protected final T doGetReference(@Nullable Object normalizedNaturalIdValue) {
+		// a load by natural id reads current state in an all-changesets session,
+		// and so does the lookup of its resolution in the persistence context and the cache
+		return loadByKey( entityDescriptor, context.getSession(), () -> getReferenceByNaturalId( normalizedNaturalIdValue ) );
+	}
+
+	@Nullable
+	private T getReferenceByNaturalId(@Nullable Object normalizedNaturalIdValue) {
 		final Object cachedResolution = getCachedResolution( normalizedNaturalIdValue );
 		if ( cachedResolution == INVALID_NATURAL_ID_REFERENCE ) {
 			// the entity is deleted, although not yet flushed - return null
@@ -192,6 +200,11 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 
 	@Nullable
 	protected final T doLoad(@Nullable Object normalizedNaturalIdValue) {
+		return loadByKey( entityDescriptor, context.getSession(), () -> loadByNaturalId( normalizedNaturalIdValue ) );
+	}
+
+	@Nullable
+	private T loadByNaturalId(@Nullable Object normalizedNaturalIdValue) {
 		final Object cachedResolution = getCachedResolution( normalizedNaturalIdValue );
 		if ( cachedResolution == INVALID_NATURAL_ID_REFERENCE ) {
 			return null;

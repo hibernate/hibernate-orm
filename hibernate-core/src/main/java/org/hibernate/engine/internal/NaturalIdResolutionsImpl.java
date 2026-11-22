@@ -78,6 +78,12 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 	}
 
 	private void cacheResolutionFromLoad(Object id, Object naturalId, EntityMappingType entityDescriptor, boolean historical) {
+		if ( historical && session().getLoadQueryInfluencers().isAllChangesetsSession() ) {
+			// In an all-changesets session a lookup by natural id reads current state, so the
+			// natural id of a snapshot, which may since belong to another entity, does not
+			// resolve to it, and must not keep the resolution of current state out of the cache
+			return;
+		}
 		if ( NATURAL_ID_LOGGER.isTraceEnabled() ) {
 			NATURAL_ID_LOGGER.cachingNaturalIdResolutionFromLoad(
 					entityDescriptor.getEntityName(),

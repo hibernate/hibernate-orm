@@ -26,6 +26,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttrib
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 import static org.hibernate.loader.internal.CacheLoadHelper.loadFromSecondLevelCache;
+import static org.hibernate.metamodel.mapping.internal.CurrentState.loadByKey;
 import static org.hibernate.loader.internal.CacheLoadHelper.loadFromSessionCache;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
@@ -52,7 +53,12 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			throw new HibernateException( "Unable to locate persister: " + event.getEntityClassName() );
 		}
 		checkId( event, loadType, persister );
-		doOnLoad( persister, event, loadType );
+		// a load by id reads current state in an all-changesets session,
+		// and so does the lookup in the persistence context and the cache
+		loadByKey( persister, event.getSession(), () -> {
+			doOnLoad( persister, event, loadType );
+			return null;
+		} );
 	}
 
 	private void checkId(@Nonnull LoadEvent event, @Nonnull LoadType loadType, @Nonnull EntityPersister persister) {
@@ -590,9 +596,8 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		if ( entity != null && persister.hasNaturalIdentifier() ) {
 			event.getSession().getPersistenceContextInternal().getNaturalIdResolutions()
 					.cacheResolutionFromLoad(
-							event.getEntityId(),
-							persister.getNaturalIdMapping().extractNaturalIdFromEntity( entity ),
-							persister
+							keyToLoad,
+							persister.getNaturalIdMapping().extractNaturalIdFromEntity( entity )
 					);
 		}
 		return entity;

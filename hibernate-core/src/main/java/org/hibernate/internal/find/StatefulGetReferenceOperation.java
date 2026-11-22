@@ -9,6 +9,7 @@ import org.hibernate.persister.entity.EntityPersister;
 
 import static org.hibernate.engine.spi.NaturalIdResolutions.INVALID_NATURAL_ID_REFERENCE;
 import static org.hibernate.internal.find.Helper.coerceId;
+import static org.hibernate.metamodel.mapping.internal.CurrentState.loadByKey;
 
 /// GetReferenceOperation implementation for a [stateful session][org.hibernate.Session].
 ///
@@ -42,6 +43,12 @@ public class StatefulGetReferenceOperation<T> implements GetReferenceOperation<T
 	}
 
 	private T getReferenceByNaturalId(Object key) {
+		// a reference by natural id is to current state in an all-changesets session,
+		// and so is the lookup of its resolution in the persistence context and the cache
+		return loadByKey( entityDescriptor, loadAccessContext.getSession(), () -> resolveReferenceByNaturalId( key ) );
+	}
+
+	private T resolveReferenceByNaturalId(Object key) {
 		final var normalizedKey = Helper.coerceNaturalId( entityDescriptor, key );
 
 		final var session = loadAccessContext.getSession();

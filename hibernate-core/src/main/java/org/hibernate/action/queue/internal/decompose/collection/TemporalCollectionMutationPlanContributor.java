@@ -47,7 +47,7 @@ public class TemporalCollectionMutationPlanContributor implements CollectionMuta
 				context.factory(),
 				context.sqlWhereString()
 		);
-		applyRowDeleteRestrictions( context.persister(), null, updateBuilder );
+		applyRowDeleteRestrictions( context.persister(), updateBuilder );
 		final var mutation = buildTemporalDeleteMutation( updateBuilder, mutatingTable, temporalMapping );
 		return new CollectionJdbcOperations.DeleteRowPlan(
 				mutation.createMutationOperation( null, context.factory() ),
@@ -83,7 +83,7 @@ public class TemporalCollectionMutationPlanContributor implements CollectionMuta
 				context.factory(),
 				context.sqlWhereString()
 		);
-		applyRemoveRestrictions( context.persister(), null, updateBuilder );
+		applyRemoveRestrictions( context.persister(), updateBuilder );
 		return buildTemporalDeleteMutation( updateBuilder, mutatingTable, temporalMapping )
 				.createMutationOperation( null, context.factory() );
 	}

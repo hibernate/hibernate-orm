@@ -1,6 +1,9 @@
 package org.hibernate.action.queue.internal.decompose.collection;
 
 
+import org.hibernate.action.queue.spi.decompose.collection.CollectionJdbcOperations.DeleteRowPlan;
+import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPlanContributor.DeleteRowPlanContext;
+import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPlanContributor.RemoveOperationContext;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationTarget;
 import org.hibernate.action.queue.spi.meta.TableDescriptor;
 import org.hibernate.action.queue.spi.meta.TableDescriptorAsTableMapping;
@@ -9,14 +12,16 @@ import org.hibernate.collection.spi.SnapshotIndexed;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.TemporalMapping;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.ManyToManyCollectionPart;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.mutation.TemporalMutationHelper;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.model.LogicalTableUpdate;
 import org.hibernate.sql.ast.spi.model.MutatingTableReference;
-import org.hibernate.sql.ast.spi.model.builder.TableDeleteBuilderStandard;
+import org.hibernate.sql.ast.spi.model.builder.RestrictedTableMutationBuilder;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
+import org.hibernate.sql.spi.mutation.MutationOperation;
 
 final class CollectionMutationPlanSupport {
 	private CollectionMutationPlanSupport() {
@@ -31,89 +36,44 @@ final class CollectionMutationPlanSupport {
 		);
 	}
 
-	static void applyRowDeleteRestrictions(
-			CollectionPersister persister,
-			TableDeleteBuilderStandard deleteBuilder,
-			TableUpdateBuilderStandard<?> updateBuilder) {
-		final var attribute = persister.getAttributeMapping();
-		attribute.getKeyDescriptor().getKeyPart().forEachSelectable( (index, jdbcMapping) -> {
-			if ( updateBuilder != null ) {
-				updateBuilder.addKeyRestrictionLeniently( jdbcMapping );
-			}
-			else {
-				deleteBuilder.addKeyRestrictionLeniently( jdbcMapping );
-			}
-		} );
+	static DeleteRowPlan buildDeleteRowPlan(DeleteRowPlanContext context, RestrictedTableMutationBuilder<?, ?> builder) {
+		final var persister = context.persister();
+		applyRowDeleteRestrictions( persister, builder );
+		return new DeleteRowPlan(
+				builder.buildMutation().createMutationOperation( null, context.factory() ),
+				(collection, key, row, position, session, bindings) ->
+						bindDeleteRestrictions( persister, collection, key, row, position, session, bindings )
+		);
+	}
 
+	static MutationOperation buildRemoveOperation(RemoveOperationContext context, RestrictedTableMutationBuilder<?, ?> builder) {
+		applyRemoveRestrictions( context.persister(), builder );
+		return builder.buildMutation().createMutationOperation( null, context.factory() );
+	}
+
+	static void applyRowDeleteRestrictions(CollectionPersister persister, RestrictedTableMutationBuilder<?, ?> builder) {
+		applyRemoveRestrictions( persister, builder );
+		final var attribute = persister.getAttributeMapping();
 		final var indexDescriptor = attribute.getIndexDescriptor();
 		final var identifierDescriptor = attribute.getIdentifierDescriptor();
+		final ValuedModelPart rowKey;
 		if ( indexDescriptor != null && hasPhysicalIndexColumn( persister ) ) {
-			indexDescriptor.forEachSelectable( (index, jdbcMapping) -> {
-				if ( updateBuilder != null ) {
-					updateBuilder.addKeyRestriction( jdbcMapping );
-				}
-				else {
-					deleteBuilder.addKeyRestriction( jdbcMapping );
-				}
-			} );
+			rowKey = indexDescriptor;
 		}
 		else if ( identifierDescriptor != null ) {
-			identifierDescriptor.forEachSelectable( (index, jdbcMapping) -> {
-				if ( updateBuilder != null ) {
-					updateBuilder.addKeyRestriction( jdbcMapping );
-				}
-				else {
-					deleteBuilder.addKeyRestriction( jdbcMapping );
-				}
-			} );
+			rowKey = identifierDescriptor;
 		}
 		else {
-			final var elementDescriptor = attribute.getElementDescriptor();
-			if ( elementDescriptor instanceof ManyToManyCollectionPart manyToMany ) {
-				manyToMany.getForeignKeyDescriptor().getKeyPart().forEachSelectable( (index, jdbcMapping) -> {
-					if ( updateBuilder != null ) {
-						updateBuilder.addKeyRestriction( jdbcMapping );
-					}
-					else {
-						deleteBuilder.addKeyRestriction( jdbcMapping );
-					}
-				} );
-			}
-			else {
-				elementDescriptor.forEachSelectable( (index, jdbcMapping) -> {
-					if ( updateBuilder != null ) {
-						updateBuilder.addKeyRestriction( jdbcMapping );
-					}
-					else {
-						deleteBuilder.addKeyRestriction( jdbcMapping );
-					}
-				} );
-			}
+			final var element = attribute.getElementDescriptor();
+			rowKey = element instanceof ManyToManyCollectionPart manyToMany
+					? manyToMany.getForeignKeyDescriptor().getKeyPart() : element;
 		}
+		rowKey.forEachSelectable( (index, mapping) -> builder.addKeyRestriction( mapping ) );
 	}
 
-	static void applyRemoveRestrictions(
-			CollectionPersister persister,
-			TableDeleteBuilderStandard deleteBuilder,
-			TableUpdateBuilderStandard<?> updateBuilder) {
-		persister.getAttributeMapping().getKeyDescriptor().getKeyPart().forEachSelectable( (index, jdbcMapping) -> {
-			if ( updateBuilder != null ) {
-				updateBuilder.addKeyRestrictionLeniently( jdbcMapping );
-			}
-			else {
-				deleteBuilder.addKeyRestrictionLeniently( jdbcMapping );
-			}
-		} );
-	}
-
-	static LogicalTableUpdate<?> buildSoftDeleteMutation(
-			TableUpdateBuilderStandard<?> updateBuilder,
-			MutatingTableReference mutatingTable,
-			org.hibernate.metamodel.mapping.SoftDeleteMapping softDeleteMapping) {
-		final var softDeleteColumnReference = new ColumnReference( mutatingTable, softDeleteMapping );
-		updateBuilder.addColumnAssignment( softDeleteMapping.createDeletedValueBinding( softDeleteColumnReference ) );
-		updateBuilder.addNonKeyRestriction( softDeleteMapping.createNonDeletedValueBinding( softDeleteColumnReference ) );
-		return updateBuilder.buildMutation();
+	static void applyRemoveRestrictions(CollectionPersister persister, RestrictedTableMutationBuilder<?, ?> builder) {
+		persister.getAttributeMapping().getKeyDescriptor().getKeyPart()
+				.forEachSelectable( (index, mapping) -> builder.addKeyRestrictionLeniently( mapping ) );
 	}
 
 	static LogicalTableUpdate<?> buildTemporalDeleteMutation(

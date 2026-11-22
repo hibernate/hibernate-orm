@@ -141,10 +141,10 @@ public class HistoryCollectionMutationPlanContributor implements CollectionMutat
 		final var builder = new org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard<>(
 				(CollectionMutationTarget) persister, reference, factory, sqlWhereString );
 		if ( allRows ) {
-			CollectionMutationPlanSupport.applyRemoveRestrictions( persister, null, builder );
+			CollectionMutationPlanSupport.applyRemoveRestrictions( persister, builder );
 		}
 		else {
-			CollectionMutationPlanSupport.applyRowDeleteRestrictions( persister, null, builder );
+			CollectionMutationPlanSupport.applyRowDeleteRestrictions( persister, builder );
 		}
 		return CollectionMutationPlanSupport.buildTemporalDeleteMutation( builder, reference, temporal )
 				.createMutationOperation( null, factory );

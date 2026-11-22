@@ -24,7 +24,7 @@ final class CollectionRowCompaction {
 			BasicCollectionPersister persister,
 			CollectionMutationPlanContributor mutationPlanContributor,
 			boolean tableHasNonPrimaryUniqueConstraints) {
-		commonInsertPlacement = mutationPlanContributor == CollectionMutationPlanContributor.STANDARD
+		commonInsertPlacement = mutationPlanContributor.supportsInsertRowCompaction()
 				&& !tableHasNonPrimaryUniqueConstraints
 				&& !persister.getCollectionTableDescriptor().isSelfReferential()
 				&& persister.getAttributeMapping().getElementDescriptor() instanceof BasicValuedCollectionPart;

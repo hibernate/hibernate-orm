@@ -78,12 +78,6 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 
 	public BasicCollectionDecomposer(
 			BasicCollectionPersister persister,
-			SessionFactoryImplementor factory) {
-		this( persister, factory, CollectionMutationPlanContributor.STANDARD );
-	}
-
-	public BasicCollectionDecomposer(
-			BasicCollectionPersister persister,
 			SessionFactoryImplementor factory,
 			CollectionMutationPlanContributor mutationPlanContributor) {
 		assert persister != null;

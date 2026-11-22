@@ -17,6 +17,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.mutation.AuditMutationWriter;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+import static org.hibernate.sql.results.internal.ResultsHelper.getCollectionOwner;
 
 /**
  * Transaction-scoped queue for deferred audit row writes.
@@ -100,21 +101,27 @@ public class AuditWorkQueue implements TransactionCompletionCallbacks.BeforeComp
 		// the diff at completion will use original vs final state
 		changeSet.addCollectionChange( collectionPersister, collection, ownerId, originalSnapshot, writer );
 
-		final var ownerPersister = collectionPersister.getOwnerEntityPersister();
-		if ( ownerPersister.getAuditMapping() != null ) {
-			final var ownerEntityKey = session.generateEntityKey( ownerId, ownerPersister );
+		final var declaringPersister = collectionPersister.getOwnerEntityPersister();
+		if ( declaringPersister.getAuditMapping() != null ) {
 			if ( trackingListener == null ) {
 				trackingListener = resolveTrackingListener( session );
 			}
-			final var persistenceContextOwner =
-					session.getPersistenceContextInternal().getCollectionOwner( ownerId, collectionPersister );
-			final var collectionOwner = persistenceContextOwner != null ? persistenceContextOwner : collection.getOwner();
-			final var owner = collectionOwner != null
-					? collectionOwner
-					: session.getPersistenceContextInternal().getEntity( ownerEntityKey );
+			final var owner = getCollectionOwner(
+					session.getPersistenceContextInternal(),
+					collectionPersister,
+					collection,
+					ownerId,
+					session
+			);
 			if ( owner != null ) {
+				// The owner may be an instance of a subclass of the entity declaring the collection
+				final var ownerPersister = declaringPersister.getSubclassEntityPersister( owner, session.getFactory() );
 				changeSet.addEntityChange(
-						ownerEntityKey,
+						// A property-ref collection key is not the owner's identifier, and a managed owner has one
+						session.generateEntityKey(
+								castNonNull( ownerPersister.getIdentifier( owner, session ) ),
+								ownerPersister
+						),
 						owner,
 						ownerPersister.getValues( owner ),
 						ModificationType.MOD,

@@ -15,6 +15,8 @@ import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
+import static org.hibernate.sql.results.internal.ResultsHelper.getCollectionOwner;
+
 /**
  * RemoveCoordinator for audited collections.
  * Delegates the bulk removal to the standard coordinator, then writes
@@ -79,7 +81,7 @@ public class RemoveCoordinatorAudit implements RemoveCoordinator, CollectionAudi
 		standardCoordinator.deleteAllRows( key, session );
 
 		// Only write DEL audit rows for entity deletion (all snapshot elements are truly removed)
-		if ( collection != null && isEntityDeletion( key, session ) ) {
+		if ( collection != null && isEntityDeletion( key, collection, session ) ) {
 			// Enqueue with snapshot = null to signal "write DEL for all current entries"
 			session.getAuditWorkQueue().enqueueCollection(
 					collectionDescriptor,
@@ -133,10 +135,13 @@ public class RemoveCoordinatorAudit implements RemoveCoordinator, CollectionAudi
 		}
 	}
 
-	private boolean isEntityDeletion(@Nonnull Object key, @Nonnull SharedSessionContractImplementor session) {
+	private boolean isEntityDeletion(
+			@Nonnull Object key,
+			@Nonnull PersistentCollection<?> collection,
+			@Nonnull SharedSessionContractImplementor session) {
 		final var pc = session.getPersistenceContextInternal();
 		final var collectionDescriptor = mutationTarget.getTargetPart().getCollectionDescriptor();
-		final var owner = pc.getCollectionOwner( key, collectionDescriptor );
+		final var owner = getCollectionOwner( pc, collectionDescriptor, collection, key, session );
 		if ( owner != null ) {
 			final var ownerEntry = pc.getEntry( owner );
 			return ownerEntry != null && ownerEntry.getStatus().isDeletedOrGone();

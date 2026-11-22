@@ -45,6 +45,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
+import org.hibernate.persister.entity.mutation.EntityAuditSupport;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.persister.entity.mutation.InsertCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
@@ -813,6 +814,17 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	@Nonnull
 	default UpdateCoordinator getMergeCoordinator() {
 		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * Get the support for writing the audit rows of this entity, shared by all
+	 * its audit mutations, or {@code null} if the entity is not
+	 * {@linkplain org.hibernate.annotations.Audited audited}.
+	 */
+	@Nullable
+	@Internal
+	default EntityAuditSupport getEntityAuditSupport() {
+		return null;
 	}
 
 	/**

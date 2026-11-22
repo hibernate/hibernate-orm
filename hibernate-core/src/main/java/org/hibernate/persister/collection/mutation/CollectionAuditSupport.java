@@ -27,6 +27,9 @@ import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.type.Type;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+import static org.hibernate.sql.results.internal.ResultsHelper.getCollectionOwner;
+
 /// Shared diffing, operation planning, and binding support for audited collection row mutations.
 ///
 /// Like [EntityAuditSupport], this type keeps audit operation construction
@@ -103,7 +106,6 @@ public class CollectionAuditSupport {
 
 	private final CollectionMutationTarget mutationTarget;
 	private final AuditCollectionHelper auditHelper;
-	private final @Nullable EntityAuditSupport ownerMutationSupport;
 
 	public CollectionAuditSupport(
 			@Nonnull CollectionMutationTarget mutationTarget,
@@ -121,10 +123,6 @@ public class CollectionAuditSupport {
 				indexIncrementer,
 				auditMapping
 		);
-		final var ownerPersister = mutationTarget.getTargetPart().getCollectionDescriptor().getOwnerEntityPersister();
-		this.ownerMutationSupport = ownerPersister.getAuditMapping() == null
-				? null
-				: new EntityAuditSupport( ownerPersister, sessionFactory );
 	}
 
 	@Nonnull
@@ -132,43 +130,50 @@ public class CollectionAuditSupport {
 		return mutationTarget;
 	}
 
-	public @Nullable EntityAuditSupport getOwnerMutationSupport() {
-		return ownerMutationSupport;
-	}
-
 	/// Resolve the owning entity change implied by an audited collection change.
 	///
 	/// Collection audit rows record the row-level ADD/DEL changes, while the
 	/// owning entity receives a MOD audit row so revision queries can see that the
-	/// association changed. The owner is resolved from the persistence context
-	/// first, then from the collection wrapper, and finally by entity key lookup.
-	/// If the owner cannot be resolved, no owner MOD change is produced; the
-	/// collection row audit work can still be recorded.
+	/// association changed. If the owner cannot be resolved from the session, no
+	/// owner MOD change is produced; the collection row audit work can still be
+	/// recorded.
 	@Nullable
 	public OwnerAuditChange resolveOwnerAuditChange(
 			@Nonnull Object ownerId,
 			@Nonnull PersistentCollection<?> collection,
 			@Nonnull SharedSessionContractImplementor session) {
 		final var collectionDescriptor = mutationTarget.getTargetPart().getCollectionDescriptor();
-		final var ownerPersister = collectionDescriptor.getOwnerEntityPersister();
-		if ( ownerMutationSupport == null ) {
+		final var declaringPersister = collectionDescriptor.getOwnerEntityPersister();
+		if ( declaringPersister.getAuditMapping() == null ) {
 			return null;
 		}
-		final var ownerEntityKey = session.generateEntityKey( ownerId, ownerPersister );
-
-		final var persistenceContext = session.getPersistenceContextInternal();
-		final var persistenceContextOwner = persistenceContext.getCollectionOwner( ownerId, collectionDescriptor );
-		final var collectionOwner = persistenceContextOwner != null ? persistenceContextOwner : collection.getOwner();
-		final var owner = collectionOwner != null ? collectionOwner : persistenceContext.getEntity( ownerEntityKey );
+		final var owner = getCollectionOwner(
+				session.getPersistenceContextInternal(),
+				collectionDescriptor,
+				collection,
+				ownerId,
+				session
+		);
 		if ( owner == null ) {
 			return null;
 		}
 
+		// The owner may be an instance of a subclass of the entity declaring the collection,
+		// and the audit row must be written with that subclass's audit support
+		final var ownerPersister = declaringPersister.getSubclassEntityPersister( owner, session.getFactory() );
+		final var ownerAuditSupport = ownerPersister.getEntityAuditSupport();
+		if ( ownerAuditSupport == null ) {
+			return null;
+		}
 		return new OwnerAuditChange(
-				ownerEntityKey,
+				// A property-ref collection key is not the owner's identifier, and a managed owner has one
+				session.generateEntityKey(
+						castNonNull( ownerPersister.getIdentifier( owner, session ) ),
+						ownerPersister
+				),
 				owner,
 				ownerPersister.getValues( owner ),
-				ownerMutationSupport
+				ownerAuditSupport
 		);
 	}
 

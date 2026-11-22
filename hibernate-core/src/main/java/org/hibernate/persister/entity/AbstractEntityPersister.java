@@ -6082,6 +6082,28 @@ public abstract class AbstractEntityPersister
 		if ( auxiliaryMapping instanceof SoftDeleteMapping && rootClass.getCustomSQLDelete() != null ) {
 			throw new UnsupportedMappingException( "Entity may not define both @SoftDelete and @SQLDelete" );
 		}
+		if ( ( auxiliaryMapping instanceof TemporalMapping || auxiliaryMapping instanceof AuditMapping )
+				&& hasCustomSql( bootEntityDescriptor ) ) {
+			throw new UnsupportedMappingException( "Entity '" + getEntityName() + "' is "
+					+ ( auxiliaryMapping instanceof AuditMapping ? "audited" : "temporal" )
+					+ " and so may not be annotated '@SQLInsert', '@SQLUpdate', or '@SQLDelete'" );
+		}
+	}
+
+	private static boolean hasCustomSql(@Nonnull PersistentClass bootEntityDescriptor) {
+		if ( bootEntityDescriptor.getCustomSQLInsert() != null
+				|| bootEntityDescriptor.getCustomSQLUpdate() != null
+				|| bootEntityDescriptor.getCustomSQLDelete() != null ) {
+			return true;
+		}
+		for ( var join : bootEntityDescriptor.getJoins() ) {
+			if ( join.getCustomSQLInsert() != null
+					|| join.getCustomSQLUpdate() != null
+					|| join.getCustomSQLDelete() != null ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private void initializeNaturalIdMapping

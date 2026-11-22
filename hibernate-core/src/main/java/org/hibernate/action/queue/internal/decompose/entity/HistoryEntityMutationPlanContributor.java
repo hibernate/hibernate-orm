@@ -30,8 +30,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.TemporalMutationHelper;
 import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
-import org.hibernate.sql.spi.mutation.MutationType;
-import org.hibernate.sql.spi.mutation.TableMapping;
 import org.hibernate.sql.ast.spi.model.LogicalTableUpdate;
 import org.hibernate.sql.ast.spi.model.MutatingTableReference;
 import org.hibernate.sql.ast.spi.model.TableInsert;
@@ -248,26 +246,9 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 				identifierTable.isSelfReferential(),
 				false,
 				false,
-				new TableMapping.MutationDetails(
-						MutationType.INSERT,
-						identifierTable.insertDetails().getExpectation(),
-						null,
-						false,
-						entityPersister.isDynamicInsert()
-				),
-				new TableMapping.MutationDetails(
-						MutationType.UPDATE,
-						identifierTable.updateDetails().getExpectation(),
-						null,
-						false,
-						entityPersister.isDynamicUpdate()
-				),
-				new TableMapping.MutationDetails(
-						MutationType.DELETE,
-						identifierTable.deleteDetails().getExpectation(),
-						null,
-						false
-				),
+				identifierTable.insertDetails(),
+				identifierTable.updateDetails(),
+				identifierTable.deleteDetails(),
 				columns,
 				identifierTable.attributes(),
 				identifierTable.attributeColumnIndexes(),

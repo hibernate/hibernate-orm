@@ -79,6 +79,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * customize the audit log's table name, schema, catalog, or
  * column names for the audit log.
  *
+ * @apiNote
+ * An audited entity or collection may not specify custom SQL using
+ * {@link SQLInsert}, {@link SQLUpdate}, {@link SQLDelete}, or
+ * {@link SQLDeleteAll}.
+ *
  * @see Changelog
  * @see org.hibernate.audit.AuditLog
  * @see org.hibernate.audit.AuditLogFactory

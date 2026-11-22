@@ -8,6 +8,7 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
@@ -43,7 +44,8 @@ public final class CacheHelper {
 
 	/**
 	 * Whether the changeset affects the collection table or its associated
-	 * entities and therefore the collection's cached membership.
+	 * entities, its elements or the keys of a map, and therefore the
+	 * collection's cached membership.
 	 */
 	public static boolean readsHistory(
 			@Nonnull SharedSessionContractImplementor session,
@@ -55,7 +57,9 @@ public final class CacheHelper {
 		final var auxiliaryMapping = persister.getAttributeMapping().getAuxiliaryMapping();
 		return auxiliaryMapping != null && auxiliaryMapping.isAffectedByInfluencers( influencers )
 			|| ( persister.isOneToMany() || persister.isManyToMany() )
-					&& readsHistory( session, persister.getElementPersister() );
+					&& readsHistory( session, persister.getElementPersister() )
+			|| persister.getAttributeMapping().getIndexDescriptor() instanceof EntityCollectionPart index
+					&& readsHistory( session, index.getAssociatedEntityMappingType().getEntityPersister() );
 	}
 
 	public static Object fromSharedCache(

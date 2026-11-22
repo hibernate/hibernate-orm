@@ -24,6 +24,7 @@ import static org.hibernate.cfg.StateManagementSettings.CHANGESET_ID_SUPPLIER;
 import static org.hibernate.cfg.StateManagementSettings.TEMPORAL_TABLE_STRATEGY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @JiraKey("HHH-21221")
 @RequiresDialect(value = H2Dialect.class, majorVersion = 2)
@@ -64,6 +65,35 @@ class TemporalIdentityGeneratedColumnTest {
 		scope.inSession( session -> checkVersion( session.find( Item.class, id ), id, 13, 26 ) );
 		try ( var session = scope.getSessionFactory().withOptions().atChangeset( before ).openSession() ) {
 			checkVersion( session.find( Item.class, id ), id, 7, 14 );
+		}
+	}
+
+	@Test
+	void deleteClosesGeneratedColumnVersion(SessionFactoryScope scope) {
+		final var persister = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( Item.class );
+		assertNotNull( persister.getUpdateDelegate() );
+
+		final var item = new Item();
+		item.quantity = 11;
+		final var before = scope.fromTransaction( session -> {
+			session.persist( item );
+			session.flush();
+			return session.getCurrentChangesetIdentifier();
+		} );
+		final Long id = item.id;
+		assertNotNull( id );
+		assertNotNull( before );
+
+		scope.inTransaction( session -> {
+			final var managed = session.find( Item.class, id );
+			checkVersion( managed, id, 11, 22 );
+			session.remove( managed );
+			session.flush();
+		} );
+
+		scope.inSession( session -> assertNull( session.find( Item.class, id ) ) );
+		try ( var session = scope.getSessionFactory().withOptions().atChangeset( before ).openSession() ) {
+			checkVersion( session.find( Item.class, id ), id, 11, 22 );
 		}
 	}
 

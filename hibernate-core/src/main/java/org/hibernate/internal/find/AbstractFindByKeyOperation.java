@@ -48,6 +48,7 @@ import static org.hibernate.engine.spi.NaturalIdResolutions.INVALID_NATURAL_ID_R
 import static org.hibernate.internal.NaturalIdHelper.performAnyNeededCrossReferenceSynchronizations;
 import static org.hibernate.internal.SessionLogging.SESSION_LOGGER;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
+import static org.hibernate.metamodel.mapping.internal.CurrentState.loadByKey;
 
 /// Base support for loading a single entity by key
 /// (either [id][KeyType#IDENTIFIER] or [natural-id][KeyType#NATURAL]).
@@ -226,7 +227,9 @@ public abstract class AbstractFindByKeyOperation<T> implements FindByKeyOperatio
 
 		return withExceptionHandling( key, makeLockOptions(), () -> {
 			if ( getKeyType() == KeyType.NATURAL ) {
-				return findByNaturalId( key );
+				// a load by natural id reads current state in an all-changesets session,
+				// and so does the lookup of its resolution in the persistence context and the cache
+				return loadByKey( getEntityDescriptor(), getEntityHandler(), () -> findByNaturalId( key ) );
 			}
 			else {
 				return findById( key );

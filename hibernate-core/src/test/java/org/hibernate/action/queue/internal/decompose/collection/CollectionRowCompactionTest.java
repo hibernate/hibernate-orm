@@ -6,9 +6,11 @@ import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPla
 import org.hibernate.action.queue.spi.meta.CollectionTableDescriptor;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.persister.collection.BasicCollectionPersister;
+import org.hibernate.persister.state.internal.SoftDeleteStateManagement;
 
 import org.junit.jupiter.api.Test;
 
@@ -32,6 +34,15 @@ class CollectionRowCompactionTest {
 
 		when( context.isBeingInsertedInCurrentFlush( owner ) ).thenReturn( true );
 		assertThat( fixture.policy.canCompactCreate( mutation, context ) ).isTrue();
+	}
+
+	@Test
+	void compactsInsertsForSoftDeletableRows() {
+		final var fixture = new Fixture();
+		when( fixture.attributeMapping.getSoftDeleteMapping() ).thenReturn( mock( SoftDeleteMapping.class ) );
+		final var contributor = SoftDeleteStateManagement.INSTANCE.getGraphIntegration()
+				.createCollectionMutationPlanContributor( fixture.persister );
+		assertThat( new CollectionRowCompaction( fixture.persister, contributor, false ).canCompactReplacement() ).isTrue();
 	}
 
 	@Test

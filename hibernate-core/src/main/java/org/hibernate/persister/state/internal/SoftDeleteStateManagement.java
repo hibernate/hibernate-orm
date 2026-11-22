@@ -3,6 +3,8 @@ package org.hibernate.persister.state.internal;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
+import org.hibernate.action.queue.internal.decompose.collection.SoftDeleteCollectionMutationPlanContributor;
+import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPlanContributor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor;
@@ -10,6 +12,7 @@ import org.hibernate.action.queue.internal.decompose.entity.SoftDeleteEntityMuta
 import org.hibernate.metamodel.mapping.AuxiliaryMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
 import org.hibernate.persister.entity.mutation.DeleteCoordinatorSoft;
@@ -30,6 +33,18 @@ public final class SoftDeleteStateManagement extends AbstractStateManagement {
 		@Override
 		public EntityMutationPlanContributor createEntityMutationPlanContributor(@Nonnull EntityPersister persister) {
 			return new SoftDeleteEntityMutationPlanContributor( persister, persister.getFactory() );
+		}
+
+		@Nonnull
+		@Override
+		public CollectionMutationPlanContributor createCollectionMutationPlanContributor(
+				@Nonnull CollectionPersister persister) {
+			if ( persister.isOneToMany() ) {
+				return CollectionMutationPlanContributor.STANDARD;
+			}
+			final var mapping = persister.getAttributeMapping().getSoftDeleteMapping();
+			return mapping == null ? CollectionMutationPlanContributor.STANDARD
+					: new SoftDeleteCollectionMutationPlanContributor( mapping );
 		}
 	};
 

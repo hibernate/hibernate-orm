@@ -43,6 +43,26 @@ public final class GeneratedValuesCollector {
 		return forTiming( entityPersister, EventType.INSERT, supportsRowId );
 	}
 
+	/// A temporal replacement binds the existing identifier; only other values may be generated.
+	public static @Nullable GeneratedValuesCollector forReplacementInsert(
+			EntityPersister entityPersister,
+			SessionFactoryImplementor sessionFactory) {
+		final var delegate = entityPersister.getInsertDelegate();
+		if ( delegate == null || !delegate.supportsArbitraryValues() ) {
+			return null;
+		}
+		final var collector = forInsert( entityPersister, sessionFactory );
+		if ( collector == null ) {
+			return null;
+		}
+		final var generatedModelParts = collector.generatedModelParts.stream()
+				.filter( part -> !part.isEntityIdentifierMapping() )
+				.toList();
+		return isEmpty( generatedModelParts )
+				? null
+				: new GeneratedValuesCollector( EventType.INSERT, entityPersister, generatedModelParts );
+	}
+
 	public static @Nullable GeneratedValuesCollector forUpdate(
 			EntityPersister entityPersister,
 			SessionFactoryImplementor sessionFactory) {

@@ -25,6 +25,7 @@ import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Property;
@@ -295,10 +296,11 @@ public final class AuditHelper {
 
 	/**
 	 * Create a middle audit table for unidirectional @OneToMany @JoinColumn.
-	 * The table tracks collection membership with (parent_key, child_key, REV, REVTYPE)
+	 * The table tracks collection membership with (parent_key, child_key, index, REV, REVTYPE),
+	 * where the index is the order column or map key columns of a list or map.
 	 * <p>
-	 * The child entity's FK column is on the child table, but from an entity model
-	 * perspective the collection is part of the parent entity's state.
+	 * The child entity's FK and index columns are on the child table, but from an entity
+	 * model perspective the collection is part of the parent entity's state.
 	 */
 	static void bindOneToManyAuditTable(
 			@Nullable Audited.Table auditTable,
@@ -357,6 +359,10 @@ public final class AuditHelper {
 			for ( var column : referencedEntity.getKey().getColumns() ) {
 				keyColumns.add( copyColumnRemovingUnique( column, middleAuditTable ) );
 			}
+			// Copy the order column or map key columns written by the collection
+			for ( var column : writtenIndexColumns( collection ) ) {
+				keyColumns.add( copyColumnRemovingUnique( column, middleAuditTable ) );
+			}
 			// Audit columns
 			final var changesetIdColumn = createAuditColumn(
 					csIdColumnName,
@@ -377,6 +383,28 @@ public final class AuditHelper {
 			enableAudit( collection, middleAuditTable, changesetIdColumn, modificationTypeColumn );
 			addTransactionEndColumns( auditTable, collection, middleAuditTable, context );
 		} );
+	}
+
+	/**
+	 * The columns of the index of a list or map which are written by the collection:
+	 * an order column or map key columns, but not a map key which is an attribute of
+	 * the element.
+	 */
+	private static List<Column> writtenIndexColumns(Collection collection) {
+		final List<Column> columns = new ArrayList<>();
+		if ( collection instanceof IndexedCollection indexedCollection
+				&& !indexedCollection.hasMapKeyProperty() ) {
+			final var index = indexedCollection.getIndex();
+			final boolean[] insertable = index.getColumnInsertability();
+			final boolean[] updatable = index.getColumnUpdateability();
+			final var selectables = index.getSelectables();
+			for ( int i = 0; i < selectables.size(); i++ ) {
+				if ( selectables.get( i ) instanceof Column column && ( insertable[i] || updatable[i] ) ) {
+					columns.add( column );
+				}
+			}
+		}
+		return columns;
 	}
 
 	@Nonnull

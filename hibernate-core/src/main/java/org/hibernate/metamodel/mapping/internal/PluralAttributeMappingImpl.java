@@ -1577,8 +1577,15 @@ public class PluralAttributeMappingImpl
 			final var descriptor = getCollectionDescriptor();
 			if ( descriptor.isOneToMany() || descriptor.isManyToMany() ) {
 				final var elementDescriptor = (EntityCollectionPart) getElementDescriptor();
-				return elementDescriptor.getAssociatedEntityMappingType()
-						.isAffectedByInfluencers( influencers, onlyApplyForLoadByKeyFilters );
+				if ( elementDescriptor.getAssociatedEntityMappingType()
+						.isAffectedByInfluencers( influencers, onlyApplyForLoadByKeyFilters ) ) {
+					return true;
+				}
+			}
+			// an entity which is the key of a map is read at the changeset of the session too
+			if ( getIndexDescriptor() instanceof EntityCollectionPart index ) {
+				final var indexAuxiliaryMapping = index.getAssociatedEntityMappingType().getAuxiliaryMapping();
+				return indexAuxiliaryMapping != null && indexAuxiliaryMapping.isAffectedByInfluencers( influencers );
 			}
 			return false;
 		}

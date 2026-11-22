@@ -114,7 +114,25 @@ class EntityInsertMutationPlanner {
 				entity,
 				identifier,
 				hasStateDependentGenerator,
-				session
+				session,
+				true
+		);
+	}
+
+	Map<String, TableInsert> resolveReplacementInsertOperations(
+			boolean[] effectiveInsertability,
+			Object entity,
+			Object identifier,
+			boolean hasStateDependentGenerator,
+			SharedSessionContractImplementor session,
+			boolean useGeneratedValuesDelegate) {
+		return chooseEffectiveInsertGroup(
+				effectiveInsertability,
+				entity,
+				identifier,
+				hasStateDependentGenerator,
+				session,
+				useGeneratedValuesDelegate
 		);
 	}
 
@@ -167,10 +185,12 @@ class EntityInsertMutationPlanner {
 			Object entity,
 			Object id,
 			boolean hasStateDependentGenerator,
-			SharedSessionContractImplementor session) {
+			SharedSessionContractImplementor session,
+			boolean useGeneratedValuesDelegate) {
 		final boolean forceIdentifierBinding = entityPersister.getGenerator().generatedOnExecution() && id != null;
 		return entityPersister.isDynamicInsert() || forceIdentifierBinding || hasStateDependentGenerator
-				? generateDynamicInsertOperations( effectiveInsertability, entity, session, forceIdentifierBinding )
+				? generateDynamicInsertOperations(
+						effectiveInsertability, entity, session, forceIdentifierBinding, useGeneratedValuesDelegate )
 				: staticInsertOperations;
 	}
 
@@ -188,7 +208,7 @@ class EntityInsertMutationPlanner {
 		entityPersister.forEachMutableTableDescriptor( (tableDescriptor) -> {
 			staticOperationBuilders.put(
 					tableDescriptor.name(),
-					createTableInsertBuilder( tableDescriptor )
+					createTableInsertBuilder( tableDescriptor, true )
 			);
 		} );
 
@@ -249,11 +269,11 @@ class EntityInsertMutationPlanner {
 		return false;
 	}
 
-	private TableInsertBuilder createTableInsertBuilder(TableDescriptor tableDescriptor) {
+	private TableInsertBuilder createTableInsertBuilder(TableDescriptor tableDescriptor, boolean useGeneratedValuesDelegate) {
 		final boolean isIdentifierTable = tableDescriptor instanceof EntityTableDescriptor entityTableDescriptor
 				&& entityTableDescriptor.isIdentifierTable();
 
-		if ( isIdentifierTable ) {
+		if ( isIdentifierTable && useGeneratedValuesDelegate ) {
 			final var delegate = entityPersister.getInsertDelegate();
 			if ( delegate != null ) {
 				return (TableInsertBuilder) delegate.createTableMutationBuilder( null, sessionFactory );
@@ -262,10 +282,11 @@ class EntityInsertMutationPlanner {
 
 		final boolean isInverse = tableDescriptor instanceof EntityTableDescriptor entityTableDescriptor
 				&& entityTableDescriptor.isInverse();
+		// The descriptor still identifies the entity's root table, but this operation may bind the key itself.
 		final TableDescriptorAsTableMapping tableMapping = new TableDescriptorAsTableMapping(
 				tableDescriptor,
 				tableDescriptor.getRelativePosition(),
-				isIdentifierTable,
+				isIdentifierTable && useGeneratedValuesDelegate,
 				isInverse
 		);
 
@@ -401,12 +422,13 @@ class EntityInsertMutationPlanner {
 			boolean[] insertable,
 			Object object,
 			SharedSessionContractImplementor session,
-			boolean forceIdentifierBinding) {
+			boolean forceIdentifierBinding,
+			boolean useGeneratedValuesDelegate) {
 		final Map<String, TableInsertBuilder> operationBuilders = CollectionHelper.linkedMapOfSize( entityPersister.getTableDescriptors().length );
 		entityPersister.forEachMutableTableDescriptor( (tableDescriptor) -> {
 			operationBuilders.put(
 					tableDescriptor.name(),
-					createTableInsertBuilder( tableDescriptor )
+					createTableInsertBuilder( tableDescriptor, useGeneratedValuesDelegate )
 			);
 		} );
 

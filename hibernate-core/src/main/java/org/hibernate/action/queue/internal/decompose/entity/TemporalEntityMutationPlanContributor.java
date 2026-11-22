@@ -166,19 +166,20 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 				context.session()
 		);
 		final boolean[] effectiveInsertability = insertMutationPlanner.resolveInsertability( context.state() );
-		final var insertGroup = insertMutationPlanner.resolveInsertOperations(
+		final boolean reusingGeneratedIdentifier = entityPersister.isIdentifierAssignedByInsert();
+		final var generatedValuesCollector = reusingGeneratedIdentifier
+				? GeneratedValuesCollector.forReplacementInsert( entityPersister, sessionFactory )
+				: GeneratedValuesCollector.forInsert( entityPersister, sessionFactory );
+		final var insertGroup = insertMutationPlanner.resolveReplacementInsertOperations(
 				effectiveInsertability,
 				context.entity(),
 				context.identifier(),
 				hasStateDependentInsertGenerator,
-				context.session()
+				context.session(),
+				!reusingGeneratedIdentifier || generatedValuesCollector != null
 		);
 
 		final var insertValuesAnalysis = new InsertValuesAnalysis( entityPersister, context.state() );
-		final var generatedValuesCollector = GeneratedValuesCollector.forInsert(
-				entityPersister,
-				sessionFactory
-		);
 		final var postUpdateHandling = new PostUpdateHandling(
 				context.action(),
 				context.cacheUpdate(),
@@ -189,11 +190,10 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 
 		int localOrd = 1;
 		FlushOperation previousOperation = null;
-		for ( var entry : insertGroup.entrySet() ) {
-			final var operation = entry.getValue().createMutationOperation( insertValuesAnalysis, sessionFactory );
-			final var tableMapping = (TableDescriptorAsTableMapping) operation.getTableDetails();
-			final var tableDescriptor = (EntityTableDescriptor) tableMapping.descriptor();
-			if ( insertValuesAnalysis.include( tableDescriptor ) ) {
+		for ( var tableDescriptor : entityPersister.getTableDescriptors() ) {
+			if ( !tableDescriptor.isInverse() && insertValuesAnalysis.include( tableDescriptor ) ) {
+				final var operation = insertGroup.get( tableDescriptor.name() )
+						.createMutationOperation( insertValuesAnalysis, sessionFactory );
 				final var op = new FlushOperation(
 						tableDescriptor,
 						MutationKind.INSERT,

@@ -61,7 +61,7 @@ class MapKeyLookupTest {
 		} );
 	}
 
-	@Entity(name = "Library")
+	@Entity(name = "BookLibrary")
 	static class Library {
 		@Id
 		int id = 1;

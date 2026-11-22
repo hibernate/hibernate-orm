@@ -9,6 +9,7 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EvictEvent;
 import org.hibernate.event.spi.EvictEventListener;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.proxy.AbstractLazyInitializer;
 
 import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 import static org.hibernate.pretty.MessageHelper.infoString;
@@ -49,7 +50,12 @@ public class DefaultEvictEventListener implements EvictEventListener {
 			final var persister =
 					source.getFactory().getMappingMetamodel()
 							.getEntityDescriptor( lazyInitializer.getEntityName() );
-			final var key = source.generateEntityKey( id, persister );
+			final var key = lazyInitializer instanceof AbstractLazyInitializer initializer
+					? source.getLoadQueryInfluencers().withCapturedTemporalIdentifier(
+							initializer.getTemporalIdentifier(),
+							() -> source.generateEntityKey( id, persister )
+					)
+					: source.generateEntityKey( id, persister );
 			final var holder = persistenceContext.detachEntity( key );
 			// if the entity has been evicted then its holder is null
 			if ( holder != null && !lazyInitializer.isUninitialized() ) {

@@ -3,6 +3,8 @@ package org.hibernate.action.queue.internal.decompose.collection;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionDecomposer;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionJdbcOperations;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPlanContributor;
+import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPlanContributor.DeleteRowPlanContext;
+import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPlanContributor.RemoveOperationContext;
 
 import jakarta.annotation.Nonnull;
 import org.hibernate.AssertionFailure;
@@ -33,6 +35,7 @@ import org.hibernate.persister.collection.BasicCollectionPersister;
 import org.hibernate.persister.entity.mutation.TemporalMutationHelper;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.spi.mutation.TableMapping.MutationDetails;
 import org.hibernate.sql.ast.spi.model.MutatingTableReference;
 import org.hibernate.sql.ast.spi.model.builder.TableDeleteBuilderStandard;
 import org.hibernate.sql.ast.spi.model.builder.TableInsertBuilderStandard;
@@ -49,9 +52,6 @@ import java.util.function.Consumer;
 import static java.util.Collections.emptyList;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionOrdinalSupport.Slot;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionOrdinalSupport.calculateOrdinal;
-import static org.hibernate.action.queue.internal.decompose.collection.CollectionMutationPlanSupport.applyRemoveRestrictions;
-import static org.hibernate.action.queue.internal.decompose.collection.CollectionMutationPlanSupport.applyRowDeleteRestrictions;
-import static org.hibernate.action.queue.internal.decompose.collection.CollectionMutationPlanSupport.buildSoftDeleteMutation;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionMutationPlanSupport.createTableMapping;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 import static org.hibernate.temporal.TemporalTableStrategy.SINGLE_TABLE;
@@ -1799,54 +1799,15 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 	}
 
 	private CollectionJdbcOperations.DeleteRowPlan buildDeleteRowPlan(SessionFactoryImplementor factory) {
-		if ( persister.isInverse() || !persister.isRowDeleteEnabled() ) {
-			// Inverse collection or row delete not enabled - no plan needed
+		if ( !persister.isInverse() && persister.isRowDeleteEnabled() ) {
+			final var context = new DeleteRowPlanContext( persister, tableDescriptor, persister.getSqlWhereString(), factory );
+			return mutationPlanContributor.buildDeleteRowPlan( context,
+					() -> CollectionMutationPlanSupport.buildDeleteRowPlan( context,
+							createDeleteBuilder( tableDescriptor.deleteDetails(), factory ) ) );
+		}
+		else {
 			return null;
 		}
-		return mutationPlanContributor.buildDeleteRowPlan(
-				new CollectionMutationPlanContributor.DeleteRowPlanContext(
-						persister,
-						tableDescriptor,
-						persister.getSqlWhereString(),
-						factory
-				),
-				() -> buildStandardDeleteRowPlan( factory )
-		);
-	}
-
-	private CollectionJdbcOperations.DeleteRowPlan buildStandardDeleteRowPlan(SessionFactoryImplementor factory) {
-		var attribute = persister.getAttributeMapping();
-
-		final TableDescriptorAsTableMapping tableMapping = createTableMapping( persister.getCollectionTableDescriptor() );
-
-		final var mutatingTable = new MutatingTableReference( tableMapping );
-		final var softDeleteMapping = attribute.getSoftDeleteMapping();
-		final var deleteBuilder = softDeleteMapping == null
-				? new TableDeleteBuilderStandard(
-						persister,
-						mutatingTable,
-						factory,
-						persister.getSqlWhereString()
-					)
-				: null;
-		final var updateBuilder = softDeleteMapping == null
-				? null
-				: new TableUpdateBuilderStandard<>(
-						persister,
-						mutatingTable,
-						factory,
-						persister.getSqlWhereString()
-				);
-
-		applyRowDeleteRestrictions( persister, deleteBuilder, updateBuilder );
-
-		final var mutation = softDeleteMapping == null
-				? deleteBuilder.buildMutation()
-				: buildSoftDeleteMutation( updateBuilder, mutatingTable, softDeleteMapping );
-		return new CollectionJdbcOperations.DeleteRowPlan(
-				mutation.createMutationOperation( null, factory ),
-				this::bindDeleteRestrictions
-		);
 	}
 
 	/// For indexed entity collections (join tables with @OrderColumn), builds deletions
@@ -1925,71 +1886,26 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 	/// Helper record to track entity and its snapshot position/key for indexed deletions
 	private record EntityPosition<K>(Object element, K snapshotIndex) implements SnapshotIndexed<K> {}
 
-	private void bindDeleteRestrictions(
-			PersistentCollection<?> collection,
-			Object key,
-			Object rowValue,
-			int rowPosition,
-			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings) {
-		CollectionMutationPlanSupport.bindDeleteRestrictions(
-				persister,
-				collection,
-				key,
-				rowValue,
-				rowPosition,
-				session,
-				jdbcValueBindings
-		);
-	}
-
 	private MutationOperation buildRemoveOperation(SessionFactoryImplementor factory) {
-		if ( !persister.needsRemove() ) {
+		if ( persister.needsRemove() ) {
+			final var context = new RemoveOperationContext( persister, tableDescriptor, persister.getSqlWhereString(), factory );
+			return mutationPlanContributor.buildRemoveOperation( context,
+					() -> CollectionMutationPlanSupport.buildRemoveOperation( context,
+							createDeleteBuilder( tableDescriptor.deleteAllDetails(), factory ) ) );
+		}
+		else {
 			return null;
 		}
-
-		return mutationPlanContributor.buildRemoveOperation(
-				new CollectionMutationPlanContributor.RemoveOperationContext(
-						persister,
-						tableDescriptor,
-						persister.getSqlWhereString(),
-						factory
-				),
-				() -> buildStandardRemoveOperation( factory )
-		);
 	}
 
-	private MutationOperation buildStandardRemoveOperation(SessionFactoryImplementor factory) {
-		var tableDescriptor = persister.getCollectionTableDescriptor();
-		var attribute = persister.getAttributeMapping();
-
-		final TableDescriptorAsTableMapping tableMapping = createTableMapping( tableDescriptor );
-		final var mutatingTable = new MutatingTableReference( tableMapping );
-		final var softDeleteMapping = attribute.getSoftDeleteMapping();
-		final var deleteBuilder = softDeleteMapping == null
-				? new TableDeleteBuilderStandard(
-						persister,
-						mutatingTable,
-						tableDescriptor.deleteAllDetails(),
-						persister.getSqlWhereString(),
-						factory
-					)
-				: null;
-		final var updateBuilder = softDeleteMapping == null
-				? null
-				: new TableUpdateBuilderStandard<>(
-						persister,
-						mutatingTable,
-						factory,
-						persister.getSqlWhereString()
-				);
-
-		applyRemoveRestrictions( persister, deleteBuilder, updateBuilder );
-
-		final var mutation = softDeleteMapping == null
-				? deleteBuilder.buildMutation()
-				: buildSoftDeleteMutation( updateBuilder, mutatingTable, softDeleteMapping );
-		return mutation.createMutationOperation(null, factory);
+	private TableDeleteBuilderStandard createDeleteBuilder(MutationDetails details, SessionFactoryImplementor factory) {
+		return new TableDeleteBuilderStandard(
+				persister,
+				new MutatingTableReference( createTableMapping( tableDescriptor ) ),
+				details,
+				persister.getSqlWhereString(),
+				factory
+		);
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

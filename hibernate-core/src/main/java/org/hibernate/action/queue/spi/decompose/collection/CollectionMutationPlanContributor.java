@@ -36,7 +36,18 @@ public interface CollectionMutationPlanContributor {
 	/// The contributor used by the standard state-management model.  It does
 	/// not contribute any alternate collection mutation plans.
 	CollectionMutationPlanContributor STANDARD = new CollectionMutationPlanContributor() {
+		@Override
+		public boolean supportsInsertRowCompaction() {
+			return true;
+		}
 	};
+
+	/// Whether otherwise eligible inserts may share one graph operation. A contributor
+	/// opting in must allow the rows to share their graph placement and may not require
+	/// a call to [#contributeAdditionalInsert] for each row.
+	default boolean supportsInsertRowCompaction() {
+		return false;
+	}
 
 	/// Optionally replaces the mutation plan for deleting a single collection row.
 	///

@@ -152,6 +152,13 @@ The redundant annotation should be removed from the subclass.
 An `@Id` annotation on a getter of the subclass did have the side effect of switching the subclass to property-based
 access. A subclass which depends on this should now be annotated `@Access(AccessType.PROPERTY)`.
 
+[[custom-sql-temporal-audited]]
+=== Custom SQL for a temporal or audited entity or collection
+
+Custom SQL specified using `@SQLInsert`, `@SQLUpdate`, `@SQLDelete`, or `@SQLDeleteAll` for a `@Temporal` or `@Audited`
+entity or collection is now rejected with an `UnsupportedMappingException` when the session factory is built.
+Previously, such a mapping usually failed when the entity or collection was written.
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // XSD changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

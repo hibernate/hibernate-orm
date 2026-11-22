@@ -18,6 +18,7 @@ import org.hibernate.mapping.List;
 import org.hibernate.mapping.Map;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
+import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.AuditMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.AuxiliaryMapping;
@@ -198,6 +199,15 @@ public class PluralAttributeMappingImpl
 		auxiliaryMapping =
 				bootDescriptor.getStateManagement()
 						.createAuxiliaryMapping( this, bootDescriptor, creationProcess );
+		if ( ( auxiliaryMapping instanceof TemporalMapping || auxiliaryMapping instanceof AuditMapping )
+				&& ( bootDescriptor.getCustomSQLInsert() != null
+					|| bootDescriptor.getCustomSQLUpdate() != null
+					|| bootDescriptor.getCustomSQLDelete() != null
+					|| bootDescriptor.getCustomSQLDeleteAll() != null ) ) {
+			throw new UnsupportedMappingException( "Collection '" + bootDescriptor.getRole() + "' is "
+					+ ( auxiliaryMapping instanceof AuditMapping ? "audited" : "temporal" )
+					+ " and so may not be annotated '@SQLInsert', '@SQLUpdate', '@SQLDelete', or '@SQLDeleteAll'" );
+		}
 
 		injectAttributeMapping( elementDescriptor, indexDescriptor, collectionDescriptor, this );
 

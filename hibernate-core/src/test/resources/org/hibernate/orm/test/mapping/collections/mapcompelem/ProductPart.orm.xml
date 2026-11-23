@@ -5,6 +5,7 @@
     <attribute-accessor>property</attribute-accessor>
     <default-cascade>none</default-cascade>
     <default-lazy>true</default-lazy>
+
     <entity class="Product" metadata-complete="true">
         <table name="Products"/>
         <dynamic-insert>false</dynamic-insert>
@@ -67,5 +68,5 @@
             </basic>
         </attributes>
     </embeddable>
-    <import class="Part"/>
+    <import rename="Part" class="Part"/>
 </entity-mappings>

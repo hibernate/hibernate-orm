@@ -2,6 +2,26 @@
 <entity-mappings xmlns="https://www.hibernate.org/xsd/orm/mapping"
                  version="8.0">
 
+    <mapped-superclass class="org.hibernate.orm.test.manytomanyassociationclass.Membership"
+                       access="PROPERTY" metadata-complete="true">
+        <attributes>
+            <embedded-id name="id">
+                <target>org.hibernate.orm.test.manytomanyassociationclass.compositeid.MembershipWithCompositeId$Id</target>
+            </embedded-id>
+            <basic name="name">
+                <column name="NAME" length="40" nullable="false"/>
+            </basic>
+            <many-to-one name="user"
+                         target-entity="org.hibernate.orm.test.manytomanyassociationclass.User">
+                <join-column name="USER_ID" nullable="false" insertable="false" updatable="false"/>
+            </many-to-one>
+            <many-to-one name="group"
+                         target-entity="org.hibernate.orm.test.manytomanyassociationclass.Group">
+                <join-column name="GROUP_ID" nullable="false" insertable="false" updatable="false"/>
+            </many-to-one>
+        </attributes>
+    </mapped-superclass>
+
     <entity class="org.hibernate.orm.test.manytomanyassociationclass.User"
             access="PROPERTY" metadata-complete="true">
         <table name="HB_USER"/>
@@ -47,26 +67,6 @@
             </one-to-many>
         </attributes>
     </entity>
-
-    <mapped-superclass class="org.hibernate.orm.test.manytomanyassociationclass.Membership"
-                       access="PROPERTY" metadata-complete="true">
-        <attributes>
-            <embedded-id name="id">
-                <target>org.hibernate.orm.test.manytomanyassociationclass.compositeid.MembershipWithCompositeId$Id</target>
-            </embedded-id>
-            <basic name="name">
-                <column name="NAME" length="40" nullable="false"/>
-            </basic>
-            <many-to-one name="user"
-                         target-entity="org.hibernate.orm.test.manytomanyassociationclass.User">
-                <join-column name="USER_ID" nullable="false" insertable="false" updatable="false"/>
-            </many-to-one>
-            <many-to-one name="group"
-                         target-entity="org.hibernate.orm.test.manytomanyassociationclass.Group">
-                <join-column name="GROUP_ID" nullable="false" insertable="false" updatable="false"/>
-            </many-to-one>
-        </attributes>
-    </mapped-superclass>
 
     <entity class="org.hibernate.orm.test.manytomanyassociationclass.compositeid.MembershipWithCompositeId"
             access="PROPERTY" metadata-complete="true">

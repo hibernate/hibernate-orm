@@ -35,8 +35,8 @@
                     <inverse-join-column name="OUT_ID"/>
                 </join-table>
                 <cascade>
-                    <cascade-merge/>
                     <cascade-persist/>
+                    <cascade-merge/>
                 </cascade>
             </many-to-many>
         </attributes>

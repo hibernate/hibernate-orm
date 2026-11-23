@@ -20,7 +20,7 @@
             </id>
             <one-to-one name="employee" fetch="EAGER" fetch-mode="JOIN" optional="true" orphan-removal="false">
                 <primary-key-join-column/>
-                <foreign-key/>
+                <primary-key-foreign-key/>
                 <cascade>
                     <cascade-persist/>
                     <cascade-remove/>
@@ -52,7 +52,7 @@
             </one-to-many>
             <one-to-one name="person" fetch="EAGER" fetch-mode="JOIN" optional="true" orphan-removal="false">
                 <primary-key-join-column/>
-                <foreign-key/>
+                <primary-key-foreign-key/>
                 <cascade/>
             </one-to-one>
         </attributes>

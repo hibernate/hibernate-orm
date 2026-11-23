@@ -39,6 +39,10 @@
                 <column name="seq_number"/>
             </basic>
             <version name="version"/>
+            <many-to-one name="contract"
+                         target-entity="org.hibernate.orm.test.query.hhh12225.VehicleContract">
+                <join-column name="contract_id"/>
+            </many-to-one>
             <transient name="vin"/>
             <transient name="model"/>
             <transient name="modelDetail"/>
@@ -52,10 +56,7 @@
             <transient name="bodyType"/>
             <transient name="fuelType"/>
             <transient name="driveLineType"/>
-            <many-to-one name="contract"
-                         target-entity="org.hibernate.orm.test.query.hhh12225.VehicleContract">
-                <join-column name="contract_id"/>
-            </many-to-one>
+
         </attributes>
     </entity>
 

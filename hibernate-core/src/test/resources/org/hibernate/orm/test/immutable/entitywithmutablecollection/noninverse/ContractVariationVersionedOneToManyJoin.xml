@@ -51,10 +51,10 @@
 
     <entity class="org.hibernate.orm.test.immutable.entitywithmutablecollection.Party" access="FIELD"
             metadata-complete="true">
-        <mutable>false</mutable>
         <secondary-table name="contract_party" optional="true" owned="false">
             <primary-key-join-column name="party"/>
         </secondary-table>
+        <mutable>false</mutable>
         <attributes>
             <id name="id">
                 <generated-value strategy="AUTO"/>

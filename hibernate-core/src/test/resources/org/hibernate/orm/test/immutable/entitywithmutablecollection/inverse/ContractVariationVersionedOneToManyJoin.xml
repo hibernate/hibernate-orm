@@ -9,10 +9,10 @@
             <id name="id">
                 <generated-value strategy="AUTO"/>
             </id>
+            <basic name="text"/>
             <version name="version">
                 <column name="VERS"/>
             </version>
-            <basic name="text"/>
         </attributes>
     </entity>
 
@@ -24,12 +24,12 @@
             <id name="id">
                 <generated-value strategy="AUTO"/>
             </id>
-            <version name="version">
-                <column name="VERS"/>
-            </version>
             <basic name="description">
                 <column nullable="false"/>
             </basic>
+            <version name="version">
+                <column name="VERS"/>
+            </version>
             <one-to-many name="infos" orphan-removal="true">
                 <join-column name="col_plan"/>
                 <cascade>
@@ -48,20 +48,20 @@
 
     <entity class="org.hibernate.orm.test.immutable.entitywithmutablecollection.Party" access="FIELD"
             metadata-complete="true">
-        <mutable>false</mutable>
         <secondary-table name="contract_party" optional="true" owned="true">
             <primary-key-join-column name="party"/>
         </secondary-table>
+        <mutable>false</mutable>
         <attributes>
             <id name="id">
                 <generated-value strategy="AUTO"/>
             </id>
-            <version name="version">
-                <column name="VERS"/>
-            </version>
             <basic name="name">
                 <column nullable="false"/>
             </basic>
+            <version name="version">
+                <column name="VERS"/>
+            </version>
             <many-to-one name="contract">
                 <join-column table="contract_party" name="contract"/>
             </many-to-one>
@@ -81,15 +81,15 @@
             <id name="id">
                 <generated-value strategy="AUTO"/>
             </id>
-            <version name="version">
-                <column name="VERS"/>
-            </version>
             <basic name="customerName">
                 <column nullable="false"/>
             </basic>
             <basic name="type">
                 <column name="`type`" nullable="false"/>
             </basic>
+            <version name="version">
+                <column name="VERS"/>
+            </version>
             <many-to-one name="parent"/>
             <one-to-many name="variations" mapped-by="contract" orphan-removal="true"
                          classification="BAG" fetch-mode="JOIN" optimistic-lock="true">
@@ -104,17 +104,17 @@
                     <cascade-all/>
                 </cascade>
             </one-to-many>
-            <many-to-many name="parties" mapped-by="contract" optimistic-lock="true">
-                <cascade>
-                    <cascade-all/>
-                </cascade>
-            </many-to-many>
             <one-to-many name="infos" orphan-removal="true">
                 <join-column name="contract"/>
                 <cascade>
                     <cascade-all/>
                 </cascade>
             </one-to-many>
+            <many-to-many name="parties" mapped-by="contract" optimistic-lock="true">
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </many-to-many>
             <many-to-many name="plans">
                 <join-table name="plan_contract">
                     <join-column name="contract"/>

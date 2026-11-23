@@ -31,15 +31,15 @@
     <embeddable class="org.hibernate.orm.test.keymanytoone.unidir.ondelete.Order$Id"
                 access="PROPERTY" metadata-complete="true">
         <attributes>
+            <basic name="number">
+                <column name="ORDER_NUMBER"/>
+            </basic>
             <many-to-one name="customer"
                          target-entity="org.hibernate.orm.test.keymanytoone.unidir.ondelete.Customer"
                          fetch="EAGER">
                 <join-column name="CUSTOMER_ID"/>
                 <on-delete>CASCADE</on-delete>
             </many-to-one>
-            <basic name="number">
-                <column name="ORDER_NUMBER"/>
-            </basic>
         </attributes>
     </embeddable>
 

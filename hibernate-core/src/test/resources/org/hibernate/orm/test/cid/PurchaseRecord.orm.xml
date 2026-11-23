@@ -16,7 +16,7 @@
         <attributes>
             <embedded-id name="id">
                 <target>PurchaseRecord$Id</target>
-                <generic-generator class="org.hibernate.orm.test.cid.PurchaseRecordIdGenerator"/>
+                <generic-generator name="purchaseRecordIdGenerator" class="org.hibernate.orm.test.cid.PurchaseRecordIdGenerator"/>
             </embedded-id>
             <basic name="timestamp" fetch="EAGER" optional="true" optimistic-lock="true">
                 <column name="`timestamp`" unique="false" nullable="true"/>

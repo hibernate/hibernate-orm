@@ -30,7 +30,7 @@ public class QueryReturnTest {
 
 	private static final String QUERY_RETURN_XML =
 			"""
-					<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping">
+					<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
 						<package>org.hibernate.orm.test.xml.query</package>
 						<attribute-accessor>property</attribute-accessor>
 						<named-native-query name="myQuery" result-set-mapping="myQuery-implicitResultSetMapping">

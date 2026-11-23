@@ -20,11 +20,6 @@
         </attributes>
     </mapped-superclass>
 
-    <entity class="org.hibernate.orm.test.event.collection.association.bidirectional.onetomany.ParentWithBidirectionalOneToMany"
-            access="PROPERTY" metadata-complete="true">
-        <table name="PARENT"/>
-    </entity>
-
     <mapped-superclass class="org.hibernate.orm.test.event.collection.ChildValue"
                        access="PROPERTY" metadata-complete="true">
         <attributes>
@@ -42,6 +37,11 @@
             </id>
         </attributes>
     </mapped-superclass>
+
+    <entity class="org.hibernate.orm.test.event.collection.association.bidirectional.onetomany.ParentWithBidirectionalOneToMany"
+            access="PROPERTY" metadata-complete="true">
+        <table name="PARENT"/>
+    </entity>
 
     <entity class="org.hibernate.orm.test.event.collection.association.bidirectional.onetomany.ChildWithManyToOne"
             access="PROPERTY" metadata-complete="true">

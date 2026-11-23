@@ -26,11 +26,22 @@
             <basic name="description">
                 <column name="description" nullable="false"/>
             </basic>
+            <one-to-many name="infos"
+                         target-entity="org.hibernate.orm.test.immutable.Info"
+                         orphan-removal="true"
+                         classification="SET">
+                <mutable>true</mutable>
+                <join-column name="col_plan"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
             <many-to-many name="contracts"
                           target-entity="org.hibernate.orm.test.immutable.Contract"
                           fetch="EAGER"
                           fetch-mode="JOIN"
                           classification="SET">
+                <mutable>true</mutable>
                 <join-table name="plan_contract">
                     <join-column name="col_plan"/>
                     <inverse-join-column name="contract"/>
@@ -38,18 +49,7 @@
                 <cascade>
                     <cascade-all/>
                 </cascade>
-                <mutable>true</mutable>
             </many-to-many>
-            <one-to-many name="infos"
-                         target-entity="org.hibernate.orm.test.immutable.Info"
-                         orphan-removal="true"
-                         classification="SET">
-                <join-column name="col_plan"/>
-                <cascade>
-                    <cascade-all/>
-                </cascade>
-                <mutable>true</mutable>
-            </one-to-many>
             <transient name="version"/>
         </attributes>
     </entity>
@@ -71,11 +71,11 @@
                          target-entity="org.hibernate.orm.test.immutable.Info"
                          orphan-removal="true"
                          classification="SET">
+                <mutable>true</mutable>
                 <join-column name="party"/>
                 <cascade>
                     <cascade-all/>
                 </cascade>
-                <mutable>true</mutable>
             </one-to-many>
             <transient name="version"/>
         </attributes>
@@ -106,21 +106,42 @@
                          fetch-mode="JOIN"
                          classification="BAG">
                 <order-by>version asc</order-by>
+                <mutable>false</mutable>
                 <cascade>
                     <cascade-all/>
                 </cascade>
-                <mutable>false</mutable>
             </one-to-many>
             <one-to-many name="subcontracts"
                          target-entity="org.hibernate.orm.test.immutable.Contract"
                          fetch="EAGER"
                          fetch-mode="JOIN"
                          classification="SET">
+                <mutable>true</mutable>
                 <join-column name="parent"/>
                 <cascade>
                     <cascade-all/>
                 </cascade>
+            </one-to-many>
+            <one-to-many name="infos"
+                         target-entity="org.hibernate.orm.test.immutable.Info"
+                         orphan-removal="true"
+                         classification="SET">
                 <mutable>true</mutable>
+                <join-column name="contract"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+            <one-to-many name="parties"
+                         target-entity="org.hibernate.orm.test.immutable.Party"
+                         mapped-by="contract"
+                         fetch="EAGER"
+                         fetch-mode="JOIN"
+                         classification="SET">
+                <mutable>true</mutable>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
             </one-to-many>
             <many-to-many name="plans"
                           target-entity="org.hibernate.orm.test.immutable.Plan"
@@ -128,27 +149,6 @@
                           classification="SET">
                 <mutable>true</mutable>
             </many-to-many>
-            <one-to-many name="parties"
-                         target-entity="org.hibernate.orm.test.immutable.Party"
-                         mapped-by="contract"
-                         fetch="EAGER"
-                         fetch-mode="JOIN"
-                         classification="SET">
-                <cascade>
-                    <cascade-all/>
-                </cascade>
-                <mutable>true</mutable>
-            </one-to-many>
-            <one-to-many name="infos"
-                         target-entity="org.hibernate.orm.test.immutable.Info"
-                         orphan-removal="true"
-                         classification="SET">
-                <join-column name="contract"/>
-                <cascade>
-                    <cascade-all/>
-                </cascade>
-                <mutable>true</mutable>
-            </one-to-many>
             <transient name="version"/>
         </attributes>
     </entity>
@@ -168,12 +168,12 @@
                          target-entity="org.hibernate.orm.test.immutable.Info"
                          orphan-removal="true"
                          classification="SET">
+                <mutable>true</mutable>
                 <join-column name="contractvariation"/>
                 <join-column name="version"/>
                 <cascade>
                     <cascade-all/>
                 </cascade>
-                <mutable>true</mutable>
             </one-to-many>
         </attributes>
     </entity>

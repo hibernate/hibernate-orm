@@ -43,10 +43,10 @@
 
     <entity class="org.hibernate.orm.test.immutable.entitywithmutablecollection.Party" access="FIELD"
             metadata-complete="true">
-        <mutable>false</mutable>
         <secondary-table name="contract_party" optional="true" owned="true">
             <primary-key-join-column name="party"/>
         </secondary-table>
+        <mutable>false</mutable>
         <attributes>
             <id name="id">
                 <generated-value strategy="AUTO"/>
@@ -65,6 +65,7 @@
             </one-to-many>
             <transient name="version"/>
         </attributes>
+
     </entity>
 
     <entity class="org.hibernate.orm.test.immutable.entitywithmutablecollection.Contract" access="FIELD"
@@ -93,17 +94,17 @@
                     <cascade-all/>
                 </cascade>
             </one-to-many>
-            <many-to-many name="parties" mapped-by="contract">
-                <cascade>
-                    <cascade-all/>
-                </cascade>
-            </many-to-many>
             <one-to-many name="infos" orphan-removal="true">
                 <join-column name="contract"/>
                 <cascade>
                     <cascade-all/>
                 </cascade>
             </one-to-many>
+            <many-to-many name="parties" mapped-by="contract">
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </many-to-many>
             <many-to-many name="plans">
                 <join-table name="plan_contract">
                     <join-column name="contract"/>

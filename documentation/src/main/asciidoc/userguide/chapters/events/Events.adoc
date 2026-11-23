@@ -22,7 +22,8 @@ An interceptor can also inspect the previous state supplied for dirty checking a
 Native listeners offer more control over Hibernate processing and require more knowledge of its internals.
 
 A notification after an insert or delete does not establish that the transaction committed.
-Logging changes is different from maintaining persistent revision history; see <<envers>> for revision auditing and <<transactions-completion>> for transaction completion and failures.
+Logging changes does not maintain a persistent revision history.
+See <<transactions-completion>> for transaction completion and failures.
 
 [[events-jpa-callbacks]]
 === Jakarta Persistence callbacks

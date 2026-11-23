@@ -56,9 +56,6 @@ extension's documentation.
 |Identifier generators
 |Supported <<identifiers-generators,generator class registrations>>.
 |Yes
-|Envers `RevisionListener`
-|<<envers-revisionlog,Revision-listener classes>>.
-|Yes
 |`ConnectionProvider`
 |Optional container lookup in <<database-connectionprovider,connection-provider selection>>.
 |Yes

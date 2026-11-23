@@ -3,6 +3,8 @@
 
 :bootstrap-guide-examples: {core-project-dir}/src/test/java/org/hibernate/orm/test/bootstrap/guide
 :bootstrap-guide-resources: {core-project-dir}/src/test/resources/org/hibernate/orm/test/bootstrap/guide
+:example-dir-boot: {core-project-dir}/src/test/java/org/hibernate/orm/test/bootstrap
+:example-dir-boot-jpa: {core-project-dir}/src/test/java/org/hibernate/orm/test/jpa/boot
 :extrasdir: extras
 
 The term bootstrapping refers to initializing and starting a software component.
@@ -154,7 +156,7 @@ bootstrap" API.  It locates a `persistence.xml` persistence unit and builds an
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-boot}/BootstrapTest.java[tags=bootstrap-jpa-compliant-EntityManagerFactory-example]
+include::{bootstrap-guide-examples}/BootstrapGuideTests.java[tags=bootstrap-guide-xml-configuration;!bootstrap-guide-assertions]
 ----
 ====
 

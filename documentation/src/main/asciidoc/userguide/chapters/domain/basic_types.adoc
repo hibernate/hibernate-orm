@@ -1828,56 +1828,11 @@ See <<basic-jpa-convert-mutability>> for converted-value dirty checking.
 
 
 [[basic-hbm-attribute-converter]]
-===== Mapping an AttributeConverter using HBM mappings
+===== Attribute converters in XML mappings
 
-HBM mappings can use a Jakarta Persistence `AttributeConverter` because Hibernate supports
-such mapping via the `type` attribute as demonstrated by the following example.
-
-Consider the following application-specific `Money` type:
-
-[[basic-hbm-attribute-converter-mapping-money-example]]
-.Application-specific `Money` type
-====
-[source, java, indent=0]
-----
-include::{example-dir-basic-mapping}/converter/hbm/Money.java[tags=basic-hbm-attribute-converter-mapping-money-example]
-----
-====
-
-The `Account` entity uses `Money` as an attribute type:
-
-[[basic-hbm-attribute-converter-mapping-account-example]]
-.`Account` entity using the `Money` type
-====
-[source, java, indent=0]
-----
-include::{example-dir-basic-mapping}/converter/hbm/Account.java[tags=basic-hbm-attribute-converter-mapping-account-example]
-----
-====
-
-The following `MoneyConverter` implements `AttributeConverter` to convert `Money` values to `Long` values for persistence:
-
-[[basic-hbm-attribute-converter-mapping-moneyconverter-example]]
-.`MoneyConverter` implementing the Jakarta Persistence `AttributeConverter` interface
-====
-[source, java, indent=0]
-----
-include::{example-dir-basic-mapping}/converter/hbm/MoneyConverter.java[tags=basic-hbm-attribute-converter-mapping-moneyconverter-example]
-----
-====
-
-To specify `MoneyConverter` in an HBM mapping, use the `converted::` prefix in the `type`
-attribute of the `property` element.
-
-[[basic-hbm-attribute-converter-mapping-xml-config-example]]
-.HBM mapping for `AttributeConverter`
-====
-[source, java, indent=0]
-----
-include::{example-dir-resources}/mapping/converter/hbm/MoneyConverterHbmTest.hbm.xml[]
-----
-====
-
+Hibernate 9 no longer supports legacy `hbm.xml` mappings or the `converted::` type prefix.
+Migrate converter declarations to Jakarta Persistence `orm.xml` mappings or use the
+annotations and registrations described in <<basic-converter-selection>>.
 
 Mutability of converted values is discussed in <<basic-jpa-convert-mutability>>.
 

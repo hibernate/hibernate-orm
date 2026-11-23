@@ -73,8 +73,6 @@ include::chapters/assistant/Assistant.adoc[]
 
 include::chapters/portability/Portability.adoc[]
 
-include::chapters/envers/Envers.adoc[]
-
 include::appendices/SettingsReference.adoc[]
 
 include::appendices/Monitoring.adoc[]

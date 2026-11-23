@@ -33,8 +33,8 @@ public class TeradataSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	public void visitQuerySpec(QuerySpec querySpec) {
-		super.visitQuerySpec( querySpec );
+	protected void renderQuerySpec(QuerySpec querySpec) {
+		super.renderQuerySpec( querySpec );
 
 		if ( querySpec.isRoot() && supportsLocking && needsLocking( querySpec ) ) {
 			final LockingClauseStrategy lockingClauseStrategy = getLockingClauseStrategy();
@@ -61,8 +61,9 @@ public class TeradataSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	protected void visitForUpdateClause(QuerySpec querySpec) {
-		// do nothing here
+	protected boolean shouldRenderForUpdateClause(QuerySpec querySpec) {
+		// locking is rendered as a statement prefix instead
+		return false;
 	}
 
 	@Override

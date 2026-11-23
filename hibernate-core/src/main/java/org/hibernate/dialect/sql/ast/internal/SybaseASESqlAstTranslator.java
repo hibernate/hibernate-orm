@@ -181,7 +181,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
-	public void visitQuerySpec(QuerySpec querySpec) {
+	protected void renderQuerySpec(QuerySpec querySpec) {
 		if ( getSqlAst() instanceof SelectStatement select && select.getQueryPart() == querySpec
 				&& needsLocking( querySpec )
 				&& getEffectiveLockTimeout( getLockOptions().getLockMode() ) == Timeouts.SKIP_LOCKED_MILLI
@@ -200,9 +200,9 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 		}
 		try {
 			final var currentHelper = currentFullJoinEmulationHelper();
-			if ( !currentHelper.renderFullJoinEmulationBranchIfNeeded( querySpec, super::visitQuerySpec )
+			if ( !currentHelper.renderFullJoinEmulationBranchIfNeeded( querySpec, super::renderQuerySpec )
 					&& !currentHelper.emulateFullJoinWithUnionIfNeeded( querySpec ) ) {
-				super.visitQuerySpec( querySpec );
+				super.renderQuerySpec( querySpec );
 			}
 		}
 		finally {
@@ -263,7 +263,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
-	public void visitQueryGroup(QueryGroup queryGroup) {
+	protected void renderQueryGroup(QueryGroup queryGroup) {
 		if ( getSqlAst() instanceof SelectStatement select
 				&& select.getQueryPart() == queryGroup
 				&& needsLocking( queryGroup.getFirstQuerySpec() )
@@ -290,10 +290,8 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
-	protected void visitForUpdateClause(QuerySpec querySpec) {
-		if ( !lockingSetQueryArms.contains( querySpec ) ) {
-			super.visitForUpdateClause( querySpec );
-		}
+	protected boolean shouldRenderForUpdateClause(QuerySpec querySpec) {
+		return !lockingSetQueryArms.contains( querySpec );
 	}
 
 	@Override
@@ -332,7 +330,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 			renderOrderBy( queryGroup.getSortSpecifications() );
 		}
 		else {
-			super.visitQueryGroup( queryGroup );
+			super.renderQueryGroup( queryGroup );
 		}
 	}
 

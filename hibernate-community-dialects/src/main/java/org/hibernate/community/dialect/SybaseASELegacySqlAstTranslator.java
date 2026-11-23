@@ -165,7 +165,7 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	}
 
 	@Override
-	public void visitQueryGroup(QueryGroup queryGroup) {
+	protected void renderQueryGroup(QueryGroup queryGroup) {
 		if ( queryGroup.hasSortSpecifications() || queryGroup.hasOffsetOrFetchClause() ) {
 			appendSql( "select " );
 			renderTopClause(
@@ -188,7 +188,7 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 			renderOrderBy( queryGroup.getSortSpecifications() );
 		}
 		else {
-			super.visitQueryGroup( queryGroup );
+			super.renderQueryGroup( queryGroup );
 		}
 	}
 

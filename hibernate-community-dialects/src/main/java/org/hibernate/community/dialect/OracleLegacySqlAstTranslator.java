@@ -228,7 +228,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 							}
 						} );
 						renderOrderByClause( sortSpecifications );
-						visitForUpdateClause( querySpec );
+						renderForUpdateClause( querySpec );
 					}
 				}
 			}
@@ -252,7 +252,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	}
 
 	@Override
-	public void visitQuerySpec(QuerySpec querySpec) {
+	protected void renderQuerySpec(QuerySpec querySpec) {
 		final EntityIdentifierMapping identifierMappingForLockingWrapper = identifierMappingForLockingWrapper( querySpec );
 		final Expression offsetExpression;
 		final Expression fetchExpression;
@@ -268,10 +268,10 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 			fetchClauseType = querySpec.getFetchClauseType();
 		}
 		if ( identifierMappingForLockingWrapper == null ) {
-			super.visitQuerySpec( querySpec );
+			super.renderQuerySpec( querySpec );
 		}
 		else {
-			super.visitQuerySpec(
+			super.renderQuerySpec(
 					createLockingWrapper(
 							querySpec,
 							offsetExpression,
@@ -281,7 +281,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 					)
 			);
 			// Render the for update clause for the original query spec, because the locking wrapper is marked as non-root
-			visitForUpdateClause( querySpec );
+			renderForUpdateClause( querySpec );
 		}
 	}
 

@@ -364,15 +364,15 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 	}
 
 	@Override
-	public void visitQueryGroup(QueryGroup queryGroup) {
+	protected void renderQueryGroup(QueryGroup queryGroup) {
 		// Informix does not like set operators on the top level select for an insert, so wrap it
 		if ( getCurrentStatement() == getStatement() && getStatement() instanceof InsertSelectStatement ) {
 			appendSql( "select * from (" );
-			super.visitQueryGroup( queryGroup );
+			super.renderQueryGroup( queryGroup );
 			appendSql( ')' );
 		}
 		else {
-			super.visitQueryGroup( queryGroup );
+			super.renderQueryGroup( queryGroup );
 		}
 	}
 

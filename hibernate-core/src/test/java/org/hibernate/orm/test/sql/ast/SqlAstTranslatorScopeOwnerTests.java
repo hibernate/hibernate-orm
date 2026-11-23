@@ -4,7 +4,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Stream;
 
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -57,17 +56,14 @@ class SqlAstTranslatorScopeOwnerTests {
 				Expression.class, FrameKind.class, Expression.class, FrameExclusion.class, boolean.class );
 	}
 
-	/// `visit` is reserved for walker callbacks and final scope owners. The
-	/// exceptions listed here are converted by later steps; the list only shrinks.
+	/// `visit` is reserved for walker callbacks and final scope owners.
 	@Test
 	void noOverridableProtectedMethodIsNamedVisit() {
-		final Set<String> pending = Set.of( "visitForUpdateClause" );
 		final List<String> offenders = Stream.of( AbstractSqlAstTranslator.class.getDeclaredMethods() )
 				.filter( method -> method.getName().startsWith( "visit" ) )
 				.filter( method -> Modifier.isProtected( method.getModifiers() ) )
 				.filter( method -> !Modifier.isFinal( method.getModifiers() ) )
 				.map( Method::getName )
-				.filter( name -> !pending.contains( name ) )
 				.toList();
 
 		assertThat( offenders ).isEmpty();

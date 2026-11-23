@@ -2375,10 +2375,20 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return lockingClauseStrategy;
 	}
 
-	protected void visitForUpdateClause(QuerySpec querySpec) {
+	/// Whether the locking clause should be rendered for the given query spec,
+	/// which is the locking target. Return `false` when the translator renders
+	/// locking for it some other way, or not at all.
+	protected boolean shouldRenderForUpdateClause(QuerySpec querySpec) {
+		return true;
+	}
+
+	protected final void renderForUpdateClause(QuerySpec querySpec) {
 		if ( querySpec != lockingTarget ) {
 			// this check is intended to help with Oracle, though
 			// really any dialect translator could leverage this
+			return;
+		}
+		if ( !shouldRenderForUpdateClause( querySpec ) ) {
 			return;
 		}
 		if ( lockOptions != null && lockOptions.getLockMode().isPessimistic() ) {
@@ -4169,7 +4179,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	// QuerySpec
 
 	@Override
-	public void visitQueryGroup(QueryGroup queryGroup) {
+	public final void visitQueryGroup(QueryGroup queryGroup) {
 		if ( !dialect.getSetOperationSupport().supports( queryGroup.getSetOperator() ) ) {
 			throw new UnsupportedOperationException(
 					"Set operator " + queryGroup.getSetOperator() + " is not supported by "
@@ -4177,6 +4187,25 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			);
 		}
 		consumeLateralJoinPredicate();
+		renderQueryGroup( queryGroup );
+	}
+
+	/// Render a query group.
+	///
+	/// This is called in the caller's context: `queryGroup` is not yet the
+	/// current query part. The set operator has been validated and any pending
+	/// lateral join predicate has been consumed. An override may render a
+	/// wrapper and delegate to [#renderStandardQueryGroup(QueryGroup)] or to
+	/// [#renderQueryGroupWithoutOrderByAndOffsetFetch(QueryGroup)].
+	///
+	/// The default renders the standard form.
+	protected void renderQueryGroup(QueryGroup queryGroup) {
+		renderStandardQueryGroup( queryGroup );
+	}
+
+	/// Render the standard form of a query group, including its order-by and
+	/// offset/fetch clauses. Does not call [#renderQueryGroup(QueryGroup)].
+	protected final void renderStandardQueryGroup(QueryGroup queryGroup) {
 		final PaginationRenderingRequest paginationRequest = createPaginationRenderingRequest( queryGroup );
 		final PaginationRenderingPlan paginationPlan = determinePaginationRenderingPlan( paginationRequest );
 		if ( paginationPlan instanceof PaginationRenderingPlan.Window window
@@ -4185,7 +4214,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			emulateFetchOffsetWithWindowFunctions( queryGroup, window.emulateFetchClause() );
 		}
 		else {
-			renderQueryGroup( queryGroup, true );
+			doRenderQueryGroup( queryGroup, true );
 		}
 	}
 
@@ -4194,13 +4223,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * supports dialect grammars which render those clauses on an outer wrapper.
 	 */
 	protected final void renderQueryGroupWithoutOrderByAndOffsetFetch(QueryGroup queryGroup) {
-		renderQueryGroup( queryGroup, false );
+		doRenderQueryGroup( queryGroup, false );
 	}
 
-	private void renderQueryGroup(QueryGroup queryGroup, boolean renderOrderByAndOffsetFetchClause) {
+	private void doRenderQueryGroup(QueryGroup queryGroup, boolean renderOrderByAndOffsetFetchClause) {
 		final QueryPart queryPartForRowNumbering = this.queryPartForRowNumbering;
 		final int queryPartForRowNumberingClauseDepth = this.queryPartForRowNumberingClauseDepth;
 		final boolean needsSelectAliases = this.needsSelectAliases;
+		// the query group is pushed part-way through the nested rendering below
+		final int queryPartStackDepth = queryPartStack.depth();
 		try {
 			// See the field documentation of queryPartForRowNumbering etc. for an explanation about this
 			final QueryPart currentQueryPart = queryPartStack.getCurrent();
@@ -4210,7 +4241,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				// If explicit column aliases were defined we should still use them when rendering the select clause
 				this.needsSelectAliases = columnAliases != null;
 			}
-			renderQueryGroup(
+			doRenderQueryGroup(
 					queryGroup,
 					queryPartForRowNumbering,
 					currentQueryPart,
@@ -4218,14 +4249,17 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			);
 		}
 		finally {
-			queryPartStack.pop();
+			// only leave the query group if rendering got far enough to enter it
+			if ( queryPartStack.depth() > queryPartStackDepth ) {
+				queryPartStack.pop();
+			}
 			this.queryPartForRowNumbering = queryPartForRowNumbering;
 			this.queryPartForRowNumberingClauseDepth = queryPartForRowNumberingClauseDepth;
 			this.needsSelectAliases = needsSelectAliases;
 		}
 	}
 
-	private void renderQueryGroup(
+	private void doRenderQueryGroup(
 			QueryGroup queryGroup,
 			QueryPart queryPartForRowNumbering,
 			QueryPart currentQueryPart,
@@ -4366,7 +4400,28 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	@Override
-	public void visitQuerySpec(QuerySpec querySpec) {
+	public final void visitQuerySpec(QuerySpec querySpec) {
+		renderQuerySpec( querySpec );
+	}
+
+	/// Render a query spec.
+	///
+	/// This is called in the caller's context: `querySpec` is not yet the current
+	/// query part, and no clause of it has been entered. An override may render
+	/// a wrapper around the query spec, render a replacement for it, or delegate
+	/// to [#renderStandardQuerySpec(QuerySpec)] for the query spec itself or for a
+	/// synthetic one, any number of times.
+	///
+	/// The default renders the standard form.
+	protected void renderQuerySpec(QuerySpec querySpec) {
+		renderStandardQuerySpec( querySpec );
+	}
+
+	/// Render the standard form of a query spec: makes it the current query
+	/// part, selects any window-function pagination emulation, renders its
+	/// clauses through [#renderQueryClauses(QuerySpec)] and then its locking
+	/// clause. Does not call [#renderQuerySpec(QuerySpec)].
+	protected final void renderStandardQuerySpec(QuerySpec querySpec) {
 		final PaginationRenderingRequest paginationRequest = createPaginationRenderingRequest( querySpec );
 		final PaginationRenderingPlan paginationPlan = determinePaginationRenderingPlan( paginationRequest );
 		if ( paginationPlan instanceof PaginationRenderingPlan.Window window
@@ -4409,7 +4464,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 			renderQueryClauses( querySpec );
 
-			visitForUpdateClause( querySpec );
+			renderForUpdateClause( querySpec );
 
 			if ( queryGroupAlias != null ) {
 				appendSql( CLOSE_PARENTHESIS );
@@ -5978,7 +6033,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 				// We render the FOR UPDATE clause in the outer query
 				if ( queryPart instanceof QuerySpec querySpec ) {
-					visitForUpdateClause( querySpec );
+					renderForUpdateClause( querySpec );
 				}
 			} );
 			if ( needsParenthesis ) {

@@ -213,7 +213,7 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 	}
 
 	@Override
-	public void visitQuerySpec(QuerySpec querySpec) {
+	protected void renderQuerySpec(QuerySpec querySpec) {
 		final var helper = currentFullJoinEmulationHelper();
 		final boolean needsNestedHelper =
 				helper.hasActiveFullJoinEmulation()
@@ -223,9 +223,9 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 		}
 		try {
 			final var currentHelper = currentFullJoinEmulationHelper();
-			if ( !currentHelper.renderFullJoinEmulationBranchIfNeeded( querySpec, super::visitQuerySpec )
+			if ( !currentHelper.renderFullJoinEmulationBranchIfNeeded( querySpec, super::renderQuerySpec )
 					&& !currentHelper.emulateFullJoinWithUnionIfNeeded( querySpec ) ) {
-				super.visitQuerySpec( querySpec );
+				super.renderQuerySpec( querySpec );
 			}
 		}
 		finally {

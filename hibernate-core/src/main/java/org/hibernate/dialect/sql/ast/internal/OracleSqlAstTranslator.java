@@ -225,7 +225,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	}
 
 	@Override
-	public void visitQuerySpec(QuerySpec querySpec) {
+	protected void renderQuerySpec(QuerySpec querySpec) {
 		final LockOptions lockOptions = getLockOptions();
 		final Locking.FollowOn followOnStrategy = lockOptions == null
 				? Locking.FollowOn.ALLOW
@@ -245,10 +245,10 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 			fetchClauseType = querySpec.getFetchClauseType();
 		}
 		if ( identifierMappingForLockingWrapper == null ) {
-			super.visitQuerySpec( querySpec );
+			super.renderQuerySpec( querySpec );
 		}
 		else {
-			super.visitQuerySpec(
+			super.renderQuerySpec(
 					createLockingWrapper(
 							querySpec,
 							offsetExpression,
@@ -258,7 +258,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 					)
 			);
 			// Render the for update clause for the original query spec, because the locking wrapper is marked as non-root
-			visitForUpdateClause( querySpec );
+			renderForUpdateClause( querySpec );
 		}
 	}
 

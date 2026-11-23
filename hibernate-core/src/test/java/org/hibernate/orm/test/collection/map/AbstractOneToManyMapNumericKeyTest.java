@@ -75,6 +75,48 @@ public abstract class AbstractOneToManyMapNumericKeyTest {
 				.containsOnlyKeys( 10, 20 ) );
 	}
 
+	@Test
+	public void testReplaceValueOfLoadedMap(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final Board board = new Board();
+			final Tile tile = new Tile( 1 );
+			board.tiles.put( 10, tile );
+			session.persist( tile );
+			session.persist( board );
+		} );
+
+		scope.inTransaction( session -> {
+			final Board board = session.find( Board.class, 1 );
+			final Tile tile = new Tile( 2 );
+			session.persist( tile );
+			board.tiles.put( 10, tile );
+		} );
+
+		assertThat( rows( scope, "select id, owner_id, pos from Tile order by id" ) )
+				.containsExactly( row( 1, null, null ), row( 2, 1, 10 ) );
+	}
+
+	@Test
+	public void testReplaceValueOfLoadedInverseMap(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final Board board = new Board();
+			final Pawn pawn = new Pawn( 1, board );
+			board.pawns.put( 10, pawn );
+			session.persist( board );
+			session.persist( pawn );
+		} );
+
+		scope.inTransaction( session -> {
+			final Board board = session.find( Board.class, 1 );
+			final Pawn pawn = new Pawn( 2, board );
+			session.persist( pawn );
+			board.pawns.put( 10, pawn ).board = null;
+		} );
+
+		assertThat( rows( scope, "select id, board_id, pos from Pawn where board_id is not null" ) )
+				.containsExactly( row( 2, 1, 10 ) );
+	}
+
 	private static List<Object[]> rows(SessionFactoryScope scope, String sql) {
 		return scope.fromTransaction( session -> session.createNativeQuery( sql, Object[].class ).getResultList() );
 	}

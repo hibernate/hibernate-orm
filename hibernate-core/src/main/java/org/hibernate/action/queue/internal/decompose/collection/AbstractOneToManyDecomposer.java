@@ -384,15 +384,16 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 	}
 
 	private void applyFrozenChangeSet(
-			CollectionChangeSet changeSet,
+			CollectionChangeSet frozenChangeSet,
 			PersistentCollection<?> collection,
 			Object key,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			Consumer<FlushOperation> operationConsumer) {
-		if ( changeSet.isEmpty() ) {
+		if ( frozenChangeSet.isEmpty() ) {
 			return;
 		}
+		final var changeSet = replacementsAsRemovalsAndAdditions( frozenChangeSet );
 		final boolean map = persister.getCollectionSemantics().getCollectionClassification().isMap();
 		// the keys of a map are not positions, even when they are numbers
 		if ( !map && persister.hasIndex() && hasNumericChangeSetIndexes( changeSet ) ) {
@@ -452,6 +453,23 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 				}
 			}
 		}
+	}
+
+	/// A one-to-many has no row of its own to update when an element is replaced by another entity.
+	/// The old element leaves the collection, and the new element joins it at the same index.
+	private static CollectionChangeSet replacementsAsRemovalsAndAdditions(CollectionChangeSet changeSet) {
+		if ( changeSet.valueChanges().isEmpty() ) {
+			return changeSet;
+		}
+		final var removals = new ArrayList<>( changeSet.removals() );
+		final var additions = new ArrayList<>( changeSet.additions() );
+		for ( var valueChange : changeSet.valueChanges() ) {
+			if ( valueChange.oldValue() != null ) {
+				removals.add( new CollectionChangeSet.Removal( valueChange.oldValue(), valueChange.index() ) );
+			}
+			additions.add( new CollectionChangeSet.Addition( valueChange.newValue(), valueChange.index() ) );
+		}
+		return new CollectionChangeSet( removals, additions, changeSet.shifts(), List.of() );
 	}
 
 	private void planInsert(

@@ -99,6 +99,32 @@ class MixedTemporalAssociationTest {
 		}
 	}
 
+	@Test
+	void assignNullableTemporalAssociation(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			assertEquals( List.of( 2L ), session.createSelectionQuery(
+					"select s.id from Student s where s.favorite is null", Long.class ).list() );
+			assertEquals( List.of( 2L ), session.createSelectionQuery(
+					"select s.id from Student s where s.favorite.id is null", Long.class ).list() );
+			assertEquals( 1, session.createMutationQuery( "update Student set favorite = :course where id = 2" )
+					.setParameter( "course", session.getReference( Course.class, 1L ) ).executeUpdate() );
+			assertEquals( List.of( 2L ), session.createSelectionQuery(
+					"select s.id from Student s where fk(s.favorite) = 1", Long.class ).list() );
+		} );
+	}
+
+	@Test
+	void dereferenceHistoricalTargetId(SessionFactoryScope scope) {
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( firstChangeset ).openSession()) {
+			assertEquals( List.of(), session.createSelectionQuery(
+					"select s.favorite.id from Student s where s.id = 1", Long.class ).list() );
+			assertEquals( List.of( 1L ), session.createSelectionQuery(
+					"select s.id from Student s where fk(s.favorite) = 2", Long.class ).list() );
+		}
+		scope.inSession( session -> assertEquals( List.of( 2L ), session.createSelectionQuery(
+				"select s.favorite.id from Student s where s.id = 1", Long.class ).list() ) );
+	}
+
 	@Entity(name = "Student")
 	static class Student {
 		@Id

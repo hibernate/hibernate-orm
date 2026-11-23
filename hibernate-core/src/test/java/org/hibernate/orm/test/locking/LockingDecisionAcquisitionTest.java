@@ -164,6 +164,9 @@ class LockingDecisionAcquisitionTest {
 	}
 
 	@Test
+	// SQL Server and Sybase lock through table hints, which combine with DISTINCT,
+	// so there is nothing for IGNORE to skip and the row is locked directly.
+	@ExtendWith(FollowOnLockingTestSupport.Eligibility.class)
 	void ignoredLockingAcquiresNoLocks(SessionFactoryScope scope) {
 		FollowOnLockingTestSupport.requireAcquisition( scope );
 		inReader( scope, reader -> {

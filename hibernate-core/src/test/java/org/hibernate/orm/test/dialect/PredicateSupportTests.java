@@ -114,14 +114,16 @@ public class PredicateSupportTests {
 				"ilike",
 				PredicateSupport.Capability.DISTINCT_FROM,
 				PredicateSupport.Capability.TRUTHNESS,
-				PredicateSupport.Capability.EXPRESSION_PLACEMENT
+				PredicateSupport.Capability.EXPRESSION_PLACEMENT,
+				PredicateSupport.Capability.BOOLEAN_EXPRESSION
 		);
 		assertProfile(
 				new PostgreSQLDialect().getPredicateSupport(),
 				"ilike",
 				PredicateSupport.Capability.DISTINCT_FROM,
 				PredicateSupport.Capability.TRUTHNESS,
-				PredicateSupport.Capability.EXPRESSION_PLACEMENT
+				PredicateSupport.Capability.EXPRESSION_PLACEMENT,
+				PredicateSupport.Capability.BOOLEAN_EXPRESSION
 		);
 		assertProfile(
 				new CockroachDialect().getPredicateSupport(),
@@ -134,20 +136,23 @@ public class PredicateSupportTests {
 				null,
 				PredicateSupport.Capability.DISTINCT_FROM,
 				PredicateSupport.Capability.TRUTHNESS,
-				PredicateSupport.Capability.EXPRESSION_PLACEMENT
+				PredicateSupport.Capability.EXPRESSION_PLACEMENT,
+				PredicateSupport.Capability.BOOLEAN_EXPRESSION
 		);
 		assertProfile(
 				new MySQLDialect().getPredicateSupport(),
 				null,
 				PredicateSupport.Capability.DISTINCT_FROM,
 				PredicateSupport.Capability.TRUTHNESS,
-				PredicateSupport.Capability.EXPRESSION_PLACEMENT
+				PredicateSupport.Capability.EXPRESSION_PLACEMENT,
+				PredicateSupport.Capability.BOOLEAN_EXPRESSION
 		);
 		assertProfile(
 				new HSQLDialect().getPredicateSupport(),
 				null,
 				PredicateSupport.Capability.DISTINCT_FROM,
-				PredicateSupport.Capability.EXPRESSION_PLACEMENT
+				PredicateSupport.Capability.EXPRESSION_PLACEMENT,
+				PredicateSupport.Capability.BOOLEAN_EXPRESSION
 		);
 		assertProfile(
 				new SQLServerDialect( DatabaseVersion.make( 15 ) ).getPredicateSupport(),
@@ -176,7 +181,8 @@ public class PredicateSupportTests {
 				null,
 				PredicateSupport.Capability.DISTINCT_FROM,
 				PredicateSupport.Capability.TRUTHNESS,
-				PredicateSupport.Capability.EXPRESSION_PLACEMENT
+				PredicateSupport.Capability.EXPRESSION_PLACEMENT,
+				PredicateSupport.Capability.BOOLEAN_EXPRESSION
 		);
 	}
 

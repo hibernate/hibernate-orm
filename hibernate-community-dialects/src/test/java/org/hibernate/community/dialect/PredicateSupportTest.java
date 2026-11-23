@@ -22,14 +22,16 @@ public class PredicateSupportTest {
 				new DB2LegacyDialect( DatabaseVersion.make( 11 ) ).getPredicateSupport(),
 				null,
 				PredicateSupport.Capability.TRUTHNESS,
-				PredicateSupport.Capability.EXPRESSION_PLACEMENT
+				PredicateSupport.Capability.EXPRESSION_PLACEMENT,
+				PredicateSupport.Capability.BOOLEAN_EXPRESSION
 		);
 		assertProfile(
 				new DB2LegacyDialect( DatabaseVersion.make( 11, 1 ) ).getPredicateSupport(),
 				null,
 				PredicateSupport.Capability.DISTINCT_FROM,
 				PredicateSupport.Capability.TRUTHNESS,
-				PredicateSupport.Capability.EXPRESSION_PLACEMENT
+				PredicateSupport.Capability.EXPRESSION_PLACEMENT,
+				PredicateSupport.Capability.BOOLEAN_EXPRESSION
 		);
 		assertProfile(
 				new DB2iLegacyDialect().getPredicateSupport(),
@@ -45,7 +47,8 @@ public class PredicateSupportTest {
 				new HSQLLegacyDialect().getPredicateSupport(),
 				null,
 				PredicateSupport.Capability.DISTINCT_FROM,
-				PredicateSupport.Capability.EXPRESSION_PLACEMENT
+				PredicateSupport.Capability.EXPRESSION_PLACEMENT,
+				PredicateSupport.Capability.BOOLEAN_EXPRESSION
 		);
 		assertProfile(
 				new SQLServerLegacyDialect( DatabaseVersion.make( 15 ) ).getPredicateSupport(),
@@ -63,7 +66,8 @@ public class PredicateSupportTest {
 				"ilike",
 				PredicateSupport.Capability.DISTINCT_FROM,
 				PredicateSupport.Capability.TRUTHNESS,
-				PredicateSupport.Capability.EXPRESSION_PLACEMENT
+				PredicateSupport.Capability.EXPRESSION_PLACEMENT,
+				PredicateSupport.Capability.BOOLEAN_EXPRESSION
 		);
 		// CUBRID 11.2 requires a logical expression as the operand of 'is true'
 		assertProfile(
@@ -80,31 +84,36 @@ public class PredicateSupportTest {
 				new FirebirdDialect( DatabaseVersion.make( 3 ) ).getPredicateSupport(),
 				null,
 				PredicateSupport.Capability.DISTINCT_FROM,
-				PredicateSupport.Capability.EXPRESSION_PLACEMENT
+				PredicateSupport.Capability.EXPRESSION_PLACEMENT,
+				PredicateSupport.Capability.BOOLEAN_EXPRESSION
 		);
 		assertProfile(
 				new SingleStoreDialect().getPredicateSupport(),
 				null,
 				PredicateSupport.Capability.TRUTHNESS,
-				PredicateSupport.Capability.EXPRESSION_PLACEMENT
+				PredicateSupport.Capability.EXPRESSION_PLACEMENT,
+				PredicateSupport.Capability.BOOLEAN_EXPRESSION
 		);
 		assertProfile(
 				new H2LegacyDialect( DatabaseVersion.make( 1, 4, 193 ) ).getPredicateSupport(),
 				null,
 				PredicateSupport.Capability.DISTINCT_FROM,
-				PredicateSupport.Capability.EXPRESSION_PLACEMENT
+				PredicateSupport.Capability.EXPRESSION_PLACEMENT,
+				PredicateSupport.Capability.BOOLEAN_EXPRESSION
 		);
 		assertProfile(
 				new H2LegacyDialect( DatabaseVersion.make( 1, 4, 194 ) ).getPredicateSupport(),
 				"ilike",
 				PredicateSupport.Capability.DISTINCT_FROM,
-				PredicateSupport.Capability.EXPRESSION_PLACEMENT
+				PredicateSupport.Capability.EXPRESSION_PLACEMENT,
+				PredicateSupport.Capability.BOOLEAN_EXPRESSION
 		);
 		assertProfile(
 				new PostgreSQLLegacyDialect().getPredicateSupport(),
 				"ilike",
 				PredicateSupport.Capability.DISTINCT_FROM,
-				PredicateSupport.Capability.EXPRESSION_PLACEMENT
+				PredicateSupport.Capability.EXPRESSION_PLACEMENT,
+				PredicateSupport.Capability.BOOLEAN_EXPRESSION
 		);
 		assertProfile( new AltibaseDialect().getPredicateSupport(), null );
 		assertProfile(
@@ -128,7 +137,8 @@ public class PredicateSupportTest {
 				new MySQLLegacyDialect().getPredicateSupport(),
 				null,
 				PredicateSupport.Capability.DISTINCT_FROM,
-				PredicateSupport.Capability.EXPRESSION_PLACEMENT
+				PredicateSupport.Capability.EXPRESSION_PLACEMENT,
+				PredicateSupport.Capability.BOOLEAN_EXPRESSION
 		);
 	}
 

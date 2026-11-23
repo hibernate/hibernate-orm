@@ -10,6 +10,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -62,6 +63,18 @@ class FilteredToOneNullCheckTest {
 	}
 
 	@Test
+	void nullCheckWithSqlRestriction(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			assertEquals( List.of( 2, 4 ), session.createSelectionQuery(
+					"select s.id from Student s where s.restrictedFavorite is null order by s.id", Integer.class ).list() );
+			assertEquals( List.of( 3 ), session.createSelectionQuery(
+					"select s.id from Student s where s.restrictedFavorite is not null", Integer.class ).list() );
+			assertEquals( List.of( 2 ), session.createSelectionQuery(
+					"select s.id from Student s where fk(s.restrictedFavorite) is null", Integer.class ).list() );
+		} );
+	}
+
+	@Test
 	void nullCheckWithoutFilter(SessionFactoryScope scope) {
 		scope.inSession( session -> assertEquals( List.of( 2 ), session.createSelectionQuery(
 				"select s.id from Student s where s.favorite is null order by s.id", Integer.class ).list() ) );
@@ -74,6 +87,9 @@ class FilteredToOneNullCheckTest {
 		int id;
 		@ManyToOne(fetch = FetchType.LAZY)
 		Course favorite;
+		@ManyToOne(fetch = FetchType.LAZY)
+		@SQLRestriction("id <> 5")
+		Course restrictedFavorite;
 
 		Student() {
 		}
@@ -81,6 +97,7 @@ class FilteredToOneNullCheckTest {
 		Student(int id, Course favorite) {
 			this.id = id;
 			this.favorite = favorite;
+			this.restrictedFavorite = favorite;
 		}
 	}
 

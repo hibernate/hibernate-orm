@@ -16,6 +16,7 @@ import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.jboss.logging.Logger;
 
+import static org.hibernate.engine.internal.CacheHelper.canUseCollectionCache;
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
 import static org.hibernate.engine.internal.CacheHelper.readsHistory;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
@@ -455,7 +456,7 @@ public class BatchFetchQueue {
 
 	private boolean isCached(Object collectionKey, CollectionPersister persister) {
 		final var session = getSession();
-		if ( session.getCacheMode().isGetEnabled() && persister.hasCache() && !readsHistory( session, persister ) ) {
+		if ( session.getCacheMode().isGetEnabled() && canUseCollectionCache( session, persister ) ) {
 			final var cache = castNonNull( persister.getCacheAccessStrategy() );
 			final Object cacheKey =
 					cache.generateCacheKey( collectionKey, persister,

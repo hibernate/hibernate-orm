@@ -26,6 +26,12 @@ import jakarta.annotation.Nullable;
 public interface AuditMapping extends AuxiliaryMapping {
 
 	@Override
+	@Nonnull
+	default SelectableMapping getVersionStart(@Nonnull String originalTableName, @Nonnull LoadQueryInfluencers influencers) {
+		return getChangesetIdMapping( originalTableName );
+	}
+
+	@Override
 	default boolean requiresSeparateMembershipTable(@Nonnull LoadQueryInfluencers influencers) {
 		// Historical membership is recorded in the collection audit table.
 		return useAuxiliaryTable( influencers );

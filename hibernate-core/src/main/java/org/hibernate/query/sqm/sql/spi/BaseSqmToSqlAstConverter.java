@@ -358,6 +358,7 @@ import org.hibernate.sql.ast.spi.query.predicate.LikePredicate;
 import org.hibernate.sql.ast.spi.query.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.predicate.PredicateCollector;
 import org.hibernate.sql.ast.spi.query.predicate.SelfRenderingPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.ThruthnessPredicate;
 import org.hibernate.sql.ast.spi.query.select.QueryGroup;
@@ -3046,7 +3047,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		else {
 			final EntityPersister entityDescriptor = resolveEntityPersister( sqmRoot.getModel() );
-			tableGroup = createEntityRoot( entityDescriptor, sqmRoot );
+			tableGroup = createEntityRoot( entityDescriptor, sqmRoot,
+					predicate -> additionalRestrictions = combinePredicates( additionalRestrictions, predicate ),
+					currentQueryNodeProcessingState::applyPredicate );
 		}
 
 //		LOG.tracef( "Resolved SqmRoot [%s] to new TableGroup [%s]", sqmRoot, tableGroup );
@@ -3812,21 +3815,27 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 	}
 
-	private TableGroup createEntityRoot(EntityPersister descriptor, SqmFrom<?, ?> from) {
+	private TableGroup createEntityRoot(
+			EntityPersister descriptor, SqmFrom<?, ?> from,
+			Consumer<Predicate> additional, Consumer<Predicate> restrictions) {
 		final var tableGroup = descriptor.createRootTableGroup(
 				true, from.getNavigablePath(), from.getExplicitAlias(), null,
-				() -> predicate -> additionalRestrictions = combinePredicates( additionalRestrictions, predicate ), this );
-		descriptor.applyBaseRestrictions( currentQueryNodeProcessingState()::applyPredicate, tableGroup,
+				() -> additional, this );
+		descriptor.applyBaseRestrictions( restrictions, tableGroup,
 				true, getLoadQueryInfluencers().getEnabledFilters(), false, null, this );
 		return tableGroup;
 	}
 
 	private TableGroup consumeCrossJoin(SqmCrossJoin<?, ?> sqmJoin, TableGroup lhsTableGroup, boolean transitive) {
-		final var tableGroup = createEntityRoot( resolveEntityPersister( sqmJoin.getReferencedPathSource() ), sqmJoin );
+		// A later outer join may preserve rows even when this operand has no match.
+		final var restrictions = new PredicateCollector();
+		final var tableGroup = createEntityRoot( resolveEntityPersister( sqmJoin.getReferencedPathSource() ),
+				sqmJoin, restrictions, restrictions );
 		final var tableGroupJoin = new TableGroupJoin(
 				sqmJoin.getNavigablePath(),
-				SqlAstJoinType.CROSS,
-				tableGroup
+				restrictions.getPredicate() == null ? SqlAstJoinType.CROSS : SqlAstJoinType.INNER,
+				tableGroup,
+				restrictions.getPredicate()
 		);
 		lhsTableGroup.addTableGroupJoin( tableGroupJoin );
 		registerSqmFromTableGroup( sqmJoin, tableGroup );
@@ -4328,7 +4337,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	 */
 	private boolean mayLackTarget(TableGroupJoinProducer joinProducer) {
 		if ( joinProducer instanceof ToOneAttributeMapping toOne ) {
-			return toOne.hasNotFoundAction()
+			return toOne.hasNotFoundAction() || toOne.hasWhereRestrictions()
 				// ToOne( mappedBy = "..." ) always has a referenced property name and is the target side
 				|| toOne.getReferencedPropertyName() != null && toOne.getSideNature() == ForeignKeyDescriptor.Nature.TARGET
 				// A target hidden by a changeset or load-by-key filter is treated like a missing target

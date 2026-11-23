@@ -224,6 +224,13 @@ public interface AuxiliaryMapping {
 		return false;
 	}
 
+	/// The start of a row version when reading at an owner's revision, for testing
+	/// whether the joined versions of a collection row, its key, and its element coexist.
+	@Nullable
+	default SelectableMapping getVersionStart(@Nonnull String originalTableName, @Nonnull LoadQueryInfluencers influencers) {
+		return null;
+	}
+
 	/// Whether the rows of this mapping can be read as of the revision of the owner of
 	/// an association, in which case they are read from its history, in place of its
 	/// current state, when an association restriction is given such a revision.

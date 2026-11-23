@@ -1,10 +1,11 @@
 package org.hibernate.metamodel.mapping;
 
 import jakarta.annotation.Nonnull;
-
 import jakarta.annotation.Nullable;
+
 import org.hibernate.Internal;
 import org.hibernate.annotations.SoftDeleteType;
+import org.hibernate.mapping.Property;
 import org.hibernate.sql.ast.spi.creation.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.query.from.TableReference;
@@ -22,6 +23,12 @@ import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
  */
 public interface SoftDeleteMapping extends AuxiliaryMapping, SelectableMapping, VirtualModelPart, SqlExpressible {
 	String ROLE_NAME = "{soft-delete}";
+
+	@Override
+	@Nonnull
+	default SoftDeleteMapping forInverseCollection(@Nonnull Property inverseProperty) {
+		return this;
+	}
 
 	@Override
 	default boolean requiresOwnerPreservationOnCollectionFetch() {

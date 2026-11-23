@@ -57,6 +57,11 @@ public interface AuditMapping extends AuxiliaryMapping {
 	@Nullable
 	SelectableMapping getInvalidatingChangesetIdMapping(@Nonnull String originalTableName);
 
+	/** Columns of this entity table written by audited inverse collections. */
+	default List<SelectableMapping> getCollectionIndexColumns(String originalTableName) {
+		return List.of();
+	}
+
 	/**
 	 * Get the entity loader for single-entity audit queries.
 	 */

@@ -58,6 +58,8 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	private final Map<String, Index> indexes = new LinkedHashMap<>();
 	private final Map<String,UniqueKey> uniqueKeys = new LinkedHashMap<>();
 	private int uniqueInteger;
+	private List<IndexedCollection> auditedInverseCollections;
+
 	private final List<CheckConstraint> checkConstraints = new ArrayList<>();
 	private String rowId;
 	private String subselect;
@@ -303,6 +305,18 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 	public int getColumnSpan() {
 		return columns.size();
+	}
+
+	public void addAuditedInverseCollection(IndexedCollection collection) {
+		if ( auditedInverseCollections == null ) {
+			auditedInverseCollections = new ArrayList<>();
+		}
+		auditedInverseCollections.add( collection );
+	}
+
+	/** The inverse collections whose index is stored in this table and audited with the element. */
+	public List<IndexedCollection> getAuditedInverseCollections() {
+		return auditedInverseCollections == null ? emptyList() : unmodifiableList( auditedInverseCollections );
 	}
 
 	public Collection<Column> getColumns() {

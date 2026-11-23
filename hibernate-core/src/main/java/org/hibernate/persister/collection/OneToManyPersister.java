@@ -7,6 +7,7 @@ import jakarta.annotation.Nullable;
 
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
+import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
@@ -22,6 +23,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.Collection;
@@ -57,6 +59,7 @@ import org.hibernate.sql.spi.mutation.jdbc.JdbcMutationOperation;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import static org.hibernate.internal.util.collections.ArrayHelper.isAnyTrue;
@@ -87,6 +90,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	private boolean useTablePerSubclassDecomposition;
 	private final boolean keyIsNullable;
 
+	private final boolean auditIndex;
 	final boolean doWriteEvenWhenInverse; // contrary to intent of JPA
 
 	public OneToManyPersister(
@@ -104,6 +108,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 					&& isAnyTrue( indexColumnIsSettable )
 					&& !getElementPersister().managesColumns( castNonNull( indexColumnNames ) );
 
+		auditIndex = doWriteEvenWhenInverse
+				&& collectionBinding.getCollectionTable().getAuditedInverseCollections().contains( collectionBinding );
 		rowMutationOperations = buildRowMutationOperations();
 		stateManagement = collectionBinding.getStateManagement();
 		final var legacyIntegration = stateManagement.getLegacyIntegration();
@@ -141,6 +147,34 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		return useTablePerSubclassDecomposition
 				? new TablePerSubclassOneToManyDecomposer( this, getFactory(), mutationPlanContributor )
 				: new StandardOneToManyDecomposer( this, getFactory(), mutationPlanContributor );
+	}
+
+	public boolean hasAuditedIndex() {
+		return auditIndex && getElementPersister().getAuditMapping() != null;
+	}
+
+	/** Visit the elements which need a new audit row for their changed order column or map key. */
+	public void visitElementsWithChangedIndex(
+			PersistentCollection<?> collection, SharedSessionContractImplementor session,
+			BiConsumer<EntityEntry, Object> consumer) {
+		final var persistenceContext = session.getPersistenceContextInternal();
+		final var collectionEntry = persistenceContext.getCollectionEntry( collection );
+		// A newly wrapped collection already has a snapshot of its in-memory contents.
+		final boolean hasDatabaseSnapshot = collection.wasInitialized() && collectionEntry != null
+				&& collectionEntry.getLoadedPersister() == this && collectionEntry.getSnapshot() != null;
+		final var entries = collection.wasInitialized() ? collection.entries( this ) : collection.queuedAdditionIterator();
+		for ( int i = 0; entries.hasNext(); i++ ) {
+			final var entry = entries.next();
+			if ( collection.entryExists( entry, i )
+					&& ( !hasDatabaseSnapshot || collection.needsInserting( entry, i, getElementType() )
+							|| collection.needsUpdating( entry, i, getElementType() ) ) ) {
+				final var entity = Hibernate.unproxy( collection.getElement( entry ) );
+				final var entityEntry = persistenceContext.getEntry( entity );
+				if ( entityEntry != null && !entityEntry.getStatus().isDeletedOrGone() ) {
+					consumer.accept( entityEntry, entity );
+				}
+			}
+		}
 	}
 
 	public boolean isDoWriteEvenWhenInverse() {
@@ -222,6 +256,10 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			boolean resetIndex,
 			@Nonnull SharedSessionContractImplementor session) {
 		writeIndexCoordinator.writeIndex( collection, entries, key, resetIndex, session );
+		if ( hasAuditedIndex() ) {
+			visitElementsWithChangedIndex( collection, session,
+					(entry, element) -> session.getAuditWorkQueue().indexedElementChanged( entry, element, session ) );
+		}
 	}
 
 	public boolean isOneToMany() {

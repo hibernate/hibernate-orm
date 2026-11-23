@@ -391,7 +391,7 @@ public final class AuditHelper {
 	 * an order column or map key columns, but not a map key which is an attribute of
 	 * the element.
 	 */
-	private static List<Column> writtenIndexColumns(Collection collection) {
+	public static List<Column> writtenIndexColumns(Collection collection) {
 		final List<Column> columns = new ArrayList<>();
 		if ( collection instanceof IndexedCollection indexedCollection
 				&& !indexedCollection.hasMapKeyProperty() ) {
@@ -661,6 +661,14 @@ public final class AuditHelper {
 		for ( var column : sourceTable.getColumns() ) {
 			if ( !excludedColumns.contains( column.getCanonicalName() ) ) {
 				copyColumnRemovingUnique( column, targetTable );
+			}
+		}
+		for ( var collection : sourceTable.getAuditedInverseCollections() ) {
+			for ( var column : writtenIndexColumns( collection ) ) {
+				if ( targetTable.getColumn( column ) == null ) {
+					// There is no current index to copy into a deletion revision.
+					copyColumnRemovingUnique( column, targetTable ).setNullable( true );
+				}
 			}
 		}
 	}

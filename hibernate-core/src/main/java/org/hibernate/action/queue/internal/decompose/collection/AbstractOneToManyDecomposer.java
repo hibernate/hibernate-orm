@@ -5,6 +5,7 @@ import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPla
 import org.hibernate.action.queue.spi.decompose.collection.OneToManyDecomposer;
 
 import org.hibernate.action.queue.internal.PreparedCollectionMutation;
+import org.hibernate.action.queue.internal.GraphBasedActionQueue;
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.bind.BindPlan;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
@@ -532,6 +533,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			Consumer<FlushOperation> operationConsumer) {
+		contributeIndexChanges( collection, ordinalBase, operationConsumer );
 		mutationPlanContributor.contributeCollectionChange(
 				new CollectionMutationPlanContributor.CollectionChangeContext(
 						persister,
@@ -815,6 +817,9 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			}
 		}
 
+		if ( !operations.isEmpty() ) {
+			contributeIndexChanges( collection, ordinalBase, operations::add );
+		}
 		operations.forEach( operationConsumer );
 	}
 
@@ -924,6 +929,21 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			else {
 				MODEL_MUTATION_LOGGER.noRowsToDelete();
 			}
+		}
+	}
+
+	private void contributeIndexChanges(PersistentCollection<?> collection, int ordinalBase,
+			Consumer<FlushOperation> operationConsumer) {
+		if ( persister.hasAuditedIndex() ) {
+			operationConsumer.accept( DecompositionSupport.createNoOpCallbackCarrier(
+					persister.getCollectionTableDescriptor(),
+					ordinalBase * 1_000 + 900,
+					session -> {
+						final var queue = (GraphBasedActionQueue) session.getActionQueue();
+						persister.visitElementsWithChangedIndex( collection, session,
+								queue.getAuditMutationCollector()::indexedElementChanged );
+					}
+			) );
 		}
 	}
 

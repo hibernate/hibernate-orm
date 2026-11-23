@@ -104,6 +104,11 @@ public class DenormalizedTable extends Table {
 	}
 
 	@Override
+	public List<IndexedCollection> getAuditedInverseCollections() {
+		return new JoinedList<>( includedTable.getAuditedInverseCollections(), super.getAuditedInverseCollections() );
+	}
+
+	@Override
 	public Collection<Column> getColumns() {
 		if ( reorderedColumns != null ) {
 			return reorderedColumns;

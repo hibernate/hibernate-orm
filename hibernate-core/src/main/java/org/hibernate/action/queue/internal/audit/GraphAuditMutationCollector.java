@@ -1,8 +1,10 @@
 package org.hibernate.action.queue.internal.audit;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import jakarta.annotation.Nullable;
@@ -17,9 +19,11 @@ import org.hibernate.audit.spi.AuditChangeSet;
 import org.hibernate.audit.spi.ChangelogSupplier;
 import org.hibernate.audit.spi.ChangelogSupplier.ChangesetContext;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.EntityAuditSupport;
 import org.hibernate.persister.collection.mutation.CollectionAuditSupport;
 
@@ -34,6 +38,7 @@ import static org.hibernate.action.queue.internal.audit.GraphAuditMutationPlans.
 /// @author Steve Ebersole
 public class GraphAuditMutationCollector {
 	private final AuditChangeSet<EntityAuditSupport, CollectionAuditSupport> changeSet = new AuditChangeSet<>();
+	private final Map<EntityPersister, EntityAuditSupport> indexedElementAuditSupport = new HashMap<>();
 	private Object changelog;
 	private @Nullable Session changesetSession;
 
@@ -44,6 +49,11 @@ public class GraphAuditMutationCollector {
 			ModificationType modificationType,
 			EntityAuditSupport mutationSupport) {
 		changeSet.addEntityChange( entityKey, entity, values, modificationType, mutationSupport );
+	}
+
+	public void indexedElementChanged(EntityEntry entry, Object entity) {
+		changeSet.addIndexedElementChange( entry, entity, persister -> indexedElementAuditSupport
+				.computeIfAbsent( persister, p -> new EntityAuditSupport( p, p.getFactory() ) ) );
 	}
 
 	public void collectionChanged(

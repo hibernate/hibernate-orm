@@ -28,6 +28,7 @@ import org.hibernate.metamodel.mapping.internal.AuditMappingImpl;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.OneToManyPersister;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinator;
 import org.hibernate.persister.collection.mutation.InsertRowsCoordinator;
 import org.hibernate.persister.collection.mutation.InsertRowsCoordinatorAudit;
@@ -54,6 +55,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import jakarta.annotation.Nullable;
 
 import static org.hibernate.boot.model.internal.AuditHelper.MODIFICATION_TYPE;
+import static org.hibernate.boot.model.internal.AuditHelper.writtenIndexColumns;
 import static org.hibernate.boot.model.internal.AuditHelper.INVALIDATING_CHANGESET_ID;
 import static org.hibernate.boot.model.internal.AuditHelper.CHANGESET_ID;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getTableIdentifierExpression;
@@ -321,9 +323,19 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 			@Nonnull MappingModelCreationProcess creationProcess) {
 		final String originalTableName = persister.determineTableName( originalTable );
 		final String auditTableName = persister.determineTableName( auditTable );
+		final List<SelectableMapping> indexColumns = new ArrayList<>();
+		for ( var collection : originalTable.getAuditedInverseCollections() ) {
+			final var collectionPersister = (OneToManyPersister) persister.getFactory().getMappingMetamodel()
+					.getCollectionDescriptor( collection.getRole() );
+			if ( collectionPersister.isDoWriteEvenWhenInverse() ) {
+				for ( var column : writtenIndexColumns( collection ) ) {
+					indexColumns.add( toSelectableMapping( auditTableName, column, column.getType(), creationProcess ) );
+				}
+			}
+		}
 		map.put(
 				originalTableName,
-				createTableAuditInfo( auditTableName, holder, csIdJdbcMapping, modTypeJdbcMapping, creationProcess )
+				createTableAuditInfo( auditTableName, holder, csIdJdbcMapping, modTypeJdbcMapping, indexColumns, creationProcess )
 		);
 	}
 
@@ -333,6 +345,7 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 			@Nonnull AuxiliaryTableHolder holder,
 			@Nonnull JdbcMapping csIdJdbcMapping,
 			@Nonnull JdbcMapping modTypeJdbcMapping,
+			List<SelectableMapping> indexColumns,
 			@Nonnull MappingModelCreationProcess creationProcess) {
 		return new AuditMappingImpl.TableAuditInfo(
 				auditTableName,
@@ -353,7 +366,8 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 						holder.getAuxiliaryColumn( INVALIDATING_CHANGESET_ID ),
 						csIdJdbcMapping,
 						creationProcess
-				)
+				),
+				List.copyOf( indexColumns )
 		);
 	}
 
@@ -415,6 +429,7 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 								bootDescriptor,
 								csIdJdbcMapping,
 								modTypeJdbcMapping,
+								List.of(),
 								creationProcess
 						)
 				),

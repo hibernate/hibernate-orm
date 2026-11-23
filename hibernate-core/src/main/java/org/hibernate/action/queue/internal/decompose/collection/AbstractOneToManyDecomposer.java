@@ -393,7 +393,9 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 		if ( changeSet.isEmpty() ) {
 			return;
 		}
-		if ( persister.hasIndex() && hasNumericChangeSetIndexes( changeSet ) ) {
+		final boolean map = persister.getCollectionSemantics().getCollectionClassification().isMap();
+		// the keys of a map are not positions, even when they are numbers
+		if ( !map && persister.hasIndex() && hasNumericChangeSetIndexes( changeSet ) ) {
 			applyIndexedChangeSet( changeSet, collection, key, ordinalBase, session, operationConsumer );
 			return;
 		}
@@ -419,7 +421,6 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 				) );
 			}
 		}
-		final boolean map = persister.getCollectionSemantics().getCollectionClassification().isMap();
 		for ( var addition : changeSet.additions() ) {
 			final Object rowValue = map
 					? new SimpleImmutableEntry<>( addition.index(), addition.element() )

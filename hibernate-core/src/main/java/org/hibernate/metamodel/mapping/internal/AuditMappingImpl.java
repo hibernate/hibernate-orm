@@ -14,6 +14,7 @@ import org.hibernate.audit.internal.AuditEntityLoaderImpl;
 import org.hibernate.audit.spi.AuditEntityLoader;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.mapping.AuditMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
@@ -89,16 +90,40 @@ public class AuditMappingImpl implements AuditMapping {
 	private final FunctionRenderer maxFunctionDescriptor;
 	private final AuditStrategy auditStrategy;
 
-	private final EntityMappingType entityMappingType;
+	@Nullable private final EntityMappingType entityMappingType;
+	@Nullable private final PluralAttributeMapping collectionMapping;
 	private final SessionFactoryImplementor sessionFactory;
 	@Nullable private AuditEntityLoader entityLoader;
 
+	/**
+	 * The audit mapping of an entity.
+	 */
 	public AuditMappingImpl(
 			Map<String, TableAuditInfo> tableAuditInfoMap,
 			EntityMappingType entityMappingType,
 			MappingModelCreationProcess creationProcess) {
+		this( tableAuditInfoMap, entityMappingType, null, creationProcess );
+	}
+
+	/**
+	 * The audit mapping of a collection, which is also the audit mapping of the
+	 * inverse side of a many-to-many association.
+	 */
+	public AuditMappingImpl(
+			Map<String, TableAuditInfo> tableAuditInfoMap,
+			PluralAttributeMapping collectionMapping,
+			MappingModelCreationProcess creationProcess) {
+		this( tableAuditInfoMap, null, collectionMapping, creationProcess );
+	}
+
+	private AuditMappingImpl(
+			Map<String, TableAuditInfo> tableAuditInfoMap,
+			@Nullable EntityMappingType entityMappingType,
+			@Nullable PluralAttributeMapping collectionMapping,
+			MappingModelCreationProcess creationProcess) {
 		this.tableAuditInfoMap = Map.copyOf( tableAuditInfoMap );
 		this.entityMappingType = entityMappingType;
+		this.collectionMapping = collectionMapping;
 
 		final var creationContext = creationProcess.getCreationContext();
 		this.sessionFactory = creationContext.getSessionFactory();
@@ -116,6 +141,12 @@ public class AuditMappingImpl implements AuditMapping {
 						: null;
 
 		maxFunctionDescriptor = resolveMaxFunction( sessionFactory );
+	}
+
+	@Nullable
+	@Override
+	public AuditMapping forInverseCollection(@Nonnull Property inverseProperty) {
+		return inverseProperty.isAuditedExcluded() ? null : this;
 	}
 
 	private TableAuditInfo resolveInfo(String originalTableName) {
@@ -358,7 +389,10 @@ public class AuditMappingImpl implements AuditMapping {
 		return keySelectables;
 	}
 
-	private List<SelectableMapping> collectCollectionRowKeySelectables(PluralAttributeMapping collectionDescriptor) {
+	private List<SelectableMapping> collectCollectionRowKeySelectables() {
+		// The owning role defines the physical row key in both directions. Resolve its initialized mapping
+		// through the persister since the mapping may be wrapped during model creation.
+		final var collectionDescriptor = castNonNull( collectionMapping ).getCollectionDescriptor().getAttributeMapping();
 		final var keySelectables = new ArrayList<SelectableMapping>();
 		final var identifierDescriptor = collectionDescriptor.getIdentifierDescriptor();
 		if ( identifierDescriptor != null ) {
@@ -452,7 +486,7 @@ public class AuditMappingImpl implements AuditMapping {
 		}
 		else {
 			applyAtRevision( collectionDescriptor, collectionDescriptor.getCollectionDescriptor().getTableName(),
-					collectCollectionRowKeySelectables( collectionDescriptor ), tableGroup, ownerRevision,
+					collectCollectionRowKeySelectables(), tableGroup, ownerRevision,
 					rowRestrictions, ownerRestrictions, aliases );
 		}
 	}
@@ -501,7 +535,7 @@ public class AuditMappingImpl implements AuditMapping {
 		if ( hasTemporalPredicate( influencers ) ) {
 			final var info = resolveInfo( collectionDescriptor.getCollectionDescriptor().getTableName() );
 			predicateConsumer.accept( createRestriction( collectionDescriptor, tableGroup.resolveTableReference( info.auditTableName ),
-					collectCollectionRowKeySelectables( collectionDescriptor ), sqlAliasBaseGenerator, info,
+					collectCollectionRowKeySelectables(), sqlAliasBaseGenerator, info,
 					resolveDefaultUpperBound( info ), false ) );
 		}
 	}

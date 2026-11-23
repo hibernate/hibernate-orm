@@ -110,8 +110,8 @@ public class ExampleSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	@Override
-	protected void visitOrderBy(List<SortSpecification> sortSpecifications) {
-		super.visitOrderBy( sortSpecifications );
+	protected void renderOrderBy(List<SortSpecification> sortSpecifications) {
+		super.renderOrderBy( sortSpecifications );
 	}
 
 	@Override
@@ -120,12 +120,12 @@ public class ExampleSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	@Override
-	protected void visitSortSpecification(
+	protected void renderSortSpecification(
 			Expression sortExpression,
 			SortDirection sortOrder,
 			Nulls nullPrecedence,
 			boolean ignoreCase) {
-		super.visitSortSpecification( sortExpression, sortOrder, nullPrecedence, ignoreCase );
+		super.renderSortSpecification( sortExpression, sortOrder, nullPrecedence, ignoreCase );
 	}
 
 	@Override

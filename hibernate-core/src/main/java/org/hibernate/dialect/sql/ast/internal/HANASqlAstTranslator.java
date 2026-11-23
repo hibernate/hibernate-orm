@@ -43,9 +43,9 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
 		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
 			appendSql( "cast(" );
-			visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
+			renderArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
 			appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-			visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
+			renderArithmeticOperand( arithmeticExpression.getRightHandOperand() );
 			appendSql( " as int)" );
 		}
 		else {
@@ -54,7 +54,7 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	}
 
 	@Override
-	protected void visitArithmeticOperand(Expression expression) {
+	protected void renderArithmeticOperand(Expression expression) {
 		render( expression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 	}
 

@@ -189,7 +189,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	}
 
 	@Override
-	protected void visitOrderBy(List<SortSpecification> sortSpecifications) {
+	protected void renderOrderBy(List<SortSpecification> sortSpecifications) {
 		// If we have a query part for row numbering, there is no need to render the order by clause
 		// as that is part of the row numbering window function already, by which we then order by in the outer query
 		final QueryPart queryPartForRowNumbering = getQueryPartForRowNumbering();
@@ -507,17 +507,17 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 					case NOT_DISTINCT_FROM:
 						appendSql( arrayTypeName );
 						appendSql( "_distinct(" );
-						visitSqlSelectExpression( lhs );
+						renderSqlSelectExpression( lhs );
 						appendSql( ',' );
-						visitSqlSelectExpression( rhs );
+						renderSqlSelectExpression( rhs );
 						appendSql( ")" );
 						break;
 					default:
 						appendSql( arrayTypeName );
 						appendSql( "_cmp(" );
-						visitSqlSelectExpression( lhs );
+						renderSqlSelectExpression( lhs );
 						appendSql( ',' );
-						visitSqlSelectExpression( rhs );
+						renderSqlSelectExpression( rhs );
 						appendSql( ")" );
 						break;
 				}
@@ -563,13 +563,13 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	}
 
 	@Override
-	protected void visitCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression, boolean inSelect) {
+	protected void renderCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression, boolean inSelect) {
 		// Oracle did not add support for CASE until 9i
 		if ( getDialect().getVersion().isBefore( 9 ) ) {
-			visitDecodeCaseSearchedExpression( caseSearchedExpression );
+			renderDecodeCaseSearchedExpression( caseSearchedExpression );
 		}
 		else {
-			super.visitCaseSearchedExpression( caseSearchedExpression, inSelect );
+			super.renderCaseSearchedExpression( caseSearchedExpression, inSelect );
 		}
 	}
 

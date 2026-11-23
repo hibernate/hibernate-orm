@@ -242,9 +242,9 @@ public class PostgreSQLLegacySqlAstTranslator<T extends JdbcOperation> extends P
 	@Override
 	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
 		appendSql( OPEN_PARENTHESIS );
-		visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
+		renderArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
 		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-		visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
+		renderArithmeticOperand( arithmeticExpression.getRightHandOperand() );
 		appendSql( CLOSE_PARENTHESIS );
 	}
 

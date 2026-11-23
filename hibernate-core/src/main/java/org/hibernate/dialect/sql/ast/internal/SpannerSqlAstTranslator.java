@@ -229,10 +229,8 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	@Override
-	public void visitOptionalTableUpdate(OptionalTableUpdate tableUpdate) {
-		withClause( Clause.UPDATE, () -> {
-			visitSpannerTableUpdate( tableUpdate );
-		} );
+	protected void renderOptionalTableUpdate(OptionalTableUpdate tableUpdate) {
+		visitSpannerTableUpdate( tableUpdate );
 	}
 
 	/**
@@ -377,9 +375,9 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
 			// Spanner uses functional syntax: DIV(numerator, denominator)
 			appendSql( "div(" );
-			visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
+			renderArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
 			appendSql( "," );
-			visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
+			renderArithmeticOperand( arithmeticExpression.getRightHandOperand() );
 			appendSql( ")" );
 		}
 		else {
@@ -388,7 +386,7 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	@Override
-	protected void visitArithmeticOperand(Expression expression) {
+	protected void renderArithmeticOperand(Expression expression) {
 		// Spanner rejects untyped null literals as arithmetic operands.
 		castNullLiteral( expression ).accept( this );
 	}

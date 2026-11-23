@@ -305,11 +305,11 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 			// SELECT-list CASE expressions need the same Altibase-compatible parameter rendering,
 			// including nested CASE result expressions reached during recursive SQL AST rendering.
 			if ( expression instanceof CaseSearchedExpression caseSearchedExpression ) {
-				visitCaseSearchedExpression( caseSearchedExpression, true );
+				renderCaseSearchedExpression( caseSearchedExpression, true );
 				return;
 			}
 			if ( expression instanceof CaseSimpleExpression caseSimpleExpression ) {
-				visitCaseSimpleExpression( caseSimpleExpression, true );
+				renderCaseSimpleExpression( caseSimpleExpression, true );
 				return;
 			}
 			super.renderSelectExpression( expression );
@@ -322,9 +322,9 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	// Handles searched CASE: "case when <predicate> then <result> end".
 	// It inlines parameter markers in predicates and result expressions for Altibase.
 	@Override
-	protected void visitCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression, boolean inSelect) {
+	protected void renderCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression, boolean inSelect) {
 		if ( !inSelect && !renderingSelectExpression ) {
-			super.visitCaseSearchedExpression( caseSearchedExpression, false );
+			super.renderCaseSearchedExpression( caseSearchedExpression, false );
 			return;
 		}
 		if ( caseSearchedExpression.getWhenFragments().isEmpty() ) {
@@ -361,9 +361,9 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	// Handles simple CASE: "case <fixture> when <value> then <result> end".
 	// It inlines parameter markers in the fixture, check values and result expressions for Altibase.
 	@Override
-	protected void visitCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression, boolean inSelect) {
+	protected void renderCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression, boolean inSelect) {
 		if ( !inSelect && !renderingSelectExpression ) {
-			super.visitCaseSimpleExpression( caseSimpleExpression, false );
+			super.renderCaseSimpleExpression( caseSimpleExpression, false );
 			return;
 		}
 		if ( caseSimpleExpression.getWhenFragments().isEmpty() ) {
@@ -513,11 +513,11 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	public void visitParameter(JdbcParameter jdbcParameter) {
+	protected void renderParameter(JdbcParameter jdbcParameter, SqlAstNodeRenderingMode requestedMode) {
 		// Altibase rejects untyped parameter markers in the SELECT clause, including ones nested in
 		// function arguments, so give plain parameters there an explicit type.
 		if ( !renderingCastedSelectParameter
-				&& getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT
+				&& requestedMode == SqlAstNodeRenderingMode.DEFAULT
 				&& getCurrentClause() == Clause.SELECT ) {
 			renderingCastedSelectParameter = true;
 			try {
@@ -528,18 +528,18 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 			}
 		}
 		else {
-			super.visitParameter( jdbcParameter );
+			super.renderParameter( jdbcParameter, requestedMode );
 		}
 	}
 
 	@Override
-	protected void visitArithmeticOperand(Expression expression) {
+	protected void renderArithmeticOperand(Expression expression) {
 		// Altibase requires an explicit type for null literals in arithmetic expressions.
 		if ( isNullLiteral( expression ) ) {
 			renderCasted( expression );
 		}
 		else {
-			super.visitArithmeticOperand( expression );
+			super.renderArithmeticOperand( expression );
 		}
 	}
 

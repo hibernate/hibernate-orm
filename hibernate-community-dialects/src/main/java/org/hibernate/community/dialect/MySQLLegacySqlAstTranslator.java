@@ -123,11 +123,11 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	protected void visitRecursivePath(Expression recursivePath, int sizeEstimate) {
+	protected void renderRecursivePath(Expression recursivePath, int sizeEstimate) {
 		// MySQL determines the type and size of a column in a recursive CTE based on the expression of the non-recursive part
 		// Due to that, we have to cast the path in the non-recursive path to a varchar of appropriate size to avoid data truncation errors
 		if ( sizeEstimate == -1 ) {
-			super.visitRecursivePath( recursivePath, sizeEstimate );
+			super.renderRecursivePath( recursivePath, sizeEstimate );
 		}
 		else {
 			appendSql( "cast(" );

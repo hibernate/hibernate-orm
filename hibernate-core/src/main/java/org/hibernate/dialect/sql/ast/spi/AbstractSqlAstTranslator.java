@@ -1223,7 +1223,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					MutationKind.DELETE,
 					ReturningMutationSource.QUERY,
 					statement.getReturningColumns(),
-					() -> visitDeleteStatementOnly( statement )
+					() -> renderDeleteStatementOnly( statement )
 			);
 		}
 		finally {
@@ -1240,7 +1240,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					MutationKind.UPDATE,
 					ReturningMutationSource.QUERY,
 					statement.getReturningColumns(),
-					() -> visitUpdateStatementOnly( statement )
+					() -> renderUpdateStatementOnly( statement )
 			);
 		}
 		finally {
@@ -1276,7 +1276,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	protected void visitDeleteStatementOnly(DeleteStatement statement) {
+	protected void renderDeleteStatementOnly(DeleteStatement statement) {
 		final DeleteRenderingPlan plan = determineDeleteRenderingPlan(
 				new DeleteRenderingRequestImpl(
 						hasNonTrivialFromClause( statement.getFromClause() ),
@@ -1358,7 +1358,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		renderDmlTargetTableExpression( statement.getTargetTable() );
 	}
 
-	protected void visitUpdateStatementOnly(UpdateStatement statement) {
+	protected void renderUpdateStatementOnly(UpdateStatement statement) {
 		final UpdateRenderingPlan plan = determineUpdateRenderingPlan(
 				new UpdateRenderingRequestImpl(
 						hasNonTrivialFromClause( statement.getFromClause() ),
@@ -3576,7 +3576,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					arguments.add( nullSeparator );
 					columnSizeEstimate += wrapRowComponentAsOrderPreservingConcatArgumentSizeEstimate( selectionExpression ) + 1;
 				}
-				visitRecursivePath(
+				renderRecursivePath(
 						new SelfRenderingFunctionSqlAstExpression<>(
 								"concat",
 								concat,
@@ -3617,7 +3617,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 				arguments.add( nullSeparator );
 				columnSizeEstimate += 1;
-				visitRecursivePath(
+				renderRecursivePath(
 						new SelfRenderingFunctionSqlAstExpression<>(
 								"concat",
 								concat,
@@ -3635,7 +3635,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * Renders the recursive path, possibly wrapping a cast expression around it,
 	 * to make sure a type with proper size is chosen.
 	 */
-	protected void visitRecursivePath(Expression recursivePath, int sizeEstimate) {
+	protected void renderRecursivePath(Expression recursivePath, int sizeEstimate) {
 		recursivePath.accept( this );
 	}
 
@@ -3879,7 +3879,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				columnSizeEstimate += wrapRowComponentAsEqualityPreservingConcatArgumentSizeEstimate( selectionExpression ) + 1;
 			}
 			arguments.add( nullSeparator );
-			visitRecursivePath(
+			renderRecursivePath(
 					new SelfRenderingFunctionSqlAstExpression<>(
 							"concat",
 							concat,
@@ -4257,7 +4257,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		afterQueryGroup( queryGroup, currentQueryPart );
 
 		if ( renderOrderByAndOffsetFetchClause ) {
-			visitOrderBy( queryGroup.getSortSpecifications() );
+			renderOrderBy( queryGroup.getSortSpecifications() );
 			visitOffsetFetchClause( queryGroup );
 		}
 		if ( queryGroupAlias != null ) {
@@ -4407,7 +4407,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				appendSql( OPEN_PARENTHESIS );
 			}
 
-			visitQueryClauses( querySpec );
+			renderQueryClauses( querySpec );
 
 			visitForUpdateClause( querySpec );
 
@@ -4460,13 +4460,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	protected void visitQueryClauses(QuerySpec querySpec) {
+	protected void renderQueryClauses(QuerySpec querySpec) {
 		visitSelectClause( querySpec.getSelectClause() );
 		visitFromClause( querySpec.getFromClause() );
 		visitWhereClause( querySpec.getWhereClauseRestrictions() );
 		visitGroupByClause( querySpec, getGroupBySelectItemReferenceStrategy() );
 		visitHavingClause( querySpec );
-		visitOrderBy( querySpec.getSortSpecifications() );
+		renderOrderBy( querySpec.getSortSpecifications() );
 		visitOffsetFetchClause( querySpec );
 	}
 
@@ -4692,7 +4692,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	protected void visitOrderBy(List<SortSpecification> sortSpecifications) {
+	protected void renderOrderBy(List<SortSpecification> sortSpecifications) {
 		// If we have a query part for row numbering, there is no need to render the order by clause
 		// as that is part of the row numbering window function already, by which we then order by in the outer query
 		if ( queryPartForRowNumbering == null ) {
@@ -4704,11 +4704,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	 * Render a standard order-by clause, including its leading whitespace.
 	 */
 	protected final void renderOrderByClause(List<SortSpecification> sortSpecifications) {
-		renderOrderBy( true, sortSpecifications );
+		doRenderOrderBy( true, sortSpecifications );
 	}
 
 	@Internal
-	private void renderOrderBy(boolean addWhitespace, List<SortSpecification> sortSpecifications) {
+	private void doRenderOrderBy(boolean addWhitespace, List<SortSpecification> sortSpecifications) {
 		if ( sortSpecifications != null && !sortSpecifications.isEmpty() ) {
 			if ( addWhitespace ) {
 				appendSql( WHITESPACE );
@@ -5107,12 +5107,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			case NOT_DISTINCT_FROM: {
 				appendSql( "exists (select " );
 				withClause( Clause.SELECT, () -> {
-					visitSqlSelectExpression( lhs );
+					renderSqlSelectExpression( lhs );
 					appendSql( getSelectOnlyFromClause() );
 					appendSql( " " );
 					appendSql( dialect.getSetOperatorSqlString( SetOperator.INTERSECT ) );
 					appendSql( " select " );
-					visitSqlSelectExpression( rhs );
+					renderSqlSelectExpression( rhs );
 					appendSql( getSelectOnlyFromClause() );
 				} );
 				appendSql( CLOSE_PARENTHESIS );
@@ -5138,16 +5138,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			String separator = NO_SEPARATOR;
 			for ( Expression expression : sqlTuple.getExpressions() ) {
 				appendSql( separator );
-				visitSortSpecification( expression, sortOrder, nullPrecedence, ignoreCase );
+				renderSortSpecification( expression, sortOrder, nullPrecedence, ignoreCase );
 				separator = COMMA_SEPARATOR;
 			}
 		}
 		else {
-			visitSortSpecification( sortExpression, sortOrder, nullPrecedence, ignoreCase );
+			renderSortSpecification( sortExpression, sortOrder, nullPrecedence, ignoreCase );
 		}
 	}
 
-	protected void visitSortSpecification(
+	protected void renderSortSpecification(
 			Expression sortExpression,
 			SortDirection sortOrder,
 			Nulls nullPrecedence,
@@ -6319,7 +6319,34 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		);
 	}
 
-	protected void visitOverClause(
+	protected final void visitOverClause(
+			List<Expression> partitionExpressions,
+			List<SortSpecification> sortSpecifications,
+			FrameMode mode,
+			FrameKind startKind,
+			Expression startExpression,
+			FrameKind endKind,
+			Expression endExpression,
+			FrameExclusion exclusion,
+			boolean orderedSetAggregate) {
+		withClause( Clause.OVER, () -> renderOverClause(
+				partitionExpressions,
+				sortSpecifications,
+				mode,
+				startKind,
+				startExpression,
+				endKind,
+				endExpression,
+				exclusion,
+				orderedSetAggregate
+		) );
+	}
+
+	/// Render a window specification.
+	///
+	/// [Clause#OVER] is current on entry. The callback owns the ` over(` keyword
+	/// and the closing parenthesis.
+	protected void renderOverClause(
 			List<Expression> partitionExpressions,
 			List<SortSpecification> sortSpecifications,
 			FrameMode mode,
@@ -6333,72 +6360,66 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( !windowSupport.supports( WindowFunctionSupport.Feature.WINDOW_FUNCTIONS ) ) {
 			throw new UnsupportedOperationException( "Window functions are not supported by this Dialect" );
 		}
-		try {
-			clauseStack.push( Clause.OVER );
-			appendSql( " over(" );
-			visitPartitionByClause( partitionExpressions );
-			if ( !orderedSetAggregate ) {
-				renderOrderBy( !partitionExpressions.isEmpty(), sortSpecifications );
+		appendSql( " over(" );
+		visitPartitionByClause( partitionExpressions );
+		if ( !orderedSetAggregate ) {
+			doRenderOrderBy( !partitionExpressions.isEmpty(), sortSpecifications );
+		}
+		if ( mode == FrameMode.RANGE && startKind == FrameKind.UNBOUNDED_PRECEDING
+				&& endKind == FrameKind.CURRENT_ROW && exclusion == FrameExclusion.NO_OTHERS ) {
+			// This is the default, so we don't need to render anything
+		}
+		else {
+			final WindowFunctionSupport.Feature frameFeature = switch ( mode ) {
+				case ROWS -> WindowFunctionSupport.Feature.ROWS_FRAME;
+				case RANGE -> WindowFunctionSupport.Feature.RANGE_FRAME;
+				case GROUPS -> WindowFunctionSupport.Feature.GROUPS_FRAME;
+			};
+			if ( !windowSupport.supports( frameFeature ) ) {
+				throw new UnsupportedOperationException(
+						"Window " + mode + " frames are not supported by this Dialect"
+				);
 			}
-			if ( mode == FrameMode.RANGE && startKind == FrameKind.UNBOUNDED_PRECEDING
-					&& endKind == FrameKind.CURRENT_ROW && exclusion == FrameExclusion.NO_OTHERS ) {
-				// This is the default, so we don't need to render anything
+			if ( exclusion != FrameExclusion.NO_OTHERS
+					&& !windowSupport.supports( WindowFunctionSupport.Feature.FRAME_EXCLUSION ) ) {
+				throw new UnsupportedOperationException( "Window frame exclusion is not supported by this Dialect" );
+			}
+			if ( !partitionExpressions.isEmpty() || !sortSpecifications.isEmpty() ) {
+				append( WHITESPACE );
+			}
+			switch ( mode ) {
+				case GROUPS:
+					append( "groups " );
+					break;
+				case RANGE:
+					append( "range " );
+					break;
+				case ROWS:
+					append( "rows " );
+					break;
+			}
+			if ( endKind == FrameKind.CURRENT_ROW ) {
+				renderFrameKind( startKind, startExpression );
 			}
 			else {
-				final WindowFunctionSupport.Feature frameFeature = switch ( mode ) {
-					case ROWS -> WindowFunctionSupport.Feature.ROWS_FRAME;
-					case RANGE -> WindowFunctionSupport.Feature.RANGE_FRAME;
-					case GROUPS -> WindowFunctionSupport.Feature.GROUPS_FRAME;
-				};
-				if ( !windowSupport.supports( frameFeature ) ) {
-					throw new UnsupportedOperationException(
-							"Window " + mode + " frames are not supported by this Dialect"
-					);
-				}
-				if ( exclusion != FrameExclusion.NO_OTHERS
-						&& !windowSupport.supports( WindowFunctionSupport.Feature.FRAME_EXCLUSION ) ) {
-					throw new UnsupportedOperationException( "Window frame exclusion is not supported by this Dialect" );
-				}
-				if ( !partitionExpressions.isEmpty() || !sortSpecifications.isEmpty() ) {
-					append( WHITESPACE );
-				}
-				switch ( mode ) {
-					case GROUPS:
-						append( "groups " );
-						break;
-					case RANGE:
-						append( "range " );
-						break;
-					case ROWS:
-						append( "rows " );
-						break;
-				}
-				if ( endKind == FrameKind.CURRENT_ROW ) {
-					renderFrameKind( startKind, startExpression );
-				}
-				else {
-					append( "between " );
-					renderFrameKind( startKind, startExpression );
-					append( " and " );
-					renderFrameKind( endKind, endExpression );
-				}
-				switch ( exclusion ) {
-					case TIES:
-						append( " exclude ties" );
-						break;
-					case CURRENT_ROW:
-						append( " exclude current row" );
-						break;
-					case GROUP:
-						append( " exclude group" );
-						break;
-				}
+				append( "between " );
+				renderFrameKind( startKind, startExpression );
+				append( " and " );
+				renderFrameKind( endKind, endExpression );
 			}
-			appendSql( CLOSE_PARENTHESIS );
+			switch ( exclusion ) {
+				case TIES:
+					append( " exclude ties" );
+					break;
+				case CURRENT_ROW:
+					append( " exclude current row" );
+					break;
+				case GROUP:
+					append( " exclude group" );
+					break;
+			}
 		}
-		finally {
-			clauseStack.pop();
-		}
+		appendSql( CLOSE_PARENTHESIS );
 	}
 
 	private void renderFrameKind(FrameKind kind, Expression expression) {
@@ -6549,10 +6570,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public final void visitSqlSelection(SqlSelection sqlSelection) {
-		visitSqlSelectExpression( sqlSelection.getExpression() );
+		renderSqlSelectExpression( sqlSelection.getExpression() );
 	}
 
-	protected void visitSqlSelectExpression(Expression expression) {
+	protected void renderSqlSelectExpression(Expression expression) {
 		final SqlTuple sqlTuple = getSqlTuple( expression );
 		if ( sqlTuple != null ) {
 			boolean isFirst = true;
@@ -6612,10 +6633,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 		}
 		else if ( expression instanceof CaseSimpleExpression caseSimpleExpression ) {
-			visitCaseSimpleExpression( caseSimpleExpression, true );
+			renderCaseSimpleExpression( caseSimpleExpression, true );
 		}
 		else if ( expression instanceof CaseSearchedExpression caseSearchedExpression ) {
-			visitCaseSearchedExpression( caseSearchedExpression, true );
+			renderCaseSearchedExpression( caseSearchedExpression, true );
 		}
 		else {
 			renderExpressionAsClauseItem( expression );
@@ -8623,10 +8644,34 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	@Override
-	public void visitParameter(JdbcParameter jdbcParameter) {
-		final SqlAstNodeRenderingMode oldParameterRenderingMode = getParameterRenderingMode();
+	public final void visitParameter(JdbcParameter jdbcParameter) {
+		final SqlAstNodeRenderingMode requestedMode = parameterRenderingMode;
 		parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
-		switch ( oldParameterRenderingMode ) {
+		try {
+			renderParameter( jdbcParameter, requestedMode );
+		}
+		finally {
+			parameterRenderingMode = requestedMode;
+		}
+	}
+
+	/// Render a JDBC parameter.
+	///
+	/// On entry the parameter rendering mode in effect is
+	/// [SqlAstNodeRenderingMode#DEFAULT], so that a parameter rendered again as
+	/// part of this rendering, as the argument of a cast for example, is
+	/// rendered as a plain marker. `requestedMode` is the mode the caller asked
+	/// for; an override which needs the nested rendering to see it can restore it
+	/// with [#withParameterRenderingMode(SqlAstNodeRenderingMode, Runnable)]. The
+	/// visitor restores `requestedMode` when this method returns or throws.
+	///
+	/// A parameter rendered as a marker must be rendered through
+	/// [#renderBoundParameter(JdbcParameter)], which registers its binder.
+	///
+	/// @param jdbcParameter the parameter to render
+	/// @param requestedMode the rendering mode requested for the parameter
+	protected void renderParameter(JdbcParameter jdbcParameter, SqlAstNodeRenderingMode requestedMode) {
+		switch ( requestedMode ) {
 			case NO_UNTYPED:
 			case NO_PLAIN_PARAMETER:
 				renderCasted( jdbcParameter );
@@ -8640,13 +8685,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				break;
 			case DEFAULT:
 			default:
-				visitParameterAsParameter( jdbcParameter );
+				renderBoundParameter( jdbcParameter );
 				break;
 		}
-		parameterRenderingMode = oldParameterRenderingMode;
 	}
 
-	protected void visitParameterAsParameter(JdbcParameter jdbcParameter) {
+	/// Registers the binder for the parameter, exactly once, and renders its
+	/// marker through [#renderParameterAsParameter(int, JdbcParameter)].
+	protected final void renderBoundParameter(JdbcParameter jdbcParameter) {
 		final int parameterPosition = addParameterBinder( jdbcParameter );
 		renderParameterAsParameter( parameterPosition, jdbcParameter );
 	}
@@ -8864,21 +8910,21 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( operator == BinaryArithmeticOperator.MODULO ) {
 			append( "mod" );
 			appendSql( OPEN_PARENTHESIS );
-			visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
+			renderArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
 			appendSql( ',' );
-			visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
+			renderArithmeticOperand( arithmeticExpression.getRightHandOperand() );
 			appendSql( CLOSE_PARENTHESIS );
 		}
 		else {
 			appendSql( OPEN_PARENTHESIS );
-			visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
+			renderArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
 			appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-			visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
+			renderArithmeticOperand( arithmeticExpression.getRightHandOperand() );
 			appendSql( CLOSE_PARENTHESIS );
 		}
 	}
 
-	protected void visitArithmeticOperand(Expression expression) {
+	protected void renderArithmeticOperand(Expression expression) {
 		expression.accept( this );
 	}
 
@@ -8945,19 +8991,19 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public final void visitCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression) {
-		visitCaseSearchedExpression( caseSearchedExpression, false );
+		renderCaseSearchedExpression( caseSearchedExpression, false );
 	}
 
-	protected void visitCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression, boolean inSelect) {
+	protected void renderCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression, boolean inSelect) {
 		if ( inSelect ) {
-			visitAnsiCaseSearchedExpression( caseSearchedExpression, this::renderSelectExpression );
+			renderAnsiCaseSearchedExpression( caseSearchedExpression, this::renderSelectExpression );
 		}
 		else {
-			visitAnsiCaseSearchedExpression( caseSearchedExpression, e -> e.accept( this ) );
+			renderAnsiCaseSearchedExpression( caseSearchedExpression, e -> e.accept( this ) );
 		}
 	}
 
-	protected void visitAnsiCaseSearchedExpression(
+	protected void renderAnsiCaseSearchedExpression(
 			CaseSearchedExpression caseSearchedExpression,
 			Consumer<Expression> resultRenderer) {
 		final List<CaseSearchedExpression.WhenFragment> whenFragments = caseSearchedExpression.getWhenFragments();
@@ -8976,15 +9022,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		appendSql( "case" );
-		final SqlAstNodeRenderingMode original = this.parameterRenderingMode;
 		for ( var whenFragment : whenFragments ) {
-			if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS
-					&& original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
-				this.parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
-			}
 			appendSql( " when " );
-			whenFragment.getPredicate().accept( this );
-			this.parameterRenderingMode = original;
+			withParameterRenderingMode(
+					SqlAstNodeRenderingMode.DEFAULT,
+					() -> whenFragment.getPredicate().accept( this )
+			);
 			appendSql( " then " );
 			resultRenderer.accept( whenFragment.getResult() );
 		}
@@ -8998,7 +9041,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		appendSql( " end" );
 	}
 
-	protected void visitDecodeCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression) {
+	protected void renderDecodeCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression) {
 		final var whenFragments = caseSearchedExpression.getWhenFragments();
 
 		// Handle empty CASE expression (HHH-20949)
@@ -9015,29 +9058,28 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		appendSql( "decode( " );
-		final SqlAstNodeRenderingMode original = this.parameterRenderingMode;
 		final int caseNumber = whenFragments.size();
 		CaseSearchedExpression.WhenFragment firstWhenFragment = null;
 		for ( int i = 0; i < caseNumber; i++ ) {
 			final var whenFragment = whenFragments.get( i );
 			final Predicate predicate = whenFragment.getPredicate();
-			if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS
-					&& original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
-				this.parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
-			}
 			if ( i != 0 ) {
 				appendSql( ',' );
-				getLeftHandExpression( predicate ).accept( this );
-				this.parameterRenderingMode = original;
+				withParameterRenderingMode(
+						SqlAstNodeRenderingMode.DEFAULT,
+						() -> getLeftHandExpression( predicate ).accept( this )
+				);
 				appendSql( ',' );
 				whenFragment.getResult().accept( this );
 			}
 			else {
-				getLeftHandExpression( predicate ).accept( this );
+				withParameterRenderingMode(
+						SqlAstNodeRenderingMode.DEFAULT,
+						() -> getLeftHandExpression( predicate ).accept( this )
+				);
 				firstWhenFragment = whenFragment;
 			}
 		}
-		this.parameterRenderingMode = original;
 		appendSql( ',' );
 		firstWhenFragment.getResult().accept( this );
 
@@ -9052,19 +9094,19 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public final void visitCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression) {
-		visitAnsiCaseSimpleExpression( caseSimpleExpression, e -> e.accept( this ) );
+		renderAnsiCaseSimpleExpression( caseSimpleExpression, e -> e.accept( this ) );
 	}
 
-	protected void visitCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression, boolean inSelect) {
+	protected void renderCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression, boolean inSelect) {
 		if ( inSelect ) {
-			visitAnsiCaseSimpleExpression( caseSimpleExpression, this::renderSelectExpression );
+			renderAnsiCaseSimpleExpression( caseSimpleExpression, this::renderSelectExpression );
 		}
 		else {
-			visitAnsiCaseSimpleExpression( caseSimpleExpression, e -> e.accept( this ) );
+			renderAnsiCaseSimpleExpression( caseSimpleExpression, e -> e.accept( this ) );
 		}
 	}
 
-	protected void visitAnsiCaseSimpleExpression(
+	protected void renderAnsiCaseSimpleExpression(
 			CaseSimpleExpression caseSimpleExpression,
 			Consumer<Expression> resultRenderer) {
 		final List<CaseSimpleExpression.WhenFragment> whenFragments = caseSimpleExpression.getWhenFragments();
@@ -9083,22 +9125,19 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		appendSql( "case " );
-		final SqlAstNodeRenderingMode original = this.parameterRenderingMode;
-		if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS && original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
-			this.parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
-		}
-		caseSimpleExpression.getFixture().accept( this );
+		withParameterRenderingMode(
+				SqlAstNodeRenderingMode.DEFAULT,
+				() -> caseSimpleExpression.getFixture().accept( this )
+		);
 		for ( CaseSimpleExpression.WhenFragment whenFragment : whenFragments ) {
-			if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS && original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
-				this.parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
-			}
 			appendSql( " when " );
-			whenFragment.getCheckValue().accept( this );
-			this.parameterRenderingMode = original;
+			withParameterRenderingMode(
+					SqlAstNodeRenderingMode.DEFAULT,
+					() -> whenFragment.getCheckValue().accept( this )
+			);
 			appendSql( " then " );
 			resultRenderer.accept( whenFragment.getResult() );
 		}
-		this.parameterRenderingMode = original;
 		final Expression otherwise = caseSimpleExpression.getOtherwise();
 		if ( otherwise != null ) {
 			appendSql( " else " );
@@ -9344,7 +9383,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final JdbcMapping valueMapping = parameter.getValueMapping();
 
 		if ( parameter.getJdbcParameter() != null ) {
-			visitParameterAsParameter( parameter.getJdbcParameter() );
+			renderBoundParameter( parameter.getJdbcParameter() );
 		}
 		else if ( value instanceof Iterable<?> iterable
 				&& !valueMapping.getJavaTypeDescriptor().isInstance( value ) ) {
@@ -9358,7 +9397,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private void processSingularFilterParameterValue(JdbcMapping valueMapping, Object value) {
-		visitParameterAsParameter( new FilterJdbcParameter( valueMapping, value ) );
+		renderBoundParameter( new FilterJdbcParameter( valueMapping, value ) );
 	}
 
 	private void processIterableFilterParameterValue(JdbcMapping valueMapping, Iterator<?> iterator) {
@@ -10429,14 +10468,17 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	@Override
-	public void visitOptionalTableUpdate(OptionalTableUpdate tableUpdate) {
-		clauseStack.push( Clause.UPDATE );
-		try {
-			visitTableUpdate( tableUpdate );
-		}
-		finally {
-			clauseStack.pop();
-		}
+	public final void visitOptionalTableUpdate(OptionalTableUpdate tableUpdate) {
+		withClause( Clause.UPDATE, () -> renderOptionalTableUpdate( tableUpdate ) );
+	}
+
+	/// Render an optional table update.
+	///
+	/// [Clause#UPDATE] is current on entry. The default renders the standard
+	/// update, without the returning handling of
+	/// [#visitStandardTableUpdate(TableUpdateStandard)].
+	protected void renderOptionalTableUpdate(OptionalTableUpdate tableUpdate) {
+		visitTableUpdate( tableUpdate );
 	}
 
 	private void visitTableUpdate(LogicalTableUpdate<? extends MutationOperation> tableUpdate) {
@@ -10642,7 +10684,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			appendSql( sqlFragment.substring( lastEnd, markerStart ) );
 
 			// render the parameter marker and register the parameter handling
-			visitParameterAsParameter( parameter );
+			renderBoundParameter( parameter );
 
 			lastEnd = markerStart + 1;
 		}

@@ -87,13 +87,13 @@ public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	// so we cast the first result arm if we encounter this condition
 
 	@Override
-	protected void visitAnsiCaseSearchedExpression(
+	protected void renderAnsiCaseSearchedExpression(
 			CaseSearchedExpression caseSearchedExpression,
 			Consumer<Expression> resultRenderer) {
 		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSearchedExpression ) ) {
 			final List<CaseSearchedExpression.WhenFragment> whenFragments = caseSearchedExpression.getWhenFragments();
 			final Expression firstResult = whenFragments.get( 0 ).getResult();
-			super.visitAnsiCaseSearchedExpression(
+			super.renderAnsiCaseSearchedExpression(
 					caseSearchedExpression,
 					e -> {
 						if ( e == firstResult ) {
@@ -106,18 +106,18 @@ public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 			);
 		}
 		else {
-			super.visitAnsiCaseSearchedExpression( caseSearchedExpression, resultRenderer );
+			super.renderAnsiCaseSearchedExpression( caseSearchedExpression, resultRenderer );
 		}
 	}
 
 	@Override
-	protected void visitAnsiCaseSimpleExpression(
+	protected void renderAnsiCaseSimpleExpression(
 			CaseSimpleExpression caseSimpleExpression,
 			Consumer<Expression> resultRenderer) {
 		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSimpleExpression ) ) {
 			final List<CaseSimpleExpression.WhenFragment> whenFragments = caseSimpleExpression.getWhenFragments();
 			final Expression firstResult = whenFragments.get( 0 ).getResult();
-			super.visitAnsiCaseSimpleExpression(
+			super.renderAnsiCaseSimpleExpression(
 					caseSimpleExpression,
 					e -> {
 						if ( e == firstResult ) {
@@ -130,7 +130,7 @@ public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 			);
 		}
 		else {
-			super.visitAnsiCaseSimpleExpression( caseSimpleExpression, resultRenderer );
+			super.renderAnsiCaseSimpleExpression( caseSimpleExpression, resultRenderer );
 		}
 	}
 
@@ -238,7 +238,7 @@ public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	protected void visitArithmeticOperand(Expression expression) {
+	protected void renderArithmeticOperand(Expression expression) {
 		render( expression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 	}
 

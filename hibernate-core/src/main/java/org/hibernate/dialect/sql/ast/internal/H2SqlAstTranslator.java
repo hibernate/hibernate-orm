@@ -161,8 +161,8 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 	}
 
 	@Override
-	protected void visitOrderBy(List<SortSpecification> sortSpecifications) {
-		currentFullJoinEmulationHelper().renderOrderByIfNeeded( getCurrentQueryPart(), sortSpecifications, super::visitOrderBy );
+	protected void renderOrderBy(List<SortSpecification> sortSpecifications) {
+		currentFullJoinEmulationHelper().renderOrderByIfNeeded( getCurrentQueryPart(), sortSpecifications, super::renderOrderBy );
 	}
 
 	@Override
@@ -212,14 +212,14 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 	@Override
 	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
 		appendSql( OPEN_PARENTHESIS );
-		visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
+		renderArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
 		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-		visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
+		renderArithmeticOperand( arithmeticExpression.getRightHandOperand() );
 		appendSql( CLOSE_PARENTHESIS );
 	}
 
 	@Override
-	protected void visitArithmeticOperand(Expression expression) {
+	protected void renderArithmeticOperand(Expression expression) {
 		render( expression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 	}
 

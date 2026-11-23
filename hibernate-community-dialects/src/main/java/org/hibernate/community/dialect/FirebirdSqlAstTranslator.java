@@ -97,13 +97,13 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	// so we cast the first result arm if we encounter this condition
 
 	@Override
-	protected void visitAnsiCaseSearchedExpression(
+	protected void renderAnsiCaseSearchedExpression(
 			CaseSearchedExpression caseSearchedExpression,
 			Consumer<Expression> resultRenderer) {
 		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSearchedExpression ) ) {
 			final List<CaseSearchedExpression.WhenFragment> whenFragments = caseSearchedExpression.getWhenFragments();
 			final Expression firstResult = whenFragments.get( 0 ).getResult();
-			super.visitAnsiCaseSearchedExpression(
+			super.renderAnsiCaseSearchedExpression(
 					caseSearchedExpression,
 					e -> {
 						if ( e == firstResult ) {
@@ -116,18 +116,18 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 			);
 		}
 		else {
-			super.visitAnsiCaseSearchedExpression( caseSearchedExpression, resultRenderer );
+			super.renderAnsiCaseSearchedExpression( caseSearchedExpression, resultRenderer );
 		}
 	}
 
 	@Override
-	protected void visitAnsiCaseSimpleExpression(
+	protected void renderAnsiCaseSimpleExpression(
 			CaseSimpleExpression caseSimpleExpression,
 			Consumer<Expression> resultRenderer) {
 		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSimpleExpression ) ) {
 			final List<CaseSimpleExpression.WhenFragment> whenFragments = caseSimpleExpression.getWhenFragments();
 			final Expression firstResult = whenFragments.get( 0 ).getResult();
-			super.visitAnsiCaseSimpleExpression(
+			super.renderAnsiCaseSimpleExpression(
 					caseSimpleExpression,
 					e -> {
 						if ( e == firstResult ) {
@@ -140,7 +140,7 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 			);
 		}
 		else {
-			super.visitAnsiCaseSimpleExpression( caseSimpleExpression, resultRenderer );
+			super.renderAnsiCaseSimpleExpression( caseSimpleExpression, resultRenderer );
 		}
 	}
 
@@ -261,7 +261,7 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	public void visitParameter(JdbcParameter jdbcParameter) {
+	protected void renderParameter(JdbcParameter jdbcParameter, SqlAstNodeRenderingMode requestedMode) {
 		if ( inFunction ) {
 			// Turn off 'inFunction' to prevent StackOverflowError while rendering the cast
 			inFunction = false;
@@ -269,15 +269,16 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 				// A lot of functions in Firebird are contextually typed and as a result,
 				// Firebird cannot determine the datatype of a parameter as passed to a function,
 				// resulting in a "Datatype unknown" error when the statement is compiled.
-				// This adds an explicit cast so Firebird can infer the type
-				renderCasted( jdbcParameter );
+				// This adds an explicit cast so Firebird can infer the type.
+				// The requested mode stays in effect while the cast is rendered.
+				withParameterRenderingMode( requestedMode, () -> renderCasted( jdbcParameter ) );
 			}
 			finally {
 				inFunction = true;
 			}
 		}
 		else {
-			super.visitParameter( jdbcParameter );
+			super.renderParameter( jdbcParameter, requestedMode );
 		}
 	}
 

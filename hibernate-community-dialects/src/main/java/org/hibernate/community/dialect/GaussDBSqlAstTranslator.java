@@ -236,9 +236,9 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends PostgreSQL
 			appendSql( "floor" );
 		}
 		appendSql( OPEN_PARENTHESIS );
-		visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
+		renderArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
 		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-		visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
+		renderArithmeticOperand( arithmeticExpression.getRightHandOperand() );
 		appendSql( CLOSE_PARENTHESIS );
 	}
 }

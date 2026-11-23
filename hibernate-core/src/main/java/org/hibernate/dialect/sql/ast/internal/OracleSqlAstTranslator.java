@@ -491,17 +491,17 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 					case NOT_DISTINCT_FROM:
 						appendSql( arrayTypeName );
 						appendSql( "_distinct(" );
-						visitSqlSelectExpression( lhs );
+						renderSqlSelectExpression( lhs );
 						appendSql( ',' );
-						visitSqlSelectExpression( rhs );
+						renderSqlSelectExpression( rhs );
 						appendSql( ")" );
 						break;
 					default:
 						appendSql( arrayTypeName );
 						appendSql( "_cmp(" );
-						visitSqlSelectExpression( lhs );
+						renderSqlSelectExpression( lhs );
 						appendSql( ',' );
-						visitSqlSelectExpression( rhs );
+						renderSqlSelectExpression( rhs );
 						appendSql( ")" );
 						break;
 				}

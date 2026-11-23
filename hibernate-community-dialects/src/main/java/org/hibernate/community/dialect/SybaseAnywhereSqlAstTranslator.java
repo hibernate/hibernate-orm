@@ -45,13 +45,13 @@ public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends Abs
 	// so we cast the first result arm if we encounter this condition
 
 	@Override
-	protected void visitAnsiCaseSearchedExpression(
+	protected void renderAnsiCaseSearchedExpression(
 			CaseSearchedExpression caseSearchedExpression,
 			Consumer<Expression> resultRenderer) {
 		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSearchedExpression ) ) {
 			final List<CaseSearchedExpression.WhenFragment> whenFragments = caseSearchedExpression.getWhenFragments();
 			final Expression firstResult = whenFragments.get( 0 ).getResult();
-			super.visitAnsiCaseSearchedExpression(
+			super.renderAnsiCaseSearchedExpression(
 					caseSearchedExpression,
 					e -> {
 						if ( e == firstResult ) {
@@ -64,18 +64,18 @@ public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends Abs
 			);
 		}
 		else {
-			super.visitAnsiCaseSearchedExpression( caseSearchedExpression, resultRenderer );
+			super.renderAnsiCaseSearchedExpression( caseSearchedExpression, resultRenderer );
 		}
 	}
 
 	@Override
-	protected void visitAnsiCaseSimpleExpression(
+	protected void renderAnsiCaseSimpleExpression(
 			CaseSimpleExpression caseSimpleExpression,
 			Consumer<Expression> resultRenderer) {
 		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSimpleExpression ) ) {
 			final List<CaseSimpleExpression.WhenFragment> whenFragments = caseSimpleExpression.getWhenFragments();
 			final Expression firstResult = whenFragments.get( 0 ).getResult();
-			super.visitAnsiCaseSimpleExpression(
+			super.renderAnsiCaseSimpleExpression(
 					caseSimpleExpression,
 					e -> {
 						if ( e == firstResult ) {
@@ -88,7 +88,7 @@ public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends Abs
 			);
 		}
 		else {
-			super.visitAnsiCaseSimpleExpression( caseSimpleExpression, resultRenderer );
+			super.renderAnsiCaseSimpleExpression( caseSimpleExpression, resultRenderer );
 		}
 	}
 
@@ -161,9 +161,9 @@ public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends Abs
 	@Override
 	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
 		appendSql( OPEN_PARENTHESIS );
-		visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
+		renderArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
 		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-		visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
+		renderArithmeticOperand( arithmeticExpression.getRightHandOperand() );
 		appendSql( CLOSE_PARENTHESIS );
 	}
 

@@ -72,7 +72,7 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 	}
 
 	@Override
-	protected void visitQueryClauses(QuerySpec querySpec) {
+	protected void renderQueryClauses(QuerySpec querySpec) {
 		visitSelectClause( querySpec.getSelectClause() );
 		visitFromClause( querySpec.getFromClause() );
 		if ( !hasFrom( querySpec.getFromClause() )
@@ -84,7 +84,7 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 		visitWhereClause( querySpec.getWhereClauseRestrictions() );
 		visitGroupByClause( querySpec, getGroupBySelectItemReferenceStrategy() );
 		visitHavingClause( querySpec );
-		visitOrderBy( querySpec.getSortSpecifications() );
+		renderOrderBy( querySpec.getSortSpecifications() );
 		visitOffsetFetchClause( querySpec );
 	}
 
@@ -275,7 +275,7 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 	}
 
 	@Override
-	protected void visitArithmeticOperand(Expression expression) {
+	protected void renderArithmeticOperand(Expression expression) {
 		render( expression, SqlAstNodeRenderingMode.NO_UNTYPED );
 	}
 
@@ -298,13 +298,13 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 	}
 
 	@Override
-	protected void visitCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression, boolean inSelect) {
-		visitAnsiCaseSearchedExpression( caseSearchedExpression, this::caseArgument );
+	protected void renderCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression, boolean inSelect) {
+		renderAnsiCaseSearchedExpression( caseSearchedExpression, this::caseArgument );
 	}
 
 	@Override
-	protected void visitCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression, boolean inSelect) {
-		visitAnsiCaseSimpleExpression( caseSimpleExpression, this::caseArgument );
+	protected void renderCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression, boolean inSelect) {
+		renderAnsiCaseSimpleExpression( caseSimpleExpression, this::caseArgument );
 	}
 
 	@Override

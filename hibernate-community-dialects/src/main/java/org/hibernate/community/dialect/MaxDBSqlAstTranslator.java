@@ -46,13 +46,13 @@ public class MaxDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	@Override
-	protected void visitCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression, boolean inSelect) {
+	protected void renderCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression, boolean inSelect) {
 		// Couldn't find documentation for older versions, but 7.7 supports ANSI style case expressions
 		if ( getDialect().getVersion().isBefore( 7, 7 ) ) {
-			visitDecodeCaseSearchedExpression( caseSearchedExpression );
+			renderDecodeCaseSearchedExpression( caseSearchedExpression );
 		}
 		else {
-			super.visitCaseSearchedExpression( caseSearchedExpression, inSelect );
+			super.renderCaseSearchedExpression( caseSearchedExpression, inSelect );
 		}
 	}
 

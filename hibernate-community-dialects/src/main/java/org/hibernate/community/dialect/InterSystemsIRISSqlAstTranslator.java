@@ -128,9 +128,9 @@ public class InterSystemsIRISSqlAstTranslator<T extends JdbcOperation> extends A
 	@Override
 	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
 		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
-			visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
+			renderArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
 			appendSql( " \\ " );
-			visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
+			renderArithmeticOperand( arithmeticExpression.getRightHandOperand() );
 		}
 		else {
 			super.visitBinaryArithmeticExpression( arithmeticExpression );

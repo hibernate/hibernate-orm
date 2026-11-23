@@ -2174,7 +2174,7 @@ public class SqlAstTranslatorSurfaceTests {
 		}
 
 		@Override
-		protected void visitSortSpecification(
+		protected void renderSortSpecification(
 				Expression sortExpression,
 				SortDirection sortOrder,
 				Nulls nullPrecedence,
@@ -2183,11 +2183,11 @@ public class SqlAstTranslatorSurfaceTests {
 		}
 
 		@Override
-		protected void visitOrderBy(List<SortSpecification> sortSpecifications) {
+		protected void renderOrderBy(List<SortSpecification> sortSpecifications) {
 			if ( sortSpecifications == omittedGroupSortSpecifications ) {
 				groupOrderByVisited = true;
 			}
-			super.visitOrderBy( sortSpecifications );
+			super.renderOrderBy( sortSpecifications );
 		}
 
 		@Override

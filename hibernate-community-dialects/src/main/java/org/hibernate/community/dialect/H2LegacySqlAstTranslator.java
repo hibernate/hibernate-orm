@@ -218,14 +218,14 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	@Override
 	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
 		appendSql( OPEN_PARENTHESIS );
-		visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
+		renderArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
 		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-		visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
+		renderArithmeticOperand( arithmeticExpression.getRightHandOperand() );
 		appendSql( CLOSE_PARENTHESIS );
 	}
 
 	@Override
-	protected void visitArithmeticOperand(Expression expression) {
+	protected void renderArithmeticOperand(Expression expression) {
 		render( expression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 	}
 

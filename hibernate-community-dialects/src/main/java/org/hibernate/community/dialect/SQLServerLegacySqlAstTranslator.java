@@ -215,11 +215,11 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 					if ( !getDialect().getPredicateSupport().supports( Capability.DISTINCT_FROM ) ) {
 						appendSql( "exists (select cast(" );
 						withClause( Clause.SELECT, () -> {
-							visitSqlSelectExpression( lhs );
+							renderSqlSelectExpression( lhs );
 							appendSql( " as nvarchar(max))" );
 							appendSql( getSelectOnlyFromClause() );
 							appendSql( " intersect select cast(" );
-							visitSqlSelectExpression( rhs );
+							renderSqlSelectExpression( rhs );
 							appendSql( " as nvarchar(max))" );
 							appendSql( getSelectOnlyFromClause() );
 						} );
@@ -277,9 +277,9 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	@Override
 	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
 		appendSql( OPEN_PARENTHESIS );
-		visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
+		renderArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
 		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-		visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
+		renderArithmeticOperand( arithmeticExpression.getRightHandOperand() );
 		appendSql( CLOSE_PARENTHESIS );
 	}
 

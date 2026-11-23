@@ -226,7 +226,7 @@ public class NullOrderingSupportTests {
 		}
 
 		private void renderSort(Expression expression, SortDirection direction, Nulls nulls) {
-			visitSortSpecification( expression, direction, nulls, false );
+			renderSortSpecification( expression, direction, nulls, false );
 		}
 
 		private void renderSelectionExpression(SqlSelectionExpression expression) {

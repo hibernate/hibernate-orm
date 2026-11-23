@@ -74,8 +74,8 @@ public class RDMSOS2200SqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	}
 
 	@Override
-	protected void visitCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression, boolean inSelect) {
-		visitDecodeCaseSearchedExpression( caseSearchedExpression );
+	protected void renderCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression, boolean inSelect) {
+		renderDecodeCaseSearchedExpression( caseSearchedExpression );
 	}
 
 	@Override

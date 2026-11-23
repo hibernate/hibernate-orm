@@ -36,6 +36,16 @@ public interface TemporalTableSupport {
 	/// columns.
 	int getTemporalColumnPrecision();
 
+	/// Report whether a column of the database's zoned timestamp type may
+	/// belong to a primary key. When it may not, an `Instant` changeset
+	/// identifier in the primary key of an audit table is held as a UTC date
+	/// and time in a column of type [org.hibernate.type.SqlTypes#TIMESTAMP].
+	///
+	/// @since 8.1
+	default boolean supportsZonedTimestampKeys() {
+		return true;
+	}
+
 	/// Render the trailing table options for the supplied table. Use every name
 	/// in the request verbatim and return `null` when no options are needed.
 	@Nullable String getTemporalTableOptions(TemporalTableDdlRequest request);

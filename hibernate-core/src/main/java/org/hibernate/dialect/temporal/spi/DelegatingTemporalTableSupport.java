@@ -44,6 +44,11 @@ public abstract class DelegatingTemporalTableSupport implements TemporalTableSup
 	}
 
 	@Override
+	public boolean supportsZonedTimestampKeys() {
+		return delegate.supportsZonedTimestampKeys();
+	}
+
+	@Override
 	public @Nullable String getTemporalTableOptions(TemporalTableDdlRequest request) {
 		return delegate.getTemporalTableOptions( request );
 	}

@@ -43,6 +43,9 @@ import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.temporal.spi.ChangesetCoordinator;
+import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
 
 import jakarta.annotation.Nullable;
 
@@ -64,6 +67,17 @@ public final class AuditHelper {
 	public static final String INVALIDATING_CHANGESET_ID = "invalidatingChangesetId";
 
 	private static final String DEFAULT_TABLE_SUFFIX = "_AUD";
+
+	/**
+	 * A UTC date and time in a column of type {@code timestamp}, even
+	 * where the database has a {@code timestamp with time zone} type.
+	 */
+	private static final JdbcType UTC_TIMESTAMP = new TimestampUtcAsJdbcTimestampJdbcType() {
+		@Override
+		public int getDdlTypeCode() {
+			return SqlTypes.TIMESTAMP;
+		}
+	};
 
 	private AuditHelper() {
 	}
@@ -707,19 +721,28 @@ public final class AuditHelper {
 		final var database = context.getMetadataCollector().getDatabase();
 		setColumnName( columnName, column, database,
 				context.getBuildingOptions().getPhysicalNamingStrategy() );
-		setTemporalColumnType( column, database, javaType );
+		setTemporalColumnType( column, basicValue, database, javaType, context );
 
 		return column;
 	}
 
 	private static void setTemporalColumnType(
 			Column column,
+			BasicValue basicValue,
 			Database database,
-			Class<?> javaType) {
+			Class<?> javaType,
+			MetadataBuildingContext context) {
 		if ( Instant.class.equals( javaType ) ) {
 			final var temporalTableSupport = database.getDialect().getTemporalTableSupport();
 			column.setTemporalPrecision( temporalTableSupport.getTemporalColumnPrecision() );
 			column.setSqlTypeCode( temporalTableSupport.getTemporalColumnType() );
+			// a changeset id supplied by a changelog is a foreign key,
+			// and so it must have the type of the column it references
+			if ( !temporalTableSupport.supportsZonedTimestampKeys()
+					&& getChangelogName( context ) == null ) {
+				// the DDL type comes from the JDBC type of the value, not from the column
+				basicValue.setExplicitJdbcTypeAccess( typeConfiguration -> UTC_TIMESTAMP );
+			}
 		}
 	}
 

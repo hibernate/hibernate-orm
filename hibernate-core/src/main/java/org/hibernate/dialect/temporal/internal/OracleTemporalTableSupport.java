@@ -30,6 +30,15 @@ public class OracleTemporalTableSupport extends DefaultTemporalTableSupport {
 		return false;
 	}
 
+	/**
+	 * Return {@code false} because Oracle does not allow a column of type
+	 * {@code timestamp with time zone} in a primary key.
+	 */
+	@Override
+	public boolean supportsZonedTimestampKeys() {
+		return false;
+	}
+
 	@Override
 	public String getExtraTemporalTableDeclarations(TemporalTableDdlRequest request) {
 		return "period for system_time (" + request.rowStartColumnName() + ", "

@@ -108,6 +108,7 @@ public class TemporalTableSupportTest {
 		assertThat( support.supportsNativeTemporalTables() ).isFalse();
 		assertThat( support.getTemporalColumnType() ).isEqualTo( SqlTypes.TIMESTAMP );
 		assertThat( support.getTemporalColumnPrecision() ).isEqualTo( 9 );
+		assertThat( support.supportsZonedTimestampKeys() ).isTrue();
 		assertThat( support.getTemporalTableOptions( request ) ).isNull();
 		assertThat( support.suppressesTemporalTablePrimaryKeys( false ) ).isFalse();
 		assertThat( support.suppressesTemporalTablePrimaryKeys( true ) ).isFalse();
@@ -217,6 +218,7 @@ public class TemporalTableSupportTest {
 		assertThat( oracle.supportsNativeTemporalTables() ).isTrue();
 		assertThat( oracle.supportsTemporalTablePartitioning() ).isTrue();
 		assertThat( oracle.suppressesTemporalTablePrimaryKeys( true ) ).isFalse();
+		assertThat( oracle.supportsZonedTimestampKeys() ).isFalse();
 		assertThat( oracle.createTemporalTableCheckConstraint( HISTORY_TABLE ) ).isFalse();
 		assertThat( oracle.getExtraTemporalTableDeclarations( nativeRequest ) )
 				.isEqualTo( "period for system_time (valid_from, valid_to)" );

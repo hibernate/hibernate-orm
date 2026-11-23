@@ -1,18 +1,29 @@
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.temporal.spi.TemporalTableDdlRequest;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
 
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/// Verifies that TiDB composes the public MySQL temporal-table profile and
-/// overrides only its generated-column declaration.
+/// Verifies temporal table support for community dialects.
 ///
 /// @author Steve Ebersole
 public class TemporalTableSupportTest {
+	@Test
+	void oracleLegacyUsesPlainTimestampForInstantAuditKeys() {
+		final var preferred = TimestampUtcAsJdbcTimestampJdbcType.INSTANCE;
+		final var oracle12 = new OracleLegacyDialect( DatabaseVersion.make( 12, 2 ) );
+		assertThat( oracle12.getTemporalTableSupport().getInstantAuditKeyJdbcType( preferred ).getDdlTypeCode() )
+				.isEqualTo( SqlTypes.TIMESTAMP );
+		final var oracle8 = new OracleLegacyDialect( DatabaseVersion.make( 8 ) );
+		assertThat( oracle8.getTemporalTableSupport().getInstantAuditKeyJdbcType( preferred ) ).isSameAs( preferred );
+	}
+
 	@Test
 	void tiDBPreservesTheStockProfileExceptForInvisibleGeneratedColumns() {
 		final var dialect = new TiDBDialect();

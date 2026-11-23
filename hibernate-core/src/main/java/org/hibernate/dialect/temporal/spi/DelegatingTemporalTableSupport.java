@@ -3,6 +3,7 @@ package org.hibernate.dialect.temporal.spi;
 import java.util.List;
 
 import org.hibernate.SPI;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.temporal.TemporalTableStrategy;
 import jakarta.annotation.Nullable;
 
@@ -41,6 +42,11 @@ public abstract class DelegatingTemporalTableSupport implements TemporalTableSup
 	@Override
 	public int getTemporalColumnPrecision() {
 		return delegate.getTemporalColumnPrecision();
+	}
+
+	@Override
+	public JdbcType getInstantAuditKeyJdbcType(JdbcType preferredType) {
+		return delegate.getInstantAuditKeyJdbcType( preferredType );
 	}
 
 	@Override

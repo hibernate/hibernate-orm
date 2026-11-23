@@ -12,8 +12,7 @@ import jakarta.persistence.Version;
 import org.hibernate.LockMode;
 import org.hibernate.Locking;
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -53,23 +52,16 @@ public class LockingBenchmark {
 
 	@Setup(Level.Trial)
 	public void setup() {
-		final var registry = new StandardServiceRegistryBuilder()
-				.applySetting( "hibernate.connection.driver_class", "org.h2.Driver" )
-				.applySetting( "hibernate.connection.url", "jdbc:h2:mem:locking_benchmark" )
-				.applySetting( "hibernate.hbm2ddl.auto", "create-drop" )
-				.applySetting( "hibernate.cache.use_second_level_cache", false )
-				.applySetting( "hibernate.cache.use_query_cache", false )
-				.applySetting( "hibernate.show_sql", false )
-				.applySetting( "hibernate.session_factory.statement_inspector", capture )
-				.build();
-		try {
-			factory = new MetadataSources( registry ).addAnnotatedClass( Item.class )
-					.buildMetadata().buildSessionFactory();
-		}
-		catch (RuntimeException | Error failure) {
-			StandardServiceRegistryBuilder.destroy( registry );
-			throw failure;
-		}
+		factory = new HibernatePersistenceConfiguration( "locking-benchmark" )
+				.managedClass( Item.class )
+				.property( "hibernate.connection.driver_class", "org.h2.Driver" )
+				.property( "hibernate.connection.url", "jdbc:h2:mem:locking_benchmark" )
+				.property( "hibernate.hbm2ddl.auto", "create-drop" )
+				.property( "hibernate.cache.use_second_level_cache", false )
+				.property( "hibernate.cache.use_query_cache", false )
+				.property( "hibernate.show_sql", false )
+				.property( "hibernate.session_factory.statement_inspector", capture )
+				.createEntityManagerFactory();
 		try (var session = factory.openSession()) {
 			final var transaction = session.beginTransaction();
 			for ( int id = 1; id <= 1000; id++ ) {

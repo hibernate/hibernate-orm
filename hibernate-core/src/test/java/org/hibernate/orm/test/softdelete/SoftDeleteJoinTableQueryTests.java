@@ -154,7 +154,7 @@ public class SoftDeleteJoinTableQueryTests {
 	}
 
 	@ParameterizedTest
-	@ValueSource(strings = {TAGS, NOTES})
+	@ValueSource(strings = {TAGS, NOTES, "byNote"})
 	public void innerJoinFetchKeepsOwnerWithOnlyDeletedRows(String collection, SessionFactoryScope scope) {
 		scope.inSession( session -> {
 			final var owners = session.createSelectionQuery(
@@ -241,6 +241,28 @@ public class SoftDeleteJoinTableQueryTests {
 			assertEquals( List.of( 20, 40 ), session.createSelectionQuery( hql, Integer.class ).list() );
 			session.enableFilter( "visibleNotes" );
 			assertEquals( List.of( 40 ), session.createSelectionQuery( hql, Integer.class ).list() );
+		} );
+	}
+
+	@Test
+	void restrictedCrossJoinBeforeRightJoin(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			session.enableFilter( "visibleNotes" );
+			// The filter removes the last visible note. The right join still preserves every owner.
+			assertEquals( List.of( 1, 2, 3 ), session.createSelectionQuery(
+					"select o.id from Tag t cross join Note n right join Owner o on n.id = o.id * 10 order by o.id",
+					Integer.class ).list() );
+		} );
+	}
+
+	@Test
+	void inverseMembership(SessionFactoryScope scope) {
+		assertEquals( List.of( 0, 1 ), ids( scope, "select size(t.owners) from Tag t order by t.id" ) );
+		scope.inSession( session -> {
+			final var owners = session.find( Tag.class, 10 ).owners;
+			assertEquals( 0, Hibernate.size( owners ) );
+			assertThat( Hibernate.contains( owners, session.find( Owner.class, 1 ) ) ).isFalse();
+			assertThat( owners ).isEmpty();
 		} );
 	}
 
@@ -395,6 +417,9 @@ public class SoftDeleteJoinTableQueryTests {
 
 		@Column(unique = true)
 		String code;
+
+		@ManyToMany(mappedBy = "tags")
+		Set<Owner> owners = new HashSet<>();
 
 		public Tag() {
 		}

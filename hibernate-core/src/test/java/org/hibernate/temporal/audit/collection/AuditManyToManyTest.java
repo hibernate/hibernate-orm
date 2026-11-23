@@ -131,6 +131,18 @@ class AuditManyToManyTest {
 			student.courses.add( c3 );
 		} );
 		revRecReplace = currentTxId;
+
+		// One course version starts during the enrollment, another starts after it ends.
+		sf.inTransaction( session -> {
+			var course = new Course( 60L, "Original" );
+			session.persist( course );
+			var student = new Student( 60L, "Charlie" );
+			student.courses.add( course );
+			session.persist( student );
+		} );
+		sf.inTransaction( session -> session.find( Course.class, 60L ).name = "During enrollment" );
+		sf.inTransaction( session -> session.find( Student.class, 60L ).courses.clear() );
+		sf.inTransaction( session -> session.find( Course.class, 60L ).name = "After withdrawal" );
 	}
 
 	// --- Write side verification ---
@@ -227,6 +239,11 @@ class AuditManyToManyTest {
 
 	private static void assertNoDeletedMembership(SessionFactoryScope scope, String joinType) {
 		try (var session = scope.getSessionFactory().withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
+			// The right operand contains only versions that coexisted with the membership.
+			// No student revision falls during the second course version, so it survives with a null owner.
+			assertEquals( List.of( "During enrollment" ), session.createSelectionQuery(
+					"select c.name from Student s " + joinType + " join s.courses c where s.id is null and c.id = 60",
+					String.class ).list() );
 			// The Math membership was removed at revDrop. Its deletion row must not survive as an orphan.
 			assertEquals( List.of(), session.createSelectionQuery(
 					"select c.id from Student s " + joinType + " join s.courses c where s.id is null and c.id = 1",

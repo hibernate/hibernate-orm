@@ -1,7 +1,9 @@
 package org.hibernate.temporal.audit.collection;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -50,6 +52,7 @@ class MixedTemporalAssociationTest {
 	}
 
 	private int firstChangeset;
+	private int afterMentorship;
 
 	@BeforeAll
 	void initData(SessionFactoryScope scope) {
@@ -63,7 +66,9 @@ class MixedTemporalAssociationTest {
 			var student = new Student( 1L, "Alice" );
 			student.courses.add( course );
 			session.persist( student );
-			session.persist( new Student( 2L, "Bob" ) );
+			var bob = new Student( 2L, "Bob" );
+			session.persist( bob );
+			student.mentees.add( bob );
 		} );
 		firstChangeset = currentTxId;
 
@@ -76,6 +81,8 @@ class MixedTemporalAssociationTest {
 			student.courses.add( course );
 		} );
 		sf.inTransaction( session -> session.find( Course.class, 1L ).name = "Algebra" );
+		sf.inTransaction( session -> session.find( Student.class, 1L ).mentees.clear() );
+		afterMentorship = currentTxId;
 	}
 
 	@Test
@@ -85,6 +92,20 @@ class MixedTemporalAssociationTest {
 					"select c.name from Student s right join s.courses c order by c.id", String.class ).list() );
 			assertEquals( List.of( 1L ), session.createSelectionQuery(
 					"select c.id from Student s right join s.courses c", Long.class ).list() );
+		}
+	}
+
+	@Test
+	void inverseMembershipAtChangeset(SessionFactoryScope scope) {
+		var factory = scope.getSessionFactory();
+		final String hql = "select size(s.mentors) from Student s where s.id = 2";
+		try (var session = factory.withOptions().atChangeset( firstChangeset ).openSession()) {
+			assertEquals( 1, session.createSelectionQuery( hql, Integer.class ).getSingleResult() );
+			assertEquals( 1L, session.find( Student.class, 2L ).mentors.iterator().next().id );
+		}
+		try (var session = factory.withOptions().atChangeset( afterMentorship ).openSession()) {
+			assertEquals( 0, session.createSelectionQuery( hql, Integer.class ).getSingleResult() );
+			assertEquals( 0, session.find( Student.class, 2L ).mentors.size() );
 		}
 	}
 
@@ -151,6 +172,11 @@ class MixedTemporalAssociationTest {
 		@ManyToMany
 		@OrderColumn(name = "position_in_list")
 		List<Course> courses = new ArrayList<>();
+		@Temporal
+		@ManyToMany
+		Set<Student> mentees = new HashSet<>();
+		@ManyToMany(mappedBy = "mentees")
+		Set<Student> mentors = new HashSet<>();
 
 		Student() {
 		}

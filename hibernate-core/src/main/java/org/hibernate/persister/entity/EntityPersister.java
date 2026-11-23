@@ -45,6 +45,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
+import org.hibernate.persister.entity.mutation.EntityAuditSupport;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.persister.entity.mutation.InsertCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
@@ -779,6 +780,12 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 				hasDirtyCollection,
 				session
 		);
+	}
+
+	/// The shared audit mutation plans for this entity, if it is audited.
+	@Nullable
+	default EntityAuditSupport getEntityAuditSupport() {
+		return getAuditMapping() == null ? null : new EntityAuditSupport( this, getFactory() );
 	}
 
 	/**

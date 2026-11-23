@@ -59,6 +59,7 @@ import org.hibernate.sql.spi.mutation.jdbc.JdbcMutationOperation;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -155,26 +156,50 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 	/** Visit the elements which need a new audit row for their changed order column or map key. */
 	public void visitElementsWithChangedIndex(
-			PersistentCollection<?> collection, SharedSessionContractImplementor session,
+			PersistentCollection<?> collection, Object key, SharedSessionContractImplementor session,
 			BiConsumer<EntityEntry, Object> consumer) {
 		final var persistenceContext = session.getPersistenceContextInternal();
 		final var collectionEntry = persistenceContext.getCollectionEntry( collection );
-		// A newly wrapped collection already has a snapshot of its in-memory contents.
-		final boolean hasDatabaseSnapshot = collection.wasInitialized() && collectionEntry != null
+		// A replacement wrapper's own snapshot describes the new contents. The wrapper
+		// registered under the destination key retains the old snapshot until postFlush.
+		final var previous = persistenceContext.getCollection( session.generateCollectionKey( this, key ) );
+		final var previousSnapshot = previous == null || previous == collection ? null : previous.getStoredSnapshot();
+		final boolean compareOwnSnapshot = previous == collection && collection.wasInitialized() && collectionEntry != null
 				&& collectionEntry.getLoadedPersister() == this && collectionEntry.getSnapshot() != null;
 		final var entries = collection.wasInitialized() ? collection.entries( this ) : collection.queuedAdditionIterator();
 		for ( int i = 0; entries.hasNext(); i++ ) {
 			final var entry = entries.next();
-			if ( collection.entryExists( entry, i )
-					&& ( !hasDatabaseSnapshot || collection.needsInserting( entry, i, getElementType() )
-							|| collection.needsUpdating( entry, i, getElementType() ) ) ) {
-				final var entity = Hibernate.unproxy( collection.getElement( entry ) );
-				final var entityEntry = persistenceContext.getEntry( entity );
-				if ( entityEntry != null && !entityEntry.getStatus().isDeletedOrGone() ) {
-					consumer.accept( entityEntry, entity );
-				}
+			if ( !collection.entryExists( entry, i ) ) {
+				continue;
+			}
+			final Object element = collection.getElement( entry );
+			if ( previousSnapshot != null && getElementType().isEqual(
+					snapshotElement( previousSnapshot, collection, entry, i ), element, getFactory() ) ) {
+				continue;
+			}
+			if ( compareOwnSnapshot && !collection.needsInserting( entry, i, getElementType() )
+					&& !collection.needsUpdating( entry, i, getElementType() ) ) {
+				continue;
+			}
+			final var entity = Hibernate.unproxy( element );
+			final var entityEntry = persistenceContext.getEntry( entity );
+			if ( entityEntry != null && !entityEntry.getStatus().isDeletedOrGone() ) {
+				consumer.accept( entityEntry, entity );
 			}
 		}
+	}
+
+	private Object snapshotElement(Object snapshot, PersistentCollection<?> collection, Object entry, int position) {
+		if ( snapshot instanceof List<?> list ) {
+			return position < list.size() ? list.get( position ) : null;
+		}
+		if ( snapshot instanceof Map<?, ?> map ) {
+			return map.get( collection.getIndex( entry, position, this ) );
+		}
+		if ( snapshot instanceof Object[] array && position < array.length ) {
+			return array[position];
+		}
+		return null;
 	}
 
 	public boolean isDoWriteEvenWhenInverse() {
@@ -257,7 +282,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			@Nonnull SharedSessionContractImplementor session) {
 		writeIndexCoordinator.writeIndex( collection, entries, key, resetIndex, session );
 		if ( hasAuditedIndex() ) {
-			visitElementsWithChangedIndex( collection, session,
+			visitElementsWithChangedIndex( collection, key, session,
 					(entry, element) -> session.getAuditWorkQueue().indexedElementChanged( entry, element, session ) );
 		}
 	}

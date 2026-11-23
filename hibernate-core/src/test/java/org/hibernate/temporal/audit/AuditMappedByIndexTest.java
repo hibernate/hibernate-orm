@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 
 @Jira("https://hibernate.atlassian.net/browse/HHH-21228")
 @AuditedTest
-@SessionFactory
+@SessionFactory(useCollectingStatementInspector = true)
 @DomainModel(annotatedClasses = {
 		AuditMappedByIndexTest.JobQueue.class, AuditMappedByIndexTest.Job.class, AuditMappedByIndexTest.Task.class
 })
@@ -41,23 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 class AuditMappedByIndexTest {
 	@Test
 	void readIndicesAtChangeset(SessionFactoryScope scope) {
-		final var first = scope.fromTransaction( session -> {
-			final var queue = new JobQueue();
-			session.persist( queue );
-			for ( int i = 1; i <= 2; i++ ) {
-				final var job = new Job();
-				job.id = i;
-				job.queue = queue;
-				final var task = new Task();
-				task.id = i;
-				task.queue = queue;
-				queue.jobs.add( job );
-				queue.tasks.put( "task" + i, task );
-				session.persist( task );
-				session.persist( job );
-			}
-			return session.getCurrentChangesetIdentifier();
-		} );
+		final var first = createQueue( scope, 1, 2 );
 		final var second = scope.fromTransaction( session -> {
 			final var queue = session.find( JobQueue.class, 1 );
 			queue.jobs.add( queue.jobs.remove( 0 ) );
@@ -86,6 +70,64 @@ class AuditMappedByIndexTest {
 			assertEquals( List.of( first, second, third ), log.getChangesets( Task.class, 1 ) );
 			assertEquals( List.of( first ), log.getChangesets( Task.class, 2 ) );
 		}
+	}
+
+	@Test
+	void auditOnlyChangedIndexesOnReplacement(SessionFactoryScope scope) {
+		final var first = createQueue( scope, 11, 3 );
+		final var inspector = scope.getCollectingStatementInspector();
+		scope.inTransaction( session -> {
+			final var queue = session.find( JobQueue.class, 11 );
+			queue.jobs = new ArrayList<>( queue.jobs );
+			queue.tasks = new HashMap<>( queue.tasks );
+			inspector.clear();
+			session.flush();
+			assertEquals( 0, inspector.getSqlQueries().stream().filter( sql -> sql.startsWith( "select" ) ).count() );
+		} );
+		final var moved = scope.fromTransaction( session -> {
+			final var queue = session.find( JobQueue.class, 11 );
+			assertFalse( Hibernate.isInitialized( queue.jobs ) );
+			queue.jobs = new ArrayList<>( List.of(
+					session.getReference( Job.class, 13 ),
+					session.getReference( Job.class, 12 ),
+					session.getReference( Job.class, 11 )
+			) );
+			queue.tasks = new HashMap<>( queue.tasks );
+			queue.tasks.put( "renamed", queue.tasks.remove( "task11" ) );
+			inspector.clear();
+			session.flush();
+			assertEquals( 1, inspector.getSqlQueries().stream().filter( sql -> sql.contains( " from Job " ) ).count() );
+			return session.getCurrentChangesetIdentifier();
+		} );
+		try (var log = AuditLogFactory.create( scope.getSessionFactory() )) {
+			assertEquals( List.of( first, moved ), log.getChangesets( Job.class, 11 ) );
+			assertEquals( List.of( first ), log.getChangesets( Job.class, 12 ) );
+			assertEquals( List.of( first, moved ), log.getChangesets( Job.class, 13 ) );
+			assertEquals( List.of( first, moved ), log.getChangesets( Task.class, 11 ) );
+			assertEquals( List.of( first ), log.getChangesets( Task.class, 12 ) );
+			assertEquals( List.of( first ), log.getChangesets( Task.class, 13 ) );
+		}
+	}
+
+	private static Object createQueue(SessionFactoryScope scope, int firstId, int count) {
+		return scope.fromTransaction( session -> {
+			final var queue = new JobQueue();
+			queue.id = firstId;
+			session.persist( queue );
+			for ( int i = firstId; i < firstId + count; i++ ) {
+				final var job = new Job();
+				job.id = i;
+				job.queue = queue;
+				final var task = new Task();
+				task.id = i;
+				task.queue = queue;
+				queue.jobs.add( job );
+				queue.tasks.put( "task" + i, task );
+				session.persist( task );
+				session.persist( job );
+			}
+			return session.getCurrentChangesetIdentifier();
+		} );
 	}
 
 	private static void checkIndices(SessionFactoryScope scope, Object changeset, List<Integer> order,

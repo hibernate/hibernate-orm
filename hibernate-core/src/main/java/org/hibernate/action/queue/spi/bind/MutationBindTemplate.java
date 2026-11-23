@@ -77,8 +77,9 @@ public final class MutationBindTemplate {
 
 	/// The mutation's ordered JDBC binding slots.
 	///
-	/// The returned array is owned by this immutable template.  Callers use the
-	/// array indexes as stable positions in their per-row value storage.
+	/// The template owns the array and orders it by JDBC parameter position.
+	/// [BindSlot#index()] identifies the position in per-row value storage.
+	/// Repeated parameters for the same column and usage share that position.
 	public BindSlot[] slots() {
 		return slots;
 	}

@@ -1,10 +1,8 @@
 package org.hibernate.action.queue.internal.audit;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import jakarta.annotation.Nullable;
@@ -38,7 +36,6 @@ import static org.hibernate.action.queue.internal.audit.GraphAuditMutationPlans.
 /// @author Steve Ebersole
 public class GraphAuditMutationCollector {
 	private final AuditChangeSet<EntityAuditSupport, CollectionAuditSupport> changeSet = new AuditChangeSet<>();
-	private final Map<EntityPersister, EntityAuditSupport> indexedElementAuditSupport = new HashMap<>();
 	private Object changelog;
 	private @Nullable Session changesetSession;
 
@@ -52,8 +49,7 @@ public class GraphAuditMutationCollector {
 	}
 
 	public void indexedElementChanged(EntityEntry entry, Object entity) {
-		changeSet.addIndexedElementChange( entry, entity, persister -> indexedElementAuditSupport
-				.computeIfAbsent( persister, p -> new EntityAuditSupport( p, p.getFactory() ) ) );
+		changeSet.addIndexedElementChange( entry, entity, EntityPersister::getEntityAuditSupport );
 	}
 
 	public void collectionChanged(

@@ -23,6 +23,7 @@ import org.hibernate.event.spi.PreCollectionRemoveEvent;
 import org.hibernate.event.spi.PreCollectionRemoveEventListener;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEventListener;
+import org.hibernate.persister.collection.OneToManyPersister;
 
 /// Performs queue-independent collection lifecycle preparation after a positive flush decision.
 ///
@@ -190,6 +191,15 @@ public final class CollectionMutationPreparer {
 						() -> new PreCollectionRecreateEvent( endpoint.persister(), collection, session ),
 						PreCollectionRecreateEventListener::onPreRecreateCollection
 				);
+		if ( endpoint.persister() instanceof OneToManyPersister persister && persister.hasAuditedIndex()
+				&& collection.wasInitialized() && !collection.empty() ) {
+			// Capture the old indexes before either queue writes the replacement.
+			final var previous = session.getPersistenceContextInternal()
+					.getCollection( session.generateCollectionKey( persister, key ) );
+			if ( previous != null && previous != collection && !previous.wasInitialized() ) {
+				previous.forceInitialization();
+			}
+		}
 		mutationConsumer.accept( preparedMutation(
 				PreparedCollectionMutation.Kind.CREATE,
 				collection,

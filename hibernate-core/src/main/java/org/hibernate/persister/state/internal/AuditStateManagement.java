@@ -78,7 +78,7 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 		@Nonnull
 		@Override
 		public EntityMutationPlanContributor createEntityMutationPlanContributor(@Nonnull EntityPersister persister) {
-			return new AuditEntityMutationPlanContributor( persister, persister.getFactory() );
+			return new AuditEntityMutationPlanContributor( persister );
 		}
 
 		@Nonnull

@@ -10,7 +10,6 @@ import org.hibernate.action.queue.internal.decompose.collection.DecompositionSup
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.audit.ModificationType;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -31,11 +30,9 @@ public class AuditEntityMutationPlanContributor implements EntityMutationPlanCon
 	private final EntityAuditSupport entityAuditSupport;
 	private final boolean[] auditedPropertyMask;
 
-	public AuditEntityMutationPlanContributor(
-			EntityPersister entityPersister,
-			SessionFactoryImplementor sessionFactory) {
+	public AuditEntityMutationPlanContributor(EntityPersister entityPersister) {
 		this.entityPersister = entityPersister;
-		this.entityAuditSupport = new EntityAuditSupport( entityPersister, sessionFactory );
+		this.entityAuditSupport = entityPersister.getEntityAuditSupport();
 		this.auditedPropertyMask = entityAuditSupport.getAuditedPropertyMask();
 	}
 

@@ -24,6 +24,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
+import static org.hibernate.engine.internal.CacheHelper.canUseCollectionCache;
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
 import static org.hibernate.engine.internal.CacheHelper.readingFromCache;
 import static org.hibernate.engine.internal.CacheHelper.readsHistory;
@@ -398,7 +399,7 @@ public class CacheLoadHelper {
 			@Nonnull CollectionPersister persister,
 			@Nonnull PersistentCollection<?> collection,
 			@Nonnull SharedSessionContractImplementor source) {
-		if ( source.getCacheMode().isGetEnabled() && !readsHistory( source, persister ) ) {
+		if ( source.getCacheMode().isGetEnabled() && canUseCollectionCache( source, persister ) ) {
 			return usingCache( persister, cache -> {
 				final Object cachedEntry = getFromSharedCache( key, persister, source, cache );
 				if ( cachedEntry == null ) {

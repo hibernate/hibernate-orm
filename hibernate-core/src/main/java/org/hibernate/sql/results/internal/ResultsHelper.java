@@ -16,7 +16,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.sql.results.spi.RowTransformer;
 
-import static org.hibernate.engine.internal.CacheHelper.readsHistory;
+import static org.hibernate.engine.internal.CacheHelper.canUseCollectionCache;
 import static org.hibernate.engine.internal.CacheHelper.usingCache;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
@@ -84,10 +84,9 @@ public class ResultsHelper {
 			boolean hasNoQueuedAdds,
 			CacheStoreMode cacheStoreMode) {
 		return hasNoQueuedAdds  // there were no queued additions
-			&& collectionDescriptor.hasCache()  // the collection role has a cache
+			&& canUseCollectionCache( session, collectionDescriptor )
 			&& isCachePutEnabled( session, cacheStoreMode )  // the effective cache mode allows puts
-			&& !hasQueuedCollectionRemove( session, collection )  // this is not a forced initialization during flush
-			&& !readsHistory( session, collectionDescriptor );  // this is not a historical snapshot
+			&& !hasQueuedCollectionRemove( session, collection );  // this is not a forced initialization during flush
 	}
 
 	private static boolean hasQueuedCollectionRemove(SharedSessionContractImplementor session, PersistentCollection<?> collection) {

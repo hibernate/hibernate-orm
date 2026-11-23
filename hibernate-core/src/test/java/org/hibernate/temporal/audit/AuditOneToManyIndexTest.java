@@ -20,6 +20,7 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Audited;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.internal.CollectionLookupLoader;
+import org.hibernate.loader.ast.internal.CollectionLookupLoader.Operation;
 import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -242,7 +243,8 @@ class AuditOneToManyIndexTest {
 				implementor.getFactory().getMappingMetamodel()
 						.getCollectionDescriptor( owner.getName() + "." + role )
 						.getAttributeMapping();
-		return CollectionLookupLoader.exists( collection, collection.getIndexDescriptor(), 1, key, implementor );
+		return new CollectionLookupLoader( collection, Operation.INDEX_EXISTS, implementor.getLoadQueryInfluencers() )
+				.exists( 1, key, implementor );
 	}
 
 	private static Genre genre(SharedSessionContract session, int id) {

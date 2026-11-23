@@ -54,8 +54,7 @@
                 <column name="INFO"/>
             </basic>
             <one-to-one name="owner"
-                        target-entity="org.hibernate.orm.test.jpa.cascade2.Parent"
-                        constrained="true"/>
+                        target-entity="org.hibernate.orm.test.jpa.cascade2.Parent"/>
         </attributes>
     </entity>
 
@@ -142,8 +141,7 @@
                 <column name="INFO"/>
             </basic>
             <one-to-one name="owner"
-                        target-entity="org.hibernate.orm.test.jpa.cascade2.ParentAssigned"
-                        constrained="true"/>
+                        target-entity="org.hibernate.orm.test.jpa.cascade2.ParentAssigned"/>
         </attributes>
     </entity>
 

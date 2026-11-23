@@ -62,13 +62,13 @@
     <embeddable class="org.hibernate.orm.test.idprops.LineItemPK"
                 access="PROPERTY" metadata-complete="true">
         <attributes>
+            <basic name="productCode">
+                <column name="PROD_CODE"/>
+            </basic>
             <many-to-one name="order"
                          target-entity="org.hibernate.orm.test.idprops.Order">
                 <join-column name="ORDR_ID"/>
             </many-to-one>
-            <basic name="productCode">
-                <column name="PROD_CODE"/>
-            </basic>
         </attributes>
     </embeddable>
 

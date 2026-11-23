@@ -31,8 +31,7 @@
                 </generic-generator>
             </id>
             <one-to-one name="employee"
-                        target-entity="org.hibernate.orm.test.orphan.one2one.pk.bidirectional.Employee"
-                        constrained="true"/>
+                        target-entity="org.hibernate.orm.test.orphan.one2one.pk.bidirectional.Employee"/>
         </attributes>
     </entity>
 

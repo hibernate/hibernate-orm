@@ -5,8 +5,8 @@
     <entity class="org.hibernate.orm.test.ops.Item" access="FIELD">
         <attributes>
             <one-to-many name="subItemsBackref" orphan-removal="true">
-                <join-column name="parentItem" nullable="false"/>
                 <order-column name="indx"/>
+                <join-column name="parentItem" nullable="false"/>
                 <cascade>
                     <cascade-persist/>
                     <cascade-merge/>

@@ -38,9 +38,9 @@
     <entity class="org.hibernate.orm.test.legacy.Lower"
             access="PROPERTY" metadata-complete="true">
         <table name="leafsubclass"/>
+        <primary-key-join-column name="id__"/>
         <dynamic-insert>true</dynamic-insert>
         <dynamic-update>true</dynamic-update>
-        <primary-key-join-column name="id__"/>
         <attributes>
             <basic name="intprop">
                 <column name="intprop" nullable="false"/>
@@ -54,15 +54,15 @@
                          target-entity="org.hibernate.orm.test.legacy.Lower">
                 <join-column name="other3"/>
             </many-to-one>
-            <one-to-one name="mypo"
-                        target-entity="org.hibernate.orm.test.legacy.Po"
-                        mapped-by="lower"/>
             <one-to-many name="set"
                          target-entity="org.hibernate.orm.test.legacy.Top"
                          fetch="EAGER"
                          classification="SET">
                 <join-column name="parent"/>
             </one-to-many>
+            <one-to-one name="mypo"
+                        target-entity="org.hibernate.orm.test.legacy.Po"
+                        mapped-by="lower"/>
             <many-to-many name="bag"
                           target-entity="org.hibernate.orm.test.legacy.Top"
                           classification="BAG">
@@ -108,8 +108,8 @@
             <one-to-many name="moreChildren"
                          target-entity="org.hibernate.orm.test.legacy.SubMulti"
                          classification="LIST">
-                <join-column name="another_parent"/>
                 <order-column name="list_ind"/>
+                <join-column name="another_parent"/>
             </one-to-many>
         </attributes>
     </entity>
@@ -136,8 +136,8 @@
             <one-to-many name="list"
                          target-entity="org.hibernate.orm.test.legacy.SubMulti"
                          classification="LIST">
-                <join-column name="list_po"/>
                 <order-column name="i"/>
+                <join-column name="list_po"/>
                 <cascade>
                     <cascade-all/>
                 </cascade>

@@ -4,7 +4,7 @@
 
     <package>org.hibernate.orm.test.connections</package>
 
-    <filter-def name="nameIsNull" condition="name is null"/>
+    <filter-def name="nameIsNull" />
 
     <entity class="Silly" metadata-complete="true" access="PROPERTY">
         <attributes>

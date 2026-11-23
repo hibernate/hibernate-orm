@@ -5,8 +5,8 @@
 	<entity class="Person" metadata-complete="true">
 		<attributes>
 			<id name="id">
-				<sequence-generator name="person_seq" sequence-name="product_sequence"/>
 				<generated-value strategy="SEQUENCE" generator="person_seq"/>
+				<sequence-generator name="person_seq" sequence-name="product_sequence"/>
 			</id>
 		</attributes>
 	</entity>

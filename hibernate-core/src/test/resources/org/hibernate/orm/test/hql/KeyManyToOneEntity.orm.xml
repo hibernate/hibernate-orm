@@ -23,9 +23,9 @@
     <embeddable class="org.hibernate.orm.test.hql.KeyManyToOneEntity$Id"
                 access="FIELD" metadata-complete="true">
         <attributes>
+            <basic name="key2"/>
             <many-to-one name="key1"
                          target-entity="org.hibernate.orm.test.hql.KeyManyToOneKeyEntity"/>
-            <basic name="key2"/>
         </attributes>
     </embeddable>
 

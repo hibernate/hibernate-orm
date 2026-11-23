@@ -102,7 +102,7 @@
             </basic>
             <one-to-one name="d" fetch="EAGER" fetch-mode="JOIN" optional="true" orphan-removal="false">
                 <primary-key-join-column/>
-                <foreign-key/>
+                <primary-key-foreign-key/>
                 <cascade/>
             </one-to-one>
             <transient name="c2s"/>

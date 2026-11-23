@@ -14,11 +14,11 @@
                     <column length="10" nullable="false"/>
                 </basic>
             </natural-id>
-            <version name="version"/>
             <basic name="password">
                 <column name="`password`" nullable="false" length="15"/>
             </basic>
             <basic name="email"/>
+            <version name="version"/>
         </attributes>
     </entity>
 

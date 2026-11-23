@@ -577,7 +577,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 		}
 	}
 
-	private static ValuedModelPart resolveNamedTargetPart(
+	static ValuedModelPart resolveNamedTargetPart(
 			String targetPartName,
 			EntityMappingType entityMappingType,
 			CollectionPersister collectionDescriptor) {

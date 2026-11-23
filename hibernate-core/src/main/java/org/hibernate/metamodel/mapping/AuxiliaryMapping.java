@@ -9,6 +9,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.mapping.Property;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.creation.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.creation.SqlAliasBaseManager;
@@ -39,6 +40,13 @@ import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 /// @since 7.4
 @Incubating(since = "5.4")
 public interface AuxiliaryMapping {
+	/// Called during mapping initialization for the inverse side of a shared collection table.
+	/// Returns the auxiliary mapping to use for reads of that property, or null if none applies.
+	@Nullable
+	default AuxiliaryMapping forInverseCollection(@Nonnull Property inverseProperty) {
+		return null;
+	}
+
 	/// The primary auxiliary table name.
 	///
 	/// Single-table state-management strategies generally use this table for all
@@ -111,7 +119,8 @@ public interface AuxiliaryMapping {
 	}
 
 	/// Restricts the rows of a collection, in the same way as the overload for the
-	/// target of an association restricts an entity.
+	/// target of an association restricts an entity. For an inverse collection,
+	/// `collectionDescriptor` is the inverse attribute being read.
 	default void applyAssociationRestrictions(
 			@Nonnull PluralAttributeMapping collectionDescriptor, @Nonnull TableGroup tableGroup,
 			@Nullable Expression ownerRevision,

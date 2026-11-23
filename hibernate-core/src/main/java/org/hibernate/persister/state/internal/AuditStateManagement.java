@@ -418,7 +418,7 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 								creationProcess
 						)
 				),
-				null,
+				pluralAttributeMapping,
 				creationProcess
 		);
 	}

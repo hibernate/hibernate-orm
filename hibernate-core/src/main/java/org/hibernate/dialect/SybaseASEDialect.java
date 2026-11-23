@@ -705,6 +705,7 @@ public class SybaseASEDialect extends SybaseDialect implements CurrentTemporalSu
 	public SubquerySupport getSubquerySupport() {
 		return SubquerySupport.builder( super.getSubquerySupport() )
 				.feature( SubquerySupport.Feature.ORDER_BY, false )
+				.feature( SubquerySupport.Feature.INSERT_VALUES, false )
 				.build();
 	}
 

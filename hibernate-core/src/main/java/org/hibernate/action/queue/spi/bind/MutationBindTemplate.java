@@ -60,8 +60,10 @@ public final class MutationBindTemplate {
 		for ( int i = 0; i < parameterBinders.size(); i++ ) {
 			final var columnValueParameter = (ColumnValueParameter) parameterBinders.get( i );
 			final var valueDescriptor = new JdbcValueDescriptorImpl( columnValueParameter, offset + i + 1 );
+			final var slotsByColumn = slotsByUsage.computeIfAbsent( valueDescriptor.getUsage(), usage -> new HashMap<>() );
+			final var existing = slotsByColumn.get( valueDescriptor.getColumnName() );
 			final var slot = new BindSlot(
-					i,
+					existing == null ? i : existing.index(),
 					valueDescriptor.getColumnName(),
 					valueDescriptor.getUsage(),
 					offset + i + 1,
@@ -69,15 +71,15 @@ public final class MutationBindTemplate {
 					valueDescriptor
 			);
 			slots[i] = slot;
-			slotsByUsage.computeIfAbsent( slot.usage(), usage -> new HashMap<>() )
-					.put( slot.columnName(), slot );
+			slotsByColumn.putIfAbsent( slot.columnName(), slot );
 		}
 	}
 
 	/// The mutation's ordered JDBC binding slots.
 	///
-	/// The returned array is owned by this immutable template.  Callers use the
-	/// array indexes as stable positions in their per-row value storage.
+	/// The template owns the array and orders it by JDBC parameter position.
+	/// [BindSlot#index()] identifies the position in per-row value storage.
+	/// Repeated parameters for the same column and usage share that position.
 	public BindSlot[] slots() {
 		return slots;
 	}

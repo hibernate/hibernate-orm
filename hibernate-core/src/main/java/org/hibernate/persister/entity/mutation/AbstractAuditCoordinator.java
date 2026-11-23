@@ -37,7 +37,7 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 
 	protected AbstractAuditCoordinator(@Nonnull EntityPersister entityPersister, @Nonnull SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
-		this.entityAuditSupport = new EntityAuditSupport( entityPersister, factory );
+		this.entityAuditSupport = entityPersister.getEntityAuditSupport();
 		this.auditedPropertyMask = entityAuditSupport.getAuditedPropertyMask();
 		this.auditBatchKey = new BasicBatchKey( entityPersister.getEntityName() + "#AUDIT_INSERT" );
 		final var staticAuditInsertMutationGroup = entityAuditSupport.getStaticAuditInsertMutationGroup();

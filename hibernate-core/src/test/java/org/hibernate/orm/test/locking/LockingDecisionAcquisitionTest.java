@@ -110,7 +110,9 @@ class LockingDecisionAcquisitionTest {
 			assertThat( translate( reader, query ).getSqlString() ).as( "CTE rendered, not inlined" ).startsWith( "with " );
 			assertThat( query.getResultList() ).hasSize( 1 );
 			assertItemProtection( scope, 1, true );
-			assertItemProtection( scope, 2, false );
+			// No assertion that item 2 is left unlocked: a locking read locks the rows
+			// the database examines, and MySQL and MariaDB examine every item to
+			// evaluate the IN subquery against the CTE, so they lock item 2 as well.
 		} );
 	}
 

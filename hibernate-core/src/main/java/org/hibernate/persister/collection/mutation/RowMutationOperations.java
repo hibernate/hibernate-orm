@@ -166,6 +166,17 @@ public class RowMutationOperations {
 	}
 
 	@Nullable
+	public JdbcMutationOperation getUpdateRowOperation(@Nonnull TableMapping tableMapping) {
+		if ( updateRowOperationProducer == null ) {
+			return null;
+		}
+		else {
+			final var tableReference = new MutatingTableReference( tableMapping );
+			return updateRowOperationProducer.createOperation( tableReference );
+		}
+	}
+
+	@Nullable
 	public Values getUpdateRowValues() {
 		return updateRowValues;
 	}

@@ -108,14 +108,12 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 
 	@Nonnull
 	private MutationOperationGroup[] buildOperationGroups() {
-		final var subMappingTypes =
-				castNonNull( mutationTarget.getElementPersister() )
-						.getRootEntityDescriptor()
-						.getSubMappingTypes();
-		final var operationGroups = new MutationOperationGroup[subMappingTypes.size()];
+		// one operation for each table which holds rows of the element type
+		final var elementPersisters = mutationTarget.getElementPersistersWithTable();
+		final var operationGroups = new MutationOperationGroup[elementPersisters.size()];
 		int i = 0;
-		for ( var subMappingType : subMappingTypes ) {
-			operationGroups[i++] = buildOperationGroup( subMappingType.getEntityPersister() );
+		for ( var elementPersister : elementPersisters ) {
+			operationGroups[i++] = buildOperationGroup( elementPersister );
 		}
 		return operationGroups;
 	}

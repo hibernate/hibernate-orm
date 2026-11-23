@@ -1,8 +1,10 @@
 package org.hibernate.dialect;
 
 import jakarta.annotation.Nullable;
+import org.hibernate.dialect.function.spi.ExpressionCoercionSupport;
 import org.hibernate.dialect.identifier.spi.KeywordRegistration;
 
+import org.hibernate.dialect.sql.ast.spi.ArithmeticSupport;
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
@@ -583,6 +585,22 @@ public class HANADialect extends Dialect implements CurrentTemporalSupport, Temp
 	 */
 	protected int getMaximumSeriesSize() {
 		return 10000;
+	}
+
+	@Override
+	public ExpressionCoercionSupport getExpressionCoercionSupport() {
+		return ExpressionCoercionSupport.builder( super.getExpressionCoercionSupport() )
+				.requirements(
+						ExpressionCoercionSupport.Requirement.TYPED_ARITHMETIC_PARAMETERS
+				)
+				.build();
+	}
+
+	@Override
+	public ArithmeticSupport getArithmeticSupport() {
+		return ArithmeticSupport.builder( super.getArithmeticSupport() )
+				.integerDivisionForm( ArithmeticSupport.IntegerDivisionForm.CAST_INTEGER )
+				.build();
 	}
 
 	@Override

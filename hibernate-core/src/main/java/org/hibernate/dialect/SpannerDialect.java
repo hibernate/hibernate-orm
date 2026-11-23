@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractErrorCode;
 
 import java.time.LocalDate;
+import org.hibernate.dialect.sql.ast.spi.ArithmeticSupport;
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
@@ -1448,6 +1449,13 @@ public class SpannerDialect extends Dialect implements CurrentTemporalSupport, T
 		return MutationSyntaxSupport.builder()
 				.capability( MutationKind.UPDATE, MutationSyntaxCapability.REQUIRES_WHERE )
 				.capability( MutationKind.DELETE, MutationSyntaxCapability.REQUIRES_WHERE )
+				.build();
+	}
+
+	@Override
+	public ArithmeticSupport getArithmeticSupport() {
+		return ArithmeticSupport.builder( super.getArithmeticSupport() )
+				.integerDivisionForm( ArithmeticSupport.IntegerDivisionForm.DIV_FUNCTION )
 				.build();
 	}
 

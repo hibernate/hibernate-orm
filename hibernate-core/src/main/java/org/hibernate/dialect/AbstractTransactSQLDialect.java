@@ -1,5 +1,6 @@
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.sql.ast.spi.ArithmeticSupport;
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
@@ -250,6 +251,13 @@ public abstract class AbstractTransactSQLDialect extends Dialect implements Curr
 	public NullOrderingSupport getNullOrderingSupport() {
 		return NullOrderingSupport.builder( super.getNullOrderingSupport() )
 				.defaultOrdering( NullOrdering.SMALLEST )
+				.build();
+	}
+
+	@Override
+	public ArithmeticSupport getArithmeticSupport() {
+		return ArithmeticSupport.builder( super.getArithmeticSupport() )
+				.moduloForm( ArithmeticSupport.ModuloForm.OPERATOR )
 				.build();
 	}
 

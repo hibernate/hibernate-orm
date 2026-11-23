@@ -1,5 +1,6 @@
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.sql.ast.spi.ArithmeticSupport;
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
@@ -882,6 +883,13 @@ public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport
 	}
 
 	@Override
+	public ArithmeticSupport getArithmeticSupport() {
+		return ArithmeticSupport.builder( super.getArithmeticSupport() )
+				.moduloForm( ArithmeticSupport.ModuloForm.OPERATOR )
+				.build();
+	}
+
+	@Override
 	public PredicateSupport getPredicateSupport() {
 		return PredicateSupport.builder( super.getPredicateSupport() )
 				.caseInsensitiveLikeOperator( "ilike" )
@@ -889,6 +897,7 @@ public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport
 						PredicateSupport.Capability.DISTINCT_FROM,
 						PredicateSupport.Capability.TRUTHNESS
 				)
+				.capability( PredicateSupport.Capability.BOOLEAN_EXPRESSION, true )
 				.build();
 	}
 

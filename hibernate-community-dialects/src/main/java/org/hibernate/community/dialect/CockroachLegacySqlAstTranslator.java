@@ -11,7 +11,6 @@ import org.hibernate.dialect.sql.ast.spi.PostgreSQLFamilySqlAstTranslator;
 import org.hibernate.sql.ast.spi.Statement;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.ast.spi.query.cte.CteMaterialization;
-import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.sql.ast.spi.query.expression.Summarization;
@@ -39,14 +38,6 @@ public class CockroachLegacySqlAstTranslator<T extends JdbcOperation> extends Po
 	protected void renderInsertIntoNoColumns(TableInsertStandard tableInsert) {
 		renderIntoIntoAndTable( tableInsert );
 		appendSql( "default values" );
-	}
-
-	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
-			appendSql( "floor" );
-		}
-		super.visitBinaryArithmeticExpression(arithmeticExpression);
 	}
 
 	@Override

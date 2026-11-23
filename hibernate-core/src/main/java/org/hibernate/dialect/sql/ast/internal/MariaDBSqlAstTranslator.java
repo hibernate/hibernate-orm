@@ -23,14 +23,12 @@ import org.hibernate.sql.ast.spi.query.MutationStatement;
 import org.hibernate.sql.ast.spi.Statement;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.ast.spi.query.delete.DeleteStatement;
-import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.sql.ast.spi.query.expression.Summarization;
 import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
 import org.hibernate.sql.ast.spi.query.insert.InsertSelectStatement;
-import org.hibernate.sql.ast.spi.query.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.LikePredicate;
 import org.hibernate.sql.ast.spi.query.select.QueryPart;
 import org.hibernate.sql.ast.spi.query.select.QuerySpec;
@@ -61,20 +59,6 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 
 	private FullJoinEmulation currentFullJoinEmulationHelper() {
 		return fullJoinEmulations.getFirst();
-	}
-
-	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
-			appendSql( OPEN_PARENTHESIS );
-			renderArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
-			appendSql( " div " );
-			renderArithmeticOperand( arithmeticExpression.getRightHandOperand() );
-			appendSql( CLOSE_PARENTHESIS );
-		}
-		else {
-			super.visitBinaryArithmeticExpression(arithmeticExpression);
-		}
 	}
 
 	@Override
@@ -176,18 +160,6 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 			appendSql( " as char(" );
 			appendSql( sizeEstimate );
 			appendSql( "))" );
-		}
-	}
-
-	@Override
-	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
-		final boolean isNegated = booleanExpressionPredicate.isNegated();
-		if ( isNegated ) {
-			appendSql( "not(" );
-		}
-		booleanExpressionPredicate.getExpression().accept( this );
-		if ( isNegated ) {
-			appendSql( CLOSE_PARENTHESIS );
 		}
 	}
 

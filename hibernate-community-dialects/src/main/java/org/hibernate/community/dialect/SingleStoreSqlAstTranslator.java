@@ -31,7 +31,6 @@ import org.hibernate.dialect.sql.ast.spi.InsertConflictRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardInsertConflictRenderingSupport;
 import org.hibernate.sql.ast.spi.query.delete.DeleteStatement;
 import org.hibernate.sql.ast.spi.query.expression.Any;
-import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.spi.query.expression.CastTarget;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.query.expression.Every;
@@ -41,7 +40,6 @@ import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
 import org.hibernate.sql.ast.spi.query.expression.Summarization;
 import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
 import org.hibernate.sql.ast.spi.query.insert.InsertSelectStatement;
-import org.hibernate.sql.ast.spi.query.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.LikePredicate;
 import org.hibernate.sql.ast.spi.query.select.QueryGroup;
 import org.hibernate.sql.ast.spi.query.select.QueryPart;
@@ -67,20 +65,6 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 	@SPI({ SPI.Role.IMPLEMENT, SPI.Role.SUPPLY })
 	protected SelectItemReferenceStrategy getGroupBySelectItemReferenceStrategy() {
 		return SelectItemReferenceStrategy.POSITION;
-	}
-
-	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
-			appendSql( OPEN_PARENTHESIS );
-			renderArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
-			appendSql( " div " );
-			renderArithmeticOperand( arithmeticExpression.getRightHandOperand() );
-			appendSql( CLOSE_PARENTHESIS );
-		}
-		else {
-			super.visitBinaryArithmeticExpression( arithmeticExpression );
-		}
 	}
 
 	@Override
@@ -153,18 +137,6 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 		expression.accept( this );
 	}
 
-
-	@Override
-	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
-		final boolean isNegated = booleanExpressionPredicate.isNegated();
-		if ( isNegated ) {
-			appendSql( "not(" );
-		}
-		booleanExpressionPredicate.getExpression().accept( this );
-		if ( isNegated ) {
-			appendSql( CLOSE_PARENTHESIS );
-		}
-	}
 
 	@Override
 	protected PaginationRenderingSupport getPaginationRenderingSupport() {

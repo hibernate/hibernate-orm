@@ -23,7 +23,6 @@ import org.hibernate.sql.ast.spi.query.select.SqlSelection;
 import org.hibernate.sql.ast.spi.query.MutationStatement;
 import org.hibernate.sql.ast.spi.Statement;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
-import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.spi.query.expression.CastTarget;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
@@ -368,21 +367,6 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 			appender.appendSql( c );
 		}
 		appender.appendSql( '\'' );
-	}
-
-	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
-			// Spanner uses functional syntax: DIV(numerator, denominator)
-			appendSql( "div(" );
-			renderArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
-			appendSql( "," );
-			renderArithmeticOperand( arithmeticExpression.getRightHandOperand() );
-			appendSql( ")" );
-		}
-		else {
-			super.visitBinaryArithmeticExpression( arithmeticExpression );
-		}
 	}
 
 	@Override

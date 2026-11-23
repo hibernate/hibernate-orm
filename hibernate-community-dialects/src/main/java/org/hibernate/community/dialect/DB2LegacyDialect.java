@@ -399,6 +399,7 @@ public class DB2LegacyDialect extends Dialect implements CurrentTemporalSupport,
 						PredicateSupport.Capability.TRUTHNESS,
 						getDB2Version().isSameOrAfter( 11 )
 				)
+				.capability( PredicateSupport.Capability.BOOLEAN_EXPRESSION, getDB2Version().isSameOrAfter( 11 ) )
 				.build();
 	}
 
@@ -998,6 +999,10 @@ public class DB2LegacyDialect extends Dialect implements CurrentTemporalSupport,
 	public ExpressionCoercionSupport getExpressionCoercionSupport() {
 		return ExpressionCoercionSupport.builder()
 				.requirements( ExpressionCoercionSupport.Requirement.CAST_NON_STRING_CONCATENATION_ARGUMENTS )
+				.requirements(
+						ExpressionCoercionSupport.Requirement.TYPED_ARITHMETIC_PARAMETERS,
+						ExpressionCoercionSupport.Requirement.CAST_CASE_RESULT_PARAMETER
+				)
 				.build();
 	}
 

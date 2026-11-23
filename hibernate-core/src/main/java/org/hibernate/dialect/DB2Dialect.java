@@ -437,6 +437,7 @@ public class DB2Dialect extends Dialect implements CurrentTemporalSupport, Tempo
 						PredicateSupport.Capability.DISTINCT_FROM,
 						PredicateSupport.Capability.TRUTHNESS
 				)
+				.capability( PredicateSupport.Capability.BOOLEAN_EXPRESSION, true )
 				.build();
 	}
 
@@ -907,6 +908,10 @@ public class DB2Dialect extends Dialect implements CurrentTemporalSupport, Tempo
 	public ExpressionCoercionSupport getExpressionCoercionSupport() {
 		return ExpressionCoercionSupport.builder()
 				.requirements( ExpressionCoercionSupport.Requirement.CAST_NON_STRING_CONCATENATION_ARGUMENTS )
+				.requirements(
+						ExpressionCoercionSupport.Requirement.TYPED_ARITHMETIC_PARAMETERS,
+						ExpressionCoercionSupport.Requirement.CAST_CASE_RESULT_PARAMETER
+				)
 				.build();
 	}
 

@@ -2,6 +2,7 @@ package org.hibernate.community.dialect;
 
 import java.sql.SQLException;
 
+import org.hibernate.dialect.sql.ast.spi.ArithmeticSupport;
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
@@ -600,6 +601,14 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 	}
 
 	@Override
+	public ArithmeticSupport getArithmeticSupport() {
+		return ArithmeticSupport.builder( super.getArithmeticSupport() )
+				.moduloForm( ArithmeticSupport.ModuloForm.OPERATOR )
+				.integerDivisionForm( ArithmeticSupport.IntegerDivisionForm.FLOOR )
+				.build();
+	}
+
+	@Override
 	public PredicateSupport getPredicateSupport() {
 		return PredicateSupport.builder( super.getPredicateSupport() )
 				.caseInsensitiveLikeOperator( "ilike" )
@@ -607,6 +616,7 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 						PredicateSupport.Capability.DISTINCT_FROM,
 						PredicateSupport.Capability.TRUTHNESS
 				)
+				.capability( PredicateSupport.Capability.BOOLEAN_EXPRESSION, true )
 				.build();
 	}
 

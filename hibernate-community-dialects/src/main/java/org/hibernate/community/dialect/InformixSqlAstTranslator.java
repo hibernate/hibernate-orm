@@ -35,7 +35,6 @@ import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.dialect.function.spi.WindowFunctionSupport;
 import org.hibernate.dialect.sql.ast.spi.InsertConflictRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardInsertConflictRenderingSupport;
-import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.spi.query.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.spi.query.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
@@ -48,7 +47,6 @@ import org.hibernate.sql.ast.spi.query.select.QueryGroup;
 import org.hibernate.sql.ast.spi.query.select.QueryPart;
 import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.ast.spi.query.select.SelectClause;
-import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.ast.spi.model.TableInsertStandard;
 
@@ -278,11 +276,6 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 		return StandardDerivedTableRenderingSupport.VALUES_SELECT_LIST;
 	}
 
-	@Override
-	protected void renderArithmeticOperand(Expression expression) {
-		render( expression, SqlAstNodeRenderingMode.NO_UNTYPED );
-	}
-
 	private static boolean isConcatFunction(Expression expression) {
 		return expression instanceof FunctionExpression fn
 			&& fn.getFunctionName().equals( "concat" );
@@ -309,14 +302,6 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 	@Override
 	protected void renderCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression, boolean inSelect) {
 		renderAnsiCaseSimpleExpression( caseSimpleExpression, this::caseArgument );
-	}
-
-	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
-			appendSql( "floor" );
-		}
-		super.visitBinaryArithmeticExpression( arithmeticExpression );
 	}
 
 	@Override

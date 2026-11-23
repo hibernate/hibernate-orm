@@ -1,5 +1,6 @@
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.function.spi.ExpressionCoercionSupport;
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupports;
 
@@ -232,6 +233,15 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect implements C
 	@Override
 	public SyntheticTableGroupSupport getSyntheticTableGroupSupport() {
 		return SyntheticTableGroupSupport.SELECT_ONE_FOR_LITERALS;
+	}
+
+	@Override
+	public ExpressionCoercionSupport getExpressionCoercionSupport() {
+		return ExpressionCoercionSupport.builder( super.getExpressionCoercionSupport() )
+				.requirements(
+						ExpressionCoercionSupport.Requirement.CAST_CASE_RESULT_PARAMETER
+				)
+				.build();
 	}
 
 	@Override

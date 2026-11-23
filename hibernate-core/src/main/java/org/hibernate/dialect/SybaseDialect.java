@@ -2,6 +2,7 @@ package org.hibernate.dialect;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import org.hibernate.dialect.function.spi.ExpressionCoercionSupport;
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupports;
 
@@ -229,6 +230,15 @@ public class SybaseDialect extends AbstractTransactSQLDialect implements Current
 	@Override
 	public SyntheticTableGroupSupport getSyntheticTableGroupSupport() {
 		return SyntheticTableGroupSupport.SELECT_ONE_FOR_LITERALS;
+	}
+
+	@Override
+	public ExpressionCoercionSupport getExpressionCoercionSupport() {
+		return ExpressionCoercionSupport.builder( super.getExpressionCoercionSupport() )
+				.requirements(
+						ExpressionCoercionSupport.Requirement.CAST_CASE_RESULT_PARAMETER
+				)
+				.build();
 	}
 
 	@Override

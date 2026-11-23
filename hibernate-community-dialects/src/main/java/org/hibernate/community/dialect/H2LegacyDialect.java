@@ -4,6 +4,8 @@ import java.sql.SQLException;
 
 import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractErrorCode;
 
+import org.hibernate.dialect.function.spi.ExpressionCoercionSupport;
+import org.hibernate.dialect.sql.ast.spi.ArithmeticSupport;
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
@@ -830,12 +832,29 @@ public class H2LegacyDialect extends Dialect implements CurrentTemporalSupport, 
 	}
 
 	@Override
+	public ExpressionCoercionSupport getExpressionCoercionSupport() {
+		return ExpressionCoercionSupport.builder( super.getExpressionCoercionSupport() )
+				.requirements(
+						ExpressionCoercionSupport.Requirement.TYPED_ARITHMETIC_PARAMETERS
+				)
+				.build();
+	}
+
+	@Override
+	public ArithmeticSupport getArithmeticSupport() {
+		return ArithmeticSupport.builder( super.getArithmeticSupport() )
+				.moduloForm( ArithmeticSupport.ModuloForm.OPERATOR )
+				.build();
+	}
+
+	@Override
 	public PredicateSupport getPredicateSupport() {
 		final PredicateSupport.Builder builder = PredicateSupport.builder( super.getPredicateSupport() )
 				.capability( PredicateSupport.Capability.DISTINCT_FROM, true );
 		if ( getVersion().isSameOrAfter( 1, 4, 194 ) ) {
 			builder.caseInsensitiveLikeOperator( "ilike" );
 		}
+		builder.capability( PredicateSupport.Capability.BOOLEAN_EXPRESSION, true );
 		return builder.build();
 	}
 

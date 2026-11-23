@@ -28,7 +28,6 @@ import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
 import org.hibernate.sql.ast.spi.query.expression.Summarization;
 import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
-import org.hibernate.sql.ast.spi.query.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
@@ -71,18 +70,6 @@ public class HSQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	@Override
 	protected void renderExpressionAsClauseItem(Expression expression) {
 		expression.accept( this );
-	}
-
-	@Override
-	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
-		final boolean isNegated = booleanExpressionPredicate.isNegated();
-		if ( isNegated ) {
-			appendSql( "not(" );
-		}
-		booleanExpressionPredicate.getExpression().accept( this );
-		if ( isNegated ) {
-			appendSql( CLOSE_PARENTHESIS );
-		}
 	}
 
 	@Override
@@ -284,8 +271,4 @@ public class HSQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 		return getDialect().getVersion().isSameOrAfter( 2, 5 );
 	}
 
-	@Override
-	protected void renderArithmeticOperand(Expression expression) {
-		render( expression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
-	}
 }

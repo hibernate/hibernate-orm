@@ -32,7 +32,6 @@ import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.ast.spi.query.from.TableGroupJoin;
 import org.hibernate.sql.ast.spi.query.select.QuerySpec;
-import org.hibernate.sql.ast.spi.query.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.BetweenPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.InArrayPredicate;
@@ -117,18 +116,6 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 	@Override
 	protected void renderExpressionAsClauseItem(Expression expression) {
 		expression.accept( this );
-	}
-
-	@Override
-	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
-		final boolean isNegated = booleanExpressionPredicate.isNegated();
-		if ( isNegated ) {
-			appendSql( "not(" );
-		}
-		booleanExpressionPredicate.getExpression().accept( this );
-		if ( isNegated ) {
-			appendSql( CLOSE_PARENTHESIS );
-		}
 	}
 
 	@Override
@@ -363,12 +350,6 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 		else {
 			expression.accept( this );
 		}
-	}
-
-	@Override
-	protected void renderArithmeticOperand(Expression expression) {
-		// HSQL requires a type for both parameters and null literals in arithmetic expressions.
-		render( expression, SqlAstNodeRenderingMode.NO_UNTYPED );
 	}
 
 }

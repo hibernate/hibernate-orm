@@ -1,5 +1,6 @@
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.function.spi.ExpressionCoercionSupport;
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
@@ -793,6 +794,15 @@ public class FirebirdDialect extends Dialect implements CurrentTemporalSupport, 
 	}
 
 	@Override
+	public ExpressionCoercionSupport getExpressionCoercionSupport() {
+		return ExpressionCoercionSupport.builder( super.getExpressionCoercionSupport() )
+				.requirements(
+						ExpressionCoercionSupport.Requirement.CAST_CASE_RESULT_PARAMETER
+				)
+				.build();
+	}
+
+	@Override
 	public PredicateSupport getPredicateSupport() {
 		return PredicateSupport.builder( super.getPredicateSupport() )
 				.capability( PredicateSupport.Capability.DISTINCT_FROM, true )
@@ -800,6 +810,7 @@ public class FirebirdDialect extends Dialect implements CurrentTemporalSupport, 
 						PredicateSupport.Capability.EXPRESSION_PLACEMENT,
 						getVersion().isSameOrAfter( 3 )
 				)
+				.capability( PredicateSupport.Capability.BOOLEAN_EXPRESSION, getVersion().isSameOrAfter( 3 ) )
 				.build();
 	}
 

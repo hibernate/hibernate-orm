@@ -1,7 +1,6 @@
 package org.hibernate.community.dialect;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.hibernate.Internal;
 import org.hibernate.dialect.sql.ast.spi.DerivedTableRenderingSupport;
@@ -22,8 +21,6 @@ import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.dialect.sql.ast.spi.InsertConflictRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardInsertConflictRenderingSupport;
 import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.spi.query.expression.CaseSearchedExpression;
-import org.hibernate.sql.ast.spi.query.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.FunctionExpression;
 import org.hibernate.sql.ast.spi.query.expression.JdbcLiteral;
@@ -34,7 +31,6 @@ import org.hibernate.sql.ast.spi.query.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
 import org.hibernate.sql.ast.spi.query.expression.Summarization;
 import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
-import org.hibernate.sql.ast.spi.query.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.InListPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.SelfRenderingPredicate;
@@ -75,74 +71,9 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		return StandardQueryMutationRenderingSupport.MERGE;
 	}
 
-	@Override
-	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
-		if ( getDialect().getVersion().isSameOrAfter( 3 ) ) {
-			final boolean isNegated = booleanExpressionPredicate.isNegated();
-			if ( isNegated ) {
-				appendSql( "not(" );
-			}
-			booleanExpressionPredicate.getExpression().accept( this );
-			if ( isNegated ) {
-				appendSql( CLOSE_PARENTHESIS );
-			}
-		}
-		else {
-			super.visitBooleanExpressionPredicate( booleanExpressionPredicate );
-		}
-	}
-
 	// Firebird does not allow CASE expressions where all result arms contain plain parameters.
 	// At least one result arm must provide some type context for inference,
 	// so we cast the first result arm if we encounter this condition
-
-	@Override
-	protected void renderAnsiCaseSearchedExpression(
-			CaseSearchedExpression caseSearchedExpression,
-			Consumer<Expression> resultRenderer) {
-		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSearchedExpression ) ) {
-			final List<CaseSearchedExpression.WhenFragment> whenFragments = caseSearchedExpression.getWhenFragments();
-			final Expression firstResult = whenFragments.get( 0 ).getResult();
-			super.renderAnsiCaseSearchedExpression(
-					caseSearchedExpression,
-					e -> {
-						if ( e == firstResult ) {
-							renderCasted( e );
-						}
-						else {
-							resultRenderer.accept( e );
-						}
-					}
-			);
-		}
-		else {
-			super.renderAnsiCaseSearchedExpression( caseSearchedExpression, resultRenderer );
-		}
-	}
-
-	@Override
-	protected void renderAnsiCaseSimpleExpression(
-			CaseSimpleExpression caseSimpleExpression,
-			Consumer<Expression> resultRenderer) {
-		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSimpleExpression ) ) {
-			final List<CaseSimpleExpression.WhenFragment> whenFragments = caseSimpleExpression.getWhenFragments();
-			final Expression firstResult = whenFragments.get( 0 ).getResult();
-			super.renderAnsiCaseSimpleExpression(
-					caseSimpleExpression,
-					e -> {
-						if ( e == firstResult ) {
-							renderCasted( e );
-						}
-						else {
-							resultRenderer.accept( e );
-						}
-					}
-			);
-		}
-		else {
-			super.renderAnsiCaseSimpleExpression( caseSimpleExpression, resultRenderer );
-		}
-	}
 
 	@Override
 	protected PaginationRenderingSupport getPaginationRenderingSupport() {

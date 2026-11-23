@@ -1475,6 +1475,7 @@ public class MySQLLegacyDialect extends Dialect implements CurrentTemporalSuppor
 		// It supports a proprietary DISTINCT FROM operator
 		return PredicateSupport.builder( super.getPredicateSupport() )
 				.capability( PredicateSupport.Capability.DISTINCT_FROM, true )
+				.capability( PredicateSupport.Capability.BOOLEAN_EXPRESSION, true )
 				.build();
 	}
 

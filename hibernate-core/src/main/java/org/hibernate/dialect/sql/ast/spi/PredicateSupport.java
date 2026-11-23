@@ -80,7 +80,12 @@ public final class PredicateSupport {
 		TRUTHNESS,
 
 		/// Predicates may occur where the SQL grammar expects a value expression.
-		EXPRESSION_PLACEMENT
+		EXPRESSION_PLACEMENT,
+
+		/// A boolean-valued expression may occur where the SQL grammar expects a
+		/// predicate, as in `where e.active` and `where not(e.active)`. Without
+		/// this, the expression is compared with a boolean literal.
+		BOOLEAN_EXPRESSION
 	}
 
 	/// Build an immutable predicate-support profile.

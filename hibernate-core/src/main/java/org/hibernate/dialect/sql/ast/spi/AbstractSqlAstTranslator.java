@@ -9001,26 +9001,74 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		final BinaryArithmeticOperator operator = arithmeticExpression.getOperator();
-		if ( operator == BinaryArithmeticOperator.MODULO ) {
+		final ArithmeticSupport arithmeticSupport = dialect.getArithmeticSupport();
+		final Expression lhs = arithmeticExpression.getLeftHandOperand();
+		final Expression rhs = arithmeticExpression.getRightHandOperand();
+		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
+			switch ( arithmeticSupport.getIntegerDivisionForm() ) {
+				case FLOOR:
+					// the standard form below supplies the parentheses
+					appendSql( "floor" );
+					break;
+				case DIV_OPERATOR:
+					appendSql( OPEN_PARENTHESIS );
+					renderArithmeticOperand( lhs );
+					appendSql( " div " );
+					renderArithmeticOperand( rhs );
+					appendSql( CLOSE_PARENTHESIS );
+					return;
+				case CAST_INTEGER:
+					appendSql( "cast(" );
+					renderArithmeticOperand( lhs );
+					appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
+					renderArithmeticOperand( rhs );
+					appendSql( " as int)" );
+					return;
+				case DIV_FUNCTION:
+					appendSql( "div(" );
+					renderArithmeticOperand( lhs );
+					appendSql( ',' );
+					renderArithmeticOperand( rhs );
+					appendSql( CLOSE_PARENTHESIS );
+					return;
+				case BACKSLASH:
+					renderArithmeticOperand( lhs );
+					appendSql( " \\ " );
+					renderArithmeticOperand( rhs );
+					return;
+				case NATIVE:
+					break;
+			}
+		}
+		if ( arithmeticExpression.getOperator() == BinaryArithmeticOperator.MODULO
+				&& arithmeticSupport.getModuloForm() == ArithmeticSupport.ModuloForm.FUNCTION ) {
 			append( "mod" );
 			appendSql( OPEN_PARENTHESIS );
-			renderArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
+			renderArithmeticOperand( lhs );
 			appendSql( ',' );
-			renderArithmeticOperand( arithmeticExpression.getRightHandOperand() );
+			renderArithmeticOperand( rhs );
 			appendSql( CLOSE_PARENTHESIS );
 		}
 		else {
 			appendSql( OPEN_PARENTHESIS );
-			renderArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
+			renderArithmeticOperand( lhs );
 			appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-			renderArithmeticOperand( arithmeticExpression.getRightHandOperand() );
+			renderArithmeticOperand( rhs );
 			appendSql( CLOSE_PARENTHESIS );
 		}
 	}
 
 	protected void renderArithmeticOperand(Expression expression) {
-		expression.accept( this );
+		final ExpressionCoercionSupport coercionSupport = dialect.getExpressionCoercionSupport();
+		if ( coercionSupport.requires( ExpressionCoercionSupport.Requirement.TYPED_ARITHMETIC_OPERANDS ) ) {
+			render( expression, SqlAstNodeRenderingMode.NO_UNTYPED );
+		}
+		else if ( coercionSupport.requires( ExpressionCoercionSupport.Requirement.TYPED_ARITHMETIC_PARAMETERS ) ) {
+			render( expression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+		}
+		else {
+			expression.accept( this );
+		}
 	}
 
 	@Override
@@ -9099,6 +9147,38 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void renderAnsiCaseSearchedExpression(
+			CaseSearchedExpression caseSearchedExpression,
+			Consumer<Expression> resultRenderer) {
+		if ( requiresCastOfCaseResultParameter() && areAllResultsParameters( caseSearchedExpression ) ) {
+			final Expression firstResult = caseSearchedExpression.getWhenFragments().get( 0 ).getResult();
+			doRenderAnsiCaseSearchedExpression(
+					caseSearchedExpression,
+					castingFirstResult( firstResult, resultRenderer )
+			);
+		}
+		else {
+			doRenderAnsiCaseSearchedExpression( caseSearchedExpression, resultRenderer );
+		}
+	}
+
+	private boolean requiresCastOfCaseResultParameter() {
+		return parameterRenderingMode == SqlAstNodeRenderingMode.DEFAULT
+			&& dialect.getExpressionCoercionSupport()
+					.requires( ExpressionCoercionSupport.Requirement.CAST_CASE_RESULT_PARAMETER );
+	}
+
+	private Consumer<Expression> castingFirstResult(Expression firstResult, Consumer<Expression> resultRenderer) {
+		return result -> {
+			if ( result == firstResult ) {
+				renderCasted( result );
+			}
+			else {
+				resultRenderer.accept( result );
+			}
+		};
+	}
+
+	private void doRenderAnsiCaseSearchedExpression(
 			CaseSearchedExpression caseSearchedExpression,
 			Consumer<Expression> resultRenderer) {
 		final List<CaseSearchedExpression.WhenFragment> whenFragments = caseSearchedExpression.getWhenFragments();
@@ -9202,6 +9282,21 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void renderAnsiCaseSimpleExpression(
+			CaseSimpleExpression caseSimpleExpression,
+			Consumer<Expression> resultRenderer) {
+		if ( requiresCastOfCaseResultParameter() && areAllResultsParameters( caseSimpleExpression ) ) {
+			final Expression firstResult = caseSimpleExpression.getWhenFragments().get( 0 ).getResult();
+			doRenderAnsiCaseSimpleExpression(
+					caseSimpleExpression,
+					castingFirstResult( firstResult, resultRenderer )
+			);
+		}
+		else {
+			doRenderAnsiCaseSimpleExpression( caseSimpleExpression, resultRenderer );
+		}
+	}
+
+	private void doRenderAnsiCaseSimpleExpression(
 			CaseSimpleExpression caseSimpleExpression,
 			Consumer<Expression> resultRenderer) {
 		final List<CaseSimpleExpression.WhenFragment> whenFragments = caseSimpleExpression.getWhenFragments();
@@ -9395,6 +9490,17 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
+		if ( dialect.getPredicateSupport().supports( PredicateSupport.Capability.BOOLEAN_EXPRESSION ) ) {
+			final boolean isNegated = booleanExpressionPredicate.isNegated();
+			if ( isNegated ) {
+				appendSql( "not(" );
+			}
+			booleanExpressionPredicate.getExpression().accept( this );
+			if ( isNegated ) {
+				appendSql( CLOSE_PARENTHESIS );
+			}
+			return;
+		}
 		// Most databases do not support boolean expressions in a predicate context, so we render `expr=true`
 		appendSql( '(' );
 		booleanExpressionPredicate.getExpression().accept( this );

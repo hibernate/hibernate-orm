@@ -512,7 +512,13 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 					.getIdentifierIfNotUnsaved( targetObject, session );
 		}
 
-		Hibernate.initializeProperty( targetObject, modelPart.getPartName() );
+		if ( side.getNature() == Nature.TARGET ) {
+			Hibernate.initializeProperty( targetObject, modelPart.getPartName() );
+		}
+		else if ( !Hibernate.isInitialized( targetObject ) ) {
+			// The key-side accessor may follow an association to the named target property.
+			Hibernate.initialize( targetObject );
+		}
 		return castNonNull( ( (PropertyBasedMapping) modelPart )
 				.getPropertyAccess() ).getPropertyValueAccessor().get( targetObject );
 	}

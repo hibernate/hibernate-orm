@@ -18,6 +18,7 @@ import jakarta.persistence.MapKeyJoinColumns;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
+import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -94,6 +95,43 @@ class LazyUniqueKeyAssociationTest {
 	}
 
 	@Test
+	void bindManyToOneParameter(SessionFactoryScope scope) {
+		persistCatalogWithFeaturedItem( scope );
+		scope.inSession( session -> {
+			final var item = session.find( Item.class, 1 );
+			assertFalse( Hibernate.isPropertyInitialized( item, "code" ) );
+			assertEquals( 1, session.createSelectionQuery(
+					"select id(c) from Catalog c where c.featuredItem = :item", Integer.class )
+					.setParameter( "item", item )
+					.getSingleResult() );
+		} );
+	}
+
+	@Test
+	void readKeySideFromEnhancedProxy(SessionFactoryScope scope) {
+		persistCatalogWithFeaturedItem( scope );
+		scope.inSession( session -> {
+			// The key-side accessor follows Catalog.featuredItem to Item.code.
+			Hibernate.initializeProperty( session.find( Item.class, 1 ), "code" );
+			final var catalog = session.getReference( Catalog.class, 1 );
+			assertFalse( Hibernate.isInitialized( catalog ) );
+			final var association = (EntityAssociationMapping) session.getFactory().getMappingMetamodel()
+					.getEntityDescriptor( Catalog.class ).findAttributeMapping( "featuredItem" );
+			final var fk = association.getForeignKeyDescriptor();
+			assertEquals( "KEY", fk.getAssociationKeyFromSide( catalog, fk.getKeySide(), session ) );
+		} );
+	}
+
+	private void persistCatalogWithFeaturedItem(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var catalog = new Catalog();
+			catalog.featuredItem = session.find( Item.class, 1 );
+			Hibernate.initializeProperty( catalog.featuredItem, "code" );
+			session.persist( catalog );
+		} );
+	}
+
+	@Test
 	void lookupCompositeMapKey(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final var item = new RegionalItem();
@@ -115,8 +153,9 @@ class LazyUniqueKeyAssociationTest {
 
 	@Entity(name = "Catalog")
 	static class Catalog {
+		// This identifier and the referenced unique key on Item share a property name.
 		@Id
-		int id = 1;
+		int code = 1;
 
 		@ManyToOne
 		@JoinColumn(name = "featured_code", referencedColumnName = "code")

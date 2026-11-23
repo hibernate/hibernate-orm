@@ -287,11 +287,14 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		}
 
 		final OperationProducer deleteAllRowsOperationProducer;
+		final RowMutationOperations.DeleteAllRowsBindings deleteAllRowsBindings;
 		if ( !isInverse() && isRowDeleteEnabled() ) {
 			deleteAllRowsOperationProducer = this::buildDeleteAllOperation;
+			deleteAllRowsBindings = this::applyDeleteAllRowsBindings;
 		}
 		else {
 			deleteAllRowsOperationProducer = null;
+			deleteAllRowsBindings = null;
 		}
 
 		return new RowMutationOperations(
@@ -303,7 +306,8 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 				updateRowRestrictions,
 				deleteRowOperationProducer,
 				deleteRowRestrictions,
-				deleteAllRowsOperationProducer
+				deleteAllRowsOperationProducer,
+				deleteAllRowsBindings
 		);
 	}
 
@@ -704,6 +708,28 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		return updateBuilder.buildMutation();
 	}
 
+	@Override
+	protected void applyDeleteAllRowsBindings(
+			@Nonnull Object key,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull JdbcValueBindings jdbcValueBindings) {
+		super.applyDeleteAllRowsBindings( key, session, jdbcValueBindings );
+		bindTemporalEnd( session, jdbcValueBindings );
+	}
+
+	private void bindTemporalEnd(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull JdbcValueBindings jdbcValueBindings) {
+		final var temporalMapping = getAttributeMapping().getTemporalMapping();
+		if ( temporalMapping != null && isUsingTransactionIdParameters( session ) ) {
+			jdbcValueBindings.bindValue(
+					session.getCurrentChangesetIdentifier(),
+					temporalMapping.getEndingColumnMapping(),
+					ParameterUsage.SET
+			);
+		}
+	}
+
 	private void applyDeleteRowRestrictions(
 			@Nonnull PersistentCollection<?> collection,
 			@Nonnull Object keyValue,
@@ -712,14 +738,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			@Nonnull SharedSessionContractImplementor session,
 			@Nonnull JdbcValueBindings jdbcValueBindings) {
 		final var attributeMapping = getAttributeMapping();
-		final var temporalMapping = attributeMapping.getTemporalMapping();
-		if ( temporalMapping != null && isUsingTransactionIdParameters( session ) ) {
-			jdbcValueBindings.bindValue(
-					session.getCurrentChangesetIdentifier(),
-					temporalMapping.getEndingColumnMapping(),
-					ParameterUsage.SET
-			);
-		}
+		bindTemporalEnd( session, jdbcValueBindings );
 		final var identifierDescriptor = attributeMapping.getIdentifierDescriptor();
 		if ( identifierDescriptor != null ) {
 			identifierDescriptor.decompose(

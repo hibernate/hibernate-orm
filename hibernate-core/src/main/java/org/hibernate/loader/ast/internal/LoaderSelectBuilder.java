@@ -788,23 +788,7 @@ public class LoaderSelectBuilder {
 		// because for table group joins the restriction is applied
 		// via PluralAttributeMappingImpl.createTableGroupJoin
 		assert tableGroup.getNavigablePath().getParent() == null;
-		pluralAttributeMapping.applyBaseRestrictions(
-				querySpec::applyPredicate,
-				tableGroup,
-				true,
-				loadQueryInfluencers.getEnabledFilters(),
-				false,
-				null,
-				astCreationState
-		);
-		pluralAttributeMapping.applyBaseManyToManyRestrictions(
-				querySpec::applyPredicate,
-				tableGroup,
-				true,
-				loadQueryInfluencers.getEnabledFilters(),
-				null,
-				astCreationState
-		);
+		pluralAttributeMapping.applyCollectionRestrictions( tableGroup, querySpec::applyPredicate, astCreationState );
 	}
 
 	private void applyFiltering(

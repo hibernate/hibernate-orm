@@ -96,15 +96,6 @@ public class CollectionBatchLoaderArrayParam
 				getSessionFactory()
 		);
 
-		final var querySpec = sqlSelect.getQueryPart().getFirstQuerySpec();
-		final var tableGroup = querySpec.getFromClause().getRoots().get( 0 );
-		attributeMapping.applyAuxiliaryRestrictions(
-				tableGroup,
-				querySpec::applyPredicate,
-				getInfluencers(),
-				sqlAliasBaseGenerator
-		);
-
 		jdbcSelectOperation = getSessionFactory().getJdbcServices()
 				.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()

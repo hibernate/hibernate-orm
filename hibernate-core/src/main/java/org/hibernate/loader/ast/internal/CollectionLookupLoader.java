@@ -95,7 +95,6 @@ public class CollectionLookupLoader {
 			restriction.addRestrictedPart( restrictedParts );
 		}
 		final var jdbcParametersBuilder = JdbcParametersList.newBuilder();
-		final var sqlAliasBaseGenerator = new SqlAliasBaseManager();
 		// the rows of the collection, restricted like the rows which load the collection
 		final var rows = LoaderSelectBuilder.createSelect(
 				attributeMapping,
@@ -106,19 +105,13 @@ public class CollectionLookupLoader {
 				influencers,
 				new LockOptions(),
 				jdbcParametersBuilder::add,
-				sqlAliasBaseGenerator,
+				new SqlAliasBaseManager(),
 				sessionFactory
 		).getQueryPart().getFirstQuerySpec();
 		if ( restriction != null ) {
 			restriction.restrictJoined( rows, jdbcParametersBuilder::add );
 		}
 		final var tableGroup = rows.getFromClause().getRoots().get( 0 );
-		attributeMapping.applyAuxiliaryRestrictions(
-				tableGroup,
-				rows::applyPredicate,
-				influencers,
-				sqlAliasBaseGenerator
-		);
 		jdbcParameters = jdbcParametersBuilder.build();
 
 		final var lookup = new QuerySpec( true );

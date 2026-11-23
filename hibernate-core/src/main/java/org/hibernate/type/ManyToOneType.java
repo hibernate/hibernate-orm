@@ -213,12 +213,22 @@ public class ManyToOneType extends EntityType {
 		if ( isSame( old, current ) ) {
 			return false;
 		}
-		else {
-			final Object oldid = getIdentifierEvenIfTransient( old, session );
-			final Object newid = getIdentifierEvenIfTransient( current, session );
-			return getIdentifierOrUniqueKeyType( session.getFactory().getRuntimeMetamodels() )
-					.isDirty( oldid, newid, session );
+		else if ( hasUnfetchedUniqueKey( current ) || hasUnfetchedUniqueKey( old ) ) {
+			if ( old == null || current == null ) {
+				return true;
+			}
+			// Two managed references with known primary keys can be compared without
+			// fetching either unique key just to decide whether to issue an update.
+			final Object oldId = session.getContextEntityIdentifier( old );
+			final Object currentId = session.getContextEntityIdentifier( current );
+			if ( oldId != null && currentId != null ) {
+				return getIdentifierType( session ).isDirty( oldId, currentId, session );
+			}
 		}
+		final Object oldid = getIdentifierEvenIfTransient( old, session );
+		final Object newid = getIdentifierEvenIfTransient( current, session );
+		return getIdentifierOrUniqueKeyType( session.getFactory().getRuntimeMetamodels() )
+				.isDirty( oldid, newid, session );
 	}
 
 	@Override

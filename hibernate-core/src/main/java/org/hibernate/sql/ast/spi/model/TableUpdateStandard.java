@@ -16,6 +16,7 @@ import org.hibernate.sql.spi.mutation.jdbc.JdbcMutationOperation;
 public class TableUpdateStandard
 		extends AbstractTableUpdate<JdbcMutationOperation>
 		implements GeneratedMutation<JdbcMutationOperation> {
+	private final List<ColumnWriteFragment> existenceChecks;
 	private final String whereFragment;
 	private final Expectation expectation;
 	private final List<ColumnReference> returningColumns;
@@ -53,6 +54,7 @@ public class TableUpdateStandard
 		super( mutatingTable, mutationTarget, sqlComment, valueBindings, keyRestrictionBindings, optLockRestrictionBindings );
 		this.whereFragment = whereFragment;
 		this.expectation = expectation;
+		this.existenceChecks = List.of();
 		this.returningColumns = returningColumns;
 	}
 
@@ -90,7 +92,23 @@ public class TableUpdateStandard
 		super( tableReference, mutationTarget, sqlComment, valueBindings, keyRestrictionBindings, optLockRestrictionBindings, parameters );
 		this.whereFragment = whereFragment;
 		this.expectation = expectation;
+		this.existenceChecks = List.of();
 		this.returningColumns = Collections.emptyList();
+	}
+
+	public TableUpdateStandard(TableUpdateStandard original, List<ColumnValueBinding> values,
+			List<ColumnValueBinding> keys, List<ColumnWriteFragment> existenceChecks) {
+		super( original.getMutatingTable(), original.getMutationTarget(), original.getMutationComment(),
+				values, keys, original.getOptimisticLockBindings() );
+		this.whereFragment = original.whereFragment;
+		this.expectation = original.expectation;
+		this.returningColumns = original.returningColumns;
+		this.existenceChecks = List.copyOf( existenceChecks );
+	}
+
+	@Override
+	public List<ColumnWriteFragment> getExistenceChecks() {
+		return existenceChecks;
 	}
 
 	@Override

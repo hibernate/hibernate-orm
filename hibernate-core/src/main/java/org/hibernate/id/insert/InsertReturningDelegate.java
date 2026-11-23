@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.action.queue.internal.exec.PropertyRefBindings;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.dialect.generated.spi.GeneratedValuesSupport;
@@ -82,6 +83,28 @@ public class InsertReturningDelegate extends AbstractReturningDelegate {
 	}
 
 	@Override
+	public GeneratedValues performGraphMutation(FlushOperation operation, Object entity, SharedSessionContractImplementor session) {
+		final var row = PropertyRefBindings.bindRow( operation, session );
+		final String sql = row.operation().getSqlString();
+		session.getJdbcServices().getSqlStatementLogger().logStatement( sql );
+		final var statement = prepareStatement( sql, session );
+		try {
+			row.beforeStatement( statement, session );
+			if ( !row.operation().requiresMatchedRow() ) {
+				return executeAndExtractReturning( sql, statement, session, operation );
+			}
+			return executeAndExtractReturning( sql, statement, session, () -> {
+				row.verifyReferencedRows( session );
+				checkEmptyResult( operation, statement, sql, session );
+			} );
+		}
+		finally {
+			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( statement );
+			session.getJdbcCoordinator().afterStatementExecution();
+		}
+	}
+
+	@Override
 	protected GeneratedValues executeAndExtractReturning(
 			String sql,
 			PreparedStatement preparedStatement,
@@ -96,21 +119,26 @@ public class InsertReturningDelegate extends AbstractReturningDelegate {
 			SharedSessionContractImplementor session,
 			FlushOperation operation) {
 		return executeAndExtractReturning( sql, preparedStatement, session,
-				getTiming() == EventType.UPDATE ? () -> {
-					try {
-						final var checker = operation.getOperationResultChecker();
-						if ( checker != null ) {
-							checker.checkResult( 0, preparedStatement, -1, sql, session.getFactory() );
-						}
-						else {
-							((PreparableMutationOperation) operation.getJdbcOperation()).getExpectation()
-									.verifyOutcome( 0, preparedStatement, -1, sql );
-						}
-					}
-					catch (SQLException e) {
-						throw session.getJdbcServices().getSqlExceptionHelper().convert( e, "Unable to check update outcome", sql );
-					}
-				} : null );
+				() -> checkEmptyResult( operation, preparedStatement, sql, session ) );
+	}
+
+	private void checkEmptyResult(FlushOperation operation, PreparedStatement statement, String sql,
+			SharedSessionContractImplementor session) {
+		if ( getTiming() == EventType.UPDATE ) {
+			try {
+				final var checker = operation.getOperationResultChecker();
+				if ( checker != null ) {
+					checker.checkResult( 0, statement, -1, sql, session.getFactory() );
+				}
+				else {
+					((PreparableMutationOperation) operation.getJdbcOperation()).getExpectation()
+							.verifyOutcome( 0, statement, -1, sql );
+				}
+			}
+			catch (SQLException e) {
+				throw session.getJdbcServices().getSqlExceptionHelper().convert( e, "Unable to check update outcome", sql );
+			}
+		}
 	}
 
 	private GeneratedValues executeAndExtractReturning(

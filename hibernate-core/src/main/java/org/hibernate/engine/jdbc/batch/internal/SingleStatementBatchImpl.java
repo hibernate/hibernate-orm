@@ -345,6 +345,21 @@ public class SingleStatementBatchImpl implements SingleStatementBatch {
 			);
 		}
 
+		if ( operation.requiresMatchedRow() ) {
+			for ( int i = 0; i < batchPosition; i++ ) {
+				if ( i >= numberOfRowCounts || rowCounts[i] == 0 || rowCounts[i] == Statement.SUCCESS_NO_INFO ) {
+					resultCheckers[i].verifyReferencedRows();
+					if ( i < numberOfRowCounts && rowCounts[i] == 0 ) {
+						final var stale = new StaleStateException( "No row matched " + sqlString );
+						mapStaleStateException( stale, i );
+						throw stale;
+					}
+				}
+				else if ( rowCounts[i] == Statement.EXECUTE_FAILED ) {
+					throw new HibernateException( "Failed batch entry " + i + " for " + sqlString );
+				}
+			}
+		}
 		if ( !operation.getTableDetails().isIdentifierTable() ) {
 			return;
 		}

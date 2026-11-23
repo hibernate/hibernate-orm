@@ -1,6 +1,7 @@
 package org.hibernate.id.insert;
 
 import jakarta.annotation.Nullable;
+import org.hibernate.action.queue.internal.exec.PropertyRefBindings;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
@@ -10,7 +11,6 @@ import org.hibernate.generator.EventType;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
 import org.hibernate.sql.ast.spi.model.builder.TableInsertBuilderStandard;
 import org.hibernate.sql.ast.spi.model.builder.TableMutationBuilder;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
@@ -112,24 +112,17 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 			FlushOperation operation,
 			Object entity,
 			SharedSessionContractImplementor session) {
-		final var jdbcOperation = (PreparableMutationOperation) operation.getJdbcOperation();
-		final var sql = jdbcOperation.getSqlString();
+		final var row = PropertyRefBindings.bindRow( operation, session );
+		final String sql = row.operation().getSqlString();
 		session.getJdbcServices().getSqlStatementLogger().logStatement( sql );
 
-		final var preparer = session.getJdbcCoordinator().getStatementPreparer();
-		final var preparedStatement = columnNames == null
-				? preparer.prepareStatement( sql, RETURN_GENERATED_KEYS )
-				: preparer.prepareStatement( sql, columnNames );
+		final var preparedStatement = prepareStatement( sql, session );
 		try {
-			final var valueBindings = new org.hibernate.action.queue.spi.bind.JdbcValueBindings(
-					operation.getMutatingTableDescriptor(),
-					jdbcOperation
-			);
+			row.beforeStatement( preparedStatement, session );
 
-			operation.getBindPlan().bindValues( valueBindings, operation, session );
-			valueBindings.beforeStatement( preparedStatement, session );
-
-			session.getJdbcCoordinator().getResultSetReturn().executeUpdate( preparedStatement, sql );
+			if ( session.getJdbcCoordinator().getResultSetReturn().executeUpdate( preparedStatement, sql ) == 0 ) {
+				row.verifyReferencedRows( session );
+			}
 			return extractGeneratedValues( session, preparedStatement, sql,
 					() -> String.format( Locale.ROOT,
 							"Unable to extract generated key for '%s'",

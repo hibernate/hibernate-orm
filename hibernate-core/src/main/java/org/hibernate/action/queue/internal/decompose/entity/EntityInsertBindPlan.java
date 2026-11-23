@@ -27,6 +27,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
 
+import static org.hibernate.action.queue.internal.exec.PropertyRefBindings.bindIfUnfetched;
 import static org.hibernate.action.queue.internal.decompose.entity.BindPlanHelper.shouldBindJdbcValue;
 import static org.hibernate.generator.EventType.INSERT;
 
@@ -146,6 +147,13 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 				final var attribute = tableDescriptor.attributes().get( i );
 				if ( !attribute.isPluralAttributeMapping() && insertable[attribute.getStateArrayPosition()] ) {
 					final Object attributeValue = resolveInsertAttributeValue( attribute, session );
+					if ( attribute instanceof ToOneAttributeMapping
+							&& bindIfUnfetched( valueBindings, attribute, attributeValue, ParameterUsage.SET, session,
+									column -> attribute.getSelectable( column ).isInsertable()
+											&& shouldBindInsertValue( attribute, column, session )
+											&& !isIdentifierColumn( attribute.getSelectable( column ).getSelectionExpression() ) ) ) {
+						continue;
+					}
 					this.valueBindings = valueBindings;
 					this.bindingSession = session;
 					this.bindingAttributeValue = attributeValue;
@@ -186,6 +194,16 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 		finally {
 			this.bindingFlushOperation = null;
 		}
+	}
+
+	// The identifier binder supplies the final value of a shared column.
+	private boolean isIdentifierColumn(String column) {
+		for ( var key : tableDescriptor.keyDescriptor().columns() ) {
+			if ( key.selectionExpression().equals( column ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private Object resolveInsertAttributeValue(

@@ -27,6 +27,11 @@ import org.hibernate.sql.spi.mutation.ValuesAnalysis;
  * @author Steve Ebersole
  */
 public interface TableMutation<O extends MutationOperation> extends Statement {
+	/// Predicates which require each target referenced by primary key to exist.
+	default List<ColumnWriteFragment> getExistenceChecks() {
+		return List.of();
+	}
+
 	/**
 	 * The table being mutated
 	 */

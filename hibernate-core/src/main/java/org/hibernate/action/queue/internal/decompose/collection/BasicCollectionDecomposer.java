@@ -51,6 +51,7 @@ import java.util.function.Consumer;
 
 import static java.util.Collections.emptyIterator;
 import static java.util.Collections.emptyList;
+import static org.hibernate.action.queue.internal.exec.PropertyRefBindings.bindIfUnfetched;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionOrdinalSupport.Slot;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionOrdinalSupport.calculateOrdinal;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionMutationPlanSupport.createTableMapping;
@@ -1509,27 +1510,36 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		else {
 			final var indexDescriptor = attributeMapping.getIndexDescriptor();
 			if ( indexDescriptor != null ) {
-				indexDescriptor.decompose(
-						persister.incrementIndexByBase( collection.getIndex( rowValue, rowPosition, persister ) ),
-						(valueIndex, value, jdbcValueMapping) -> {
-							if ( persister.getIndexColumnIsSettable()[valueIndex] ) {
-								jdbcValueBindings.bindAssignment( valueIndex, value, jdbcValueMapping );
-							}
-						},
-						session
-				);
+				final Object index = persister.incrementIndexByBase( collection.getIndex( rowValue, rowPosition, persister ) );
+				if ( !bindIfUnfetched( jdbcValueBindings, indexDescriptor, index, ParameterUsage.SET, session,
+						i -> persister.getIndexColumnIsSettable()[i] ) ) {
+					indexDescriptor.decompose(
+							index,
+							(valueIndex, value, jdbcValueMapping) -> {
+								if ( persister.getIndexColumnIsSettable()[valueIndex] ) {
+									jdbcValueBindings.bindAssignment( valueIndex, value, jdbcValueMapping );
+								}
+							},
+							session
+					);
+				}
 			}
 		}
 
-		attributeMapping.getElementDescriptor().decompose(
-				collection.getElement( rowValue ),
-				(valueIndex, value, jdbcValueMapping) -> {
-					if ( persister.getElementColumnIsSettable()[valueIndex] ) {
-						jdbcValueBindings.bindAssignment( valueIndex, value, jdbcValueMapping );
-					}
-				},
-				session
-		);
+		final var element = attributeMapping.getElementDescriptor();
+		final Object elementValue = collection.getElement( rowValue );
+		if ( !bindIfUnfetched( jdbcValueBindings, element, elementValue, ParameterUsage.SET, session,
+				i -> persister.getElementColumnIsSettable()[i] ) ) {
+			element.decompose(
+					elementValue,
+					(valueIndex, value, jdbcValueMapping) -> {
+						if ( persister.getElementColumnIsSettable()[valueIndex] ) {
+							jdbcValueBindings.bindAssignment( valueIndex, value, jdbcValueMapping );
+						}
+					},
+					session
+			);
+		}
 
 		final var temporalMapping = attributeMapping.getTemporalMapping();
 		if ( temporalMapping != null
@@ -1680,8 +1690,12 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		final var elementDescriptor = attribute.getElementDescriptor();
 
 		// For Maps, rowValue is a Map.Entry - extract the element (value) first
+		final Object elementValue = collection.getElement( rowValue );
+		if ( bindIfUnfetched( jdbcValueBindings, elementDescriptor, elementValue, ParameterUsage.SET, session, i -> true ) ) {
+			return;
+		}
 		elementDescriptor.decompose(
-				collection.getElement( rowValue ),
+				elementValue,
 				jdbcValueBindings::bindAssignment,
 				session
 		);
@@ -1713,6 +1727,10 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			// For indexed collections (lists, maps), restrict by the index position
 			// This identifies which row in the collection table to update
 			final Object indexValue = collection.getIndex( rowValue, rowPosition, persister );
+			if ( bindIfUnfetched( jdbcValueBindings, indexDescriptor, indexValue, ParameterUsage.RESTRICT, session,
+					i -> indexDescriptor.getSelectable( i ).isUpdateable() ) ) {
+				return;
+			}
 			indexDescriptor.decompose(
 					persister.incrementIndexByBase( indexValue ),
 					jdbcValueBindings::bindUpdateRestriction,

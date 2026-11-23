@@ -99,6 +99,10 @@ public class JdbcValueBindings {
 		}
 	}
 
+	protected boolean hasBindTemplate() {
+		return bindTemplate != null;
+	}
+
 	public static Object resolveValue(Object value) {
 		return value instanceof DelayedValueAccess handle ? handle.get() : value;
 	}

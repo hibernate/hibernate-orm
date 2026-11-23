@@ -12,6 +12,7 @@ import org.hibernate.sql.spi.mutation.jdbc.JdbcInsertMutation;
  * @author Steve Ebersole
  */
 public class TableInsertStandard extends AbstractTableInsert implements TableInsert, GeneratedMutation<JdbcInsertMutation> {
+	private final List<ColumnWriteFragment> existenceChecks;
 	private final List<ColumnReference> returningColumns;
 	private final boolean hasValueSubquery;
 
@@ -33,12 +34,26 @@ public class TableInsertStandard extends AbstractTableInsert implements TableIns
 			boolean hasValueSubquery) {
 		super( mutatingTable, mutationTarget, parameters, valueBindings );
 		this.hasValueSubquery = hasValueSubquery;
+		this.existenceChecks = List.of();
 		this.returningColumns = returningColumns;
+	}
+
+	public TableInsertStandard(TableInsertStandard original, List<ColumnValueBinding> values,
+			List<ColumnWriteFragment> existenceChecks) {
+		super( original.getMutatingTable(), original.getMutationTarget(), original.getMutationComment(), null, values );
+		this.returningColumns = original.returningColumns;
+		this.hasValueSubquery = true;
+		this.existenceChecks = List.copyOf( existenceChecks );
 	}
 
 	/// Whether any inserted value is a scalar subquery.
 	public boolean hasValueSubquery() {
 		return hasValueSubquery;
+	}
+
+	@Override
+	public List<ColumnWriteFragment> getExistenceChecks() {
+		return existenceChecks;
 	}
 
 	@Override

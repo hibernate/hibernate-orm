@@ -19,12 +19,14 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.ModelPart.JdbcValueBiConsumer;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.spi.mutation.ValuesAnalysis;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import static org.hibernate.action.queue.internal.exec.PropertyRefBindings.bindIfUnfetched;
 import static org.hibernate.action.queue.internal.decompose.entity.BindPlanHelper.shouldBindJdbcValue;
 import static org.hibernate.generator.EventType.UPDATE;
 
@@ -210,6 +212,12 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 			return;
 		}
 
+		if ( attribute instanceof ToOneAttributeMapping
+				&& bindIfUnfetched( valueBindings, attribute, value, ParameterUsage.SET, session,
+						i -> attribute.getSelectable( i ).isUpdateable() && valuesAnalysis.includesColumn( attribute.getSelectable( i ) )
+								&& shouldBindUpdateValue( attribute, i, session ) ) ) {
+			return;
+		}
 		this.valueBindings = valueBindings;
 		this.bindingSession = session;
 		try {

@@ -455,22 +455,31 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 		final Object removedId = identifiers.get( index );
 		final int last = collection.size()-1;
 		for ( int i=index; i<last; i++ ) {
-			final Object id = identifiers.get( i+1 );
-			if ( id == null ) {
-				identifiers.remove( i );
-			}
-			else {
-				identifiers.put( i, id );
-			}
+			setIdentifier( i, identifiers.get( i+1 ) );
 		}
-		identifiers.put( last, removedId );
+		setIdentifier( last, removedId );
 	}
 
 	private void beforeAdd(int index) {
-		for ( int i=index; i<collection.size(); i++ ) {
-			identifiers.put( i+1, identifiers.get( i ) );
+		// move the last identifier first, so that no identifier
+		// is overwritten before it has itself been moved
+		for ( int i=collection.size()-1; i>=index; i-- ) {
+			setIdentifier( i+1, identifiers.get( i ) );
 		}
 		identifiers.remove( index );
+	}
+
+	/**
+	 * An element which has not been written yet has no identifier, and must
+	 * have no entry at all, or {@link #preInsert} would not generate one.
+	 */
+	private void setIdentifier(int position, Object identifier) {
+		if ( identifier == null ) {
+			identifiers.remove( position );
+		}
+		else {
+			identifiers.put( position, identifier );
+		}
 	}
 
 	// HHH-10875: the generic IteratorProxy/ListIteratorProxy from AbstractPersistentCollection
@@ -502,6 +511,8 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 			beforeRemove( lastReturnedIndex );
 			itr.remove();
 			elementRemoved = true;
+			// the next element is now at the position of the removed one
+			cursor = lastReturnedIndex - 1;
 			lastReturnedIndex = -1;
 		}
 	}

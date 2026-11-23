@@ -32,6 +32,7 @@ endif::[]
 // Filesystem paths (PDF settings may be overridden by a renderer or document)
 
 :core-project-dir: {root-project-dir}/hibernate-core
+:core-tests-project-dir: {root-project-dir}/hibernate-core-tests
 :documentation-project-dir: {root-project-dir}/documentation
 :testing-project-dir: {root-project-dir}/hibernate-testing
 

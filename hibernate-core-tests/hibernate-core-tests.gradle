@@ -1,0 +1,224 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
+plugins {
+    id "local.java-module"
+    id "local.code-quality"
+}
+
+description = 'Tests for Hibernate\'s core ORM functionality'
+
+configurations {
+    tests {
+        description = 'Configuration for the produced test jar'
+        canBeConsumed = true
+        canBeResolved = false
+    }
+}
+
+dependencies {
+    testImplementation project(':hibernate-core')
+    testImplementation project(':hibernate-testing')
+    testImplementation project(':hibernate-ant')
+    testImplementation project(':hibernate-scan-jandex')
+
+    // todo : to get rid of these
+    testImplementation libs.test.junit4
+    testImplementation libs.test.junit4Engine
+
+    testImplementation libs.test.shrinkwrap
+    testImplementation libs.jakarta.cdi
+    testImplementation libs.jakarta.data
+    testImplementation libs.jakarta.jacc
+    testImplementation libs.jakarta.validation
+    testImplementation( libs.test.validator ) {
+        // for test runtime
+        transitive = true
+    }
+    testImplementation libs.jdbc.h2
+    testImplementation libs.hibernateModelsJandex
+
+    testRuntimeOnly libs.byteBuddy
+    testRuntimeOnly libs.test.weld
+    testRuntimeOnly(libs.test.wildFlyTxnClient) {
+        // WildFly Elytron includes a whole copy of JBoss Logging, Jackson with its original package,
+        // not even shaded, which causes lots of problems.
+        // Since we don't need WildFly Elytron in our tests, we'll just exclude it.
+        exclude group: 'org.wildfly.security', module: 'wildfly-elytron'
+    }
+    testImplementation libs.jandex
+    testImplementation libs.jakarta.jsonb
+    testImplementation libs.jackson
+    testRuntimeOnly libs.jacksonXml
+    testRuntimeOnly libs.jacksonJsr310
+    testImplementation libs.jackson3
+    testImplementation libs.jackson3Xml
+
+    testAnnotationProcessor project( ':hibernate-processor' )
+
+    // These were previously inherited from core's main compile classpath.
+    testImplementation libs.hibernateModels
+    testImplementation libs.hibernateAccessorByteBuddy
+    testImplementation libs.byteBuddy
+    testImplementation libs.jakarta.jaxbApi
+    testImplementation libs.jakarta.jaxb
+    testImplementation libs.jakarta.inject
+    testImplementation libs.antlrRuntime
+    testImplementation libs.jdbc.postgresql
+    testImplementation libs.jdbc.edb
+}
+
+sourceSets {
+    instrumentationTest {
+        // This suite deliberately has no dependency on the ordinary test runtime.
+    }
+    test {
+        resources {
+            srcDir 'src/test/resources'
+            srcDir 'src/test/bundles'
+        }
+    }
+}
+
+dependencies {
+    instrumentationTestImplementation project(':hibernate-core')
+    instrumentationTestImplementation libs.test.junitJupiterApi
+    instrumentationTestRuntimeOnly libs.test.junitJupiterEngine
+    instrumentationTestRuntimeOnly libs.test.junitJupiterLauncher
+}
+
+def instrumentationTestAgent = tasks.register('instrumentationTestAgent', Jar) {
+    archiveClassifier = 'instrumentation-test-agent'
+    from sourceSets.instrumentationTest.output
+    include 'org/hibernate/orm/test/instrumentation/InstrumentationAgent.class'
+    manifest {
+        attributes 'Premain-Class': 'org.hibernate.orm.test.instrumentation.InstrumentationAgent'
+    }
+}
+
+def instrumentationTest = tasks.register('instrumentationTest', Test) {
+    description = 'Tests load-time enhancement in a fresh JVM with a startup agent.'
+    group = 'verification'
+    dependsOn instrumentationTestAgent
+    testClassesDirs = sourceSets.instrumentationTest.output.classesDirs
+    classpath = sourceSets.instrumentationTest.runtimeClasspath
+    useJUnitPlatform {
+        includeEngines 'junit-jupiter'
+    }
+    doFirst {
+        jvmArgs "-javaagent:${instrumentationTestAgent.get().archiveFile.get().asFile.absolutePath}"
+    }
+}
+
+tasks.named('check') {
+    dependsOn instrumentationTest
+}
+
+tasks.register('copyBundleResourcesXml', Copy) {
+    inputs.property( "db", db )
+    inputs.property( "dbHost", dbHost )
+    ext {
+        bundlesTargetDir = layout.buildDirectory.dir("bundles").get().asFile
+        // Escape
+        bundleTokens = [
+                'db.dialect' : dbBundle[db]['db.dialect'].replace("&", "&amp;"),
+                'jdbc.driver' : dbBundle[db]['jdbc.driver'].replace("&", "&amp;"),
+                'jdbc.user' : dbBundle[db]['jdbc.user'].replace("&", "&amp;"),
+                'jdbc.pass' : dbBundle[db]['jdbc.pass'].replace("&", "&amp;"),
+                'jdbc.url' : dbBundle[db]['jdbc.url'].replace("&", "&amp;"),
+                'jdbc.datasource' : dbBundle[db]['jdbc.datasource'].replace("&", "&amp;"),
+                'connection.init_sql' : dbBundle[db]['connection.init_sql'].replace("&", "&amp;")
+        ]
+        ext.bundleTokens['buildDirName'] = project.relativePath( layout.buildDirectory.asFile.get() )
+    }
+
+    from('src/test/bundles/templates') {
+        include '**/*.xml'
+    }
+    into ext.bundlesTargetDir
+    filter( ReplaceTokens, tokens: ext.bundleTokens)
+
+    doFirst {
+        ext.bundlesTargetDir.mkdirs()
+    }
+}
+
+tasks.register('copyBundleResourcesNonXml', Copy) {
+    inputs.property( "db", db )
+    ext {
+        bundlesTargetDir = layout.buildDirectory.dir("bundles").get().asFile
+        // Escape
+        bundleTokens = dbBundle[db]
+        ext.bundleTokens['buildDirName'] = project.relativePath(layout.buildDirectory.asFile.get())
+    }
+
+    from('src/test/bundles/templates') {
+        exclude '**/*.xml'
+    }
+    into ext.bundlesTargetDir
+    filter( ReplaceTokens, tokens: ext.bundleTokens)
+
+    doFirst {
+        ext.bundlesTargetDir.mkdirs()
+    }
+}
+
+tasks.register('copyBundleResources', Copy) {
+    inputs.property( "db", db )
+    dependsOn tasks.copyBundleResourcesXml
+    dependsOn tasks.copyBundleResourcesNonXml
+}
+
+processTestResources {
+    dependsOn copyBundleResources
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+tasks.register('testJar', Jar) {
+    dependsOn testClasses
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveClassifier.set( 'test' )
+    from sourceSets.test.output
+}
+
+artifacts {
+    tests testJar
+}
+
+compileTestJava {
+    options.compilerArgs += [ "-AsuppressJakartaDataMetamodel=true" ]
+}
+
+tasks.withType( Test.class ).configureEach { test ->
+    test.systemProperty 'file.encoding', 'utf-8'
+    // Allow creating a function in HSQLDB for this Java method
+    test.systemProperty 'hsqldb.method_class_names', 'org.hibernate.orm.test.jpa.transaction.TransactionTimeoutTest.sleep'
+
+    // See org.hibernate.boot.model.naming.NamingHelperTest.DefaultCharset.set
+    test.jvmArgs( ['--add-opens', 'java.base/java.nio.charset=ALL-UNNAMED'] )
+    // Weld needs this to generate proxies
+    test.jvmArgs( ['--add-opens', 'java.base/java.security=ALL-UNNAMED'] )
+    test.jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
+
+    //Avoid Log4J2 classloader leaks:
+    test.jvmArgs( ['-Dlog4j2.disableJmx=true'] )
+
+    // see GradleParallelTestingResolver for how the test worker id is resolved in JDBC configs
+    def forks = org.hibernate.orm.env.TestParallelism.resolveThreadCount(
+            project.db,
+            project.findProperty("test.threads")?.toString()
+    )
+    if (forks.present) {
+        test.maxParallelForks = forks.asInt
+        test.systemProperty 'maxParallelForks', test.maxParallelForks
+    }
+    if (!forks.present || forks.asInt == 1) {
+        // To reduce the JVM metaspace pressure, reduce the amount of classes that can run in one fork
+        test.forkEvery = 8096
+    }
+}
+
+instrumentationTest.configure {
+    // Preserve cold Byte Buddy loading even if more instrumentation tests are added.
+    forkEvery = 1
+}
+

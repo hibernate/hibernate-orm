@@ -1,6 +1,6 @@
 [[QuerySpecification]]
 == Programmatic query specifications
-:example-dir-query-guide: {core-project-dir}/src/test/java/org/hibernate/orm/test/query/criteria
+:example-dir-query-guide: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/query/criteria
 
 The `org.hibernate.query.specification` package supports iterative customization of a base query.
 Use a specification to add restrictions, sorting, fetching, or projections before creating an executable query.

@@ -1,10 +1,10 @@
 [[pc]]
 == Persistence Context
-:example-dir-pc: {core-project-dir}/src/test/java/org/hibernate/orm/test/pc
+:example-dir-pc: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/pc
 :jcache-project-dir: {root-project-dir}/hibernate-jcache
 :example-dir-caching: {jcache-project-dir}/src/test/java/org/hibernate/orm/test/caching
 :pc-extrasdir: extras
-:example-dir-custom-sql: {core-project-dir}/src/test/java/org/hibernate/orm/test/sql
+:example-dir-custom-sql: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/sql
 
 [[pc-fundamentals]]
 === Persistence-context fundamentals

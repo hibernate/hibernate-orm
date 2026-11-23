@@ -1,11 +1,11 @@
 [[fetching]]
 == Fetching
-:example-dir-fetching: {core-project-dir}/src/test/java/org/hibernate/orm/test/fetching
-:example-dir-fetching-graphs: {core-project-dir}/src/test/java/org/hibernate/orm/test/entitygraph
-:example-dir-fetching-boot: {core-project-dir}/src/test/java/org/hibernate/orm/test/jpa/boot
-:example-dir-fetching-toone: {core-project-dir}/src/test/java/org/hibernate/orm/test/fetchmode/toone
-:example-dir-fetching-pc: {core-project-dir}/src/test/java/org/hibernate/orm/test/pc
-:example-dir-fetching-associations: {core-project-dir}/src/test/java/org/hibernate/orm/test/associations
+:example-dir-fetching: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/fetching
+:example-dir-fetching-graphs: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/entitygraph
+:example-dir-fetching-boot: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/jpa/boot
+:example-dir-fetching-toone: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/fetchmode/toone
+:example-dir-fetching-pc: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/pc
+:example-dir-fetching-associations: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/associations
 :fetching-extras-dir: extras
 
 Fetching loads persistent state so the application can use it.

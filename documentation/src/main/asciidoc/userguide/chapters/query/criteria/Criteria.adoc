@@ -1,6 +1,6 @@
 [[criteria]]
 == Criteria queries
-:example-dir-criteria: {core-project-dir}/src/test/java/org/hibernate/orm/test/query/criteria
+:example-dir-criteria: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/query/criteria
 
 Criteria queries represent a query using Java objects instead of a query string.
 Use the static metamodel to refer to mapped attributes with compile-time type checking.

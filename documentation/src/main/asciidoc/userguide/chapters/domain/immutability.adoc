@@ -1,6 +1,6 @@
 [[mutability]]
 === Mutability and immutability
-:mutability-example-dir: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping/mutability
+:mutability-example-dir: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/mapping/mutability
 :domain-immutability-extrasdir: extras/immutability
 
 Immutability can be specified for both entities and attributes.
@@ -17,7 +17,7 @@ based on this distinction.
 
 :testing-project-dir: {root-project-dir}/hibernate-testing
 :example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
-:domain-basic-types-core-test-base: {core-project-dir}/src/test
+:domain-basic-types-core-test-base: {core-tests-project-dir}/src/test
 :example-dir-basic-mapping: {domain-basic-types-core-test-base}/java/org/hibernate/orm/test/mapping
 :example-dir-resources: {domain-basic-types-core-test-base}/resources/org/hibernate/orm/test/
 :example-dir-generated: {domain-basic-types-core-test-base}/java/org/hibernate/orm/test/mapping/generated
@@ -127,14 +127,14 @@ The annotation does not prevent changes to the Java object; it prevents those ch
 
 [source,java,indent=0]
 ----
-include::{root-project-dir}/hibernate-core/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-immutable-embedded]
+include::{root-project-dir}/hibernate-core-tests/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-immutable-embedded]
 ----
 
 For example, this change does not update the stored city:
 
 [source,java,indent=0]
 ----
-include::{root-project-dir}/hibernate-core/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-immutable-embedded-change]
+include::{root-project-dir}/hibernate-core-tests/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-immutable-embedded-change]
 ----
 
 To exclude only one component attribute from updates, place `@Immutable` on that attribute inside the embeddable.
@@ -208,14 +208,14 @@ For an inverse `mappedBy` attribute, database writes are controlled by the ownin
 
 [source,java,indent=0]
 ----
-include::{root-project-dir}/hibernate-core/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-immutable-association]
+include::{root-project-dir}/hibernate-core-tests/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-immutable-association]
 ----
 
 In the following example, the existing author's name is updated, but replacing the `author` reference does not update the profile's foreign key:
 
 [source,java,indent=0]
 ----
-include::{root-project-dir}/hibernate-core/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-immutable-association-change]
+include::{root-project-dir}/hibernate-core-tests/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-immutable-association-change]
 ----
 
 To ignore changes to the referenced entity's own state, annotate that entity type with `@Immutable`; see <<mutability-entity>>.

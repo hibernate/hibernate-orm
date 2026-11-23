@@ -2,7 +2,7 @@
 [appendix]
 == Array functions and predicates
 
-:ql-array-example-dir: {core-project-dir}/src/test/java/org/hibernate/orm/test/function/array
+:ql-array-example-dir: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/function/array
 :ql-function-extras-dir: {doc-main-asciidoc-dir}/querylanguage/extras
 
 The following functions deal with SQL array types, which are not supported on every database.

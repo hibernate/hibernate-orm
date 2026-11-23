@@ -2,7 +2,7 @@
 [appendix]
 == JSON functions
 
-:ql-json-example-dir: {core-project-dir}/src/test/java/org/hibernate/orm/test/function/json
+:ql-json-example-dir: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/function/json
 :ql-function-extras-dir: {doc-main-asciidoc-dir}/querylanguage/extras
 
 The following functions deal with SQL JSON types, which are not supported on every database.

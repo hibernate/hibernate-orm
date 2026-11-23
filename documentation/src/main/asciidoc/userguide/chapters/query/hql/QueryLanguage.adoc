@@ -1,7 +1,7 @@
 [[query-language]]
 == Function integration
-:function-example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/query/hql
-:srf-example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/function/srf
+:function-example-dir-hql: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/query/hql
+:srf-example-dir-hql: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/function/srf
 
 The Query Language guide describes built-in syntax and functions, including its
 link:{doc-query-language-url}#hql-functions-arrays[array], link:{doc-query-language-url}#hql-functions-json[JSON], and link:{doc-query-language-url}#hql-functions-xml[XML] appendices and their dialect support tables.

@@ -1,7 +1,7 @@
 [[domain-relational-mapping]]
 === Tables, columns, and naming
 :core-project-dir: {root-project-dir}/hibernate-core
-:domain-entity-core-test-base: {core-project-dir}/src/test/java/org/hibernate/orm/test
+:domain-entity-core-test-base: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test
 :domain-entity-example-dir-mapping: {domain-entity-core-test-base}/mapping
 :example-dir-proxy: {domain-entity-core-test-base}/proxy
 :example-dir-persister: {domain-entity-core-test-base}/persister
@@ -10,7 +10,7 @@
 :testing-project-dir: {root-project-dir}/hibernate-testing
 :example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
 :core-project-dir: {root-project-dir}/hibernate-core
-:domain-basic-types-core-test-base: {core-project-dir}/src/test
+:domain-basic-types-core-test-base: {core-tests-project-dir}/src/test
 :example-dir-basic-mapping: {domain-basic-types-core-test-base}/java/org/hibernate/orm/test/mapping
 :example-dir-resources: {domain-basic-types-core-test-base}/resources/org/hibernate/orm/test/
 :example-dir-generated: {domain-basic-types-core-test-base}/java/org/hibernate/orm/test/mapping/generated
@@ -148,7 +148,7 @@ Use `@Column(table=...)` to place an attribute in a declared secondary table.
 
 [source,java,indent=0]
 ----
-include::{root-project-dir}/hibernate-core/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-columns-secondary]
+include::{root-project-dir}/hibernate-core-tests/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-columns-secondary]
 ----
 
 Here, `title`, `price`, and `createdBy` belong to `guide_entry`, while `summary` belongs to `guide_entry_details`.

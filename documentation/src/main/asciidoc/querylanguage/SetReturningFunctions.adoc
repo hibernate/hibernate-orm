@@ -1,7 +1,7 @@
 [[hql-from-set-returning-functions]]
 === Set-returning functions
 
-:ql-srf-example-dir: {core-project-dir}/src/test/java/org/hibernate/orm/test/function/srf
+:ql-srf-example-dir: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/function/srf
 
 A set-returning function is a function that produces rows instead of a single scalar value
 and is exclusively used in the `from` clause, either as root node or join target.

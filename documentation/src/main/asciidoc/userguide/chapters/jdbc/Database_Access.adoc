@@ -1,6 +1,6 @@
 [[database]]
 == Database Access
-:database-guide-examples: {core-project-dir}/src/test/java/org/hibernate/orm/test/jdbc/guide
+:database-guide-examples: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/jdbc/guide
 :database-hikari-examples: {root-project-dir}/hibernate-hikaricp/src/test/java/org/hibernate/test/hikaricp
 :database-ucp-examples: {root-project-dir}/hibernate-ucp/src/test/java/org/hibernate/test/ucp
 

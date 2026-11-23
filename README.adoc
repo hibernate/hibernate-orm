@@ -80,8 +80,14 @@ To execute a task in a specific module, either:
 For example, to run the tests for the `hibernate-core` module from the root directory you could type:
 
 ----
-./gradlew hibernate-core:test
+./gradlew hibernate-core-tests:test
 ----
+
+Core tests live in the unpublished `hibernate-core-tests` project.
+The historical `hibernate-core:test` entry point also runs this suite and accepts
+`--tests` filters. Test reports are written under `hibernate-core-tests/target/reports/tests`.
+Instrumentation tests run through `hibernate-core-tests:instrumentationTest`
+(or the corresponding `hibernate-core:instrumentationTest` entry point).
 
 === Common tasks
 

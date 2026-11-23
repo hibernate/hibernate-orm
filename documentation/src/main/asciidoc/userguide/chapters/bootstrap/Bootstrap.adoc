@@ -1,8 +1,8 @@
 [[bootstrap]]
 == Bootstrap
 
-:bootstrap-guide-examples: {core-project-dir}/src/test/java/org/hibernate/orm/test/bootstrap/guide
-:bootstrap-guide-resources: {core-project-dir}/src/test/resources/org/hibernate/orm/test/bootstrap/guide
+:bootstrap-guide-examples: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/bootstrap/guide
+:bootstrap-guide-resources: {core-tests-project-dir}/src/test/resources/org/hibernate/orm/test/bootstrap/guide
 :extrasdir: extras
 
 Bootstrapping creates the factory used to access an application's persistent model.

@@ -1,7 +1,7 @@
 [[sql]]
 == Native SQL Queries
 :example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
-:doc-emeddable-example-dir: {core-project-dir}/src/test/java/org/hibernate/orm/test/sql
+:doc-emeddable-example-dir: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/sql
 :extrasdir: extras
 
 You may also express queries in the native SQL dialect of your database.
@@ -30,7 +30,7 @@ The example below uses static imports from `jakarta.persistence.sql.ResultSetMap
 ====
 [source,java,indent=0]
 ----
-include::{core-project-dir}/src/test/java/org/hibernate/orm/test/query/criteria/QueryGuideTests.java[tags=query-native-mapping]
+include::{core-tests-project-dir}/src/test/java/org/hibernate/orm/test/query/criteria/QueryGuideTests.java[tags=query-native-mapping]
 ----
 ====
 

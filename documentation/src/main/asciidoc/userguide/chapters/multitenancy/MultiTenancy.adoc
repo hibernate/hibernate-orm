@@ -1,6 +1,6 @@
 [[multitenacy]]
 == Multitenancy
-:example-dir-multitenancy: {core-project-dir}/src/test/java/org/hibernate/orm/test/multitenancy
+:example-dir-multitenancy: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/multitenancy
 :multitenancy-guide-examples: {example-dir-multitenancy}/guide/MultitenancyGuideTests.java
 
 Multitenancy lets an application serve multiple tenants while distinguishing their data.

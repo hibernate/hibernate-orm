@@ -1,5 +1,5 @@
 :core-project-dir: {root-project-dir}/hibernate-core
-:domain-collections-core-test-base: {core-project-dir}/src/test/java
+:domain-collections-core-test-base: {core-tests-project-dir}/src/test/java
 :example-dir-collection: {domain-collections-core-test-base}/org/hibernate/orm/test/mapping/collections
 :docs-base: https://docs.hibernate.org/orm/{majorMinorVersion}
 :javadoc-base: {docs-base}/javadocs

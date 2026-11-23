@@ -2,7 +2,7 @@
 [appendix]
 == XML functions
 
-:ql-xml-example-dir: {core-project-dir}/src/test/java/org/hibernate/orm/test/function/xml
+:ql-xml-example-dir: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/function/xml
 :ql-function-extras-dir: {doc-main-asciidoc-dir}/querylanguage/extras
 
 The following functions deal with SQL XML types, which are not supported on every database.

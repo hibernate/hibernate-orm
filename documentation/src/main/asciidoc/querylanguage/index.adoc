@@ -5,7 +5,7 @@ include::{root-project-dir}/.asciidoctorconfig.adoc[]
 
 
 :example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
-:example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/hql
+:example-dir-hql: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/hql
 :extrasdir: extras
 
 = A Guide to Hibernate Query Language

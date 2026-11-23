@@ -1,6 +1,6 @@
 [[entity-inheritance]]
 === Inheritance and polymorphism
-:example-dir-inheritance: {core-project-dir}/src/test/java/org/hibernate/orm/test/inheritance
+:example-dir-inheritance: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/inheritance
 :domain-inheritance-extrasdir: extras/inheritance
 
 Although relational database systems don't provide support for inheritance, Hibernate provides several strategies to leverage this object-oriented trait onto domain model entities:
@@ -10,7 +10,7 @@ Single table:: The domain model class hierarchy is materialized into a single ta
 Joined table:: The base class and all the subclasses have their own database tables and fetching a subclass entity requires a join with the parent table as well. See <<entity-inheritance-joined-table>>.
 Table per class:: Each subclass has its own table containing both the subclass and the base class properties. See <<entity-inheritance-table-per-class>>.
 
-:domain-entity-core-test-base: {core-project-dir}/src/test/java/org/hibernate/orm/test
+:domain-entity-core-test-base: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test
 :domain-entity-example-dir-mapping: {domain-entity-core-test-base}/mapping
 :example-dir-proxy: {domain-entity-core-test-base}/proxy
 :example-dir-persister: {domain-entity-core-test-base}/persister

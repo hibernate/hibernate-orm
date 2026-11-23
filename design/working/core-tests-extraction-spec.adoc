@@ -1,0 +1,203 @@
+= Core Tests Extraction: Working Specification
+:toc:
+
+Status: Approved by Steve on 2026-11-23. Implementation and verification complete.
+See `core-tests-extraction-ledger.adoc` for evidence and measured limitations.
+
+Source baseline: `54aaaf25583`. Initial inspection only; no Gradle tasks or
+tests have been run for this proposal. Existing unrelated working-tree files
+are outside this change.
+
+== Purpose and accepted scope
+
+Introduce an unpublished Gradle project named `hibernate-core-tests` to own
+core's ordinary tests and instrumentation tests. Tests consume production
+code through project dependencies instead of sharing core's main/test
+SourceSet relationship. Preserve existing core test entry points.
+
+JMH remains in `hibernate-core` for this change. Its eventual destination is
+https://github.com/hibernate/hibernate-orm-benchmark[`hibernate-orm-benchmark`],
+through a separate coordinated migration. This change must preserve the
+ability to build and run the existing benchmarks.
+
+The intended incremental-compilation improvement must be demonstrated rather
+than inferred from the new project structure alone.
+
+== Project and source ownership
+
+* Register `:hibernate-core-tests` in `settings.gradle`, with its build file
+  at `hibernate-core-tests/hibernate-core-tests.gradle`.
+* Apply the existing Java-module and code-quality conventions without the
+  publishing conventions. Do not add the project to published platform/BOM
+  constraints or release publications.
+* Move all tracked contents of `hibernate-core/src/test` and
+  `hibernate-core/src/instrumentationTest` into the corresponding directories
+  under the new project, including resources, bundles and support files.
+* Preserve Java packages, class names, source contents and resource-relative
+  paths unless an identified path reference requires adjustment. Do not
+  reformat the moved Java files as part of this migration.
+* Keep production sources, production annotation processing, ANTLR/XJC
+  generation, version injection, production artifacts and JMH in core.
+* Core must no longer compile or process the relocated test sources.
+  Its standard empty test SourceSet may remain for convention compatibility.
+
+== Dependencies and compilation
+
+The new ordinary test SourceSet declares a normal dependency on
+`:hibernate-core`, and retains the existing dependencies on
+`:hibernate-testing`, `:hibernate-ant` and `:hibernate-scan-jandex`.
+Move the test libraries, runtime dependencies, exclusions and test annotation
+processor configuration from core with the suite. Preserve the
+`suppressJakartaDataMetamodel` processor option.
+
+Explicitly declare libraries used by tests that were previously available
+through core's main compile classpath. Do not expose additional dependencies
+through core's production API to make test compilation succeed. Do not
+construct test classpaths from another project's SourceSet outputs or
+resolvable internal configurations.
+
+The instrumentation SourceSet retains its own dependencies and consumes core
+through ordinary project dependencies. Preserve its current isolation from
+the ordinary test suite's runtime configuration.
+
+Audit tasks remaining in core for reliance on its former test classpath,
+including `generateEnversStaticMetamodel`. Give such tasks the dependencies
+they need without introducing a dependency on the extracted suite's output.
+
+Core production compilation and packaging must not depend on compiling or
+running the extracted tests. In particular, normal core consumption by
+`hibernate-testing` must not create a task cycle through the new project.
+
+== Task behavior and compatibility
+
+[cols="2,4",options="header"]
+|===
+|Entry point |Required behavior
+|`:hibernate-core-tests:test`
+|Compile and execute the relocated ordinary suite.
+|`:hibernate-core:test`
+|Trigger the same ordinary suite, without a second execution in core.
+|`:hibernate-core-tests:instrumentationTest`
+|Build the startup agent and execute the relocated instrumentation suite.
+|`:hibernate-core:instrumentationTest`
+|Trigger the relocated instrumentation suite.
+|`:hibernate-core-tests:check`
+|Run the new project's applicable checks and both test suites.
+|`:hibernate-core:check`
+|Retain core's production checks and include the new project's checks.
+|===
+
+Root/unqualified test and check invocations and existing CI entry points must
+continue to include the suite. Selecting both old and new entry points in
+one invocation must execute each actual suite at most once. Build and clean
+lifecycles must remain acyclic.
+
+=== Filtering and test options
+
+These invocations must select equivalent tests:
+
+[source,shell]
+----
+./gradlew :hibernate-core:test --tests 'org.hibernate.orm.test.SomeTest'
+./gradlew :hibernate-core-tests:test --tests 'org.hibernate.orm.test.SomeTest'
+----
+
+Preserve repeated `--tests` patterns, class/method selection and the existing
+failure behavior when no tests match. Preserve `--fail-fast`, `--test-dry-run`
+and `--debug-jvm` through the compatibility entry point. Apply the same
+compatibility rules to the instrumentation entry point.
+
+When old and new entry points both supply test patterns, combine their
+patterns using the same inclusive matching semantics as repeated `--tests`.
+Boolean execution options requested through either entry point apply to the
+single actual execution. Exact supported CLI behavior must be verified
+against the repository's Gradle wrapper during implementation.
+
+Existing project/system-property controls, including database selection,
+test parallelism, exclusion patterns and Hibernate testing properties,
+continue to affect the actual execution. Compatibility tasks must not
+produce misleading empty reports in place of the real suite's results.
+
+=== Execution environment and resources
+
+Preserve the existing encodings, JVM opens, assertions, logging settings,
+database configuration, fork counts and fork limits. Instrumentation tests
+retain startup-agent execution and `forkEvery = 1`.
+
+Move the bundle-generation tasks and their resource-processing dependencies
+to the new project. Preserve XML escaping, database substitution, resource
+lookup and generated bundle contents, adjusting paths for the new project.
+Inspect relative filesystem assumptions in tests and resources; execution
+from the new project directory must resolve the intended files.
+
+Real test reports, generated resources and coverage execution data belong to
+the new project's configured build directory (`target` under current
+conventions). Existing report locations under core are not compatibility
+requirements; update active consumers instead of copying outputs back.
+
+== Test artifacts and consumers
+
+Move the existing `tests` outgoing configuration and `testJar` production to
+`:hibernate-core-tests`, preserving its contents and duplicate handling.
+The artifact remains an internal build artifact, without a new publication.
+
+Update the existing consumers in `hibernate-kotlin-tests`,
+`hibernate-spatial`, `hibernate-vector` and `hibernate-community-dialects`
+to consume the new project's `tests` configuration. Do not retain the old
+core `tests` configuration or `testJar` task solely as compatibility aliases.
+
+Check JMH's use of test outputs and its effective compile/runtime classpaths.
+Any required test support comes through an explicit dependency on the new
+test artifact. Building benchmarks must not execute the correctness suite.
+
+== Documentation, CI and coverage
+
+Update active documentation includes and source-path attributes that point
+at moved files, together with contributor instructions and relevant CI
+paths. Existing documented `:hibernate-core:test` commands remain valid.
+Avoid rewriting historical examples or unrelated design documents merely
+because they mention the old layout.
+
+Coverage aggregation must continue to report production classes from core
+using execution data generated by the new suite. Do not replace core's
+production sources with the new project's empty main SourceSet. Inspect CI
+artifact collection and test-result publication for new output locations.
+
+== Verification and acceptance
+
+Record the implementation revision, wrapper version, JDK/toolchain,
+database, command lines and results in the implementation ledger or report.
+Any discovered deviation from this specification is raised before making it.
+
+. Inventory the moved files and verify that no test/resource files were lost
+  and that ordinary source contents remain unchanged apart from necessary
+  path updates.
+. Configure the complete build and inspect task graphs for direct, legacy,
+  combined and root entry points. Check for cycles and duplicate execution.
+. Compile both complete extracted SourceSets, build the agent and test JAR,
+  and compile the four consumer projects' tests.
+. Execute the complete ordinary suite on the default H2 configuration and
+  the complete instrumentation suite. Compare failures with the unchanged
+  baseline when necessary; report unresolved failures explicitly.
+. Exercise legacy and direct filtering, repeated patterns, a method filter,
+  an unmatched filter, combined entry points and the execution options above
+  using a small existing subset. Verify unmatched filters fail as expected.
+. Exercise representative bundle/resource, metamodel-generation and
+  bytecode-enhancement tests. Validate resource substitution under another
+  supported database configuration; run database-specific tests when an
+  appropriate service is available and record unavailable services.
+. Build affected documentation, validate CI result discovery and generate
+  aggregate coverage showing core production classes covered by the new
+  suite. Exercise applicable formatting and build checks.
+. Build the existing JMH artifact and run a short benchmark smoke test;
+  compare benchmark discovery before and after the extraction.
+. Establish a warm incremental-compilation baseline. Apply a controlled
+  core method-body-only change and inspect compilation outcomes and Gradle
+  diagnostics before and after extraction. Apply a controlled ABI change
+  used by an existing test and verify affected tests recompile. Restore both
+  probes. Record cache/processor effects and any case where the expected
+  improvement is not observed; do not claim a general result from task
+  `UP-TO-DATE` status alone.
+
+Implementation is complete only when the accepted behavior is demonstrated
+and remaining environmental verification limits are explicitly reported.

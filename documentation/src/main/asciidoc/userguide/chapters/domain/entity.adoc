@@ -1,6 +1,6 @@
 [[entity]]
 === Entity classes and attribute access
-:domain-entity-core-test-base: {core-project-dir}/src/test/java/org/hibernate/orm/test
+:domain-entity-core-test-base: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test
 :domain-entity-example-dir-mapping: {domain-entity-core-test-base}/mapping
 :domain-entity-example-dir-locking: {domain-entity-core-test-base}/locking
 :example-dir-proxy: {domain-entity-core-test-base}/proxy

@@ -1,6 +1,6 @@
 [[collections]]
 === Collections
-:domain-collections-core-test-base: {core-project-dir}/src/test/java
+:domain-collections-core-test-base: {core-tests-project-dir}/src/test/java
 :example-dir-collection: {domain-collections-core-test-base}/org/hibernate/orm/test/mapping/collections
 :docs-base: https://docs.hibernate.org/orm/{majorMinorVersion}
 :javadoc-base: {docs-base}/javadocs
@@ -173,7 +173,7 @@ The following mapping belongs to `Profile`, whose identifier is `id`:
 
 [source,java,indent=0]
 ----
-include::{root-project-dir}/hibernate-core/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-idbag-mapping]
+include::{root-project-dir}/hibernate-core-tests/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-idbag-mapping]
 ----
 
 Declare the named generator on the entity:
@@ -188,14 +188,14 @@ Do not confuse `@CollectionId` with an `@OrderColumn`, which records a list posi
 
 [source,java,indent=0]
 ----
-include::{root-project-dir}/hibernate-core/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-idbag-persist]
+include::{root-project-dir}/hibernate-core-tests/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-idbag-persist]
 ----
 
 Both occurrences survive reload. Removing one occurrence leaves the other intact:
 
 [source,java,indent=0]
 ----
-include::{root-project-dir}/hibernate-core/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-idbag-remove]
+include::{root-project-dir}/hibernate-core-tests/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-idbag-remove]
 ----
 
 Hibernate can identify a removed row by `label_id` rather than by the potentially duplicated element value.

@@ -1,5 +1,5 @@
 :core-project-dir: {root-project-dir}/hibernate-core
-:domain-entity-core-test-base: {core-project-dir}/src/test/java/org/hibernate/orm/test
+:domain-entity-core-test-base: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test
 :domain-entity-example-dir-mapping: {domain-entity-core-test-base}/mapping
 :example-dir-proxy: {domain-entity-core-test-base}/proxy
 :example-dir-persister: {domain-entity-core-test-base}/persister
@@ -166,7 +166,7 @@ The following example uses a non-null, immutable natural id and assumes that `Au
 
 [source,java,indent=0]
 ----
-include::{root-project-dir}/hibernate-core/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-proxy-equality]
+include::{root-project-dir}/hibernate-core-tests/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-proxy-equality]
 ----
 
 `instanceof` accepts subclass proxies. In a mapped inheritance hierarchy, however, accepting every subtype can produce inappropriate equality or violate symmetry if subclasses define different rules.

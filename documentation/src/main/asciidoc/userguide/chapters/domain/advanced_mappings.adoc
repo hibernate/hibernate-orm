@@ -1,14 +1,14 @@
 [[domain-advanced-mappings]]
 === Advanced mappings and customization
 :core-project-dir: {root-project-dir}/hibernate-core
-:domain-entity-core-test-base: {core-project-dir}/src/test/java/org/hibernate/orm/test
+:domain-entity-core-test-base: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test
 :domain-entity-example-dir-mapping: {domain-entity-core-test-base}/mapping
 :example-dir-proxy: {domain-entity-core-test-base}/proxy
 :example-dir-persister: {domain-entity-core-test-base}/persister
 :domain-entity-extrasdir: extras
 
 :core-project-dir: {root-project-dir}/hibernate-core
-:domain-identifiers-core-test-base: {core-project-dir}/src/test/java/org/hibernate/orm/test
+:domain-identifiers-core-test-base: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test
 :example-dir-identifier: {domain-identifiers-core-test-base}/mapping/identifier
 :example-dir-generated: {domain-identifiers-core-test-base}/mapping/generated
 :example-dir-associations: {domain-identifiers-core-test-base}/associations

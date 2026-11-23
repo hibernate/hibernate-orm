@@ -1,6 +1,6 @@
 [[transactions]]
 == Transactions
-:example-dir-transaction: {core-project-dir}/src/test/java/org/hibernate/orm/test/transactions
+:example-dir-transaction: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/transactions
 
 [[transactions-physical]]
 === Transaction boundaries and ownership

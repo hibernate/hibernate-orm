@@ -1,6 +1,6 @@
 [[flushing]]
 === Flushing
-:example-dir-flushing: {core-project-dir}/src/test/java/org/hibernate/orm/test/flush
+:example-dir-flushing: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/flush
 :flushing-extrasdir: extras
 
 Flushing synchronizes pending persistence-context changes with the database using SQL inserts, updates, deletes, and collection operations.

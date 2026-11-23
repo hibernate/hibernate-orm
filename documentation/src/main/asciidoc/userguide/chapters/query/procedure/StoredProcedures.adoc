@@ -1,7 +1,7 @@
 [[stored-procedures]]
 == Stored procedures and functions
 :example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
-:example-dir-procedure: {core-project-dir}/src/test/java/org/hibernate/orm/test/sql
+:example-dir-procedure: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/sql
 
 Stored procedure calls have a different execution model from <<sql,native SQL queries>>.
 Use the standard `StoredProcedureQuery` API for portable calls, or Hibernate's `ProcedureCall` for provider-specific features.

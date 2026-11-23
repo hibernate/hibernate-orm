@@ -1,7 +1,7 @@
 [[events]]
 == Interceptors and Events
-:example-dir-event: {core-project-dir}/src/test/java/org/hibernate/orm/test/events
-:example-dir-event-resources: {core-project-dir}/src/test/resources/org/hibernate/orm/test/events
+:example-dir-event: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/events
+:example-dir-event-resources: {core-tests-project-dir}/src/test/resources/org/hibernate/orm/test/events
 
 Callbacks let an application react to entity lifecycle changes and database operations, inspect or adjust state, and integrate with Hibernate's event processing.
 Choose the mechanism according to the information and control the application needs.

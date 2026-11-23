@@ -1,6 +1,6 @@
 [[domain-customizing]]
 ==== Mapping annotations and AttributeBinder
-:example-dir-attributebinder: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping/attributebinder
+:example-dir-attributebinder: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/mapping/attributebinder
 :domain-customizing-extrasdir: extras
 
 For mapping requirements beyond the built-in annotations, use the `@AttributeBinderType` meta-annotation

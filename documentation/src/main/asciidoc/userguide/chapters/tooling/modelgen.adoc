@@ -3,7 +3,7 @@
 
 :example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
 :example-dir-metamodelgen-generated: {testing-project-dir}/target/generated/sources/annotationProcessor/java/main/org/hibernate/testing/orm/domain/userguide
-:toolingTestsDir: {core-project-dir}/src/test/java/org/hibernate/orm/test/tooling
+:toolingTestsDir: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/tooling
 
 `org.hibernate.orm:hibernate-processor` is a compiler annotation processor. It generates
 Jakarta Persistence static metamodel classes and also supports query validation and generated

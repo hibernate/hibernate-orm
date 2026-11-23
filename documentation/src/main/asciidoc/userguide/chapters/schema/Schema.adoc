@@ -1,7 +1,7 @@
 [[schema-generation]]
 == Schema Tooling
-:example-dir-schemagen: {core-project-dir}/src/test/java/org/hibernate/orm/test/schema
-:example-dir-schemagen-resources: {core-project-dir}/src/test/resources
+:example-dir-schemagen: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/schema
+:example-dir-schemagen-resources: {core-tests-project-dir}/src/test/resources
 :schema-guide-examples: {example-dir-schemagen}/guide
 :schema-guide-resources: {example-dir-schemagen-resources}/org/hibernate/orm/test/schema/guide
 :extrasdir: extras

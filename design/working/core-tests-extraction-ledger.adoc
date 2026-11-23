@@ -1,0 +1,104 @@
+= Core Tests Extraction: Implementation Ledger
+
+== Scope and decisions
+
+* Specification: `core-tests-extraction-spec.adoc`, approved 2026-11-23.
+* Baseline revision: `54aaaf25583`; unrelated SQL AST proposal/spec files left alone.
+* Move ordinary/instrumentation suites, retain legacy entry points and options.
+* JMH stays in core, with its ordinary-test-output inclusion disabled: no
+  benchmark sources import the test suite or testing library.
+* Reports and test artifacts belong to the new project. Existing CI report
+  collection uses project-wide wildcards and already includes that location.
+* Coverage aggregation already collects execution data across all projects
+  and retains core's main SourceSet; its source selection needs no change.
+
+== Environment and evidence
+
+* Gradle wrapper: 9.9.1. Runtime/compiler: Temurin JDK 25; default H2 database.
+* Baseline complete ordinary/instrumentation compilation and JMH artifact
+  build passed (`/private/tmp/core-tests-baseline.log`).
+* Recorded SHA-256 hashes of 9,603 ordinary/instrumentation source/resource
+  files before moving them (`/private/tmp/core-tests-source-manifest.json`).
+* Recorded baseline JMH discovery metadata from the built artifact.
+* Baseline method-body probe: temporary `Version.getVersionString()` change
+  from returning `VERSION` to `VERSION.toString()`. Compile passed, but core
+  test compilation rebuilt in full because core's JAR changed on the
+  annotation-processor path (`/private/tmp/core-tests-baseline-body.log`).
+  Probe source restored. This is an independent source of invalidation that
+  extraction alone is not expected to eliminate.
+* Compatibility option forwarding uses Gradle's internal command-line
+  filter getter because the public `TestFilter` interface exposes only build
+  script patterns. The wrapper's implementation was inspected with `javap`;
+  behavior must be covered by the CLI verification matrix.
+
+* Both extracted SourceSets compile. Legacy filtered execution passed six
+  parameterized naming cases; legacy instrumentation execution passed its
+  startup-agent regression (`/private/tmp/core-tests-smoke.log`).
+* CLI matrix passed: old/new entry-point pattern union (10 tests, one actual
+  suite), repeated method filters (two tests), unmatched-pattern failure,
+  ordinary test dry run (nine skipped), forwarded debug/fail-fast/dry-run
+  options, core production packaging independence, core check coverage and
+  root check task graph (`/private/tmp/core-tests-matrix-results.json`).
+* Parameterized-only `--test-dry-run` discovers a skipped test template and
+  reports no matching tests through both direct and legacy entry points.
+  Regular parameterized execution passes; this behavior is independent of
+  compatibility forwarding.
+
+* Generated H2 bundles match all 23 baseline files byte for byte.
+* New test JAR contains relocated classes and expected database/logging
+  resources. All four consuming projects' test classes compile.
+* JMH packaging passed; all 220 benchmark configurations match the baseline
+  after normalizing parameter-map iteration order. A one-fork, one-iteration
+  `LockingBenchmark.query` smoke run passed (`/private/tmp/core-tests-jmh-smoke.log`).
+
+* Complete H2 execution: 5,240 suites, 30,169 tests, 1,705 skipped,
+  zero failures/errors. Instrumentation: one test, zero failures/errors.
+  Used four test forks and four Gradle workers. Preserved full H2 reports at
+  `hibernate-core-tests/target/verification/h2-test-report/index.html` and
+  XML results under `target/verification/h2-test-results`.
+* User-guide and query-language HTML rendering passed with updated includes.
+  New-project formatting and applicable forbidden-API checks passed.
+* Selecting coverage aggregation together with documentation or test
+  resource/compilation tasks triggers Gradle's implicit-dependency validation
+  against the existing repository-root execution-data file tree. Standalone
+  aggregation passed; the reporting build script is unchanged. The combined
+  restoration command hit this same validation after compilation, resource
+  processing and test-JAR rebuilding had completed successfully.
+
+* Standalone `:reporting:mergeCodeCoverageReport --stacktrace` passed.
+  Aggregate XML includes covered core production classes (for example,
+  `SessionImpl`: 961 covered lines). The existing repository-wide execution
+  data tree takes approximately three minutes to traverse in this workspace.
+* HSQLDB targeted execution passed: four suites, 28 tests, no skips or
+  failures. Covered packaged persistence resources, generated static
+  metamodel use and bytecode enhancement. `excludeTests` removed one of the
+  nine StringHelper tests as expected. No external database services used.
+* Post-extraction body-only probe again forces full test recompilation:
+  Gradle explicitly reports the changed core JAR on
+  `options.annotationProcessorPath`. The project split does not eliminate
+  this measured invalidation cause. Preserving annotation processing is
+  required by this specification; changing its architecture is future work.
+
+* ABI probe passed: removing `final` from `Version` (retaining the preceding
+  body probe) caused test recompilation. Existing enhancement tests refer to
+  this production type. Both probes compiled successfully; the original
+  production source was restored and the complete suite recompiled.
+* Coverage attribution checked directly using JaCoCo's execution-data reader:
+  the new suite's H2 execution file matches the current production
+  `SessionImpl` class ID `239fdc3ef70d6544`, with 1,032/1,338 probes covered.
+  This check uses only the new suite's execution data, independently of old
+  execution files collected by the aggregate report.
+* Benchmark-only task graph passed: `:hibernate-core:jmhJar` does not depend
+  on any task in `:hibernate-core-tests`.
+* Final inventory: all 9,603 moved files retain their original SHA-256 hashes;
+  no moved tracked files are hidden by ignore rules. Old test source
+  directories are absent. Production Java sources have no remaining diff.
+  `git diff --check` passed; unrelated SQL AST design files remain untouched.
+
+== Completion and limits
+
+Implementation and verification complete on 2026-11-23. Changes remain an
+uncommitted working tree based on `54aaaf25583`. The annotation-processor-path
+invalidation described above remains unresolved; this migration does not
+claim to eliminate body-only test recompilation. The benchmark-repository
+migration remains a separate task as agreed.

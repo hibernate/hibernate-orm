@@ -1,6 +1,6 @@
 [[naturalid]]
 ==== Natural Ids
-:domain-natural-id-core-test-base-dir: {core-project-dir}/src/test/java/org/hibernate/orm/test
+:domain-natural-id-core-test-base-dir: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test
 :example-dir-naturalid: {domain-natural-id-core-test-base-dir}/mapping/identifier
 :jcache-project-dir: {root-project-dir}/hibernate-jcache
 :example-dir-caching: {jcache-project-dir}/src/test/java/org/hibernate/orm/test/caching

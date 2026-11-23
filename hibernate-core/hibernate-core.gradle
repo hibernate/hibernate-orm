@@ -1,5 +1,3 @@
-import org.apache.tools.ant.filters.ReplaceTokens
-
 plugins {
     id "local.publishing-java-module"
     id "local.publishing-group-relocation"
@@ -13,8 +11,9 @@ plugins {
 description = 'Hibernate\'s core ORM functionality'
 
 configurations {
-    tests {
-        description = 'Configuration for the produced test jar'
+    metamodelGeneration {
+        description = 'Processor classpath for the Envers metamodel generation task'
+        canBeConsumed = false
     }
 }
 
@@ -48,44 +47,8 @@ dependencies {
     compileOnly libs.jdbc.postgresql
     compileOnly libs.jdbc.edb
 
-    testImplementation project(':hibernate-testing')
-    testImplementation project(':hibernate-ant')
-    testImplementation project(':hibernate-scan-jandex')
-
-    // todo : to get rid of these
-    testImplementation libs.test.junit4
-    testImplementation libs.test.junit4Engine
-
-    testImplementation libs.test.shrinkwrap
-    testImplementation libs.jakarta.cdi
-    testImplementation libs.jakarta.data
-    testImplementation libs.jakarta.jacc
-    testImplementation libs.jakarta.validation
-    testImplementation( libs.test.validator ) {
-        // for test runtime
-        transitive = true
-    }
-    testImplementation libs.jdbc.h2
-    testImplementation libs.hibernateModelsJandex
-
-    testRuntimeOnly libs.byteBuddy
-    testRuntimeOnly libs.test.weld
     implementation libs.logging
-    testRuntimeOnly(libs.test.wildFlyTxnClient) {
-        // WildFly Elytron includes a whole copy of JBoss Logging, Jackson with its original package,
-        // not even shaded, which causes lots of problems.
-        // Since we don't need WildFly Elytron in our tests, we'll just exclude it.
-        exclude group: 'org.wildfly.security', module: 'wildfly-elytron'
-    }
-    testImplementation libs.jandex
-    testImplementation libs.jakarta.jsonb
-    testImplementation libs.jackson
-    testRuntimeOnly libs.jacksonXml
-    testRuntimeOnly libs.jacksonJsr310
-    testImplementation libs.jackson3
-    testImplementation libs.jackson3Xml
-
-    testAnnotationProcessor project( ':hibernate-processor' )
+    metamodelGeneration project(':hibernate-processor')
 
     // NOTE: it seems like, since 4.10, the Antlr Tool no longer defines
     // transitive dep on the corresponding Antlr Runtime.  At least, I get
@@ -96,6 +59,7 @@ dependencies {
 
 	// JMH benchmarks
 	jmh libs.jdbc.h2
+    jmh libs.jakarta.annotation
 }
 
 jar {
@@ -110,62 +74,15 @@ ext {
     jaxbTargetDir = project.layout.buildDirectory.dir("generated/sources/xjc/main").get().asFile
 }
 
-sourceSets {
-    instrumentationTest {
-        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
-        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
-    }
-    test {
-        resources {
-            srcDir 'src/test/resources'
-            srcDir 'src/test/bundles'
-        }
-    }
-}
-
-dependencies {
-    instrumentationTestImplementation libs.test.junitJupiterApi
-    instrumentationTestRuntimeOnly libs.test.junitJupiterEngine
-    instrumentationTestRuntimeOnly libs.test.junitJupiterLauncher
-}
-
-def instrumentationTestAgent = tasks.register('instrumentationTestAgent', Jar) {
-    archiveClassifier = 'instrumentation-test-agent'
-    from sourceSets.instrumentationTest.output
-    include 'org/hibernate/orm/test/instrumentation/InstrumentationAgent.class'
-    manifest {
-        attributes 'Premain-Class': 'org.hibernate.orm.test.instrumentation.InstrumentationAgent'
-    }
-}
-
-def instrumentationTest = tasks.register('instrumentationTest', Test) {
-    description = 'Tests load-time enhancement in a fresh JVM with a startup agent.'
-    group = 'verification'
-    dependsOn instrumentationTestAgent
-    testClassesDirs = sourceSets.instrumentationTest.output.classesDirs
-    classpath = sourceSets.instrumentationTest.runtimeClasspath
-    useJUnitPlatform {
-        includeEngines 'junit-jupiter'
-    }
-    doFirst {
-        jvmArgs "-javaagent:${instrumentationTestAgent.get().archiveFile.get().asFile.absolutePath}"
-    }
-}
-
-tasks.named('check') {
-    dependsOn instrumentationTest
-}
-
 jmh {
+    includeTests = false
     jmhVersion = '1.37'
     warmupIterations = 5
     iterations = 10
     fork = project.hasProperty( 'jmh.fork' ) ? project.property( 'jmh.fork' ) as int : 1
     zip64 = true
 
-    // Force JMH to use minimal logging configuration from src/jmh/resources
-    // Without this, it picks up src/test/resources/log4j2.properties with TRACE logging
-    // which generates millions of log lines and severely degrades benchmark performance
+    // Keep benchmark logging minimal to avoid distorting measurements.
     jvmArgs = ['-Dlog4j.configurationFile=file:src/jmh/resources/log4j2.properties']
 
     // Can be overridden via -Pjmh.include="pattern"
@@ -209,83 +126,8 @@ versionInjection {
     into( 'org.hibernate.Version', 'initVersion' )
 }
 
-tasks.register('copyBundleResourcesXml', Copy) {
-    inputs.property( "db", db )
-    inputs.property( "dbHost", dbHost )
-    ext {
-        bundlesTargetDir = layout.buildDirectory.dir("bundles").get().asFile
-        // Escape
-        bundleTokens = [
-                'db.dialect' : dbBundle[db]['db.dialect'].replace("&", "&amp;"),
-                'jdbc.driver' : dbBundle[db]['jdbc.driver'].replace("&", "&amp;"),
-                'jdbc.user' : dbBundle[db]['jdbc.user'].replace("&", "&amp;"),
-                'jdbc.pass' : dbBundle[db]['jdbc.pass'].replace("&", "&amp;"),
-                'jdbc.url' : dbBundle[db]['jdbc.url'].replace("&", "&amp;"),
-                'jdbc.datasource' : dbBundle[db]['jdbc.datasource'].replace("&", "&amp;"),
-                'connection.init_sql' : dbBundle[db]['connection.init_sql'].replace("&", "&amp;")
-        ]
-        ext.bundleTokens['buildDirName'] = project.relativePath( layout.buildDirectory.asFile.get() )
-    }
-
-    from('src/test/bundles/templates') {
-        include '**/*.xml'
-    }
-    into ext.bundlesTargetDir
-    filter( ReplaceTokens, tokens: ext.bundleTokens)
-
-    doFirst {
-        ext.bundlesTargetDir.mkdirs()
-    }
-}
-
-tasks.register('copyBundleResourcesNonXml', Copy) {
-    inputs.property( "db", db )
-    ext {
-        bundlesTargetDir = layout.buildDirectory.dir("bundles").get().asFile
-        // Escape
-        bundleTokens = dbBundle[db]
-        ext.bundleTokens['buildDirName'] = project.relativePath(layout.buildDirectory.asFile.get())
-    }
-
-    from('src/test/bundles/templates') {
-        exclude '**/*.xml'
-    }
-    into ext.bundlesTargetDir
-    filter( ReplaceTokens, tokens: ext.bundleTokens)
-
-    doFirst {
-        ext.bundlesTargetDir.mkdirs()
-    }
-}
-
-tasks.register('copyBundleResources', Copy) {
-    inputs.property( "db", db )
-    dependsOn tasks.copyBundleResourcesXml
-    dependsOn tasks.copyBundleResourcesNonXml
-}
-
-processTestResources {
-    dependsOn copyBundleResources
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
-}
-
 sourcesJar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-}
-
-tasks.register('testJar', Jar) {
-    dependsOn testClasses
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    archiveClassifier.set( 'test' )
-    from sourceSets.test.output
-}
-
-artifacts {
-    tests testJar
-}
-
-compileTestJava {
-    options.compilerArgs += [ "-AsuppressJakartaDataMetamodel=true" ]
 }
 
 tasks.register( "generateAnnotationClasses", JavaCompile ) {
@@ -315,7 +157,8 @@ tasks.register('generateEnversStaticMetamodel', JavaCompile) {
     include 'org/hibernate/envers/enhanced/SequenceIdRevisionEntity.java'
     include 'org/hibernate/envers/enhanced/SequenceIdTrackingModifiedEntitiesRevisionEntity.java'
 
-    classpath = sourceSets.main.runtimeClasspath + sourceSets.test.compileClasspath
+    classpath = sourceSets.main.runtimeClasspath + configurations.metamodelGeneration
+    options.annotationProcessorPath = configurations.metamodelGeneration
     options.compilerArgs = [
             "-proc:only",
             "-processor",
@@ -326,38 +169,42 @@ tasks.register('generateEnversStaticMetamodel', JavaCompile) {
     destinationDirectory = layout.projectDirectory.dir("src/main/java").asFile
 }
 
-tasks.withType( Test.class ).configureEach { test ->
-    test.systemProperty 'file.encoding', 'utf-8'
-    // Allow creating a function in HSQLDB for this Java method
-    test.systemProperty 'hsqldb.method_class_names', 'org.hibernate.orm.test.jpa.transaction.TransactionTimeoutTest.sleep'
-
-    // See org.hibernate.boot.model.naming.NamingHelperTest.DefaultCharset.set
-    test.jvmArgs( ['--add-opens', 'java.base/java.nio.charset=ALL-UNNAMED'] )
-    // Weld needs this to generate proxies
-    test.jvmArgs( ['--add-opens', 'java.base/java.security=ALL-UNNAMED'] )
-    test.jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
-
-    //Avoid Log4J2 classloader leaks:
-    test.jvmArgs( ['-Dlog4j2.disableJmx=true'] )
-
-    // see GradleParallelTestingResolver for how the test worker id is resolved in JDBC configs
-    def forks = org.hibernate.orm.env.TestParallelism.resolveThreadCount(
-            project.db,
-            project.findProperty("test.threads")?.toString()
-    )
-    if (forks.present) {
-        test.maxParallelForks = forks.asInt
-        test.systemProperty 'maxParallelForks', test.maxParallelForks
+// Keep the historical entry points while the new project owns execution.
+// Test tasks retain Gradle's CLI options, but do not execute or write reports here.
+['test', 'instrumentationTest'].each { testTaskName ->
+    def delegatePath = ":hibernate-core-tests:${testTaskName}"
+    def compatibilityTask = testTaskName == 'test'
+            ? tasks.named(testTaskName, Test)
+            : tasks.register(testTaskName, Test)
+    compatibilityTask.configure {
+        description = "Delegates to ${delegatePath}"
+        group = 'verification'
+        dependsOn delegatePath
+        testClassesDirs = files()
+        classpath = files()
+        onlyIf { false }
     }
-    if (!forks.present || forks.asInt == 1) {
-        // To reduce the JVM metaspace pressure, reduce the amount of classes that can run in one fork
-        test.forkEvery = 8096
+
+    gradle.taskGraph.whenReady { graph ->
+        def alias = compatibilityTask.get()
+        if (graph.hasTask(alias)) {
+            def delegate = project(':hibernate-core-tests').tasks.named(testTaskName, Test).get()
+            // Gradle's public TestFilter API does not expose command-line patterns.
+            // Keep this wrapper-specific access here, so combined entry points have
+            // the same inclusive semantics as repeated --tests options.
+            delegate.setTestNameIncludePatterns((delegate.filter.commandLineIncludePatterns
+                    + alias.filter.commandLineIncludePatterns).toList())
+            alias.filter.includePatterns.each { delegate.filter.includeTestsMatching(it) }
+            alias.filter.excludePatterns.each { delegate.filter.excludeTestsMatching(it) }
+            delegate.failFast = delegate.failFast || alias.failFast
+            delegate.dryRun = delegate.dryRun.getOrElse(false) || alias.dryRun.getOrElse(false)
+            delegate.debug = delegate.debug || alias.debug
+        }
     }
 }
 
-instrumentationTest.configure {
-    // Preserve cold Byte Buddy loading even if more instrumentation tests are added.
-    forkEvery = 1
+tasks.named('check') {
+    dependsOn ':hibernate-core-tests:check'
 }
 
 tasks.named( "javadoc", Javadoc ) {

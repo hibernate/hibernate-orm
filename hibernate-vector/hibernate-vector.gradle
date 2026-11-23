@@ -11,7 +11,7 @@ dependencies {
     compileOnly libs.jdbc.mssql
 
     testImplementation project( ':hibernate-testing' )
-    testImplementation project( path: ':hibernate-core', configuration: 'tests' )
+    testImplementation project( path: ':hibernate-core-tests', configuration: 'tests' )
 }
 
 test {

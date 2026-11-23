@@ -1,11 +1,11 @@
 [[hql]]
 == Query APIs and execution
-:example-dir-query: {core-project-dir}/src/test/java/org/hibernate/orm/test/hql
+:example-dir-query: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/hql
 :example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
-:example-dir-query-guide: {core-project-dir}/src/test/java/org/hibernate/orm/test/query/criteria
+:example-dir-query-guide: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/query/criteria
 :query-extras-dir: {doc-main-asciidoc-dir}/userguide/chapters/query/hql/extras
-:example-dir-batch: {core-project-dir}/src/test/java/org/hibernate/orm/test/batch
-:example-dir-bulkid: {core-project-dir}/src/test/java/org/hibernate/orm/test/bulkid
+:example-dir-batch: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/batch
+:example-dir-bulkid: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/bulkid
 :batch-extras-dir: {doc-main-asciidoc-dir}/userguide/chapters/batch/extras
 
 [[query-execution]]This chapter describes the common APIs for executing selections and mutations.

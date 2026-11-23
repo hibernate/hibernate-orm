@@ -1,4 +1,4 @@
-:sourcedir: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping
+:sourcedir: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/mapping
 :extrasdir: extras
 :originalextrasdir: ../chapters/domain/extras
 

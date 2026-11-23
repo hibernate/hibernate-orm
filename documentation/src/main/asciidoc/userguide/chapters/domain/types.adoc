@@ -1,6 +1,6 @@
 [[mapping-types]]
 === Domain model overview
-:domain-types-example-dir-mapping: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping
+:domain-types-example-dir-mapping: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/mapping
 :domain-types-extrasdir: extras/types
 
 A https://en.wikipedia.org/wiki/Domain_model[domain model] describes an application's https://en.wikipedia.org/wiki/Problem_domain[problem domain].

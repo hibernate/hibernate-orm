@@ -5,7 +5,7 @@ Tune a representative operation against its required results and consistency gua
 A change that helps one workload can add cost to another, so use measurements to choose among
 Hibernate's mapping, fetching, and execution options.
 
-:example-dir-best-practices: {core-project-dir}/src/test/java/org/hibernate/orm/test/bestpractices
+:example-dir-best-practices: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/bestpractices
 
 [[best-practices-measurement]]
 === Measure and diagnose
@@ -157,7 +157,7 @@ Log4j 2 is one possible backend, not a Hibernate requirement.
 
 [source,xml]
 ----
-include::{core-project-dir}/src/test/resources/best-practices/log4j2.xml[]
+include::{core-tests-project-dir}/src/test/resources/best-practices/log4j2.xml[]
 ----
 
 Enable value tracing selectively: it adds output and processing overhead.

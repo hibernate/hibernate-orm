@@ -1,6 +1,6 @@
 [[embeddables]]
 === Embeddable values
-:domain-embeddables-core-test-base: {root-project-dir}/hibernate-core/src/test/java
+:domain-embeddables-core-test-base: {root-project-dir}/hibernate-core-tests/src/test/java
 :example-dir-emeddable: {domain-embeddables-core-test-base}/org/hibernate/orm/test/mapping/embeddable
 :example-dir-embeddableinstantiator: {domain-embeddables-core-test-base}/org/hibernate/orm/test/mapping/embeddable/strategy/instantiator
 :example-dir-compositeusertype: {domain-embeddables-core-test-base}/org/hibernate/orm/test/mapping/embeddable/strategy/usertype

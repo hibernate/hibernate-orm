@@ -1,7 +1,7 @@
 [[dynamic-model]]
 ==== Dynamic models
-:example-dir-dynamic: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping/dynamic
-:example-dir-resources: {core-project-dir}/src/test/resources/org/hibernate/orm/test/mapping/dynamic
+:example-dir-dynamic: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/mapping/dynamic
+:example-dir-resources: {core-tests-project-dir}/src/test/resources/org/hibernate/orm/test/mapping/dynamic
 :domain-dynamic-model-extrasdir: extras
 
 [IMPORTANT]

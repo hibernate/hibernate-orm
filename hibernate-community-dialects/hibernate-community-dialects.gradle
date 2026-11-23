@@ -10,7 +10,7 @@ dependencies {
 
     testImplementation project( ':hibernate-testing' )
     testImplementation project( ':hibernate-dialect-testkit' )
-    testImplementation project( path: ':hibernate-core', configuration: 'tests' )
+    testImplementation project( path: ':hibernate-core-tests', configuration: 'tests' )
 }
 
 test {

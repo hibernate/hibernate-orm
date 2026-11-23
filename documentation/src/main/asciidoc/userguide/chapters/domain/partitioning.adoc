@@ -1,6 +1,6 @@
 [[partitioning]]
 === Partition keys
-:example-dir-partition-key: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping/identifier
+:example-dir-partition-key: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/mapping/identifier
 :domain-partitioning-extrasdir: extras
 
 A database table may be divided into physical partitions according to partition keys and a partitioning scheme.

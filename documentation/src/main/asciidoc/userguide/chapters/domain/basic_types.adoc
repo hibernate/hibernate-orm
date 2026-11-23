@@ -1,7 +1,7 @@
 [[basic]]
 === Basic values
 :example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
-:domain-basic-types-core-test-base: {core-project-dir}/src/test
+:domain-basic-types-core-test-base: {core-tests-project-dir}/src/test
 :example-dir-basic-mapping: {domain-basic-types-core-test-base}/java/org/hibernate/orm/test/mapping
 :example-dir-resources: {domain-basic-types-core-test-base}/resources/org/hibernate/orm/test/
 :example-dir-generated: {domain-basic-types-core-test-base}/java/org/hibernate/orm/test/mapping/generated
@@ -77,7 +77,7 @@ See <<basic-jpa-convert>> for more on this topic.
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:domain-collections-core-test-base: {core-project-dir}/src/test/java
+:domain-collections-core-test-base: {core-tests-project-dir}/src/test/java
 :example-dir-collection: {domain-collections-core-test-base}/org/hibernate/orm/test/mapping/collections
 :docs-base: https://docs.hibernate.org/orm/{majorMinorVersion}
 :javadoc-base: {docs-base}/javadocs
@@ -989,7 +989,7 @@ No `@Temporal` annotation or direct JDBC support for exchanging `Year` instances
 
 [source,java,indent=0]
 ----
-include::{root-project-dir}/hibernate-core/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-year]
+include::{root-project-dir}/hibernate-core-tests/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-year]
 ----
 
 For example, assigning `Year.of(2026)` stores the integer `2026` and reconstructs the `Year` value when the entity is loaded.
@@ -1579,7 +1579,7 @@ This differs from a plain `String` mapping to `VARCHAR`, even if that string hap
 
 [source,java,indent=0]
 ----
-include::{root-project-dir}/hibernate-core/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-json-mapping]
+include::{root-project-dir}/hibernate-core-tests/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-json-mapping]
 ----
 
 A basic document value is mapped as one value. An <<embeddable-mapping-aggregate,aggregate embeddable>> additionally exposes its mapped component attributes to Hibernate.
@@ -1596,12 +1596,12 @@ For the `Map<String,String>` mapping above, both of these changes are detected:
 
 [source,java,indent=0]
 ----
-include::{root-project-dir}/hibernate-core/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-json-mutate]
+include::{root-project-dir}/hibernate-core-tests/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-json-mutate]
 ----
 
 [source,java,indent=0]
 ----
-include::{root-project-dir}/hibernate-core/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-json-replace]
+include::{root-project-dir}/hibernate-core-tests/src/test/java/org/hibernate/orm/test/mapping/userguide/DomainModelGuideTests.java[tag=guide-json-replace]
 ----
 
 This does not imply that every application-defined object graph supports the same dirty checking.
@@ -1761,7 +1761,7 @@ Use `@Convert(disableConversion=true)` to suppress automatic conversion:
 
 [source,java,indent=0]
 ----
-include::{root-project-dir}/hibernate-core/src/test/java/org/hibernate/orm/test/mapping/userguide/converters/ConverterSelectionTests.java[tag=guide-converter-selection]
+include::{root-project-dir}/hibernate-core-tests/src/test/java/org/hibernate/orm/test/mapping/userguide/converters/ConverterSelectionTests.java[tag=guide-converter-selection]
 ----
 
 With the package registration shown below, `automatic` uses `YesNoConverter`, `explicit` uses `NumericBooleanConverter`,
@@ -1777,7 +1777,7 @@ For example:
 
 [source,java,indent=0]
 ----
-include::{root-project-dir}/hibernate-core/src/test/java/org/hibernate/orm/test/mapping/userguide/converters/ConverterSelectionTests.java[tag=guide-converter-map]
+include::{root-project-dir}/hibernate-core-tests/src/test/java/org/hibernate/orm/test/mapping/userguide/converters/ConverterSelectionTests.java[tag=guide-converter-map]
 ----
 
 Jakarta Persistence excludes identifier attributes, version attributes, associations, and attributes explicitly annotated with `@Enumerated` or `@Temporal` from automatic conversion.
@@ -1812,7 +1812,7 @@ Use repeated annotations or the explicit link:{doc-javadoc-url}org/hibernate/ann
 
 [source,java,indent=0]
 ----
-include::{root-project-dir}/hibernate-core/src/test/java/org/hibernate/orm/test/mapping/userguide/converters/package-info.java[tag=guide-converter-registrations]
+include::{root-project-dir}/hibernate-core-tests/src/test/java/org/hibernate/orm/test/mapping/userguide/converters/package-info.java[tag=guide-converter-registrations]
 ----
 
 Here, `YesNoConverter` is automatically applied, while `PeriodStringConverter` is registered for explicit selection.

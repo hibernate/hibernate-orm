@@ -1,7 +1,7 @@
 [[statistics]]
 == Statistics
 
-:example-dir-statistics: {core-project-dir}/src/test/java/org/hibernate/orm/test/stats
+:example-dir-statistics: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/stats
 
 Hibernate statistics describe activity recorded by a `SessionFactory`: entity and collection
 operations, queries, cache access, JDBC resource use, and transaction completion.

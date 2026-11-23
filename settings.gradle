@@ -117,6 +117,7 @@ buildCache {
 }
 
 include 'hibernate-core'
+include 'hibernate-core-tests'
 include 'hibernate-testing'
 include 'hibernate-dialect-testkit'
 

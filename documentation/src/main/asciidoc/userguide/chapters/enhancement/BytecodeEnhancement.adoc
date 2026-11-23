@@ -1,7 +1,7 @@
 [[BytecodeEnhancement]]
 == Bytecode Enhancement
 
-:example-dir-enhancement: {core-project-dir}/src/test/java/org/hibernate/orm/test/pc
+:example-dir-enhancement: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/pc
 
 [[tooling-enhancement,Bytecode Enhancement]]
 Bytecode enhancement adds interception and state-tracking code to persistent classes.

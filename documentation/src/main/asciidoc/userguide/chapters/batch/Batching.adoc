@@ -1,7 +1,7 @@
 [[batch]]
 == Batching
-:example-dir-doc-batch: {core-project-dir}/src/test/java/org/hibernate/orm/test/batch
-:example-dir-bulkid: {core-project-dir}/src/test/java/org/hibernate/orm/test/bulkid
+:example-dir-doc-batch: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/batch
+:example-dir-bulkid: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/bulkid
 :batch-extras-dir: extras
 
 Processing many rows involves separate choices about persistence semantics, JDBC execution,

@@ -10,7 +10,7 @@ description = 'Kotlin tests for Hibernate\'s core ORM functionality'
 
 dependencies {
     testImplementation project( ':hibernate-testing' )
-    testImplementation project( path: ':hibernate-core', configuration: 'tests' )
+    testImplementation project( path: ':hibernate-core-tests', configuration: 'tests' )
     testImplementation libs.test.assertjCore
 }
 

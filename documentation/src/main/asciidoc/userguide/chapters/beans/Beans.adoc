@@ -1,8 +1,8 @@
 [[beans]]
 == Managed Beans
 
-:beans-guide-example: {core-project-dir}/src/test/java/org/hibernate/orm/test/cdi/guide/ManagedBeansGuideTests.java
-:beans-guide-resources: {core-project-dir}/src/test/resources/beans-guide
+:beans-guide-example: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/cdi/guide/ManagedBeansGuideTests.java
+:beans-guide-resources: {core-tests-project-dir}/src/test/resources/beans-guide
 
 Hibernate can obtain extension instances through CDI or another bean container, allowing
 those instances to receive dependency injection and lifecycle callbacks. This support

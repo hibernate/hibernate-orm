@@ -13,7 +13,7 @@ dependencies {
 
 	testImplementation project( ':hibernate-testing' )
 	testImplementation project( ':hibernate-ant' )
-	testImplementation project( path: ':hibernate-core', configuration: 'tests' )
+	testImplementation project( path: ':hibernate-core-tests', configuration: 'tests' )
 
 	testImplementation libs.jakarta.validation
 	testImplementation libs.jandex

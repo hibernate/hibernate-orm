@@ -1,7 +1,7 @@
 [[associations]]
 === Associations
-:example-dir-association: {core-project-dir}/src/test/java/org/hibernate/orm/test/associations
-:example-dir-any: {core-project-dir}/src/test/java/org/hibernate/orm/test/any
+:example-dir-association: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/associations
+:example-dir-any: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/any
 :domain-associations-extrasdir: extras/associations
 
 Associations map relationships between entities.

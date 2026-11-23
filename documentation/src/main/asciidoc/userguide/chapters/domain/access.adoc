@@ -1,6 +1,6 @@
 [[access]]
 ==== Attribute access
-:example-dir-access: {core-project-dir}/src/test/java/org/hibernate/orm/test/mapping/access
+:example-dir-access: {core-tests-project-dir}/src/test/java/org/hibernate/orm/test/mapping/access
 :domain-access-extrasdir: extras
 
 As a Jakarta Persistence provider, Hibernate can inspect entity fields or property accessor methods.

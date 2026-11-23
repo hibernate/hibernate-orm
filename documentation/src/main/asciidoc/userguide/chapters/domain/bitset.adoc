@@ -1,7 +1,7 @@
 :testing-project-dir: {root-project-dir}/hibernate-testing
 :example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
 :core-project-dir: {root-project-dir}/hibernate-core
-:domain-basic-types-core-test-base: {core-project-dir}/src/test
+:domain-basic-types-core-test-base: {core-tests-project-dir}/src/test
 :example-dir-basic-mapping: {domain-basic-types-core-test-base}/java/org/hibernate/orm/test/mapping
 :example-dir-resources: {domain-basic-types-core-test-base}/resources/org/hibernate/orm/test/
 :example-dir-generated: {domain-basic-types-core-test-base}/java/org/hibernate/orm/test/mapping/generated

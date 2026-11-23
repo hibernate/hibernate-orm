@@ -18,6 +18,10 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.spi.mutation.MutationType;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
@@ -26,10 +30,10 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.sin
  * OneToMany insert coordinator if the element is a {@link org.hibernate.persister.entity.UnionSubclassEntityPersister}.
  */
 public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordinator {
-	private final CollectionMutationTarget mutationTarget;
+	private final OneToManyPersister mutationTarget;
 	private final RowMutationOperations rowMutationOperations;
 
-	private final SubclassEntry[] subclassEntries;
+	private final Map<EntityPersister, SubclassEntry> subclassEntries = new ConcurrentHashMap<>();
 	private final MutationExecutorService mutationExecutorService;
 
 	public InsertRowsCoordinatorTablePerSubclass(
@@ -38,11 +42,6 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 			@Nonnull ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
 		this.rowMutationOperations = rowMutationOperations;
-		subclassEntries =
-				new SubclassEntry[castNonNull( mutationTarget.getElementPersister() )
-						.getRootEntityDescriptor()
-						.getSubclassEntityNames()
-						.size()];
 		mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 	}
 
@@ -77,27 +76,17 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 			MODEL_MUTATION_LOGGER.noCollectionRowsToInsert( mutationTarget.getRolePath(), id );
 			return;
 		}
-		final var executors = new MutationExecutor[subclassEntries.length];
+		final Map<EntityPersister, MutationExecutor> executors = new HashMap<>();
 		try {
 			int entryCount = 0;
 			while ( entries.hasNext() ) {
 				final Object entry = entries.next();
 
 				if ( entryChecker == null || entryChecker.include( entry, entryCount, collection, pluralAttribute ) ) {
-					final var entityEntry = session.getPersistenceContextInternal().getEntry( entry );
-					final int subclassId = entityEntry.getPersister().getSubclassId();
-					final MutationExecutor mutationExecutor;
-					if ( executors[subclassId] == null ) {
-						final var subclassEntry = getSubclassEntry( entityEntry.getPersister() );
-						mutationExecutor = executors[subclassId] = mutationExecutorService.createExecutor(
-								subclassEntry.batchKeySupplier,
-								subclassEntry.operationGroup,
-								session
-						);
-					}
-					else {
-						mutationExecutor = executors[subclassId];
-					}
+					final var mutationExecutor = executors.computeIfAbsent(
+							mutationTarget.getConcreteElementPersister( collection.getElement( entry ), session ),
+							elementPersister -> createExecutor( elementPersister, session )
+					);
 					// if the entry is included, perform the "insert"
 					castNonNull( rowMutationOperations.getInsertRowValues() ).applyValues(
 							collection,
@@ -117,24 +106,27 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 
 		}
 		finally {
-			for ( var executor : executors ) {
-				if ( executor != null ) {
-					executor.release();
-				}
-			}
+			executors.values().forEach( MutationExecutor::release );
 		}
 	}
 
 	@Nonnull
-	private SubclassEntry getSubclassEntry(@Nonnull EntityPersister elementPersister) {
-		final int subclassId = elementPersister.getSubclassId();
-		final var subclassEntry = subclassEntries[subclassId];
-		if ( subclassEntry != null ) {
-			return subclassEntry;
-		}
+	private MutationExecutor createExecutor(
+			@Nonnull EntityPersister elementPersister,
+			@Nonnull SharedSessionContractImplementor session) {
+		final var subclassEntry = subclassEntries.computeIfAbsent( elementPersister, this::createSubclassEntry );
+		return mutationExecutorService.createExecutor(
+				subclassEntry.batchKeySupplier,
+				subclassEntry.operationGroup,
+				session
+		);
+	}
+
+	@Nonnull
+	private SubclassEntry createSubclassEntry(@Nonnull EntityPersister elementPersister) {
 		final var basicBatchKey =
-				new BasicBatchKey( mutationTarget.getRolePath() + "#INSERT#" + subclassId );
-		return subclassEntries[subclassId] = new SubclassEntry(
+				new BasicBatchKey( mutationTarget.getRolePath() + "#INSERT#" + elementPersister.getSubclassId() );
+		return new SubclassEntry(
 				() -> basicBatchKey,
 				createOperationGroup( elementPersister )
 		);

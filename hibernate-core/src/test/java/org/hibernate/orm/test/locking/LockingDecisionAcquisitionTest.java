@@ -140,6 +140,9 @@ class LockingDecisionAcquisitionTest {
 	}
 
 	@Test
+	// SQL Server and Sybase lock directly even when follow-on locking is forced, so
+	// they never reach the follow-on path and this test would pass there.
+	@ExtendWith(FollowOnLockingTestSupport.Eligibility.class)
 	@FailureExpected(reason = "Finding 1: the locking strategy is built from the CTE's query spec, so"
 			+ " getPathsToLock() is null and follow-on locking fails with a NullPointerException"
 			+ " while processing results. Verified on H2.")

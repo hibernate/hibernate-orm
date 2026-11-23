@@ -159,6 +159,14 @@ Custom SQL specified using `@SQLInsert`, `@SQLUpdate`, `@SQLDelete`, or `@SQLDel
 entity or collection is now rejected with an `UnsupportedMappingException` when the session factory is built.
 Previously, such a mapping usually failed when the entity or collection was written.
 
+[[custom-sql-mapped-by]]
+=== Custom SQL for a `mappedBy` collection
+
+An `@SQLInsert`, `@SQLDelete`, or `@SQLDeleteAll` annotation on a collection which is `mappedBy` another entity
+is now rejected with an `AnnotationException` when the metadata is built. Previously the annotation was silently ignored.
+An `@SQLUpdate` annotation is also rejected, unless the collection is a `@OneToMany` association with an order column
+or map key column, since it is then used to update that column.
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // XSD changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

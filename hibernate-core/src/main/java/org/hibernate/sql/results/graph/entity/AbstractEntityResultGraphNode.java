@@ -5,7 +5,6 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.CurrentState;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
-import org.hibernate.metamodel.mapping.internal.TemporalMappingImpl;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.spi.NavigablePath;
@@ -115,6 +114,7 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 				joinedPart instanceof ToOneAttributeMapping || joinedPart instanceof EntityCollectionPart;
 		final var expressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		final var auditMapping = entityMappingType.getAuditMapping();
+		final var temporalMapping = entityMappingType.getTemporalMapping();
 		final Expression changesetId;
 		if ( auditMapping != null ) {
 			// The target of a to-one, or an element, is the target as of its owner's revision,
@@ -126,10 +126,9 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 							entityTableGroup.resolveTableReference( auditMapping.resolveTableName( table ) ),
 							auditMapping.getChangesetIdMapping( table ) );
 		}
-		else if ( association
-				&& entityMappingType.getTemporalMapping() instanceof TemporalMappingImpl temporalMapping ) {
+		else if ( association && temporalMapping != null ) {
 			// A temporal target or element of an audit snapshot is read as of the snapshot's revision
-			changesetId = temporalMapping.ownerRevision( navigablePath, sqlAstCreationState );
+			changesetId = ownerRevision( temporalMapping, navigablePath, sqlAstCreationState );
 		}
 		else {
 			changesetId = null;

@@ -160,10 +160,7 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 			boolean addsPredicate,
 			SqlAstCreationState creationState) {
 		final var joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
-		if ( lhs instanceof CollectionTableGroup
-			&& getCollectionDescriptor().getAttributeMapping().getAuditMapping() != null ) {
-			// Temporal OTM with middle audit table: the collection uses a CollectionTableGroup
-			// instead of OneToManyTableGroup, so we create the entity as a joined table group
+		if ( lhs instanceof CollectionTableGroup ) {
 			final var sqlAliasBase = SqlAliasBase.from(
 					explicitSqlAliasBase,
 					explicitSourceAlias,

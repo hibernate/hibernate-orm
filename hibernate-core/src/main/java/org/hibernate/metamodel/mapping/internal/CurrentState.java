@@ -10,6 +10,7 @@ import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
@@ -143,8 +144,9 @@ public final class CurrentState {
 				&& owner.getModelPart() instanceof EntityValuedModelPart entityPart
 				&& !readsCurrentState( owner, creationState ) ) {
 			final var entityMappingType = entityPart.getEntityMappingType();
-			if ( entityMappingType.getTemporalMapping() instanceof TemporalMappingImpl temporalMapping
-					&& !temporalMapping.readsHistoryWithRestriction( creationState ) ) {
+			final var temporalMapping = entityMappingType.getTemporalMapping();
+			if ( temporalMapping != null
+					&& !temporalMapping.readsHistoryAtOwnerRevision( creationState.getLoadQueryInfluencers() ) ) {
 				return null;
 			}
 			final var revision =
@@ -164,6 +166,23 @@ public final class CurrentState {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * In an all-revisions query, the revision column of the audit snapshot owning a
+	 * temporal target or element with the given path, which it is read at. It is
+	 * {@code null} when the owner is current state, or when the dialect reads history
+	 * with {@code AS OF}, which cannot take a column.
+	 *
+	 * @see #ownerRevision(NavigablePath, SqlAstCreationState)
+	 */
+	public static @Nullable ColumnReference ownerRevision(
+			@Nonnull TemporalMapping temporalMapping,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqlAstCreationState creationState) {
+		return temporalMapping.readsHistoryAtOwnerRevision( creationState.getLoadQueryInfluencers() )
+				? ownerRevision( navigablePath, creationState )
+				: null;
 	}
 
 	/**

@@ -55,6 +55,8 @@ public class RowMutationOperations {
 
 	@Nullable
 	private final OperationProducer deleteAllRowsOperationProducer;
+	@Nullable
+	private final DeleteAllRowsBindings deleteAllRowsBindings;
 
 	@Nullable
 	private JdbcMutationOperation insertRowOperation;
@@ -72,12 +74,14 @@ public class RowMutationOperations {
 			@Nullable Restrictions updateRowRestrictions,
 			@Nullable OperationProducer deleteRowOperationProducer,
 			@Nullable Restrictions deleteRowRestrictions,
-			@Nullable OperationProducer deleteAllRowsOperationProducer) {
+			@Nullable OperationProducer deleteAllRowsOperationProducer,
+			@Nullable DeleteAllRowsBindings deleteAllRowsBindings) {
 		this.target = target;
 
 		assert areSameNullness( insertRowOperationProducer, insertRowValues );
 		assert areSameNullness( updateRowOperationProducer, updateRowValues, updateRowRestrictions );
 		assert areSameNullness( deleteRowOperationProducer, deleteRowRestrictions );
+		assert areSameNullness( deleteAllRowsOperationProducer, deleteAllRowsBindings );
 
 		this.insertRowOperationProducer = insertRowOperationProducer;
 		this.insertRowValues = insertRowValues;
@@ -90,6 +94,7 @@ public class RowMutationOperations {
 		this.deleteRowRestrictions = deleteRowRestrictions;
 
 		this.deleteAllRowsOperationProducer = deleteAllRowsOperationProducer;
+		this.deleteAllRowsBindings = deleteAllRowsBindings;
 	}
 
 	@Nonnull
@@ -212,6 +217,19 @@ public class RowMutationOperations {
 	@Nullable
 	public OperationProducer getDeleteAllRowsOperationProducer() {
 		return deleteAllRowsOperationProducer;
+	}
+
+	@Nullable
+	public DeleteAllRowsBindings getDeleteAllRowsBindings() {
+		return deleteAllRowsBindings;
+	}
+
+	@FunctionalInterface
+	public interface DeleteAllRowsBindings {
+		void bind(
+				@Nonnull Object key,
+				@Nonnull SharedSessionContractImplementor session,
+				@Nonnull JdbcValueBindings jdbcValueBindings);
 	}
 
 	@FunctionalInterface

@@ -7,11 +7,9 @@ import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationTarget;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
-import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
-import org.hibernate.persister.entity.mutation.TemporalMutationHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.spi.mutation.MutationType;
@@ -29,6 +27,7 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.sin
 public class RemoveCoordinatorStandard implements RemoveCoordinator {
 	private final AbstractCollectionPersister mutationTarget;
 	private final OperationProducer operationProducer;
+	private final RowMutationOperations.DeleteAllRowsBindings bindings;
 	private final BasicBatchKey batchKey;
 	private final MutationExecutorService mutationExecutorService;
 
@@ -47,6 +46,7 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 			@Nonnull ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
 		this.operationProducer = castNonNull( mutationOperations.getDeleteAllRowsOperationProducer() );
+		this.bindings = castNonNull( mutationOperations.getDeleteAllRowsBindings() );
 
 		batchKey = new BasicBatchKey( mutationTarget.getRolePath() + "#REMOVE" );
 		mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
@@ -93,24 +93,7 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 		);
 
 		try {
-			final var jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
-			mutationTarget.getTargetPart().getKeyDescriptor().getKeyPart().decompose(
-					key,
-					0,
-					jdbcValueBindings,
-					null,
-					RowMutationOperations.DEFAULT_RESTRICTOR,
-					session
-			);
-			final var temporalMapping = mutationTarget.getTargetPart().getTemporalMapping();
-			if ( temporalMapping != null && TemporalMutationHelper.isUsingParameters( session ) ) {
-				jdbcValueBindings.bindValue(
-						session.getCurrentChangesetIdentifier(),
-						temporalMapping.getEndingColumnMapping(),
-						ParameterUsage.SET
-				);
-			}
-
+			bindings.bind( key, session, mutationExecutor.getJdbcValueBindings() );
 			mutationExecutor.execute(
 					key,
 					null,

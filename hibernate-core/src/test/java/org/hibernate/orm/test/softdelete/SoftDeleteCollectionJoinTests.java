@@ -115,7 +115,7 @@ public class SoftDeleteCollectionJoinTests {
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFullJoin.class)
 	public void fullJoinDoesNotReturnHiddenNotes(SessionFactoryScope scope) {
 		assertThat( ids( scope, "select n.id from Parent p full join p.notes n" ) )
-				.contains( 2 )
+				.contains( null, 2, 3 )
 				.doesNotContain( 1, 4, 5 );
 	}
 

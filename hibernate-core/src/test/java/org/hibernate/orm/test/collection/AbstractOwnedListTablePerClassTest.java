@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.Hibernate;
+import org.hibernate.WrongClassException;
 import org.hibernate.engine.spi.SessionImplementor;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -20,6 +21,7 @@ import jakarta.persistence.OrderColumn;
 
 import static jakarta.persistence.InheritanceType.TABLE_PER_CLASS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * The rows of an owned one-to-many list whose element is a {@code TABLE_PER_CLASS} hierarchy are
@@ -153,6 +155,26 @@ public abstract class AbstractOwnedListTablePerClassTest {
 		} );
 
 		assertLoadsAs( scope, 1, 2, 3, 5 );
+	}
+
+	/**
+	 * A proxy obtained through a subtype which the identified row does not belong to must not be
+	 * resolved to the row of a sibling subtype.
+	 */
+	@Test
+	public void testAdditionOfProxyOfWrongSubtype(SessionFactoryScope scope) {
+		persistBox( scope );
+		scope.inTransaction( session -> session.persist( new ThingB( 5 ) ) );
+
+		assertThatThrownBy( () -> scope.inTransaction( session -> {
+			final Box box = session.find( Box.class, 1 );
+			assertThat( box.things ).hasSize( 3 );
+			final Thing proxy = session.getReference( Branch.class, 5 );
+			assertThat( Hibernate.isInitialized( proxy ) ).isFalse();
+			box.things.add( proxy );
+		} ) ).isInstanceOf( WrongClassException.class );
+
+		scope.inTransaction( session -> assertThat( positions( session, "ThingB" ) ).containsExactly( 1, null ) );
 	}
 
 	/**
@@ -292,6 +314,26 @@ public abstract class AbstractOwnedListTablePerClassTest {
 		}
 
 		ThingB(int id) {
+			super( id );
+		}
+	}
+
+	@Entity(name = "Branch")
+	public static abstract class Branch extends Thing {
+		Branch() {
+		}
+
+		Branch(int id) {
+			super( id );
+		}
+	}
+
+	@Entity(name = "Twig")
+	public static class Twig extends Branch {
+		Twig() {
+		}
+
+		Twig(int id) {
 			super( id );
 		}
 	}

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.Hibernate;
+import org.hibernate.WrongClassException;
 import org.hibernate.engine.spi.SessionImplementor;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -23,6 +24,7 @@ import jakarta.persistence.OrderColumn;
 
 import static jakarta.persistence.InheritanceType.TABLE_PER_CLASS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * The order column or map key column of an inverse one-to-many collection whose element is a
@@ -134,6 +136,26 @@ public abstract class AbstractInverseIndexedTablePerClassTest {
 			assertThat( positions( session, "ThingA" ) ).containsExactly( 0, 2 );
 			assertThat( positions( session, "ThingB" ) ).containsExactly( 1, 3 );
 		} );
+	}
+
+	/**
+	 * A proxy obtained through a subtype which the identified row does not belong to must not be
+	 * resolved to the row of a sibling subtype.
+	 */
+	@Test
+	public void testAdditionOfProxyOfWrongSubtype(SessionFactoryScope scope) {
+		persistCrate( scope );
+		scope.inTransaction( session -> session.persist( new ThingB( 4, null ) ) );
+
+		assertThatThrownBy( () -> scope.inTransaction( session -> {
+			final Crate crate = session.find( Crate.class, 1 );
+			assertThat( crate.things ).hasSize( 3 );
+			final Thing proxy = session.getReference( Branch.class, 4 );
+			assertThat( Hibernate.isInitialized( proxy ) ).isFalse();
+			crate.things.add( proxy );
+		} ) ).isInstanceOf( WrongClassException.class );
+
+		scope.inTransaction( session -> assertThat( positions( session, "ThingB" ) ).containsExactly( 1, null ) );
 	}
 
 	@Test
@@ -257,6 +279,26 @@ public abstract class AbstractInverseIndexedTablePerClassTest {
 		}
 
 		ThingB(int id, Crate crate) {
+			super( id, crate );
+		}
+	}
+
+	@Entity(name = "Branch")
+	public static abstract class Branch extends Thing {
+		Branch() {
+		}
+
+		Branch(int id, Crate crate) {
+			super( id, crate );
+		}
+	}
+
+	@Entity(name = "Twig")
+	public static class Twig extends Branch {
+		Twig() {
+		}
+
+		Twig(int id, Crate crate) {
 			super( id, crate );
 		}
 	}

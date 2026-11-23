@@ -11,6 +11,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.WrongClassException;
 import org.hibernate.action.queue.internal.PreparedCollectionMutation;
 import org.hibernate.action.queue.spi.decompose.DecompositionContext;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionDecomposer;
@@ -161,9 +162,19 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		final var lazyInitializer = extractLazyInitializer( element );
 		if ( lazyInitializer != null && lazyInitializer.isUninitialized() ) {
 			final var proxiedPersister = mappingMetamodel.getEntityDescriptor( lazyInitializer.getEntityName() );
-			return proxiedPersister.hasSubclasses()
-					? resolveConcreteElementPersister( lazyInitializer.getInternalIdentifier(), session )
-					: proxiedPersister;
+			if ( !proxiedPersister.hasSubclasses() ) {
+				return proxiedPersister;
+			}
+			final Object id = lazyInitializer.getInternalIdentifier();
+			final var concretePersister = resolveConcreteElementPersister( id, session );
+			if ( !concretePersister.isTypeOrSuperType( proxiedPersister ) ) {
+				throw new WrongClassException(
+						"object was of wrong type " + concretePersister.getEntityName(),
+						id,
+						proxiedPersister.getEntityName()
+				);
+			}
+			return concretePersister;
 		}
 		else {
 			return mappingMetamodel.getEntityDescriptor( session.bestGuessEntityName( element ) );

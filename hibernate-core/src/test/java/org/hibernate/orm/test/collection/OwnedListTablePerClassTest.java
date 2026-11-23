@@ -14,6 +14,8 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 				AbstractOwnedListTablePerClassTest.Thing.class,
 				AbstractOwnedListTablePerClassTest.ThingA.class,
 				AbstractOwnedListTablePerClassTest.ThingB.class,
+				AbstractOwnedListTablePerClassTest.Branch.class,
+				AbstractOwnedListTablePerClassTest.Twig.class,
 				AbstractOwnedListTablePerClassTest.Label.class,
 				AbstractOwnedListTablePerClassTest.Shelf.class,
 				AbstractOwnedListTablePerClassTest.Tool.class,

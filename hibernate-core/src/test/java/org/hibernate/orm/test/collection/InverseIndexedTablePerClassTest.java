@@ -13,7 +13,9 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 				AbstractInverseIndexedTablePerClassTest.Item.class,
 				AbstractInverseIndexedTablePerClassTest.Thing.class,
 				AbstractInverseIndexedTablePerClassTest.ThingA.class,
-				AbstractInverseIndexedTablePerClassTest.ThingB.class
+				AbstractInverseIndexedTablePerClassTest.ThingB.class,
+				AbstractInverseIndexedTablePerClassTest.Branch.class,
+				AbstractInverseIndexedTablePerClassTest.Twig.class
 		}
 )
 @SessionFactory

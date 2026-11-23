@@ -14,7 +14,6 @@ import org.hibernate.dialect.sql.ast.spi.StandardSetReturningFunctionRenderingSu
 import org.hibernate.dialect.sql.ast.spi.StandardTableJoinRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.TableJoinRenderingSupport;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.spi.translation.Clause;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorWithMerge;
@@ -29,7 +28,6 @@ import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
 import org.hibernate.sql.ast.spi.query.expression.Summarization;
 import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
 import org.hibernate.sql.ast.spi.query.select.QueryGroup;
-import org.hibernate.sql.ast.spi.query.select.QueryPart;
 import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.ast.spi.query.select.SelectClause;
 import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
@@ -153,41 +151,6 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 	protected void renderEmptyOrderBy() {
 		// Always need an order by clause: https://blog.jooq.org/2014/05/13/sql-server-trick-circumvent-missing-order-by-clause/
 		appendSql( "order by (select 0)" );
-	}
-
-	@Override
-	public void visitOffsetFetchClause(QueryPart queryPart) {
-		if ( !isRowNumberingCurrentQueryPart() ) {
-			if ( determinePaginationRenderingPlan( queryPart ) instanceof PaginationRenderingPlan.OffsetFetch ) {
-				if ( !queryPart.hasSortSpecifications() ) {
-					appendSql( ' ' );
-					renderEmptyOrderBy();
-				}
-				final Expression offsetExpression;
-				final Expression fetchExpression;
-				final FetchClauseType fetchClauseType;
-				if ( queryPart.isRoot() && hasLimit() ) {
-					offsetExpression = getOffsetParameter();
-					fetchExpression = getLimitParameter();
-					fetchClauseType = FetchClauseType.ROWS_ONLY;
-				}
-				else {
-					offsetExpression = queryPart.getOffsetClauseExpression();
-					fetchExpression = queryPart.getFetchClauseExpression();
-					fetchClauseType = queryPart.getFetchClauseType();
-				}
-				if ( offsetExpression == null ) {
-					appendSql( " offset 0 rows" );
-				}
-				else {
-					renderOffset( offsetExpression, true );
-				}
-
-				if ( fetchExpression != null ) {
-					renderFetch( fetchExpression, null, fetchClauseType );
-				}
-			}
-		}
 	}
 
 	@Override

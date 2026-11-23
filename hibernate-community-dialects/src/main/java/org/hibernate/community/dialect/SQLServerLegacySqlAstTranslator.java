@@ -10,6 +10,7 @@ import org.hibernate.dialect.sql.ast.spi.StandardSetReturningFunctionRenderingSu
 import org.hibernate.Locking;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingRequest;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.PredicateSupport.Capability;
 import org.hibernate.dialect.sql.ast.spi.SQLServerPaginationRenderingSupport;
@@ -17,7 +18,6 @@ import org.hibernate.dialect.sql.ast.spi.StandardTableJoinRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.TableJoinRenderingSupport;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.sql.ast.spi.translation.Clause;
 import org.hibernate.dialect.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.query.select.SqlSelection;
@@ -68,7 +68,17 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 
 	@Override
 	protected PaginationRenderingSupport getPaginationRenderingSupport() {
-		return paginationRenderingSupport;
+		return PaginationRenderingSupport.withValidation( paginationRenderingSupport, this::validatePaginationRequest );
+	}
+
+	private void validatePaginationRequest(PaginationRenderingRequest request) {
+		final QueryPart queryPart = request.queryPart();
+		if ( !isRowNumberingCurrentQueryPart()
+				&& getDialect().getVersion().isBefore( 9 )
+				&& !queryPart.isRoot()
+				&& queryPart.getOffsetClauseExpression() != null ) {
+			throw new IllegalArgumentException( "Can't emulate offset clause in subquery" );
+		}
 	}
 
 	@Override
@@ -160,44 +170,6 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	protected void renderEmptyOrderBy() {
 		// Always need an order by clause: https://blog.jooq.org/2014/05/13/sql-server-trick-circumvent-missing-order-by-clause/
 		appendSql( "order by (select 0)" );
-	}
-
-	@Override
-	public void visitOffsetFetchClause(QueryPart queryPart) {
-		if ( !isRowNumberingCurrentQueryPart() ) {
-			if ( getDialect().getVersion().isBefore( 9 ) && !queryPart.isRoot() && queryPart.getOffsetClauseExpression() != null ) {
-				throw new IllegalArgumentException( "Can't emulate offset clause in subquery" );
-			}
-			if ( determinePaginationRenderingPlan( queryPart ) instanceof PaginationRenderingPlan.OffsetFetch ) {
-				if ( !queryPart.hasSortSpecifications() ) {
-					appendSql( ' ' );
-					renderEmptyOrderBy();
-				}
-				final Expression offsetExpression;
-				final Expression fetchExpression;
-				final FetchClauseType fetchClauseType;
-				if ( queryPart.isRoot() && hasLimit() ) {
-					offsetExpression = getOffsetParameter();
-					fetchExpression = getLimitParameter();
-					fetchClauseType = FetchClauseType.ROWS_ONLY;
-				}
-				else {
-					offsetExpression = queryPart.getOffsetClauseExpression();
-					fetchExpression = queryPart.getFetchClauseExpression();
-					fetchClauseType = queryPart.getFetchClauseType();
-				}
-				if ( offsetExpression == null ) {
-					appendSql( " offset 0 rows" );
-				}
-				else {
-					renderOffset( offsetExpression, true );
-				}
-
-				if ( fetchExpression != null ) {
-					renderFetch( fetchExpression, null, fetchClauseType );
-				}
-			}
-		}
 	}
 
 	@Override

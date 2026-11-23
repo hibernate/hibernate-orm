@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.hibernate.Locking;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingRequest;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.dialect.sql.ast.spi.AbstractSqlAstTranslator;
@@ -46,6 +47,10 @@ public class IngresSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 
 	@Override
 	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		return PaginationRenderingSupport.withValidation( paginationPlanSelection(), this::validatePaginationRequest );
+	}
+
+	private PaginationRenderingSupport paginationPlanSelection() {
 		return request -> supportsOffsetFetchClause()
 				? new PaginationRenderingPlan.OffsetFetch( false )
 				: new PaginationRenderingPlan.First();
@@ -71,12 +76,11 @@ public class IngresSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 		}
 	}
 
-	@Override
-	public void visitOffsetFetchClause(QueryPart queryPart) {
+	private void validatePaginationRequest(PaginationRenderingRequest request) {
+		final QueryPart queryPart = request.queryPart();
 		if ( !supportsOffsetFetchClause() && !queryPart.isRoot() && queryPart.getOffsetClauseExpression() != null ) {
 			throw new IllegalArgumentException( "Can't emulate offset clause in subquery" );
 		}
-		super.visitOffsetFetchClause( queryPart );
 	}
 
 	@Override

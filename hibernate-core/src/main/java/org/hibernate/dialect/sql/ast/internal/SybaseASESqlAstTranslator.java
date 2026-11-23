@@ -18,6 +18,7 @@ import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.sql.ast.spi.DerivedTableRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.InsertConflictRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingRequest;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.PredicateSupport.Capability;
 import org.hibernate.dialect.sql.ast.spi.StandardDerivedTableRenderingSupport;
@@ -167,6 +168,10 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 
 	@Override
 	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		return PaginationRenderingSupport.withValidation( paginationPlanSelection(), this::validatePaginationRequest );
+	}
+
+	private PaginationRenderingSupport paginationPlanSelection() {
 		return request -> currentFullJoinEmulationHelper().isFullJoinEmulationQueryPart( request.queryPart() )
 				? new PaginationRenderingPlan.None()
 				: new PaginationRenderingPlan.Top( true, false );
@@ -360,8 +365,8 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 		return StandardDerivedTableRenderingSupport.VALUES_SELECT_UNION;
 	}
 
-	@Override
-	public void visitOffsetFetchClause(QueryPart queryPart) {
+	private void validatePaginationRequest(PaginationRenderingRequest request) {
+		final QueryPart queryPart = request.queryPart();
 		if ( !currentFullJoinEmulationHelper().isFullJoinEmulationQueryPart( queryPart ) ) {
 			assertRowsOnlyFetchClauseType( queryPart );
 			if ( !queryPart.isRoot() && queryPart.hasOffsetOrFetchClause() ) {

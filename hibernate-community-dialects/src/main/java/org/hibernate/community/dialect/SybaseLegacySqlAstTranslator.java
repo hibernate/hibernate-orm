@@ -6,6 +6,7 @@ import java.util.function.Consumer;
 import org.hibernate.Internal;
 import org.hibernate.Locking;
 import org.hibernate.dialect.sql.ast.spi.DerivedTableRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingRequest;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardPaginationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardDerivedTableRenderingSupport;
@@ -129,16 +130,19 @@ public class SybaseLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 
 	@Override
 	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		return PaginationRenderingSupport.withValidation( paginationPlanSelection(), this::validatePaginationRequest );
+	}
+
+	private PaginationRenderingSupport paginationPlanSelection() {
 		return StandardPaginationRenderingSupport.NONE;
 	}
 
-	@Override
-	public void visitOffsetFetchClause(QueryPart queryPart) {
+	private void validatePaginationRequest(PaginationRenderingRequest request) {
+		final QueryPart queryPart = request.queryPart();
 		assertRowsOnlyFetchClauseType( queryPart );
 		if ( !queryPart.isRoot() && queryPart.getOffsetClauseExpression() != null ) {
 			throw new IllegalArgumentException( "Can't emulate offset clause in subquery" );
 		}
-		super.visitOffsetFetchClause( queryPart );
 	}
 
 	@Override

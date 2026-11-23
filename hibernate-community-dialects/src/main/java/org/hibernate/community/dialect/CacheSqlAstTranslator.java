@@ -3,6 +3,7 @@ package org.hibernate.community.dialect;
 import java.util.List;
 
 import org.hibernate.Locking;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingRequest;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardPaginationRenderingSupport;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -45,6 +46,10 @@ public class CacheSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 
 	@Override
 	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		return PaginationRenderingSupport.withValidation( paginationPlanSelection(), this::validatePaginationRequest );
+	}
+
+	private PaginationRenderingSupport paginationPlanSelection() {
 		return StandardPaginationRenderingSupport.TOP_WITH_OFFSET;
 	}
 
@@ -62,8 +67,8 @@ public class CacheSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 		renderFetchPlusOffsetExpressionAsSingleParameter( fetchClauseExpression, offsetClauseExpression, offset );
 	}
 
-	@Override
-	public void visitOffsetFetchClause(QueryPart queryPart) {
+	private void validatePaginationRequest(PaginationRenderingRequest request) {
+		final QueryPart queryPart = request.queryPart();
 		// Cache only supports the TOP clause
 		if ( !queryPart.isRoot() && queryPart.getOffsetClauseExpression() != null ) {
 			throw new IllegalArgumentException( "Can't emulate offset clause in subquery" );

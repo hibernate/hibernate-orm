@@ -1027,7 +1027,7 @@ public class SqlAstTranslatorSurfaceTests {
 		when( request.fetchClauseType() ).thenReturn( FetchClauseType.ROWS_ONLY );
 
 		assertThat( support.determinePlan( request ) )
-				.isEqualTo( new PaginationRenderingPlan.OffsetFetch( true ) );
+				.isEqualTo( new PaginationRenderingPlan.OffsetFetch( true, true, true ) );
 
 		querySpec.getSelectClause().makeDistinct( true );
 		assertThat( support.determinePlan( request ) )

@@ -3,6 +3,7 @@ package org.hibernate.community.dialect;
 import java.util.List;
 
 import org.hibernate.Locking;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingRequest;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardPaginationRenderingSupport;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -39,17 +40,20 @@ public class RDMSOS2200SqlAstTranslator<T extends JdbcOperation> extends Abstrac
 
 	@Override
 	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		return PaginationRenderingSupport.withValidation( paginationPlanSelection(), this::validatePaginationRequest );
+	}
+
+	private PaginationRenderingSupport paginationPlanSelection() {
 		return request -> request.hasFetch()
 				? StandardPaginationRenderingSupport.FETCH_PLUS_OFFSET.determinePlan( request )
 				: StandardPaginationRenderingSupport.NONE.determinePlan( request );
 	}
 
-	@Override
-	public void visitOffsetFetchClause(QueryPart queryPart) {
+	private void validatePaginationRequest(PaginationRenderingRequest request) {
+		final QueryPart queryPart = request.queryPart();
 		if ( !queryPart.isRoot() && queryPart.getOffsetClauseExpression() != null ) {
 			throw new IllegalArgumentException( "Can't emulate offset clause in subquery" );
 		}
-		super.visitOffsetFetchClause( queryPart );
 	}
 
 	@Override

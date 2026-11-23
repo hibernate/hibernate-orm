@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingRequest;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.QueryMutationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardQueryMutationRenderingSupport;
@@ -136,19 +137,22 @@ public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 
 	@Override
 	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		return PaginationRenderingSupport.withValidation( paginationPlanSelection(), this::validatePaginationRequest );
+	}
+
+	private PaginationRenderingSupport paginationPlanSelection() {
 		return request -> supportsOffsetFetchClause()
 				? new PaginationRenderingPlan.OffsetFetch( true )
 				: new PaginationRenderingPlan.None();
 	}
 
-	@Override
-	public void visitOffsetFetchClause(QueryPart queryPart) {
+	private void validatePaginationRequest(PaginationRenderingRequest request) {
+		final QueryPart queryPart = request.queryPart();
 		// Derby only supports the OFFSET and FETCH clause with ROWS
 		assertRowsOnlyFetchClauseType( queryPart );
 		if ( !supportsOffsetFetchClause() && getCurrentClause() != null ) {
 			throw new IllegalArgumentException( "Can't render offset and fetch clause for subquery" );
 		}
-		super.visitOffsetFetchClause( queryPart );
 	}
 
 	@Override

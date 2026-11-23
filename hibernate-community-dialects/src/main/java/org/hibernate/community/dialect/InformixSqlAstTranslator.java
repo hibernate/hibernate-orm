@@ -8,6 +8,7 @@ import org.hibernate.Locking;
 import org.hibernate.SPI;
 import org.hibernate.dialect.sql.ast.spi.DerivedTableRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingRequest;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.QueryMutationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardQueryMutationRenderingSupport;
@@ -113,6 +114,10 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 
 	@Override
 	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		return PaginationRenderingSupport.withValidation( paginationPlanSelection(), this::validatePaginationRequest );
+	}
+
+	private PaginationRenderingSupport paginationPlanSelection() {
 		return request -> {
 			if ( request.hasFetch() && request.fetchClauseType() != FetchClauseType.ROWS_ONLY ) {
 				if ( getDialect().getWindowFunctionSupport()
@@ -158,13 +163,12 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 		}
 	}
 
-	@Override
-	public void visitOffsetFetchClause(QueryPart queryPart) {
+	private void validatePaginationRequest(PaginationRenderingRequest request) {
+		final QueryPart queryPart = request.queryPart();
 		// Informix only supports the SKIP clause in the top level query
 		if ( !queryPart.isRoot() && queryPart.getOffsetClauseExpression() != null ) {
 			throw new IllegalArgumentException( "Can't emulate offset clause in subquery" );
 		}
-		super.visitOffsetFetchClause( queryPart );
 	}
 
 	@Override

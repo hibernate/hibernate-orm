@@ -7,6 +7,7 @@ import org.hibernate.Internal;
 import org.hibernate.Locking;
 import org.hibernate.dialect.sql.ast.spi.DerivedTableRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingRequest;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.QueryMutationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardQueryMutationRenderingSupport;
@@ -173,7 +174,27 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 
 	@Override
 	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		return PaginationRenderingSupport.withValidation( paginationPlanSelection(), this::validatePaginationRequest );
+	}
+
+	private void validatePaginationRequest(PaginationRenderingRequest request) {
+		if ( !isRowNumberingCurrentQueryPart() && !supportsOffsetFetchClause() ) {
+			assertRowsOnlyFetchClauseType( request.queryPart() );
+		}
+	}
+
+	private PaginationRenderingSupport paginationPlanSelection() {
 		return request -> {
+			final QueryPart queryPart = request.queryPart();
+			if ( supportsOffsetFetchClause()
+					&& request.isNestedInQueryGroup()
+					&& queryPart.hasSortSpecifications()
+					&& ( queryPart.isRoot() && !request.usesQueryOptionsLimit()
+							|| !queryPart.hasOffsetOrFetchClause() ) ) {
+				// If the query part has a query group parent, no offset/fetch clause, but an order by clause,
+				// then we must render "offset 0 rows" as that is needed for the SQL to be valid
+				return new PaginationRenderingPlan.ZeroOffset();
+			}
 			if ( !request.hasOffset() && !request.hasFetch() ) {
 				return new PaginationRenderingPlan.OffsetFetch( true );
 			}
@@ -367,27 +388,6 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 		return querySpec.getFetchClauseType() != FetchClauseType.ROWS_ONLY
 				|| hasOffset( querySpec )
 				|| hasLimit( querySpec );
-	}
-
-	@Override
-	public void visitOffsetFetchClause(QueryPart queryPart) {
-		if ( !isRowNumberingCurrentQueryPart() ) {
-			if ( supportsOffsetFetchClause() ) {
-				if ( queryPart.hasSortSpecifications()
-						&& getParentQueryPart() instanceof QueryGroup
-						&& ( queryPart.isRoot() && !hasLimit() || !queryPart.hasOffsetOrFetchClause() ) ) {
-					// If the current query part has a query group parent, no offset/fetch clause, but an order by clause,
-					// then we must render "offset 0 rows" as that is needed for the SQL to be valid
-					appendSql( " offset 0 rows" );
-				}
-				else {
-					renderOffsetFetchClause( queryPart, true );
-				}
-			}
-			else {
-				assertRowsOnlyFetchClauseType( queryPart );
-			}
-		}
 	}
 
 	@Override

@@ -12,6 +12,11 @@ public final class SQLServerPaginationRenderingSupport implements PaginationRend
 	public static final SQLServerPaginationRenderingSupport MODERN =
 			new SQLServerPaginationRenderingSupport( true, true );
 
+	/// SQL Server requires an `order by` before `offset`, and an `offset` before
+	/// `fetch`.
+	private static final PaginationRenderingPlan OFFSET_FETCH =
+			new PaginationRenderingPlan.OffsetFetch( true, true, true );
+
 	private final boolean supportsOffsetInTop;
 	private final boolean supportsOffsetFetchClause;
 
@@ -32,7 +37,7 @@ public final class SQLServerPaginationRenderingSupport implements PaginationRend
 				|| request.fetchClauseType() == FetchClauseType.ROWS_ONLY;
 		if ( request.queryPart() instanceof QueryGroup ) {
 			return supportsOffsetFetchClause && rowsOnly
-					? new PaginationRenderingPlan.OffsetFetch( true )
+					? OFFSET_FETCH
 					: new PaginationRenderingPlan.Window( !rowsOnly );
 		}
 
@@ -45,6 +50,6 @@ public final class SQLServerPaginationRenderingSupport implements PaginationRend
 				|| !querySpec.hasSortSpecifications() && querySpec.getSelectClause().isDistinct() ) {
 			return new PaginationRenderingPlan.Window( !rowsOnly );
 		}
-		return new PaginationRenderingPlan.OffsetFetch( true );
+		return OFFSET_FETCH;
 	}
 }

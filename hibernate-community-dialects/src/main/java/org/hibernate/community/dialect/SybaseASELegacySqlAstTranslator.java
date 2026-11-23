@@ -5,6 +5,7 @@ import org.hibernate.Locking;
 import org.hibernate.dialect.sql.ast.spi.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.sql.ast.spi.DerivedTableRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingRequest;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.PredicateSupport.Capability;
 import org.hibernate.dialect.sql.ast.spi.StandardDerivedTableRenderingSupport;
@@ -151,6 +152,10 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 
 	@Override
 	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		return PaginationRenderingSupport.withValidation( paginationPlanSelection(), this::validatePaginationRequest );
+	}
+
+	private PaginationRenderingSupport paginationPlanSelection() {
 		return request -> request.queryPart() instanceof QueryGroup || supportsTopClause()
 				? new PaginationRenderingPlan.Top( true, false )
 				: new PaginationRenderingPlan.None();
@@ -197,15 +202,14 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 		return StandardDerivedTableRenderingSupport.VALUES_SELECT_UNION;
 	}
 
-	@Override
-	public void visitOffsetFetchClause(QueryPart queryPart) {
+	private void validatePaginationRequest(PaginationRenderingRequest request) {
+		final QueryPart queryPart = request.queryPart();
 		assertRowsOnlyFetchClauseType( queryPart );
 		if ( !queryPart.isRoot() && queryPart.hasOffsetOrFetchClause() ) {
 			if ( queryPart.getFetchClauseExpression() != null && !supportsTopClause() || queryPart.getOffsetClauseExpression() != null ) {
 				throw new IllegalArgumentException( "Can't emulate offset fetch clause in subquery" );
 			}
 		}
-		super.visitOffsetFetchClause( queryPart );
 	}
 
 	@Override

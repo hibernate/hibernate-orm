@@ -5339,14 +5339,18 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	@Override
-	public void visitOffsetFetchClause(QueryPart queryPart) {
+	public final void visitOffsetFetchClause(QueryPart queryPart) {
 		final PaginationRenderingRequest request = createPaginationRenderingRequest( queryPart );
+		validatePagination( request );
 		if ( request.isRowNumberingCurrentQueryPart() ) {
 			return;
 		}
 		final PaginationRenderingPlan plan = determinePaginationRenderingPlan( request );
 		if ( plan instanceof PaginationRenderingPlan.OffsetFetch offsetFetch ) {
-			renderOffsetFetchClause( queryPart, offsetFetch.renderOffsetRowsKeyword() );
+			renderOffsetFetchClause( queryPart, offsetFetch );
+		}
+		else if ( plan instanceof PaginationRenderingPlan.ZeroOffset ) {
+			appendSql( " offset 0 rows" );
 		}
 		else if ( plan instanceof PaginationRenderingPlan.LimitOffset ) {
 			renderLimitOffsetClause( queryPart );
@@ -5357,6 +5361,42 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		else if ( plan instanceof PaginationRenderingPlan.FetchPlusOffset ) {
 			renderFetchPlusOffsetClause( queryPart );
 		}
+	}
+
+	private void validatePagination(PaginationRenderingRequest request) {
+		final PaginationRenderingSupport support = getPaginationRenderingSupport();
+		if ( support == null ) {
+			throw new IllegalStateException( "Pagination rendering support must not be null" );
+		}
+		support.validate( request );
+	}
+
+	private void renderOffsetFetchClause(QueryPart queryPart, PaginationRenderingPlan.OffsetFetch plan) {
+		if ( plan.requireOrdering() && !queryPart.hasSortSpecifications() ) {
+			appendSql( ' ' );
+			renderEmptyOrderBy();
+		}
+		if ( plan.renderZeroOffsetIfAbsent() ) {
+			final boolean usesQueryOptionsLimit = queryPart.isRoot() && hasLimit();
+			final Expression offsetExpression = usesQueryOptionsLimit
+					? getOffsetParameter()
+					: queryPart.getOffsetClauseExpression();
+			if ( offsetExpression == null ) {
+				appendSql( " offset 0 rows" );
+				final Expression fetchExpression = usesQueryOptionsLimit
+						? getLimitParameter()
+						: queryPart.getFetchClauseExpression();
+				if ( fetchExpression != null ) {
+					renderFetch(
+							fetchExpression,
+							null,
+							usesQueryOptionsLimit ? FetchClauseType.ROWS_ONLY : queryPart.getFetchClauseType()
+					);
+				}
+				return;
+			}
+		}
+		renderOffsetFetchClause( queryPart, plan.renderOffsetRowsKeyword() );
 	}
 
 	private void renderFetchPlusOffsetClause(QueryPart queryPart) {

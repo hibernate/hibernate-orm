@@ -35,7 +35,6 @@ import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.from.FromClause;
 import org.hibernate.sql.ast.spi.query.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.spi.query.insert.Values;
-import org.hibernate.sql.ast.spi.query.select.QueryPart;
 import org.hibernate.sql.ast.spi.query.select.SelectClause;
 import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.ast.spi.query.select.SortSpecification;
@@ -71,11 +70,6 @@ public class ExampleSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	protected void renderInsertIntoNoColumns(TableInsertStandard tableInsert) {
 		renderIntoIntoAndTable( tableInsert );
 		appendSql( "default values" );
-	}
-
-	@Override
-	public void visitOffsetFetchClause(QueryPart queryPart) {
-		super.visitOffsetFetchClause( queryPart );
 	}
 
 	@Override

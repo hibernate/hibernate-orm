@@ -5,6 +5,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.LockMode;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.sql.ast.internal.H2SqlAstTranslator;
 import org.hibernate.dialect.sql.ast.spi.AbstractSqlAstTranslator;
@@ -50,6 +51,29 @@ class SqlAstTranslatorQueryPartTests {
 		assertFinal( "renderStandardQueryGroup", QueryGroup.class );
 		assertFinal( "renderQueryGroupWithoutOrderByAndOffsetFetch", QueryGroup.class );
 		assertFinal( "renderForUpdateClause", QuerySpec.class );
+	}
+
+	/// Step 5: the locking reads are final, and the ones which ignore their
+	/// arguments are deprecated for removal.
+	@Test
+	void lockingReadsAreFinal() throws NoSuchMethodException {
+		assertFinal( "getEffectiveLockMode" );
+		assertFinal( "getEffectiveLockMode", String.class );
+		assertFinal( "getEffectiveLockMode", String.class, boolean.class );
+		assertFinal( "getEffectiveLockTimeout", LockMode.class );
+		assertFinal( "getLockingClauseStrategy" );
+		assertFinal( "needsLocking" );
+		assertFinal( "needsLocking", QuerySpec.class );
+		assertFinal( "isLockingRendered" );
+		assertDeprecatedForRemoval( "getEffectiveLockMode", String.class, boolean.class );
+		assertDeprecatedForRemoval( "needsLocking", QuerySpec.class );
+	}
+
+	private static void assertDeprecatedForRemoval(String name, Class<?>... parameterTypes) throws NoSuchMethodException {
+		final Deprecated deprecated =
+				AbstractSqlAstTranslator.class.getDeclaredMethod( name, parameterTypes ).getAnnotation( Deprecated.class );
+		assertThat( deprecated ).as( name ).isNotNull();
+		assertThat( deprecated.forRemoval() ).as( name ).isTrue();
 	}
 
 	@Test

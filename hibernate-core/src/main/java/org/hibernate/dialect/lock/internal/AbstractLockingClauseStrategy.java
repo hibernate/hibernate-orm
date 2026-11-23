@@ -112,6 +112,6 @@ public abstract class AbstractLockingClauseStrategy implements LockingClauseStra
 
 	@Override
 	public Collection<NavigablePath> getPathsToLock() {
-		return pathsToLock;
+		return pathsToLock == null ? Set.of() : pathsToLock;
 	}
 }

@@ -21,7 +21,6 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -51,12 +50,10 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 /// whose finding depends on a capability the database lacks states that as an
 /// assumption.
 ///
-/// Tests marked `@FailureExpected` state the intended behavior and fail today.
-/// The build verifies that they still fail, but it cannot tell why: a failed
-/// precondition or an unmet assumption satisfies the marker just as the real
-/// defect does. So these tests carry no precondition assertions of their own;
-/// `cteQueryLocksTheSelectedRows` is the unmarked test that proves the CTE is
-/// rendered, and each marker says on which database its failure was observed.
+/// The tests tied to a finding failed before the locking changes and were
+/// marked as expected failures; the markers came off as the changes landed.
+/// `cteQueryLocksTheSelectedRows` proves that the CTE is rendered rather than
+/// inlined, which the other CTE tests rely on.
 @DomainModel(annotatedClasses = {
 		LockingDecisionAcquisitionTest.Owner.class,
 		LockingDecisionAcquisitionTest.Item.class
@@ -118,10 +115,6 @@ class LockingDecisionAcquisitionTest {
 	}
 
 	@Test
-	@FailureExpected(reason = "Finding 1: the locking strategy is built from the CTE's query spec, so the clause"
-			+ " names no lock target and every table in the query is locked. NOT verified against a"
-			+ " database: H2 cannot restrict a locking clause to selected tables, so there this test"
-			+ " stops at its assumption, which also satisfies this marker.")
 	void cteQueryDoesNotLockAnUnselectedJoinedTable(SessionFactoryScope scope) {
 		FollowOnLockingTestSupport.requireAcquisition( scope );
 		assumeTrue( scope.getSessionFactory().getJdbcServices().getDialect().getLockingSupport().getMetadata()
@@ -143,9 +136,6 @@ class LockingDecisionAcquisitionTest {
 	// SQL Server and Sybase lock directly even when follow-on locking is forced, so
 	// they never reach the follow-on path and this test would pass there.
 	@ExtendWith(FollowOnLockingTestSupport.Eligibility.class)
-	@FailureExpected(reason = "Finding 1: the locking strategy is built from the CTE's query spec, so"
-			+ " getPathsToLock() is null and follow-on locking fails with a NullPointerException"
-			+ " while processing results. Verified on H2.")
 	void cteQueryWithForcedFollowOnLocksTheSelectedRows(SessionFactoryScope scope) {
 		FollowOnLockingTestSupport.requireAcquisition( scope );
 		inReader( scope, reader -> {
@@ -158,8 +148,6 @@ class LockingDecisionAcquisitionTest {
 	}
 
 	@Test
-	@FailureExpected(reason = "Finding 9: the locking clause is rendered at the end of the first branch of a set"
-			+ " operation. Verified on H2, where the statement fails with a syntax error.")
 	void setOperationQueryLocksEveryBranch(SessionFactoryScope scope) {
 		FollowOnLockingTestSupport.requireAcquisition( scope );
 		inReader( scope, reader -> {

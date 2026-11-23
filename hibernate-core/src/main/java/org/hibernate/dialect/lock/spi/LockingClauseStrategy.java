@@ -70,6 +70,7 @@ public interface LockingClauseStrategy {
 	/// A no-clause strategy performs no output.
 	void render(SqlAppender sqlAppender);
 
-	/// The navigable paths selected for locking during registration.
+	/// The navigable paths selected for locking during registration. Empty,
+	/// never `null`, when nothing was registered.
 	Collection<NavigablePath> getPathsToLock();
 }

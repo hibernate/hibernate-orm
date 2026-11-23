@@ -135,7 +135,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	@Override
 	protected void renderQuerySpec(QuerySpec querySpec) {
 		if ( getSqlAst() instanceof SelectStatement select && select.getQueryPart() == querySpec
-				&& needsLocking( querySpec )
+				&& needsLocking()
 				&& getEffectiveLockTimeout( getLockOptions().getLockMode() ) == Timeouts.SKIP_LOCKED_MILLI
 				&& LockingSqlRewriterSupport.interpretLockKind( getLockOptions() ) == PessimisticLockKind.UPDATE ) {
 			validateExclusiveSkipLockedQuery( querySpec );
@@ -218,7 +218,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	protected void renderQueryGroup(QueryGroup queryGroup) {
 		if ( getSqlAst() instanceof SelectStatement select
 				&& select.getQueryPart() == queryGroup
-				&& needsLocking( queryGroup.getFirstQuerySpec() )
+				&& needsLocking()
 				&& getEffectiveLockTimeout( getLockOptions().getLockMode() ) == Timeouts.SKIP_LOCKED_MILLI ) {
 			final var kind = LockingSqlRewriterSupport.interpretLockKind( getLockOptions() );
 			if ( kind == PessimisticLockKind.UPDATE ) {

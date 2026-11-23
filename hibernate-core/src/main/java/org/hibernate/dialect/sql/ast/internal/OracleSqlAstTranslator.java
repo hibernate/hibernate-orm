@@ -139,20 +139,9 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 
 		LockStrategy strategy = super.determineLockingStrategy( querySpec, followOnStrategy );
 
-		// Oracle also doesn't support locks with set operators
+		// Oracle doesn't support locks with set operators either; the base handles a
+		// query spec within a query group, this handles a union table group in the FROM clause.
 		// See https://docs.oracle.com/cd/B19306_01/server.102/b14200/statements_10002.htm#i2066346
-		if ( strategy != LockStrategy.FOLLOW_ON && isPartOfQueryGroup() ) {
-			if ( followOnStrategy == Locking.FollowOn.DISALLOW ) {
-				throw new IllegalQueryOperationException( "Locking with set operators is not supported" );
-			}
-			else if ( followOnStrategy == Locking.FollowOn.IGNORE ) {
-				strategy = LockStrategy.NONE;
-			}
-			else {
-				strategy = LockStrategy.FOLLOW_ON;
-			}
-		}
-
 		if ( strategy != LockStrategy.FOLLOW_ON && hasSetOperations( querySpec ) ) {
 			if ( followOnStrategy == Locking.FollowOn.DISALLOW ) {
 				throw new IllegalQueryOperationException( "Locking with set operators is not supported" );
@@ -184,10 +173,6 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 
 	private boolean hasSetOperations(QuerySpec querySpec) {
 		return querySpec.getFromClause().queryTableGroups( group -> group instanceof UnionTableGroup ? group : null ) != null;
-	}
-
-	private boolean isPartOfQueryGroup() {
-		return isWithinQueryGroup();
 	}
 
 	@Override
@@ -277,8 +262,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 							identifierMappingForLockingWrapper
 					)
 			);
-			// Render the for update clause for the original query spec, because the locking wrapper is marked as non-root
-			renderForUpdateClause( querySpec );
+			// the locking wrapper is the locking target, so its rendering includes the locking clause
 		}
 	}
 
@@ -338,7 +322,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 		// We only need a locking wrapper for very simple queries
 		if ( canApplyLockingWrapper( querySpec )
 				// There must be the need for locking in this query
-				&& needsLocking( querySpec )
+				&& needsLocking()
 				// The query uses some sort of pagination which makes the wrapper necessary
 				&& needsLockingWrapper( querySpec, followOnStrategy )
 				// The query may not have a group by, having and distinct clause, or use aggregate functions,

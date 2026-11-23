@@ -37,7 +37,9 @@ public class TeradataSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	protected void renderQuerySpec(QuerySpec querySpec) {
 		super.renderQuerySpec( querySpec );
 
-		if ( querySpec.isRoot() && supportsLocking && needsLocking( querySpec ) ) {
+		// the prefix is the locking clause: render it only when locking is applied in the SQL,
+		// not when follow-on locking was chosen or locking is skipped
+		if ( querySpec.isRoot() && supportsLocking && isLockingRendered() ) {
 			final LockingClauseStrategy lockingClauseStrategy = getLockingClauseStrategy();
 			if ( lockingClauseStrategy != null ) {
 				// NOTE: the dialect already adds a trailing space

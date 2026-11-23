@@ -9,7 +9,12 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.spi.NavigablePath;
@@ -33,12 +38,15 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.hibernate.testing.orm.junit.FailureExpected;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -52,10 +60,9 @@ import static org.mockito.Mockito.when;
 /// application and whether a follow-on action was attached, not that rows are
 /// locked.
 ///
-/// Tests marked `@FailureExpected` fail on the current code for the stated
-/// finding. The build runs them with failure validation enabled, so each one
-/// is verified to still fail and the build breaks as soon as one starts to
-/// pass. Remove each marker when the corresponding change lands.
+/// These were written against the code as it was before the locking changes,
+/// where the tests tied to a finding failed and were marked as expected
+/// failures. The markers came off as the changes landed.
 class CommunityLockingDecisionBaselineTest {
 	private static final NavigablePath WORK_ITEM = new NavigablePath( "WorkItem" );
 
@@ -63,7 +70,6 @@ class CommunityLockingDecisionBaselineTest {
 	// Oracle legacy: set operation
 
 	@Test
-	@FailureExpected(reason = "Finding 6: the follow-on branch for set operations is inverted, so ALLOW yields NONE")
 	void oracleLegacySetOperationWithAllowAttachesFollowOnLocking() {
 		oracleLegacySetOperationAttachesFollowOnLocking( Locking.FollowOn.ALLOW );
 	}
@@ -89,7 +95,6 @@ class CommunityLockingDecisionBaselineTest {
 	}
 
 	@Test
-	@FailureExpected(reason = "Finding 6: the follow-on branch for set operations is inverted, so IGNORE yields FOLLOW_ON")
 	void oracleLegacySetOperationWithIgnoreReportsNoLocking() {
 		final var fixture = new Fixture( new OracleLegacyDialect( DatabaseVersion.make( 12 ) ) );
 		final var translator = new RecordingOracleLegacy<>( fixture.request( fixture.lockedUnion() ) );
@@ -116,7 +121,6 @@ class CommunityLockingDecisionBaselineTest {
 	// TimesTen: set operation, including its inverted follow-on branch
 
 	@Test
-	@FailureExpected(reason = "Finding 6: the follow-on branch for set operations is inverted, so ALLOW yields NONE")
 	void timesTenSetOperationWithAllowAttachesFollowOnLocking() {
 		timesTenSetOperationAttachesFollowOnLocking( Locking.FollowOn.ALLOW );
 	}
@@ -142,7 +146,6 @@ class CommunityLockingDecisionBaselineTest {
 	}
 
 	@Test
-	@FailureExpected(reason = "Finding 6: the follow-on branch for set operations is inverted, so IGNORE yields FOLLOW_ON")
 	void timesTenSetOperationWithIgnoreReportsNoLocking() {
 		final var fixture = new Fixture( new TimesTenDialect() );
 		final var translator = new RecordingTimesTen<>( fixture.request( fixture.lockedUnion() ) );
@@ -184,7 +187,6 @@ class CommunityLockingDecisionBaselineTest {
 	}
 
 	@Test
-	@FailureExpected(reason = "Finding 2: the follow-on decision is made twice, from two signals; Teradata renders its prefix, reports RENDERED and also gets a follow-on action")
 	void teradataDoesNotRenderItsLockingPrefixWhenFollowOnIsUsed() {
 		final var fixture = new Fixture( new TeradataDialect( DatabaseVersion.make( 14 ) ) );
 		final var querySpec = fixture.lockedRoot();
@@ -198,6 +200,77 @@ class CommunityLockingDecisionBaselineTest {
 		assertThat( operation.getLoadedValuesCollectorFactory() ).as( "follow-on action attached" ).isNotNull();
 		assertThat( operation.getLockingApplication() ).isEqualTo( JdbcLockingApplication.FOLLOW_ON );
 		assertThat( operation.getSqlString() ).doesNotContainIgnoringCase( "locking" );
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Oracle legacy locking wrapper: the wrapper is the locking target
+
+	@ParameterizedTest
+	@EnumSource(value = Locking.FollowOn.class, names = { "ALLOW", "DISALLOW", "IGNORE" })
+	void oracleLegacyLockingWrapperRendersTheLockingClauseOnce(Locking.FollowOn followOn) {
+		final var fixture = new Fixture( new OracleLegacyDialect( DatabaseVersion.make( 12 ) ) );
+		final var querySpec = fixture.lockedEntityRoot();
+		querySpec.setFetchClauseExpression( new QueryLiteral<>( 5, fixture.integerType ), FetchClauseType.ROWS_ONLY );
+		final var translator = new RecordingOracleLegacy<>( fixture.request( new SelectStatement( querySpec ) ) );
+
+		final JdbcSelect operation = translator.translate( null, options( followOn ) );
+
+		// the SQL is what this translator rendered before the wrapper became the locking target
+		assertThat( operation.getSqlString() ).isEqualTo(
+				"select 1 from work_item w where w.id in (select r_0_.c0 from"
+						+ " (select w.id c0,rownum rn from work_item w) r_0_ where r_0_.rn<=5) for update" );
+		assertThat( operation.getLockingApplication() ).isEqualTo( JdbcLockingApplication.RENDERED );
+		assertThat( operation.getLoadedValuesCollectorFactory() ).isNull();
+		assertThat( translator.calls ).as( "calls: %s", translator.calls ).hasSize( 1 );
+		assertThat( translator.calls.get( 0 ).queryPartStackDepth() ).as( "decided within the wrapper" ).isOne();
+	}
+
+	/// Also the window-paginated case: the query is rendered through the
+	/// row-numbering emulation and the decision is still made once.
+	@Test
+	void oracleLegacyForcedFollowOnUsesNoLockingWrapper() {
+		final var fixture = new Fixture( new OracleLegacyDialect( DatabaseVersion.make( 12 ) ) );
+		final var querySpec = fixture.lockedEntityRoot();
+		querySpec.setFetchClauseExpression( new QueryLiteral<>( 5, fixture.integerType ), FetchClauseType.ROWS_ONLY );
+		final var translator = new RecordingOracleLegacy<>( fixture.request( new SelectStatement( querySpec ) ) );
+
+		final JdbcSelect operation = translator.translate( null, options( Locking.FollowOn.FORCE ) );
+
+		assertThat( operation.getSqlString() ).isEqualTo(
+				"select * from (select 1 c0,rownum rn from work_item w) r_0_ where r_0_.rn<=5 order by r_0_.rn" );
+		assertThat( operation.getLockingApplication() ).isEqualTo( JdbcLockingApplication.FOLLOW_ON );
+		assertThat( operation.getLoadedValuesCollectorFactory() ).isNotNull();
+		// the collector dereferences the paths while processing results
+		operation.getLoadedValuesCollectorFactory().build().registerEntity( WORK_ITEM, null, null );
+		assertThat( translator.calls ).as( "calls: %s", translator.calls ).hasSize( 1 );
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Teradata: the decision is made once, though no trailing clause is rendered
+
+	@ParameterizedTest
+	@EnumSource(Locking.FollowOn.class)
+	void teradataDecidesOnce(Locking.FollowOn followOn) {
+		final var fixture = new Fixture( new TeradataDialect( DatabaseVersion.make( 14 ) ) );
+		final var translator = new RecordingTeradata<>( fixture.request( new SelectStatement( fixture.lockedRoot() ) ) );
+
+		translator.translate( null, options( followOn ) );
+
+		assertThat( translator.calls ).as( "calls: %s", translator.calls ).hasSize( 1 );
+		assertThat( translator.calls.get( 0 ).queryPartStackDepth() ).as( "decided within the query spec" ).isOne();
+	}
+
+	@Test
+	void teradataWithoutLockingSupportRendersNoPrefix() {
+		final var fixture = new Fixture( new TeradataDialect( DatabaseVersion.make( 13 ) ) );
+
+		final JdbcSelect operation = new TeradataSqlAstTranslator<JdbcSelect>(
+				fixture.request( new SelectStatement( fixture.lockedRoot() ) ) )
+				.translate( null, options( Locking.FollowOn.ALLOW ) );
+
+		assertThat( operation.getSqlString() ).doesNotContainIgnoringCase( "locking" );
+		assertThat( operation.getLockingApplication() ).isEqualTo( JdbcLockingApplication.NONE );
+		assertThat( operation.getLoadedValuesCollectorFactory() ).isNull();
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -251,6 +324,35 @@ class CommunityLockingDecisionBaselineTest {
 			return querySpec;
 		}
 
+		/// A locked root whose model part is an entity with a single-column
+		/// identifier, which is what the Oracle locking wrapper requires.
+		QuerySpec lockedEntityRoot() {
+			final var persister = mock( EntityPersister.class );
+			when( persister.getQuerySpaces() ).thenReturn( new String[] { "work_item" } );
+			final var identifier = mock( EntityIdentifierMapping.class );
+			final var selectable = mock( SelectableMapping.class );
+			when( selectable.getSelectionExpression() ).thenReturn( "id" );
+			when( selectable.getSelectableName() ).thenReturn( "id" );
+			when( selectable.getJdbcMapping() ).thenReturn( integerType );
+			when( identifier.getJdbcTypeCount() ).thenReturn( 1 );
+			when( identifier.forEachSelectable( anyInt(), any() ) ).thenAnswer( invocation -> {
+				invocation.<SelectableConsumer>getArgument( 1 ).accept( 0, selectable );
+				return 1;
+			} );
+			when( persister.getIdentifierMapping() ).thenReturn( identifier );
+			final var querySpec = new QuerySpec( true );
+			querySpec.applyRootPathForLocking( WORK_ITEM );
+			querySpec.getFromClause().addRoot( new StandardTableGroup(
+					true, WORK_ITEM, persister, "w", new NamedTableReference( "work_item", "w" ),
+					false, new SqlAliasBaseConstant( "w" ), name -> false, null, factory ) );
+			final EntityResult<?> result = mock( EntityResult.class );
+			when( result.getNavigablePath() ).thenReturn( WORK_ITEM );
+			when( result.getFetches() ).thenReturn( ImmutableFetchList.EMPTY );
+			querySpec.applyDomainResultForLocking( result );
+			querySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( 0, new QueryLiteral<>( 1, integerType ) ) );
+			return querySpec;
+		}
+
 		SelectStatement lockedUnion() {
 			final var first = querySpec( false, "work_item", "w", WORK_ITEM, WORK_ITEM );
 			final var second = querySpec( false, "archived_item", "a", null, new NavigablePath( "ArchivedItem" ) );
@@ -279,6 +381,23 @@ class CommunityLockingDecisionBaselineTest {
 		final List<Call> calls = new ArrayList<>();
 
 		RecordingTimesTen(SqlAstTranslationRequest<? extends Statement, T> request) {
+			super( request );
+		}
+
+		@Override
+		protected LockStrategy determineLockingStrategy(QuerySpec querySpec, Locking.FollowOn followOnStrategy) {
+			final var answer = super.determineLockingStrategy( querySpec, followOnStrategy );
+			calls.add( new Call(
+					querySpec.getFromClause().getRoots().get( 0 ).getPrimaryTableReference().getIdentificationVariable(),
+					getQueryPartStack().depth(), answer.name() ) );
+			return answer;
+		}
+	}
+
+	static final class RecordingTeradata<T extends JdbcOperation> extends TeradataSqlAstTranslator<T> {
+		final List<Call> calls = new ArrayList<>();
+
+		RecordingTeradata(SqlAstTranslationRequest<? extends Statement, T> request) {
 			super( request );
 		}
 

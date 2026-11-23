@@ -67,8 +67,10 @@ class NonNullTargetLockingRenderingTest {
 			assertThat( operation.getSqlString() ).doesNotContain( " for " );
 		}
 		else if ( type == OuterJoinLockingType.UNSUPPORTED && policy == Locking.FollowOn.IGNORE ) {
-			assertThat( operation.getLockingApplication() ).isEqualTo( JdbcLockingApplication.RENDERED );
+			// locking is skipped: nothing is rendered and no follow-on locking is attached
+			assertThat( operation.getLockingApplication() ).isEqualTo( JdbcLockingApplication.NONE );
 			assertThat( operation.getSqlString() ).doesNotContain( " for " );
+			assertThat( operation.getLoadedValuesCollectorFactory() ).isNull();
 		}
 		else {
 			assertThat( operation.getLockingApplication() ).isEqualTo( JdbcLockingApplication.RENDERED );

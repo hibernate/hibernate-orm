@@ -377,6 +377,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	private QuerySpec lockingTarget;
 	private LockingClauseStrategy lockingClauseStrategy;
 	private Boolean nonNullTargetsEligible;
+	/// The locking decision recorded for the current locking target, or `null`
+	/// while it is unresolved. See [#resolveLockingDecision()].
+	private LockStrategy lockingDecision;
 	private LockOptions lockOptions;
 	private boolean scrollExecution;
 
@@ -452,6 +455,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( lockingTarget != querySpec ) {
 			lockingClauseStrategy = null;
 			nonNullTargetsEligible = null;
+			lockingDecision = null;
 		}
 		lockingTarget = querySpec;
 	}
@@ -684,11 +688,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return appliedParameterBindings;
 	}
 
-	private JdbcLockingApplication getJdbcLockingApplication(LockOptions requestedLockOptions) {
-		if ( requestedLockOptions == null || !requestedLockOptions.getLockMode().isPessimistic() ) {
+	private JdbcLockingApplication getJdbcLockingApplication() {
+		if ( !needsLocking() ) {
 			return JdbcLockingApplication.NONE;
 		}
-		return lockOptions == null ? JdbcLockingApplication.FOLLOW_ON : JdbcLockingApplication.RENDERED;
+		return switch ( resolveLockingDecision() ) {
+			case CLAUSE -> JdbcLockingApplication.RENDERED;
+			case FOLLOW_ON -> JdbcLockingApplication.FOLLOW_ON;
+			case NONE -> JdbcLockingApplication.NONE;
+		};
 	}
 
 	protected final JdbcParameterBindings getJdbcParameterBindings() {
@@ -1030,9 +1038,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		logDomainResultGraph( selectStatement.getDomainResultDescriptors() );
 		logSqlAst( selectStatement );
 
-		// we need to make a cope here for later since visitSelectStatement clears it :(
-		final LockOptions lockOptions = this.lockOptions;
-
 		final PaginationRenderingPlan paginationPlan =
 				determinePaginationRenderingPlan( selectStatement.getQueryPart() );
 		if ( hasLimit() && !( paginationPlan instanceof PaginationRenderingPlan.None ) ) {
@@ -1052,7 +1057,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				) )
 				.maxRows( getMaxRows( selectStatement, getJdbcParameterBindings(), rowsToSkip, paginationPlan ) )
 				.appliedParameterBindings( getAppliedParameterBindings() )
-				.lockingApplication( getJdbcLockingApplication( lockOptions ) )
+				.lockingApplication( getJdbcLockingApplication() )
 				.paginationApplication( getJdbcPaginationApplication( selectStatement, paginationPlan ) )
 				.offsetParameter( getOffsetParameter() )
 				.limitParameter( getLimitParameter() )
@@ -1064,13 +1069,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		final JdbcSelect jdbcSelect = selectBuilder.build();
 
-		if ( lockOptions == null || !lockOptions.getLockMode().isPessimistic() ) {
+		if ( !needsLocking() ) {
 			return jdbcSelect;
 		}
 
 		final LockingSupport lockingSupport = getDialect().getLockingSupport();
 		final LockingSupport.Metadata lockingSupportMetadata = lockingSupport.getMetadata();
-		final LockStrategy lockStrategy = determineLockingStrategy( lockingTarget, lockOptions.getFollowOnStrategy() );
+		// the decision recorded while rendering; resolved here only when the locking
+		// target was never rendered through the standard path
+		final LockStrategy lockStrategy = resolveLockingDecision();
 		if ( lockStrategy == LockStrategy.FOLLOW_ON ) {
 			LockingHelper.validateFollowOnLocking( lockOptions );
 			LockingHelper.validateFollowOnLockingResults( selectStatement, lockingTarget, lockingClauseStrategy );
@@ -2375,8 +2382,32 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	protected LockingClauseStrategy getLockingClauseStrategy() {
+	protected final LockingClauseStrategy getLockingClauseStrategy() {
 		return lockingClauseStrategy;
+	}
+
+	/// Whether a pessimistic lock was requested for this translation.
+	protected final boolean needsLocking() {
+		return lockOptions != null && lockOptions.getLockMode().isPessimistic();
+	}
+
+	/// Whether locking for the current locking target is rendered in the SQL:
+	/// a pessimistic lock was requested and the decision recorded for the
+	/// target is [LockStrategy#CLAUSE]. Answers `false` until that target has
+	/// been rendered.
+	protected final boolean isLockingRendered() {
+		return needsLocking() && lockingDecision == LockStrategy.CLAUSE;
+	}
+
+	/// The decision for the locking target, resolved at most once per target.
+	/// Rendering and plan finalization both read it, so they cannot disagree
+	/// about whether locking is rendered, applied by follow-on locking or
+	/// skipped.
+	private LockStrategy resolveLockingDecision() {
+		if ( lockingDecision == null ) {
+			lockingDecision = determineLockingStrategy( lockingTarget, lockOptions.getFollowOnStrategy() );
+		}
+		return lockingDecision;
 	}
 
 	/// Whether the locking clause should be rendered for the given query spec,
@@ -2392,61 +2423,56 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			// really any dialect translator could leverage this
 			return;
 		}
-		if ( !shouldRenderForUpdateClause( querySpec ) ) {
+		if ( !shouldRenderForUpdateClause( querySpec ) || !needsLocking() ) {
 			return;
 		}
-		if ( lockOptions != null && lockOptions.getLockMode().isPessimistic() ) {
-			final LockStrategy lockStrategy = determineLockingStrategy( querySpec, lockOptions.getFollowOnStrategy() );
-			switch ( lockStrategy ) {
-				case CLAUSE: {
-					lockingClauseStrategy.render( this );
-					break;
+		if ( lockingClauseStrategy == null ) {
+			// the target was not rendered through the standard path, e.g. a translator
+			// rendered a wrapper in its place; nothing was registered for locking
+			lockingClauseStrategy = dialect.getLockingClauseStrategy( querySpec, lockOptions );
+		}
+		switch ( resolveLockingDecision() ) {
+			case CLAUSE -> lockingClauseStrategy.render( this );
+			case FOLLOW_ON -> {
+				if ( !querySpec.isRoot()
+						&& !( getSqlAst() instanceof SelectStatement select
+								&& select.getQueryPart().isRoot()
+								&& select.getQueryPart().getFirstQuerySpec() == querySpec ) ) {
+					throw new UnsupportedOperationException( "Follow-on locking for subqueries is not supported" );
 				}
-				case FOLLOW_ON: {
-					if ( querySpec.isRoot()
-							|| getSqlAst() instanceof SelectStatement select
-									&& select.getQueryPart().isRoot()
-									&& select.getQueryPart().getFirstQuerySpec() == querySpec ) {
-						lockOptions = null;
-					}
-					else {
-						throw new UnsupportedOperationException( "Follow-on locking for subqueries is not supported" );
-					}
-					break;
-				}
-				case NONE: {
-					// nothing to do
-					break;
-				}
+			}
+			case NONE -> {
+				// nothing to do
 			}
 		}
 	}
 
-	protected LockMode getEffectiveLockMode() {
-		if ( getLockOptions() == null ) {
+	protected final LockMode getEffectiveLockMode() {
+		if ( lockOptions == null ) {
 			return LockMode.NONE;
 		}
 		else {
-			final QueryPart currentQueryPart = getQueryPartStack().getCurrent();
+			final QueryPart currentQueryPart = queryPartStack.getCurrent();
 			if ( currentQueryPart == null || !currentQueryPart.isRoot() ) {
 				return LockMode.NONE;
 			}
 		}
-		return getLockOptions().getLockMode();
+		return lockOptions.getLockMode();
 	}
 
-	protected LockMode getEffectiveLockMode(String alias) {
-		final QueryPart currentQueryPart = getQueryPartStack().getCurrent();
-		return currentQueryPart == null
+	protected final LockMode getEffectiveLockMode(String alias) {
+		return queryPartStack.getCurrent() == null || lockOptions == null
 				? LockMode.NONE
-				: getEffectiveLockMode( alias, currentQueryPart.isRoot() );
+				: lockOptions.getLockMode();
 	}
 
-	protected LockMode getEffectiveLockMode(String alias, boolean isRoot) {
-		return getLockOptions() == null ? LockMode.NONE : getLockOptions().getLockMode();
+	/// @deprecated Ignores both arguments. Use [#getEffectiveLockMode(String)].
+	@Deprecated(since = "8.0", forRemoval = true)
+	protected final LockMode getEffectiveLockMode(String alias, boolean isRoot) {
+		return lockOptions == null ? LockMode.NONE : lockOptions.getLockMode();
 	}
 
-	protected int getEffectiveLockTimeout(LockMode lockMode) {
+	protected final int getEffectiveLockTimeout(LockMode lockMode) {
 		return getLockOptions() == null
 				? Timeouts.WAIT_FOREVER_MILLI
 				: switch ( lockMode ) {
@@ -2460,11 +2486,34 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return AggregateFunctionChecker.hasAggregateFunctions( querySpec );
 	}
 
+	/// Selects how the lock requested for the locking target is applied: by a
+	/// rendered locking clause, by follow-on locking, or not at all.
+	///
+	/// Invoked once each time a query spec becomes the locking target, and its
+	/// answer is recorded for both rendering and plan finalization. For a target
+	/// rendered through the standard path that is after the target's clauses
+	/// are rendered and while it is still the current query part, so the
+	/// FROM clause has been traversed and the enclosing query parts can be
+	/// inspected. A target which is never rendered that way is asked about
+	/// outside any query part.
+	///
+	/// Emits no SQL. May throw for a combination the requested follow-on
+	/// setting disallows.
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
 			Locking.FollowOn followOnStrategy) {
 		if ( followOnStrategy == Locking.FollowOn.FORCE ) {
 			return LockStrategy.FOLLOW_ON;
+		}
+
+		// A locking clause cannot be combined with a set operation. This uses the
+		// follow-on setting as requested: every branch of a set operation is
+		// non-root, so it must precede the replacement below.
+		if ( isWithinQueryGroup() ) {
+			if ( followOnStrategy == Locking.FollowOn.DISALLOW ) {
+				throw new IllegalQueryOperationException( "Locking with set operators is not supported" );
+			}
+			return followOnStrategy == Locking.FollowOn.IGNORE ? LockStrategy.NONE : LockStrategy.FOLLOW_ON;
 		}
 
 		if ( !querySpec.isRoot() ) {
@@ -4435,8 +4484,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			return;
 		}
 
-		if ( lockingClauseStrategy == null ) {
-			lockingClauseStrategy = dialect.getLockingClauseStrategy( querySpec, getLockOptions() );
+		// Only the locking target contributes lock targets: a query spec visited
+		// before it, such as a CTE definition, must not create the strategy.
+		if ( querySpec == lockingTarget && lockingClauseStrategy == null ) {
+			lockingClauseStrategy = dialect.getLockingClauseStrategy( querySpec, lockOptions );
 		}
 
 		final QueryPart queryPartForRowNumbering = this.queryPartForRowNumbering;
@@ -4468,6 +4519,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 			renderQueryClauses( querySpec );
 
+			if ( querySpec == lockingTarget && needsLocking() ) {
+				// Resolved here, with the target still the current query part and its
+				// FROM clause traversed, whether or not this translator renders a clause.
+				resolveLockingDecision();
+			}
 			renderForUpdateClause( querySpec );
 
 			if ( queryGroupAlias != null ) {
@@ -6982,8 +7038,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			addAdditionalWherePredicate( determineLateralEmulationPredicate( tableGroup ) );
 		}
 
-		final LockMode lockMode = getEffectiveLockMode();
-		renderTableReferenceJoins( tableGroup, lockMode );
+		// the root's secondary tables follow the root
+		renderTableReferenceJoins( tableGroup, effectiveLockMode );
 		processNestedTableGroupJoins( tableGroup, tableGroupJoinCollector );
 		if ( tableGroupJoinCollector != null ) {
 			tableGroupJoinCollector.addAll( tableGroup.getTableGroupJoins() );
@@ -7131,10 +7187,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
+	/// @deprecated Ignores its argument. Use [#needsLocking()].
 	@SPI(USE)
+	@Deprecated(since = "8.0", forRemoval = true)
 	protected final boolean needsLocking(QuerySpec querySpec) {
-		final LockOptions lockOptions = getLockOptions();
-		return lockOptions != null && lockOptions.getLockMode().isPessimistic();
+		return needsLocking();
 	}
 
 	private boolean hasNestedTableGroupsToRender(List<TableGroupJoin> nestedTableGroupJoins) {

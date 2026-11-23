@@ -5,17 +5,25 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.LockMode;
+import org.hibernate.Timeouts;
 import org.hibernate.Locking;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.sql.ast.internal.OracleSqlAstTranslator;
 import org.hibernate.dialect.sql.ast.internal.SQLServerSqlAstTranslator;
+import org.hibernate.dialect.sql.ast.internal.SybaseASESqlAstTranslator;
 import org.hibernate.dialect.sql.ast.spi.PostgreSQLSqlAstTranslator;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.spi.NavigablePath;
@@ -43,7 +51,6 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.hibernate.testing.orm.junit.FailureExpected;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -51,6 +58,8 @@ import org.junit.jupiter.params.provider.EnumSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -71,10 +80,9 @@ import static org.mockito.Mockito.when;
 /// collected. A test that unexpectedly passes or fails should be read against
 /// that record before a finding is revised.
 ///
-/// Tests marked `@FailureExpected` fail on the current code for the stated
-/// finding. The build runs them with failure validation enabled, so each one
-/// is verified to still fail and the build breaks as soon as one starts to
-/// pass. Remove each marker when the corresponding change lands.
+/// These were written against the code as it was before the locking changes,
+/// where the tests tied to a finding failed and were marked as expected
+/// failures. The markers came off as the changes landed.
 class LockingDecisionBaselineTest {
 	private static final NavigablePath WORK_ITEM = new NavigablePath( "WorkItem" );
 
@@ -94,7 +102,6 @@ class LockingDecisionBaselineTest {
 	}
 
 	@Test
-	@FailureExpected(reason = "Finding 1: the locking strategy is built from the CTE's query spec, so the clause names no lock target")
 	void cteDoesNotChangeTheLockTarget() {
 		final var fixture = new Fixture( new PostgreSQLDialect() );
 		final var statement = new SelectStatement( fixture.lockedRoot( true ) );
@@ -110,7 +117,6 @@ class LockingDecisionBaselineTest {
 	}
 
 	@Test
-	@FailureExpected(reason = "Finding 1: the locking strategy is built from the CTE's query spec, so getPathsToLock() is null")
 	void cteWithForcedFollowOnCollectsThePathsToLock() {
 		final var fixture = new Fixture( new PostgreSQLDialect() );
 		final var statement = new SelectStatement( fixture.lockedRoot( true ) );
@@ -131,7 +137,6 @@ class LockingDecisionBaselineTest {
 	// Finding 2: two signals for the follow-on decision
 
 	@Test
-	@FailureExpected(reason = "Finding 2: the follow-on decision is made twice, from two signals; the second call sees an empty query-part stack and no follow-on action is attached")
 	void oracleSetOperationWithAllowAttachesFollowOnLocking() {
 		oracleSetOperationAttachesFollowOnLocking( Locking.FollowOn.ALLOW );
 	}
@@ -157,7 +162,6 @@ class LockingDecisionBaselineTest {
 	}
 
 	@Test
-	@FailureExpected(reason = "Finding 2: the follow-on decision is made twice, from two signals; a NONE decision is reported as RENDERED")
 	void oracleSetOperationWithIgnoreReportsNoLocking() {
 		final var fixture = new Fixture( new OracleDialect() );
 		final var translator = new RecordingOracle<>( fixture.request( fixture.lockedUnion() ) );
@@ -181,7 +185,6 @@ class LockingDecisionBaselineTest {
 	}
 
 	@Test
-	@FailureExpected(reason = "Finding 2: the follow-on decision is made twice, from two signals; a NONE decision is reported as RENDERED")
 	void noneDecisionReportsNoLocking() {
 		final var fixture = new Fixture( new PostgreSQLDialect() );
 		final var querySpec = fixture.lockedRoot( true );
@@ -197,7 +200,6 @@ class LockingDecisionBaselineTest {
 
 	@ParameterizedTest
 	@EnumSource(Locking.FollowOn.class)
-	@FailureExpected(reason = "Finding 2: the follow-on decision is made twice, from two signals")
 	void decisionIsMadeOncePerLockingTarget(Locking.FollowOn followOn) {
 		final var fixture = new Fixture( new PostgreSQLDialect() );
 		final var translator = new RecordingPostgres<>( fixture.request( new SelectStatement( fixture.lockedRoot( true ) ) ) );
@@ -211,7 +213,6 @@ class LockingDecisionBaselineTest {
 	// Finding 3: a root's secondary tables follow a different rule
 
 	@Test
-	@FailureExpected(reason = "Finding 3: a root's secondary tables are hinted by a different rule from the root")
 	void secondaryTableOfUnselectedRootIsNotHinted() {
 		final var fixture = new Fixture( new SQLServerDialect() );
 		final var querySpec = fixture.lockedRoot( false );
@@ -236,6 +237,123 @@ class LockingDecisionBaselineTest {
 
 		assertThat( operation.getSqlString() ).containsPattern( "work_item w with \\([^)]*updlock" );
 		assertThat( operation.getSqlString() ).containsPattern( "work_item_detail d with \\([^)]*updlock" );
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Oracle locking wrapper: the wrapper is the locking target
+
+	@ParameterizedTest
+	@EnumSource(value = Locking.FollowOn.class, names = { "ALLOW", "DISALLOW", "IGNORE" })
+	void oracleLockingWrapperRendersTheLockingClauseOnce(Locking.FollowOn followOn) {
+		final var fixture = new Fixture( new OracleDialect() );
+		final var querySpec = fixture.lockedEntityRoot();
+		querySpec.setFetchClauseExpression( new QueryLiteral<>( 5, fixture.integerType ), FetchClauseType.ROWS_ONLY );
+		final var translator = new RecordingOracle<>( fixture.request( new SelectStatement( querySpec ) ) );
+
+		final JdbcSelect operation = translator.translate( null, options( followOn ) );
+
+		assertThat( operation.getSqlString() ).isEqualTo(
+				"select 1 from work_item w where w.id in (select w.id from work_item w fetch first 5 rows only) for update" );
+		assertThat( operation.getLockingApplication() ).isEqualTo( JdbcLockingApplication.RENDERED );
+		assertThat( operation.getLoadedValuesCollectorFactory() ).isNull();
+		assertThat( translator.calls ).as( "calls: %s", translator.calls ).hasSize( 1 );
+		assertThat( translator.calls.get( 0 ).queryPartStackDepth() ).as( "decided within the wrapper" ).isOne();
+	}
+
+	@Test
+	void oracleForcedFollowOnUsesNoLockingWrapper() {
+		final var fixture = new Fixture( new OracleDialect() );
+		final var querySpec = fixture.lockedEntityRoot();
+		querySpec.setFetchClauseExpression( new QueryLiteral<>( 5, fixture.integerType ), FetchClauseType.ROWS_ONLY );
+		final var translator = new RecordingOracle<>( fixture.request( new SelectStatement( querySpec ) ) );
+
+		final JdbcSelect operation = translator.translate( null, options( Locking.FollowOn.FORCE ) );
+
+		assertThat( operation.getSqlString() ).isEqualTo( "select 1 from work_item w fetch first 5 rows only" );
+		assertThat( operation.getLockingApplication() ).isEqualTo( JdbcLockingApplication.FOLLOW_ON );
+		assertThat( operation.getLoadedValuesCollectorFactory() ).isNotNull();
+		assertThat( translator.calls ).as( "calls: %s", translator.calls ).hasSize( 1 );
+		assertThat( translator.calls.get( 0 ).pathsToLock() ).containsExactly( WORK_ITEM );
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// The decision is made once per locking target, whatever the query shape
+
+	@ParameterizedTest
+	@EnumSource(Locking.FollowOn.class)
+	void decisionIsMadeOnceWithACte(Locking.FollowOn followOn) {
+		final var fixture = new Fixture( new PostgreSQLDialect() );
+		final var statement = new SelectStatement( fixture.lockedRoot( true ) );
+		statement.addCteStatement( fixture.cte() );
+		final var translator = new RecordingPostgres<>( fixture.request( statement ) );
+
+		translator.translate( null, options( followOn ) );
+
+		assertThat( translator.calls ).as( "calls: %s", translator.calls ).hasSize( 1 );
+		assertThat( translator.calls.get( 0 ).querySpec() ).as( "asked about the main query" ).isEqualTo( "w" );
+		assertThat( translator.calls.get( 0 ).pathsToLock() ).containsExactly( WORK_ITEM );
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Finding 9: a locking clause cannot be combined with a set operation
+
+	@Test
+	void setOperationUsesFollowOnLocking() {
+		final var fixture = new Fixture( new PostgreSQLDialect() );
+		final var translator = new RecordingPostgres<>( fixture.request( fixture.lockedUnion() ) );
+
+		final JdbcSelect operation = translator.translate( null, options( Locking.FollowOn.ALLOW ) );
+
+		assertThat( operation.getSqlString() ).contains( "union all" ).doesNotContain( " for " );
+		assertThat( operation.getLockingApplication() ).isEqualTo( JdbcLockingApplication.FOLLOW_ON );
+		assertThat( operation.getLoadedValuesCollectorFactory() ).isNotNull();
+		assertThat( translator.calls ).as( "calls: %s", translator.calls ).hasSize( 1 );
+	}
+
+	@Test
+	void setOperationWithIgnoreAppliesNoLocking() {
+		final var fixture = new Fixture( new PostgreSQLDialect() );
+		final var translator = new RecordingPostgres<>( fixture.request( fixture.lockedUnion() ) );
+
+		final JdbcSelect operation = translator.translate( null, options( Locking.FollowOn.IGNORE ) );
+
+		assertThat( operation.getSqlString() ).doesNotContain( " for " );
+		assertThat( operation.getLockingApplication() ).isEqualTo( JdbcLockingApplication.NONE );
+		assertThat( operation.getLoadedValuesCollectorFactory() ).isNull();
+	}
+
+	@Test
+	void setOperationWithDisallowIsRejected() {
+		final var fixture = new Fixture( new PostgreSQLDialect() );
+		final var translator = new RecordingPostgres<>( fixture.request( fixture.lockedUnion() ) );
+
+		assertThatThrownBy( () -> translator.translate( null, options( Locking.FollowOn.DISALLOW ) ) )
+				.isInstanceOf( IllegalQueryOperationException.class )
+				.hasMessageContaining( "set operators" );
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Sybase ASE locking set query: each arm becomes the locking target in turn
+
+	@Test
+	void sybaseAseLockingSetQueryRestoresItsTarget() {
+		final var fixture = new Fixture( new SybaseASEDialect() );
+		final var translator = new RecordingSybaseASE<>( fixture.request( fixture.lockedUnion() ) );
+		final var options = new QueryOptionsImpl();
+		options.getLockOptions().setLockMode( LockMode.PESSIMISTIC_READ ).setTimeout( Timeouts.SKIP_LOCKED );
+
+		final JdbcSelect operation = translator.translate( null, options );
+
+		// the arms carry no trailing locking clause of their own; one is rendered for the whole query
+		assertThat( operation.getSqlString() ).isEqualTo(
+				"select 1 from work_item w readpast union all select 1 from archived_item a at isolation 2" );
+		assertThat( operation.getLockingApplication() ).isEqualTo( JdbcLockingApplication.RENDERED );
+		assertThat( operation.getLoadedValuesCollectorFactory() ).isNull();
+		// one decision each time a query spec becomes the locking target: the two arms while
+		// they are rendered, then the first arm again once it is restored as the target
+		assertThat( translator.calls ).extracting( Call::querySpec ).containsExactly( "w", "a", "w" );
+		assertThat( translator.calls ).extracting( Call::answer ).containsOnly( "CLAUSE" );
+		assertThat( translator.calls.get( 2 ).queryPartStackDepth() ).as( "decided at finalization" ).isZero();
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -302,6 +420,35 @@ class LockingDecisionBaselineTest {
 					new SelectStatement( definition ) );
 		}
 
+		/// A locked root whose model part is an entity with a single-column
+		/// identifier, which is what the Oracle locking wrapper requires.
+		QuerySpec lockedEntityRoot() {
+			final var persister = mock( EntityPersister.class );
+			when( persister.getQuerySpaces() ).thenReturn( new String[] { "work_item" } );
+			final var identifier = mock( EntityIdentifierMapping.class );
+			final var selectable = mock( SelectableMapping.class );
+			when( selectable.getSelectionExpression() ).thenReturn( "id" );
+			when( selectable.getSelectableName() ).thenReturn( "id" );
+			when( selectable.getJdbcMapping() ).thenReturn( integerType );
+			when( identifier.getJdbcTypeCount() ).thenReturn( 1 );
+			when( identifier.forEachSelectable( anyInt(), any() ) ).thenAnswer( invocation -> {
+				invocation.<SelectableConsumer>getArgument( 1 ).accept( 0, selectable );
+				return 1;
+			} );
+			when( persister.getIdentifierMapping() ).thenReturn( identifier );
+			final var querySpec = new QuerySpec( true );
+			querySpec.applyRootPathForLocking( WORK_ITEM );
+			querySpec.getFromClause().addRoot( new StandardTableGroup(
+					true, WORK_ITEM, persister, "w", new NamedTableReference( "work_item", "w" ),
+					false, new SqlAliasBaseConstant( "w" ), name -> false, null, factory ) );
+			final EntityResult<?> result = mock( EntityResult.class );
+			when( result.getNavigablePath() ).thenReturn( WORK_ITEM );
+			when( result.getFetches() ).thenReturn( ImmutableFetchList.EMPTY );
+			querySpec.applyDomainResultForLocking( result );
+			querySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( 0, new QueryLiteral<>( 1, integerType ) ) );
+			return querySpec;
+		}
+
 		SelectStatement lockedUnion() {
 			final var first = querySpec( false, "work_item", "w", WORK_ITEM, WORK_ITEM );
 			final var second = querySpec( false, "archived_item", "a", null, new NavigablePath( "ArchivedItem" ) );
@@ -332,6 +479,25 @@ class LockingDecisionBaselineTest {
 		final List<Call> calls = new ArrayList<>();
 
 		RecordingOracle(SqlAstTranslationRequest<? extends Statement, T> request) {
+			super( request );
+		}
+
+		@Override
+		protected LockStrategy determineLockingStrategy(QuerySpec querySpec, Locking.FollowOn followOnStrategy) {
+			final var answer = super.determineLockingStrategy( querySpec, followOnStrategy );
+			final var strategy = getLockingClauseStrategy();
+			final var paths = strategy == null ? null : strategy.getPathsToLock();
+			calls.add( new Call(
+					querySpec.getFromClause().getRoots().get( 0 ).getPrimaryTableReference().getIdentificationVariable(),
+					getQueryPartStack().depth(), answer.name(), paths == null ? null : List.copyOf( paths ) ) );
+			return answer;
+		}
+	}
+
+	static final class RecordingSybaseASE<T extends JdbcOperation> extends SybaseASESqlAstTranslator<T> {
+		final List<Call> calls = new ArrayList<>();
+
+		RecordingSybaseASE(SqlAstTranslationRequest<? extends Statement, T> request) {
 			super( request );
 		}
 

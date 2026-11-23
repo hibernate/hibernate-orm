@@ -37,6 +37,7 @@ import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
 import org.hibernate.sql.ast.spi.query.from.StandardTableGroup;
 import org.hibernate.sql.ast.spi.query.from.TableGroupProducer;
 import org.hibernate.sql.ast.spi.query.from.TableReferenceJoin;
+import org.hibernate.sql.ast.spi.query.predicate.ExistsPredicate;
 import org.hibernate.sql.ast.spi.query.select.QueryGroup;
 import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.ast.spi.query.select.SelectStatement;
@@ -85,6 +86,8 @@ import static org.mockito.Mockito.when;
 /// failures. The markers came off as the changes landed.
 class LockingDecisionBaselineTest {
 	private static final NavigablePath WORK_ITEM = new NavigablePath( "WorkItem" );
+	private static final NavigablePath ARCHIVED_ITEM = new NavigablePath( "ArchivedItem" );
+	private static final NavigablePath PURGED_ITEM = new NavigablePath( "PurgedItem" );
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Finding 1: strategy built from the first query spec visited
@@ -333,6 +336,59 @@ class LockingDecisionBaselineTest {
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// SQL Server locks through table hints, which every branch of a set operation carries
+
+	@ParameterizedTest
+	@EnumSource(Locking.FollowOn.class)
+	void sqlServerLocksEveryBranchOfASetOperation(Locking.FollowOn followOn) {
+		final var fixture = new Fixture( new SQLServerDialect() );
+
+		final JdbcSelect operation = new SQLServerSqlAstTranslator<JdbcSelect>(
+				fixture.request( fixture.lockedUnionOfEntities() ) ).translate( null, options( followOn ) );
+
+		assertThat( operation.getSqlString() ).isEqualTo(
+				"select 1 from work_item w with (updlock,holdlock,rowlock)"
+						+ " union all select 1 from archived_item a with (updlock,holdlock,rowlock)" );
+		assertThat( operation.getLockingApplication() ).isEqualTo( JdbcLockingApplication.RENDERED );
+		assertThat( operation.getLoadedValuesCollectorFactory() ).isNull();
+	}
+
+	@Test
+	void sqlServerLocksEveryBranchOfANestedSetOperation() {
+		final var fixture = new Fixture( new SQLServerDialect() );
+		final var nested = new QueryGroup( false, SetOperator.UNION_ALL, List.of(
+				fixture.querySpec( false, "archived_item", "a", ARCHIVED_ITEM, ARCHIVED_ITEM ),
+				fixture.querySpec( false, "purged_item", "p", PURGED_ITEM, PURGED_ITEM ) ) );
+		final var statement = new SelectStatement( new QueryGroup( true, SetOperator.UNION_ALL, List.of(
+				fixture.querySpec( false, "work_item", "w", WORK_ITEM, WORK_ITEM ), nested ) ) );
+
+		final JdbcSelect operation = new SQLServerSqlAstTranslator<JdbcSelect>( fixture.request( statement ) )
+				.translate( null, options( Locking.FollowOn.ALLOW ) );
+
+		assertThat( operation.getSqlString() )
+				.contains( "work_item w with (updlock,holdlock,rowlock)" )
+				.contains( "archived_item a with (updlock,holdlock,rowlock)" )
+				.contains( "purged_item p with (updlock,holdlock,rowlock)" );
+	}
+
+	@Test
+	void sqlServerDoesNotLockASetOperationInASubquery() {
+		final var fixture = new Fixture( new SQLServerDialect() );
+		final var root = fixture.lockedRoot( true );
+		final var subquery = new QueryGroup( false, SetOperator.UNION_ALL, List.of(
+				fixture.querySpec( false, "archived_item", "a", null, ARCHIVED_ITEM ),
+				fixture.querySpec( false, "purged_item", "p", null, PURGED_ITEM ) ) );
+		root.applyPredicate( new ExistsPredicate( new SelectStatement( subquery ), false, null ) );
+
+		final JdbcSelect operation = new SQLServerSqlAstTranslator<JdbcSelect>(
+				fixture.request( new SelectStatement( root ) ) ).translate( null, options( Locking.FollowOn.ALLOW ) );
+
+		assertThat( operation.getSqlString() ).isEqualTo(
+				"select 1 from work_item w with (updlock,holdlock,rowlock) where exists("
+						+ "select 1 from archived_item a union all select 1 from purged_item p)" );
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Sybase ASE locking set query: each arm becomes the locking target in turn
 
 	@Test
@@ -447,6 +503,14 @@ class LockingDecisionBaselineTest {
 			querySpec.applyDomainResultForLocking( result );
 			querySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( 0, new QueryLiteral<>( 1, integerType ) ) );
 			return querySpec;
+		}
+
+		/// A set operation whose branches each select an entity to lock, as an HQL
+		/// set operation over entity queries does.
+		SelectStatement lockedUnionOfEntities() {
+			final var first = querySpec( false, "work_item", "w", WORK_ITEM, WORK_ITEM );
+			final var second = querySpec( false, "archived_item", "a", ARCHIVED_ITEM, ARCHIVED_ITEM );
+			return new SelectStatement( new QueryGroup( true, SetOperator.UNION_ALL, List.of( first, second ) ) );
 		}
 
 		SelectStatement lockedUnion() {

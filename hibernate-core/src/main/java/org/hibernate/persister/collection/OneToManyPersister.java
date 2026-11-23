@@ -62,9 +62,12 @@ import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.ast.spi.model.TableUpdateStandard;
 import org.hibernate.sql.spi.mutation.jdbc.JdbcMutationOperation;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -165,6 +168,30 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		else {
 			return mappingMetamodel.getEntityDescriptor( session.bestGuessEntityName( element ) );
 		}
+	}
+
+	/**
+	 * The persisters of the element type of this collection and of each of its subclasses
+	 * which have a table of their own. An abstract class with subclasses has none.
+	 */
+	@Nonnull
+	public List<EntityPersister> getElementPersistersWithTable() {
+		final var elementPersister = getElementPersister();
+		// the tables of the element type, of its superclasses, and of its subclasses
+		final Set<String> tableNames = new HashSet<>();
+		elementPersister.visitConstraintOrderedTables(
+				(tableName, keyColumnVisitationSupplier) -> tableNames.add( tableName ) );
+		final List<EntityPersister> persisters = new ArrayList<>();
+		if ( tableNames.contains( elementPersister.getMappedTableDetails().getTableName() ) ) {
+			persisters.add( elementPersister );
+		}
+		for ( var subMappingType : elementPersister.getSubMappingTypes() ) {
+			final var subclassPersister = subMappingType.getEntityPersister();
+			if ( tableNames.contains( subclassPersister.getMappedTableDetails().getTableName() ) ) {
+				persisters.add( subclassPersister );
+			}
+		}
+		return persisters;
 	}
 
 	@Nonnull

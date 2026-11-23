@@ -8,13 +8,11 @@ import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationTar
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.OneToManyPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.spi.mutation.MutationType;
 import org.hibernate.sql.ast.spi.model.MutatingTableReference;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
@@ -111,16 +109,17 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 	@Nonnull
 	private MutationOperationGroup[] buildOperationGroups() {
 		// one operation for each table which holds rows of the element type
-		final List<MutationOperationGroup> operationGroups = new ArrayList<>();
-		mutationTarget.getElementPersister().visitConstraintOrderedTables(
-				(tableName, keyColumnVisitationSupplier) ->
-						operationGroups.add( buildOperationGroup( tableName ) )
-		);
-		return operationGroups.toArray( new MutationOperationGroup[0] );
+		final var elementPersisters = mutationTarget.getElementPersistersWithTable();
+		final var operationGroups = new MutationOperationGroup[elementPersisters.size()];
+		int i = 0;
+		for ( var elementPersister : elementPersisters ) {
+			operationGroups[i++] = buildOperationGroup( elementPersister );
+		}
+		return operationGroups;
 	}
 
 	@Nonnull
-	private MutationOperationGroup buildOperationGroup(@Nonnull String tableName) {
+	private MutationOperationGroup buildOperationGroup(@Nonnull EntityPersister elementPersister) {
 		assert mutationTarget.getTargetPart() != null
 			&& mutationTarget.getTargetPart().getKeyDescriptor() != null;
 
@@ -132,7 +131,7 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 		final var collectionTableMapping = mutationTarget.getCollectionTableMapping();
 		final var tableReference = new MutatingTableReference(
 				new CollectionTableMapping(
-						tableName,
+						elementPersister.getMappedTableDetails().getTableName(),
 						collectionTableMapping.getSpaces(),
 						collectionTableMapping.isJoinTable(),
 						collectionTableMapping.isInverse(),

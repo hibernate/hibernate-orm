@@ -16,10 +16,8 @@ import org.hibernate.persister.collection.OneToManyPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Consumer;
 
 /// One-to-many decomposer for table-per-subclass inheritance where each concrete subclass
@@ -51,14 +49,9 @@ public class TablePerSubclassOneToManyDecomposer extends AbstractOneToManyDecomp
 			operationsBySubclass.put( subclassPersister, buildJdbcOperations( subclassPersister ) );
 		} );
 
-		final Set<String> tableNames = new HashSet<>();
-		associatedType.visitConstraintOrderedTables(
-				(tableName, keyColumnVisitationSupplier) -> tableNames.add( tableName ) );
-		operationsBySubclass.forEach( (entityPersister, jdbcOperations) -> {
-			if ( tableNames.contains( jdbcOperations.tableDescriptor().name() ) ) {
-				operationsByTable.add( jdbcOperations );
-			}
-		} );
+		for ( var elementPersister : persister.getElementPersistersWithTable() ) {
+			operationsByTable.add( operationsBySubclass.get( elementPersister ) );
+		}
 	}
 
 	private CollectionJdbcOperations buildJdbcOperations(

@@ -249,11 +249,12 @@ public abstract class AbstractOwnedListTablePerClassTest {
 	}
 
 	/**
-	 * The element type of the collection is not the root of its hierarchy.
+	 * The element type of the collection is not the root of its hierarchy, and its superclass has
+	 * a table of its own, with no foreign key to the box.
 	 */
 	@Entity(name = "Item")
 	@Inheritance(strategy = TABLE_PER_CLASS)
-	public static abstract class Item {
+	public static class Item {
 		@Id
 		int id;
 

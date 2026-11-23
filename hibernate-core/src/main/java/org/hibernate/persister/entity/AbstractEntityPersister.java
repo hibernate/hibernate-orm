@@ -163,6 +163,7 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.models.internal.util.CollectionHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
+import org.hibernate.persister.entity.mutation.EntityAuditSupport;
 import org.hibernate.action.queue.internal.decompose.entity.DeleteDecomposer;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.persister.entity.mutation.EntityTableMappingImpl;
@@ -424,6 +425,7 @@ public abstract class AbstractEntityPersister
 
 	@SuppressWarnings("NullAway.Init") // Initialized during mapping model creation.
 	private EntityTableMapping[] tableMappings;
+	private EntityAuditSupport entityAuditSupport;
 	@SuppressWarnings("NullAway.Init") // Initialized during mapping model creation.
 	private InsertCoordinator insertCoordinator;
 	@SuppressWarnings("NullAway.Init") // Initialized during mapping model creation.
@@ -3888,6 +3890,9 @@ public abstract class AbstractEntityPersister
 					createGeneratedValuesProcessor( UPDATE, updateGeneratedAttributes );
 		}
 
+		if ( getAuditMapping() != null ) {
+			entityAuditSupport = new EntityAuditSupport( this, getFactory() );
+		}
 		final var legacyIntegration = stateManagement.getLegacyIntegration();
 		insertCoordinator = legacyIntegration.createInsertCoordinator( this );
 		updateCoordinator = legacyIntegration.createUpdateCoordinator( this );
@@ -6937,6 +6942,12 @@ public abstract class AbstractEntityPersister
 	public TemporalMapping getTemporalMapping() {
 		return auxiliaryMapping instanceof TemporalMapping temporalMapping
 				? temporalMapping : null;
+	}
+
+	@Nullable
+	@Override
+	public EntityAuditSupport getEntityAuditSupport() {
+		return entityAuditSupport;
 	}
 
 	@Nullable

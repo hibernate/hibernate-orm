@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.hibernate.dialect.sql.ast.spi.SubquerySupport.Feature.EXISTS_IN_SELECT;
 import static org.hibernate.dialect.sql.ast.spi.SubquerySupport.Feature.IN_PREDICATE_LHS;
+import static org.hibernate.dialect.sql.ast.spi.SubquerySupport.Feature.INSERT_VALUES;
 import static org.hibernate.dialect.sql.ast.spi.SubquerySupport.Feature.LATERAL;
 import static org.hibernate.dialect.sql.ast.spi.SubquerySupport.Feature.MUTATION_JOIN;
 import static org.hibernate.dialect.sql.ast.spi.SubquerySupport.Feature.MUTATION_TARGET_REFERENCE;
@@ -40,6 +41,7 @@ import static org.hibernate.dialect.sql.ast.spi.SubquerySupport.Feature.SELECT_L
 public class SubquerySupportTests {
 	private static final SubquerySupport.Feature[] STANDARD_FEATURES = {
 			SELECT_LIST,
+			INSERT_VALUES,
 			EXISTS_IN_SELECT,
 			ORDER_BY,
 			NESTED_CORRELATION,
@@ -68,6 +70,7 @@ public class SubquerySupportTests {
 				.build();
 		assertFeatures(
 				copied,
+				INSERT_VALUES,
 				ORDER_BY,
 				OFFSET,
 				NESTED_CORRELATION,
@@ -99,21 +102,21 @@ public class SubquerySupportTests {
 		}.getSubquerySupport(), STANDARD_FEATURES );
 		assertFeatures(
 				new H2Dialect(),
-				SELECT_LIST, EXISTS_IN_SELECT, ORDER_BY, OFFSET, NESTED_CORRELATION,
+				SELECT_LIST, INSERT_VALUES, EXISTS_IN_SELECT, ORDER_BY, OFFSET, NESTED_CORRELATION,
 				MUTATION_TARGET_REFERENCE, IN_PREDICATE_LHS
 		);
 		assertFeatures(
 				new MySQLDialect( DatabaseVersion.make( 8, 0, 13 ) ),
-				SELECT_LIST, EXISTS_IN_SELECT, ORDER_BY, OFFSET, MUTATION_JOIN, IN_PREDICATE_LHS
+				SELECT_LIST, INSERT_VALUES, EXISTS_IN_SELECT, ORDER_BY, OFFSET, MUTATION_JOIN, IN_PREDICATE_LHS
 		);
 		assertFeatures(
 				new MySQLDialect( DatabaseVersion.make( 8, 0, 14 ) ),
-				SELECT_LIST, EXISTS_IN_SELECT, ORDER_BY, OFFSET, MUTATION_JOIN, IN_PREDICATE_LHS, LATERAL
+				SELECT_LIST, INSERT_VALUES, EXISTS_IN_SELECT, ORDER_BY, OFFSET, MUTATION_JOIN, IN_PREDICATE_LHS, LATERAL
 		);
 		assertThat( new MariaDBDialect().getSubquerySupport().supports( LATERAL ) ).isFalse();
 		assertFeatures(
 				new OracleDialect( DatabaseVersion.make( 19 ) ),
-				SELECT_LIST, ORDER_BY, OFFSET, MUTATION_TARGET_REFERENCE, MUTATION_JOIN,
+				SELECT_LIST, INSERT_VALUES, ORDER_BY, OFFSET, MUTATION_TARGET_REFERENCE, MUTATION_JOIN,
 				IN_PREDICATE_LHS, LATERAL
 		);
 		assertOffsetAndLateral( new DB2Dialect() );
@@ -128,6 +131,7 @@ public class SubquerySupportTests {
 		assertOffsetAndLateral( new SQLServerDialect() );
 		assertThat( new SybaseASEDialect().getSubquerySupport().supports( EXISTS_IN_SELECT ) ).isFalse();
 		assertThat( new SybaseASEDialect().getSubquerySupport().supports( ORDER_BY ) ).isFalse();
+		assertThat( new SybaseASEDialect().getSubquerySupport().supports( INSERT_VALUES ) ).isFalse();
 	}
 
 	private static void assertOffsetAndLateral(Dialect dialect) {

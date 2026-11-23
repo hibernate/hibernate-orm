@@ -95,6 +95,7 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
+import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Collection;
@@ -1724,9 +1725,14 @@ public abstract class CollectionBinder {
 
 		// For @OneToMany @JoinColumn on an @Audited entity, create a middle audit table
 		// to track collection membership changes (same approach as @ManyToMany / @JoinTable)
-		if ( !collection.isInverse() ) {
-			final var audited = extract( Audited.class, property, buildingContext );
-			if ( audited != null && !property.hasDirectAnnotationUsage( Audited.Excluded.class ) ) {
+		if ( extract( Audited.class, property, buildingContext ) != null
+				&& !property.hasDirectAnnotationUsage( Audited.Excluded.class ) ) {
+			if ( collection.isInverse() ) {
+				if ( collection instanceof IndexedCollection indexed ) {
+					collectionTable.addAuditedInverseCollection( indexed );
+				}
+			}
+			else {
 				AuditHelper.bindOneToManyAuditTable(
 						extract( Audited.Table.class, property, buildingContext ),
 						collection,

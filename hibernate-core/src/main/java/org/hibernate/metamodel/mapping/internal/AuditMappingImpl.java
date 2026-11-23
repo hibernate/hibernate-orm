@@ -79,8 +79,14 @@ public class AuditMappingImpl implements AuditMapping {
 			String auditTableName,
 			SelectableMapping changesetIdMapping,
 			@Nullable SelectableMapping modificationTypeMapping,
-			@Nullable SelectableMapping invalidatingChangesetMapping
-	) {}
+			@Nullable SelectableMapping invalidatingChangesetMapping,
+			List<SelectableMapping> collectionIndexColumns
+	) {
+		public TableAuditInfo(String auditTableName, SelectableMapping changesetIdMapping,
+				@Nullable SelectableMapping modificationTypeMapping, @Nullable SelectableMapping invalidatingChangesetMapping) {
+			this( auditTableName, changesetIdMapping, modificationTypeMapping, invalidatingChangesetMapping, List.of() );
+		}
+	}
 
 	private final Map<String, TableAuditInfo> tableAuditInfoMap;
 
@@ -157,6 +163,11 @@ public class AuditMappingImpl implements AuditMapping {
 							+ "' (known tables: " + tableAuditInfoMap.keySet() + ")" );
 		}
 		return info;
+	}
+
+	@Override
+	public List<SelectableMapping> getCollectionIndexColumns(String originalTableName) {
+		return resolveInfo( originalTableName ).collectionIndexColumns();
 	}
 
 	@Nonnull

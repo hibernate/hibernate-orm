@@ -73,16 +73,14 @@ public class JdbcValueBindings {
 			return;
 		}
 
-		final BindSlot[] slots = bindTemplate.slots();
-		for ( int i = 0; i < slots.length; i++ ) {
-			if ( !boundSlots[i] ) {
+		for ( var slot : bindTemplate.slots() ) {
+			if ( !boundSlots[slot.index()] ) {
 				continue;
 			}
-			final BindSlot slot = slots[i];
 			try {
 				slot.jdbcMapping().getJdbcValueBinder().bind(
 						preparedStatement,
-						resolveValue( valuesBySlot[i] ),
+						resolveValue( valuesBySlot[slot.index()] ),
 						slot.jdbcPosition(),
 						session
 				);
@@ -94,7 +92,7 @@ public class JdbcValueBindings {
 								Locale.ROOT,
 								"Unable to bind parameter #%s - %s",
 								slot.jdbcPosition(),
-								valuesBySlot[i]
+								valuesBySlot[slot.index()]
 						)
 				);
 			}
@@ -152,11 +150,9 @@ public class JdbcValueBindings {
 	public BindingGroup getBindingGroup() {
 		if ( bindTemplate != null ) {
 			final BindingGroup compatibilityGroup = new BindingGroup( tableDescriptor.name() );
-			final BindSlot[] slots = bindTemplate.slots();
-			for ( int i = 0; i < slots.length; i++ ) {
-				if ( boundSlots[i] ) {
-					final BindSlot slot = slots[i];
-					compatibilityGroup.bindValue( slot.columnName(), valuesBySlot[i], slot.valueDescriptor() );
+			for ( var slot : bindTemplate.slots() ) {
+				if ( boundSlots[slot.index()] ) {
+					compatibilityGroup.bindValue( slot.columnName(), valuesBySlot[slot.index()], slot.valueDescriptor() );
 				}
 			}
 			return compatibilityGroup;

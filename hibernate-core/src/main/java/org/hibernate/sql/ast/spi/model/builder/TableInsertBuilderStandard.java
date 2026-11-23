@@ -36,6 +36,10 @@ public class TableInsertBuilderStandard extends AbstractTableInsertBuilder {
 
 	@Override
 	public TableInsert buildMutation() {
+		return buildMutation( false );
+	}
+
+	public TableInsert buildMutation(boolean hasValueSubquery) {
 		if ( isCustomSql ) {
 			return new TableInsertCustomSql(
 					getMutatingTable(),
@@ -50,7 +54,8 @@ public class TableInsertBuilderStandard extends AbstractTableInsertBuilder {
 				getMutationTarget(),
 				combine( getValueBindingList(), getLobValueBindingList() ),
 				Collections.emptyList(),
-				getParameters()
+				getParameters(),
+				hasValueSubquery
 		);
 	}
 }

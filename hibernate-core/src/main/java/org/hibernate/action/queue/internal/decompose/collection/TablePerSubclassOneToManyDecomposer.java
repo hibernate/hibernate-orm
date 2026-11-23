@@ -113,15 +113,7 @@ public class TablePerSubclassOneToManyDecomposer extends AbstractOneToManyDecomp
 	@Override
 	protected CollectionJdbcOperations selectJdbcOperations(Object entry, SharedSessionContractImplementor session) {
 		final var element = entry instanceof Map.Entry<?,?> mapEntry ? mapEntry.getValue() : entry;
-		final var entityPersister = session.getEntityPersister( null, element );
-		final var jdbcOperations = operationsBySubclass.get( entityPersister );
-		if ( jdbcOperations != null ) {
-			return jdbcOperations;
-		}
-		else {
-			final var entityEntry = session.getPersistenceContextInternal().getEntry( element );
-			return operationsBySubclass.get( entityEntry.getPersister() );
-		}
+		return operationsBySubclass.get( persister.getConcreteElementPersister( element, session ) );
 	}
 
 	@Override

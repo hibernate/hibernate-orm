@@ -28,6 +28,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.loader.ast.internal.CollectionIndexSnapshotLoader;
+import org.hibernate.loader.ast.internal.EntityConcreteTypeLoader;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
@@ -42,6 +43,8 @@ import org.hibernate.persister.collection.mutation.UpdateRowsCoordinator;
 import org.hibernate.persister.collection.mutation.WriteIndexCoordinator;
 import org.hibernate.persister.collection.mutation.WriteIndexCoordinatorNoOp;
 import org.hibernate.persister.collection.mutation.WriteIndexCoordinatorStandard;
+import org.hibernate.persister.collection.mutation.WriteIndexCoordinatorTablePerSubclass;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.persister.state.spi.StateManagement;
@@ -68,6 +71,7 @@ import java.util.function.Consumer;
 import static org.hibernate.internal.util.collections.ArrayHelper.isAnyTrue;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.persister.collection.mutation.RowMutationOperations.DEFAULT_RESTRICTOR;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 import static org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilder.NULL;
 
 /**
@@ -91,6 +95,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	private final WriteIndexCoordinator writeIndexCoordinator;
 
 	private boolean useTablePerSubclassDecomposition;
+	@Nullable
+	private EntityConcreteTypeLoader concreteElementTypeLoader;
 	private final boolean keyIsNullable;
 
 	private final boolean auditIndex;
@@ -128,11 +134,58 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	public void prepareMappingModel(@Nonnull MappingModelCreationProcess creationProcess, @Nonnull Collection bootCollectionDescriptor) {
 		super.prepareMappingModel( creationProcess, bootCollectionDescriptor );
 
-		if ( getElementPersister() instanceof UnionSubclassEntityPersister ) {
-			useTablePerSubclassDecomposition = getElementPersister().hasSubclasses();
+		useTablePerSubclassDecomposition = isElementTablePerSubclass();
+	}
+
+	private boolean isElementTablePerSubclass() {
+		final var elementPersister = getElementPersister();
+		return elementPersister instanceof UnionSubclassEntityPersister
+			&& elementPersister.hasSubclasses();
+	}
+
+	/**
+	 * The persister of the concrete subclass of the given element of this collection.
+	 * <p>
+	 * An uninitialized proxy obtained through a type with subclasses does not know its
+	 * concrete subclass, and might belong to another session, so its concrete subclass
+	 * is resolved from its identifier using the given session.
+	 */
+	@Nonnull
+	public EntityPersister getConcreteElementPersister(
+			@Nonnull Object element,
+			@Nonnull SharedSessionContractImplementor session) {
+		final var mappingMetamodel = getFactory().getMappingMetamodel();
+		final var lazyInitializer = extractLazyInitializer( element );
+		if ( lazyInitializer != null && lazyInitializer.isUninitialized() ) {
+			final var proxiedPersister = mappingMetamodel.getEntityDescriptor( lazyInitializer.getEntityName() );
+			return proxiedPersister.hasSubclasses()
+					? resolveConcreteElementPersister( lazyInitializer.getInternalIdentifier(), session )
+					: proxiedPersister;
 		}
 		else {
-			useTablePerSubclassDecomposition = false;
+			return mappingMetamodel.getEntityDescriptor( session.bestGuessEntityName( element ) );
+		}
+	}
+
+	@Nonnull
+	private EntityPersister resolveConcreteElementPersister(
+			@Nonnull Object id,
+			@Nonnull SharedSessionContractImplementor session) {
+		final var elementPersister = getElementPersister();
+		final Object entity =
+				session.getPersistenceContextInternal()
+						.getEntity( session.generateEntityKey( id, elementPersister ) );
+		if ( entity != null ) {
+			return getFactory().getMappingMetamodel()
+					.getEntityDescriptor( session.bestGuessEntityName( entity ) );
+		}
+		else {
+			var concreteElementTypeLoader = this.concreteElementTypeLoader;
+			if ( concreteElementTypeLoader == null ) {
+				this.concreteElementTypeLoader = concreteElementTypeLoader =
+						new EntityConcreteTypeLoader( elementPersister, getFactory() );
+			}
+			return concreteElementTypeLoader.getConcreteType( id, session );
 		}
 	}
 
@@ -478,11 +531,14 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 	@Nonnull
 	private WriteIndexCoordinator buildWriteIndexCoordinator() {
-		if ( doWriteEvenWhenInverse ) {
-			return new WriteIndexCoordinatorStandard( this, rowMutationOperations, getFactory() );
+		if ( !doWriteEvenWhenInverse ) {
+			return new WriteIndexCoordinatorNoOp( this );
+		}
+		else if ( isElementTablePerSubclass() ) {
+			return new WriteIndexCoordinatorTablePerSubclass( this, rowMutationOperations, getFactory() );
 		}
 		else {
-			return new WriteIndexCoordinatorNoOp( this );
+			return new WriteIndexCoordinatorStandard( this, rowMutationOperations, getFactory() );
 		}
 	}
 

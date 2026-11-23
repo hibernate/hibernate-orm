@@ -111,7 +111,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 						writeIndexOrdinal,
 						ordinalBase,
 						session,
-						operations
+						operations::add
 				);
 			}
 		}
@@ -127,7 +127,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 					writeIndexOrdinal,
 					ordinalBase,
 					session,
-					operations
+					operations::add
 			) );
 		}
 		else {
@@ -170,13 +170,13 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			int writeIndexOrdinal,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
-			List<FlushOperation> operations) {
+			Consumer<FlushOperation> operationConsumer) {
 		final var jdbcOperations = selectJdbcOperations( entry, session );
 		final var insertRowPlan = jdbcOperations.insertRowPlan();
 		if ( insertRowPlan != null
 				&& ( inclusionAlreadyTested
 						|| collection.includeInRecreate( entry, entryPosition, collection, attribute ) ) ) {
-			operations.add( new FlushOperation(
+			operationConsumer.accept( new FlushOperation(
 					jdbcOperations.tableDescriptor(),
 					MutationKind.UPDATE,
 					insertRowPlan.jdbcOperation(),
@@ -199,12 +199,12 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 					entryPosition,
 					ordinalBase,
 					session,
-					operations::add
+					operationConsumer
 			);
 		}
 
 		if ( jdbcOperations.updateIndexPlan() != null ) {
-			operations.add( new FlushOperation(
+			operationConsumer.accept( new FlushOperation(
 					jdbcOperations.tableDescriptor(),
 					MutationKind.UPDATE_ORDER,
 					jdbcOperations.updateIndexPlan().jdbcOperation(),
@@ -342,11 +342,19 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 				planRemoveAll( key, ordinalBase, operationConsumer );
 			}
 			collection.preInsert( persister );
-			replaceAll.currentRows().forEach( (entry, position) -> planInsert(
+			final var attribute = persister.getAttributeMapping();
+			final int insertOrdinal = calculateOrdinal( ordinalBase, Slot.INSERT );
+			final int writeIndexOrdinal = calculateOrdinal( ordinalBase, Slot.WRITEINDEX );
+			// like a recreation, write the index columns of an inverse collection
+			replaceAll.currentRows().forEach( (entry, position) -> planRecreateEntry(
 					entry,
 					position,
+					true,
 					collection,
 					key,
+					attribute,
+					insertOrdinal,
+					writeIndexOrdinal,
 					ordinalBase,
 					session,
 					operationConsumer

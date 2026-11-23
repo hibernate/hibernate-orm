@@ -580,7 +580,7 @@ In the association-table case, without a custom `PhysicalNamingStrategy` both `I
 `ImplicitNamingStrategyLegacyHbmImpl` ("legacy-hbm"):: Historical implementation from `hbm.xml` days.
 `ImplicitNamingStrategyComponentPathImpl` ("component-path"):: Generally the same as `StandardImplicitNamingStrategy` with some minor differences.
 
-These deprecated strategies remain available during the deprecation period. Selecting one, including a subclass, emits deprecation warning HHH90000046. Migrate to "hibernate" or "jpa" after comparing resolved schema names. "hibernate" now supplies "component-path"’s embedded naming behavior, but its association-table composition uses logical dependency names, so replacing "component-path" with "hibernate" is not guaranteed to preserve every schema name.
+These deprecated strategies remain available during the deprecation period. Selecting one, including a subclass, emits deprecation warning HHH90000048. Migrate to "hibernate" or "jpa" after comparing resolved schema names. "hibernate" now supplies "component-path"’s embedded naming behavior, but its association-table composition uses logical dependency names, so replacing "component-path" with "hibernate" is not guaranteed to preserve every schema name.
 
 To preserve an existing schema -
 

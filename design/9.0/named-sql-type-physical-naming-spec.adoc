@@ -174,3 +174,11 @@ The focused named SQL type, physical naming contract, and aggregate annotation
 checks passed after the split: 59 tests, zero failures/errors, and zero skipped.
 This includes callback dispatch and independent per-kind caching. All core test
 sources compiled. Live PostgreSQL/Oracle execution was not part of this run.
+
+== Pre-Integration Database Validation (2026-11-23)
+
+The physical type-name integration test now passes with real database execution on
+PostgreSQL 18.6 and Oracle AI Database 26ai Free (23.26.1.0.0).
+The focused naming run reported 42 tests on each database, with no skips, failures,
+or errors. See `naming-strategy-verification.adoc` for the tested source revisions,
+configuration, coverage, and remaining pre-existing aggregate limitations.

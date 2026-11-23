@@ -463,7 +463,7 @@ The implemented retention decision is:
   they do not guarantee uniqueness against arbitrary explicit names or underscores.
 * Deprecate legacy-HBM, legacy-JPA, and component-path for removal, since 9.0.
   Keep their current behavior and selector aliases during the deprecation period.
-* Emit `HHH90000046` through `DeprecationLogger` once per mapping resolution using
+* Emit `HHH90000048` through `DeprecationLogger` once per mapping resolution using
   a deprecated strategy, including subclasses, after programmatic overrides are
   applied. Accepting an unused deprecated configuration must not produce a warning.
 * Keep JPA as the default. Standard is opt-in; its qualified embeddable names
@@ -584,3 +584,48 @@ The affected naming, temporal/state-management, and schema follow-up run passed
 712 tests, with 6 skipped and no failures or errors. This corrected the archive test
 configuration and retained temporal naming compatibility. Final full-core verification, including the aggregate compatibility exception, passed:
 17,976 tests, 1,525 skipped, zero failures and zero errors.
+
+== Rebase And Pre-Integration Validation (2026-11-23)
+
+The runtime sources at `912368097d1` are identical to the validated rebased tree
+at `12ad726260c`; reorganizing the commits did not change the final tree.
+The complete core H2 suite on that tree reported 28,796 tests, 1,627 skipped,
+and zero failures or errors on 2026-11-20.
+The reorganized code boundaries also passed compilation, forbidden-API checks,
+and focused regressions. The final naming/default-strategy check reported
+492 tests, one skipped, and zero failures or errors.
+
+Live database checks on 2026-11-23 used JDK 25, the repository's PostgreSQL and
+Oracle test profiles, one test fork, and a dedicated database/schema for each run.
+Both dedicated resources were removed after validation; existing test schemas
+and containers were retained.
+
+[cols="3,1,1,1",options="header"]
+|===
+|Database |Tests |Failures/errors |Skipped
+|PostgreSQL 18.6 |42 |0 |0
+|Oracle AI Database 26ai Free (23.26.1.0.0) |42 |0 |0
+|===
+
+Each database run included `NamedSqlTypePhysicalNamingIntegrationTest`,
+`ImplicitSqlTypeNamingTest`, `NamedSqlTypeNamingImpactTest`, and
+`PhysicalNamingStrategyContractTest`.
+The integration test executed on both databases, covering persistence, named enum
+literals, null/non-null arrays, and array functions with transformed physical names.
+These are focused naming checks, not complete PostgreSQL or Oracle core-suite runs.
+
+Aggregated Javadocs and HTML rendering of the user guide, introduction, and
+migration guide passed using `:documentation:javadoc`,
+`:documentation:renderUserGuideHtml`, `:documentation:renderIntroductionHtml`,
+and `:documentation:renderMigrationGuide`.
+The documentation build exposed stale bootstrap example paths and references to
+removed HBM examples and the deleted Envers chapter already present on `wip/9.0`.
+Those references were repaired or retired, and the build passed without suppressing
+its missing-include checks. Javadoc generation still reports annotation-classpath
+warnings about `Status.STABLE`; there were no Javadoc errors.
+The naming-strategy deprecation message is `HHH90000048`, matching the implementation
+and warning-inspection tests.
+
+The aggregate JDBC binding and aggregate metadata-restoration expected failures
+noted above remain separate, pre-existing limitations; these checks do not resolve
+them. Subsequent changes in this readiness pass affect documentation only.

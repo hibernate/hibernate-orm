@@ -1,5 +1,6 @@
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.temporal.spi.TemporalTableDdlRequest;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.type.SqlTypes;
@@ -8,11 +9,16 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/// Verifies that TiDB composes the public MySQL temporal-table profile and
-/// overrides only its generated-column declaration.
+/// Verifies temporal table support for community dialects.
 ///
 /// @author Steve Ebersole
 public class TemporalTableSupportTest {
+	@Test
+	void oracleLegacyDisallowsZonedTimestampKeys() {
+		final var dialect = new OracleLegacyDialect( DatabaseVersion.make( 12, 2 ) );
+		assertThat( dialect.getTemporalTableSupport().supportsZonedTimestampKeys() ).isFalse();
+	}
+
 	@Test
 	void tiDBPreservesTheStockProfileExceptForInvisibleGeneratedColumns() {
 		final var dialect = new TiDBDialect();

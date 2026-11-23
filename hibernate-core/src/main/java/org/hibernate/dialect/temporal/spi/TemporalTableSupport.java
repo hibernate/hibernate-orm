@@ -5,6 +5,7 @@ import java.util.List;
 import org.hibernate.SPI;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.temporal.TemporalTableStrategy;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import jakarta.annotation.Nullable;
 
 import static org.hibernate.SPI.Role.IMPLEMENT;
@@ -35,6 +36,15 @@ public interface TemporalTableSupport {
 	/// Return the default fractional-second precision of temporal effectivity
 	/// columns.
 	int getTemporalColumnPrecision();
+
+	/// Choose the JDBC type for a generated [java.time.Instant] changeset identifier
+	/// that belongs to an audit table's primary key. Return the preferred mapping
+	/// when the database permits its column type in a key.
+	///
+	/// @since 8.1
+	default JdbcType getInstantAuditKeyJdbcType(JdbcType preferredType) {
+		return preferredType;
+	}
 
 	/// Render the trailing table options for the supplied table. Use every name
 	/// in the request verbatim and return `null` when no options are needed.

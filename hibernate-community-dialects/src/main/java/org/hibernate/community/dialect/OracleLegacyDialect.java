@@ -1,5 +1,7 @@
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.temporal.spi.DelegatingTemporalTableSupport;
+import org.hibernate.dialect.temporal.spi.TemporalTableSupport;
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
 
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
@@ -911,6 +913,17 @@ public class OracleLegacyDialect extends Dialect implements CurrentTemporalSuppo
 
 		ddlTypeRegistry.addDescriptor( StandardDdlTypes.standardArray( this, false ) );
 		ddlTypeRegistry.addDescriptor( TABLE, StandardDdlTypes.standardArray( this, false ) );
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalTableSupport getTemporalTableSupport() {
+		return new DelegatingTemporalTableSupport( super.getTemporalTableSupport() ) {
+			@Override
+			public JdbcType getInstantAuditKeyJdbcType(JdbcType preferredType) {
+				return OracleJdbcTypes.instantAuditKeyType( preferredType, getTimeZoneSupport() );
+			}
+		};
 	}
 
 	@Override

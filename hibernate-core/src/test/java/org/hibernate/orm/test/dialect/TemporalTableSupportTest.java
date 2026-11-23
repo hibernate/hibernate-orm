@@ -28,6 +28,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.mapping.Table;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneJdbcType;
 
 import org.junit.jupiter.api.Test;
 
@@ -108,6 +109,8 @@ public class TemporalTableSupportTest {
 		assertThat( support.supportsNativeTemporalTables() ).isFalse();
 		assertThat( support.getTemporalColumnType() ).isEqualTo( SqlTypes.TIMESTAMP );
 		assertThat( support.getTemporalColumnPrecision() ).isEqualTo( 9 );
+		assertThat( support.getInstantAuditKeyJdbcType( TimestampWithTimeZoneJdbcType.INSTANCE ) )
+				.isSameAs( TimestampWithTimeZoneJdbcType.INSTANCE );
 		assertThat( support.getTemporalTableOptions( request ) ).isNull();
 		assertThat( support.suppressesTemporalTablePrimaryKeys( false ) ).isFalse();
 		assertThat( support.suppressesTemporalTablePrimaryKeys( true ) ).isFalse();
@@ -217,6 +220,8 @@ public class TemporalTableSupportTest {
 		assertThat( oracle.supportsNativeTemporalTables() ).isTrue();
 		assertThat( oracle.supportsTemporalTablePartitioning() ).isTrue();
 		assertThat( oracle.suppressesTemporalTablePrimaryKeys( true ) ).isFalse();
+		assertThat( oracle.getInstantAuditKeyJdbcType( TimestampWithTimeZoneJdbcType.INSTANCE ).getDdlTypeCode() )
+				.isEqualTo( SqlTypes.TIMESTAMP );
 		assertThat( oracle.createTemporalTableCheckConstraint( HISTORY_TABLE ) ).isFalse();
 		assertThat( oracle.getExtraTemporalTableDeclarations( nativeRequest ) )
 				.isEqualTo( "period for system_time (valid_from, valid_to)" );

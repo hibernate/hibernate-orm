@@ -25,6 +25,7 @@ import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.DependantBasicValue;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.PrimaryKey;
@@ -697,30 +698,38 @@ public final class AuditHelper {
 			Class<?> javaType,
 			Table table,
 			MetadataBuildingContext context) {
-		final var basicValue = new BasicValue( context, table );
-		basicValue.setImplicitJavaTypeAccess( typeConfiguration -> javaType );
 		final var column = new Column();
 		column.setNullable( false );
-		column.setValue( basicValue );
-		basicValue.addColumn( column );
+		final var value = javaType == Instant.class
+				? createTimestampValue( column, table, context )
+				: new BasicValue( context, table );
+		value.setImplicitJavaTypeAccess( typeConfiguration -> javaType );
+		value.addColumn( column );
 
 		final var database = context.getMetadataCollector().getDatabase();
 		setColumnName( columnName, column, database,
 				context.getBuildingOptions().getPhysicalNamingStrategy() );
-		setTemporalColumnType( column, database, javaType );
-
 		return column;
 	}
 
-	private static void setTemporalColumnType(
-			Column column,
-			Database database,
-			Class<?> javaType) {
-		if ( Instant.class.equals( javaType ) ) {
-			final var temporalTableSupport = database.getDialect().getTemporalTableSupport();
-			column.setTemporalPrecision( temporalTableSupport.getTemporalColumnPrecision() );
-			column.setSqlTypeCode( temporalTableSupport.getTemporalColumnType() );
+	private static BasicValue createTimestampValue(Column column, Table table, MetadataBuildingContext context) {
+		final var key = getChangelogKey( context );
+		if ( key != null ) {
+			final var keyColumn = key.getColumns().get( 0 );
+			column.setTemporalPrecision( keyColumn.getTemporalPrecision() );
+			column.setSqlType( keyColumn.getSqlType() );
+			return new DependantBasicValue( context, table, (BasicValue) key.getValue(), false, false );
 		}
+
+		final var value = new BasicValue( context, table );
+		final var support = value.getDialect().getTemporalTableSupport();
+		column.setTemporalPrecision( support.getTemporalColumnPrecision() );
+		final var preferredType = value.getJdbcType( value.getPreferredSqlTypeCodeForInstant() );
+		final var keyType = support.getInstantAuditKeyJdbcType( preferredType );
+		if ( keyType != preferredType ) {
+			value.setExplicitJdbcTypeAccess( typeConfiguration -> keyType );
+		}
+		return value;
 	}
 
 	private static void setColumnName(
@@ -761,22 +770,21 @@ public final class AuditHelper {
 
 	/**
 	 * Create a FK from the audit table's REV (or REVEND) column to the
-	 * changelog entity's PK. Only applies when {@code @Changelog}
+	 * changelog entity's changeset identifier. Only applies when {@code @Changelog}
 	 * is configured.
 	 */
 	private static void createChangesetForeignKey(
 			Table auditTable,
 			Column revColumn,
 			MetadataBuildingContext context) {
-		final String changelogName = getChangelogName( context );
-		if ( changelogName != null ) {
-			auditTable.createForeignKey(
-					null,
-					List.of( revColumn ),
-					changelogName,
-					null,
-					null
+		final var key = getChangelogKey( context );
+		if ( key != null ) {
+			final var changelog = key.getPersistentClass();
+			final var fk = auditTable.createForeignKey(
+					null, List.of( revColumn ), changelog.getEntityName(), null, null,
+					key == changelog.getIdentifierProperty() ? null : key.getColumns()
 			);
+			fk.setReferencedTable( key.getValue().getTable() );
 		}
 	}
 
@@ -799,9 +807,13 @@ public final class AuditHelper {
 		fk.setReferencedTable( referencedAuditTable );
 	}
 
-	private static @Nullable String getChangelogName(MetadataBuildingContext context) {
+	private static @Nullable Property getChangelogKey(MetadataBuildingContext context) {
 		final var supplier = ChangelogSupplier.resolve( context.getBootstrapContext().getServiceRegistry() );
-		return supplier != null ? supplier.getChangelogClass().getName() : null;
+		return supplier == null ? null : requireBasicProperty(
+				context.getMetadataCollector().getEntityBinding( supplier.getChangelogClass().getName() ),
+				supplier.getChangesetIdProperty(),
+				"@Changelog.ChangesetId"
+		);
 	}
 
 	private static Set<String> resolveExcludedColumns(Iterable<Property> properties) {

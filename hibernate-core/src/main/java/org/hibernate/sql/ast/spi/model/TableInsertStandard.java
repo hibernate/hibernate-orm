@@ -13,6 +13,7 @@ import org.hibernate.sql.spi.mutation.jdbc.JdbcInsertMutation;
  */
 public class TableInsertStandard extends AbstractTableInsert implements TableInsert, GeneratedMutation<JdbcInsertMutation> {
 	private final List<ColumnReference> returningColumns;
+	private final boolean hasValueSubquery;
 
 	public TableInsertStandard(
 			MutatingTableReference mutatingTable,
@@ -20,8 +21,24 @@ public class TableInsertStandard extends AbstractTableInsert implements TableIns
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnReference> returningColumns,
 			List<ColumnValueParameter> parameters) {
+		this( mutatingTable, mutationTarget, valueBindings, returningColumns, parameters, false );
+	}
+
+	public TableInsertStandard(
+			MutatingTableReference mutatingTable,
+			MutationTarget mutationTarget,
+			List<ColumnValueBinding> valueBindings,
+			List<ColumnReference> returningColumns,
+			List<ColumnValueParameter> parameters,
+			boolean hasValueSubquery) {
 		super( mutatingTable, mutationTarget, parameters, valueBindings );
+		this.hasValueSubquery = hasValueSubquery;
 		this.returningColumns = returningColumns;
+	}
+
+	/// Whether any inserted value is a scalar subquery.
+	public boolean hasValueSubquery() {
+		return hasValueSubquery;
 	}
 
 	@Override

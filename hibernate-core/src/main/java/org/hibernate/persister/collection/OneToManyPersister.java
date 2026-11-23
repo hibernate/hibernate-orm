@@ -24,8 +24,10 @@ import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jdbc.Expectation;
+import org.hibernate.loader.ast.internal.CollectionIndexSnapshotLoader;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
@@ -92,6 +94,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	private final boolean keyIsNullable;
 
 	private final boolean auditIndex;
+	private CollectionIndexSnapshotLoader indexSnapshotLoader;
 	final boolean doWriteEvenWhenInverse; // contrary to intent of JPA
 
 	public OneToManyPersister(
@@ -136,6 +139,11 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	@Override
 	public void postInstantiate() throws MappingException {
 		super.postInstantiate();
+		if ( hasAuditedIndex() ) {
+			indexSnapshotLoader = new CollectionIndexSnapshotLoader(
+					getAttributeMapping(), new LoadQueryInfluencers( getFactory() )
+			);
+		}
 
 		// Initialize JDBC operations after entity persisters have completed their initialization
 		decomposer = buildCollectionDecomposer();
@@ -154,16 +162,32 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		return auditIndex && getElementPersister().getAuditMapping() != null;
 	}
 
+	/// Capture the destination's indexes before a replacement writes them.
+	public @Nullable Object getReplacementIndexSnapshot(
+			PersistentCollection<?> collection, Object key, SharedSessionContractImplementor session) {
+		final var previous = session.getPersistenceContextInternal().getCollection( session.generateCollectionKey( this, key ) );
+		if ( previous == null || previous == collection || !collection.wasInitialized() || collection.empty() ) {
+			return null;
+		}
+		if ( previous.wasInitialized() ) {
+			return previous.getStoredSnapshot();
+		}
+		// A child inserted by an earlier flush may still have a null order column.
+		// Read index/element pairs without trying to assemble the old list.
+		final var influencers = session.getLoadQueryInfluencers();
+		final var loader = getAttributeMapping().isAffectedByInfluencers( influencers, true )
+				? new CollectionIndexSnapshotLoader( getAttributeMapping(), influencers )
+				: indexSnapshotLoader;
+		return loader.load( key, session );
+	}
+
 	/** Visit the elements which need a new audit row for their changed order column or map key. */
 	public void visitElementsWithChangedIndex(
-			PersistentCollection<?> collection, Object key, SharedSessionContractImplementor session,
-			BiConsumer<EntityEntry, Object> consumer) {
+			PersistentCollection<?> collection, Object key, @Nullable Object previousSnapshot,
+			SharedSessionContractImplementor session, BiConsumer<EntityEntry, Object> consumer) {
 		final var persistenceContext = session.getPersistenceContextInternal();
 		final var collectionEntry = persistenceContext.getCollectionEntry( collection );
-		// A replacement wrapper's own snapshot describes the new contents. The wrapper
-		// registered under the destination key retains the old snapshot until postFlush.
 		final var previous = persistenceContext.getCollection( session.generateCollectionKey( this, key ) );
-		final var previousSnapshot = previous == null || previous == collection ? null : previous.getStoredSnapshot();
 		final boolean compareOwnSnapshot = previous == collection && collection.wasInitialized() && collectionEntry != null
 				&& collectionEntry.getLoadedPersister() == this && collectionEntry.getSnapshot() != null;
 		final var entries = collection.wasInitialized() ? collection.entries( this ) : collection.queuedAdditionIterator();
@@ -280,9 +304,10 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			@Nonnull Object key,
 			boolean resetIndex,
 			@Nonnull SharedSessionContractImplementor session) {
+		final var snapshot = hasAuditedIndex() ? getReplacementIndexSnapshot( collection, key, session ) : null;
 		writeIndexCoordinator.writeIndex( collection, entries, key, resetIndex, session );
 		if ( hasAuditedIndex() ) {
-			visitElementsWithChangedIndex( collection, key, session,
+			visitElementsWithChangedIndex( collection, key, snapshot, session,
 					(entry, element) -> session.getAuditWorkQueue().indexedElementChanged( entry, element, session ) );
 		}
 	}

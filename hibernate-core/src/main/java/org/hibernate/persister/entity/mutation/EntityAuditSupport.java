@@ -21,6 +21,7 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AuditMapping;
 import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.spi.mutation.MutationOperation;
@@ -520,7 +521,8 @@ public class EntityAuditSupport {
 			}
 
 			final var sourceTableName = sourceMapping.getTableName();
-			addCollectionIndexColumns( insertBuilder, sourceMapping );
+			final var indexColumns = auditMapping.getCollectionIndexColumns( sourceTableName );
+			addCollectionIndexColumns( insertBuilder, sourceMapping, indexColumns );
 			final var txIdMapping = auditMapping.getChangesetIdMapping( sourceTableName );
 			final var modTypeMapping = auditMapping.getModificationTypeMapping( sourceTableName );
 			insertBuilder.addColumnAssignment( txIdMapping, useServerTransactionTimestamps ? currentTimestampFunctionName : "?" );
@@ -529,7 +531,7 @@ public class EntityAuditSupport {
 			}
 
 			sourceMapping.getKeyMapping().forEachKeyColumn( insertBuilder::addColumnAssignment );
-			mutations.add( insertBuilder.buildMutation() );
+			mutations.add( insertBuilder.buildMutation( !indexColumns.isEmpty() ) );
 		}
 
 		if ( mutations.isEmpty() ) {
@@ -540,11 +542,12 @@ public class EntityAuditSupport {
 				: new MutationGroupStandard( MutationType.INSERT, entityPersister, mutations );
 	}
 
-	private void addCollectionIndexColumns(TableInsertBuilderStandard insertBuilder, EntityTableMapping sourceMapping) {
+	private void addCollectionIndexColumns(TableInsertBuilderStandard insertBuilder, EntityTableMapping sourceMapping,
+			List<SelectableMapping> indexColumns) {
 		final String sourceTableName = sourceMapping.getTableName();
 		// The collection writes its index after the entity mutation. Copy the final
 		// physical value when writing the audit row at transaction completion.
-		for ( var column : auditMapping.getCollectionIndexColumns( sourceTableName ) ) {
+		for ( var column : indexColumns ) {
 			final var table = insertBuilder.getMutatingTable();
 			final var keys = sourceMapping.getKeyMapping();
 			final var parameters = new ColumnValueParameterList( table, ParameterUsage.SET, keys.getColumnCount() );

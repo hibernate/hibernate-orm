@@ -14,6 +14,7 @@ import jakarta.persistence.OrderColumn;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Audited;
+import org.hibernate.annotations.ListIndexBase;
 import org.hibernate.audit.AuditLogFactory;
 import org.hibernate.testing.orm.junit.AuditedTest;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -92,11 +93,16 @@ class AuditMappedByIndexTest {
 					session.getReference( Job.class, 12 ),
 					session.getReference( Job.class, 11 )
 			) );
-			queue.tasks = new HashMap<>( queue.tasks );
-			queue.tasks.put( "renamed", queue.tasks.remove( "task11" ) );
+			assertFalse( Hibernate.isInitialized( queue.tasks ) );
+			queue.tasks = new HashMap<>( Map.of(
+					"renamed", session.getReference( Task.class, 11 ),
+					"task12", session.getReference( Task.class, 12 ),
+					"task13", session.getReference( Task.class, 13 )
+			) );
 			inspector.clear();
 			session.flush();
 			assertEquals( 1, inspector.getSqlQueries().stream().filter( sql -> sql.contains( " from Job " ) ).count() );
+			assertEquals( 1, inspector.getSqlQueries().stream().filter( sql -> sql.contains( " from Task " ) ).count() );
 			return session.getCurrentChangesetIdentifier();
 		} );
 		try (var log = AuditLogFactory.create( scope.getSessionFactory() )) {
@@ -106,6 +112,47 @@ class AuditMappedByIndexTest {
 			assertEquals( List.of( first, moved ), log.getChangesets( Task.class, 11 ) );
 			assertEquals( List.of( first ), log.getChangesets( Task.class, 12 ) );
 			assertEquals( List.of( first ), log.getChangesets( Task.class, 13 ) );
+		}
+	}
+
+	@Test
+	void replaceUninitializedListAfterFlush(SessionFactoryScope scope) {
+		final var first = createQueue( scope, 21, 2 );
+		final var added = scope.fromTransaction( session -> {
+			final var queue = session.find( JobQueue.class, 21 );
+			final var job = new Job();
+			job.id = 23;
+			job.queue = queue;
+			session.persist( job );
+			session.flush();
+			assertFalse( Hibernate.isInitialized( queue.jobs ) );
+			queue.jobs = new ArrayList<>( List.of(
+					session.getReference( Job.class, 21 ), session.getReference( Job.class, 22 ), job ) );
+			return session.getCurrentChangesetIdentifier();
+		} );
+		try (var log = AuditLogFactory.create( scope.getSessionFactory() )) {
+			assertEquals( List.of( first ), log.getChangesets( Job.class, 21 ) );
+			assertEquals( List.of( first ), log.getChangesets( Job.class, 22 ) );
+			assertEquals( List.of( added ), log.getChangesets( Job.class, 23 ) );
+		}
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( added ).openSession()) {
+			assertEquals( List.of( 21, 22, 23 ), session.find( JobQueue.class, 21 ).jobs.stream()
+					.map( job -> job.id ).toList() );
+		}
+	}
+
+	@Test
+	void deletingIndexedElementRecordsDeletion(SessionFactoryScope scope) {
+		final var first = createQueue( scope, 31, 1 );
+		final var deleted = scope.fromTransaction( session -> {
+			session.remove( session.find( Job.class, 31 ) );
+			return session.getCurrentChangesetIdentifier();
+		} );
+		try (var log = AuditLogFactory.create( scope.getSessionFactory() )) {
+			assertEquals( List.of( first, deleted ), log.getChangesets( Job.class, 31 ) );
+		}
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( deleted ).openSession()) {
+			assertNull( session.find( Job.class, 31 ) );
 		}
 	}
 
@@ -152,6 +199,7 @@ class AuditMappedByIndexTest {
 		int id = 1;
 		@OneToMany(mappedBy = "queue")
 		@OrderColumn(name = "job_index")
+		@ListIndexBase(1)
 		List<Job> jobs = new ArrayList<>();
 		@OneToMany(mappedBy = "queue")
 		@MapKeyColumn(name = "job_key", nullable = true)

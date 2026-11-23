@@ -192,17 +192,10 @@ Such changes typically do not impact programs using a relational schema managed 
 
 For an audited `@OneToMany(mappedBy = ...)` list or map whose index is written by the collection,
 Hibernate now records the order column or map key columns in the element's audit table.
-When upgrading an existing schema, add the missing columns to that table using the same SQL types
-as the corresponding columns in the element table, and allow nulls.
-Before resuming writes, backfill the latest audit row for each current collection member.
-Match the full element identifier and copy the stored order column or map key columns from the live element table.
-With the default audit strategy, select the greatest changeset identifier (`REV`) for that element.
-With the validity strategy, select its open revision (`REVEND IS NULL`).
-Use the column names configured for your mapping.
-
-A post-upgrade changeset can still read a pre-upgrade audit row for an unchanged member.
-A null list index in such a row prevents Hibernate from loading the list.
-The backfill establishes the order and keys at upgrade time.
+Add these columns as nullable, using the SQL types from the live element table.
+Before resuming writes, copy each current member's stored index or map key into its latest audit row,
+matching the full element identifier (greatest `REV` for the default strategy, or `REVEND IS NULL` for validity).
+An unchanged member can still be read from that row after upgrade, and a null list index prevents the list from loading.
 Recovering earlier order or keys requires historical data from another source.
 
 [[sqlserver-time-precision]]

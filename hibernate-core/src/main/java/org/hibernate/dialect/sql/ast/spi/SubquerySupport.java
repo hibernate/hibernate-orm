@@ -34,6 +34,7 @@ public final class SubquerySupport {
 	public static final SubquerySupport STANDARD = new SubquerySupport(
 			Set.of(
 					Feature.SELECT_LIST,
+					Feature.INSERT_VALUES,
 					Feature.EXISTS_IN_SELECT,
 					Feature.ORDER_BY,
 					Feature.NESTED_CORRELATION,
@@ -76,6 +77,9 @@ public final class SubquerySupport {
 	public enum Feature {
 		/// A scalar subquery may occur in the select list.
 		SELECT_LIST,
+
+		/// A scalar subquery may occur in a single-row insert VALUES clause.
+		INSERT_VALUES,
 
 		/// An `exists` predicate may occur in the select list.
 		EXISTS_IN_SELECT,

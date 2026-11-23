@@ -533,7 +533,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			Consumer<FlushOperation> operationConsumer) {
-		contributeIndexChanges( collection, key, ordinalBase, operationConsumer );
+		contributeIndexChanges( collection, key, ordinalBase, session, operationConsumer );
 		mutationPlanContributor.contributeCollectionChange(
 				new CollectionMutationPlanContributor.CollectionChangeContext(
 						persister,
@@ -818,7 +818,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 		}
 
 		if ( !operations.isEmpty() ) {
-			contributeIndexChanges( collection, key, ordinalBase, operations::add );
+			contributeIndexChanges( collection, key, ordinalBase, session, operations::add );
 		}
 		operations.forEach( operationConsumer );
 	}
@@ -933,14 +933,15 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 	}
 
 	private void contributeIndexChanges(PersistentCollection<?> collection, Object key, int ordinalBase,
-			Consumer<FlushOperation> operationConsumer) {
+			SharedSessionContractImplementor session, Consumer<FlushOperation> operationConsumer) {
 		if ( persister.hasAuditedIndex() ) {
+			final var snapshot = persister.getReplacementIndexSnapshot( collection, key, session );
 			operationConsumer.accept( DecompositionSupport.createNoOpCallbackCarrier(
 					persister.getCollectionTableDescriptor(),
 					ordinalBase * 1_000 + 900,
-					session -> {
-						final var queue = (GraphBasedActionQueue) session.getActionQueue();
-						persister.visitElementsWithChangedIndex( collection, key, session,
+					executionSession -> {
+						final var queue = (GraphBasedActionQueue) executionSession.getActionQueue();
+						persister.visitElementsWithChangedIndex( collection, key, snapshot, executionSession,
 								queue.getAuditMutationCollector()::indexedElementChanged );
 					}
 			) );

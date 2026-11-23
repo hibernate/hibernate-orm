@@ -212,9 +212,9 @@ enum StandardCollectionMutationInterpreter implements CollectionMutationInterpre
 		while ( entries.hasNext() ) {
 			final Object entry = entries.next();
 			final Object identifier = collection.getIdentifier( entry, position );
-			final Object rowIdentity = identifier == null
-					? new DeferredCollectionIdentifier( collection, position )
-					: identifier;
+			// A row is bound by the position of its entry, and a collection
+			// identifier is not a position, even when it is already assigned
+			final var rowIdentity = new DeferredCollectionIdentifier( collection, position );
 			if ( collection.includeInInsert(
 					entry,
 					position,

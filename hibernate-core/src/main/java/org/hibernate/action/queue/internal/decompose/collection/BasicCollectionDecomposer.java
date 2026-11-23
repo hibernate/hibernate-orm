@@ -882,8 +882,13 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 							updateValueOrigin,
 							updateShapeKey
 					) );
+					// The old row of an identifier bag is identified by its collection
+					// identifier, where the change identifies it by entry position
+					final var oldIdentity = persister.getAttributeMapping().getIdentifierDescriptor() != null
+							? collection.getIdentifier( entry, entryIndex )
+							: valueChange.index();
 					contributeAdditionalUpdate( collection, key,
-							new CollectionChangeSet.Removal( valueChange.oldValue(), valueChange.index() ), entryIndex,
+							new CollectionChangeSet.Removal( valueChange.oldValue(), oldIdentity ), entryIndex,
 							entry, entryIndex, ordinalBase, session, operationConsumer );
 				}
 			}

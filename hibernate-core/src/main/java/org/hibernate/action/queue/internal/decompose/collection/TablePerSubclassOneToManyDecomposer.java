@@ -16,7 +16,10 @@ import org.hibernate.persister.collection.OneToManyPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 /// One-to-many decomposer for table-per-subclass inheritance where each concrete subclass
@@ -24,6 +27,9 @@ import java.util.function.Consumer;
 /// @author Steve Ebersole
 public class TablePerSubclassOneToManyDecomposer extends AbstractOneToManyDecomposer {
 	private final IdentityMap<EntityPersister,CollectionJdbcOperations> operationsBySubclass;
+	/// The operations for each table which holds rows of the element type.
+	/// An abstract class with subclasses has no table of its own.
+	private final List<CollectionJdbcOperations> operationsByTable = new ArrayList<>();
 
 	public TablePerSubclassOneToManyDecomposer(
 			OneToManyPersister persister,
@@ -43,6 +49,15 @@ public class TablePerSubclassOneToManyDecomposer extends AbstractOneToManyDecomp
 		associatedType.getSubMappingTypes().forEach( subclassMapping -> {
 			final var subclassPersister = subclassMapping.getEntityPersister();
 			operationsBySubclass.put( subclassPersister, buildJdbcOperations( subclassPersister ) );
+		} );
+
+		final Set<String> tableNames = new HashSet<>();
+		associatedType.visitConstraintOrderedTables(
+				(tableName, keyColumnVisitationSupplier) -> tableNames.add( tableName ) );
+		operationsBySubclass.forEach( (entityPersister, jdbcOperations) -> {
+			if ( tableNames.contains( jdbcOperations.tableDescriptor().name() ) ) {
+				operationsByTable.add( jdbcOperations );
+			}
 		} );
 	}
 
@@ -117,6 +132,19 @@ public class TablePerSubclassOneToManyDecomposer extends AbstractOneToManyDecomp
 	}
 
 	@Override
+	protected void planRemoveAll(Object key, int ordinalBase, Consumer<FlushOperation> operationConsumer) {
+		for ( var jdbcOperations : operationsByTable ) {
+			planRemoveAll(
+					jdbcOperations.tableDescriptor(),
+					jdbcOperations.removeOperation(),
+					key,
+					ordinalBase,
+					operationConsumer
+			);
+		}
+	}
+
+	@Override
 	public void decomposeRemove(
 			PreparedCollectionMutation action,
 			int ordinalBase,
@@ -142,7 +170,7 @@ public class TablePerSubclassOneToManyDecomposer extends AbstractOneToManyDecomp
 		}
 		else {
 			final var operations = new ArrayList<FlushOperation>();
-			operationsBySubclass.forEach( (entityPersister, jdbcOperations) -> {
+			for ( var jdbcOperations : operationsByTable ) {
 				operations.add( new FlushOperation(
 						jdbcOperations.tableDescriptor(),
 						// technically an UPDATE
@@ -152,7 +180,7 @@ public class TablePerSubclassOneToManyDecomposer extends AbstractOneToManyDecomp
 						ordinalBase * 1_000,
 						"RemoveAllRows(" + persister.getRolePath() + ")"
 				) );
-			} );
+			}
 
 			if ( !operations.isEmpty() ) {
 				DecompositionSupport.attachExecutionMonitor(

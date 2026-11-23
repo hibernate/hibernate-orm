@@ -265,17 +265,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 		}
 		else if ( !persister.isAffectedByEnabledFilters( session ) && collection.empty() ) {
 			if ( !action.isEmptySnapshot() ) {
-				final var removeOperation = buildRemoveOperation( persister.getCollectionTableDescriptor() );
-				if ( removeOperation != null ) {
-					operations.add( new FlushOperation(
-							persister.getCollectionTableDescriptor(),
-							MutationKind.UPDATE,
-							removeOperation,
-							new RemoveBindPlan( key, persister, mutationPlanContributor ),
-							calculateOrdinal( ordinalBase, Slot.DELETE ),
-							"RemoveAllRows(" + persister.getRolePath() + ")"
-					) );
-				}
+				planRemoveAll( key, ordinalBase, operations::add );
 			}
 		}
 		else {
@@ -359,14 +349,25 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 		);
 	}
 
-	private void planRemoveAll(
+	/// Plans the removal of every row of the collection as part of an update,
+	/// with one operation for each table which holds its rows.
+	protected void planRemoveAll(
 			Object key,
 			int ordinalBase,
 			Consumer<FlushOperation> operationConsumer) {
-		final var removeOperation = buildRemoveOperation( persister.getCollectionTableDescriptor() );
+		final var tableDescriptor = persister.getCollectionTableDescriptor();
+		planRemoveAll( tableDescriptor, buildRemoveOperation( tableDescriptor ), key, ordinalBase, operationConsumer );
+	}
+
+	protected final void planRemoveAll(
+			TableDescriptor tableDescriptor,
+			MutationOperation removeOperation,
+			Object key,
+			int ordinalBase,
+			Consumer<FlushOperation> operationConsumer) {
 		if ( removeOperation != null ) {
 			operationConsumer.accept( new FlushOperation(
-					persister.getCollectionTableDescriptor(),
+					tableDescriptor,
 					MutationKind.UPDATE,
 					removeOperation,
 					new RemoveBindPlan( key, persister, mutationPlanContributor ),

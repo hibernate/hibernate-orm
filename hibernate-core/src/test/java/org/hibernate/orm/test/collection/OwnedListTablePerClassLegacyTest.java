@@ -17,7 +17,11 @@ import org.hibernate.testing.orm.junit.Setting;
 				AbstractOwnedListTablePerClassTest.Item.class,
 				AbstractOwnedListTablePerClassTest.Thing.class,
 				AbstractOwnedListTablePerClassTest.ThingA.class,
-				AbstractOwnedListTablePerClassTest.ThingB.class
+				AbstractOwnedListTablePerClassTest.ThingB.class,
+				AbstractOwnedListTablePerClassTest.Label.class,
+				AbstractOwnedListTablePerClassTest.Shelf.class,
+				AbstractOwnedListTablePerClassTest.Tool.class,
+				AbstractOwnedListTablePerClassTest.PowerTool.class
 		}
 )
 @SessionFactory

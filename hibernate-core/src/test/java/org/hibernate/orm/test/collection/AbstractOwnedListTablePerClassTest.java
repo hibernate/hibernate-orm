@@ -24,7 +24,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * The rows of an owned one-to-many list whose element is a {@code TABLE_PER_CLASS} hierarchy are
  * written to the table of the concrete subclass of each element, including when the element type
- * of the collection is not the root of its hierarchy.
+ * of the collection is not the root of its hierarchy. Removing every row of the collection touches
+ * each table which holds a row of the element type, and no other.
  */
 @JiraKey("HHH-21239")
 public abstract class AbstractOwnedListTablePerClassTest {
@@ -75,6 +76,33 @@ public abstract class AbstractOwnedListTablePerClassTest {
 		} );
 
 		assertLoadsAs( scope, 2, 3, 1 );
+	}
+
+	@Test
+	public void testClear(SessionFactoryScope scope) {
+		persistBox( scope );
+
+		scope.inTransaction( session -> session.find( Box.class, 1 ).things.clear() );
+
+		scope.inTransaction( session -> {
+			assertThat( positions( session, "ThingA" ) ).containsExactly( null, null );
+			assertThat( positions( session, "ThingB" ) ).containsExactly( (Integer) null );
+		} );
+
+		assertLoadsAs( scope );
+	}
+
+	@Test
+	public void testRemoveOwner(SessionFactoryScope scope) {
+		persistBox( scope );
+
+		scope.inTransaction( session -> session.remove( session.find( Box.class, 1 ) ) );
+
+		scope.inTransaction( session -> {
+			assertThat( session.find( Box.class, 1 ) ).isNull();
+			assertThat( positions( session, "ThingA" ) ).containsExactly( null, null );
+			assertThat( positions( session, "ThingB" ) ).containsExactly( (Integer) null );
+		} );
 	}
 
 	/**
@@ -159,6 +187,28 @@ public abstract class AbstractOwnedListTablePerClassTest {
 	}
 
 	/**
+	 * The element type of the collection is a concrete class with a table of its own.
+	 */
+	@Test
+	public void testClearConcreteElementType(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final Shelf shelf = new Shelf();
+			final List<Tool> tools = List.of( new Tool( 1 ), new PowerTool( 2 ) );
+			shelf.tools.addAll( tools );
+			tools.forEach( session::persist );
+			session.persist( shelf );
+		} );
+
+		scope.inTransaction( session -> session.find( Shelf.class, 1 ).tools.clear() );
+
+		scope.inTransaction( session -> {
+			assertThat( positions( session, "Tool" ) ).containsExactly( (Integer) null );
+			assertThat( positions( session, "PowerTool" ) ).containsExactly( (Integer) null );
+			assertThat( session.find( Shelf.class, 1 ).tools ).isEmpty();
+		} );
+	}
+
+	/**
 	 * Persists a box holding the things 1 (A), 2 (B) and 3 (A), in that order.
 	 */
 	private static void persistBox(SessionFactoryScope scope) {
@@ -167,6 +217,7 @@ public abstract class AbstractOwnedListTablePerClassTest {
 			final List<Thing> things = List.of( new ThingA( 1 ), new ThingB( 2 ), new ThingA( 3 ) );
 			box.things.addAll( things );
 			things.forEach( session::persist );
+			session.persist( new Label( 4 ) );
 			session.persist( box );
 		} );
 	}
@@ -240,6 +291,54 @@ public abstract class AbstractOwnedListTablePerClassTest {
 		}
 
 		ThingB(int id) {
+			super( id );
+		}
+	}
+
+	/**
+	 * A subclass which is not an element of the collection, and whose table has no foreign key to the box.
+	 */
+	@Entity(name = "Label")
+	public static class Label extends Item {
+		Label() {
+		}
+
+		Label(int id) {
+			super( id );
+		}
+	}
+
+	@Entity(name = "Shelf")
+	public static class Shelf {
+		@Id
+		int id = 1;
+
+		@OneToMany
+		@JoinColumn(name = "shelf_id")
+		@OrderColumn(name = "pos")
+		List<Tool> tools = new ArrayList<>();
+	}
+
+	@Entity(name = "Tool")
+	@Inheritance(strategy = TABLE_PER_CLASS)
+	public static class Tool {
+		@Id
+		int id;
+
+		Tool() {
+		}
+
+		Tool(int id) {
+			this.id = id;
+		}
+	}
+
+	@Entity(name = "PowerTool")
+	public static class PowerTool extends Tool {
+		PowerTool() {
+		}
+
+		PowerTool(int id) {
 			super( id );
 		}
 	}

@@ -11,6 +11,7 @@ import jakarta.persistence.MapKey;
 import org.hibernate.Hibernate;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.internal.CollectionLookupLoader;
+import org.hibernate.loader.ast.internal.CollectionLookupLoader.Operation;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -55,8 +56,10 @@ class MapKeyLookupTest {
 					implementor.getFactory().getMappingMetamodel()
 							.getCollectionDescriptor( Library.class.getName() + ".volumes" )
 							.getAttributeMapping();
-			assertTrue( CollectionLookupLoader.exists( collection, collection.getIndexDescriptor(), 1, "a", implementor ) );
-			assertFalse( CollectionLookupLoader.exists( collection, collection.getIndexDescriptor(), 1, "b", implementor ) );
+			final var lookup = new CollectionLookupLoader( collection, Operation.INDEX_EXISTS,
+					implementor.getLoadQueryInfluencers() );
+			assertTrue( lookup.exists( 1, "a", implementor ) );
+			assertFalse( lookup.exists( 1, "b", implementor ) );
 			assertFalse( Hibernate.isInitialized( volumes ) );
 		} );
 	}

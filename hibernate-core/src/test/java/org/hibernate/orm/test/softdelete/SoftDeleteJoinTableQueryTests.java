@@ -15,6 +15,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.MapKeyJoinColumn;
 import jakarta.persistence.Table;
 
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.SQLRestriction;
@@ -229,6 +230,76 @@ public class SoftDeleteJoinTableQueryTests {
 			assertEquals( List.of( 20, 40 ), session.createSelectionQuery( hql, Integer.class ).list() );
 			session.enableFilter( "visibleNotes" );
 			assertEquals( List.of( 40 ), session.createSelectionQuery( hql, Integer.class ).list() );
+		} );
+	}
+
+	@Test
+	void collectionSizeAndMembership(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			final var owner = session.find( Owner.class, 1 );
+			final var tag = session.find( Tag.class, 10 );
+			assertThat( Hibernate.isEmpty( owner.tags ) ).isTrue();
+			assertThat( Hibernate.contains( owner.tags, tag ) ).isFalse();
+			assertEquals( 0, Hibernate.size( owner.labels ) );
+			assertEquals( 1, Hibernate.size( owner.marks ) );
+			assertThat( Hibernate.contains( owner.marks, tag ) ).isTrue();
+			assertEquals( 1, owner.marks.size() );
+			assertThat( Hibernate.isInitialized( owner.marks ) ).isFalse();
+		} );
+		scope.inSession( session -> {
+			session.enableFilter( "liveMarks" );
+			final var owner = session.find( Owner.class, 1 );
+			final var tag = session.find( Tag.class, 10 );
+			assertEquals( 0, Hibernate.size( owner.marks ) );
+			assertThat( Hibernate.contains( owner.marks, tag ) ).isFalse();
+			assertEquals( 0, owner.marks.size() );
+			assertThat( Hibernate.isInitialized( owner.marks ) ).isFalse();
+		} );
+	}
+
+	@Test
+	void membershipUsesReferencedColumn(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			final var owner = session.find( Owner.class, 2 );
+			final var tag = session.find( Tag.class, 20 );
+			final var observer = scope.getCollectingStatementObserver();
+			observer.clear();
+			assertThat( Hibernate.contains( owner.tags, tag ) ).isTrue();
+			observer.assertQuery( 0 ).doesNotContain( " join " );
+			assertThat( Hibernate.contains( owner.tagsByCode, tag ) ).isTrue();
+			assertThat( Hibernate.contains( owner.tagsByCode, session.find( Tag.class, 10 ) ) ).isFalse();
+		} );
+	}
+
+	@Test
+	void sameEntityTypeForMapKeyAndValue(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.find( Owner.class, 3 ).keyed
+				.put( session.find( Tag.class, 10 ), session.find( Tag.class, 20 ) ) );
+		scope.inSession( session -> {
+			final var map = session.find( Owner.class, 3 ).keyed;
+			final var value = session.find( Tag.class, 20 );
+			assertThat( Hibernate.get( map, session.find( Tag.class, 10 ) ) ).isSameAs( value );
+			assertThat( Hibernate.get( map, value ) ).isNull();
+			assertThat( Hibernate.isInitialized( map ) ).isFalse();
+		} );
+	}
+
+	@Test
+	void indexedAccess(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			final var hidden = session.find( Owner.class, 1 );
+			final var live = session.find( Owner.class, 2 );
+			final var tag = session.find( Tag.class, 20 );
+			assertThat( Hibernate.get( hidden.keyed, session.find( Tag.class, 10 ) ) ).isNull();
+			assertThat( Hibernate.get( live.keyed, tag ) ).isSameAs( tag );
+		} );
+		scope.inSession( session -> {
+			session.enableFilter( "visibleNotes" );
+			final var live = session.find( Owner.class, 2 );
+			final var tag = session.find( Tag.class, 20 );
+			assertThat( Hibernate.get( live.keyed, tag ) ).isNull();
+			assertThat( Hibernate.isInitialized( live.keyed ) ).isFalse();
+			assertThat( live.keyed.get( tag ) ).isNull();
 		} );
 	}
 

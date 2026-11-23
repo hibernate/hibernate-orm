@@ -10,6 +10,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OrderColumn;
 
+import org.hibernate.Hibernate;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.cfg.StateManagementSettings;
@@ -24,6 +25,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @SessionFactory
 @DomainModel(annotatedClasses = {
@@ -82,6 +85,17 @@ class MixedTemporalAssociationTest {
 					"select c.name from Student s right join s.courses c order by c.id", String.class ).list() );
 			assertEquals( List.of( 1L ), session.createSelectionQuery(
 					"select c.id from Student s right join s.courses c", Long.class ).list() );
+		}
+	}
+
+	@Test
+	void indexedAccessAtChangeset(SessionFactoryScope scope) {
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( firstChangeset ).openSession()) {
+			final var courses = session.find( Student.class, 1L ).courses;
+			assertEquals( 1, Hibernate.size( courses ) );
+			assertEquals( "Math", Hibernate.get( courses, 0 ).name );
+			assertNull( Hibernate.get( courses, 1 ) );
+			assertFalse( Hibernate.isInitialized( courses ) );
 		}
 	}
 

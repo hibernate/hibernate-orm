@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.Hibernate;
+import org.hibernate.StaleStateException;
 import org.hibernate.WrongClassException;
 import org.hibernate.engine.spi.SessionImplementor;
 
@@ -17,6 +18,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.OrderColumn;
 
 import static jakarta.persistence.InheritanceType.TABLE_PER_CLASS;
@@ -180,19 +182,26 @@ public abstract class AbstractOwnedListTablePerClassTest {
 	/**
 	 * A proxy obtained through a subtype with no subclasses is written to the table of that subtype.
 	 * If its row belongs to a sibling subtype, no row is written, and the sibling row is left alone.
+	 * Hibernate may report the update which matched no row, or ignore it.
 	 */
 	@Test
 	public void testAdditionOfProxyOfWrongLeafType(SessionFactoryScope scope) {
 		persistBox( scope );
 		scope.inTransaction( session -> session.persist( new ThingB( 5 ) ) );
 
-		scope.inTransaction( session -> {
-			final Box box = session.find( Box.class, 1 );
-			assertThat( box.things ).hasSize( 3 );
-			final Thing proxy = session.getReference( ThingA.class, 5 );
-			assertThat( Hibernate.isInitialized( proxy ) ).isFalse();
-			box.things.add( proxy );
-		} );
+		try {
+			scope.inTransaction( session -> {
+				final Box box = session.find( Box.class, 1 );
+				assertThat( box.things ).hasSize( 3 );
+				final Thing proxy = session.getReference( ThingA.class, 5 );
+				assertThat( Hibernate.isInitialized( proxy ) ).isFalse();
+				box.things.add( proxy );
+			} );
+		}
+		catch (OptimisticLockException e) {
+			// the update matched no row
+			assertThat( e ).hasCauseInstanceOf( StaleStateException.class );
+		}
 
 		scope.inTransaction( session -> {
 			assertThat( positions( session, "ThingA" ) ).containsExactly( 0, 2 );

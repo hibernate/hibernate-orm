@@ -167,7 +167,7 @@ public abstract class AbstractOwnedMapTablePerClassTest {
 
 		@OneToMany
 		@JoinColumn(name = "box_id")
-		@MapKeyColumn(name = "slot")
+		@MapKeyColumn(name = "slot", nullable = true)
 		Map<String, Thing> things = new HashMap<>();
 	}
 

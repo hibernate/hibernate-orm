@@ -364,11 +364,14 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		}
 
 		final OperationProducer deleteAllEntriesOperationProducer;
+		final RowMutationOperations.DeleteAllRowsBindings deleteAllRowsBindings;
 		if ( !isInverse() && isRowDeleteEnabled() ) {
 			deleteAllEntriesOperationProducer = this::buildDeleteAllOperation;
+			deleteAllRowsBindings = this::applyDeleteAllRowsBindings;
 		}
 		else {
 			deleteAllEntriesOperationProducer = null;
+			deleteAllRowsBindings = null;
 		}
 
 		return new RowMutationOperations(
@@ -380,7 +383,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				writeIndexRestrictions,
 				deleteEntryOperationProducer,
 				deleteEntryRestrictions,
-				deleteAllEntriesOperationProducer
+				deleteAllEntriesOperationProducer,
+				deleteAllRowsBindings
 		);
 	}
 

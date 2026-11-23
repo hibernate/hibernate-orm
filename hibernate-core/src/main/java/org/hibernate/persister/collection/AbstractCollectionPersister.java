@@ -30,6 +30,7 @@ import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
@@ -1940,6 +1941,14 @@ public abstract class AbstractCollectionPersister
 				collectionBootDescriptor.getCustomSQLDeleteAll(),
 				customDeleteAllCallable
 		);
+	}
+
+	protected void applyDeleteAllRowsBindings(
+			@Nonnull Object key,
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull JdbcValueBindings jdbcValueBindings) {
+		getAttributeMapping().getKeyDescriptor().getKeyPart().decompose(
+				key, 0, jdbcValueBindings, null, RowMutationOperations.DEFAULT_RESTRICTOR, session );
 	}
 
 	@Nonnull

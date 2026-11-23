@@ -11,9 +11,9 @@ import java.sql.SQLException;
 import java.util.Map;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -25,8 +25,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import static org.hibernate.engine.internal.ForeignKeys.getEntityIdentifier;
 import static org.hibernate.engine.internal.ForeignKeys.getEntityIdentifierIfNotUnsaved;
 import static org.hibernate.engine.internal.ForeignKeys.isTransient;
-import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
-import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
+import static org.hibernate.internal.util.StringHelper.root;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
@@ -386,7 +385,13 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	private Object getUniqueKey(Object entity, Type keyType, EntityPersister persister) {
 		return keyType.getReturnedClass().isInstance( entity )
 				? entity
-				: persister.getPropertyValue( entity, uniqueKeyPropertyName );
+				: getUniqueKeyPropertyValue( entity, persister );
+	}
+
+	private Object getUniqueKeyPropertyValue(Object entity, EntityPersister persister) {
+		final Object implementation = Hibernate.unproxy( entity );
+		Hibernate.initializeProperty( implementation, root( uniqueKeyPropertyName ) );
+		return persister.getPropertyValue( implementation, uniqueKeyPropertyName );
 	}
 
 	private static Object getId(Object entity, EntityPersister persister) {
@@ -462,24 +467,8 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	}
 
 	private Object getUniqueKey(Object value, SharedSessionContractImplementor session) {
-		final var lazyInitializer = extractLazyInitializer( value );
-		if ( lazyInitializer != null ) {
-			// If the value is a Proxy and the property access is field, the value returned by
-			// attributeMapping.getAttributeMetadata().getPropertyAccess().getGetter().get( object )
-			// is always null except for the id, and we need to use the proxy implementation to
-			// extract the property value.
-			value = lazyInitializer.getImplementation();
-		}
-		else if ( isPersistentAttributeInterceptable( value ) ) {
-			// If the value is an instance of PersistentAttributeInterceptable, and it is
-			// not initialized, we need to force initialization the get the property value
-			if ( asPersistentAttributeInterceptable( value ).$$_hibernate_getInterceptor()
-					instanceof EnhancementAsProxyLazinessInterceptor lazinessInterceptor ) {
-				lazinessInterceptor.forceInitialize( value, null );
-			}
-		}
 		final var entityPersister = getAssociatedEntityPersister( session.getFactory() );
-		final Object propertyValue = entityPersister.getPropertyValue( value, uniqueKeyPropertyName );
+		final Object propertyValue = getUniqueKeyPropertyValue( value, entityPersister );
 		// We now have the value of the property-ref we reference. However,
 		// we need to dig a little deeper, as that property might also be
 		// an entity type, in which case we need to resolve its identifier
@@ -500,7 +489,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 		else {
 			final var entityPersister = getAssociatedEntityPersister( sessionFactory );
-			final Object propertyValue = entityPersister.getPropertyValue( value, uniqueKeyPropertyName );
+			final Object propertyValue = getUniqueKeyPropertyValue( value, entityPersister );
 			// We now have the value of the property-ref we reference.  However,
 			// we need to dig a little deeper, as that property might also be
 			// an entity type, in which case we need to resolve its identifier

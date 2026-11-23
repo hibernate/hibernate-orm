@@ -4,6 +4,7 @@ import jakarta.annotation.Nonnull;
 
 import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
+import org.hibernate.Hibernate;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.cache.MutableCacheKeyBuilder;
@@ -55,7 +56,6 @@ import org.hibernate.persister.entity.EntityNameUse;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.metamodel.mapping.internal.CurrentState.TargetRead;
@@ -2841,8 +2841,9 @@ public class ToOneAttributeMapping
 	 * when possible.
 	 */
 	protected Object lazyInitialize(Object domainValue) {
-		final var lazyInitializer = HibernateProxy.extractLazyInitializer( domainValue );
-		return lazyInitializer == null ? domainValue : lazyInitializer.getImplementation();
+		final Object entity = Hibernate.unproxy( domainValue );
+		Hibernate.initializeProperty( entity, StringHelper.root( referencedPropertyName ) );
+		return entity;
 	}
 
 	@Nullable

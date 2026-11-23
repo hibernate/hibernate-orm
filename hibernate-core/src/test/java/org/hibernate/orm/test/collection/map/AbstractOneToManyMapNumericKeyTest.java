@@ -118,11 +118,23 @@ public abstract class AbstractOneToManyMapNumericKeyTest {
 	}
 
 	private static List<Object[]> rows(SessionFactoryScope scope, String sql) {
-		return scope.fromTransaction( session -> session.createNativeQuery( sql, Object[].class ).getResultList() );
+		return scope.fromTransaction( session -> session.createNativeQuery( sql, Object[].class ).getResultList() )
+				.stream().map( AbstractOneToManyMapNumericKeyTest::withIntegers ).toList();
 	}
 
 	private static Object[] row(Object... values) {
 		return values;
+	}
+
+	/**
+	 * The Java type of an integer column read by a native query depends on the database.
+	 */
+	private static Object[] withIntegers(Object[] row) {
+		final Object[] result = new Object[row.length];
+		for ( int i = 0; i < row.length; i++ ) {
+			result[i] = row[i] instanceof Number number ? number.intValue() : row[i];
+		}
+		return result;
 	}
 
 	@Entity(name = "Board")

@@ -76,11 +76,23 @@ public abstract class AbstractInverseMapEmbeddableKeyTest {
 	private static List<Object[]> rows(SessionFactoryScope scope) {
 		return scope.fromTransaction( session -> session
 				.createNativeQuery( "select id, x, y from Cell order by id", Object[].class )
-				.getResultList() );
+				.getResultList() )
+				.stream().map( AbstractInverseMapEmbeddableKeyTest::withIntegers ).toList();
 	}
 
 	private static Object[] row(Integer id, Integer x, Integer y) {
 		return new Object[] { id, x, y };
+	}
+
+	/**
+	 * The Java type of an integer column read by a native query depends on the database.
+	 */
+	private static Object[] withIntegers(Object[] row) {
+		final Object[] result = new Object[row.length];
+		for ( int i = 0; i < row.length; i++ ) {
+			result[i] = row[i] instanceof Number number ? number.intValue() : row[i];
+		}
+		return result;
 	}
 
 	@Entity(name = "Board")

@@ -4,12 +4,15 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.hibernate.audit.ModificationType;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionKey;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.EntityPersister;
 
 /// Transaction-scoped audit change set with shared audit merge semantics.
 ///
@@ -51,6 +54,16 @@ public class AuditChangeSet<E, C> {
 		entityChanges.compute( entityKey, (key, existing) -> existing == null
 				? new MutableEntityChange<>( entity, values, modificationType, entityAuditHandler )
 				: merge( existing, entity, values, modificationType ) );
+	}
+
+	/// An index write needs an entity revision only if the entity has no revision of its own.
+	public void addIndexedElementChange(EntityEntry entry, Object element, Function<EntityPersister, E> handler) {
+		entityChanges.computeIfAbsent( entry.getEntityKey(), key -> {
+			final var persister = entry.getPersister();
+			final var state = entry.getLoadedState();
+			return new MutableEntityChange<>( element, state != null ? state : persister.getValues( element ),
+					ModificationType.MOD, handler.apply( persister ) );
+		} );
 	}
 
 	/// Add a collection audit change if one has not already been captured.

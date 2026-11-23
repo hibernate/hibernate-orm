@@ -5,6 +5,7 @@ import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPla
 import org.hibernate.action.queue.spi.decompose.collection.OneToManyDecomposer;
 
 import org.hibernate.action.queue.internal.PreparedCollectionMutation;
+import org.hibernate.action.queue.internal.GraphBasedActionQueue;
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.bind.BindPlan;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
@@ -532,6 +533,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			Consumer<FlushOperation> operationConsumer) {
+		contributeIndexChanges( collection, key, ordinalBase, session, operationConsumer );
 		mutationPlanContributor.contributeCollectionChange(
 				new CollectionMutationPlanContributor.CollectionChangeContext(
 						persister,
@@ -815,6 +817,9 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			}
 		}
 
+		if ( !operations.isEmpty() ) {
+			contributeIndexChanges( collection, key, ordinalBase, session, operations::add );
+		}
 		operations.forEach( operationConsumer );
 	}
 
@@ -924,6 +929,22 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			else {
 				MODEL_MUTATION_LOGGER.noRowsToDelete();
 			}
+		}
+	}
+
+	private void contributeIndexChanges(PersistentCollection<?> collection, Object key, int ordinalBase,
+			SharedSessionContractImplementor session, Consumer<FlushOperation> operationConsumer) {
+		if ( persister.hasAuditedIndex() ) {
+			final var snapshot = persister.getReplacementIndexSnapshot( collection, key, session );
+			operationConsumer.accept( DecompositionSupport.createNoOpCallbackCarrier(
+					persister.getCollectionTableDescriptor(),
+					ordinalBase * 1_000 + 900,
+					executionSession -> {
+						final var queue = (GraphBasedActionQueue) executionSession.getActionQueue();
+						persister.visitElementsWithChangedIndex( collection, key, snapshot, executionSession,
+								queue.getAuditMutationCollector()::indexedElementChanged );
+					}
+			) );
 		}
 	}
 

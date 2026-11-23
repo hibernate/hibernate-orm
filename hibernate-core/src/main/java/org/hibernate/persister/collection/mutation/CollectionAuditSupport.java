@@ -122,9 +122,7 @@ public class CollectionAuditSupport {
 				auditMapping
 		);
 		final var ownerPersister = mutationTarget.getTargetPart().getCollectionDescriptor().getOwnerEntityPersister();
-		this.ownerMutationSupport = ownerPersister.getAuditMapping() == null
-				? null
-				: new EntityAuditSupport( ownerPersister, sessionFactory );
+		this.ownerMutationSupport = ownerPersister.getEntityAuditSupport();
 	}
 
 	@Nonnull

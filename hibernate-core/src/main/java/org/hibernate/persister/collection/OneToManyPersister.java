@@ -7,6 +7,7 @@ import jakarta.annotation.Nullable;
 
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
+import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
@@ -22,8 +23,11 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jdbc.Expectation;
+import org.hibernate.loader.ast.internal.CollectionIndexSnapshotLoader;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
@@ -57,6 +61,8 @@ import org.hibernate.sql.spi.mutation.jdbc.JdbcMutationOperation;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import static org.hibernate.internal.util.collections.ArrayHelper.isAnyTrue;
@@ -87,6 +93,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	private boolean useTablePerSubclassDecomposition;
 	private final boolean keyIsNullable;
 
+	private final boolean auditIndex;
+	private CollectionIndexSnapshotLoader indexSnapshotLoader;
 	final boolean doWriteEvenWhenInverse; // contrary to intent of JPA
 
 	public OneToManyPersister(
@@ -104,6 +112,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 					&& isAnyTrue( indexColumnIsSettable )
 					&& !getElementPersister().managesColumns( castNonNull( indexColumnNames ) );
 
+		auditIndex = doWriteEvenWhenInverse
+				&& collectionBinding.getCollectionTable().getAuditedInverseCollections().contains( collectionBinding );
 		rowMutationOperations = buildRowMutationOperations();
 		stateManagement = collectionBinding.getStateManagement();
 		final var legacyIntegration = stateManagement.getLegacyIntegration();
@@ -129,6 +139,11 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	@Override
 	public void postInstantiate() throws MappingException {
 		super.postInstantiate();
+		if ( hasAuditedIndex() ) {
+			indexSnapshotLoader = new CollectionIndexSnapshotLoader(
+					getAttributeMapping(), new LoadQueryInfluencers( getFactory() )
+			);
+		}
 
 		// Initialize JDBC operations after entity persisters have completed their initialization
 		decomposer = buildCollectionDecomposer();
@@ -141,6 +156,74 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		return useTablePerSubclassDecomposition
 				? new TablePerSubclassOneToManyDecomposer( this, getFactory(), mutationPlanContributor )
 				: new StandardOneToManyDecomposer( this, getFactory(), mutationPlanContributor );
+	}
+
+	public boolean hasAuditedIndex() {
+		return auditIndex && getElementPersister().getAuditMapping() != null;
+	}
+
+	/// Capture the destination's indexes before a replacement writes them.
+	public @Nullable Object getReplacementIndexSnapshot(
+			PersistentCollection<?> collection, Object key, SharedSessionContractImplementor session) {
+		final var previous = session.getPersistenceContextInternal().getCollection( session.generateCollectionKey( this, key ) );
+		if ( previous == null || previous == collection || !collection.wasInitialized() || collection.empty() ) {
+			return null;
+		}
+		if ( previous.wasInitialized() ) {
+			return previous.getStoredSnapshot();
+		}
+		// A child inserted by an earlier flush may still have a null order column.
+		// Read index/element pairs without trying to assemble the old list.
+		final var influencers = session.getLoadQueryInfluencers();
+		final var loader = getAttributeMapping().isAffectedByInfluencers( influencers, true )
+				? new CollectionIndexSnapshotLoader( getAttributeMapping(), influencers )
+				: indexSnapshotLoader;
+		return loader.load( key, session );
+	}
+
+	/** Visit the elements which need a new audit row for their changed order column or map key. */
+	public void visitElementsWithChangedIndex(
+			PersistentCollection<?> collection, Object key, @Nullable Object previousSnapshot,
+			SharedSessionContractImplementor session, BiConsumer<EntityEntry, Object> consumer) {
+		final var persistenceContext = session.getPersistenceContextInternal();
+		final var collectionEntry = persistenceContext.getCollectionEntry( collection );
+		final var previous = persistenceContext.getCollection( session.generateCollectionKey( this, key ) );
+		final boolean compareOwnSnapshot = previous == collection && collection.wasInitialized() && collectionEntry != null
+				&& collectionEntry.getLoadedPersister() == this && collectionEntry.getSnapshot() != null;
+		final var entries = collection.wasInitialized() ? collection.entries( this ) : collection.queuedAdditionIterator();
+		for ( int i = 0; entries.hasNext(); i++ ) {
+			final var entry = entries.next();
+			if ( !collection.entryExists( entry, i ) ) {
+				continue;
+			}
+			final Object element = collection.getElement( entry );
+			if ( previousSnapshot != null && getElementType().isEqual(
+					snapshotElement( previousSnapshot, collection, entry, i ), element, getFactory() ) ) {
+				continue;
+			}
+			if ( compareOwnSnapshot && !collection.needsInserting( entry, i, getElementType() )
+					&& !collection.needsUpdating( entry, i, getElementType() ) ) {
+				continue;
+			}
+			final var entity = Hibernate.unproxy( element );
+			final var entityEntry = persistenceContext.getEntry( entity );
+			if ( entityEntry != null && !entityEntry.getStatus().isDeletedOrGone() ) {
+				consumer.accept( entityEntry, entity );
+			}
+		}
+	}
+
+	private Object snapshotElement(Object snapshot, PersistentCollection<?> collection, Object entry, int position) {
+		if ( snapshot instanceof List<?> list ) {
+			return position < list.size() ? list.get( position ) : null;
+		}
+		if ( snapshot instanceof Map<?, ?> map ) {
+			return map.get( collection.getIndex( entry, position, this ) );
+		}
+		if ( snapshot instanceof Object[] array && position < array.length ) {
+			return array[position];
+		}
+		return null;
 	}
 
 	public boolean isDoWriteEvenWhenInverse() {
@@ -221,7 +304,12 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			@Nonnull Object key,
 			boolean resetIndex,
 			@Nonnull SharedSessionContractImplementor session) {
+		final var snapshot = hasAuditedIndex() ? getReplacementIndexSnapshot( collection, key, session ) : null;
 		writeIndexCoordinator.writeIndex( collection, entries, key, resetIndex, session );
+		if ( hasAuditedIndex() ) {
+			visitElementsWithChangedIndex( collection, key, snapshot, session,
+					(entry, element) -> session.getAuditWorkQueue().indexedElementChanged( entry, element, session ) );
+		}
 	}
 
 	public boolean isOneToMany() {

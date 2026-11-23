@@ -17,9 +17,11 @@ import org.hibernate.audit.spi.AuditChangeSet;
 import org.hibernate.audit.spi.ChangelogSupplier;
 import org.hibernate.audit.spi.ChangelogSupplier.ChangesetContext;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.EntityAuditSupport;
 import org.hibernate.persister.collection.mutation.CollectionAuditSupport;
 
@@ -44,6 +46,10 @@ public class GraphAuditMutationCollector {
 			ModificationType modificationType,
 			EntityAuditSupport mutationSupport) {
 		changeSet.addEntityChange( entityKey, entity, values, modificationType, mutationSupport );
+	}
+
+	public void indexedElementChanged(EntityEntry entry, Object entity) {
+		changeSet.addIndexedElementChange( entry, entity, EntityPersister::getEntityAuditSupport );
 	}
 
 	public void collectionChanged(

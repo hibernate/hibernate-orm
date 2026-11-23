@@ -12,8 +12,8 @@ import org.hibernate.sql.spi.mutation.jdbc.JdbcValueDescriptor;
 /// used when binding the statement, and the descriptor information needed by
 /// compatibility callers that still expect descriptor-based bindings.
 ///
-/// @param index the zero-based position of this slot within the owning
-/// [MutationBindTemplate#slots()] array
+/// @param index the index of the bound value, shared by all occurrences of
+/// the same column and usage in the statement
 /// @param columnName the physical column expression represented by the
 /// underlying column-value parameter
 /// @param usage whether the parameter is used as an assignment value or as a

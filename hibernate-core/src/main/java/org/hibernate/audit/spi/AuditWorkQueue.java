@@ -10,6 +10,7 @@ import org.hibernate.annotations.Changelog;
 import org.hibernate.audit.EntityTrackingChangesetListener;
 import org.hibernate.audit.ModificationType;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TransactionCompletionCallbacks;
@@ -64,12 +65,21 @@ public class AuditWorkQueue implements TransactionCompletionCallbacks.BeforeComp
 			ModificationType modificationType,
 			AuditWriter writer,
 			SharedSessionContractImplementor session) {
+		registerEntityCallbacks( session );
+		changeSet.addEntityChange( entityKey, entity, values, modificationType, writer );
+	}
+
+	public void indexedElementChanged(EntityEntry entry, Object entity, SharedSessionContractImplementor session) {
+		registerEntityCallbacks( session );
+		changeSet.addIndexedElementChange( entry, entity, persister -> (AuditWriter) persister.getUpdateCoordinator() );
+	}
+
+	private void registerEntityCallbacks(SharedSessionContractImplementor session) {
 		if ( !registered ) {
 			registerCallbacks( session );
 			trackingListener = resolveTrackingListener( session );
 			registered = true;
 		}
-		changeSet.addEntityChange( entityKey, entity, values, modificationType, writer );
 	}
 
 	/**

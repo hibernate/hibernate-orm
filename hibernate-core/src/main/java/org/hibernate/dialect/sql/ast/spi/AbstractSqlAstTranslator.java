@@ -10401,9 +10401,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
 		} );
 
-		getCurrentClauseStack().push( Clause.VALUES );
+		// A table-less SELECT produces one row even if a scalar subquery finds no match.
+		final boolean selectSource = tableInsert.hasValueSubquery()
+				&& !dialect.getSubquerySupport().supports( SubquerySupport.Feature.INSERT_VALUES );
+		getCurrentClauseStack().push( selectSource ? Clause.SELECT : Clause.VALUES );
 		try {
-			sqlBuffer.append( ") values (" );
+			sqlBuffer.append( selectSource ? ") select " : ") values (" );
 
 			tableInsert.forEachValueBinding( (columnPosition, columnValueBinding) -> {
 				if ( columnPosition > 0 ) {
@@ -10416,7 +10419,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			getCurrentClauseStack().pop();
 		}
 
-		sqlBuffer.append( ")" );
+		sqlBuffer.append( selectSource ? getSelectOnlyFromClause() : ")" );
 	}
 
 	/**

@@ -128,7 +128,7 @@ public class PluralAttributeMappingImpl
 	private final FetchTiming fetchTiming;
 	private final FetchStyle fetchStyle;
 	@Nullable
-	private final AuxiliaryMapping auxiliaryMapping;
+	private AuxiliaryMapping auxiliaryMapping;
 
 	private final String bidirectionalAttributeName;
 
@@ -432,11 +432,13 @@ public class PluralAttributeMappingImpl
 	}
 
 	public void finishInitialization(
-			@SuppressWarnings("unused")
 			Property bootProperty,
 			Collection bootDescriptor,
 			@SuppressWarnings("unused")
 			MappingModelCreationProcess creationProcess) {
+		if ( auxiliaryMapping == null && bootDescriptor.isInverse() && collectionDescriptor.isManyToMany() ) {
+			auxiliaryMapping = inverseAuxiliaryMapping( bootProperty, bootDescriptor.getMappedByProperty() );
+		}
 		final boolean hasOrder = bootDescriptor.getOrderBy() != null;
 		final boolean hasManyToManyOrder = bootDescriptor.getManyToManyOrdering() != null;
 
@@ -615,6 +617,23 @@ public class PluralAttributeMappingImpl
 	private static @Nullable AuxiliaryMapping auxiliaryMapping(@Nullable CollectionPart part) {
 		final var entity = associatedEntity( part );
 		return entity == null ? null : entity.getAuxiliaryMapping();
+	}
+
+	/**
+	 * The auxiliary mapping of the inverse side of a many-to-many association, which
+	 * reads the rows belonging to the owning side, with the given name.
+	 */
+	private @Nullable AuxiliaryMapping inverseAuxiliaryMapping(Property bootProperty, @Nullable String mappedBy) {
+		final var elementEntity = associatedEntity( elementDescriptor );
+		if ( elementEntity == null || mappedBy == null || mappedBy.isEmpty() ) {
+			return null;
+		}
+		final var owningAttribute =
+				ManyToManyCollectionPart.resolveNamedTargetPart( mappedBy, elementEntity, collectionDescriptor )
+						.asAttributeMapping();
+		final var owningCollection = owningAttribute == null ? null : owningAttribute.asPluralAttributeMapping();
+		final var owningMapping = owningCollection == null ? null : owningCollection.getAuxiliaryMapping();
+		return owningMapping == null ? null : owningMapping.forInverseCollection( bootProperty );
 	}
 
 	/**

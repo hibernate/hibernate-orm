@@ -1,6 +1,7 @@
 package org.hibernate.metamodel.mapping;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -12,6 +13,7 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.creation.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.creation.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.from.LazyTableGroup;
 import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
 import org.hibernate.sql.ast.spi.query.from.TableGroup;
@@ -92,6 +94,32 @@ public interface AuxiliaryMapping {
 			@Nonnull SqlAliasBaseGenerator sqlAliasBaseGenerator,
 			@Nonnull LoadQueryInfluencers influencers);
 
+	/// Restricts the rows of an entity which is the target of an association. A
+	/// predicate on the row alone is passed to `rowRestrictions`, and may be applied
+	/// inside a preserved join operand. A predicate which also refers to the owner of
+	/// the association is passed to `ownerRestrictions`, and must be applied where
+	/// both are in scope.
+	///
+	/// In an all-revisions query, `ownerRevision` is the revision of the audit snapshot
+	/// which owns the association, and the rows are read as of that revision.
+	default void applyAssociationRestrictions(
+			@Nonnull EntityMappingType associatedEntityDescriptor, @Nonnull TableGroup tableGroup,
+			@Nullable Expression ownerRevision,
+			@Nonnull Consumer<Predicate> rowRestrictions, @Nonnull Consumer<Predicate> ownerRestrictions,
+			@Nonnull SqlAliasBaseGenerator aliases, @Nonnull LoadQueryInfluencers influencers) {
+		applyPredicate( associatedEntityDescriptor, rowRestrictions, tableGroup, aliases, influencers );
+	}
+
+	/// Restricts the rows of a collection, in the same way as the overload for the
+	/// target of an association restricts an entity.
+	default void applyAssociationRestrictions(
+			@Nonnull PluralAttributeMapping collectionDescriptor, @Nonnull TableGroup tableGroup,
+			@Nullable Expression ownerRevision,
+			@Nonnull Consumer<Predicate> rowRestrictions, @Nonnull Consumer<Predicate> ownerRestrictions,
+			@Nonnull SqlAliasBaseGenerator aliases, @Nonnull LoadQueryInfluencers influencers) {
+		applyPredicate( collectionDescriptor, rowRestrictions, tableGroup, aliases, influencers );
+	}
+
 	/// Applies the auxiliary row restriction directly to a table-group join.
 	///
 	/// This form is used when the restriction belongs on the join predicate
@@ -152,6 +180,23 @@ public interface AuxiliaryMapping {
 	/// for dialects that support native temporal table syntax.
 	@Nonnull
 	JdbcMapping getJdbcMapping();
+
+	/// Whether this mapping can contribute a row restriction to an association join.
+	default boolean hasRowRestriction(@Nonnull LoadQueryInfluencers influencers) {
+		return true;
+	}
+
+	/// Whether these session settings require a target table read for an association
+	/// key that could otherwise be read from the foreign key.
+	default boolean requiresTargetTableForKeyRead(@Nonnull LoadQueryInfluencers influencers) {
+		return isAffectedByRowRestrictions( influencers );
+	}
+
+	/// Whether row visibility differs from a load using the default session settings.
+	/// Mappings whose SQL varies for other reasons may refine the conservative default.
+	default boolean isAffectedByRowRestrictions(@Nonnull LoadQueryInfluencers influencers) {
+		return isAffectedByInfluencers( influencers );
+	}
 
 	/// Whether this mapping should use its auxiliary table for the supplied
 	/// query influencers.

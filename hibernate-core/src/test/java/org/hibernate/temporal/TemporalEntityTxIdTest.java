@@ -54,6 +54,7 @@ class TemporalEntityTxIdTest {
 
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsPrimaryKeyUpdate.class )
 	@Test void test(SessionFactoryScope scope) {
+		final String friendIds = "select f.id from TemporalChild1 c left join c.friends f where c.id = 1";
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					TemporalEntity1 entity = new TemporalEntity1();
@@ -126,6 +127,7 @@ class TemporalEntityTxIdTest {
 							session.createSelectionQuery( "select f from TemporalEntity1 p join p.children c join c.friends f where p.id=1", TemporalChild1.class )
 									.getResultCount();
 					assertEquals( 1, friends );
+					assertEquals( List.of( 5L ), session.createSelectionQuery( friendIds, Long.class ).getResultList() );
 				}
 		);
 		try (var session = scope.getSessionFactory().withOptions().atChangeset(txId).open()) {
@@ -160,6 +162,8 @@ class TemporalEntityTxIdTest {
 						session.createSelectionQuery( "select f from TemporalEntity1 p join p.children c join c.friends f where p.id=1", TemporalChild1.class )
 								.getResultCount();
 				assertEquals( 0, friends );
+				// The owner has no friends yet, though the join table contains a later membership.
+				assertNull( session.createSelectionQuery( friendIds, Long.class ).getSingleResult() );
 			} );
 		}
 
@@ -177,6 +181,7 @@ class TemporalEntityTxIdTest {
 				session -> {
 					TemporalEntity1 entity = session.find( TemporalEntity1.class, 1L );
 					assertEquals( Set.of("y", "z"), entity.strings );
+					assertNull( session.createSelectionQuery( friendIds, Long.class ).getSingleResult() );
 					assertEquals( 0, entity.children.get(0).friends.size() );
 				}
 		);

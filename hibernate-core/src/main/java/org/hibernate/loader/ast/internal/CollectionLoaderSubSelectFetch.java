@@ -58,14 +58,6 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 				session.getFactory()
 		);
 
-		final var querySpec = sqlAst.getQueryPart().getFirstQuerySpec();
-		final var tableGroup = querySpec.getFromClause().getRoots().get( 0 );
-		attributeMapping.applyAuxiliaryRestrictions(
-				tableGroup,
-				querySpec::applyPredicate,
-				session.getLoadQueryInfluencers(),
-				sqlAliasBaseGenerator
-		);
 	}
 
 	@Nonnull

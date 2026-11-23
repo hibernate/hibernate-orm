@@ -40,7 +40,7 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends Postgre
 	}
 
 	@Override
-	public void visitInArrayPredicate(InArrayPredicate inArrayPredicate) {
+	protected void renderInArrayPredicate(InArrayPredicate inArrayPredicate) {
 		inArrayPredicate.getTestExpression().accept( this );
 		appendSql( " = any (" );
 		inArrayPredicate.getArrayParameter().accept( this );
@@ -136,7 +136,7 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends Postgre
 	}
 
 	@Override
-	public void visitNullnessPredicate(NullnessPredicate nullnessPredicate) {
+	protected void renderNullnessPredicate(NullnessPredicate nullnessPredicate) {
 		final Expression expression = nullnessPredicate.getExpression();
 		final JdbcMappingContainer expressionType = expression.getExpressionType();
 		if ( isStruct( expressionType ) ) {
@@ -151,7 +151,7 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends Postgre
 			}
 		}
 		else {
-			super.visitNullnessPredicate( nullnessPredicate );
+			super.renderNullnessPredicate( nullnessPredicate );
 		}
 	}
 

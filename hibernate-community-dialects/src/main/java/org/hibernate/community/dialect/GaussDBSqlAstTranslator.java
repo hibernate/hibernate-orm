@@ -47,7 +47,7 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends PostgreSQL
 	}
 
 	@Override
-	public void visitInArrayPredicate(InArrayPredicate inArrayPredicate) {
+	protected void renderInArrayPredicate(InArrayPredicate inArrayPredicate) {
 		inArrayPredicate.getTestExpression().accept( this );
 		appendSql( " = any (" );
 		inArrayPredicate.getArrayParameter().accept( this );
@@ -121,7 +121,7 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends PostgreSQL
 	}
 
 	@Override
-	public void visitNullnessPredicate(NullnessPredicate nullnessPredicate) {
+	protected void renderNullnessPredicate(NullnessPredicate nullnessPredicate) {
 		final Expression expression = nullnessPredicate.getExpression();
 		final JdbcMappingContainer expressionType = expression.getExpressionType();
 		if ( isStruct( expressionType ) ) {
@@ -136,7 +136,7 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends PostgreSQL
 			}
 		}
 		else {
-			super.visitNullnessPredicate( nullnessPredicate );
+			super.renderNullnessPredicate( nullnessPredicate );
 		}
 	}
 
@@ -189,7 +189,7 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends PostgreSQL
 	}
 
 	@Override
-	public void visitLikePredicate(LikePredicate likePredicate) {
+	protected void renderLikePredicateExpression(LikePredicate likePredicate) {
 		// We need a custom implementation here because GaussDB
 		// uses the backslash character as default escape character
 		// According to the documentation, we can overcome this by specifying an empty escape character

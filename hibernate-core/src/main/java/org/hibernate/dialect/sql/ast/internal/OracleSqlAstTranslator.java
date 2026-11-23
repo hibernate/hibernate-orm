@@ -114,7 +114,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	}
 
 	@Override
-	public void visitInArrayPredicate(InArrayPredicate inArrayPredicate) {
+	protected void renderInArrayPredicate(InArrayPredicate inArrayPredicate) {
 		// column in (select column_value from(?) )
 		inArrayPredicate.getTestExpression().accept( this );
 		appendSql( " in (select column_value from table(" );
@@ -386,7 +386,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	}
 
 	@Override
-	public void visitOver(Over<?> over) {
+	protected void renderOver(Over<?> over) {
 		final Expression expression = over.getExpression();
 		if ( expression instanceof FunctionExpression functionExpression
 				&& "row_number".equals( functionExpression.getFunctionName() ) ) {
@@ -400,7 +400,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 				return;
 			}
 		}
-		super.visitOver( over );
+		super.renderOver( over );
 	}
 
 	@Override

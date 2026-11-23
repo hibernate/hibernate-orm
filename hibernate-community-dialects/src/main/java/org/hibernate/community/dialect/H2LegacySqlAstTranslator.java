@@ -151,7 +151,7 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	public void visitInSubQueryPredicate(InSubQueryPredicate inSubQueryPredicate) {
+	protected void renderInSubQueryPredicate(InSubQueryPredicate inSubQueryPredicate) {
 		final SqlTuple lhsTuple;
 		// As of 1.4.200 this is supported
 		if ( getDialect().getVersion().isBefore( 1, 4, 200 )
@@ -168,7 +168,7 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 			this.renderAsArray = renderAsArray;
 		}
 		else {
-			super.visitInSubQueryPredicate( inSubQueryPredicate );
+			super.renderInSubQueryPredicate( inSubQueryPredicate );
 		}
 	}
 
@@ -211,8 +211,8 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	public void visitLikePredicate(LikePredicate likePredicate) {
-		super.visitLikePredicate( likePredicate );
+	protected void renderLikePredicateExpression(LikePredicate likePredicate) {
+		super.renderLikePredicateExpression( likePredicate );
 		// Custom implementation because H2 uses backslash as the default escape character
 		// We can override this by specifying an empty escape character
 		// See http://www.h2database.com/html/grammar.html#like_predicate_right_hand_side

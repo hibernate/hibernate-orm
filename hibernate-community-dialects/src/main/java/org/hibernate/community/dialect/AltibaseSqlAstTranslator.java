@@ -204,7 +204,7 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	public void visitOver(Over<?> over) {
+	protected void renderOver(Over<?> over) {
 		final Expression expression = over.getExpression();
 		if ( expression instanceof FunctionExpression functionExpression
 				&& "row_number".equals( functionExpression.getFunctionName() ) ) {
@@ -217,7 +217,7 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 				return;
 			}
 		}
-		super.visitOver( over );
+		super.renderOver( over );
 	}
 
 	@Override

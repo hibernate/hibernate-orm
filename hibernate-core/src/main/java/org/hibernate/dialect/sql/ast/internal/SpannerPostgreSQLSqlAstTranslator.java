@@ -169,7 +169,7 @@ public class SpannerPostgreSQLSqlAstTranslator<T extends JdbcOperation> extends 
 	}
 
 	@Override
-	public void visitUnaryOperationExpression(UnaryOperation unaryOperationExpression) {
+	protected void renderUnaryOperationExpression(UnaryOperation unaryOperationExpression) {
 		// Spanner PostgreSQL doesn't support unary plus, so we just render the operand
 		if ( unaryOperationExpression.getOperator() == UnaryArithmeticOperator.UNARY_MINUS ) {
 			appendSql( UnaryArithmeticOperator.UNARY_MINUS.getOperatorChar() );

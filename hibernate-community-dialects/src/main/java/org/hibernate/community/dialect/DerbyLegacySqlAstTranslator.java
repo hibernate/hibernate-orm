@@ -146,7 +146,7 @@ public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	public void visitInListPredicate(InListPredicate inListPredicate) {
+	protected void renderInListPredicate(InListPredicate inListPredicate) {
 		final List<Expression> listExpressions = inListPredicate.getListExpressions();
 		if ( listExpressions.isEmpty() ) {
 			appendSql( "1=" + ( inListPredicate.isNegated() ? "1" : "0" ) );
@@ -163,7 +163,7 @@ public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 			appendSql( CLOSE_PARENTHESIS );
 		}
 		else {
-			super.visitInListPredicate( inListPredicate );
+			super.renderInListPredicate( inListPredicate );
 		}
 	}
 

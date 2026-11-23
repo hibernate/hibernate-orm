@@ -155,12 +155,12 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	public void visitAny(Any any) {
+	protected void renderAny(Any any) {
 		throw new UnsupportedOperationException( "SingleStore doesn't support ANY clause" );
 	}
 
 	@Override
-	public void visitEvery(Every every) {
+	protected void renderEvery(Every every) {
 		throw new UnsupportedOperationException( "SingleStore doesn't support ALL clause" );
 	}
 
@@ -172,7 +172,7 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		if ( operator == ComparisonOperator.DISTINCT_FROM || operator == ComparisonOperator.NOT_DISTINCT_FROM ) {
-			renderDistinct( lhs, operator, rhs );
+			renderDistinctComparison( lhs, operator, rhs );
 		}
 		else {
 			lhs.accept( this );
@@ -181,7 +181,7 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 		}
 	}
 
-	private void renderDistinct(Expression lhs, ComparisonOperator operator, Expression rhs) {
+	private void renderDistinctComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		appendSql( OPEN_PARENTHESIS );
 		appendSql( "case when " );
 		rhs.accept( this );
@@ -220,7 +220,7 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 			String separator = OPEN_PARENTHESIS + "";
 			for ( int i = 0; i < size; i++ ) {
 				appendSql( separator );
-				renderDistinct( (Expression) lhsExpressions.get( i ), operator, (Expression) rhsExpressions.get( i ) );
+				renderDistinctComparison( (Expression) lhsExpressions.get( i ), operator, (Expression) rhsExpressions.get( i ) );
 				separator = ") and (";
 			}
 			appendSql( CLOSE_PARENTHESIS );
@@ -260,7 +260,7 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 
 	//SingleStore like is case insensitive
 	@Override
-	public void visitLikePredicate(LikePredicate likePredicate) {
+	protected void renderLikePredicateExpression(LikePredicate likePredicate) {
 		appendSql( "cast( " );
 		likePredicate.getMatchExpression().accept( this );
 		appendSql( " as char) " );
@@ -367,13 +367,13 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	public void visitCastTarget(CastTarget castTarget) {
+	protected void renderCastTarget(CastTarget castTarget) {
 		String sqlType = getSqlType( castTarget, getSessionFactory() );
 		if ( sqlType != null ) {
 			appendSql( sqlType );
 		}
 		else {
-			super.visitCastTarget( castTarget );
+			super.renderCastTarget( castTarget );
 		}
 	}
 }

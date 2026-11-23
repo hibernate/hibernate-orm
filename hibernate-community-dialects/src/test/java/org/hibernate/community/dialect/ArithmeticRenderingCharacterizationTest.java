@@ -13,6 +13,7 @@ import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
@@ -117,7 +118,13 @@ class ArithmeticRenderingCharacterizationTest {
 				dialect( "MariaDBLegacy", MariaDBLegacyDialect::new,
 						"mod(x.a,x.b)", "(x.a/x.b)", "(x.a+x.b)" ),
 				dialect( "OracleLegacy", OracleLegacyDialect::new,
-						"mod(x.a,x.b)", "(x.a/x.b)", "(x.a+x.b)" )
+						"mod(x.a,x.b)", "(x.a/x.b)", "(x.a+x.b)" ),
+				// not recorded: derived from the anonymous translators these two Dialects used to create,
+				// which prefixed `floor` to the PostgreSQL rendering of an integer division
+				dialect( "PostgresPlus", PostgresPlusDialect::new,
+						"(x.a%x.b)", "floor(x.a/x.b)", "(x.a+x.b)" ),
+				dialect( "PostgresPlusLegacy", PostgresPlusLegacyDialect::new,
+						"(x.a%x.b)", "floor(x.a/x.b)", "(x.a+x.b)" )
 		);
 	}
 

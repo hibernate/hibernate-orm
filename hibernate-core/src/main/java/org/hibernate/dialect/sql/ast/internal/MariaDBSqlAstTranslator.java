@@ -293,7 +293,7 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 	}
 
 	@Override
-	public void visitLikePredicate(LikePredicate likePredicate) {
+	protected void renderLikePredicateExpression(LikePredicate likePredicate) {
 		if ( likePredicate.isCaseSensitive() ) {
 			likePredicate.getMatchExpression().accept( this );
 			if ( likePredicate.isNegated() ) {

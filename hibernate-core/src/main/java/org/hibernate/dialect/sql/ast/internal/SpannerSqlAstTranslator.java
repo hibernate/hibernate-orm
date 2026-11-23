@@ -308,7 +308,7 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	@Override
-	public void visitInArrayPredicate(InArrayPredicate inArrayPredicate) {
+	protected void renderInArrayPredicate(InArrayPredicate inArrayPredicate) {
 		inArrayPredicate.getTestExpression().accept( this );
 		appendSql( " in unnest(" );
 		inArrayPredicate.getArrayParameter().accept( this );
@@ -381,7 +381,7 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	@Override
-	public <N extends Number> void visitUnparsedNumericLiteral(UnparsedNumericLiteral<N> literal) {
+	protected <N extends Number> void renderUnparsedNumericLiteral(UnparsedNumericLiteral<N> literal) {
 		final Class<?> javaTypeClass = literal.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass();
 		if ( BigDecimal.class.isAssignableFrom( javaTypeClass )
 			|| BigInteger.class.isAssignableFrom( javaTypeClass ) ) {
@@ -390,7 +390,7 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 			appendSql( "'" );
 		}
 		else {
-			super.visitUnparsedNumericLiteral( literal );
+			super.renderUnparsedNumericLiteral( literal );
 		}
 	}
 

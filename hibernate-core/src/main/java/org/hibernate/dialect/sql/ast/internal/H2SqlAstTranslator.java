@@ -205,8 +205,8 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 	}
 
 	@Override
-	public void visitLikePredicate(LikePredicate likePredicate) {
-		super.visitLikePredicate( likePredicate );
+	protected void renderLikePredicateExpression(LikePredicate likePredicate) {
+		super.renderLikePredicateExpression( likePredicate );
 		// Custom implementation because H2 uses backslash as the default escape character
 		// We can override this by specifying an empty escape character
 		// See http://www.h2database.com/html/grammar.html#like_predicate_right_hand_side

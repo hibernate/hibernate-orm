@@ -131,7 +131,7 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	public void visitInListPredicate(InListPredicate inListPredicate) {
+	protected void renderInListPredicate(InListPredicate inListPredicate) {
 		final List<Expression> listExpressions = inListPredicate.getListExpressions();
 		if ( listExpressions.isEmpty() ) {
 			appendSql( "1=" + ( inListPredicate.isNegated() ? "1" : "0" ) );
@@ -148,7 +148,7 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 			appendSql( CLOSE_PARENTHESIS );
 		}
 		else {
-			super.visitInListPredicate( inListPredicate );
+			super.renderInListPredicate( inListPredicate );
 		}
 	}
 
@@ -158,12 +158,12 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	public void visitSelfRenderingPredicate(SelfRenderingPredicate selfRenderingPredicate) {
+	protected void renderSelfRenderingPredicate(SelfRenderingPredicate selfRenderingPredicate) {
 		// see comments in visitParameter
 		boolean inFunction = this.inFunction;
 		this.inFunction = true;
 		try {
-			super.visitSelfRenderingPredicate( selfRenderingPredicate );
+			super.renderSelfRenderingPredicate( selfRenderingPredicate );
 		}
 		finally {
 			this.inFunction = inFunction;
@@ -171,12 +171,12 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	public void visitSelfRenderingExpression(SelfRenderingExpression expression) {
+	protected void renderSelfRenderingExpression(SelfRenderingExpression expression) {
 		// see comments in visitParameter
 		boolean inFunction = this.inFunction;
 		this.inFunction = isFunctionOrCastWithArithmeticExpression( expression );
 		try {
-			super.visitSelfRenderingExpression( expression );
+			super.renderSelfRenderingExpression( expression );
 		}
 		finally {
 			this.inFunction = inFunction;
@@ -214,12 +214,12 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	public void visitJdbcLiteral(JdbcLiteral<?> jdbcLiteral) {
+	protected void renderJdbcLiteral(JdbcLiteral<?> jdbcLiteral) {
 		visitLiteral( jdbcLiteral );
 	}
 
 	@Override
-	public void visitQueryLiteral(QueryLiteral<?> queryLiteral) {
+	protected void renderQueryLiteral(QueryLiteral<?> queryLiteral) {
 		visitLiteral( queryLiteral );
 	}
 
@@ -234,18 +234,18 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	public void visitRelationalPredicate(ComparisonPredicate comparisonPredicate) {
+	protected void renderRelationalPredicate(ComparisonPredicate comparisonPredicate) {
 		if ( isParameterOrContainsParameter( comparisonPredicate.getLeftHandExpression() )
 			&& isParameterOrContainsParameter( comparisonPredicate.getRightHandExpression() ) ) {
 			// Firebird cannot compare two parameters with each other as they will be untyped, and in some cases
 			// comparisons involving arithmetic expression with parameters also fails to infer the type
 			withParameterRenderingMode(
 					SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER,
-					() -> super.visitRelationalPredicate( comparisonPredicate )
+					() -> super.renderRelationalPredicate( comparisonPredicate )
 			);
 		}
 		else {
-			super.visitRelationalPredicate( comparisonPredicate );
+			super.renderRelationalPredicate( comparisonPredicate );
 		}
 	}
 

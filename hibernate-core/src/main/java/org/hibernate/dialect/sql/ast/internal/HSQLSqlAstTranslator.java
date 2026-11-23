@@ -119,7 +119,7 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 	}
 
 	@Override
-	public void visitInArrayPredicate(InArrayPredicate inArrayPredicate) {
+	protected void renderInArrayPredicate(InArrayPredicate inArrayPredicate) {
 		// column in ( unnest(?) )
 		inArrayPredicate.getTestExpression().accept( this );
 		appendSql( " in (unnest(" );
@@ -270,7 +270,7 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 	}
 
 	@Override
-	public void visitBetweenPredicate(BetweenPredicate predicate) {
+	protected void renderBetweenPredicate(BetweenPredicate predicate) {
 		final var expression = predicate.getExpression();
 		final var column = sqlExpression( expression );
 		if ( column instanceof ColumnReference reference
@@ -285,7 +285,7 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 					predicate.getUpperBound() ) );
 		}
 		else {
-			super.visitBetweenPredicate( predicate );
+			super.renderBetweenPredicate( predicate );
 		}
 	}
 
@@ -294,17 +294,17 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 	}
 
 	@Override
-	public void visitRelationalPredicate(ComparisonPredicate comparisonPredicate) {
+	protected void renderRelationalPredicate(ComparisonPredicate comparisonPredicate) {
 		if ( isParameter( comparisonPredicate.getLeftHandExpression() )
 				&& isParameter( comparisonPredicate.getRightHandExpression() ) ) {
 			// HSQLDB doesn't like comparing two parameters with each other
 			withParameterRenderingMode(
 					SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER,
-					() -> super.visitRelationalPredicate( comparisonPredicate )
+					() -> super.renderRelationalPredicate( comparisonPredicate )
 			);
 		}
 		else {
-			super.visitRelationalPredicate( comparisonPredicate );
+			super.renderRelationalPredicate( comparisonPredicate );
 		}
 	}
 

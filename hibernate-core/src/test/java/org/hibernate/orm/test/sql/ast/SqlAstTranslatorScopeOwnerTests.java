@@ -15,6 +15,7 @@ import org.hibernate.query.common.FrameExclusion;
 import org.hibernate.query.common.FrameKind;
 import org.hibernate.query.common.FrameMode;
 import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
+import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
 import org.hibernate.sql.ast.spi.query.select.QuerySpec;
@@ -54,6 +55,30 @@ class SqlAstTranslatorScopeOwnerTests {
 		assertFinal( "visitOverClause", List.class, List.class );
 		assertFinal( "visitOverClause", List.class, List.class, FrameMode.class, FrameKind.class,
 				Expression.class, FrameKind.class, Expression.class, FrameExclusion.class, boolean.class );
+	}
+
+	/// Every walker callback the base implements is final: a subclass customizes
+	/// rendering through a callback, never by replacing a traversal entry point.
+	@Test
+	void everyWalkerCallbackIsFinal() {
+		final List<String> overridable = Stream.of( SqlAstWalker.class.getMethods() )
+				.map( declared -> {
+					try {
+						return AbstractSqlAstTranslator.class.getMethod( declared.getName(), declared.getParameterTypes() );
+					}
+					catch (NoSuchMethodException e) {
+						throw new AssertionError( e );
+					}
+				} )
+				.filter( implemented -> implemented.getDeclaringClass() == AbstractSqlAstTranslator.class )
+				.filter( implemented -> !Modifier.isFinal( implemented.getModifiers() ) )
+				.map( Method::toString )
+				.toList();
+
+		assertThat( overridable ).isEmpty();
+		assertThat( Stream.of( SqlAstWalker.class.getMethods() )
+				.filter( declared -> !Modifier.isStatic( declared.getModifiers() ) ) )
+				.as( "walker callbacks checked" ).hasSizeGreaterThan( 70 );
 	}
 
 	/// `visit` is reserved for walker callbacks and final scope owners.

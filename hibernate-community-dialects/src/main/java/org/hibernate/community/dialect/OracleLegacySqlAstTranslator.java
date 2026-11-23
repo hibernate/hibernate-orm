@@ -404,7 +404,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	}
 
 	@Override
-	public void visitOver(Over<?> over) {
+	protected void renderOver(Over<?> over) {
 		final Expression expression = over.getExpression();
 		if ( expression instanceof FunctionExpression && "row_number".equals( ( (FunctionExpression) expression ).getFunctionName() ) ) {
 			if ( over.getPartitions().isEmpty() && over.getOrderList().isEmpty()
@@ -417,7 +417,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 				return;
 			}
 		}
-		super.visitOver( over );
+		super.renderOver( over );
 	}
 
 	@Override

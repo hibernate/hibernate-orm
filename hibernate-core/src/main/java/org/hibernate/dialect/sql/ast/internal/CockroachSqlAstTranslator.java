@@ -89,9 +89,9 @@ public class CockroachSqlAstTranslator<T extends JdbcOperation> extends PostgreS
 	}
 
 	@Override
-	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
+	protected void renderBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
 		if ( booleanExpressionPredicate.isNegated() ) {
-			super.visitBooleanExpressionPredicate( booleanExpressionPredicate );
+			super.renderBooleanExpressionPredicate( booleanExpressionPredicate );
 		}
 		else {
 			final boolean isNegated = booleanExpressionPredicate.isNegated();
@@ -138,7 +138,7 @@ public class CockroachSqlAstTranslator<T extends JdbcOperation> extends PostgreS
 	}
 
 	@Override
-	public void visitLikePredicate(LikePredicate likePredicate) {
+	protected void renderLikePredicateExpression(LikePredicate likePredicate) {
 		// Custom implementation because CockroachDB uses backslash as default escape character
 		likePredicate.getMatchExpression().accept( this );
 		if ( likePredicate.isNegated() ) {
@@ -163,7 +163,7 @@ public class CockroachSqlAstTranslator<T extends JdbcOperation> extends PostgreS
 	}
 
 	@Override
-	public void visitInArrayPredicate(InArrayPredicate inArrayPredicate) {
+	protected void renderInArrayPredicate(InArrayPredicate inArrayPredicate) {
 		inArrayPredicate.getTestExpression().accept( this );
 		appendSql( " = any(" );
 		inArrayPredicate.getArrayParameter().accept( this );

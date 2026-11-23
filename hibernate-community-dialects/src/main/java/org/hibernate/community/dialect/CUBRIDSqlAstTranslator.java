@@ -223,7 +223,7 @@ public class CUBRIDSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	}
 
 	@Override
-	public void visitInListPredicate(InListPredicate inListPredicate) {
+	protected void renderInListPredicate(InListPredicate inListPredicate) {
 		final List<Expression> listExpressions = inListPredicate.getListExpressions();
 		//CUBRID reads 'x in ((select ...))' as a list holding one scalar subquery and fails as soon as
 		//the subquery returns more than one row, so render it as a plain in-subquery
@@ -236,7 +236,7 @@ public class CUBRIDSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 			) );
 		}
 		else {
-			super.visitInListPredicate( inListPredicate );
+			super.renderInListPredicate( inListPredicate );
 		}
 	}
 }

@@ -50,6 +50,7 @@ public class EntityDelayedFetchInitializer
 	private final boolean isPartOfKey;
 	private final ToOneAttributeMapping referencedModelPart;
 	private final boolean selectByUniqueKey;
+	private final boolean targetIdResolved;
 	private final DomainResultAssembler<?> identifierAssembler;
 	private final @Nullable BasicResultAssembler<?> discriminatorAssembler;
 	private final boolean keyIsEager;
@@ -85,6 +86,7 @@ public class EntityDelayedFetchInitializer
 
 		isPartOfKey = Initializer.isPartOfKey( fetchedNavigable, parent );
 		identifierAssembler = keyResult.createResultAssembler( this, creationState );
+		targetIdResolved = keyResult instanceof RestrictedToOneIdentifierResult<?>;
 		discriminatorAssembler =
 				discriminatorResult == null
 						? null
@@ -108,7 +110,7 @@ public class EntityDelayedFetchInitializer
 
 	@Override
 	public Object getFilteredAssociationKey(RowProcessingState rowProcessingState) {
-		return identifierAssembler instanceof RestrictedForeignKeyResult.Assembler<?> assembler
+		return identifierAssembler instanceof RestrictedToOneIdentifierResult.Assembler<?> assembler
 				? assembler.getFilteredKey( rowProcessingState )
 				: null;
 	}
@@ -210,7 +212,11 @@ public class EntityDelayedFetchInitializer
 		}
 		// For primary key-based mappings we only use bytecode-laziness if the attribute is optional,
 		// because the non-optionality implies that it is safe to have a proxy
-		else if ( referencedModelPart.isOptional() && referencedModelPart.isLazy() ) {
+		// A restricted join has already established both existence and identity.
+		// Retain that identity in a proxy instead of resolving the association again
+		// through its possibly nonunique physical key on first access.
+		else if ( referencedModelPart.isOptional() && referencedModelPart.isLazy()
+				&& !targetIdResolved ) {
 			return UNFETCHED_PROPERTY;
 		}
 		else {
@@ -378,7 +384,7 @@ public class EntityDelayedFetchInitializer
 
 	@Override
 	protected void forEachSubInitializer(BiConsumer<Initializer<?>, RowProcessingState> consumer, InitializerData data) {
-		if ( identifierAssembler instanceof RestrictedForeignKeyResult.Assembler<?> assembler ) {
+		if ( identifierAssembler instanceof RestrictedToOneIdentifierResult.Assembler<?> assembler ) {
 			assembler.forEachInitializer( consumer, data.getRowProcessingState() );
 		}
 		else {

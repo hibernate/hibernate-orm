@@ -125,6 +125,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 	// Loaded entity instances, by EntityUniqueKey
 	private HashMap<EntityUniqueKey, Object> entitiesByUniqueKey;
+	private LoadByKeyFilterState uniqueKeyFilterState;
 
 	// Snapshots of the current database state for entities
 	// that have *not* been loaded
@@ -267,6 +268,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 		arrayHolders = null;
 		entitiesByKey = null;
 		entitiesByUniqueKey = null;
+		uniqueKeyFilterState = null;
 		newEntityHolder = null;
 		entityEntryContext.clear();
 		parentsByChild = null;
@@ -614,15 +616,41 @@ class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	@Nullable
 	public Object getEntity(@Nonnull EntityUniqueKey euk) {
-		return entitiesByUniqueKey == null ? null : entitiesByUniqueKey.get( euk );
+		if ( entitiesByUniqueKey == null ) {
+			return null;
+		}
+		synchronizeUniqueKeyFilterState( euk );
+		return entitiesByUniqueKey.get( euk );
 	}
 
 	@Override
 	public void addEntity(@Nonnull EntityUniqueKey euk, @Nonnull Object entity) {
+		synchronizeUniqueKeyFilterState( euk );
 		if ( entitiesByUniqueKey == null ) {
 			entitiesByUniqueKey = mapOfSize( INIT_COLL_SIZE );
 		}
 		entitiesByUniqueKey.put( euk, entity );
+	}
+
+	private void synchronizeUniqueKeyFilterState(EntityUniqueKey key) {
+		final var influencers = session.getLoadQueryInfluencers();
+		// A previous snapshot must still be checked when filters have just been disabled.
+		if ( uniqueKeyFilterState == null && !influencers.hasEnabledFilters() ) {
+			return;
+		}
+		final var mappingMetamodel = session.getFactory().getMappingMetamodel();
+		if ( mappingMetamodel.getEntityDescriptor( key.getEntityName() ).hasFilterForLoadByKey() ) {
+			if ( uniqueKeyFilterState == null || !uniqueKeyFilterState.matches( influencers ) ) {
+				// A filter change can select another entity for the same physical key.
+				// Discard only unique-key resolutions for filterable entities. Instances by
+				// identifier and associations already loaded into them remain unchanged.
+				if ( entitiesByUniqueKey != null ) {
+					entitiesByUniqueKey.keySet().removeIf( cachedKey -> mappingMetamodel
+							.getEntityDescriptor( cachedKey.getEntityName() ).hasFilterForLoadByKey() );
+				}
+				uniqueKeyFilterState = LoadByKeyFilterState.capture( influencers );
+			}
+		}
 	}
 
 	@Override
@@ -2029,6 +2057,9 @@ class StatefulPersistenceContext implements PersistenceContext {
 				}
 				if ( count != 0 ) {
 					context.entitiesByUniqueKey = mapOfSize( Math.max( count, INIT_COLL_SIZE ) );
+					// Filter snapshots are not serialized, so these resolutions need checking
+					// even if all filters were disabled before serialization.
+					context.uniqueKeyFilterState = LoadByKeyFilterState.UNKNOWN;
 					for ( int i = 0; i < count; i++ ) {
 						context.entitiesByUniqueKey.put( EntityUniqueKey.deserialize( ois, session ), ois.readObject() );
 					}

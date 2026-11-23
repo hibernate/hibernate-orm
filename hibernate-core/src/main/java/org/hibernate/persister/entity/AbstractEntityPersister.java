@@ -30,6 +30,7 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeDescriptor;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.accessor.MultiValueReader;
 import org.hibernate.accessor.MultiValueWriter;
@@ -287,6 +288,7 @@ import static org.hibernate.internal.util.StringHelper.replace;
 import static org.hibernate.internal.util.StringHelper.root;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_INT_ARRAY;
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 import static org.hibernate.internal.util.collections.ArrayHelper.contains;
 import static org.hibernate.internal.util.collections.ArrayHelper.indexOf;
 import static org.hibernate.internal.util.collections.ArrayHelper.isAllTrue;
@@ -457,6 +459,7 @@ public abstract class AbstractEntityPersister
 	// dynamic filters attached to the class-level
 	@Nullable
 	private final FilterHelper filterHelper;
+	private final String[] loadByKeyFilterNames;
 	@Nullable
 	private volatile Set<String> affectingFetchProfileNames;
 
@@ -592,9 +595,13 @@ public abstract class AbstractEntityPersister
 							factory.getSqlStringGenerationContext() ),
 					factory
 			);
+			loadByKeyFilterNames = Arrays.stream( filterHelper.getFilterNames() )
+					.filter( name -> factory.getFilterDefinition( name ).isAppliedToLoadByKey() )
+					.toArray( String[]::new );
 		}
 		else {
 			filterHelper = null;
+			loadByKeyFilterNames = EMPTY_STRING_ARRAY;
 		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1374,11 +1381,14 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public boolean hasFilterForLoadByKey() {
-		if ( filterHelper != null ) {
-			for ( String filterName : filterHelper.getFilterNames() ) {
-				if ( factory.getFilterDefinition( filterName ).isAppliedToLoadByKey() ) {
-					return true;
-				}
+		return loadByKeyFilterNames.length != 0;
+	}
+
+	@Override
+	public boolean hasEnabledFilterForLoadByKey(LoadQueryInfluencers influencers) {
+		for ( String filterName : loadByKeyFilterNames ) {
+			if ( influencers.getEnabledFilter( filterName ) != null ) {
+				return true;
 			}
 		}
 		return false;
@@ -4730,9 +4740,13 @@ public abstract class AbstractEntityPersister
 	private Object readEnhancedEntityAttribute(
 			@Nonnull Object entity, @Nonnull Object id, @Nullable String nameOfAttributeBeingAccessed,
 			@Nonnull SharedSessionContractImplementor session) {
-		final var interceptor =
-				getBytecodeEnhancementMetadata()
-						.injectInterceptor( entity, id, session );
+		final var enhancementMetadata = getBytecodeEnhancementMetadata();
+		final var currentInterceptor = enhancementMetadata.extractLazyInterceptor( entity );
+		// Loading the proxy may already have initialized lazy attributes, for example
+		// associations selected by an enabled filter. Preserve that information.
+		final var interceptor = currentInterceptor instanceof LazyAttributeLoadingInterceptor lazyInterceptor
+				? lazyInterceptor
+				: enhancementMetadata.injectInterceptor( entity, id, session );
 		final Object value;
 		if ( nameOfAttributeBeingAccessed == null ) {
 			return null;

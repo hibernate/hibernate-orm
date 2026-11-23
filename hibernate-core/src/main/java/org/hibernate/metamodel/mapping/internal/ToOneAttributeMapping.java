@@ -8,7 +8,7 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.internal.FilteredAssociationState;
-import org.hibernate.sql.results.graph.entity.internal.RestrictedForeignKeyResult;
+import org.hibernate.sql.results.graph.entity.internal.RestrictedToOneIdentifierResult;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -1138,11 +1138,12 @@ public class ToOneAttributeMapping
 			}
 
 			final var sqlAstCreationState = creationState.getSqlAstCreationState();
+			final boolean restricted = isAffectedByRestrictions( creationState );
 			if ( restrictions.hasSqlRestriction()
 					|| restrictions.isAffectedByFilters( sqlAstCreationState.getLoadQueryInfluencers() )
-					|| sqlAstCreationState.isProcedureOrNativeQuery() && restrictions.hasFilters() ) {
-				// An entity loaded through another path has not satisfied this association's predicate.
-				// Resolve its visibility before reusing the instance, retaining the physical key as usual.
+					|| sqlAstCreationState.isProcedureOrNativeQuery() && restricted ) {
+				// A parent loaded through another path has not satisfied this association's
+				// restrictions. Native SQL may also have bypassed entity-level restrictions.
 				return generateNonJoinedFetch( fetchParent, fetchablePath, fetchTiming,
 						sqlAstCreationState.getFromClauseAccess().getTableGroup( fetchParentNavigablePath ),
 						getSide( creationState ), creationState );
@@ -1170,6 +1171,14 @@ public class ToOneAttributeMapping
 						fetchTiming,
 						creationState
 				);
+			}
+
+			if ( restricted ) {
+				// For a bidirectional association, the parent already satisfied the entity
+				// restrictions. Other circular paths must resolve their own selected target.
+				return generateNonJoinedFetch( fetchParent, fetchablePath, fetchTiming,
+						sqlAstCreationState.getFromClauseAccess().getTableGroup( fetchParentNavigablePath ),
+						getSide( creationState ), creationState );
 			}
 
 			/*
@@ -1209,7 +1218,7 @@ public class ToOneAttributeMapping
 		try {
 			creationState.setResolvingCircularFetch( true );
 			if ( isInverseFormulaReference() ) {
-				return createInverseFormulaKeyResult( fetchablePath, parentTableGroup, creationState );
+				return createTargetIdentifierResult( fetchablePath, parentTableGroup, creationState );
 			}
 			else if ( circularFetchModelPart != null ) {
 				return circularFetchModelPart.createDomainResult(
@@ -1816,27 +1825,27 @@ public class ToOneAttributeMapping
 			ForeignKeyDescriptor.Nature side,
 			DomainResultCreationState creationState) {
 		final var sqlAstCreationState = creationState.getSqlAstCreationState();
+		final boolean restricted = isAffectedByRestrictions( creationState );
+		final boolean nativeQuery = sqlAstCreationState.isProcedureOrNativeQuery();
+		final boolean selectTargetId = restricted && !nativeQuery;
+		final boolean selectByUniqueKey = !selectTargetId && isSelectByUniqueKey( side );
 		DomainResult<?> keyResult =
 				getKeyResult( fetchParent, fetchablePath, creationState, side, parentTableGroup );
-		if ( isAffectedByRestrictions( creationState )
-				&& !sqlAstCreationState.isProcedureOrNativeQuery() ) {
-			final var tableGroup = createTableGroupForDelayedFetch(
-					fetchablePath, parentTableGroup, null, creationState );
-			final var targetResult = entityMappingType.getIdentifierMapping().createDomainResult(
-					fetchablePath, tableGroup, null, creationState );
-			keyResult = new RestrictedForeignKeyResult<>( keyResult, targetResult );
+		if ( selectTargetId ) {
+			// An inverse formula already selected the target identifier through the join.
+			final var targetResult = isInverseFormulaReference() ? keyResult
+					: createTargetIdentifierResult( fetchablePath, parentTableGroup, creationState );
+			keyResult = new RestrictedToOneIdentifierResult<>( keyResult, targetResult );
 		}
-		final boolean selectByUniqueKey = isSelectByUniqueKey( side );
 
-		if ( needsImmediateFetch( fetchTiming )
-				|| sqlAstCreationState.isProcedureOrNativeQuery() && isAffectedByRestrictions( creationState ) ) {
+		if ( needsImmediateFetch( fetchTiming ) || nativeQuery && restricted ) {
 			return buildEntityFetchSelect(
 					fetchParent,
 					this,
 					fetchablePath,
 					keyResult,
 					selectByUniqueKey,
-					isAffectedByRestrictions( creationState ),
+					restricted,
 					creationState
 			);
 		}
@@ -1862,7 +1871,7 @@ public class ToOneAttributeMapping
 			ForeignKeyDescriptor.Nature side,
 			TableGroup parentTableGroup) {
 		if ( isInverseFormulaReference() ) {
-			return createInverseFormulaKeyResult( fetchablePath, parentTableGroup, creationState );
+			return createTargetIdentifierResult( fetchablePath, parentTableGroup, creationState );
 		}
 		else if ( side == ForeignKeyDescriptor.Nature.KEY ) {
 			final var tableGroup =
@@ -1903,12 +1912,13 @@ public class ToOneAttributeMapping
 		return false;
 	}
 
-	private DomainResult<?> createInverseFormulaKeyResult(
+	private DomainResult<?> createTargetIdentifierResult(
 			NavigablePath fetchablePath,
 			TableGroup parentTableGroup,
 			DomainResultCreationState creationState) {
-		// The reversed descriptor's key is the owner's identifier, which does not prove
-		// that an inverse target exists. Read the associated entity's identifier after joining.
+		// The join establishes existence and identity after applying restrictions.
+		// For an inverse formula, the reversed descriptor's key is the owner's identifier,
+		// which cannot establish whether the associated entity exists.
 		var tableGroup = createTableGroupForDelayedFetch( fetchablePath, parentTableGroup, null, creationState );
 		if ( tableGroup instanceof LazyTableGroup lazyTableGroup ) {
 			tableGroup = lazyTableGroup.getTableGroup();
@@ -1982,8 +1992,10 @@ public class ToOneAttributeMapping
 	}
 
 	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
+		// Filters on associations fetched by the target affect its load plan, but
+		// only filters on this association or the target itself can hide the target.
 		return restrictions.isAffectedByFilters( influencers )
-				|| entityMappingType.isAffectedByEnabledFilters( influencers, true );
+				|| entityMappingType.getEntityPersister().hasEnabledFilterForLoadByKey( influencers );
 	}
 
 	public boolean isAffectedByRestrictions(LoadQueryInfluencers influencers) {

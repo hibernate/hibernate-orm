@@ -13,7 +13,8 @@ import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 
 /**
  * A virtual {@link TableReference} for correlated roots.
- * Table group joins are pushed into the from clause as roots and join predicates to the where clause.
+ * Inner joins become subquery roots with their predicates in the where clause.
+ * Left joins need a single row on their left to preserve missing matches.
  *
  * @author Christian Beikov
  */
@@ -21,6 +22,7 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 	private final TableGroup correlatedTableGroup;
 	private final QuerySpec querySpec;
 	private final Consumer<Predicate> joinPredicateConsumer;
+	private TableGroup singleRowGroup;
 
 	public CorrelatedTableGroup(
 			TableGroup correlatedTableGroup,
@@ -48,9 +50,7 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 	@Override
 	public void addTableGroupJoin(TableGroupJoin join) {
 		assert !getTableGroupJoins().contains( join );
-		assert join.getJoinType() == SqlAstJoinType.INNER;
-		querySpec.getFromClause().addRoot( join.getJoinedGroup() );
-		registerPredicate( join );
+		addJoinToSubquery( join );
 		super.addTableGroupJoin( join );
 	}
 
@@ -62,10 +62,34 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 	@Override
 	public void addNestedTableGroupJoin(TableGroupJoin join) {
 		assert !getTableGroupJoins().contains( join );
-		assert join.getJoinType() == SqlAstJoinType.INNER;
-		querySpec.getFromClause().addRoot( join.getJoinedGroup() );
-		registerPredicate( join );
+		addJoinToSubquery( join );
 		super.addNestedTableGroupJoin( join );
+	}
+
+	void addJoinToSubquery(TableGroupJoin join) {
+		if ( join.getJoinedGroup() instanceof StandardVirtualTableGroup ) {
+			// An embedded path shares its parent's table. Its own joins reach this
+			// correlated group individually, including through nested embeddables.
+			registerPredicate( join );
+		}
+		else if ( join.getJoinType() == SqlAstJoinType.LEFT ) {
+			// A correlated root has no FROM item in the subquery. Give its left joins a
+			// single row to preserve when the ON predicate finds no matching target.
+			if ( singleRowGroup == null ) {
+				final var factory = getSessionFactory();
+				final var singleRowSupport = factory.getJdbcServices().getDialect().getSingleRowTableSupport();
+				final var singleRow = new NamedTableReference( "(select 1 c" + singleRowSupport.getSelectOnlyFromClause() + ")",
+						getSqlAliasBase().generateNewAlias() );
+				singleRowGroup = new StandardTableGroup( true, getNavigablePath(), null, null, singleRow, null, factory );
+				querySpec.getFromClause().addRoot( singleRowGroup );
+			}
+			singleRowGroup.addTableGroupJoin( join );
+		}
+		else {
+			assert join.getJoinType() == SqlAstJoinType.INNER;
+			querySpec.getFromClause().addRoot( join.getJoinedGroup() );
+			registerPredicate( join );
+		}
 	}
 
 	private void registerPredicate(TableGroupJoin join) {

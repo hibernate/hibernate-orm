@@ -1209,6 +1209,7 @@ public class LoaderSelectBuilder {
 
 		applySubSelectRestriction( rootQuerySpec, rootTableGroup, attributeMapping, subselect, sqlAstCreationState );
 		applyFiltering( rootQuerySpec, rootTableGroup, entityMapping, sqlAstCreationState );
+		attributeMapping.applyAssociationRestrictions( rootQuerySpec::applyPredicate, rootTableGroup, sqlAstCreationState );
 
 		return new SelectStatement( rootQuerySpec, domainResults );
 	}

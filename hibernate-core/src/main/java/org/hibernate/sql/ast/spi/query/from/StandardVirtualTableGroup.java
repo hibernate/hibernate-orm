@@ -78,28 +78,28 @@ public class StandardVirtualTableGroup extends AbstractTableGroup implements Vir
 	@Override
 	public void addTableGroupJoin(TableGroupJoin join) {
 		super.addTableGroupJoin( join );
-		registerPredicateOnCorrelatedTableGroup( join );
+		addJoinToCorrelatedSubquery( join );
 	}
 
 	@Override
 	public void prependTableGroupJoin(NavigablePath navigablePath, TableGroupJoin join) {
 		super.prependTableGroupJoin( navigablePath, join );
-		registerPredicateOnCorrelatedTableGroup( join );
+		addJoinToCorrelatedSubquery( join );
 	}
 
 	@Override
 	public void addNestedTableGroupJoin(TableGroupJoin join) {
 		super.addNestedTableGroupJoin( join );
-		registerPredicateOnCorrelatedTableGroup( join );
+		addJoinToCorrelatedSubquery( join );
 	}
 
-	private void registerPredicateOnCorrelatedTableGroup(TableGroupJoin join) {
+	private void addJoinToCorrelatedSubquery(TableGroupJoin join) {
 		TableGroup tableGroup = underlyingTableGroup;
 		while ( tableGroup instanceof StandardVirtualTableGroup standardVirtualTableGroup ) {
 			tableGroup = standardVirtualTableGroup.underlyingTableGroup;
 		}
 		if ( tableGroup instanceof CorrelatedTableGroup correlatedTableGroup ) {
-			correlatedTableGroup.getJoinPredicateConsumer().accept( join.getPredicate() );
+			correlatedTableGroup.addJoinToSubquery( join );
 		}
 	}
 

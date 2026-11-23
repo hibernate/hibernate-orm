@@ -154,6 +154,17 @@ public class SoftDeleteJoinTableQueryTests {
 	}
 
 	@ParameterizedTest
+	@ValueSource(strings = {TAGS, NOTES})
+	public void innerJoinFetchKeepsOwnerWithOnlyDeletedRows(String collection, SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			final var owners = session.createSelectionQuery(
+					"select o from Owner o join fetch o." + collection + " order by o.id", Owner.class )
+					.getResultList();
+			assertThat( owners ).extracting( owner -> owner.id ).containsExactly( 1, 2, 3 );
+		} );
+	}
+
+	@ParameterizedTest
 	@ValueSource(strings = {TAGS, LABELS, MARKS, KEYED, NOTES})
 	public void leftJoinFetch(String collection, SessionFactoryScope scope) {
 		scope.inSession( session -> {

@@ -8,7 +8,6 @@ import org.hibernate.dialect.temporal.spi.TemporalRestrictionRequest;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Stateful;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -46,6 +45,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static java.util.Collections.emptyList;
+import static org.hibernate.metamodel.mapping.internal.CurrentState.ownerRevision;
 import static org.hibernate.boot.model.internal.TemporalHelper.ROW_END;
 import static org.hibernate.boot.model.internal.TemporalHelper.ROW_START;
 import static org.hibernate.query.sqm.ComparisonOperator.GREATER_THAN;
@@ -283,7 +283,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 			@Nonnull LazyTableGroup lazyTableGroup,
 			@Nonnull NavigablePath navigablePath,
 			@Nonnull SqlAstCreationState creationState) {
-		final var ownerRevision = ownerRevision( navigablePath, creationState );
+		final var ownerRevision = ownerRevision( this, navigablePath, creationState );
 		if ( ownerRevision != null ) {
 			// read as of the revision of the audited snapshot that owns the association
 			final var tableReference = lazyTableGroup.resolveTableReference( navigablePath, getTableName() );
@@ -382,7 +382,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 			@Nullable Expression ownerRevision,
 			@Nonnull Consumer<Predicate> rowRestrictions, @Nonnull Consumer<Predicate> ownerRestrictions,
 			@Nonnull SqlAliasBaseGenerator aliases, @Nonnull LoadQueryInfluencers influencers) {
-		if ( ownerRevision != null && readsHistoryWithRestriction( influencers.getSessionFactory() ) ) {
+		if ( ownerRevision != null && readsHistoryAtOwnerRevision( influencers ) ) {
 			// read as of the revision of the audited snapshot that owns the association
 			ownerRestrictions.accept( createRevisionRestriction( tableGroup, ownerRevision ) );
 		}
@@ -397,29 +397,13 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 			@Nullable Expression ownerRevision,
 			@Nonnull Consumer<Predicate> rowRestrictions, @Nonnull Consumer<Predicate> ownerRestrictions,
 			@Nonnull SqlAliasBaseGenerator aliases, @Nonnull LoadQueryInfluencers influencers) {
-		if ( ownerRevision != null && readsHistoryWithRestriction( influencers.getSessionFactory() ) ) {
+		if ( ownerRevision != null && readsHistoryAtOwnerRevision( influencers ) ) {
 			// read as of the revision of the audited snapshot that owns the collection
 			ownerRestrictions.accept( createRevisionRestriction( tableGroup, ownerRevision ) );
 		}
 		else {
 			applyPredicate( collectionDescriptor, rowRestrictions, tableGroup, aliases, influencers );
 		}
-	}
-
-	/**
-	 * In an all-revisions query, the revision column of the audit snapshot owning a
-	 * temporal target or element with the given path, which it is read at. It is
-	 * {@code null} when the owner is current state, or when the dialect reads history
-	 * with {@code AS OF}, which cannot take a column.
-	 *
-	 * @see CurrentState#ownerRevision
-	 */
-	public @Nullable ColumnReference ownerRevision(
-			@Nonnull NavigablePath navigablePath,
-			@Nonnull SqlAstCreationState creationState) {
-		return readsHistoryWithRestriction( creationState )
-				? CurrentState.ownerRevision( navigablePath, creationState )
-				: null;
 	}
 
 	/**
@@ -435,11 +419,9 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 	 * Whether the dialect reads history with a restriction, which can be bounded by a
 	 * revision column, rather than with {@code AS OF}, which cannot.
 	 */
-	public boolean readsHistoryWithRestriction(@Nonnull SqlAstCreationState creationState) {
-		return readsHistoryWithRestriction( creationState.getCreationContext().getSessionFactory() );
-	}
-
-	private boolean readsHistoryWithRestriction(SessionFactoryImplementor sessionFactory) {
+	@Override
+	public boolean readsHistoryAtOwnerRevision(@Nonnull LoadQueryInfluencers influencers) {
+		final var sessionFactory = influencers.getSessionFactory();
 		return sessionFactory.getJdbcServices().getDialect().getTemporalTableSupport()
 				.useTemporalRestriction( new TemporalRestrictionRequest(
 						temporalTableStrategy,

@@ -114,6 +114,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static org.hibernate.metamodel.mapping.internal.CurrentState.hasHistory;
+import static org.hibernate.metamodel.mapping.internal.CurrentState.ownerRevision;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.createInverseModelPart;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getTableIdentifierExpression;
@@ -2475,11 +2476,11 @@ public class ToOneAttributeMapping
 	 */
 	private TargetRead targetRead(TableGroup lhs, NavigablePath navigablePath, SqlAstCreationState creationState) {
 		final var target = getAssociatedEntityMappingType();
+		final var temporalMapping = target.getTemporalMapping();
 		return TargetRead.of(
 				hasHistory( target ),
 				lhs,
-				target.getTemporalMapping() instanceof TemporalMappingImpl temporalMapping
-						&& temporalMapping.ownerRevision( navigablePath, creationState ) != null,
+				temporalMapping != null && ownerRevision( temporalMapping, navigablePath, creationState ) != null,
 				creationState
 		);
 	}

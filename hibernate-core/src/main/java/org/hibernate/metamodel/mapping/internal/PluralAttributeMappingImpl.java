@@ -618,21 +618,18 @@ public class PluralAttributeMappingImpl
 	}
 
 	/**
-	 * Whether the collection is temporal, or its element or index is a temporal
-	 * entity, read as of a revision column.
+	 * Whether the collection, its element, or its index reads its history, in place
+	 * of its current state, when it is read as of a revision of the owner.
 	 */
-	private boolean readsTemporalPartAtRevision(SqlAstCreationState creationState) {
-		return auxiliaryMapping instanceof TemporalMappingImpl temporalMapping
-				&& temporalMapping.readsHistoryWithRestriction( creationState )
-			|| readsTemporalPartAtRevision( elementDescriptor, creationState )
-			|| readsTemporalPartAtRevision( indexDescriptor, creationState );
+	private boolean readsHistoryAtOwnerRevision(LoadQueryInfluencers influencers) {
+		return readsHistoryAtOwnerRevision( auxiliaryMapping, influencers )
+			|| readsHistoryAtOwnerRevision( auxiliaryMapping( elementDescriptor ), influencers )
+			|| readsHistoryAtOwnerRevision( auxiliaryMapping( indexDescriptor ), influencers );
 	}
 
-	private static boolean readsTemporalPartAtRevision(
-			@Nullable CollectionPart part, SqlAstCreationState creationState) {
-		return part instanceof EntityCollectionPart entityPart
-			&& entityPart.getAssociatedEntityMappingType().getTemporalMapping() instanceof TemporalMappingImpl temporalMapping
-			&& temporalMapping.readsHistoryWithRestriction( creationState );
+	private static boolean readsHistoryAtOwnerRevision(
+			@Nullable AuxiliaryMapping mapping, LoadQueryInfluencers influencers) {
+		return mapping != null && mapping.readsHistoryAtOwnerRevision( influencers );
 	}
 
 	@Nonnull
@@ -672,7 +669,7 @@ public class PluralAttributeMappingImpl
 		return TargetRead.of(
 				hasHistory( this ),
 				owner,
-				ownerRevision != null && readsTemporalPartAtRevision( creationState ),
+				ownerRevision != null && readsHistoryAtOwnerRevision( creationState.getLoadQueryInfluencers() ),
 				creationState
 		);
 	}
@@ -1225,17 +1222,17 @@ public class PluralAttributeMappingImpl
 		return join;
 	}
 
-	private boolean hasSoftDelete() {
-		// NOTE: this needs to be done lazily because the associated entity mapping (if one)
-		// does not know its SoftDeleteMapping yet when this is created
-		return auxiliaryMapping instanceof SoftDeleteMapping
-			|| getElementDescriptor() instanceof EntityCollectionPart collectionPart
-					&& collectionPart.getAssociatedEntityMappingType().getSoftDeleteMapping() != null;
+	private boolean requiresOwnerPreservationOnFetch() {
+		if ( auxiliaryMapping != null && auxiliaryMapping.requiresOwnerPreservationOnCollectionFetch() ) {
+			return true;
+		}
+		final var elementMapping = auxiliaryMapping( elementDescriptor );
+		return elementMapping != null && elementMapping.requiresOwnerPreservationOnCollectionFetch();
 	}
 
 	public SqlAstJoinType determineSqlJoinType(TableGroup lhs, @Nullable SqlAstJoinType requestedJoinType, boolean fetched) {
-		if ( fetched && hasSoftDelete() && requestedJoinType != SqlAstJoinType.RIGHT && requestedJoinType != SqlAstJoinType.FULL ) {
-			// A fetch keeps the owner when all its elements have been deleted.
+		if ( fetched && requestedJoinType != SqlAstJoinType.RIGHT && requestedJoinType != SqlAstJoinType.FULL
+				&& requiresOwnerPreservationOnFetch() ) {
 			return SqlAstJoinType.LEFT;
 		}
 		else if ( requestedJoinType == null ) {
@@ -1296,12 +1293,9 @@ public class PluralAttributeMappingImpl
 	}
 
 	private boolean useCollectionTableGroup(SqlAstCreationState creationState) {
-		// For temporal OTM @JoinColumn reads, use CollectionTableGroup with the middle
-		// audit table as primary (like M2M). The FK column isn't in the entity audit table,
-		// so the key must resolve from the middle audit table instead.
 		return !getCollectionDescriptor().isOneToMany()
-				|| auxiliaryMapping instanceof AuditMapping auditMapping
-				&& auditMapping.useAuxiliaryTable( creationState.getLoadQueryInfluencers() );
+				|| auxiliaryMapping != null
+					&& auxiliaryMapping.requiresSeparateMembershipTable( creationState.getLoadQueryInfluencers() );
 	}
 
 	private TableGroup rootTableGroup(

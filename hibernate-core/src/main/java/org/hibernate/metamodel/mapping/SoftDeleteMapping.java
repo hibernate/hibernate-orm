@@ -23,6 +23,11 @@ import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
 public interface SoftDeleteMapping extends AuxiliaryMapping, SelectableMapping, VirtualModelPart, SqlExpressible {
 	String ROLE_NAME = "{soft-delete}";
 
+	@Override
+	default boolean requiresOwnerPreservationOnCollectionFetch() {
+		return true;
+	}
+
 	/**
 	 * The soft-delete strategy - how to interpret indicator values
 	 */

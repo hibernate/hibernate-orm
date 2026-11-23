@@ -186,6 +186,11 @@ public interface AuxiliaryMapping {
 		return true;
 	}
 
+	/// Whether fetching a collection must keep its owner when this mapping hides every row.
+	default boolean requiresOwnerPreservationOnCollectionFetch() {
+		return false;
+	}
+
 	/// Whether these session settings require a target table read for an association
 	/// key that could otherwise be read from the foreign key.
 	default boolean requiresTargetTableForKeyRead(@Nonnull LoadQueryInfluencers influencers) {
@@ -204,6 +209,18 @@ public interface AuxiliaryMapping {
 	/// Some strategies use the primary table for current-state queries and an
 	/// auxiliary table only for historical or audit views.
 	boolean useAuxiliaryTable(@Nonnull LoadQueryInfluencers influencers);
+
+	/// Whether a one-to-many read must join a separate membership table to the element table.
+	default boolean requiresSeparateMembershipTable(@Nonnull LoadQueryInfluencers influencers) {
+		return false;
+	}
+
+	/// Whether the rows of this mapping can be read as of the revision of the owner of
+	/// an association, in which case they are read from its history, in place of its
+	/// current state, when an association restriction is given such a revision.
+	default boolean readsHistoryAtOwnerRevision(@Nonnull LoadQueryInfluencers influencers) {
+		return false;
+	}
 
 	/// Whether query plans involving this mapping are affected by the supplied
 	/// influencers.

@@ -62,6 +62,22 @@ public final class CacheHelper {
 					&& readsHistory( session, index.getAssociatedEntityMappingType().getEntityPersister() );
 	}
 
+	/**
+	 * A cached collection holds identifiers. A change to a map key may hide or reveal
+	 * its entry without modifying the collection or invalidating its cache entry.
+	 */
+	public static boolean canUseCollectionCache(
+			@Nonnull SharedSessionContractImplementor session, @Nonnull CollectionPersister persister) {
+		if ( !persister.hasCache() || readsHistory( session, persister ) ) {
+			return false;
+		}
+		if ( persister.getAttributeMapping().getIndexDescriptor() instanceof EntityCollectionPart key ) {
+			final var keyType = key.getAssociatedEntityMappingType();
+			return !keyType.hasWhereRestrictions() && keyType.getSoftDeleteMapping() == null;
+		}
+		return true;
+	}
+
 	public static Object fromSharedCache(
 			SharedSessionContractImplementor session,
 			Object cacheKey,

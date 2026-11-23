@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.Hibernate;
+import org.hibernate.StaleStateException;
 import org.hibernate.WrongClassException;
 import org.hibernate.engine.spi.SessionImplementor;
 
@@ -20,6 +21,7 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.OrderColumn;
 
 import static jakarta.persistence.InheritanceType.TABLE_PER_CLASS;
@@ -158,6 +160,38 @@ public abstract class AbstractInverseIndexedTablePerClassTest {
 		scope.inTransaction( session -> assertThat( positions( session, "ThingB" ) ).containsExactly( 1, null ) );
 	}
 
+	/**
+	 * A proxy obtained through a subtype with no subclasses is written to the table of that subtype.
+	 * If its row belongs to a sibling subtype, no row is written, and the sibling row is left alone.
+	 * Hibernate may report the update which matched no row, or ignore it.
+	 */
+	@Test
+	public void testAdditionOfProxyOfWrongLeafType(SessionFactoryScope scope) {
+		persistCrate( scope );
+		scope.inTransaction( session -> session.persist( new ThingB( 4, null ) ) );
+
+		try {
+			scope.inTransaction( session -> {
+				final Crate crate = session.find( Crate.class, 1 );
+				assertThat( crate.things ).hasSize( 3 );
+				final Thing proxy = session.getReference( ThingA.class, 4 );
+				assertThat( Hibernate.isInitialized( proxy ) ).isFalse();
+				crate.things.add( proxy );
+			} );
+		}
+		catch (OptimisticLockException e) {
+			// the update matched no row
+			assertThat( e ).hasCauseInstanceOf( StaleStateException.class );
+		}
+
+		scope.inTransaction( session -> {
+			assertThat( positions( session, "ThingA" ) ).containsExactly( 0, 2 );
+			assertThat( positions( session, "ThingB" ) ).containsExactly( 1, null );
+		} );
+
+		assertLoadsAs( scope, 1, 2, 3 );
+	}
+
 	@Test
 	public void testMapKeyWrite(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
@@ -228,7 +262,7 @@ public abstract class AbstractInverseIndexedTablePerClassTest {
 		List<Thing> things = new ArrayList<>();
 
 		@OneToMany(mappedBy = "crate")
-		@MapKeyColumn(name = "slot")
+		@MapKeyColumn(name = "slot", nullable = true)
 		Map<String, Thing> thingsBySlot = new HashMap<>();
 	}
 

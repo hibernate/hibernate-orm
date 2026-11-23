@@ -10,7 +10,6 @@ import java.util.function.Supplier;
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationTarget;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
-import org.hibernate.collection.spi.CollectionChangeSet;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.ast.spi.model.MutatingTableReference;
@@ -22,6 +21,8 @@ import static org.hibernate.action.queue.internal.decompose.collection.Collectio
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionMutationPlanSupport.bindTemporalEndingValue;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionMutationPlanSupport.buildTemporalDeleteMutation;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionMutationPlanSupport.createTableMapping;
+import static org.hibernate.action.queue.internal.decompose.collection.CollectionMutationPlanSupport.replacedRow;
+import static org.hibernate.action.queue.internal.decompose.collection.CollectionMutationPlanSupport.rowPosition;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionOrdinalSupport.Slot;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionOrdinalSupport.calculateOrdinal;
 import static org.hibernate.temporal.TemporalTableStrategy.SINGLE_TABLE;
@@ -109,9 +110,22 @@ public class TemporalCollectionMutationPlanContributor implements CollectionMuta
 		}
 
 		final var valueChange = context.valueChange();
-		final Object deleteRowValue = new CollectionChangeSet.Removal(
-				valueChange.oldValue(),
-				valueChange.index()
+		final Object insertRowValue;
+		final int entryIndex;
+		if ( context.persister().getCollectionSemantics().getCollectionClassification().isMap() ) {
+			insertRowValue = new SimpleImmutableEntry<>( valueChange.index(), valueChange.newValue() );
+			entryIndex = -1;
+		}
+		else {
+			insertRowValue = valueChange.newValue();
+			entryIndex = rowPosition( valueChange.index() );
+		}
+		final Object deleteRowValue = replacedRow(
+				context.persister(),
+				context.collection(),
+				valueChange,
+				insertRowValue,
+				entryIndex
 		);
 		operationConsumer.accept( new FlushOperation(
 				context.tableDescriptor(),
@@ -128,16 +142,6 @@ public class TemporalCollectionMutationPlanContributor implements CollectionMuta
 				"DeleteValue[" + valueChange.index() + "](" + context.persister().getRole() + ")"
 		) );
 
-		final Object insertRowValue;
-		final int entryIndex;
-		if ( context.persister().getCollectionSemantics().getCollectionClassification().isMap() ) {
-			insertRowValue = new SimpleImmutableEntry<>( valueChange.index(), valueChange.newValue() );
-			entryIndex = -1;
-		}
-		else {
-			insertRowValue = valueChange.newValue();
-			entryIndex = (Integer) valueChange.index();
-		}
 		operationConsumer.accept( new FlushOperation(
 				context.tableDescriptor(),
 				MutationKind.INSERT,

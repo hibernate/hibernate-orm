@@ -20,8 +20,6 @@ import org.hibernate.action.queue.spi.meta.TableDescriptorAsTableMapping;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.collection.spi.CollectionChangeSet;
 import org.hibernate.collection.spi.CollectionMutationInterpretation;
-import org.hibernate.collection.spi.DeferredCollectionIdentifier;
-import org.hibernate.collection.spi.DeferredCollectionPosition;
 import org.hibernate.collection.spi.FrozenCollectionRows;
 import org.hibernate.collection.spi.PhysicalCollectionMutation;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -54,6 +52,8 @@ import static java.util.Collections.emptyList;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionOrdinalSupport.Slot;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionOrdinalSupport.calculateOrdinal;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionMutationPlanSupport.createTableMapping;
+import static org.hibernate.action.queue.internal.decompose.collection.CollectionMutationPlanSupport.replacedRow;
+import static org.hibernate.action.queue.internal.decompose.collection.CollectionMutationPlanSupport.rowPosition;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 import static org.hibernate.temporal.TemporalTableStrategy.SINGLE_TABLE;
 
@@ -882,30 +882,12 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 							updateValueOrigin,
 							updateShapeKey
 					) );
-					// The old row of an identifier bag is identified by its collection
-					// identifier, where the change identifies it by entry position
-					final var oldIdentity = persister.getAttributeMapping().getIdentifierDescriptor() != null
-							? collection.getIdentifier( entry, entryIndex )
-							: valueChange.index();
 					contributeAdditionalUpdate( collection, key,
-							new CollectionChangeSet.Removal( valueChange.oldValue(), oldIdentity ), entryIndex,
+							replacedRow( persister, collection, valueChange, entry, entryIndex ), entryIndex,
 							entry, entryIndex, ordinalBase, session, operationConsumer );
 				}
 			}
 		}
-	}
-
-	private static int rowPosition(Object position) {
-		if ( position instanceof Number number ) {
-			return number.intValue();
-		}
-		if ( position instanceof DeferredCollectionIdentifier identifier ) {
-			return identifier.entryPosition();
-		}
-		if ( position instanceof DeferredCollectionPosition deferredPosition ) {
-			return deferredPosition.resolve();
-		}
-		return -1;
 	}
 
 	private boolean canUpdateIndexedManyToManyValuesAtPositions(

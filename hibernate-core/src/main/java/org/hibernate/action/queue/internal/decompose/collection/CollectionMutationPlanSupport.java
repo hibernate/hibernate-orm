@@ -7,6 +7,9 @@ import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPla
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationTarget;
 import org.hibernate.action.queue.spi.meta.TableDescriptor;
 import org.hibernate.action.queue.spi.meta.TableDescriptorAsTableMapping;
+import org.hibernate.collection.spi.CollectionChangeSet;
+import org.hibernate.collection.spi.DeferredCollectionIdentifier;
+import org.hibernate.collection.spi.DeferredCollectionPosition;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.collection.spi.SnapshotIndexed;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
@@ -34,6 +37,36 @@ final class CollectionMutationPlanSupport {
 				false,
 				false
 		);
+	}
+
+	/// The position in the collection of the entry which an index of a
+	/// [CollectionChangeSet] refers to, or `-1` if the index is not a position.
+	static int rowPosition(Object position) {
+		if ( position instanceof Number number ) {
+			return number.intValue();
+		}
+		if ( position instanceof DeferredCollectionIdentifier identifier ) {
+			return identifier.entryPosition();
+		}
+		if ( position instanceof DeferredCollectionPosition deferredPosition ) {
+			return deferredPosition.resolve();
+		}
+		return -1;
+	}
+
+	/// The row which a value change replaces. The change identifies the row
+	/// of an identifier bag by entry position, where the row itself is
+	/// identified by its collection identifier.
+	static CollectionChangeSet.Removal replacedRow(
+			CollectionPersister persister,
+			PersistentCollection<?> collection,
+			CollectionChangeSet.ValueChange valueChange,
+			Object entry,
+			int entryPosition) {
+		final Object rowKey = persister.getAttributeMapping().getIdentifierDescriptor() != null
+				? collection.getIdentifier( entry, entryPosition )
+				: valueChange.index();
+		return new CollectionChangeSet.Removal( valueChange.oldValue(), rowKey );
 	}
 
 	static DeleteRowPlan buildDeleteRowPlan(DeleteRowPlanContext context, RestrictedTableMutationBuilder<?, ?> builder) {

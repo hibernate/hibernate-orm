@@ -114,6 +114,21 @@ class MixedTemporalAssociationTest {
 	}
 
 	@Test
+	void nullCheckTreatsInvisibleTargetAsNull(SessionFactoryScope scope) {
+		// Alice's favorite course did not exist yet at the first changeset
+		final String isNull = "select s.id from Student s where s.id = 1 and s.favorite is null";
+		final String isNotNull = "select s.id from Student s where s.id = 1 and s.favorite is not null";
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( firstChangeset ).openSession()) {
+			assertEquals( List.of( 1L ), session.createSelectionQuery( isNull, Long.class ).list() );
+			assertEquals( List.of(), session.createSelectionQuery( isNotNull, Long.class ).list() );
+		}
+		scope.inSession( session -> {
+			assertEquals( List.of(), session.createSelectionQuery( isNull, Long.class ).list() );
+			assertEquals( List.of( 1L ), session.createSelectionQuery( isNotNull, Long.class ).list() );
+		} );
+	}
+
+	@Test
 	void dereferenceHistoricalTargetId(SessionFactoryScope scope) {
 		try (var session = scope.getSessionFactory().withOptions().atChangeset( firstChangeset ).openSession()) {
 			assertEquals( List.of(), session.createSelectionQuery(

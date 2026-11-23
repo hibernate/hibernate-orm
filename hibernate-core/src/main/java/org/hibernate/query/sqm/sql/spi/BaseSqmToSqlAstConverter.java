@@ -447,6 +447,7 @@ import static org.hibernate.query.sqm.BinaryArithmeticOperator.SUBTRACT;
 import static org.hibernate.query.sqm.UnaryArithmeticOperator.UNARY_MINUS;
 import static org.hibernate.query.sqm.internal.SqmMappingModelHelper.resolveExplicitTreatTarget;
 import static org.hibernate.query.sqm.internal.SqmMappingModelHelper.resolveMappingModelExpressible;
+import static org.hibernate.query.sqm.internal.SqmUtil.hasRestrictedTarget;
 import static org.hibernate.query.sqm.internal.SqmUtil.isFkOptimizationAllowed;
 import static org.hibernate.query.sqm.sql.spi.AggregateColumnAssignmentHandler.forEntityDescriptor;
 import static org.hibernate.sql.ast.internal.TableGroupJoinHelper.determineJoinForPredicateApply;
@@ -4269,12 +4270,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				queryNodeProcessingState.getFromClause().addRoot( tableGroup );
 			}
 			else {
-				final boolean mappedByOrNotFoundToOne = isMappedByOrNotFoundToOne( joinProducer );
+				final boolean mayLackTarget = mayLackTarget( joinProducer );
 				final var compatibleLeftJoin =
-						mappedByOrNotFoundToOne
+						mayLackTarget
 								? parentTableGroup.findCompatibleJoin( joinProducer, SqlAstJoinType.LEFT )
 								: null;
-				final var sqlAstJoinType = mappedByOrNotFoundToOne ? SqlAstJoinType.LEFT : null;
+				final var sqlAstJoinType = mayLackTarget ? SqlAstJoinType.LEFT : null;
 				final var compatibleTableGroup =
 						compatibleLeftJoin != null
 								? compatibleLeftJoin.getJoinedGroup()
@@ -4321,11 +4322,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return tableGroup;
 	}
 
-	private boolean isMappedByOrNotFoundToOne(TableGroupJoinProducer joinProducer) {
+	/**
+	 * Whether a to-one may have a foreign key with no visible target row, so that
+	 * a null check on the association needs a left join to the target table.
+	 */
+	private boolean mayLackTarget(TableGroupJoinProducer joinProducer) {
 		if ( joinProducer instanceof ToOneAttributeMapping toOne ) {
 			return toOne.hasNotFoundAction()
 				// ToOne( mappedBy = "..." ) always has a referenced property name and is the target side
-				|| toOne.getReferencedPropertyName() != null && toOne.getSideNature() == ForeignKeyDescriptor.Nature.TARGET;
+				|| toOne.getReferencedPropertyName() != null && toOne.getSideNature() == ForeignKeyDescriptor.Nature.TARGET
+				// A target hidden by a changeset or load-by-key filter is treated like a missing target
+				|| hasRestrictedTarget( toOne, this );
 		}
 		return false;
 	}

@@ -6,7 +6,9 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.temporal.spi.TemporalRestrictionRequest;
 import org.hibernate.dialect.temporal.spi.TemporalTableAuxiliaryObject;
 import org.hibernate.dialect.temporal.spi.TemporalTableDdlRequest;
+import org.hibernate.dialect.type.spi.OracleJdbcTypes;
 import org.hibernate.temporal.TemporalTableStrategy;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import static org.hibernate.dialect.temporal.spi.TemporalTableAuxiliaryObject.Scope.DATABASE;
 import static org.hibernate.dialect.temporal.spi.TemporalTableAuxiliaryObject.Scope.TABLE;
@@ -30,13 +32,9 @@ public class OracleTemporalTableSupport extends DefaultTemporalTableSupport {
 		return false;
 	}
 
-	/**
-	 * Return {@code false} because Oracle does not allow a column of type
-	 * {@code timestamp with time zone} in a primary key.
-	 */
 	@Override
-	public boolean supportsZonedTimestampKeys() {
-		return false;
+	public JdbcType getInstantAuditKeyJdbcType(JdbcType preferredType) {
+		return OracleJdbcTypes.instantAuditKeyType( preferredType, dialect.getTimeZoneSupport() );
 	}
 
 	@Override

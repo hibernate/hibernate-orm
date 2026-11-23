@@ -44,9 +44,6 @@ import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.temporal.spi.ChangesetCoordinator;
-import org.hibernate.type.SqlTypes;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
 
 import jakarta.annotation.Nullable;
 
@@ -55,7 +52,6 @@ import static org.hibernate.annotations.Audited.Table.DEFAULT_INVALIDATING_CHANG
 import static org.hibernate.annotations.Audited.Table.DEFAULT_MODIFICATION_TYPE_COLUMN_NAME;
 import static org.hibernate.audit.AuditStrategy.VALIDITY;
 import static org.hibernate.cfg.StateManagementSettings.AUDIT_STRATEGY;
-import static org.hibernate.dialect.type.spi.TimeZoneSupport.NATIVE;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.nullIfBlank;
 import static org.hibernate.metamodel.mapping.internal.CurrentState.readsCurrentState;
@@ -69,17 +65,6 @@ public final class AuditHelper {
 	public static final String INVALIDATING_CHANGESET_ID = "invalidatingChangesetId";
 
 	private static final String DEFAULT_TABLE_SUFFIX = "_AUD";
-
-	/**
-	 * A UTC date and time in a column of type {@code timestamp}, even
-	 * where the database has a {@code timestamp with time zone} type.
-	 */
-	private static final JdbcType UTC_TIMESTAMP = new TimestampUtcAsJdbcTimestampJdbcType() {
-		@Override
-		public int getDdlTypeCode() {
-			return SqlTypes.TIMESTAMP;
-		}
-	};
 
 	private AuditHelper() {
 	}
@@ -739,20 +724,12 @@ public final class AuditHelper {
 		final var value = new BasicValue( context, table );
 		final var support = value.getDialect().getTemporalTableSupport();
 		column.setTemporalPrecision( support.getTemporalColumnPrecision() );
-		column.setSqlTypeCode( support.getTemporalColumnType() );
-		if ( !support.supportsZonedTimestampKeys() && usesZonedTimestamp( value ) ) {
-			value.setExplicitJdbcTypeAccess( typeConfiguration -> UTC_TIMESTAMP );
+		final var preferredType = value.getJdbcType( value.getPreferredSqlTypeCodeForInstant() );
+		final var keyType = support.getInstantAuditKeyJdbcType( preferredType );
+		if ( keyType != preferredType ) {
+			value.setExplicitJdbcTypeAccess( typeConfiguration -> keyType );
 		}
 		return value;
-	}
-
-	private static boolean usesZonedTimestamp(BasicValue value) {
-		final var jdbcType = value.getJdbcType( value.getPreferredSqlTypeCodeForInstant() );
-		return switch ( jdbcType.getDdlTypeCode() ) {
-			case SqlTypes.TIMESTAMP_WITH_TIMEZONE -> true;
-			case SqlTypes.TIMESTAMP_UTC -> value.getDialect().getTimeZoneSupport() == NATIVE;
-			default -> false;
-		};
 	}
 
 	private static void setColumnName(

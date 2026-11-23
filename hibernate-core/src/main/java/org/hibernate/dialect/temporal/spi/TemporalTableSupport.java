@@ -5,6 +5,7 @@ import java.util.List;
 import org.hibernate.SPI;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.temporal.TemporalTableStrategy;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import jakarta.annotation.Nullable;
 
 import static org.hibernate.SPI.Role.IMPLEMENT;
@@ -36,14 +37,13 @@ public interface TemporalTableSupport {
 	/// columns.
 	int getTemporalColumnPrecision();
 
-	/// Report whether a column of the database's zoned timestamp type may
-	/// belong to a primary key. When it may not, an `Instant` changeset
-	/// identifier in the primary key of an audit table is held as a UTC date
-	/// and time in a column of type [org.hibernate.type.SqlTypes#TIMESTAMP].
+	/// Choose the JDBC type for a generated [java.time.Instant] changeset identifier
+	/// that belongs to an audit table's primary key. Return the preferred mapping
+	/// when the database permits its column type in a key.
 	///
 	/// @since 8.1
-	default boolean supportsZonedTimestampKeys() {
-		return true;
+	default JdbcType getInstantAuditKeyJdbcType(JdbcType preferredType) {
+		return preferredType;
 	}
 
 	/// Render the trailing table options for the supplied table. Use every name

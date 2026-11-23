@@ -4,6 +4,7 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.temporal.spi.TemporalTableDdlRequest;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
 
 import org.junit.jupiter.api.Test;
 
@@ -14,9 +15,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 /// @author Steve Ebersole
 public class TemporalTableSupportTest {
 	@Test
-	void oracleLegacyDisallowsZonedTimestampKeys() {
-		final var dialect = new OracleLegacyDialect( DatabaseVersion.make( 12, 2 ) );
-		assertThat( dialect.getTemporalTableSupport().supportsZonedTimestampKeys() ).isFalse();
+	void oracleLegacyUsesPlainTimestampForInstantAuditKeys() {
+		final var preferred = TimestampUtcAsJdbcTimestampJdbcType.INSTANCE;
+		final var oracle12 = new OracleLegacyDialect( DatabaseVersion.make( 12, 2 ) );
+		assertThat( oracle12.getTemporalTableSupport().getInstantAuditKeyJdbcType( preferred ).getDdlTypeCode() )
+				.isEqualTo( SqlTypes.TIMESTAMP );
+		final var oracle8 = new OracleLegacyDialect( DatabaseVersion.make( 8 ) );
+		assertThat( oracle8.getTemporalTableSupport().getInstantAuditKeyJdbcType( preferred ) ).isSameAs( preferred );
 	}
 
 	@Test

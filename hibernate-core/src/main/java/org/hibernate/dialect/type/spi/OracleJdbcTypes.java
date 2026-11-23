@@ -13,16 +13,18 @@ import org.hibernate.dialect.type.internal.OracleReflectionStructJdbcType;
 import org.hibernate.dialect.type.internal.OracleXmlArrayJdbcTypeConstructor;
 import org.hibernate.dialect.type.internal.OracleXmlJdbcType;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
 
 import static org.hibernate.SPI.Role.USE;
 
 /// Access to Hibernate's stock Oracle JDBC type descriptors.
 ///
-/// Call these methods from
-/// [org.hibernate.dialect.Dialect#contributeTypes(org.hibernate.boot.model.TypeContributions, org.hibernate.service.ServiceRegistry)]
-/// and contribute each result with the matching JDBC descriptor or constructor
+/// When contributing types from
+/// [org.hibernate.dialect.Dialect#contributeTypes(org.hibernate.boot.model.TypeContributions, org.hibernate.service.ServiceRegistry)],
+/// register each result with the matching JDBC descriptor or constructor
 /// operation. Test [#isDriverUsable(ServiceRegistry)] before requesting a
 /// driver-backed result and test [#isOsonAvailable(ServiceRegistry)] before
 /// contributing the OSON descriptors.
@@ -31,7 +33,27 @@ import static org.hibernate.SPI.Role.USE;
 /// @author Steve Ebersole
 @SPI(USE)
 public final class OracleJdbcTypes {
+	/// A plain timestamp written and read using a UTC calendar.
+	private static final JdbcType UTC_TIMESTAMP = new TimestampUtcAsJdbcTimestampJdbcType() {
+		@Override
+		public int getDdlTypeCode() {
+			return SqlTypes.TIMESTAMP;
+		}
+	};
+
 	private OracleJdbcTypes() {
+	}
+
+	/// Oracle requires a plain timestamp for an audit primary key when the
+	/// preferred mapping would produce a timestamp with time zone.
+	///
+	/// @since 8.1
+	public static JdbcType instantAuditKeyType(JdbcType preferredType, TimeZoneSupport timeZoneSupport) {
+		return switch ( preferredType.getDdlTypeCode() ) {
+			case SqlTypes.TIMESTAMP_WITH_TIMEZONE -> UTC_TIMESTAMP;
+			case SqlTypes.TIMESTAMP_UTC -> timeZoneSupport == TimeZoneSupport.NATIVE ? UTC_TIMESTAMP : preferredType;
+			default -> preferredType;
+		};
 	}
 
 	/// Obtain Oracle's pre-23 boolean descriptor.

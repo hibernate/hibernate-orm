@@ -920,8 +920,8 @@ public class OracleLegacyDialect extends Dialect implements CurrentTemporalSuppo
 	public TemporalTableSupport getTemporalTableSupport() {
 		return new DelegatingTemporalTableSupport( super.getTemporalTableSupport() ) {
 			@Override
-			public boolean supportsZonedTimestampKeys() {
-				return false;
+			public JdbcType getInstantAuditKeyJdbcType(JdbcType preferredType) {
+				return OracleJdbcTypes.instantAuditKeyType( preferredType, getTimeZoneSupport() );
 			}
 		};
 	}

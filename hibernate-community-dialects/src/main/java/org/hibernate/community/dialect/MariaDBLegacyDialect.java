@@ -345,18 +345,6 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 	}
 
 	@Override
-	boolean supportsForShare() {
-		//only supported on MySQL
-		return false;
-	}
-
-	@Override
-	boolean supportsAliasLocks() {
-		//only supported on MySQL
-		return false;
-	}
-
-	@Override
 	@SPI({ IMPLEMENT, SUPPLY })
 	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
 		return FunctionalDependencyAnalysisSupport.TABLE_GROUP_AND_CONSTANTS;

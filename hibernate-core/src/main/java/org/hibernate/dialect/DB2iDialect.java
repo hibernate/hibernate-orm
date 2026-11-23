@@ -50,9 +50,6 @@ public class DB2iDialect extends DB2Dialect {
 
 	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 7, 2 );
 	public final static DatabaseVersion DB2_LUW_VERSION = DB2Dialect.MINIMUM_VERSION;
-
-	private static final String FOR_UPDATE_SQL = " for update with rs";
-	private static final String FOR_UPDATE_SKIP_LOCKED_SQL = FOR_UPDATE_SQL + " skip locked data";
 	private static final SequenceInformationExtractor SEQUENCE_INFORMATION_EXTRACTOR =
 			SequenceInformationExtractors.builder(
 					"select distinct sequence_schema as seqschema, sequence_name as seqname, START, minimum_value as minvalue, maximum_value as maxvalue, increment from qsys2.syssequences "

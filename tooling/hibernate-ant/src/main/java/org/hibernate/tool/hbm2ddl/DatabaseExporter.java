@@ -17,7 +17,7 @@ import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
  * {@link org.hibernate.tool.schema.spi.SchemaManagementTool} and friends.
  */
 @Deprecated
-class DatabaseExporter implements Exporter {
+class DatabaseExporter {
 
 	private final ConnectionHelper connectionHelper;
 	private final SqlExceptionHelper sqlExceptionHelper;
@@ -34,12 +34,10 @@ class DatabaseExporter implements Exporter {
 		statement = connection.createStatement();
 	}
 
-	@Override
 	public boolean acceptsImportScripts() {
 		return true;
 	}
 
-	@Override
 	public void export(String string) throws Exception {
 		statement.executeUpdate( string );
 		try {
@@ -53,7 +51,6 @@ class DatabaseExporter implements Exporter {
 		}
 	}
 
-	@Override
 	public void release() throws Exception {
 		try {
 			statement.close();

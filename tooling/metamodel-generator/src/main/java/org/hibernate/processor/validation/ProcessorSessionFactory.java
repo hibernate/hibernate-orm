@@ -11,7 +11,6 @@ import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
-import org.hibernate.type.EntityType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.EnumJavaType;
@@ -50,7 +49,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -418,12 +416,6 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		}
 
 		@Override
-		boolean isSamePersister(MockEntityPersister entityPersister) {
-			final var persister = (EntityPersister) entityPersister;
-			return typeUtil.isSameType( persister.type.asType(), type.asType() );
-		}
-
-		@Override
 		boolean isSubclassPersister(MockEntityPersister entityPersister) {
 			final var persister = (EntityPersister) entityPersister;
 			return typeUtil.isSubtype( persister.type.asType(), type.asType() );
@@ -480,17 +472,9 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 					new ManyToOneType(that.getTypeConfiguration(), targetEntityName),
 					that);
 		}
-
-		@Override
-		Type getElementPropertyType(String propertyPath) {
-			return getElementPersister().getPropertyType(propertyPath);
-		}
 	}
 
 	public abstract static class ElementCollectionPersister extends MockCollectionPersister {
-		private final TypeElement elementType;
-		private final AccessType defaultAccessType;
-		private final ProcessorSessionFactory factory;
 
 		public ElementCollectionPersister(String role,
 				CollectionType collectionType,
@@ -503,16 +487,6 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 							propertyPath, defaultAccessType,
 							factory),
 					factory);
-			this.elementType = elementType;
-			this.defaultAccessType = defaultAccessType;
-			this.factory = factory;
-		}
-
-		@Override
-		Type getElementPropertyType(String propertyPath) {
-			final var symbol = findPropertyByPath(elementType, propertyPath, defaultAccessType);
-			return symbol == null ? null :
-					factory.propertyType(symbol, getOwnerEntityName(), propertyPath, defaultAccessType);
 		}
 	}
 
@@ -1043,90 +1017,6 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 			&& type.getEnclosedElements().stream()
 				.anyMatch(element -> element.getKind() == ElementKind.FIELD
 						&& element.getSimpleName().contentEquals(fieldName));
-	}
-
-	@Override
-	boolean isConstructorDefined(String qualifiedClassName, List<Type> argumentTypes) {
-		final var symbol = findClassByQualifiedName(qualifiedClassName);
-		if (symbol==null) {
-			return false;
-		}
-		for (Element cons: symbol.getEnclosedElements()) {
-			if ( cons.getKind() == ElementKind.CONSTRUCTOR ) {
-				final var constructor = (ExecutableElement) cons;
-				final var parameters = constructor.getParameters();
-				if (parameters.size()==argumentTypes.size()) {
-					var argumentsCheckOut = true;
-					for (int i=0; i<argumentTypes.size(); i++) {
-						final var type = argumentTypes.get(i);
-						final var param = parameters.get(i);
-						if (param.asType().getKind().isPrimitive()) {
-							final Class<?> primitive;
-							try {
-								primitive = toPrimitiveClass( type.getReturnedClass() );
-							}
-							catch (Exception e) {
-								continue;
-							}
-							if (!toPrimitiveClass(param).equals(primitive)) {
-								argumentsCheckOut = false;
-								break;
-							}
-						}
-						else {
-							final TypeElement typeClass;
-							if ( type instanceof EntityType entityType ) {
-								typeClass = findEntityClass(entityType.getAssociatedEntityName());
-							}
-							//TODO:
-	//						else if (type instanceof CompositeCustomType) {
-	//							typeClass = ((Component) ((CompositeCustomType) type).getUserType()).type;
-	//						}
-							else if (type instanceof BasicType) {
-								final String className;
-								//TODO: custom impl of getReturnedClassName()
-								//      for many more Hibernate types!
-								try {
-									className = type.getReturnedClassName();
-								}
-								catch (Exception e) {
-									continue;
-								}
-								typeClass = findClassByQualifiedName(className);
-							}
-							else {
-								//TODO: what other Hibernate Types do we
-								//	  need to consider here?
-								continue;
-							}
-							if (typeClass != null
-									&& !typeUtil.isSubtype( typeClass.asType(), param.asType() ) ) {
-								argumentsCheckOut = false;
-								break;
-							}
-						}
-					}
-					if (argumentsCheckOut) {
-						return true; //matching constructor found!
-					}
-				}
-			}
-		}
-		return false;
-	}
-
-	private static Class<?> toPrimitiveClass(VariableElement param) {
-		return switch ( param.asType().getKind() ) {
-			case BOOLEAN -> boolean.class;
-			case CHAR -> char.class;
-			case INT -> int.class;
-			case SHORT -> short.class;
-			case BYTE -> byte.class;
-			case LONG -> long.class;
-			case FLOAT -> float.class;
-			case DOUBLE -> double.class;
-			default -> Object.class;
-		};
 	}
 
 	private TypeElement findClassByQualifiedName(String path) {

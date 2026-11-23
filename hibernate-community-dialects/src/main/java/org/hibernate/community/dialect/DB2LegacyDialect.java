@@ -229,13 +229,6 @@ public class DB2LegacyDialect extends Dialect implements CurrentTemporalSupport,
 
 	private static final int BIND_PARAMETERS_NUMBER_LIMIT = 32_767;
 
-	private static final String FOR_READ_ONLY_SQL = " for read only with rs";
-	private static final String FOR_SHARE_SQL = FOR_READ_ONLY_SQL + " use and keep share locks";
-	private static final String FOR_UPDATE_SQL = FOR_READ_ONLY_SQL + " use and keep update locks";
-	private static final String SKIP_LOCKED_SQL = " skip locked data";
-	private static final String FOR_SHARE_SKIP_LOCKED_SQL = FOR_SHARE_SQL + SKIP_LOCKED_SQL;
-	private static final String FOR_UPDATE_SKIP_LOCKED_SQL = FOR_UPDATE_SQL + SKIP_LOCKED_SQL;
-
 	private final LimitHandler limitHandler = getDB2Version().isBefore( 11, 1 )
 			? LegacyDB2LimitHandler.INSTANCE
 			: DB2LimitHandler.INSTANCE;

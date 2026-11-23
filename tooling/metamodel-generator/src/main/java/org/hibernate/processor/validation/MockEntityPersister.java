@@ -70,8 +70,6 @@ public abstract class MockEntityPersister implements EntityPersister, Joinable {
 				.orElse(null);
 	}
 
-	abstract boolean isSamePersister(MockEntityPersister entityPersister);
-
 	abstract boolean isSubclassPersister(MockEntityPersister entityPersister);
 
 	@Override

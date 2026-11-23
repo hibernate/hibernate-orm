@@ -106,7 +106,6 @@ import org.hibernate.dialect.temporaltype.spi.IntervalType;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
-import org.hibernate.sql.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.Statement;
@@ -1200,18 +1199,6 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 
 	private static MutationOperation withoutMerge(OptionalTableUpdateOperationRequest request) {
 		return new OptionalTableUpdateOperation( request.mutationTarget(), request.update() );
-	}
-
-	private static class NativeParameterMarkers implements ParameterMarkerStrategy {
-		/**
-		 * Singleton access
-		 */
-		public static final NativeParameterMarkers INSTANCE = new NativeParameterMarkers();
-
-		@Override
-		public String createMarker(int position, JdbcType jdbcType) {
-			return "$" + position;
-		}
 	}
 
 	@Override

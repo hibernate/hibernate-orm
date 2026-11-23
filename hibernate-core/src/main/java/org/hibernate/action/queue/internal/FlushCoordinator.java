@@ -752,12 +752,6 @@ public class FlushCoordinator {
 		newlyManagedEntities.clear();
 	}
 
-	/// Composite key for grouping operations by shape and ordinalBase.
-	private record CompositeOperationGroupKey(
-			StatementShapeKey shapeKey,
-			int ordinalBase) implements OperationGroupKey {
-	}
-
 	/// Operation group key that includes ordinal information for self-referential tables.
 	private record OrdinalAwareOperationGroupKey(
 			StatementShapeKey shapeKey,

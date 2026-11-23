@@ -29,8 +29,4 @@ interface TargetColumnAdapter {
 	void setRead(String value);
 
 	void setWrite(String value);
-
-	void setInsertable(Boolean value);
-
-	void setUpdatable(Boolean value);
 }

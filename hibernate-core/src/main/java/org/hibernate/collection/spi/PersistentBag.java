@@ -713,27 +713,4 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 			}
 		}
 	}
-
-	final class SimpleRemove extends AbstractValueDelayedOperation {
-
-		public SimpleRemove(E orphan) {
-			super( null, orphan );
-		}
-
-		@Override
-		public QueuedCollectionOperation toQueuedOperation(int order) {
-			return new QueuedCollectionOperation(
-					QueuedCollectionOperation.Kind.REMOVE,
-					null,
-					getOrphan(),
-					null,
-					order
-			);
-		}
-
-		@Override
-		public void operate() {
-			collection.remove( getOrphan() );
-		}
-	}
 }

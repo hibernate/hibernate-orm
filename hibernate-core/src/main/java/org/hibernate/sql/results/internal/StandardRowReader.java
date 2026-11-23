@@ -260,20 +260,17 @@ public class StandardRowReader<T> implements RowReader<T> {
 	}
 
 	enum ComponentType {
-		BOOLEAN(boolean.class),
-		BYTE(byte.class),
-		SHORT(short.class),
-		CHAR(char.class),
-		INT(int.class),
-		LONG(long.class),
-		FLOAT(float.class),
-		DOUBLE(double.class),
-		OBJECT(Object.class);
+		BOOLEAN(),
+		BYTE(),
+		SHORT(),
+		CHAR(),
+		INT(),
+		LONG(),
+		FLOAT(),
+		DOUBLE(),
+		OBJECT();
 
-		private final Class<?> componentType;
-
-		ComponentType(Class<?> componentType) {
-			this.componentType = componentType;
+		ComponentType() {
 		}
 
 		public static ComponentType determineComponentType(Class<?> resultType) {
@@ -304,10 +301,6 @@ public class StandardRowReader<T> implements RowReader<T> {
 			else {
 				return OBJECT;
 			}
-		}
-
-		public Class<?> getComponentType() {
-			return componentType;
 		}
 	}
 

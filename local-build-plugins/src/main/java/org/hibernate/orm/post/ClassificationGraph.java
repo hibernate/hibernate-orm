@@ -129,7 +129,7 @@ final class ClassificationGraph {
 
 	private void addEdge(String sourceElementId, String targetElementId, String kind) {
 		outgoing.computeIfAbsent( sourceElementId, ignored -> new ArrayList<>() )
-				.add( new Edge( sourceElementId, targetElementId, kind ) );
+				.add( new Edge( targetElementId, kind ) );
 	}
 
 	private static boolean isRoot(ClassificationModel.Element element) {
@@ -146,18 +146,12 @@ final class ClassificationGraph {
 	}
 
 	static final class Edge {
-		private final String sourceElementId;
 		private final String targetElementId;
 		private final String kind;
 
-		private Edge(String sourceElementId, String targetElementId, String kind) {
-			this.sourceElementId = sourceElementId;
+		private Edge(String targetElementId, String kind) {
 			this.targetElementId = targetElementId;
 			this.kind = kind;
-		}
-
-		String getSourceElementId() {
-			return sourceElementId;
 		}
 
 		String getTargetElementId() {

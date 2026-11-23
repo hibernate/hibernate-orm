@@ -158,6 +158,31 @@ public abstract class AbstractInverseIndexedTablePerClassTest {
 		scope.inTransaction( session -> assertThat( positions( session, "ThingB" ) ).containsExactly( 1, null ) );
 	}
 
+	/**
+	 * A proxy obtained through a subtype with no subclasses is written to the table of that subtype.
+	 * If its row belongs to a sibling subtype, no row is written, and the sibling row is left alone.
+	 */
+	@Test
+	public void testAdditionOfProxyOfWrongLeafType(SessionFactoryScope scope) {
+		persistCrate( scope );
+		scope.inTransaction( session -> session.persist( new ThingB( 4, null ) ) );
+
+		scope.inTransaction( session -> {
+			final Crate crate = session.find( Crate.class, 1 );
+			assertThat( crate.things ).hasSize( 3 );
+			final Thing proxy = session.getReference( ThingA.class, 4 );
+			assertThat( Hibernate.isInitialized( proxy ) ).isFalse();
+			crate.things.add( proxy );
+		} );
+
+		scope.inTransaction( session -> {
+			assertThat( positions( session, "ThingA" ) ).containsExactly( 0, 2 );
+			assertThat( positions( session, "ThingB" ) ).containsExactly( 1, null );
+		} );
+
+		assertLoadsAs( scope, 1, 2, 3 );
+	}
+
 	@Test
 	public void testMapKeyWrite(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {

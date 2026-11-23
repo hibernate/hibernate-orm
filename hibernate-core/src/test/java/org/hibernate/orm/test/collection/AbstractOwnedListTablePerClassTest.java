@@ -178,6 +178,31 @@ public abstract class AbstractOwnedListTablePerClassTest {
 	}
 
 	/**
+	 * A proxy obtained through a subtype with no subclasses is written to the table of that subtype.
+	 * If its row belongs to a sibling subtype, no row is written, and the sibling row is left alone.
+	 */
+	@Test
+	public void testAdditionOfProxyOfWrongLeafType(SessionFactoryScope scope) {
+		persistBox( scope );
+		scope.inTransaction( session -> session.persist( new ThingB( 5 ) ) );
+
+		scope.inTransaction( session -> {
+			final Box box = session.find( Box.class, 1 );
+			assertThat( box.things ).hasSize( 3 );
+			final Thing proxy = session.getReference( ThingA.class, 5 );
+			assertThat( Hibernate.isInitialized( proxy ) ).isFalse();
+			box.things.add( proxy );
+		} );
+
+		scope.inTransaction( session -> {
+			assertThat( positions( session, "ThingA" ) ).containsExactly( 0, 2 );
+			assertThat( positions( session, "ThingB" ) ).containsExactly( 1, null );
+		} );
+
+		assertLoadsAs( scope, 1, 2, 3 );
+	}
+
+	/**
 	 * A proxy which exists before the collection is read is the element held by the collection.
 	 */
 	@Test

@@ -5,6 +5,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import org.hibernate.annotations.Audited;
+import org.hibernate.audit.AuditLog;
 import org.hibernate.audit.AuditLogFactory;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.SharedSessionContract;
@@ -262,6 +263,38 @@ class AuditBidirectionalOneToManyTest {
 			assertNotNull( parent );
 			assertEquals( 1, parent.children.size() );
 			assertEquals( "Upd Child A v2", parent.children.get( 0 ).name );
+		}
+	}
+
+	@Test
+	void testRightJoinExcludesDeletedChildRevision(SessionFactoryScope scope) {
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
+			// The parent has a single revision. The later child update survives as an orphan, the deletion does not.
+			assertEquals( List.of( revAddChild ), session.createSelectionQuery(
+					"select changesetId(c) from Parent p right join p.children c where p.id is null and c.id = 1",
+					Integer.class ).list() );
+		}
+	}
+
+	@Test
+	void testSizeAtJoinedParentsRevision(SessionFactoryScope scope) {
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
+			// The parent's only revision predates the addition of the sibling. A parent reached from
+			// a revision of the child is the parent as of that revision, when it had both children.
+			assertEquals( List.of( 2 ), session.createSelectionQuery(
+					"select size(p.children) from Child c join c.parent p "
+							+ "where c.id = 1 and changesetId(c) = :revision",
+					Integer.class ).setParameter( "revision", revAddChild ).list() );
+		}
+	}
+
+	@Test
+	void testSizeWithMultipleChildRevisions(SessionFactoryScope scope) {
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
+			// Only the child changed after the sole revision of this parent.
+			assertEquals( 1, session.createSelectionQuery(
+					"select size(p.children) from Parent p where p.id = 20", Integer.class )
+					.getSingleResult() );
 		}
 	}
 

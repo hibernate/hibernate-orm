@@ -12,6 +12,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -94,6 +95,27 @@ class MapKeyEntityFilterTest {
 			assertThat( Hibernate.isInitialized( owner.tags ) ).isEqualTo( path != FetchPath.LAZY );
 			assertThat( owner.tags.keySet() ).extracting( note -> note.id ).containsExactlyInAnyOrder( expected );
 			assertThat( owner.tags.values() ).allSatisfy( tag -> assertThat( tag.id ).isEqualTo( 1 ) );
+		} );
+	}
+
+	@Test
+	void uninitializedMapReads(SessionFactoryScope scope) {
+		scope.inSession( session -> {
+			session.enableFilter( "queryNotes" );
+			final var tags = session.find( session.createEntityGraph( Owner.class ), 1, FETCH ).tags;
+			final var key = session.getReference( Note.class, 20 );
+			assertThat( ( (PersistentCollection<?>) tags ).getSize() ).isEqualTo( 2 );
+			assertThat( Hibernate.get( tags, key ) ).isNotNull();
+			assertThat( Hibernate.isInitialized( tags ) ).isFalse();
+		} );
+		scope.inSession( session -> {
+			session.enableFilter( "queryNotes" );
+			session.enableFilter( "loadNotes" );
+			final var tags = session.find( session.createEntityGraph( Owner.class ), 1, FETCH ).tags;
+			final var key = session.getReference( Note.class, 20 );
+			assertThat( ( (PersistentCollection<?>) tags ).getSize() ).isEqualTo( 1 );
+			assertThat( Hibernate.get( tags, key ) ).isNull();
+			assertThat( Hibernate.isInitialized( tags ) ).isFalse();
 		} );
 	}
 

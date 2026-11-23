@@ -51,7 +51,6 @@ import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.community.dialect.internal.GaussDBRefCursorSupportFactory;
 import org.hibernate.community.dialect.identity.internal.GaussDBIdentityColumnSupport;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.lock.internal.GaussDBLockingSupport;
 import org.hibernate.community.dialect.sequence.GaussDBMModeSequenceInformationExtractor;
 import org.hibernate.community.dialect.sequence.GaussDBMModeSequenceSupport;
@@ -66,7 +65,7 @@ import org.hibernate.dialect.aggregate.spi.AggregateSupport;
 import org.hibernate.dialect.type.spi.NationalizationSupport;
 import org.hibernate.dialect.type.spi.TimeZoneSupport;
 import org.hibernate.dialect.type.spi.TypeSizingProfile;
-import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
+import org.hibernate.dialect.identity.internal.MySQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.spi.IdentityColumnSupport;
 import org.hibernate.dialect.generated.spi.GeneratedValuesSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
@@ -127,7 +126,6 @@ import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.dialect.sql.ast.spi.OptionalTableUpdateOperationRequest;
-import org.hibernate.sql.spi.mutation.jdbc.OptionalTableUpdateOperation;
 import org.hibernate.sql.spi.mutation.jdbc.OptionalTableUpdateWithUpsertOperation;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
@@ -158,7 +156,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -322,7 +319,6 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 
 	public GaussDBDialect(DialectResolutionInfo info, GaussDBServerConfiguration serverConfiguration) {
 		this( info.makeCopyOrDefault( MINIMUM_VERSION ), serverConfiguration );
-		registerKeywords( info );
 	}
 
 	public GaussDBDialect(DatabaseVersion version) {
@@ -332,17 +328,20 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 	public GaussDBDialect(DatabaseVersion version, GaussDBServerConfiguration serverConfiguration) {
 		super( version );
 		this.serverConfiguration = serverConfiguration;
-		// initDefaultProperties() ran during super() construction while the compatibility mode was still
-		// the default, so re-run it now that the real mode is known, so mode-dependent defaults such as
-		// USE_GET_GENERATED_KEYS (see getDefaultUseGetGeneratedKeys()) are computed correctly.
-		// M mode must disable getGeneratedKeys: gsjdbc4 implements it by rewriting the INSERT with a
-		// RETURNING clause, which single-node M mode rejects ("Unsupported function. only supported in
-		// distributed database").
-		initDefaultProperties();
+	}
+
+	@Override
+	protected void contributeKeywords(org.hibernate.dialect.identifier.spi.KeywordRegistration registration) {
+		super.contributeKeywords( registration );
 		// M mode reserves `excluded` as a keyword (PostgreSQL treats it as non-reserved, usable as a column name),
 		// so identifiers named "excluded" must be quoted. GaussDB upserts use ON DUPLICATE KEY (not ON CONFLICT's
-		// EXCLUDED alias), so quoting the identifier is safe.
-		registerKeyword( "excluded" );
+		// EXCLUDED alias), so quoting the identifier is safe. `match` is a MySQL reserved word (M mode) but
+		// non-reserved in PostgreSQL, so an unquoted `create table Match (...)` raises a syntax error in M mode;
+		// it is registered only for M mode so A-mode behavior is unchanged.
+		registration.registerKeyword( "excluded" );
+		if ( isMMode() ) {
+			registration.registerKeyword( "match" );
+		}
 	}
 
 	/**
@@ -389,6 +388,14 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 		super.contributeDefaultProperties( properties );
 		properties.setProperty( org.hibernate.cfg.AvailableSettings.NON_CONTEXTUAL_LOB_CREATION, "true" );
 		properties.setProperty( org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE, "15" );
+		if ( isMMode() ) {
+			// M mode: the gsjdbc4 (PostgreSQL) driver implements getGeneratedKeys() by
+			// rewriting the INSERT with a RETURNING clause, which single-node GaussDB M mode
+			// rejects. Disable it so IdentityGenerator falls back to BasicSelectingDelegate,
+			// which runs a plain INSERT then `select last_insert_id()` (verified). A mode
+			// keeps the default true (RETURNING works on the openGauss PG kernel).
+			properties.setProperty( org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS, "false" );
+		}
 	}
 
 	@Override
@@ -528,7 +535,7 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 			// M mode (MySQL-compatible) has no native interval column type (syntax error on
 			// `interval second(6)`); store Duration seconds as numeric($p,$s) instead.
 			// A mode (openGauss PG kernel) keeps the native `interval second($s)` type.
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INTERVAL_SECOND, "numeric($p,$s)", this ) );
+			ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( INTERVAL_SECOND, "numeric($p,$s)", this ) );
 		}
 		else {
 			ddlTypeRegistry.addDescriptor( StandardDdlTypes.scale6IntervalSecond( this ) );
@@ -540,11 +547,6 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 
 		ddlTypeRegistry.addDescriptor( StandardDdlTypes.namedNativeEnum() );
 		ddlTypeRegistry.addDescriptor( StandardDdlTypes.namedNativeOrdinalEnum() );
-	}
-
-	@Override
-	public int getDefaultStatementBatchSize() {
-		return 15;
 	}
 
 	@Override
@@ -674,11 +676,11 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 			// M mode (MySQL kernel): bare `localtimestamp` is second-precision, so two timestamps
 			// produced within the same second compare equal. @CurrentTimestamp/@CreationTimestamp/
 			// @UpdateTimestamp tests that update an entity ~10ms apart then fail, even though
-			// getDefaultTimestampPrecision()==6 advertises microsecond precision (via the
+			// getTypeSizingProfile().defaultTimestampPrecision()==6 advertises microsecond precision (via the
 			// CurrentTimestampHasMicrosecondPrecision feature check). Emit `now(6)` to match the
 			// datetime($p) column type and yield microsecond precision. A mode (openGauss PG kernel)
 			// keeps bare `localtimestamp` (microsecond by default) — zero regression.
-			return "now(" + getDefaultTimestampPrecision() + ")";
+			return "now(" + getTypeSizingProfile().defaultTimestampPrecision() + ")";
 		}
 		return "localtimestamp";
 	}
@@ -695,27 +697,38 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 			// for microsecond precision, matching currentTimestamp() and the datetime($p) column type.
 			// A mode (openGauss PG kernel) keeps bare `current_timestamp` (timestamptz, microsecond by
 			// default) — zero regression.
-			return "now(" + getDefaultTimestampPrecision() + ")";
+			return "now(" + getTypeSizingProfile().defaultTimestampPrecision() + ")";
 		}
 		return "current_timestamp";
 	}
 
 	@Override
-	public String getColumnDefaultString(String defaultValue) {
+	public void appendDefinition(
+			org.hibernate.sql.spi.SqlAppender appender,
+			org.hibernate.dialect.schema.spi.ColumnDefinitionRequest request) {
 		if ( isMMode() ) {
 			// M mode requires a datetime(N) column's current-timestamp default to carry matching
 			// precision (N); the bare CURRENT_TIMESTAMP that @ColumnDefault produces is rejected
-			// ("The default value of the ... type is invalid"). now(getDefaultTimestampPrecision())
-			// matches the datetime($p) columnType, whose $p defaults to getDefaultTimestampPrecision()
-			// (6). A mode keeps the super behaviour.
-			final String upper = defaultValue.trim().toUpperCase( Locale.ROOT );
-			if ( upper.equals( "CURRENT_TIMESTAMP" ) || upper.equals( "CURRENT_TIMESTAMP()" )
-					|| upper.equals( "LOCALTIMESTAMP" ) || upper.equals( "LOCALTIMESTAMP()" )
-					|| upper.equals( "NOW" ) || upper.equals( "NOW()" ) ) {
-				return "now(" + getDefaultTimestampPrecision() + ")";
+			// ("The default value of the ... type is invalid"). now(getTypeSizingProfile().defaultTimestampPrecision())
+			// matches the datetime($p) columnType, whose $p defaults to the same precision (6).
+			// A mode keeps the base rendering.
+			final String defaultExpression = request.defaultExpression();
+			if ( defaultExpression != null ) {
+				final String upper = defaultExpression.trim().toUpperCase( Locale.ROOT );
+				if ( upper.equals( "CURRENT_TIMESTAMP" ) || upper.equals( "CURRENT_TIMESTAMP()" )
+						|| upper.equals( "LOCALTIMESTAMP" ) || upper.equals( "LOCALTIMESTAMP()" )
+						|| upper.equals( "NOW" ) || upper.equals( "NOW()" ) ) {
+					request = new org.hibernate.dialect.schema.spi.ColumnDefinitionRequest(
+							request.sqlType(),
+							request.renderedCollation(),
+							request.nullable(),
+							"now(" + getTypeSizingProfile().defaultTimestampPrecision() + ")",
+							request.generatedExpression()
+					);
+				}
 			}
 		}
-		return super.getColumnDefaultString( defaultValue );
+		super.appendDefinition( appender, request );
 	}
 
 	@Override
@@ -990,7 +1003,6 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 	}
 
 	@Override
-	@Override
 	public CteSupport getCteSupport() {
 		if ( isMMode() ) {
 			// M mode (MySQL-compatible) has no `INSERT ... RETURNING`, so DML-as-CTE
@@ -1004,7 +1016,6 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 						CteSupport.MutationFeature.INSERT_CONFLICT
 				)
 				.build();
-	}
 	}
 
 	@Override
@@ -1094,7 +1105,6 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 	}
 
 	@Override
-	@Override
 	public TupleCountSupport getTupleCountSupport() {
 		// A mode (openGauss PG kernel) supports the native tuple form count(distinct (a,b));
 		// M mode (MySQL-compatible) rejects it with "Unsupport type", so select UNSUPPORTED to
@@ -1106,7 +1116,6 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 						.nonDistinctSyntax( TupleCountSupport.Syntax.PARENTHESIZED_TUPLE )
 						.distinctSyntax( TupleCountSupport.Syntax.PARENTHESIZED_TUPLE )
 						.build();
-	}
 	}
 
 	@Override
@@ -1133,16 +1142,25 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuildRequest request) {
 		final var builder = request.builder();
+		final var jdbcMetadata = request.jdbcMetadata();
 
-		if ( !request.jdbcMetadata().isJdbcMetadataAccessible() ) {
+		if ( !jdbcMetadata.isJdbcMetadataAccessible() ) {
 			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.LOWER );
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
-		// Replicate Dialect#buildIdentifierHelper but apply only the curated M-mode reserved words instead of
-		// the full inherited sqlKeywords (which over-reports ANSI/PG words M mode permits, e.g. `aggregate`).
-		builder.applyIdentifierCasing( dbMetaData );
+		// Replicate the base builder but apply only the curated reserved words (see
+		// M_MODE_RESERVED_KEYWORDS / A_MODE_RESERVED_KEYWORDS) instead of the full inherited
+		// ANSI/PG keyword set (which over-reports words the modes permit, e.g. `aggregate`).
+		builder.setUnquotedCaseStrategy( jdbcMetadata.getUnquotedIdentifierCaseStrategy() );
+		builder.setQuotedCaseStrategy( jdbcMetadata.getQuotedIdentifierCaseStrategy() );
+		builder.clearReservedWords();
 		builder.applyReservedWords( isMMode() ? M_MODE_RESERVED_KEYWORDS : A_MODE_RESERVED_KEYWORDS );
-		builder.setNameQualifierSupport( getNameQualifierSupport() );
+		builder.applyReservedWords(
+				jdbcMetadata.getSqlKeywords().stream()
+						.filter( request.keywordSupport()::acceptsJdbcKeyword )
+						.toList()
+		);
+		builder.setNameQualifierSupport( request.nameQualifierSupport() );
 		if ( isMMode() ) {
 			// M mode (MySQL-compatible) preserves unquoted identifier case — `create table AbCdEf` stores
 			// "AbCdEf", not lower-cased. But gsjdbc4 reports storesLowerCaseIdentifiers=true (PG behavior),
@@ -1160,9 +1178,6 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
 		return builder.build();
-	}
-
-		return super.buildIdentifierHelper( request );
 	}
 
 	@Override
@@ -1197,7 +1212,6 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 			};
 		}
 		return super.getLocalTemporaryTableStrategy();
-	}
 	}
 
 	@Override
@@ -1312,16 +1326,6 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 	}
 
 	@Override
-	public boolean getDefaultUseGetGeneratedKeys() {
-		// M mode: the gsjdbc4 (PostgreSQL) driver implements getGeneratedKeys() by
-		// rewriting the INSERT with a RETURNING clause, which single-node GaussDB M mode
-		// rejects. Disable it so IdentityGenerator falls back to BasicSelectingDelegate,
-		// which runs a plain INSERT then `select last_insert_id()` (verified). A mode
-		// keeps the default true (RETURNING works on the openGauss PG kernel).
-		return !isMMode();
-	}
-
-	@Override
 	@SPI({ IMPLEMENT, SUPPLY })
 	public NationalizationSupport getNationalizationSupport() {
 		return NationalizationSupport.IMPLICIT;
@@ -1339,7 +1343,6 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 		// Reporting NONE makes the base array type resolution fall back to VARBINARY, so
 		// array tests are skipped for M mode. A mode (openGauss PG kernel) supports arrays.
 		return isMMode() ? ArraySupport.NONE : ARRAY_SUPPORT;
-	}
 	}
 
 	@Override
@@ -1384,8 +1387,6 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 		}
 		throw new UnsupportedOperationException( "GaussDB not support datetime format yet" );
 	}
-		throw new UnsupportedOperationException( "GaussDB not support datetime format yet" );
-	}
 
 	@Override
 	@SPI({ USE, IMPLEMENT })
@@ -1407,7 +1408,7 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 		// expressions are not adapted, so report no aggregate support at all (the base implementation;
 		// its probes throw UnsupportedOperationException, which the standard feature checks interpret
 		// as "not supported"). A mode (openGauss PG kernel) supports them through GaussDBAggregateSupport.
-		return isMMode() ? AggregateSupportImpl.INSTANCE : GaussDBAggregateSupport.valueOf( this );
+		return isMMode() ? AggregateSupportImpl.INSTANCE : org.hibernate.community.dialect.aggregate.GaussDBAggregateSupport.valueOf( this );
 	}
 
 	@Override
@@ -1749,11 +1750,6 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 		return QueryHintPlacement.BEFORE_COMMENT;
 	}
 
-	@FunctionalInterface
-	private interface OptionalTableUpdateStrategy {
-		MutationOperation buildMutationOperation(OptionalTableUpdateOperationRequest request);
-	}
-
 	@Override
 	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public MutationOperation createOptionalTableUpdateOperation(
@@ -1766,11 +1762,11 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 			// without relying on MERGE.
 			return new OptionalTableUpdateWithUpsertOperation( request.update(), request.versionedTarget() );
 		}
-		// A mode (openGauss Oracle-compatible): version>=15 uses MERGE emulation; older versions use
-		// the default OptionalTableUpdateOperation (plain insert + catch unique-violation to fall back
-		// to update). A mode does not support ON CONFLICT, and the M-mode upsert operation relies on
-		// ON DUPLICATE KEY UPDATE, which A mode rejects when it touches primary/unique key columns.
-		return optionalTableUpdateStrategy.buildMutationOperation( request );
+		// A mode (openGauss Oracle-compatible): the base OptionalTableUpdateOperation does a plain
+		// insert and catches the unique-violation to fall back to update. A mode does not support
+		// ON CONFLICT, and the M-mode upsert operation relies on ON DUPLICATE KEY UPDATE, which A
+		// mode rejects when it touches primary/unique key columns.
+		return super.createOptionalTableUpdateOperation( request );
 	}
 
 	private static class NativeParameterMarkers implements ParameterMarkerStrategy {
@@ -1806,6 +1802,5 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 	@SPI({ IMPLEMENT, SUPPLY })
 	public InformationExtractor getInformationExtractor(ExtractionContext extractionContext) {
 		return InformationExtractors.postgresql( extractionContext );
-	}
 	}
 }

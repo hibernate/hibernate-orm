@@ -29,7 +29,6 @@ import org.hibernate.sql.ast.spi.query.expression.Star;
 import org.hibernate.sql.ast.spi.query.expression.Summarization;
 import org.hibernate.sql.ast.spi.query.expression.UnparsedNumericLiteral;
 import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
-import org.hibernate.sql.ast.spi.query.from.TableReference;
 import org.hibernate.sql.ast.spi.query.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.spi.model.OptionalTableInsert;
 import org.hibernate.sql.ast.spi.model.TableInsertStandard;
@@ -104,16 +103,24 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends PostgreSQL
 
 	@Override
 	protected void renderInsertIntoNoColumns(TableInsertStandard tableInsert) {
+		if ( getDialect() instanceof GaussDBDialect g && g.isMMode() ) {
+			// M mode (MySQL-compatible) rejects `default values`; render `() values ()` instead
+			// (same shape as the base translator, wrapped in parentheses MySQL accepts).
+			// A mode keeps `default values`.
+			renderIntoIntoAndTable( tableInsert );
+			appendSql( "() values ()" );
+			return;
+		}
 		renderIntoIntoAndTable( tableInsert );
-		// Delegate to the dialect so M mode (MySQL-compatible) renders `() values ()`
-		// instead of `default values`, which M mode rejects. A mode keeps `default values`.
-		appendSql( getDialect().getNoColumnsInsertString() );
+		appendSql( "default values" );
 	}
 
 	@Override
 	@Internal
 	protected InsertConflictRenderingSupport getInsertConflictRenderingSupport() {
-		final GaussDBDialect dialect = getDialect();
+		if ( !( getDialect() instanceof GaussDBDialect dialect ) ) {
+			return super.getInsertConflictRenderingSupport();
+		}
 		if ( dialect.isMMode() ) {
 			// M mode (MySQL-compatible): `on duplicate key update nothing` is a syntax error, so
 			// emulate DO NOTHING via self-assignment; proposed-row references use values(col)
@@ -222,7 +229,6 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends PostgreSQL
 		renderFromClauseJoiningDmlTargetReference( statement );
 	}
 
-	@Override
 	@Override
 	protected void renderAssignmentColumn(ColumnReference column) {
 		// Multi-table UPDATE renders MySQL-style `update t1 alias join t2 ...`: unqualified

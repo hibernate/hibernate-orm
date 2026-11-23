@@ -21,7 +21,7 @@ import org.hibernate.dialect.function.array.ArrayIncludesOperatorFunction;
 import org.hibernate.dialect.function.array.ArrayIntersectsOperatorFunction;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**

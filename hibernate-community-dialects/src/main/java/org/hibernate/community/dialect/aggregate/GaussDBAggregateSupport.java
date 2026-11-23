@@ -1,26 +1,21 @@
-/*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
- */
 package org.hibernate.community.dialect.aggregate;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.aggregate.AggregateSupport;
-import org.hibernate.dialect.aggregate.AggregateSupport.AggregateColumnWriteExpression;
-import org.hibernate.dialect.aggregate.AggregateSupport.WriteExpressionRenderer;
-import org.hibernate.dialect.aggregate.PostgreSQLAggregateSupport;
+import org.hibernate.dialect.aggregate.spi.AggregateSupport;
+import org.hibernate.dialect.aggregate.spi.AggregateColumnWriteExpression;
+import org.hibernate.dialect.aggregate.internal.PostgreSQLAggregateSupport;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;

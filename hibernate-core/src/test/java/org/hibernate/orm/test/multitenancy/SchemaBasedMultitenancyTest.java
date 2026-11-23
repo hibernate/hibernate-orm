@@ -3,7 +3,6 @@ package org.hibernate.orm.test.multitenancy;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.annotation.Nonnull;
-import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;

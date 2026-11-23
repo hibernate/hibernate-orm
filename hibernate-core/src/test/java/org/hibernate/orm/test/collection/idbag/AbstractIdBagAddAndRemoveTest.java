@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.NoSuchElementException;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.BiConsumer;
@@ -17,6 +18,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Adding an element to an idbag inserts one row, removing an element deletes one row, and neither
@@ -98,6 +100,35 @@ public abstract class AbstractIdBagAddAndRemoveTest extends IdBagFixture {
 
 		final var expected = new TreeMap<>( rowsBefore );
 		expected.values().removeAll( removed );
+		assertThat( rows( scope, COURSE_ROWS ) ).isEqualTo( expected );
+	}
+
+	@ParameterizedTest
+	@ValueSource(booleans = { true, false })
+	public void testRejectedIndexedAdd(boolean loaded, SessionFactoryScope scope) {
+		final var rowsBefore = change( scope, loaded, (session, courses) -> {
+			final Course added = course( session, 4L );
+			assertThrows( IndexOutOfBoundsException.class, () -> courses.add( -1, added ) );
+			courses.add( added );
+		} );
+
+		assertAdded( scope, rowsBefore, 4L );
+	}
+
+	@ParameterizedTest
+	@ValueSource(booleans = { true, false })
+	public void testRemoveAfterFailedPrevious(boolean loaded, SessionFactoryScope scope) {
+		final var change = change( scope, loaded, COURSE_ROWS, (session, student) -> {
+			final var courses = student.courses;
+			final var iterator = courses.listIterator( 1 );
+			final Course removed = iterator.previous();
+			assertThrows( NoSuchElementException.class, iterator::previous );
+			iterator.remove();
+			return removed.id;
+		} );
+
+		final var expected = new TreeMap<>( change.rowsBefore() );
+		expected.remove( change.rowId() );
 		assertThat( rows( scope, COURSE_ROWS ) ).isEqualTo( expected );
 	}
 

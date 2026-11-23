@@ -174,10 +174,8 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 		initialize( true );
 		final int index = bagAsList().indexOf( o );
 		if ( index >= 0 ) {
-			beforeRemove( index );
 			bagAsList().remove( index );
-			elementRemoved = true;
-			dirty();
+			afterRemove( index );
 			return true;
 		}
 		else {
@@ -403,9 +401,9 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 
 	@Override
 	public void add(int index, E element) {
-		write();
-		beforeAdd( index );
+		initialize( true );
 		bagAsList().add( index, element );
+		afterAdd( index );
 	}
 
 	@Override
@@ -451,22 +449,26 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 		return new IdentifierBagListIterator( bagAsList().listIterator( index ) );
 	}
 
-	private void beforeRemove(int index) {
+	private void afterRemove(int index) {
 		final Object removedId = identifiers.get( index );
-		final int last = collection.size()-1;
-		for ( int i=index; i<last; i++ ) {
-			setIdentifier( i, identifiers.get( i+1 ) );
+		final int last = collection.size();
+		for ( int i = index; i < last; i++ ) {
+			setIdentifier( i, identifiers.get( i + 1 ) );
 		}
+		// An append before the next flush may reuse the removed row.
 		setIdentifier( last, removedId );
+		elementRemoved = true;
+		dirty();
 	}
 
-	private void beforeAdd(int index) {
+	private void afterAdd(int index) {
 		// move the last identifier first, so that no identifier
 		// is overwritten before it has itself been moved
-		for ( int i=collection.size()-1; i>=index; i-- ) {
-			setIdentifier( i+1, identifiers.get( i ) );
+		for ( int i = collection.size() - 1; i > index; i-- ) {
+			setIdentifier( i, identifiers.get( i - 1 ) );
 		}
 		identifiers.remove( index );
+		dirty();
 	}
 
 	/**
@@ -507,10 +509,8 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 			if ( lastReturnedIndex < 0 ) {
 				throw new IllegalStateException();
 			}
-			write();
-			beforeRemove( lastReturnedIndex );
 			itr.remove();
-			elementRemoved = true;
+			afterRemove( lastReturnedIndex );
 			// the next element is now at the position of the removed one
 			cursor = lastReturnedIndex - 1;
 			lastReturnedIndex = -1;
@@ -532,8 +532,9 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 
 		@Override
 		public E next() {
-			lastReturnedIndex = delegate.nextIndex();
-			return delegate.next();
+			final E element = delegate.next();
+			lastReturnedIndex = delegate.previousIndex();
+			return element;
 		}
 
 		@Override
@@ -543,8 +544,9 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 
 		@Override
 		public E previous() {
-			lastReturnedIndex = delegate.previousIndex();
-			return delegate.previous();
+			final E element = delegate.previous();
+			lastReturnedIndex = delegate.nextIndex();
+			return element;
 		}
 
 		@Override
@@ -562,10 +564,8 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 			if ( lastReturnedIndex < 0 ) {
 				throw new IllegalStateException();
 			}
-			write();
-			beforeRemove( lastReturnedIndex );
 			delegate.remove();
-			elementRemoved = true;
+			afterRemove( lastReturnedIndex );
 			lastReturnedIndex = -1;
 		}
 
@@ -577,18 +577,19 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 
 		@Override
 		public void add(E e) {
-			write();
-			beforeAdd( delegate.nextIndex() );
+			final int index = delegate.nextIndex();
 			delegate.add( e );
+			afterAdd( index );
 			lastReturnedIndex = -1;
 		}
 	}
 
 	@Override
 	public E remove(int index) {
-		write();
-		beforeRemove( index );
-		return bagAsList().remove( index );
+		initialize( true );
+		final E removed = bagAsList().remove( index );
+		afterRemove( index );
+		return removed;
 	}
 
 	@Override

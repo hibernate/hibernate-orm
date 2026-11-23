@@ -1251,6 +1251,14 @@ public abstract class CollectionBinder {
 						+ qualify( propertyHolder.getPath(), propertyName )
 						+ "' is 'mappedBy' another entity and may not specify the '@JoinTable'" );
 			}
+			detectMappedByCustomSql( SQLInsert.class );
+			detectMappedByCustomSql( SQLDelete.class );
+			detectMappedByCustomSql( SQLDeleteAll.class );
+			// an unowned one-to-many association with an order column
+			// or map key column writes that column using an update
+			if ( !oneToMany || !collection.isIndexed() || hasMapKeyProperty ) {
+				detectMappedByCustomSql( SQLUpdate.class );
+			}
 			if ( oneToMany ) {
 				if ( property.hasDirectAnnotationUsage( MapKeyColumn.class ) ) {
 					BOOT_LOGGER.mappedByShouldNotSpecifyMapKeyColumn(
@@ -1284,6 +1292,15 @@ public abstract class CollectionBinder {
 			throw new AnnotationException( "Unidirectional '@OneToMany' association '"
 					+ qualify( propertyHolder.getPath(), propertyName )
 					+ "' is annotated '@OnDelete' and must explicitly specify a '@JoinColumn'" );
+		}
+	}
+
+	private void detectMappedByCustomSql(Class<? extends Annotation> annotationType) {
+		if ( property.hasDirectAnnotationUsage( annotationType ) ) {
+			throw new AnnotationException( "Association '"
+					+ qualify( propertyHolder.getPath(), propertyName )
+					+ "' is 'mappedBy' another entity and may not specify '@"
+					+ annotationType.getSimpleName() + "'" );
 		}
 	}
 

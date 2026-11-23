@@ -26,6 +26,7 @@ import org.hibernate.spi.NavigablePath;
 
 import java.util.List;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 
 /**
@@ -231,6 +232,18 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 	public PersistentAttribute<? super Object, ?> getAttribute() {
 		// none
 		return null;
+	}
+
+	@Override
+	@Nonnull
+	public SqmFrom<?, Object> getParent() {
+		return castNonNull( super.getLhs() );
+	}
+
+	@Override
+	@Nonnull
+	public SqmRoot<?> findRoot() {
+		return getParent().findRoot();
 	}
 
 	@Override

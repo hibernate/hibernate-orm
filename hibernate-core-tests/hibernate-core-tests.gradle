@@ -184,8 +184,38 @@ artifacts {
     tests testJar
 }
 
-compileTestJava {
-    options.compilerArgs += [ "-AsuppressJakartaDataMetamodel=true" ]
+// Keep processor implementation changes out of the test compiler's inputs.
+// Processing still uses the current core and processor, but unchanged generated
+// sources allow compileTestJava to remain up to date after a core body-only edit.
+def generatedTestSourcesDirectory = layout.buildDirectory.dir('generated/sources/test-processor')
+def generateTestSources = tasks.register('generateTestSources', JavaCompile) {
+    description = 'Runs annotation processing for the core tests without compiling them.'
+    source = fileTree('src/test/java') {
+        include '**/*.java'
+    }
+    classpath = sourceSets.test.compileClasspath
+    options.annotationProcessorPath = configurations.testAnnotationProcessor
+    options.compilerArgs += [ '-proc:only', '-AsuppressJakartaDataMetamodel=true' ]
+    // Rebuild the complete generated tree so removed/renamed inputs cannot leave
+    // stale metamodel sources or entity indexes behind.
+    options.incremental = false
+    // Cache snapshots omit ._* files, but ._78729 is a real enum-value index.
+    // Keep the complete processor output; ordinary up-to-date checks still apply.
+    outputs.doNotCacheIf('Generated enum indexes can match metadata-file exclusions') { true }
+    options.generatedSourceOutputDirectory = generatedTestSourcesDirectory
+    destinationDirectory = layout.buildDirectory.dir('generated/resources/test-processor')
+}
+
+// Register the path without a task dependency: Spotless inspects all SourceSets,
+// and making its source collection depend on generation would cycle through
+// compileJava (which is part of the test compile classpath).
+sourceSets.test.java.srcDir(generatedTestSourcesDirectory)
+sourceSets.test.output.dir(generateTestSources.flatMap { it.destinationDirectory })
+
+tasks.named('compileTestJava', JavaCompile) {
+    dependsOn generateTestSources
+    options.annotationProcessorPath = files()
+    options.compilerArgs += [ '-proc:none' ]
 }
 
 tasks.withType( Test.class ).configureEach { test ->

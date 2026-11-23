@@ -1,0 +1,103 @@
+= Separate Core Test Annotation Processing
+
+Status: Implementation and verification complete. Steve explicitly requested
+implementation of option 1 as a second commit, after the extraction commit
+`e3b8a60de4c`.
+
+== Contract and implementation
+
+* `generateTestSources` runs the current processor and its current core
+  dependency over the original test Java sources with `-proc:only`.
+* Generated Java and source-output indexes belong to
+  `target/generated/sources/test-processor`.
+* Processor class-output resources belong to
+  `target/generated/resources/test-processor`, included in test runtime
+  output and the test JAR. Source-output indexes remain with the generated
+  sources, matching the previous pipeline.
+* `compileTestJava` compiles original and generated Java with `-proc:none`
+  and an empty processor path. Its ordinary compile classpath still includes
+  current core and retains Gradle's ABI-sensitive normalization.
+* Generation is nonincremental so changed/deleted inputs rebuild the complete
+  generated tree rather than retaining obsolete metamodels or indexes.
+  This also means a test-source edit reruns processing over the whole suite;
+  optimizing that path is outside this initial implementation.
+* Build-cache reuse is disabled for this generation task. A real enum index
+  named `entity/index/._78729` (for `PostalArea._78729`) matches Gradle's
+  metadata-file exclusions. Inspection of the cached output archive confirmed
+  it was omitted, while ordinary hidden enum indexes were included. A cache
+  restore therefore lost one of the 10,138 outputs. Normal up-to-date checks
+  remain enabled; compiler outputs are not cached through this task.
+* The generated-source path is registered without task provenance because
+  Spotless inspects all SourceSets, and a dependency through its source
+  collection would cycle back through main compilation. The test compiler
+  explicitly depends on generation. Generated files remain excluded from
+  formatting by the existing `target/**/*.java` exclusion.
+
+== Why the processor path matters after extraction
+
+Core is both a compile dependency of the tests and a transitive runtime
+dependency of the processor. Gradle 9.9.1's
+`CompileOptions.getAnnotationProcessorPath()` is annotated `@Classpath`,
+which includes implementation changes, whereas `@CompileClasspath` ignores
+body-only changes. A core JAR change therefore invalidated the former
+combined compile task through its processor path even when core's ABI was
+unchanged. This is legitimate: the processor executes core code, including
+HQL semantic validation.
+
+The separate generation task must still rerun in that case. The acceptance
+condition is that unchanged generation results no longer force recompiling
+the test suite. This does not claim to eliminate processing or all other
+upstream compilation work (for example, processing in `hibernate-testing`).
+
+== Environment and baseline
+
+* Same Gradle 9.9.1, Temurin JDK 25, Java 17 release level and default H2
+  configuration as the extraction verification.
+* Baseline recorded before changing the build: 10,138 generated Java/index
+  files, including hidden enum-index files; 32,824 compiled test classes.
+* First separated compilation and test-JAR build passed. Generated file
+  names and SHA-256 hashes match the entire baseline exactly. Compiled class
+  file names also match exactly, with no additions or removals.
+* An unchanged warm build leaves both generation and compilation up to date.
+
+== Final targeted verification
+
+* With cache reuse disabled, a warm build leaves both tasks up to date.
+  A core body-only probe reruns generation, preserves all 10,138 hashes and
+  leaves `compileTestJava` up to date (34.79 s wall time; generation 19.205 s,
+  compiler up-to-date check 1.270 s in the Gradle profile).
+* A core ABI probe still recompiles three affected classes incrementally.
+  The original core source was restored and recompiled afterward.
+* Temporary model addition/edit/removal checks passed again. All generated
+  sources, entity indexes, enum indexes, compiled classes and class-output
+  resources were correctly removed or updated. The final generated tree
+  exactly matches the original 10,138-file baseline, including `._78729`.
+  The compiled class inventory again matches all 32,824 original classes.
+* An invalid temporary processing input fails generation and prevents the
+  test compiler from executing. Recovery regenerates the complete baseline.
+* A temporary test loaded a generated class-output resource through the
+  actual test runtime. The test JAR contained the resource; removing its
+  producer removed it from both output and JAR.
+* All 9,603 original moved source/resource files still match their original
+  hashes; no temporary Java fixtures or production edits remain.
+* Logs/results: `/private/tmp/core-processing-final-verification.log`,
+  `/private/tmp/core-processing-final-results.json`, and
+  `/private/tmp/core-processing-invalid.log`. Gradle HTML profiles live in
+  `target/reports/profile`.
+
+== Full verification and completion
+
+* Full H2 suite passed through `:hibernate-core:test`: 5,240 suites, 30,169
+  tests, 1,705 skipped, zero failures/errors. Instrumentation passed its one
+  startup-agent test through the legacy entry point.
+* All four test-JAR consumers' test classes compile. New-project formatting
+  and applicable forbidden-API checks pass. The combined verification build
+  succeeded in 2m 50s with four test forks and four Gradle workers.
+* Final source and generated-output hashes still match their baselines.
+  Production Java sources have no remaining changes. Temporary probes are
+  removed. `git diff --check` passes.
+* Full verification log: `/private/tmp/core-processing-full.log`; results:
+  `/private/tmp/core-processing-full-summary.json`. Full test reports are in
+  `hibernate-core-tests/target/reports/tests/test/index.html`.
+* Prepared as the second commit after extraction. Unrelated SQL AST design
+  files remain untracked and outside both commits.

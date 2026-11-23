@@ -58,9 +58,9 @@ public class MinMaxCaseEveryAnyEmulation extends AbstractSqmSelfRenderingFunctio
 			sqlAppender.appendSql( "max(case when " );
 		}
 		if ( filter != null ) {
-			walker.getCurrentClauseStack().push( Clause.WHERE );
-			filter.accept( walker );
-			walker.getCurrentClauseStack().pop();
+			walker.withClause( Clause.WHERE, () -> {
+				filter.accept( walker );
+			} );
 			sqlAppender.appendSql( " then case when " );
 			sqlAstArguments.get( 0 ).accept( walker );
 			sqlAppender.appendSql( " then 1 else 0 end else null end)" );

@@ -58,7 +58,7 @@ public class CockroachLegacySqlAstTranslator<T extends JdbcOperation> extends Po
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		final Statement currentStatement = getStatementStack().getCurrent();
+		final Statement currentStatement = getCurrentStatement();
 		if ( !( currentStatement instanceof UpdateStatement )
 				|| !hasNonTrivialFromClause( ( (UpdateStatement) currentStatement ).getFromClause() ) ) {
 			// For UPDATE statements we render a full FROM clause and a join condition to match target table rows,

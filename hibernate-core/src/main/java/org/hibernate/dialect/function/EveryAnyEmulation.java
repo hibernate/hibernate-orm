@@ -72,9 +72,9 @@ public class EveryAnyEmulation extends AbstractSqmSelfRenderingFunctionDescripto
 		}
 		sqlAppender.appendSql( "(sum(case when " );
 		if ( filter != null ) {
-			walker.getCurrentClauseStack().push( Clause.WHERE );
-			filter.accept( walker );
-			walker.getCurrentClauseStack().pop();
+			walker.withClause( Clause.WHERE, () -> {
+				filter.accept( walker );
+			} );
 			sqlAppender.appendSql( " then case when " );
 			sqlAstArguments.get( 0 ).accept( walker );
 			if ( every ) {

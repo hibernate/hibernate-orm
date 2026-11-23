@@ -93,7 +93,7 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getCurrentClause() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}
@@ -134,14 +134,14 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 
 	@Override
 	protected void renderSelectItems(SelectClause selectClause) {
-		final QuerySpec querySpec = (QuerySpec) getQueryPartStack().getCurrent();
+		final QuerySpec querySpec = (QuerySpec) getCurrentQueryPart();
 		final PaginationRenderingPlan paginationPlan = determinePaginationRenderingPlan( querySpec );
 		if ( paginationPlan instanceof PaginationRenderingPlan.Window window ) {
 			renderTopClause( querySpec, !window.emulateFetchClause(), true );
 		}
 		else if ( paginationPlan instanceof PaginationRenderingPlan.None
-				&& getQueryPartStack().depth() > 1 && querySpec.hasSortSpecifications()
-				&& getQueryPartStack().peek( 1 ) instanceof QueryGroup ) {
+				&& querySpec.hasSortSpecifications()
+				&& getParentQueryPart() instanceof QueryGroup ) {
 			// If the current query spec has a query group parent, no offset/fetch clause, but an order by clause,
 			// then we must render "top 100 percent" as that is needed for the SQL to be valid
 			appendSql( "top 100 percent " );
@@ -204,15 +204,15 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 				case NOT_DISTINCT_FROM: {
 					if ( !getDialect().getPredicateSupport().supports( Capability.DISTINCT_FROM ) ) {
 						appendSql( "exists (select cast(" );
-						getClauseStack().push( Clause.SELECT );
-						visitSqlSelectExpression( lhs );
-						appendSql( " as nvarchar(max))" );
-						appendSql( getSelectOnlyFromClause() );
-						appendSql( " intersect select cast(" );
-						visitSqlSelectExpression( rhs );
-						appendSql( " as nvarchar(max))" );
-						appendSql( getSelectOnlyFromClause() );
-						getClauseStack().pop();
+						withClause( Clause.SELECT, () -> {
+							visitSqlSelectExpression( lhs );
+							appendSql( " as nvarchar(max))" );
+							appendSql( getSelectOnlyFromClause() );
+							appendSql( " intersect select cast(" );
+							visitSqlSelectExpression( rhs );
+							appendSql( " as nvarchar(max))" );
+							appendSql( getSelectOnlyFromClause() );
+						} );
 						appendSql( CLOSE_PARENTHESIS );
 						return;
 					}

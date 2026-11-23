@@ -45,7 +45,7 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 
 	@Override
 	protected void renderSetAssignment(Assignment assignment) {
-		final Statement currentStatement = getStatementStack().getCurrent();
+		final Statement currentStatement = getCurrentStatement();
 		final UpdateStatement statement;
 		if ( currentStatement instanceof UpdateStatement
 				&& hasNonTrivialFromClause( ( statement = (UpdateStatement) currentStatement ).getFromClause() ) ) {
@@ -59,7 +59,7 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getCurrentClause() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}

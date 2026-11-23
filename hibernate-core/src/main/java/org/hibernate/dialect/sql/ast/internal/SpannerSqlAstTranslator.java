@@ -230,13 +230,9 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 
 	@Override
 	public void visitOptionalTableUpdate(OptionalTableUpdate tableUpdate) {
-		getClauseStack().push( Clause.UPDATE );
-		try {
+		withClause( Clause.UPDATE, () -> {
 			visitSpannerTableUpdate( tableUpdate );
-		}
-		finally {
-			getClauseStack().pop();
-		}
+		} );
 	}
 
 	/**
@@ -254,8 +250,7 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 		appendSql( " " + alias );
 		registerAffectedTable( tableUpdate.getMutatingTable().getTableName() );
 
-		getClauseStack().push( Clause.SET );
-		try {
+		withClause( Clause.SET, () -> {
 			appendSql( " set" );
 			tableUpdate.forEachValueBinding( (columnPosition, columnValueBinding) -> {
 				if ( columnPosition == 0 ) {
@@ -269,13 +264,9 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 				appendSql( "=" );
 				columnValueBinding.getValueExpression().accept( this );
 			} );
-		}
-		finally {
-			getClauseStack().pop();
-		}
+		} );
 
-		getClauseStack().push( Clause.WHERE );
-		try {
+		withClause( Clause.WHERE, () -> {
 			appendSql( " where" );
 			tableUpdate.forEachKeyBinding( (position, columnValueBinding) -> {
 				if ( position == 0 ) {
@@ -308,16 +299,13 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 					}
 				} );
 			}
-		}
-		finally {
-			getClauseStack().pop();
-		}
+		} );
 	}
 
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getCurrentClause() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}
@@ -428,7 +416,7 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	protected String determineColumnReferenceQualifier(ColumnReference columnReference) {
 		// Cloud Spanner does not support target table aliases in INSERT statements,
 		// so we must qualify column references with the actual table name to avoid ambiguity.
-		if ( getClauseStack().findCurrentFirst( clause -> clause == Clause.CONFLICT ? Boolean.TRUE : null ) != null ) {
+		if ( isWithinClause( Clause.CONFLICT ) ) {
 			if ( !"excluded".equalsIgnoreCase( columnReference.getQualifier() ) ) {
 				final MutationStatement currentDmlStatement = getCurrentDmlStatement();
 				if ( currentDmlStatement != null && currentDmlStatement.getTargetTable() != null ) {

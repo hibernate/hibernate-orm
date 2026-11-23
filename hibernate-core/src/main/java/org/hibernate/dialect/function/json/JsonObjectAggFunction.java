@@ -80,10 +80,10 @@ public class JsonObjectAggFunction extends AbstractSqmSelfRenderingFunctionDescr
 			if ( arguments.nullBehavior() != JsonNullBehavior.ABSENT ) {
 				throw new QueryException( "Can't emulate json_objectagg filter clause when using 'null on null' clause.", (String) null );
 			}
-			translator.getCurrentClauseStack().push( Clause.WHERE );
-			sqlAppender.appendSql( "case when " );
-			filter.accept( translator );
-			translator.getCurrentClauseStack().pop();
+			translator.withClause( Clause.WHERE, () -> {
+				sqlAppender.appendSql( "case when " );
+				filter.accept( translator );
+			} );
 			sqlAppender.appendSql( " then " );
 			renderArgument( sqlAppender, arguments.value(), arguments.nullBehavior(), translator );
 			sqlAppender.appendSql( " else null end)" );
@@ -101,11 +101,11 @@ public class JsonObjectAggFunction extends AbstractSqmSelfRenderingFunctionDescr
 		sqlAppender.appendSql( ')' );
 
 		if ( !caseWrapper && filter != null ) {
-			translator.getCurrentClauseStack().push( Clause.WHERE );
-			sqlAppender.appendSql( " filter (where " );
-			filter.accept( translator );
-			sqlAppender.appendSql( ')' );
-			translator.getCurrentClauseStack().pop();
+			translator.withClause( Clause.WHERE, () -> {
+				sqlAppender.appendSql( " filter (where " );
+				filter.accept( translator );
+				sqlAppender.appendSql( ')' );
+			} );
 		}
 	}
 

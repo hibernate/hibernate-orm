@@ -110,14 +110,14 @@ public class InterSystemsIRISSqlAstTranslator<T extends JdbcOperation> extends A
 		final MutationStatement currentDmlStatement;
 		final String dmlAlias;
 
-		if ( getClauseStack().getCurrent() != Clause.SET
+		if ( getCurrentClause() != Clause.SET
 			|| !( ( currentDmlStatement = getCurrentDmlStatement() ) instanceof InsertSelectStatement )
 			|| ( dmlAlias = currentDmlStatement.getTargetTable().getIdentificationVariable() ) == null
 			|| !dmlAlias.equals( columnReference.getQualifier() ) ) {
 			return columnReference.getQualifier();
 		}
 		// Qualify the column reference with the table expression also when in subqueries
-		else if ( qualifierSupport != DmlTargetColumnQualifierSupport.NONE || !getQueryPartStack().isEmpty() ) {
+		else if ( qualifierSupport != DmlTargetColumnQualifierSupport.NONE || getCurrentQueryPart() != null ) {
 			return getCurrentDmlStatement().getTargetTable().getTableExpression();
 		}
 		else {

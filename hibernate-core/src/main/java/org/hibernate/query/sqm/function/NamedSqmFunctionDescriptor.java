@@ -180,10 +180,10 @@ public class NamedSqmFunctionDescriptor
 				sqlAppender.appendSql( "," );
 			}
 			if ( caseWrapper && !( arg instanceof Distinct ) ) {
-				translator.getCurrentClauseStack().push( Clause.WHERE );
-				sqlAppender.appendSql( "case when " );
-				filter.accept( translator );
-				translator.getCurrentClauseStack().pop();
+				translator.withClause( Clause.WHERE, () -> {
+					sqlAppender.appendSql( "case when " );
+					filter.accept( translator );
+				} );
 				sqlAppender.appendSql( " then " );
 				if ( ( arg instanceof Star ) ) {
 					sqlAppender.appendSql( "1" );
@@ -204,15 +204,15 @@ public class NamedSqmFunctionDescriptor
 		}
 
 		if ( withinGroup != null && !withinGroup.isEmpty() ) {
-			translator.getCurrentClauseStack().push( Clause.WITHIN_GROUP );
-			sqlAppender.appendSql( " within group (order by " );
-			translator.render( withinGroup.get( 0 ), argumentRenderingMode );
-			for ( int i = 1; i < withinGroup.size(); i++ ) {
-				sqlAppender.appendSql( SqlAppender.COMMA_SEPARATOR_CHAR );
+			translator.withClause( Clause.WITHIN_GROUP, () -> {
+				sqlAppender.appendSql( " within group (order by " );
 				translator.render( withinGroup.get( 0 ), argumentRenderingMode );
-			}
-			sqlAppender.appendSql( ')' );
-			translator.getCurrentClauseStack().pop();
+				for ( int i = 1; i < withinGroup.size(); i++ ) {
+					sqlAppender.appendSql( SqlAppender.COMMA_SEPARATOR_CHAR );
+					translator.render( withinGroup.get( i ), argumentRenderingMode );
+				}
+				sqlAppender.appendSql( ')' );
+			} );
 		}
 
 		if ( fromFirst != null ) {
@@ -233,11 +233,11 @@ public class NamedSqmFunctionDescriptor
 		}
 
 		if ( filter != null && !caseWrapper ) {
-			translator.getCurrentClauseStack().push( Clause.WHERE );
-			sqlAppender.appendSql( " filter (where " );
-			filter.accept( translator );
-			sqlAppender.appendSql( ')' );
-			translator.getCurrentClauseStack().pop();
+			translator.withClause( Clause.WHERE, () -> {
+				sqlAppender.appendSql( " filter (where " );
+				filter.accept( translator );
+				sqlAppender.appendSql( ')' );
+			} );
 		}
 	}
 

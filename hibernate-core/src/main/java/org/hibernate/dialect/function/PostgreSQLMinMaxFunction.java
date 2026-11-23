@@ -62,10 +62,10 @@ public class PostgreSQLMinMaxFunction extends AbstractSqmSelfRenderingFunctionDe
 		final Expression arg = (Expression) sqlAstArguments.get( 0 );
 		final String castTarget;
 		if ( caseWrapper ) {
-			translator.getCurrentClauseStack().push( Clause.WHERE );
-			sqlAppender.appendSql( "case when " );
-			filter.accept( translator );
-			translator.getCurrentClauseStack().pop();
+			translator.withClause( Clause.WHERE, () -> {
+				sqlAppender.appendSql( "case when " );
+				filter.accept( translator );
+			} );
 			sqlAppender.appendSql( " then " );
 			castTarget = renderArgument( sqlAppender, translator, arg );
 			sqlAppender.appendSql( " else null end)" );
@@ -74,11 +74,11 @@ public class PostgreSQLMinMaxFunction extends AbstractSqmSelfRenderingFunctionDe
 			castTarget = renderArgument( sqlAppender, translator, arg );
 			sqlAppender.appendSql( ')' );
 			if ( filter != null ) {
-				translator.getCurrentClauseStack().push( Clause.WHERE );
-				sqlAppender.appendSql( " filter (where " );
-				filter.accept( translator );
-				sqlAppender.appendSql( ')' );
-				translator.getCurrentClauseStack().pop();
+				translator.withClause( Clause.WHERE, () -> {
+					sqlAppender.appendSql( " filter (where " );
+					filter.accept( translator );
+					sqlAppender.appendSql( ')' );
+				} );
 			}
 		}
 		if ( castTarget != null ) {

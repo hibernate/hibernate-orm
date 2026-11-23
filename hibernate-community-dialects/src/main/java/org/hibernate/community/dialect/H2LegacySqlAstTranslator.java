@@ -95,7 +95,7 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getCurrentClause() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}
@@ -250,7 +250,7 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	protected boolean allowsNullPrecedence() {
-		return getClauseStack().getCurrent() != Clause.WITHIN_GROUP
+		return getCurrentClause() != Clause.WITHIN_GROUP
 				|| getDialect().getNullOrderingSupport()
 						.supports( NullOrderingSupport.Capability.NULLS_FIRST_LAST );
 	}

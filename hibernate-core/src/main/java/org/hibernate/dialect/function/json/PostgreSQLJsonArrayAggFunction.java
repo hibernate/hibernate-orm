@@ -62,28 +62,28 @@ public class PostgreSQLJsonArrayAggFunction extends JsonArrayAggFunction {
 			}
 			renderArgument( sqlAppender, arg, nullBehavior, translator );
 			if ( withinGroup != null && !withinGroup.isEmpty() ) {
-				translator.getCurrentClauseStack().push( Clause.WITHIN_GROUP );
-				sqlAppender.appendSql( " order by " );
-				withinGroup.get( 0 ).accept( translator );
-				for ( int i = 1; i < withinGroup.size(); i++ ) {
-					sqlAppender.appendSql( ',' );
-					withinGroup.get( i ).accept( translator );
-				}
-				translator.getCurrentClauseStack().pop();
+				translator.withClause( Clause.WITHIN_GROUP, () -> {
+					sqlAppender.appendSql( " order by " );
+					withinGroup.get( 0 ).accept( translator );
+					for ( int i = 1; i < withinGroup.size(); i++ ) {
+						sqlAppender.appendSql( ',' );
+						withinGroup.get( i ).accept( translator );
+					}
+				} );
 			}
 			sqlAppender.appendSql( ')' );
 
 			if ( filter != null ) {
-				translator.getCurrentClauseStack().push( Clause.WHERE );
-				sqlAppender.appendSql( " filter (where " );
-				filter.accept( translator );
-				if ( nullBehavior != JsonNullBehavior.NULL ) {
-					sqlAppender.appendSql( " and " );
-					arg.accept( translator );
-					sqlAppender.appendSql( " is not null" );
-				}
-				sqlAppender.appendSql( ')' );
-				translator.getCurrentClauseStack().pop();
+				translator.withClause( Clause.WHERE, () -> {
+					sqlAppender.appendSql( " filter (where " );
+					filter.accept( translator );
+					if ( nullBehavior != JsonNullBehavior.NULL ) {
+						sqlAppender.appendSql( " and " );
+						arg.accept( translator );
+						sqlAppender.appendSql( " is not null" );
+					}
+					sqlAppender.appendSql( ')' );
+				} );
 			}
 			else if ( nullBehavior != JsonNullBehavior.NULL ) {
 				sqlAppender.appendSql( " filter (where " );

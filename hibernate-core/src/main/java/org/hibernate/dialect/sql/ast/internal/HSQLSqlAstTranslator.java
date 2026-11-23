@@ -67,7 +67,7 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 	}
 
 	private boolean followsCorrelatedPath(TableGroup root) {
-		if ( getQueryPartStack().getCurrent() instanceof QuerySpec query && !query.isRoot() ) {
+		if ( getCurrentQueryPart() instanceof QuerySpec query && !query.isRoot() ) {
 			for ( var preceding : query.getFromClause().getRoots() ) {
 				if ( preceding == root ) {
 					break;
@@ -104,7 +104,7 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getCurrentClause() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}

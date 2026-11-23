@@ -91,7 +91,7 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 	@Override
 	protected void renderSelectClause(SelectClause selectClause) {
 		appendSql( "select " );
-		final QuerySpec querySpec = (QuerySpec) getQueryPartStack().getCurrent();
+		final QuerySpec querySpec = (QuerySpec) getCurrentQueryPart();
 		final PaginationRenderingPlan plan = determinePaginationRenderingPlan( querySpec );
 		if ( plan instanceof PaginationRenderingPlan.SkipFirst ) {
 			renderSkipFirstClause( querySpec );
@@ -319,7 +319,7 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
 		if (getDialect().getVersion().isSameOrAfter( 12, 10 )) {
-			if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+			if ( getCurrentClause() != Clause.INSERT ) {
 				renderTableReferenceIdentificationVariable( tableReference );
 			}
 		}
@@ -366,7 +366,7 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 	@Override
 	public void visitQueryGroup(QueryGroup queryGroup) {
 		// Informix does not like set operators on the top level select for an insert, so wrap it
-		if ( getStatementStack().depth() == 1 && getStatement() instanceof InsertSelectStatement ) {
+		if ( getCurrentStatement() == getStatement() && getStatement() instanceof InsertSelectStatement ) {
 			appendSql( "select * from (" );
 			super.visitQueryGroup( queryGroup );
 			appendSql( ')' );

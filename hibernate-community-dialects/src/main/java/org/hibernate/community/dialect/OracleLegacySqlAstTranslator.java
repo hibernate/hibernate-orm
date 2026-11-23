@@ -14,7 +14,6 @@ import org.hibernate.dialect.sql.ast.spi.StandardDerivedTableRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.SetReturningFunctionRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardSetReturningFunctionRenderingSupport;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
-import org.hibernate.spi.Stack;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -94,7 +93,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getCurrentClause() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}
@@ -162,7 +161,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	}
 
 	private boolean isPartOfQueryGroup() {
-		return getQueryPartStack().findCurrentFirst( part -> part instanceof QueryGroup ? part : null ) != null;
+		return isWithinQueryGroup();
 	}
 
 	@Override
@@ -181,7 +180,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 			if ( !supportsOffsetFetchClause()
 					// Work around an Oracle segmentation fault for insert queries with a plain query group and fetch clause.
 					|| request.queryPart() instanceof QueryGroup
-							&& getClauseStack().isEmpty()
+							&& getCurrentClause() == null
 							&& getStatement() instanceof InsertSelectStatement ) {
 				return new PaginationRenderingPlan.Window( true );
 			}
@@ -220,19 +219,14 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 							appendSql( " where " );
 						}
 						appendSql( "rownum<=" );
-						final Stack<Clause> clauseStack = getClauseStack();
-						clauseStack.push( Clause.WHERE );
-						try {
+						withClause( Clause.WHERE, () -> {
 							if ( querySpec.isRoot() && hasLimit() ) {
 								getLimitParameter().accept( this );
 							}
 							else {
 								querySpec.getFetchClauseExpression().accept( this );
 							}
-						}
-						finally {
-							clauseStack.pop();
-						}
+						} );
 						renderOrderByClause( sortSpecifications );
 						visitForUpdateClause( querySpec );
 					}
@@ -379,8 +373,8 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		if ( !isRowNumberingCurrentQueryPart() ) {
 			if ( supportsOffsetFetchClause() ) {
-				if ( getQueryPartStack().depth() > 1 && queryPart.hasSortSpecifications()
-						&& getQueryPartStack().peek( 1 ) instanceof QueryGroup
+				if ( queryPart.hasSortSpecifications()
+						&& getParentQueryPart() instanceof QueryGroup
 						&& ( queryPart.isRoot() && !hasLimit() || !queryPart.hasOffsetOrFetchClause() ) ) {
 					// If the current query part has a query group parent, no offset/fetch clause, but an order by clause,
 					// then we must render "offset 0 rows" as that is needed for the SQL to be valid

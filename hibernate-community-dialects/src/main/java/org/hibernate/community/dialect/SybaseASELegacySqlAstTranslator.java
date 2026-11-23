@@ -396,7 +396,7 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 		}
 		// Sybase needs a table name prefix
 		// but not if this is a restricted union table reference subquery
-		final QuerySpec currentQuerySpec = (QuerySpec) getQueryPartStack().getCurrent();
+		final QuerySpec currentQuerySpec = (QuerySpec) getCurrentQueryPart();
 		final List<TableGroup> roots;
 		if ( currentQuerySpec != null && !currentQuerySpec.isRoot()
 				&& (roots = currentQuerySpec.getFromClause().getRoots()).size() == 1

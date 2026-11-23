@@ -95,7 +95,7 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT && !usesSingleTableDml( getCurrentDmlStatement() ) ) {
+		if ( getCurrentClause() != Clause.INSERT && !usesSingleTableDml( getCurrentDmlStatement() ) ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}
@@ -107,7 +107,7 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 		// Since MariaDB does not support aliasing the insert target table,
 		// we must detect column reference that are used in the conflict clause
 		// and use the table expression as qualifier instead
-		if ( getClauseStack().getCurrent() != Clause.SET
+		if ( getCurrentClause() != Clause.SET
 				|| !( getCurrentDmlStatement() instanceof InsertSelectStatement insertSelectStatement )
 				|| ( dmlAlias = insertSelectStatement.getTargetTable().getIdentificationVariable() ) == null
 				|| !dmlAlias.equals( columnReference.getQualifier() ) ) {
@@ -118,13 +118,13 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 				final String qualifier = columnReference.getQualifier();
 				final String targetAlias = targetTable.getIdentificationVariable();
 				if ( ( targetAlias != null && qualifier.equals( targetAlias ) ) || qualifier.equals( targetTableName ) ) {
-					return !getQueryPartStack().isEmpty() ? targetTableName : null;
+					return getCurrentQueryPart() != null ? targetTableName : null;
 				}
 			}
 			return columnReference.getQualifier();
 		}
 		// Qualify the column reference with the table expression also when in subqueries
-		else if ( qualifierSupport != DmlTargetColumnQualifierSupport.NONE || !getQueryPartStack().isEmpty() ) {
+		else if ( qualifierSupport != DmlTargetColumnQualifierSupport.NONE || getCurrentQueryPart() != null ) {
 			return getCurrentDmlStatement().getTargetTable().getTableExpression();
 		}
 		else {

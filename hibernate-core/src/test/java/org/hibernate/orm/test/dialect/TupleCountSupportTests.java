@@ -21,7 +21,6 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.spi.Stack;
 import org.hibernate.sql.ast.spi.SqlAstNode;
 import org.hibernate.sql.ast.spi.query.expression.Distinct;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
@@ -183,14 +182,16 @@ public class TupleCountSupportTests {
 		final StringBuilderDialectSqlAppender appender = new StringBuilderDialectSqlAppender( dialect );
 
 		final SqlAstTranslator<?> translator = mock( SqlAstTranslator.class );
-		final Stack<Clause> clauseStack = mock( Stack.class );
 		final SessionFactoryImplementor sessionFactory = mock( SessionFactoryImplementor.class );
 		final JdbcServices jdbcServices = mock( JdbcServices.class );
 		final QueryEngine queryEngine = mock( QueryEngine.class );
 		final SqmFunctionRegistry functionRegistry = new SqmFunctionRegistry();
 		functionRegistry.patternDescriptorBuilder( "chr", "chr(?1)" ).setExactArgumentCount( 1 ).register();
 		when( translator.getSessionFactory() ).thenReturn( sessionFactory );
-		when( translator.getCurrentClauseStack() ).thenReturn( clauseStack );
+		doAnswer( invocation -> {
+			invocation.<Runnable>getArgument( 1 ).run();
+			return null;
+		} ).when( translator ).withClause( any( Clause.class ), any( Runnable.class ) );
 		when( sessionFactory.getJdbcServices() ).thenReturn( jdbcServices );
 		when( jdbcServices.getDialect() ).thenReturn( dialect );
 		when( sessionFactory.getQueryEngine() ).thenReturn( queryEngine );

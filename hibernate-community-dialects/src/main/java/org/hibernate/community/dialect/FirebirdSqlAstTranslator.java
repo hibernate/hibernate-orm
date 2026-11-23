@@ -159,9 +159,9 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	@Override
 	protected void renderSelectClause(SelectClause selectClause) {
 		appendSql( "select " );
-		if ( determinePaginationRenderingPlan( getQueryPartStack().getCurrent() )
+		if ( determinePaginationRenderingPlan( getCurrentQueryPart() )
 				instanceof PaginationRenderingPlan.FirstSkip ) {
-			renderFirstSkipClause( (QuerySpec) getQueryPartStack().getCurrent() );
+			renderFirstSkipClause( (QuerySpec) getCurrentQueryPart() );
 		}
 		if ( selectClause.isDistinct() ) {
 			appendSql( "distinct " );
@@ -329,7 +329,7 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getCurrentClause() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}

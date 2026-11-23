@@ -277,7 +277,7 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		// In INSERT SELECT/VALUES sources, inline simple values, version seeds and bound
 		// parameters that Hibernate would otherwise render as SELECT-list parameter markers.
 		final boolean renderingInsertSelectSource = !renderingSelectExpression
-				&& getStatementStack().getCurrent() instanceof InsertSelectStatement insertStatement
+				&& getCurrentStatement() instanceof InsertSelectStatement insertStatement
 				&& insertStatement.getSourceSelectStatement() != null;
 		final boolean renderingDerivedValuesSource = isRenderingDerivedTable( DerivedTableKind.VALUES )
 				&& !renderingSelectExpression;
@@ -476,7 +476,7 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getCurrentClause() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}
@@ -518,7 +518,7 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		// function arguments, so give plain parameters there an explicit type.
 		if ( !renderingCastedSelectParameter
 				&& getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT
-				&& getCurrentClauseStack().getCurrent() == Clause.SELECT ) {
+				&& getCurrentClause() == Clause.SELECT ) {
 			renderingCastedSelectParameter = true;
 			try {
 				renderCasted( jdbcParameter );

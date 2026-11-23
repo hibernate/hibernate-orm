@@ -55,10 +55,10 @@ public class HANAJsonArrayAggFunction extends JsonArrayAggFunction {
 			if ( nullBehavior != JsonNullBehavior.ABSENT ) {
 				throw new QueryException( "Can't emulate json_arrayagg filter clause when using 'null on null' clause.", (String) null );
 			}
-			translator.getCurrentClauseStack().push( Clause.WHERE );
-			sqlAppender.appendSql( "case when " );
-			filter.accept( translator );
-			translator.getCurrentClauseStack().pop();
+			translator.withClause( Clause.WHERE, () -> {
+				sqlAppender.appendSql( "case when " );
+				filter.accept( translator );
+			} );
 			sqlAppender.appendSql( " then " );
 			renderArgument( sqlAppender, arg, nullBehavior, translator );
 			sqlAppender.appendSql( " else null end)" );
@@ -68,14 +68,14 @@ public class HANAJsonArrayAggFunction extends JsonArrayAggFunction {
 		}
 		sqlAppender.appendSql( ",','" );
 		if ( withinGroup != null && !withinGroup.isEmpty() ) {
-			translator.getCurrentClauseStack().push( Clause.WITHIN_GROUP );
-			sqlAppender.appendSql( " order by " );
-			withinGroup.get( 0 ).accept( translator );
-			for ( int i = 1; i < withinGroup.size(); i++ ) {
-				sqlAppender.appendSql( ',' );
-				withinGroup.get( i ).accept( translator );
-			}
-			translator.getCurrentClauseStack().pop();
+			translator.withClause( Clause.WITHIN_GROUP, () -> {
+				sqlAppender.appendSql( " order by " );
+				withinGroup.get( 0 ).accept( translator );
+				for ( int i = 1; i < withinGroup.size(); i++ ) {
+					sqlAppender.appendSql( ',' );
+					withinGroup.get( i ).accept( translator );
+				}
+			} );
 		}
 		sqlAppender.appendSql( ")||']'" );
 	}

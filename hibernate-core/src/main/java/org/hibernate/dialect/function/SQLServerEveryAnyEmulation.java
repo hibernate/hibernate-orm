@@ -60,9 +60,9 @@ public class SQLServerEveryAnyEmulation extends AbstractSqmSelfRenderingFunction
 			sqlAppender.appendSql( "max(iif(" );
 		}
 		if ( filter != null ) {
-			walker.getCurrentClauseStack().push( Clause.WHERE );
-			filter.accept( walker );
-			walker.getCurrentClauseStack().pop();
+			walker.withClause( Clause.WHERE, () -> {
+				filter.accept( walker );
+			} );
 			sqlAppender.appendSql( ",iif(" );
 			sqlAstArguments.get( 0 ).accept( walker );
 			sqlAppender.appendSql( ",1,0),null))" );

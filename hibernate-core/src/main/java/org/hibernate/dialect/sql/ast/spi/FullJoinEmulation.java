@@ -12,7 +12,6 @@ import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.query.SortDirection;
-import org.hibernate.sql.ast.spi.translation.Clause;
 import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.query.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
@@ -84,19 +83,15 @@ public final class FullJoinEmulation {
 	public boolean renderSelectClauseIfNeeded(SelectClause selectClause) {
 		if ( renderingFullJoinEmulationBranch
 				&& fullJoinEmulationExtraSelections != null ) {
-			translator.getClauseStack().push( Clause.SELECT );
-			try {
-				translator.appendSql( "select " );
-				if ( selectClause.isDistinct() ) {
-					translator.appendSql( "distinct " );
-				}
-				translator.renderSelectItems( selectClause );
-				translator.renderVirtualSelections( selectClause );
-				renderFullJoinEmulationAdditionalSelectItems( selectClause );
+			// Clause.SELECT is already current: this is called from a renderSelectClause
+			// override, within the scope entered by visitSelectClause
+			translator.appendSql( "select " );
+			if ( selectClause.isDistinct() ) {
+				translator.appendSql( "distinct " );
 			}
-			finally {
-				translator.getClauseStack().pop();
-			}
+			translator.renderSelectItems( selectClause );
+			translator.renderVirtualSelections( selectClause );
+			renderFullJoinEmulationAdditionalSelectItems( selectClause );
 			return true;
 		}
 		return false;

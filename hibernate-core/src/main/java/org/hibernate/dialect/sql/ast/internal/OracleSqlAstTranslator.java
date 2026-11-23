@@ -108,7 +108,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getCurrentClause() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}
@@ -187,11 +187,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	}
 
 	private boolean isPartOfQueryGroup() {
-		return getQueryPartStack().findCurrentFirst( OracleSqlAstTranslator::partIsQueryGroup ) != null;
-	}
-
-	private static QueryPart partIsQueryGroup(final QueryPart part) {
-		return part instanceof QueryGroup ? part : null;
+		return isWithinQueryGroup();
 	}
 
 	@Override
@@ -210,7 +206,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 			if ( !supportsOffsetFetchClause()
 					// Work around an Oracle segmentation fault for insert queries with a plain query group and fetch clause.
 					|| request.queryPart() instanceof QueryGroup
-							&& getClauseStack().isEmpty()
+							&& getCurrentClause() == null
 							&& getStatement() instanceof InsertSelectStatement ) {
 				return new PaginationRenderingPlan.Window( true );
 			}
@@ -360,8 +356,8 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		if ( !isRowNumberingCurrentQueryPart() ) {
 			if ( supportsOffsetFetchClause() ) {
-				if ( getQueryPartStack().depth() > 1 && queryPart.hasSortSpecifications()
-						&& getQueryPartStack().peek( 1 ) instanceof QueryGroup
+				if ( queryPart.hasSortSpecifications()
+						&& getParentQueryPart() instanceof QueryGroup
 						&& ( queryPart.isRoot() && !hasLimit() || !queryPart.hasOffsetOrFetchClause() ) ) {
 					// If the current query part has a query group parent, no offset/fetch clause, but an order by clause,
 					// then we must render "offset 0 rows" as that is needed for the SQL to be valid

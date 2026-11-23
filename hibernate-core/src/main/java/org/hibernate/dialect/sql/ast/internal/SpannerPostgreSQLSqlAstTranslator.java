@@ -41,7 +41,7 @@ public class SpannerPostgreSQLSqlAstTranslator<T extends JdbcOperation> extends 
 		registerAffectedTable(tableReference);
 		// ALWAYS render the alias for the target table since Spanner doesn't support
 		// FROM in UPDATE
-		final Clause currentClause = getClauseStack().getCurrent();
+		final Clause currentClause = getCurrentClause();
 		if ( currentClause == Clause.UPDATE || currentClause == Clause.DELETE) {
 			renderTableReferenceIdentificationVariable(tableReference);
 		}

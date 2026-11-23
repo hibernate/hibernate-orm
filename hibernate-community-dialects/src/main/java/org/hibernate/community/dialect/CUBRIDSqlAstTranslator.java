@@ -181,9 +181,7 @@ public class CUBRIDSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	@Override
 	protected void renderDeleteClause(DeleteStatement statement) {
 		appendSql( "delete" );
-		final var clauseStack = getClauseStack();
-		try {
-			clauseStack.push( Clause.DELETE );
+		withClause( Clause.DELETE, () -> {
 			renderTableReferenceIdentificationVariable( statement.getTargetTable() );
 			if ( statement.getFromClause().getRoots().isEmpty() ) {
 				appendSql( " from " );
@@ -192,10 +190,7 @@ public class CUBRIDSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 			else {
 				visitFromClause( statement.getFromClause() );
 			}
-		}
-		finally {
-			clauseStack.pop();
-		}
+		} );
 	}
 
 	@Override
@@ -222,7 +217,7 @@ public class CUBRIDSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getCurrentClause() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}

@@ -46,7 +46,7 @@ public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 
 	@Override
 	protected void renderSetAssignment(Assignment assignment) {
-		final Statement currentStatement = getStatementStack().getCurrent();
+		final Statement currentStatement = getCurrentStatement();
 		final UpdateStatement statement;
 		if ( currentStatement instanceof UpdateStatement
 				&& hasNonTrivialFromClause( ( statement = (UpdateStatement) currentStatement ).getFromClause() ) ) {
@@ -60,7 +60,7 @@ public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getCurrentClause() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}
@@ -145,7 +145,7 @@ public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		// Derby only supports the OFFSET and FETCH clause with ROWS
 		assertRowsOnlyFetchClauseType( queryPart );
-		if ( !supportsOffsetFetchClause() && !getClauseStack().isEmpty() ) {
+		if ( !supportsOffsetFetchClause() && getCurrentClause() != null ) {
 			throw new IllegalArgumentException( "Can't render offset and fetch clause for subquery" );
 		}
 		super.visitOffsetFetchClause( queryPart );

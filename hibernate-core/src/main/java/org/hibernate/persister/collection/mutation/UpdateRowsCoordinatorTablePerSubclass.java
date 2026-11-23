@@ -15,6 +15,10 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.spi.mutation.MutationType;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
@@ -22,10 +26,11 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.sin
  * OneToMany update coordinator if the element is a {@link org.hibernate.persister.entity.UnionSubclassEntityPersister}.
  */
 public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoordinator {
+	private final OneToManyPersister persister;
 	private final RowMutationOperations rowMutationOperations;
 
-	private final SubclassEntry[] deleteSubclassEntries;
-	private final SubclassEntry[] insertSubclassEntries;
+	private final Map<EntityPersister, SubclassEntry> deleteSubclassEntries = new ConcurrentHashMap<>();
+	private final Map<EntityPersister, SubclassEntry> insertSubclassEntries = new ConcurrentHashMap<>();
 
 	private final MutationExecutorService mutationExecutorService;
 
@@ -34,13 +39,8 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 			@Nonnull RowMutationOperations rowMutationOperations,
 			@Nonnull SessionFactoryImplementor sessionFactory) {
 		super( mutationTarget, sessionFactory );
+		this.persister = mutationTarget;
 		this.rowMutationOperations = rowMutationOperations;
-		final int size =
-				castNonNull( mutationTarget.getElementPersister() ).getRootEntityDescriptor()
-						.getSubclassEntityNames().size();
-		deleteSubclassEntries = new SubclassEntry[size];
-		insertSubclassEntries = new SubclassEntry[size];
-
 		mutationExecutorService = sessionFactory.getServiceRegistry().requireService( MutationExecutorService.class );
 	}
 
@@ -62,7 +62,7 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 		final var collectionDescriptor = attributeMapping.getCollectionDescriptor();
 		final var entries = collection.entries( collectionDescriptor );
 		if ( entries.hasNext() ) {
-			final var executors = new MutationExecutor[deleteSubclassEntries.length];
+			final Map<EntityPersister, MutationExecutor> executors = new HashMap<>();
 			try {
 				int entryPosition = -1;
 				while ( entries.hasNext() ) {
@@ -70,20 +70,10 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 					entryPosition++;
 					if ( collection.needsUpdating( entry, entryPosition, attributeMapping ) ) {
 						final Object entryToUpdate = collection.getSnapshotElement( entry, entryPosition );
-						final var entityEntry = session.getPersistenceContextInternal().getEntry( entryToUpdate );
-						final int subclassId = entityEntry.getPersister().getSubclassId();
-						final MutationExecutor mutationExecutor;
-						if ( executors[subclassId] == null ) {
-							final var subclassEntry = getDeleteSubclassEntry( entityEntry.getPersister() );
-							mutationExecutor = executors[subclassId] = mutationExecutorService.createExecutor(
-									subclassEntry.batchKeySupplier,
-									subclassEntry.operationGroup,
-									session
-							);
-						}
-						else {
-							mutationExecutor = executors[subclassId];
-						}
+						final var mutationExecutor = executors.computeIfAbsent(
+								persister.getConcreteElementPersister( entryToUpdate, session ),
+								elementPersister -> createExecutor( getDeleteSubclassEntry( elementPersister ), session )
+						);
 						castNonNull( rowMutationOperations.getDeleteRowRestrictions() ).applyRestrictions(
 								collection,
 								key,
@@ -98,27 +88,32 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 				}
 			}
 			finally {
-				for ( var executor : executors ) {
-					if ( executor != null ) {
-						executor.release();
-					}
-				}
+				executors.values().forEach( MutationExecutor::release );
 			}
 		}
 	}
 
 	@Nonnull
-	private SubclassEntry getDeleteSubclassEntry( @Nonnull EntityPersister elementPersister) {
-		final int subclassId = elementPersister.getSubclassId();
-		final var subclassEntry = deleteSubclassEntries[subclassId];
-		if ( subclassEntry != null ) {
-			return subclassEntry;
-		}
-		final var basicBatchKey = new BasicBatchKey( getMutationTarget().getRolePath() + "#UPDATE-DELETE#" + subclassId );
-		return deleteSubclassEntries[subclassId] = new SubclassEntry(
-				() -> basicBatchKey,
-				resolveDeleteGroup( elementPersister )
+	private MutationExecutor createExecutor(
+			@Nonnull SubclassEntry subclassEntry,
+			@Nonnull SharedSessionContractImplementor session) {
+		return mutationExecutorService.createExecutor(
+				subclassEntry.batchKeySupplier,
+				subclassEntry.operationGroup,
+				session
 		);
+	}
+
+	@Nonnull
+	private SubclassEntry getDeleteSubclassEntry( @Nonnull EntityPersister elementPersister) {
+		return deleteSubclassEntries.computeIfAbsent( elementPersister, persister -> {
+			final var basicBatchKey =
+					new BasicBatchKey( getMutationTarget().getRolePath() + "#UPDATE-DELETE#" + persister.getSubclassId() );
+			return new SubclassEntry(
+					() -> basicBatchKey,
+					resolveDeleteGroup( persister )
+			);
+		} );
 	}
 
 	@Nonnull
@@ -149,27 +144,17 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 			return -1;
 		}
 
-		final var executors = new MutationExecutor[insertSubclassEntries.length];
+		final Map<EntityPersister, MutationExecutor> executors = new HashMap<>();
 		try {
 			int entryPosition = -1;
 			while ( entries.hasNext() ) {
 				final Object entry = entries.next();
 				entryPosition++;
 				if ( collection.needsUpdating( entry, entryPosition, attributeMapping ) ) {
-					final var entityEntry = session.getPersistenceContextInternal().getEntry( entry );
-					final int subclassId = entityEntry.getPersister().getSubclassId();
-					final MutationExecutor mutationExecutor;
-					if ( executors[subclassId] == null ) {
-						final var subclassEntry = getInsertSubclassEntry( entityEntry.getPersister() );
-						mutationExecutor = executors[subclassId] = mutationExecutorService.createExecutor(
-								subclassEntry.batchKeySupplier,
-								subclassEntry.operationGroup,
-								session
-						);
-					}
-					else {
-						mutationExecutor = executors[subclassId];
-					}
+					final var mutationExecutor = executors.computeIfAbsent(
+							persister.getConcreteElementPersister( collection.getElement( entry ), session ),
+							elementPersister -> createExecutor( getInsertSubclassEntry( elementPersister ), session )
+					);
 					castNonNull( rowMutationOperations.getInsertRowValues() ).applyValues(
 							collection,
 							key,
@@ -184,29 +169,20 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 			return entryPosition;
 		}
 		finally {
-			for ( var executor : executors ) {
-				if ( executor != null ) {
-					executor.release();
-				}
-			}
+			executors.values().forEach( MutationExecutor::release );
 		}
 	}
 
 	@Nonnull
 	private SubclassEntry getInsertSubclassEntry( @Nonnull EntityPersister elementPersister) {
-		final int subclassId = elementPersister.getSubclassId();
-		final var subclassEntry = insertSubclassEntries[subclassId];
-		if ( subclassEntry != null ) {
-			return subclassEntry;
-		}
-		else {
+		return insertSubclassEntries.computeIfAbsent( elementPersister, persister -> {
 			final var basicBatchKey =
-					new BasicBatchKey( getMutationTarget().getRolePath() + "#UPDATE-INSERT#" + subclassId );
-			return insertSubclassEntries[subclassId] = new SubclassEntry(
+					new BasicBatchKey( getMutationTarget().getRolePath() + "#UPDATE-INSERT#" + persister.getSubclassId() );
+			return new SubclassEntry(
 					() -> basicBatchKey,
-					resolveInsertGroup( elementPersister )
+					resolveInsertGroup( persister )
 			);
-		}
+		} );
 	}
 
 	@Nonnull

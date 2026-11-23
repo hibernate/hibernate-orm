@@ -21,8 +21,6 @@ import static org.hibernate.action.queue.internal.decompose.collection.Collectio
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionMutationPlanSupport.bindTemporalEndingValue;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionMutationPlanSupport.buildTemporalDeleteMutation;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionMutationPlanSupport.createTableMapping;
-import static org.hibernate.action.queue.internal.decompose.collection.CollectionMutationPlanSupport.replacedRow;
-import static org.hibernate.action.queue.internal.decompose.collection.CollectionMutationPlanSupport.rowPosition;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionOrdinalSupport.Slot;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionOrdinalSupport.calculateOrdinal;
 import static org.hibernate.temporal.TemporalTableStrategy.SINGLE_TABLE;
@@ -113,20 +111,13 @@ public class TemporalCollectionMutationPlanContributor implements CollectionMuta
 		final Object insertRowValue;
 		final int entryIndex;
 		if ( context.persister().getCollectionSemantics().getCollectionClassification().isMap() ) {
-			insertRowValue = new SimpleImmutableEntry<>( valueChange.index(), valueChange.newValue() );
+			insertRowValue = new SimpleImmutableEntry<>( valueChange.rowKey(), valueChange.newValue() );
 			entryIndex = -1;
 		}
 		else {
 			insertRowValue = valueChange.newValue();
-			entryIndex = rowPosition( valueChange.index() );
+			entryIndex = valueChange.bindingPosition();
 		}
-		final Object deleteRowValue = replacedRow(
-				context.persister(),
-				context.collection(),
-				valueChange,
-				insertRowValue,
-				entryIndex
-		);
 		operationConsumer.accept( new FlushOperation(
 				context.tableDescriptor(),
 				MutationKind.DELETE,
@@ -135,11 +126,11 @@ public class TemporalCollectionMutationPlanContributor implements CollectionMuta
 						context.persister(),
 						context.collection(),
 						context.key(),
-						deleteRowValue,
+						valueChange.replacedRow(),
 						context.jdbcOperations().deleteRowPlan().restrictions()
 				),
 				calculateOrdinal( context.ordinalBase(), Slot.DELETE ),
-				"DeleteValue[" + valueChange.index() + "](" + context.persister().getRole() + ")"
+				"DeleteValue[" + valueChange.rowKey() + "](" + context.persister().getRole() + ")"
 		) );
 
 		operationConsumer.accept( new FlushOperation(
@@ -155,7 +146,7 @@ public class TemporalCollectionMutationPlanContributor implements CollectionMuta
 						entryIndex
 				),
 				calculateOrdinal( context.ordinalBase(), Slot.INSERT ),
-				"InsertValue[" + valueChange.index() + "](" + context.persister().getRole() + ")"
+				"InsertValue[" + valueChange.rowKey() + "](" + context.persister().getRole() + ")"
 		) );
 		return true;
 	}

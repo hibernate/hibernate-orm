@@ -474,13 +474,13 @@ public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implemen
 				removals.add( new CollectionChangeSet.Removal( snapshotValue, snapshotKey ) );
 			}
 			else if ( !elementType.isEqual( snapshotValue, currentValue, persister.getFactory() ) ) {
-				valueChanges.add( new CollectionChangeSet.ValueChange( snapshotValue, currentValue, snapshotKey ) );
+				valueChanges.add( new CollectionChangeSet.ValueChange( snapshotValue, currentValue, snapshotKey, -1 ) );
 			}
 		} );
 
 		// Anything left in the copy is an addition
 		mapCopy.forEach( (key, value) -> {
-			additions.add( new CollectionChangeSet.Addition( value, key ) );
+			additions.add( new CollectionChangeSet.Addition( value, key, -1 ) );
 		} );
 
 		return new CollectionChangeSet(removals, additions, List.of(), valueChanges);
@@ -508,13 +508,13 @@ public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implemen
 			}
 			else if ( elementType.isDirty( currentValue, snapshotValue, getSession() ) ) {
 				// both contained the key, but with different values - treat that as a value change.
-				valueChanges.add( new CollectionChangeSet.ValueChange( snapshotValue, currentValue, snapshotKey ) );
+				valueChanges.add( new CollectionChangeSet.ValueChange( snapshotValue, currentValue, snapshotKey, -1 ) );
 			}
 		} );
 
 		// Anything left in the copy is an addition
 		mapCopy.forEach( (key, value) -> {
-			additions.add( new CollectionChangeSet.Addition( value, key ) );
+			additions.add( new CollectionChangeSet.Addition( value, key, -1 ) );
 		} );
 
 		return new CollectionChangeSet(removals, additions, List.of(), valueChanges);

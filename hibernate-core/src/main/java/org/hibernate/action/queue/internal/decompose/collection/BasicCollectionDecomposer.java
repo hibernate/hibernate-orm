@@ -52,8 +52,6 @@ import static java.util.Collections.emptyList;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionOrdinalSupport.Slot;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionOrdinalSupport.calculateOrdinal;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionMutationPlanSupport.createTableMapping;
-import static org.hibernate.action.queue.internal.decompose.collection.CollectionMutationPlanSupport.replacedRow;
-import static org.hibernate.action.queue.internal.decompose.collection.CollectionMutationPlanSupport.rowPosition;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 import static org.hibernate.temporal.TemporalTableStrategy.SINGLE_TABLE;
 
@@ -794,12 +792,12 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 				final Object rowValue;
 				final int entryIndex;
 				if ( map ) {
-					rowValue = new SimpleImmutableEntry<>( addition.index(), addition.element() );
+					rowValue = new SimpleImmutableEntry<>( addition.rowKey(), addition.element() );
 					entryIndex = -1;
 				}
 				else {
 					rowValue = addition.element();
-					entryIndex = rowPosition( addition.index() );
+					entryIndex = addition.bindingPosition();
 				}
 
 				operationConsumer.accept( new FlushOperation(
@@ -857,12 +855,12 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 					final Object entry;
 					final int entryIndex;
 					if ( map ) {
-						entry = new SimpleImmutableEntry<>( valueChange.index(), valueChange.newValue() );
+						entry = new SimpleImmutableEntry<>( valueChange.rowKey(), valueChange.newValue() );
 						entryIndex = -1;
 					}
 					else {
 						entry = valueChange.newValue();
-						entryIndex = rowPosition( valueChange.index() );
+						entryIndex = valueChange.bindingPosition();
 					}
 
 					operationConsumer.accept( new FlushOperation(
@@ -883,7 +881,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 							updateShapeKey
 					) );
 					contributeAdditionalUpdate( collection, key,
-							replacedRow( persister, collection, valueChange, entry, entryIndex ), entryIndex,
+							valueChange.replacedRow(), entryIndex,
 							entry, entryIndex, ordinalBase, session, operationConsumer );
 				}
 			}

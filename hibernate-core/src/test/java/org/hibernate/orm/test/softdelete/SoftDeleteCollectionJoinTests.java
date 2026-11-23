@@ -95,8 +95,7 @@ public class SoftDeleteCollectionJoinTests {
 	@Test
 	public void rightJoinDoesNotReturnHiddenNotes(SessionFactoryScope scope) {
 		assertThat( ids( scope, "select n.id from Parent p right join p.notes n" ) )
-				.contains( 2 )
-				.doesNotContain( 1, 4, 5 );
+				.containsExactlyInAnyOrder( 2, 3 );
 	}
 
 	@Test

@@ -147,6 +147,9 @@ abstract class AbstractTemporalEntityHistoryTest {
 						session.createSelectionQuery( "select f from TemporalEntity4 p join p.children c join c.friends f where p.id=1", TemporalChild4.class )
 								.getResultCount();
 				assertEquals( 0, friends );
+				assertNull( session.createSelectionQuery(
+						"select f.id from TemporalChild4 c left join c.friends f where c.id = 1", Long.class )
+						.getSingleResult() );
 			} );
 		}
 		awaitTimestampTick();

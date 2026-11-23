@@ -75,7 +75,6 @@ public class CollectionElementLoaderByIndex implements Loader {
 		partsToSelect.add( attributeMapping.getElementDescriptor() );
 
 		final var jdbcParametersBuilder = JdbcParametersList.newBuilder( keyJdbcCount );
-		final var sqlAliasBaseGenerator = new SqlAliasBaseManager();
 		sqlAst = LoaderSelectBuilder.createSelect(
 				attributeMapping,
 				partsToSelect,
@@ -85,18 +84,10 @@ public class CollectionElementLoaderByIndex implements Loader {
 				influencers,
 				new LockOptions(),
 				jdbcParametersBuilder::add,
-				sqlAliasBaseGenerator,
+				new SqlAliasBaseManager(),
 				sessionFactory
 		);
-		// restricted like the rows which load the collection
-		final var querySpec = sqlAst.getQueryPart().getFirstQuerySpec();
-		indexRestriction.restrictJoined( querySpec, jdbcParametersBuilder::add );
-		attributeMapping.applyAuxiliaryRestrictions(
-				querySpec.getFromClause().getRoots().get( 0 ),
-				querySpec::applyPredicate,
-				influencers,
-				sqlAliasBaseGenerator
-		);
+		indexRestriction.restrictJoined( sqlAst.getQueryPart().getFirstQuerySpec(), jdbcParametersBuilder::add );
 		jdbcParameters = jdbcParametersBuilder.build();
 	}
 

@@ -396,7 +396,10 @@ public final class Hibernate {
 		final var lazyInitializer = extractLazyInitializer( proxy );
 		final Object entity = lazyInitializer != null ? lazyInitializer.getImplementation() : proxy;
 		if ( isPersistentAttributeInterceptable( entity ) ) {
-			getAttributeInterceptor( entity ).readObject( entity, attributeName, null );
+			final var interceptor = getAttributeInterceptor( entity );
+			if ( interceptor != null ) {
+				interceptor.readObject( entity, attributeName, null );
+			}
 		}
 	}
 

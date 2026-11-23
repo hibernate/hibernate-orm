@@ -10,7 +10,6 @@ import java.util.function.IntFunction;
 
 import jakarta.annotation.Nullable;
 import org.hibernate.Hibernate;
-import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -54,8 +53,6 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
-import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
-import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 
@@ -515,14 +512,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 					.getIdentifierIfNotUnsaved( targetObject, session );
 		}
 
-		if ( lazyInitializer == null && isPersistentAttributeInterceptable( targetObject ) ) {
-			if ( asPersistentAttributeInterceptable( targetObject ).$$_hibernate_getInterceptor()
-						instanceof EnhancementAsProxyLazinessInterceptor lazinessInterceptor
-					&& !lazinessInterceptor.isInitialized() ) {
-				Hibernate.initialize( targetObject );
-			}
-		}
-
+		Hibernate.initializeProperty( targetObject, modelPart.getPartName() );
 		return castNonNull( ( (PropertyBasedMapping) modelPart )
 				.getPropertyAccess() ).getPropertyValueAccessor().get( targetObject );
 	}

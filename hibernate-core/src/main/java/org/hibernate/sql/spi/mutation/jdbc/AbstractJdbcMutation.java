@@ -75,7 +75,7 @@ public abstract class AbstractJdbcMutation implements JdbcMutationOperation {
 
 	@Override
 	public boolean requiresMatchedRow() {
-		return model != null && !model.getExistenceChecks().isEmpty();
+		return model != null && model.requiresMatchedRow();
 	}
 
 	/// The standard mutation AST, when available for specialization.

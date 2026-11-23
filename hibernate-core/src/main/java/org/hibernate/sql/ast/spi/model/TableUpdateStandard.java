@@ -3,8 +3,10 @@ package org.hibernate.sql.ast.spi.model;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import org.hibernate.jdbc.Expectation;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.spi.mutation.MutationTarget;
@@ -16,7 +18,7 @@ import org.hibernate.sql.spi.mutation.jdbc.JdbcMutationOperation;
 public class TableUpdateStandard
 		extends AbstractTableUpdate<JdbcMutationOperation>
 		implements GeneratedMutation<JdbcMutationOperation> {
-	private final List<ColumnWriteFragment> existenceChecks;
+	private final Predicate restriction;
 	private final String whereFragment;
 	private final Expectation expectation;
 	private final List<ColumnReference> returningColumns;
@@ -54,7 +56,7 @@ public class TableUpdateStandard
 		super( mutatingTable, mutationTarget, sqlComment, valueBindings, keyRestrictionBindings, optLockRestrictionBindings );
 		this.whereFragment = whereFragment;
 		this.expectation = expectation;
-		this.existenceChecks = List.of();
+		this.restriction = null;
 		this.returningColumns = returningColumns;
 	}
 
@@ -92,23 +94,38 @@ public class TableUpdateStandard
 		super( tableReference, mutationTarget, sqlComment, valueBindings, keyRestrictionBindings, optLockRestrictionBindings, parameters );
 		this.whereFragment = whereFragment;
 		this.expectation = expectation;
-		this.existenceChecks = List.of();
+		this.restriction = null;
 		this.returningColumns = Collections.emptyList();
 	}
 
 	public TableUpdateStandard(TableUpdateStandard original, List<ColumnValueBinding> values,
-			List<ColumnValueBinding> keys, List<ColumnWriteFragment> existenceChecks) {
+			List<ColumnValueBinding> keys, Predicate restriction, List<ColumnValueParameter> restrictionParameters) {
 		super( original.getMutatingTable(), original.getMutationTarget(), original.getMutationComment(),
 				values, keys, original.getOptimisticLockBindings() );
 		this.whereFragment = original.whereFragment;
 		this.expectation = original.expectation;
 		this.returningColumns = original.returningColumns;
-		this.existenceChecks = List.copyOf( existenceChecks );
+		this.restriction = restriction;
+		getParameters().addAll( restrictionParameters );
 	}
 
 	@Override
-	public List<ColumnWriteFragment> getExistenceChecks() {
-		return existenceChecks;
+	public void forEachParameter(Consumer<ColumnValueParameter> consumer) {
+		if ( restriction == null ) {
+			super.forEachParameter( consumer );
+		}
+		else {
+			getParameters().forEach( consumer );
+		}
+	}
+
+	@Override
+	public boolean requiresMatchedRow() {
+		return restriction != null;
+	}
+
+	public Predicate getAdditionalRestriction() {
+		return restriction;
 	}
 
 	@Override

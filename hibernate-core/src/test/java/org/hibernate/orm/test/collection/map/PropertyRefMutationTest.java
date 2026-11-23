@@ -24,9 +24,7 @@ import org.hibernate.orm.test.collection.map.LazyUniqueKeyAssociationTest.Region
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProviderSettingProvider;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -82,7 +80,6 @@ class PropertyRefMutationTest {
 	}
 
 	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInSelect.class)
 	void insertRowsWithLoadedAndUnfetchedKeys(SessionFactoryScope scope) {
 		final var sql = scope.getCollectingStatementInspector();
 		scope.inTransaction( session -> {
@@ -106,9 +103,9 @@ class PropertyRefMutationTest {
 			assertThat( sql.getSqlQueries() ).anySatisfy( statement -> assertThat( statement )
 					.containsIgnoringCase( "catalog_labels" ).containsIgnoringCase( "values" ) );
 			assertThat( sql.getSqlQueries() ).anySatisfy( statement -> assertThat( statement )
-					.containsIgnoringCase( "catalog_labels" ).containsIgnoringCase( "exists" ) );
+					.containsIgnoringCase( "catalog_labels" ).containsIgnoringCase( " from Item " ) );
 			assertThat( sql.getSqlQueries() ).filteredOn( statement -> statement.contains( "catalog_labels" )
-					&& statement.contains( "exists" ) ).hasSize( 1 );
+					&& statement.contains( " from Item " ) ).hasSize( 1 );
 			assertThat( Hibernate.isInitialized( second ) ).isFalse();
 			assertThat( Hibernate.isInitialized( third ) ).isFalse();
 		} );
@@ -121,7 +118,6 @@ class PropertyRefMutationTest {
 	}
 
 	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInSelect.class)
 	void mergeWithManagedTarget(SessionFactoryScope scope) {
 		final var sql = scope.getCollectingStatementInspector();
 		scope.inTransaction( session -> {
@@ -135,7 +131,7 @@ class PropertyRefMutationTest {
 			session.flush();
 			assertThat( sql.getSqlQueries() ).noneMatch( statement -> statement.startsWith( "select" )
 					&& statement.contains( " from Item " ) );
-			assertThat( sql.getLastQuery().contains( "exists" ) ).isEqualTo( !codeLoaded );
+			assertThat( sql.getLastQuery().contains( " from Item " ) ).isEqualTo( !codeLoaded );
 			assertThat( Hibernate.isPropertyInitialized( item, "code" ) ).isEqualTo( codeLoaded );
 		} );
 		scope.inSession( session -> assertThat( session.createNativeQuery(
@@ -143,7 +139,6 @@ class PropertyRefMutationTest {
 	}
 
 	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInSelect.class)
 	void updateCollectionRow(SessionFactoryScope scope) {
 		final var sql = scope.getCollectingStatementInspector();
 		scope.inTransaction( session -> {
@@ -189,10 +184,13 @@ class PropertyRefMutationTest {
 		@ManyToOne
 		@JoinColumn(name = "item_code", referencedColumnName = "code")
 		Item item;
+
+		@ManyToOne
+		@JoinColumn(name = "other_item_code", referencedColumnName = "code")
+		Item otherItem;
 	}
 
 	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInSelect.class)
 	void insertWithDeferredIdentity(SessionFactoryScope scope) {
 		final var sql = scope.getCollectingStatementInspector();
 		final Long invoiceId = scope.fromTransaction( session -> {
@@ -202,7 +200,7 @@ class PropertyRefMutationTest {
 			session.persist( invoice );
 			session.flush();
 			assertThat( sql.getSqlQueries() ).anySatisfy( statement -> assertThat( statement )
-					.containsIgnoringCase( "insert into Invoice" ).containsIgnoringCase( "exists" ) );
+					.containsIgnoringCase( "insert into Invoice" ).containsIgnoringCase( " from Item " ) );
 			assertThat( Hibernate.isInitialized( invoice.item ) ).isFalse();
 			return invoice.id;
 		} );
@@ -215,6 +213,35 @@ class PropertyRefMutationTest {
 			session.persist( invoice );
 			session.flush();
 		} ) );
+	}
+
+	@Test
+	void insertWithTwoReferencesToSameTable(SessionFactoryScope scope) {
+		final var sql = scope.getCollectingStatementInspector();
+		scope.inTransaction( session -> {
+			final var invoice = new Invoice();
+			invoice.item = session.getReference( Item.class, 1 );
+			invoice.otherItem = session.getReference( Item.class, 2 );
+			sql.clear();
+			session.persist( invoice );
+			session.flush();
+			assertThat( sql.getSqlQueries() ).anySatisfy( statement -> assertThat( statement )
+					.contains( "Item uk0", "Item uk1" ).doesNotContain( "exists" ) );
+			assertThat( Hibernate.isInitialized( invoice.item ) ).isFalse();
+			assertThat( Hibernate.isInitialized( invoice.otherItem ) ).isFalse();
+		} );
+		scope.inSession( session -> assertThat( session.createNativeQuery(
+				"select item_code, other_item_code from Invoice", Object[].class ).getSingleResult() )
+				.containsExactly( "KEY1", "KEY2" ) );
+
+		final var failure = assertThrows( EntityNotFoundException.class, () -> scope.inTransaction( session -> {
+			final var invoice = new Invoice();
+			invoice.item = session.getReference( Item.class, 1 );
+			invoice.otherItem = session.getReference( Item.class, 99 );
+			session.persist( invoice );
+			session.flush();
+		} ) );
+		assertThat( failure ).hasMessageContaining( "99" );
 	}
 
 	@Embeddable
@@ -240,7 +267,6 @@ class PropertyRefMutationTest {
 	}
 
 	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInSelect.class)
 	void compositeKeys(SessionFactoryScope scope) {
 		final var id = new StockId( "Dublin", 3 );
 		scope.inTransaction( session -> {
@@ -260,8 +286,10 @@ class PropertyRefMutationTest {
 			session.persist( reservation );
 			session.flush();
 			sql.assertExecutedCount( 1 );
-			assertThat( sql.getLastQuery() ).containsIgnoringCase( "select uk.sku" )
-					.containsIgnoringCase( "select uk.region" ).containsIgnoringCase( "exists" );
+			assertThat( sql.getLastQuery() ).containsOnlyOnce( " from Stock " )
+					.contains( "uk0.sku", "uk0.region" ).doesNotContain( "exists" );
+			// One reservation id and one two-column stock id.
+			assertThat( sql.getLastQuery().chars().filter( ch -> ch == '?' ).count() ).isEqualTo( 3 );
 			assertThat( Hibernate.isInitialized( stock ) ).isFalse();
 		} );
 		scope.inSession( session -> assertThat( session.createNativeQuery(
@@ -270,7 +298,34 @@ class PropertyRefMutationTest {
 	}
 
 	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInSelect.class)
+	void updateWithCompositeTargetIdentifier(SessionFactoryScope scope) {
+		final var id = new StockId( "Dublin", 3 );
+		scope.inTransaction( session -> {
+			final var stock = new Stock();
+			stock.id = id;
+			stock.sku = "S42";
+			stock.region = "IE";
+			session.persist( stock );
+			final var reservation = new Reservation();
+			reservation.id = 1;
+			session.persist( reservation );
+		} );
+		scope.inTransaction( session -> {
+			final var reservation = session.find( Reservation.class, 1 );
+			reservation.stock = session.getReference( Stock.class, id );
+			final var sql = scope.getCollectingStatementInspector();
+			sql.clear();
+			session.flush();
+			sql.assertExecutedCount( 1 );
+			assertThat( sql.getLastQuery() ).contains( "exists", "uk.sku", "uk.region" );
+			assertThat( Hibernate.isInitialized( reservation.stock ) ).isFalse();
+		} );
+		scope.inSession( session -> assertThat( session.createNativeQuery(
+				"select stock_sku, stock_region from Reservation", Object[].class ).getSingleResult() )
+				.containsExactly( "S42", "IE" ) );
+	}
+
+	@Test
 	void partiallyFetchedCompositeMapKey(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final var item = new RegionalItem();
@@ -290,8 +345,8 @@ class PropertyRefMutationTest {
 			session.flush();
 			assertThat( sql.getSqlQueries() ).allSatisfy( statement ->
 					assertThat( statement ).startsWithIgnoringCase( "insert" ) );
-			assertThat( sql.getLastQuery().contains( "select uk.code" ) ).isEqualTo( !codeLoaded );
-			assertThat( sql.getLastQuery() ).doesNotContainIgnoringCase( "select uk.region" );
+			assertThat( sql.getLastQuery().contains( "uk0.code" ) ).isEqualTo( !codeLoaded );
+			assertThat( sql.getLastQuery() ).doesNotContainIgnoringCase( "uk0.region" );
 			assertThat( Hibernate.isPropertyInitialized( item, "code" ) ).isEqualTo( codeLoaded );
 		} );
 		scope.inSession( session -> assertThat( session.createNativeQuery(
@@ -300,7 +355,6 @@ class PropertyRefMutationTest {
 	}
 
 	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInSelect.class)
 	void missingMapKeyWithUnknownBatchCounts(SessionFactoryScope scope) {
 		final var provider = (PreparedStatementSpyConnectionProvider) scope.getSessionFactory()
 				.getProperties().get( AvailableSettings.CONNECTION_PROVIDER );

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 
 import org.hibernate.sql.ast.spi.SqlAstWalker;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.spi.mutation.MutationTarget;
 import org.hibernate.sql.spi.mutation.jdbc.JdbcInsertMutation;
@@ -12,7 +13,7 @@ import org.hibernate.sql.spi.mutation.jdbc.JdbcInsertMutation;
  * @author Steve Ebersole
  */
 public class TableInsertStandard extends AbstractTableInsert implements TableInsert, GeneratedMutation<JdbcInsertMutation> {
-	private final List<ColumnWriteFragment> existenceChecks;
+	private final SelectStatement sourceSelect;
 	private final List<ColumnReference> returningColumns;
 	private final boolean hasValueSubquery;
 
@@ -34,16 +35,16 @@ public class TableInsertStandard extends AbstractTableInsert implements TableIns
 			boolean hasValueSubquery) {
 		super( mutatingTable, mutationTarget, parameters, valueBindings );
 		this.hasValueSubquery = hasValueSubquery;
-		this.existenceChecks = List.of();
+		this.sourceSelect = null;
 		this.returningColumns = returningColumns;
 	}
 
 	public TableInsertStandard(TableInsertStandard original, List<ColumnValueBinding> values,
-			List<ColumnWriteFragment> existenceChecks) {
-		super( original.getMutatingTable(), original.getMutationTarget(), original.getMutationComment(), null, values );
+			SelectStatement sourceSelect, List<ColumnValueParameter> parameters) {
+		super( original.getMutatingTable(), original.getMutationTarget(), original.getMutationComment(), parameters, values );
 		this.returningColumns = original.returningColumns;
-		this.hasValueSubquery = true;
-		this.existenceChecks = List.copyOf( existenceChecks );
+		this.hasValueSubquery = original.hasValueSubquery;
+		this.sourceSelect = sourceSelect;
 	}
 
 	/// Whether any inserted value is a scalar subquery.
@@ -52,8 +53,12 @@ public class TableInsertStandard extends AbstractTableInsert implements TableIns
 	}
 
 	@Override
-	public List<ColumnWriteFragment> getExistenceChecks() {
-		return existenceChecks;
+	public boolean requiresMatchedRow() {
+		return sourceSelect != null;
+	}
+
+	public SelectStatement getSourceSelect() {
+		return sourceSelect;
 	}
 
 	@Override

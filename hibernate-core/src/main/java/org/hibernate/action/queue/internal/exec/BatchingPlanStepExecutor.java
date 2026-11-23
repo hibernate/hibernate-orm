@@ -78,14 +78,13 @@ public class BatchingPlanStepExecutor extends StandardPlanStepExecutor implement
 				applyToBatch(
 						preparable,
 						flushOperation,
-						groupedRowBindPlan,
 						bindingIndex,
 						bindingIndex == bindingCount - 1
 				);
 			}
 		}
 		else {
-			applyToBatch( preparable, flushOperation, flushOperation.getBindPlan(), -1, true );
+			applyToBatch( preparable, flushOperation, -1, true );
 		}
 	}
 
@@ -143,21 +142,14 @@ public class BatchingPlanStepExecutor extends StandardPlanStepExecutor implement
 	private void applyToBatch(
 			PreparableMutationOperation preparable,
 			FlushOperation flushOperation,
-			org.hibernate.action.queue.spi.bind.BindPlan bindPlan,
 			int bindingIndex,
 			boolean completesOperation) {
 		if ( batchKey != null && !flushOperation.getShapeKey().equals( originalBatchKey ) ) {
 			executeBatch();
 		}
 		final var valueBindings = getReusableValueBindings( preparable, flushOperation );
-		if ( bindingIndex >= 0 && bindPlan instanceof GroupedRowBindPlan groupedRowBindPlan ) {
-			groupedRowBindPlan.bindValues( bindingIndex, valueBindings, flushOperation, session );
-		}
-		else {
-			bindPlan.bindValues( valueBindings, flushOperation, session );
-		}
-
-		final var effective = valueBindings.resolve( session );
+		final var row = valueBindings.prepareRow( flushOperation, bindingIndex, session );
+		final var effective = row.operation();
 		final var table = flushOperation.getMutatingTableDescriptor();
 		final var shape = effective == preparable ? flushOperation.getShapeKey()
 				: StatementShapeKey.forMutation( table.name(), flushOperation.getKind(), table, effective );
@@ -169,8 +161,8 @@ public class BatchingPlanStepExecutor extends StandardPlanStepExecutor implement
 		final var resultChecker = flushOperation.getOperationResultChecker();
 		try {
 			batch.addToBatch(
-					(statement, session) -> valueBindings.bindStatement( effective, statement, session ),
-					valueBindings.batchResultChecker( resultChecker, session )
+					row::beforeStatement,
+					row.batchResultChecker( resultChecker, session )
 			);
 		}
 		catch (ConstraintViolationException cve) {

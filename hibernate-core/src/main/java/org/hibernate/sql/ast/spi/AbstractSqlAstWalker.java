@@ -582,8 +582,13 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 
 		tableInsert.forEachValueBinding( (integer, columnValueBinding) -> {
 			columnValueBinding.getColumnReference().accept( this );
-			columnValueBinding.getValueExpression().accept( this );
+			if ( tableInsert.getSourceSelect() == null ) {
+				columnValueBinding.getValueExpression().accept( this );
+			}
 		} );
+		if ( tableInsert.getSourceSelect() != null ) {
+			tableInsert.getSourceSelect().accept( this );
+		}
 
 		tableInsert.forEachReturningColumn( (integer, columnReference) -> {
 			columnReference.accept( this );

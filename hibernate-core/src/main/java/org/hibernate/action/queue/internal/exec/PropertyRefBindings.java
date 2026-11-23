@@ -3,9 +3,7 @@ package org.hibernate.action.queue.internal.exec;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.IntPredicate;
 
 import org.hibernate.Hibernate;
@@ -27,19 +25,15 @@ import org.hibernate.loader.ast.internal.SingleIdEntityLoaderProvidedQueryImpl;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
-import org.hibernate.sql.ast.spi.model.ColumnValueParameter;
-import org.hibernate.sql.ast.spi.model.ColumnWriteFragment;
 import org.hibernate.sql.ast.spi.model.TableInsertStandard;
 import org.hibernate.sql.ast.spi.model.TableMutation;
 import org.hibernate.sql.ast.spi.model.TableUpdateStandard;
-import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.spi.mutation.MutationType;
 import org.hibernate.sql.spi.mutation.jdbc.AbstractJdbcMutation;
 import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
@@ -52,22 +46,24 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 public final class PropertyRefBindings extends JdbcValueBindings {
 	private final TableMutation<?> model;
 	private final PreparableMutationOperation operation;
-	private Map<Column, Lookup> lookups;
-	private Map<Column, Lookup> previousLookups;
+	private List<PropertyRefLookup> lookups;
+	private List<PropertyRefLookup> previousLookups;
 	private PreparableMutationOperation previousOperation;
+	private MutationBindTemplate previousTemplate;
 	private List<EntityKey> referencedRows;
 
 	PropertyRefBindings(FlushOperation flushOperation, PreparableMutationOperation operation) {
 		super( flushOperation.getMutatingTableDescriptor(), operation );
 		this.operation = operation;
-		model = hasBindTemplate() && flushOperation.getBindingPatch() == null && operation instanceof AbstractJdbcMutation mutation
+		model = getBindTemplate() != null && flushOperation.getBindingPatch() == null && operation instanceof AbstractJdbcMutation mutation
 				? mutation.getMutationModel() : null;
 	}
 
 	/// A single prepared row, including the bindings in the order required by its SQL.
-	public record BoundRow(PreparableMutationOperation operation, PropertyRefBindings bindings, List<EntityKey> references) {
+	public record BoundRow(PreparableMutationOperation operation, PropertyRefBindings bindings,
+			MutationBindTemplate template, List<EntityKey> references) {
 		public void beforeStatement(PreparedStatement statement, SharedSessionContractImplementor session) {
-			bindings.bindStatement( operation, statement, session );
+			bindings.beforeStatement( template, statement, session );
 		}
 
 		public void verifyReferencedRows(SharedSessionContractImplementor session) {
@@ -78,6 +74,24 @@ public final class PropertyRefBindings extends JdbcValueBindings {
 				}
 			}
 		}
+
+		BatchedResultChecker batchResultChecker(OperationResultChecker checker, SharedSessionContractImplementor session) {
+			if ( references == null ) {
+				return checker == null ? null : checker::checkResult;
+			}
+			return new BatchedResultChecker() {
+				@Override
+				public void verifyReferencedRows() {
+					PropertyRefBindings.verifyReferencedRows( references, session );
+				}
+
+				@Override
+				public boolean checkResult(int count, PreparedStatement statement, int position, String sql,
+						SessionFactoryImplementor factory) throws SQLException {
+					return checker == null || checker.checkResult( count, statement, position, sql, factory );
+				}
+			};
+		}
 	}
 
 	public static BoundRow bindRow(FlushOperation operation, SharedSessionContractImplementor session) {
@@ -86,47 +100,24 @@ public final class PropertyRefBindings extends JdbcValueBindings {
 
 	static BoundRow bindRow(PreparableMutationOperation original, FlushOperation operation, int rowIndex,
 			SharedSessionContractImplementor session) {
-		final var row = new PropertyRefBindings( operation, original );
+		return new PropertyRefBindings( operation, original ).prepareRow( operation, rowIndex, session );
+	}
+
+	BoundRow prepareRow(FlushOperation operation, int rowIndex, SharedSessionContractImplementor session) {
 		final var plan = operation.getBindPlan();
 		if ( rowIndex >= 0 && plan instanceof GroupedRowBindPlan grouped ) {
-			grouped.bindValues( rowIndex, row, operation, session );
+			grouped.bindValues( rowIndex, this, operation, session );
 		}
 		else {
-			plan.bindValues( row, operation, session );
+			plan.bindValues( this, operation, session );
 		}
-		final var effective = row.resolve( session );
-		return new BoundRow( effective, row, row.referencedRows );
-	}
-
-	private record Column(String name, ParameterUsage usage) {}
-
-	/// A lookup parameter is bound from the indicated component of the target id.
-	private static final class IdentifierParameter extends ColumnValueParameter {
-		final int component;
-
-		IdentifierParameter(ColumnReference reference, ParameterUsage usage, int component) {
-			super( reference, usage );
-			this.component = component;
+		if ( lookups == null ) {
+			return new BoundRow( this.operation, this, getBindTemplate(), null );
 		}
-	}
-
-	private record Lookup(EntityIdentifierMapping id, SelectableMapping source, SelectableMapping target, boolean firstColumn) {
-		ColumnWriteFragment expression(Column column, boolean existence) {
-			final var sql = new StringBuilder();
-			sql.append( existence ? "exists (select 1" : "(select " + new ColumnReference( "uk", target ).getExpressionText() )
-					.append( " from " ).append( target.getContainingTableExpression() ).append( " uk where " );
-			final List<ColumnValueParameter> parameters = new ArrayList<>( id.getJdbcTypeCount() );
-			for ( int i = 0; i < id.getJdbcTypeCount(); i++ ) {
-				if ( i > 0 ) {
-					sql.append( " and " );
-				}
-				final var selectable = id.getSelectable( i );
-				sql.append( new ColumnReference( "uk", selectable ).getExpressionText() ).append( "=?" );
-				final var reference = new ColumnReference( (String) null, column.name(), false, null, selectable.getJdbcMapping() );
-				parameters.add( new IdentifierParameter( reference, column.usage(), i ) );
-			}
-			return new ColumnWriteFragment( sql.append( ')' ).toString(), parameters, source );
+		if ( !lookups.equals( previousLookups ) ) {
+			specialize( session.getFactory() );
 		}
+		return new BoundRow( previousOperation, this, previousTemplate, referencedRows );
 	}
 
 	public static boolean bindIfUnfetched(
@@ -156,7 +147,8 @@ public final class PropertyRefBindings extends JdbcValueBindings {
 				return false;
 			}
 		}
-		if ( model instanceof TableInsertStandard
+		// A scalar subquery already present in the original values would move into the select list.
+		if ( model instanceof TableInsertStandard insert && insert.hasValueSubquery()
 				&& !session.getJdbcServices().getDialect().getSubquerySupport().supports( SubquerySupport.Feature.SELECT_LIST ) ) {
 			return false;
 		}
@@ -181,6 +173,7 @@ public final class PropertyRefBindings extends JdbcValueBindings {
 		}
 		final var targets = new SelectableMapping[fk.getJdbcTypeCount()];
 		fk.visitTargetSelectables( (i, selectable) -> targets[i] = selectable );
+		final List<PropertyRefLookup.Column> missing = new ArrayList<>();
 		for ( int i = 0; i < targets.length; i++ ) {
 			final var source = fk.getSelectable( i );
 			final String column = source.getSelectionExpression();
@@ -188,10 +181,14 @@ public final class PropertyRefBindings extends JdbcValueBindings {
 					&& !targets[i].getSelectionExpression().equals( available[i].getSelectionExpression() ) ) {
 				return false;
 			}
+			final var binding = findPlainBinding( column, usage );
 			if ( !includesColumn.test( i ) || source.isFormula() || targets[i].isFormula()
 					|| !targets[i].getContainingTableExpression().equals( fk.getTargetTable() )
-					|| hasBinding( column, usage ) || !hasPlainParameter( column, usage ) ) {
+					|| hasBinding( column, usage ) || binding == null ) {
 				return false;
+			}
+			if ( available == null || available[i] == null ) {
+				missing.add( new PropertyRefLookup.Column( binding, source, targets[i] ) );
 			}
 		}
 		final Object pk = proxy == null ? id.getIdentifier( value ) : proxy.getInternalIdentifier();
@@ -206,19 +203,17 @@ public final class PropertyRefBindings extends JdbcValueBindings {
 			id.decompose( pk, (i, component, mapping) -> components[i] = component, session );
 		}
 		if ( lookups == null ) {
-			lookups = new LinkedHashMap<>();
+			lookups = new ArrayList<>();
 			referencedRows = new ArrayList<>();
 		}
 		referencedRows.add( session.generateEntityKey( pk, persister ) );
-		boolean needsCheck = true;
+		lookups.add( new PropertyRefLookup( id, usage, missing ) );
 		for ( int i = 0; i < targets.length; i++ ) {
 			final var source = fk.getSelectable( i );
 			final String column = source.getSelectionExpression();
 			final var loaded = available == null ? null : available[i];
 			if ( loaded == null ) {
-				lookups.put( new Column( column, usage ), new Lookup( id, source, targets[i], needsCheck ) );
 				bindValue( components, column, usage );
-				needsCheck = false;
 			}
 			else {
 				final var entity = proxy == null ? value : proxy.getImplementation();
@@ -247,36 +242,7 @@ public final class PropertyRefBindings extends JdbcValueBindings {
 		return missing ? attributes : null;
 	}
 
-	@SuppressWarnings("unchecked")
-	void bindStatement(PreparableMutationOperation effective, PreparedStatement statement,
-			SharedSessionContractImplementor session) {
-		if ( effective == operation ) {
-			beforeStatement( statement, session );
-			return;
-		}
-
-		// Repeated occurrences share the source column value. Each lookup parameter
-		// selects its own identifier component at its physical JDBC position.
-		final var slots = MutationBindTemplate.forOperation( effective ).slots();
-		final var parameters = effective.getParameterBinders();
-		try {
-			for ( int i = 0; i < slots.length; i++ ) {
-				final var slot = slots[i];
-				if ( hasBinding( slot.columnName(), slot.usage() ) ) {
-					final var value = getBoundValue( slot.columnName(), slot.usage() );
-					final var jdbcValue = parameters.get( i ) instanceof IdentifierParameter id
-							? ( (Object[]) value )[id.component] : resolveValue( value );
-					slot.jdbcMapping().getJdbcValueBinder().bind( statement, jdbcValue, slot.jdbcPosition(), session );
-				}
-			}
-		}
-		catch (SQLException e) {
-			throw session.getJdbcServices().getSqlExceptionHelper().convert( e,
-					"Unable to bind property-ref mutation", effective.getSqlString() );
-		}
-	}
-
-	private boolean hasPlainParameter(String column, ParameterUsage usage) {
+	private ColumnValueBinding findPlainBinding(String column, ParameterUsage usage) {
 		final List<ColumnValueBinding> bindings;
 		if ( model instanceof TableInsertStandard insert ) {
 			bindings = insert.getValueBindings();
@@ -289,10 +255,10 @@ public final class PropertyRefBindings extends JdbcValueBindings {
 			if ( column.equals( binding.getColumnReference().getColumnExpression() ) ) {
 				final var expression = binding.getValueExpression();
 				return expression != null && "?".equals( expression.getFragment() )
-						&& expression.getParameters().size() == 1;
+						&& expression.getParameters().size() == 1 ? binding : null;
 			}
 		}
-		return false;
+		return null;
 	}
 
 	@Override
@@ -302,34 +268,14 @@ public final class PropertyRefBindings extends JdbcValueBindings {
 		referencedRows = null;
 	}
 
-	PreparableMutationOperation resolve(SharedSessionContractImplementor session) {
-		if ( lookups == null ) {
-			return operation;
-		}
-		if ( lookups.equals( previousLookups ) ) {
-			return previousOperation;
-		}
-		final List<ColumnWriteFragment> checks = new ArrayList<>();
-		lookups.forEach( (column, lookup) -> {
-			if ( lookup.firstColumn() ) {
-				checks.add( lookup.expression( column, true ) );
-			}
-		} );
-		final TableMutation<?> specialized;
-		if ( model instanceof TableInsertStandard insert ) {
-			final var values = substitute( insert.getValueBindings(), ParameterUsage.SET );
-			// A SELECT list cannot contain DEFAULT. Omitting its target column applies the same default.
-			values.removeIf( binding -> "default".equalsIgnoreCase( binding.getValueExpression().getFragment() ) );
-			specialized = new TableInsertStandard( insert, values, checks );
-		}
-		else {
-			final var update = (TableUpdateStandard) model;
-			specialized = new TableUpdateStandard( update, substitute( update.getValueBindings(), ParameterUsage.SET ),
-					substitute( update.getKeyBindings(), ParameterUsage.RESTRICT ), checks );
-		}
-		previousOperation = (PreparableMutationOperation) specialized.createMutationOperation( null, session.getFactory() );
+	private void specialize(SessionFactoryImplementor factory) {
+		final TableMutation<?> specialized = model instanceof TableInsertStandard insert
+				? PropertyRefLookup.insert( insert, lookups, factory )
+				: PropertyRefLookup.update( (TableUpdateStandard) model, lookups, factory );
+		previousOperation = (PreparableMutationOperation) specialized.createMutationOperation( null, factory );
+		previousTemplate = getBindTemplate().project( previousOperation, parameter ->
+				parameter instanceof PropertyRefLookup.IdentifierParameter id ? id.component : -1 );
 		previousLookups = lookups;
-		return previousOperation;
 	}
 
 	private static void verifyReferencedRows(List<EntityKey> keys, SharedSessionContractImplementor session) {
@@ -339,36 +285,5 @@ public final class PropertyRefBindings extends JdbcValueBindings {
 				throw new ObjectNotFoundException( key.getIdentifierValue(), key.getEntityName() );
 			}
 		}
-	}
-
-	BatchedResultChecker batchResultChecker(OperationResultChecker checker, SharedSessionContractImplementor session) {
-		if ( referencedRows == null ) {
-			return checker == null ? null : checker::checkResult;
-		}
-		// Bindings are reused for the next row. Keep the keys for this batch entry.
-		final var keys = referencedRows;
-		return new BatchedResultChecker() {
-			@Override
-			public void verifyReferencedRows() {
-				PropertyRefBindings.verifyReferencedRows( keys, session );
-			}
-
-			@Override
-			public boolean checkResult(int count, PreparedStatement statement, int position, String sql,
-					SessionFactoryImplementor factory) throws SQLException {
-				return checker == null || checker.checkResult( count, statement, position, sql, factory );
-			}
-		};
-	}
-
-	private List<ColumnValueBinding> substitute(List<ColumnValueBinding> bindings, ParameterUsage usage) {
-		final List<ColumnValueBinding> result = new ArrayList<>( bindings.size() );
-		for ( var binding : bindings ) {
-			final var column = new Column( binding.getColumnReference().getColumnExpression(), usage );
-			final var lookup = lookups.get( column );
-			result.add( lookup == null ? binding
-					: new ColumnValueBinding( binding.getColumnReference(), lookup.expression( column, false ) ) );
-		}
-		return result;
 	}
 }

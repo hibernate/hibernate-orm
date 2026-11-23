@@ -27,9 +27,9 @@ import org.hibernate.sql.spi.mutation.ValuesAnalysis;
  * @author Steve Ebersole
  */
 public interface TableMutation<O extends MutationOperation> extends Statement {
-	/// Predicates which require each target referenced by primary key to exist.
-	default List<ColumnWriteFragment> getExistenceChecks() {
-		return List.of();
+	/// Whether this mutation is conditional on matching a referenced row.
+	default boolean requiresMatchedRow() {
+		return false;
 	}
 
 	/**

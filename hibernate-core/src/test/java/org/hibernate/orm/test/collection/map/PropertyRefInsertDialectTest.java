@@ -28,7 +28,7 @@ class PropertyRefInsertDialectTest {
 	@SessionFactory(useCollectingStatementInspector = true)
 	void insertWithRestrictedSingleRowSource(SessionFactoryScope scope) {
 		final var sql = insertReservation( scope );
-		assertThat( sql ).containsIgnoringCase( "where x=1" ).containsIgnoringCase( "exists" );
+		assertThat( sql ).containsIgnoringCase( " from Stock " ).doesNotContain( "where x=1", "exists" );
 	}
 
 	@Test
@@ -38,8 +38,8 @@ class PropertyRefInsertDialectTest {
 	})
 	@DomainModel(annotatedClasses = { Stock.class, Reservation.class })
 	@SessionFactory(useCollectingStatementInspector = true)
-	void fetchKeyWhenSelectListSubqueriesAreUnsupported(SessionFactoryScope scope) {
-		assertThat( insertReservation( scope ) ).containsIgnoringCase( "values" );
+	void insertWhenSelectListSubqueriesAreUnsupported(SessionFactoryScope scope) {
+		assertThat( insertReservation( scope ) ).containsIgnoringCase( " from Stock " ).doesNotContain( "(select" );
 	}
 
 	private String insertReservation(SessionFactoryScope scope) {

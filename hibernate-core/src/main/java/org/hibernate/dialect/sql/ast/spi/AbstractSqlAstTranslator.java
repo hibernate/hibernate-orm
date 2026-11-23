@@ -10401,11 +10401,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
 		} );
 
-		// An existence predicate needs a SELECT source, even on dialects supporting subqueries in VALUES.
-		final var existenceChecks = tableInsert.getExistenceChecks();
-		final boolean selectSource = !existenceChecks.isEmpty()
-				|| ( tableInsert.hasValueSubquery()
-						&& !dialect.getSubquerySupport().supports( SubquerySupport.Feature.INSERT_VALUES ) );
+		if ( tableInsert.getSourceSelect() != null ) {
+			appendSql( ") " );
+			tableInsert.getSourceSelect().accept( this );
+			return;
+		}
+
+		final boolean selectSource = tableInsert.hasValueSubquery()
+				&& !dialect.getSubquerySupport().supports( SubquerySupport.Feature.INSERT_VALUES );
 		getCurrentClauseStack().push( selectSource ? Clause.SELECT : Clause.VALUES );
 		try {
 			sqlBuffer.append( selectSource ? ") select " : ") values (" );
@@ -10421,27 +10424,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			getCurrentClauseStack().pop();
 		}
 
-		if ( existenceChecks.isEmpty() ) {
-			sqlBuffer.append( selectSource ? getSelectOnlyFromClause() : ")" );
-		}
-		else {
-			final String fromClause = getSelectOnlyFromClause();
-			if ( !fromClause.isEmpty() ) {
-				// The dialect's complete single-row source may already have a WHERE clause.
-				appendSql( " from (select 1 as c1" );
-				appendSql( fromClause );
-				appendSql( ") d_" );
-			}
-			renderExistenceChecks( existenceChecks, " where " );
-		}
-	}
-
-	private void renderExistenceChecks(List<ColumnWriteFragment> checks, String separator) {
-		for ( var check : checks ) {
-			appendSql( separator );
-			check.accept( this );
-			separator = " and ";
-		}
+		sqlBuffer.append( selectSource ? getSelectOnlyFromClause() : ")" );
 	}
 
 	/**
@@ -10492,7 +10475,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					tableUpdate.getReturningColumns(),
 					() -> {
 						renderStandardTableUpdate( tableUpdate );
-						renderExistenceChecks( tableUpdate.getExistenceChecks(), " and " );
+						if ( tableUpdate.getAdditionalRestriction() != null ) {
+							appendSql( " and " );
+							tableUpdate.getAdditionalRestriction().accept( this );
+						}
 					}
 			);
 		}

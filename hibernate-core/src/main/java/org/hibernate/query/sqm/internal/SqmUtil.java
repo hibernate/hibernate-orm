@@ -226,11 +226,9 @@ public class SqmUtil {
 			SqmPath<?> sqmPath,
 			ModelPartContainer modelPartContainer,
 			SqmToSqlAstConverter sqlAstCreationState) {
-		if ( sqlAstCreationState.getLoadQueryInfluencers().hasEnabledFilters() ) {
-			final var filteredMapping = getFilteredTargetMapping( sqmPath, modelPartContainer, sqlAstCreationState );
-			if ( filteredMapping != modelPartContainer ) {
-				return filteredMapping;
-			}
+		final var targetMapping = getRestrictedTargetMapping( sqmPath, modelPartContainer, sqlAstCreationState );
+		if ( targetMapping != modelPartContainer ) {
+			return targetMapping;
 		}
 		// We only need to do this for queries
 		if ( sqlAstCreationState.getCurrentClauseStack().getCurrent() != Clause.FROM
@@ -248,11 +246,11 @@ public class SqmUtil {
 		return modelPartContainer;
 	}
 
-	private static ModelPartContainer getFilteredTargetMapping(
+	private static ModelPartContainer getRestrictedTargetMapping(
 			SqmPath<?> sqmPath,
 			ModelPartContainer modelPartContainer,
 			SqmToSqlAstConverter sqlAstCreationState) {
-		if ( isAssociationAffectedByEnabledFilters( modelPartContainer, sqlAstCreationState ) ) {
+		if ( hasRestrictedTarget( modelPartContainer, sqlAstCreationState ) ) {
 			return ( (EntityAssociationMapping) modelPartContainer ).getAssociatedEntityMappingType();
 		}
 		if ( modelPartContainer instanceof EmbeddableValuedModelPart
@@ -261,7 +259,7 @@ public class SqmUtil {
 			final var parentGroup = sqlAstCreationState.getFromClauseAccess()
 					.findTableGroup( sqmPath.getLhs().getLhs().getNavigablePath() );
 			if ( parentGroup != null ) {
-				final var parentMapping = getFilteredTargetMapping(
+				final var parentMapping = getRestrictedTargetMapping(
 						sqmPath.getLhs(), parentGroup.getModelPart(), sqlAstCreationState );
 				if ( parentMapping != parentGroup.getModelPart() ) {
 					return (ModelPartContainer) parentMapping.findSubPart(
@@ -272,14 +270,20 @@ public class SqmUtil {
 		return modelPartContainer;
 	}
 
-	/** A filtered target's key must be read from the joined target, not the owner's foreign key. */
-	public static boolean isAssociationAffectedByEnabledFilters(
+	/** Read the key from the joined target whenever session restrictions can hide that target. */
+	public static boolean hasRestrictedTarget(
 			ModelPart modelPart, SqmToSqlAstConverter creationState) {
 		// An insert target names the foreign key columns on the association owner.
-		return creationState.getCurrentClauseStack().getCurrent() != Clause.INSERT
-				&& modelPart instanceof ToOneAttributeMapping toOne
-				&& toOne.hasFilterForLoadByKey()
-				&& toOne.isAffectedByEnabledFilters( creationState.getLoadQueryInfluencers() );
+		if ( modelPart instanceof ToOneAttributeMapping toOne
+				&& creationState.getCurrentClauseStack().getCurrent() != Clause.INSERT ) {
+			final var influencers = creationState.getLoadQueryInfluencers();
+			final var auxiliary = toOne.getAssociatedEntityMappingType().getAuxiliaryMapping();
+			return auxiliary != null && auxiliary.requiresTargetTableForKeyRead( influencers )
+					&& creationState.getCurrentClauseStack().getCurrent() != Clause.SET
+				|| influencers.hasEnabledFilters() && toOne.hasFilterForLoadByKey()
+						&& toOne.isAffectedByEnabledFilters( influencers );
+		}
+		return false;
 	}
 
 	private static boolean shouldRenderTargetSide(

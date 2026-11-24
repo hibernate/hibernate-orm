@@ -59,6 +59,13 @@ This section describes changes to contracts (classes, interfaces, methods, etc.)
 
 The deprecated `PersistenceContext.reentrantSafeEntityEntries()` method has been removed. The replacement method is `PersistenceContext.reentrantSafeManagedEntities()`.
 
+[[persistence-context-temporal-revisions]]
+=== Tracking temporal revisions across flushes
+
+Custom implementations of `PersistenceContext` must implement `registerUpdatedTemporalRevision(EntityKey)` and `wasTemporalRevisionUpdated(EntityKey)`.
+Record the entity key when an update inserts a replacement revision, keep it across flushes and `Session.clear()`, and discard it at transaction completion.
+This lets a second flush update the revision already created by the transaction.
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Changes in Behavior
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

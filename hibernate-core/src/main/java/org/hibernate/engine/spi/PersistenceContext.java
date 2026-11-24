@@ -853,7 +853,7 @@ public interface PersistenceContext {
 	void replaceDelayedEntityIdentityInsertKeys(@Nonnull EntityKey oldKey, @Nonnull Object generatedId);
 
 	@Internal
-	void replaceEntityEntryRowId(@Nonnull Object entity, @Nonnull Object rowId);
+	void replaceEntityEntryRowId(@Nonnull Object entity, @Nullable Object rowId);
 
 	/**
 	 * Add a child/parent relation to cache for cascading op
@@ -886,6 +886,11 @@ public interface PersistenceContext {
 	 * @return True if inserted during this transaction, false otherwise.
 	 */
 	boolean wasInsertedDuringTransaction(@Nonnull EntityPersister persister, @Nonnull Object id);
+
+	/// Remember that an update created a temporal revision in this transaction.
+	void registerUpdatedTemporalRevision(EntityKey key);
+
+	boolean wasTemporalRevisionUpdated(EntityKey key);
 
 	/**
 	 * Checks if a certain {@link EntityKey} was registered as nullifiable on this {@link PersistenceContext}.

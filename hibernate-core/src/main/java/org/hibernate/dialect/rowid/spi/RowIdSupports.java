@@ -29,9 +29,14 @@ public final class RowIdSupports {
 
 	/// Create a fixed implicit pseudo-column profile.
 	public static RowIdSupport fixed(String expression, int sqlTypeCode) {
+		return fixed( expression, sqlTypeCode, true );
+	}
+
+	/// Create a fixed pseudo-column profile with the specified locator lifetime.
+	public static RowIdSupport fixed(String expression, int sqlTypeCode, boolean stableAcrossUpdates) {
 		return FIXED.computeIfAbsent(
-				new FixedKey( expression, sqlTypeCode ),
-				key -> StandardRowIdSupport.fixed( key.expression(), key.sqlTypeCode() )
+				new FixedKey( expression, sqlTypeCode, stableAcrossUpdates ),
+				key -> StandardRowIdSupport.fixed( key.expression(), key.sqlTypeCode(), key.stableAcrossUpdates() )
 		);
 	}
 
@@ -51,7 +56,7 @@ public final class RowIdSupports {
 		);
 	}
 
-	private record FixedKey(String expression, int sqlTypeCode) {
+	private record FixedKey(String expression, int sqlTypeCode, boolean stableAcrossUpdates) {
 	}
 
 	private record RequestedNameKey(

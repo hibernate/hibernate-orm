@@ -282,7 +282,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 				previousVersion,
 				generatedValuesCollector,
 				entityEntry
-		);
+		).forInPlaceUpdate();
 
 		final var versionMapping = entityPersister.getVersionMapping();
 		if ( versionMapping != null ) {

@@ -3,6 +3,7 @@ package org.hibernate.persister.entity;
 import jakarta.persistence.Entity;
 import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
+import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.internal.EntityCacheRestrictions;
@@ -1018,6 +1019,16 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 */
 	@Nullable
 	Object[] getDatabaseSnapshot(@Nonnull Object id, @Nonnull SharedSessionContractImplementor session) throws HibernateException;
+
+	/// Initialize the attributes needed to insert a complete revision.
+	default void initializeLazyProperties(
+			@Nonnull Object entity,
+			@Nonnull List<AttributeMapping> attributes,
+			@Nonnull SharedSessionContractImplementor session) {
+		for ( var attribute : attributes ) {
+			Hibernate.initializeProperty( entity, attribute.getAttributeName() );
+		}
+	}
 
 	@Nullable
 	default TenantIdLoader getTenantIdLoader() {

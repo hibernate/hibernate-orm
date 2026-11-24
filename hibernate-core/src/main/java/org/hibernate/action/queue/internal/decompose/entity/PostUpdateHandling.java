@@ -63,6 +63,13 @@ public class PostUpdateHandling implements PostExecutionCallback {
 		this.preservePreviousVersion = preservePreviousVersion;
 	}
 
+	PostExecutionCallback forInPlaceUpdate() {
+		return action.hasUnstableRowId() ? session -> {
+			action.invalidateRowIdAfterUpdate();
+			handle( session );
+		} : this;
+	}
+
 	@Override
 	public void handle(SessionImplementor session) {
 		final EntityEntry entry = resolveEntityEntry( session );

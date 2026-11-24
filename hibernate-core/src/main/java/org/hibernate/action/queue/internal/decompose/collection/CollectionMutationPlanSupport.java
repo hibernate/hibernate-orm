@@ -163,26 +163,17 @@ final class CollectionMutationPlanSupport {
 			);
 		}
 		else {
-			final var elementDescriptor = attribute.getElementDescriptor();
-			if ( elementDescriptor instanceof ManyToManyCollectionPart manyToMany ) {
-				final var id = manyToMany.getAssociatedEntityMappingType().getIdentifierMapping().getIdentifier( actualElement );
-				manyToMany.getForeignKeyDescriptor().getKeyPart().decompose(
-						id,
-						jdbcValueBindings::bindRestriction,
-						session
-				);
-			}
-			else {
-				elementDescriptor.decompose(
-						actualElement,
-						(valueIndex, value, jdbcValueMapping) -> {
-							if ( !jdbcValueMapping.isNullable() && !jdbcValueMapping.isFormula() ) {
-								jdbcValueBindings.bindRestriction( valueIndex, value, jdbcValueMapping );
-							}
-						},
-						session
-				);
-			}
+			// the element of a many-to-many decomposes to the key the join table refers to,
+			// which is not necessarily the identifier of the associated entity
+			attribute.getElementDescriptor().decompose(
+					actualElement,
+					(valueIndex, value, jdbcValueMapping) -> {
+						if ( !jdbcValueMapping.isNullable() && !jdbcValueMapping.isFormula() ) {
+							jdbcValueBindings.bindRestriction( valueIndex, value, jdbcValueMapping );
+						}
+					},
+					session
+			);
 		}
 	}
 

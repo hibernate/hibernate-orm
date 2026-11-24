@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.JoinColumnOrFormula;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbForeignKeyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPrimaryKeyJoinColumnImpl;
@@ -162,8 +163,10 @@ public class JoinColumnProcessing {
 	 */
 	public static void applyPrimaryKeyJoinColumns(
 			List<JaxbPrimaryKeyJoinColumnImpl> jaxbJoinColumns,
+			JaxbForeignKeyImpl jaxbPrimaryKeyForeignKey,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
+		// no synthesized default column: a @PrimaryKeyJoinColumn would turn the association into a true one-to-one
 		if ( CollectionHelper.isEmpty( jaxbJoinColumns ) ) {
 			return;
 		}
@@ -174,10 +177,22 @@ public class JoinColumnProcessing {
 				xmlDocumentContext.getModelBuildingContext()
 		);
 
+		// creates on the attribute
+		//   @PrimaryKeyJoinColumns(
+		//       value = { @PrimaryKeyJoinColumn(...), ... },   // from <primary-key-join-column/>
+		//       foreignKey = @ForeignKey(...)                  // from <primary-key-foreign-key/>, if present
+		//   )
+		// There is no @PrimaryKeyForeignKey annotation, PrimaryKeyJoinColumns#foreignKey carries it instead.
 		columnsUsage.value( transformPrimaryKeyJoinColumns(
 				jaxbJoinColumns,
 				xmlDocumentContext
 		) );
+		if ( jaxbPrimaryKeyForeignKey != null ) {
+			columnsUsage.foreignKey( ForeignKeyProcessing.createNestedForeignKeyAnnotation(
+					jaxbPrimaryKeyForeignKey,
+					xmlDocumentContext
+			) );
+		}
 	}
 
 	private static final PrimaryKeyJoinColumn[] NO_PRIMARY_KEY_JOIN_COLUMNS = new PrimaryKeyJoinColumn[0];

@@ -2158,7 +2158,10 @@ public class XmlAnnotationHelper {
 			MutableClassDetails classDetails,
 			XmlDocumentContext xmlDocumentContext) {
 		List<JaxbPrimaryKeyJoinColumnImpl> jaxbColumns = jaxbEntity.getPrimaryKeyJoinColumns();
-		if ( isEmpty( jaxbColumns ) ) {
+		// A <primary-key-foreign-key/> without any <primary-key-join-column/> becomes an empty container
+		//   @PrimaryKeyJoinColumns(value = {}, foreignKey = @ForeignKey(...))
+		// which JPA allows in order to specify the foreign key while defaulting the join columns.
+		if ( isEmpty( jaxbColumns ) && jaxbEntity.getPrimaryKeyForeignKey() == null ) {
 			return;
 		}
 
@@ -2177,6 +2180,16 @@ public class XmlAnnotationHelper {
 			columns[i] = column;
 		}
 		columnsAnn.value( columns );
+		// the entity's <primary-key-foreign-key/> (FK from the subclass table to the superclass table)
+		// is applied to the class as
+		//   @PrimaryKeyJoinColumns(value = { ... }, foreignKey = @ForeignKey(name = ..., value = ...))
+		// There is no @PrimaryKeyForeignKey annotation, PrimaryKeyJoinColumns#foreignKey carries it instead.
+		if ( jaxbEntity.getPrimaryKeyForeignKey() != null ) {
+			columnsAnn.foreignKey( ForeignKeyProcessing.createNestedForeignKeyAnnotation(
+					jaxbEntity.getPrimaryKeyForeignKey(),
+					xmlDocumentContext
+			) );
+		}
 	}
 
 	public static void applyOnDelete(

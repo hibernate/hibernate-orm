@@ -3,6 +3,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
+import org.hibernate.boot.jaxb.mapping.spi.JaxbForeignKeyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSecondaryTableImpl;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.spi.CommonTableDetails;
@@ -225,9 +226,16 @@ public class SecondaryTableJpaAnnotation implements SecondaryTable, CommonTableD
 				xmlDocumentContext
 		) );
 
-		if ( jaxbTable.getForeignKey() != null ) {
+		// There is no @PrimaryKeyForeignKey annotation: both <foreign-key/> and <primary-key-foreign-key/>
+		// describe the FK from the secondary table to the primary table, so either one becomes
+		//   @SecondaryTable(..., foreignKey = @ForeignKey(name = ..., value = ...))
+		// When both are present, <foreign-key/> takes precedence.
+		final JaxbForeignKeyImpl jaxbForeignKey = jaxbTable.getForeignKey() != null
+				? jaxbTable.getForeignKey()
+				: jaxbTable.getPrimaryKeyForeignKey();
+		if ( jaxbForeignKey != null ) {
 			foreignKey( ForeignKeyProcessing.createNestedForeignKeyAnnotation(
-					jaxbTable.getForeignKey(),
+					jaxbForeignKey,
 					xmlDocumentContext
 			) );
 		}

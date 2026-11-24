@@ -60,7 +60,12 @@ public class OneToOneAttributeProcessing {
 
 		TableProcessing.transformJoinTable( jaxbOneToOne.getJoinTable(), memberDetails, xmlDocumentContext );
 		JoinColumnProcessing.applyJoinColumnsOrFormulas( jaxbOneToOne.getJoinColumnOrJoinFormula(), memberDetails, xmlDocumentContext );
-		JoinColumnProcessing.applyPrimaryKeyJoinColumns( jaxbOneToOne.getPrimaryKeyJoinColumn(), memberDetails, xmlDocumentContext );
+		JoinColumnProcessing.applyPrimaryKeyJoinColumns(
+				jaxbOneToOne.getPrimaryKeyJoinColumn(),
+				jaxbOneToOne.getPrimaryKeyForeignKey(),
+				memberDetails,
+				xmlDocumentContext
+		);
 
 		if ( jaxbOneToOne.getPropertyRef() != null ) {
 			final PropertyRefAnnotation propertyRefUsage = (PropertyRefAnnotation) memberDetails.applyAnnotationUsage(

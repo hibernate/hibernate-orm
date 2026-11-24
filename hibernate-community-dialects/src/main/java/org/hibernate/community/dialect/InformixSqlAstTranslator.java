@@ -285,7 +285,10 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 	}
 
 	private void caseArgument(Expression expression) {
-		if ( isConcatFunction( expression ) ) {
+		if ( expression instanceof Literal literal && isNullLiteral( literal ) ) {
+			renderCasted( expression );
+		}
+		else if ( isConcatFunction( expression ) ) {
 			// concatenation inside a case must be cast to varchar(255)
 			// or we get a bunch of trailing whitespace
 			append( "cast(" );

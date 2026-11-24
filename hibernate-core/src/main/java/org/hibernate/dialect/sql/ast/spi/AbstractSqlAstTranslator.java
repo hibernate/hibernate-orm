@@ -9010,7 +9010,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				resultRenderer.accept( otherwise );
 			}
 			else {
-				appendSql( "null" );
+				resultRenderer.accept( new JdbcLiteral<>( null, caseSearchedExpression.getExpressionType().getSingleJdbcMapping() ) );
 			}
 			return;
 		}
@@ -9117,7 +9117,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				resultRenderer.accept( otherwise );
 			}
 			else {
-				appendSql( "null" );
+				resultRenderer.accept( new JdbcLiteral<>( null, caseSimpleExpression.getExpressionType().getSingleJdbcMapping() ) );
 			}
 			return;
 		}

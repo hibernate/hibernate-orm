@@ -103,7 +103,6 @@ public class CollectionAuditSupport {
 
 	private final CollectionMutationTarget mutationTarget;
 	private final AuditCollectionHelper auditHelper;
-	private final @Nullable EntityAuditSupport ownerMutationSupport;
 
 	public CollectionAuditSupport(
 			@Nonnull CollectionMutationTarget mutationTarget,
@@ -121,8 +120,6 @@ public class CollectionAuditSupport {
 				indexIncrementer,
 				auditMapping
 		);
-		final var ownerPersister = mutationTarget.getTargetPart().getCollectionDescriptor().getOwnerEntityPersister();
-		this.ownerMutationSupport = ownerPersister.getEntityAuditSupport();
 	}
 
 	@Nonnull
@@ -130,44 +127,32 @@ public class CollectionAuditSupport {
 		return mutationTarget;
 	}
 
-	public @Nullable EntityAuditSupport getOwnerMutationSupport() {
-		return ownerMutationSupport;
-	}
-
 	/// Resolve the owning entity change implied by an audited collection change.
 	///
 	/// Collection audit rows record the row-level ADD/DEL changes, while the
 	/// owning entity receives a MOD audit row so revision queries can see that the
-	/// association changed. The owner is resolved from the persistence context
-	/// first, then from the collection wrapper, and finally by entity key lookup.
+	/// association changed. The collection key can refer to a unique property of the owner.
 	/// If the owner cannot be resolved, no owner MOD change is produced; the
 	/// collection row audit work can still be recorded.
 	@Nullable
-	public OwnerAuditChange resolveOwnerAuditChange(
-			@Nonnull Object ownerId,
+	public static OwnerAuditChange resolveOwnerAuditChange(
+			@Nonnull CollectionPersister persister,
+			@Nonnull Object collectionKey,
 			@Nonnull PersistentCollection<?> collection,
 			@Nonnull SharedSessionContractImplementor session) {
-		final var collectionDescriptor = mutationTarget.getTargetPart().getCollectionDescriptor();
-		final var ownerPersister = collectionDescriptor.getOwnerEntityPersister();
+		final var ownerPersister = persister.getOwnerEntityPersister();
+		final var ownerMutationSupport = ownerPersister.getEntityAuditSupport();
 		if ( ownerMutationSupport == null ) {
 			return null;
 		}
-		final var ownerEntityKey = session.generateEntityKey( ownerId, ownerPersister );
-
-		final var persistenceContext = session.getPersistenceContextInternal();
-		final var persistenceContextOwner = persistenceContext.getCollectionOwner( ownerId, collectionDescriptor );
-		final var collectionOwner = persistenceContextOwner != null ? persistenceContextOwner : collection.getOwner();
-		final var owner = collectionOwner != null ? collectionOwner : persistenceContext.getEntity( ownerEntityKey );
+		final var context = session.getPersistenceContextInternal();
+		final var managedOwner = context.getCollectionOwner( collectionKey, persister, collection );
+		final var owner = managedOwner != null ? managedOwner : collection.getOwner();
 		if ( owner == null ) {
 			return null;
 		}
-
-		return new OwnerAuditChange(
-				ownerEntityKey,
-				owner,
-				ownerPersister.getValues( owner ),
-				ownerMutationSupport
-		);
+		final var ownerKey = session.generateEntityKey( ownerPersister.getIdentifier( owner, session ), ownerPersister );
+		return new OwnerAuditChange( ownerKey, owner, ownerPersister.getValues( owner ), ownerMutationSupport );
 	}
 
 	@Nonnull

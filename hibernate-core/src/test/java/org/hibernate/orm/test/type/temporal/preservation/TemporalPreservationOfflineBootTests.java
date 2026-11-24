@@ -7,6 +7,19 @@ import org.hibernate.sql.spi.StringBuilderSqlAppender;
 import org.hibernate.dialect.type.internal.OracleInstantAtUtcJdbcType;
 import org.hibernate.dialect.type.internal.OracleLocalTimeJdbcType;
 import java.time.LocalTime;
+import java.lang.reflect.Proxy;
+import java.sql.PreparedStatement;
+import java.sql.Types;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import org.hibernate.dialect.DB2iDialect;
+import org.hibernate.dialect.DB2zDialect;
+import org.hibernate.dialect.type.internal.DB2LocalDateTimeAsTextJdbcType;
+import org.hibernate.mapping.BasicValue;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.orm.test.type.temporal.preservation.TemporalPreservationBootMatrix.WithLocalDateTime;
+import org.hibernate.type.descriptor.ValueBinder;
+import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -291,6 +304,153 @@ class TemporalPreservationOfflineBootTests {
 		}
 	}
 
+	/// On DB2 a `LocalDateTime` is exchanged as text which the database
+	/// converts, since the driver passes one through the default time zone of
+	/// the JVM however it is given. The SQL which does so, and the text itself,
+	/// need no database, so they are verified whatever the database under test.
+	@Test
+	void localDateTimeIsExchangedAsTextOnDb2() throws SQLException {
+		final List<String> statements = new ArrayList<>();
+		final var registryBuilder = ServiceRegistryUtil.serviceRegistryBuilder();
+		registryBuilder.applySetting( MappingSettings.TEMPORAL_PRESERVATION, true );
+		registryBuilder.applySetting( JdbcSettings.ALLOW_METADATA_ON_BOOT, false );
+		registryBuilder.applySetting( JdbcSettings.DIALECT, DB2Dialect.class.getName() );
+		registryBuilder.applySetting( JdbcSettings.CONNECTION_PROVIDER, new NoStatements( statements ) );
+		registryBuilder.applySetting( "hibernate.hbm2ddl.auto", "none" );
+		try ( var registry = registryBuilder.build();
+				var factory = (SessionFactoryImplementor) new MetadataSources( registry )
+						.addAnnotatedClass( WithLocalDateTime.class )
+						.buildMetadata()
+						.buildSessionFactory() ) {
+			final var mapping = factory.getMappingMetamodel()
+					.getEntityDescriptor( WithLocalDateTime.class )
+					.findAttributeMapping( "theValue" )
+					.getSingleJdbcMapping();
+			assertThat( mapping.getJdbcType() ).isSameAs( DB2LocalDateTimeAsTextJdbcType.INSTANCE );
+			assertThat( mapping.getJdbcType().getDdlTypeCode() ).isEqualTo( Types.TIMESTAMP );
+			// a value which is not that of a column, such as a parameter of a function, is exchanged the same way
+			assertThat( factory.getTypeConfiguration().getBasicTypeForJavaType( LocalDateTime.class ).getJdbcType() )
+					.isSameAs( DB2LocalDateTimeAsTextJdbcType.INSTANCE );
+
+			final String written = "cast(cast(? as varchar(40)) as timestamp(12))";
+			final String read = "varchar_format(wldt1_0.theValue,'YYYY-MM-DD HH24:MI:SS.FF9')";
+
+			// a query reads the column as text, and compares it with a parameter given as text
+			try ( var session = factory.openSession() ) {
+				assertThatThrownBy( () -> session.createQuery(
+						"select e.theValue from WithLocalDateTime e where e.theValue > :theValue",
+						LocalDateTime.class
+				).setParameter( "theValue", LocalDateTime.of( 2021, 3, 14, 2, 30 ) ).getResultList() )
+						.hasStackTraceContaining( "No statement may be prepared by this test" );
+			}
+			assertThat( statements ).last().asString()
+					.startsWith( "select " + read + " from " )
+					.endsWith( "wldt1_0.theValue>" + written );
+
+			// so does loading the entity
+			statements.clear();
+			try ( var session = factory.openSession() ) {
+				assertThatThrownBy( () -> session.find( WithLocalDateTime.class, 1 ) )
+						.hasStackTraceContaining( "No statement may be prepared by this test" );
+			}
+			assertThat( statements ).last().asString().contains( read );
+
+			// and it is written as text
+			statements.clear();
+			try ( var session = factory.openSession() ) {
+				assertThatThrownBy( () -> {
+					session.beginTransaction();
+					final var entity = new WithLocalDateTime();
+					entity.id = 1;
+					entity.theValue = LocalDateTime.of( 2021, 3, 14, 2, 30 );
+					session.persist( entity );
+					session.flush();
+				} ).hasStackTraceContaining( "No statement may be prepared by this test" );
+			}
+
+			// the text is the same whatever the default time zone of the JVM
+			final var original = TimeZone.getDefault();
+			try {
+				for ( String zone : new String[] { "UTC", "America/New_York", "Asia/Kathmandu" } ) {
+					TimeZone.setDefault( TimeZone.getTimeZone( zone ) );
+					assertThat( boundText( mapping, LocalDateTime.of( 2021, 3, 14, 2, 30 ), factory ) )
+							.as( zone )
+							.isEqualTo( "2021-03-14 02:30:00.000000000" );
+					assertThat( boundText( mapping, LocalDateTime.of( 1, 1, 1, 0, 0, 0, 1 ), factory ) )
+							.as( zone )
+							.isEqualTo( "0001-01-01 00:00:00.000000001" );
+					assertThat( boundText( mapping, LocalDateTime.of( 1582, 10, 10, 12, 34, 56, 123_456_000 ), factory ) )
+							.as( zone )
+							.isEqualTo( "1582-10-10 12:34:56.123456000" );
+					assertThat( DB2LocalDateTimeAsTextJdbcType.parse( "2021-03-14 02:30:00.000000000" ) )
+							.as( zone )
+							.isEqualTo( LocalDateTime.of( 2021, 3, 14, 2, 30 ) );
+					assertThat( DB2LocalDateTimeAsTextJdbcType.parse( "0001-01-01 00:00:00.000000001" ) )
+							.as( zone )
+							.isEqualTo( LocalDateTime.of( 1, 1, 1, 0, 0, 0, 1 ) );
+				}
+			}
+			finally {
+				TimeZone.setDefault( original );
+			}
+			// DB2 holds the end of a day as 24:00:00 of that day
+			assertThat( DB2LocalDateTimeAsTextJdbcType.parse( "2021-12-31 24:00:00.000000000" ) )
+					.isEqualTo( LocalDateTime.of( 2022, 1, 1, 0, 0 ) );
+			assertThatThrownBy( () -> DB2LocalDateTimeAsTextJdbcType.parse( "2021-03-14-02.30.00.000000" ) )
+					.isInstanceOf( TemporalPreservationException.class );
+
+			// values outside the supported range are rejected as they are bound
+			assertThatThrownBy( () -> boundText( mapping, LocalDateTime.of( 10000, 1, 1, 0, 0 ), factory ) )
+					.isInstanceOf( TemporalPreservationException.class );
+			assertThatThrownBy( () -> boundText( mapping, LocalDateTime.of( 0, 12, 31, 23, 59 ), factory ) )
+					.isInstanceOf( TemporalPreservationException.class );
+		}
+		assertThat( statements ).last().asString()
+				.startsWith( "insert into tp_local_date_time " )
+				.contains( "cast(cast(? as varchar(40)) as timestamp(12))" );
+
+		// nothing of this applies with temporal preservation disabled, nor on the other DB2 databases
+		for ( Class<? extends DB2Dialect> dialectClass : List.of( DB2Dialect.class, DB2zDialect.class, DB2iDialect.class ) ) {
+			final var disabled = ServiceRegistryUtil.serviceRegistryBuilder();
+			disabled.applySetting( MappingSettings.TEMPORAL_PRESERVATION, dialectClass != DB2Dialect.class );
+			disabled.applySetting( JdbcSettings.ALLOW_METADATA_ON_BOOT, false );
+			disabled.applySetting( JdbcSettings.DIALECT, dialectClass.getName() );
+			disabled.applySetting( JdbcSettings.CONNECTION_PROVIDER, new NoConnections() );
+			disabled.applySetting( "hibernate.hbm2ddl.auto", "none" );
+			try ( var registry = disabled.build() ) {
+				final var metadata = new MetadataSources( registry )
+						.addAnnotatedClass( WithLocalDateTime.class )
+						.buildMetadata();
+				final var value = (BasicValue) metadata.getEntityBinding( WithLocalDateTime.class.getName() )
+						.getProperty( "theValue" )
+						.getValue();
+				assertThat( value.resolve().getJdbcType() ).as( dialectClass.getSimpleName() )
+						.isSameAs( TimestampJdbcType.INSTANCE );
+			}
+		}
+	}
+
+	/// The text which the binder of the mapping hands to the JDBC driver for the value.
+	private static String boundText(JdbcMapping mapping, LocalDateTime value, SessionFactoryImplementor factory)
+			throws SQLException {
+		final String[] text = new String[1];
+		final var statement = (PreparedStatement) Proxy.newProxyInstance(
+				TemporalPreservationOfflineBootTests.class.getClassLoader(),
+				new Class<?>[] { PreparedStatement.class },
+				(proxy, method, arguments) -> {
+					if ( method.getName().equals( "setString" ) ) {
+						text[0] = (String) arguments[1];
+						return null;
+					}
+					throw new UnsupportedOperationException( method.getName() );
+				}
+		);
+		@SuppressWarnings("unchecked")
+		final var binder = (ValueBinder<Object>) mapping.getJdbcValueBinder();
+		binder.bind( statement, value, 1, factory.getWrapperOptions() );
+		return text[0];
+	}
+
 	private static void boot(Class<?> entityClass) {
 		final var registryBuilder = ServiceRegistryUtil.serviceRegistryBuilder();
 		registryBuilder.applySetting( MappingSettings.TEMPORAL_PRESERVATION, true );
@@ -339,6 +499,58 @@ class TemporalPreservationOfflineBootTests {
 		@Id
 		Integer id;
 		LocalDate[] theValues;
+	}
+
+	/// Hands out connections which record the SQL they are asked to prepare, and prepare nothing.
+	public static class NoStatements implements ConnectionProvider {
+		private final List<String> statements;
+
+		NoStatements(List<String> statements) {
+			this.statements = statements;
+		}
+
+		@Override
+		public Connection getConnection() {
+			return (Connection) Proxy.newProxyInstance(
+					NoStatements.class.getClassLoader(),
+					new Class<?>[] { Connection.class },
+					(proxy, method, arguments) -> {
+						if ( method.getName().startsWith( "prepare" ) ) {
+							statements.add( (String) arguments[0] );
+							throw new SQLException( "No statement may be prepared by this test" );
+						}
+						final Class<?> type = method.getReturnType();
+						if ( type == boolean.class ) {
+							return method.getName().equals( "getAutoCommit" );
+						}
+						else if ( type == int.class ) {
+							return 0;
+						}
+						else {
+							return null;
+						}
+					}
+			);
+		}
+
+		@Override
+		public void closeConnection(Connection connection) {
+		}
+
+		@Override
+		public boolean supportsAggressiveRelease() {
+			return false;
+		}
+
+		@Override
+		public boolean isUnwrappableAs(Class<?> unwrapType) {
+			return false;
+		}
+
+		@Override
+		public <T> T unwrap(Class<T> unwrapType) {
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	public static class NoConnections implements ConnectionProvider {

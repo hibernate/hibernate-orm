@@ -109,10 +109,10 @@ public interface MetadataBuildingContext {
 	@Remove
 	default boolean isDirectJavaTimeJdbcAccessEnabled(Class<?> javaTimeType) {
 		return isPreferJavaTimeJdbcTypesEnabled()
-				&& getRegistry().requireService( JdbcServices.class )
-						.getDialect()
-						.getDirectJavaTimeJdbcSupport()
-						.supports( javaTimeType );
+				&& TemporalPreservationSettings.javaTimeJdbcTypeSupport(
+						getRegistry().requireService( JdbcServices.class ).getDialect(),
+						isTemporalPreservationEnabled( getRegistry() )
+				).supports( javaTimeType );
 	}
 
 	/**

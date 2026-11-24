@@ -15,6 +15,7 @@ import org.hibernate.TemporalPreservationException;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.QuerySettings;
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.type.internal.DB2LocalDateTimeAsTextJdbcType;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -212,7 +213,7 @@ class TemporalPreservationStorageTests {
 		}
 	}
 
-	/// Not on DB2, where a `LocalDateTime` is not supported.
+	/// Not on DB2, which has its own way with a `LocalDateTime`: see [Db2DateTimes].
 	@Nested
 	@ServiceRegistry(settings = {
 			@Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "true"),
@@ -296,6 +297,107 @@ class TemporalPreservationStorageTests {
 								: dialect( scope ) instanceof SQLServerDialect ? "datetime2" : "timestamp" )
 						+ ")"
 			);
+		}
+	}
+
+	/// On DB2 a `LocalDateTime` is exchanged as text which the database
+	/// converts to and from the `TIMESTAMP` of the column. DB2 uses the
+	/// proleptic Gregorian calendar, so the ten days before 15 October 1582
+	/// are stored as they are, as is everything from the first day of year 1.
+	@Nested
+	@ServiceRegistry(settings = {
+			@Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "true"),
+			@Setting(name = QuerySettings.CRITERIA_VALUE_HANDLING_MODE, value = "inline")
+	})
+	@RequiresDialect(value = DB2Dialect.class, matchSubTypes = false)
+	@DomainModel(annotatedClasses = WithLocalDateTime.class)
+	@SessionFactory
+	class Db2DateTimes {
+		@AfterEach
+		void cleanup(SessionFactoryScope scope) {
+			scope.dropData();
+		}
+
+		@Test
+		void nullDateTime(SessionFactoryScope scope) {
+			assertNullIsStored( scope, WithLocalDateTime.class );
+		}
+
+		/// 02:30 on 2021-03-14 does not exist in New York, and 01:30 on
+		/// 2021-11-07 occurs twice. Neither may be changed by the default
+		/// time zone of the JVM, nor any of the others.
+		@Test
+		void localDateTime(SessionFactoryScope scope) {
+			final TimeZone original = TimeZone.getDefault();
+			try {
+				for ( var zone : new String[] { "UTC", "America/New_York", "Asia/Kathmandu" } ) {
+					TimeZone.setDefault( TimeZone.getTimeZone( zone ) );
+					for ( var value : new LocalDateTime[] {
+							LocalDateTime.of( 1, 1, 1, 0, 0, 0 ),
+							LocalDateTime.of( 1582, 10, 4, 23, 59, 59 ),
+							LocalDateTime.of( 1582, 10, 10, 12, 34, 56 ),
+							LocalDateTime.of( 1582, 10, 15, 0, 0, 0 ),
+							LocalDateTime.of( 1970, 1, 1, 0, 0, 0 ),
+							LocalDateTime.of( 2021, 3, 14, 2, 30, 0, 123_456_000 ),
+							LocalDateTime.of( 2021, 11, 7, 1, 30, 0 ),
+							LocalDateTime.of( 9999, 12, 31, 23, 59, 59, 999_999_000 )
+					} ) {
+						assertStoredAsWritten(
+								scope,
+								WithLocalDateTime.class,
+								"tp_local_date_time",
+								value,
+								TemporalPreservationSql.dateTimeLiteral( dialect( scope ), DATE_TIME.format( value ) )
+						);
+					}
+				}
+			}
+			finally {
+				TimeZone.setDefault( original );
+			}
+		}
+
+		@Test
+		void localDateTimeOutsideRangeIsRejected(SessionFactoryScope scope) {
+			assertRejected( scope, WithLocalDateTime.class, LocalDateTime.of( 0, 12, 31, 23, 59, 59 ) );
+			assertRejected( scope, WithLocalDateTime.class, LocalDateTime.of( 10000, 1, 1, 0, 0 ) );
+		}
+
+		/// DB2 holds the end of a day as the time 24:00:00 of that day, which
+		/// is the start of the next day.
+		@Test
+		void endOfDayIsReadAsTheStartOfTheNext(SessionFactoryScope scope) {
+			final int id = IDS.incrementAndGet();
+			scope.inTransaction( session -> session.createNativeMutationQuery(
+					"insert into tp_local_date_time (id, theValue) values (" + id + ", timestamp '2021-12-31 24:00:00')"
+			).executeUpdate() );
+			scope.inTransaction( session -> assertThat( session.createQuery(
+					"select e.theValue from WithLocalDateTime e where e.id = :id",
+					LocalDateTime.class
+			).setParameter( "id", id ).getSingleResult() ).isEqualTo( LocalDateTime.of( 2022, 1, 1, 0, 0 ) ) );
+		}
+
+		/// A native query is not rewritten. The driver would hand over a
+		/// `TIMESTAMP` column already converted through the default time zone
+		/// of the JVM, so it is rejected, and the query has to format it as
+		/// Hibernate does.
+		@Test
+		void nativeQueryReadsTheColumnAsText(SessionFactoryScope scope) {
+			final int id = IDS.incrementAndGet();
+			final var value = LocalDateTime.of( 2021, 3, 14, 2, 30, 0, 123_456_000 );
+			scope.inTransaction( session -> session.persist( newEntity( WithLocalDateTime.class, id, value ) ) );
+			scope.inTransaction( session -> {
+				assertThatThrownBy( () -> session.createNativeQuery(
+						"select theValue from tp_local_date_time where id = " + id,
+						LocalDateTime.class
+				).getSingleResult() )
+						.hasStackTraceContaining( "TemporalPreservationException" );
+				assertThat( session.createNativeQuery(
+						"select varchar_format(theValue,'" + DB2LocalDateTimeAsTextJdbcType.READ_FORMAT
+								+ "') from tp_local_date_time where id = " + id,
+						LocalDateTime.class
+				).getSingleResult() ).isEqualTo( value );
+			} );
 		}
 	}
 

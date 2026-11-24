@@ -767,6 +767,24 @@ public abstract class Dialect implements ConversionContext, AlterTableSupport,
 		return DirectJavaTimeJdbcSupports.jdbc42();
 	}
 
+	/// Whether, with [temporal preservation][org.hibernate.cfg.MappingSettings#TEMPORAL_PRESERVATION]
+	/// enabled, a value of the exact Java Time class is exchanged through
+	/// the JDBC type registered for that class itself, such as
+	/// [org.hibernate.type.SqlTypes#LOCAL_DATE_TIME] for a `LocalDateTime`,
+	/// although the JDBC driver does not [exchange it directly][#getDirectJavaTimeJdbcSupport()].
+	///
+	/// For a Dialect which, with temporal preservation enabled, registers a
+	/// JDBC type under that type code which preserves the value in some
+	/// other way than by handing it to the driver. Not consulted when
+	/// temporal preservation is disabled.
+	///
+	/// @since 8.1
+	@Incubating(since = "8.1")
+	@SPI({ IMPLEMENT, SUPPLY })
+	public boolean usesJavaTimeJdbcTypeForTemporalPreservation(Class<?> javaTimeType) {
+		return false;
+	}
+
 	/// Report how the exact combination of Java type and JDBC type stores a
 	/// Java Time value on this database with its JDBC driver. Consulted only
 	/// when [temporal preservation][org.hibernate.cfg.MappingSettings#TEMPORAL_PRESERVATION]

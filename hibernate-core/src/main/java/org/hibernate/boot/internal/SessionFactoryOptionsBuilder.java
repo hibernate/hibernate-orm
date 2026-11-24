@@ -343,7 +343,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		final var jdbcServices = serviceRegistry.requireService( JdbcServices.class );
 
 		final var dialect = jdbcServices.getJdbcEnvironment().getDialect();
-		directJavaTimeJdbcSupport = dialect.getDirectJavaTimeJdbcSupport();
+		directJavaTimeJdbcSupport = TemporalPreservationSettings.javaTimeJdbcTypeSupport(
+				dialect,
+				TemporalPreservationSettings.resolve( configurationService.getSettings() ).preservationEnabled()
+		);
 
 		final Map<String, Object> settings = new HashMap<>();
 		settings.putAll( map( dialect.getDefaultProperties() ) );

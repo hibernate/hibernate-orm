@@ -172,7 +172,7 @@ HSQLDialect,OffsetDateTime (ADJUSTED),OffsetDateTimeJdbcType,timestamp(6) with t
 HSQLDialect,ZonedDateTime (ADJUSTED),OffsetDateTimeJdbcType,timestamp(6) with time zone,INSTANT,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
 DB2Dialect,LocalDate,DateJdbcType,date,DATE,,1583-01-01,9999-12-31,QUALIFIED
 DB2Dialect,LocalTime,DB2LocalTimeJdbcType,time,TIME,,,,QUALIFIED
-DB2Dialect,LocalDateTime,TimestampJdbcType,timestamp(6),,,,,REJECTED
+DB2Dialect,LocalDateTime,DB2LocalDateTimeAsTextJdbcType,timestamp(6),DATE+TIME,,0001-01-01T00:00,9999-12-31T23:59:59.999999999,QUALIFIED
 DB2Dialect,Instant,TimestampUtcAsJdbcTimestampJdbcType,timestamp(6),INSTANT,UTC_CONVENTION,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
 DB2Dialect,OffsetTime,DB2TimeUtcJdbcType + IntegerJdbcType,time + integer,TIME+OFFSET,,,,QUALIFIED
 DB2Dialect,OffsetDateTime,TimestampUtcAsJdbcTimestampJdbcType + IntegerJdbcType,timestamp(6) + integer,INSTANT+OFFSET,UTC_CONVENTION,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED

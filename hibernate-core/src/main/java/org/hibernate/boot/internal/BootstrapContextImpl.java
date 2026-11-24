@@ -37,6 +37,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.type.internal.TemporalPreservationSettings;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -125,7 +126,10 @@ public class BootstrapContextImpl implements BootstrapContext {
 					MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( configurationService );
 			typeConfiguration = new TypeConfiguration(
 					directJavaTimeJdbcAccessEnabled,
-					dialect.getDirectJavaTimeJdbcSupport()
+					TemporalPreservationSettings.javaTimeJdbcTypeSupport(
+							dialect,
+							MetadataBuildingContext.isTemporalPreservationEnabled( serviceRegistry )
+					)
 			);
 		}
 		return typeConfiguration;

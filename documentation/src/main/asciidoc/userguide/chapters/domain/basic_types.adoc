@@ -887,9 +887,6 @@ Enabling temporal preservation has three effects.
 Temporal preservation is supported on H2, HSQLDB, PostgreSQL, EDB Postgres Advanced Server, CockroachDB, Oracle, MySQL, MariaDB, SQL Server and Db2, for `LocalDate`, `LocalTime`, `LocalDateTime`, `Instant`,
 `OffsetTime`, `OffsetDateTime` and `ZonedDateTime`. The last three are described further under <<basic-temporal-preservation-policy>>.
 On every other database, a mapped value is rejected.
-On Db2, a `LocalDateTime` is rejected.
-It is exchanged with the JDBC driver as a `java.sql.Timestamp` in the default time zone of the JVM,
-which cannot express a time skipped there as clocks are set forward, and stores the time an hour later instead.
 The driver does not accept a `LocalDateTime` directly, and reads one requested directly through that same time zone.
 
 The following table lists every combination which has been assessed.
@@ -1341,6 +1338,11 @@ or on <<basic-datetime-time-zone,`hibernate.jdbc.time_zone`>>, whether configure
 * A `LocalDate`, `LocalTime` or `LocalDateTime` is exchanged with the driver as its fields, with no time zone involved.
   The exception is a `LocalDate` on Db2, which is exchanged as a `java.sql.Date`. The driver was established to store the same date whatever the default time zone of the JVM.
   A `LocalTime` on Db2 is exchanged directly, as elsewhere.
+  A `LocalDateTime` on Db2 is exchanged as text, which the database itself converts to and from the `TIMESTAMP` of the column.
+  The driver passes a `LocalDateTime` through the default time zone of the JVM however it is given one, which cannot express a time skipped there as clocks are set forward, and stores the time an hour later instead.
+  So Hibernate writes the value through `cast(cast(? as varchar(40)) as timestamp(12))` and reads it through `varchar_format(…,'YYYY-MM-DD HH24:MI:SS.FF9')`, in the SQL it generates.
+  A native query is not rewritten: one which returns such a column as a `LocalDateTime` has to format it the same way, and is rejected otherwise, and one which passes a `LocalDateTime` as a parameter has to cast the parameter the same way.
+  A `LocalDateTime` is not passed to or returned from a stored procedure on Db2.
   Oracle has no `TIME` type, so a `LocalTime` is stored there in a `TIMESTAMP` column, on the first day of 1970, and is exchanged with the driver as a `LocalDateTime` on that day.
   What the driver stores for a `LocalTime` passed as such depends on the default time zone of the JVM, which is how the value is exchanged when temporal preservation is not enabled.
   Times stored that way may therefore be on another day and at another hour; a value read back is the time of whatever date is stored.

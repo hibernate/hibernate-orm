@@ -208,6 +208,11 @@ public class DB2iDialect extends DB2Dialect {
 	}
 
 	@Override
+	public boolean usesJavaTimeJdbcTypeForTemporalPreservation(Class<?> javaTimeType) {
+		return false;
+	}
+
+	@Override
 	public org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
 		return org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports.none();
 	}

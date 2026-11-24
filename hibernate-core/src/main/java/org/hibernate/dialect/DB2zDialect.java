@@ -253,6 +253,11 @@ public class DB2zDialect extends DB2Dialect implements TemporalOperationSupport 
 	}
 
 	@Override
+	public boolean usesJavaTimeJdbcTypeForTemporalPreservation(Class<?> javaTimeType) {
+		return false;
+	}
+
+	@Override
 	public org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
 		return org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports.none();
 	}

@@ -41,7 +41,6 @@ import org.hibernate.orm.test.type.temporal.preservation.TemporalPreservationBoo
 
 import org.hibernate.type.descriptor.java.InstantJavaType;
 
-import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
@@ -64,7 +63,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /// This covers both kinds of access. A `LocalDate`, `LocalTime` or
 /// `LocalDateTime` is passed to the JDBC driver directly, with no time zone
 /// involved, apart from a `LocalDate` on DB2, which passes through a
-/// `java.sql.Date`. An `Instant` is converted on PostgreSQL to a `java.sql.Timestamp`
+/// `java.sql.Date`, and a `LocalDateTime` on DB2, which is exchanged as text
+/// that the database converts. An `Instant` is converted on PostgreSQL to a `java.sql.Timestamp`
 /// with a fixed UTC calendar, and on Oracle to an `OffsetDateTime` at UTC;
 /// neither may be swayed by a configured JDBC time zone.
 ///
@@ -335,15 +335,12 @@ class TemporalPreservationTimeZoneTests {
 		for ( var value : new LocalDate[] { LocalDate.of( 2021, 3, 14 ), LocalDate.of( 1985, 12, 31 ) } ) {
 			samples.put( value, TemporalPreservationSql.dateLiteral( dialect, DATE.format( value ) ) );
 		}
-		if ( !( dialect instanceof DB2Dialect ) ) {
-			// a LocalDateTime is not supported on DB2
-			for ( var value : new LocalDateTime[] {
-					LocalDateTime.of( 2021, 3, 14, 2, 30, 0 ),
-					LocalDateTime.of( 2021, 11, 7, 1, 30, 0 ),
-					LocalDateTime.of( 1985, 12, 31, 23, 59, 59, 123_456_000 )
-			} ) {
-				samples.put( value, TemporalPreservationSql.dateTimeLiteral( dialect, DATE_TIME.format( value ) ) );
-			}
+		for ( var value : new LocalDateTime[] {
+				LocalDateTime.of( 2021, 3, 14, 2, 30, 0 ),
+				LocalDateTime.of( 2021, 11, 7, 1, 30, 0 ),
+				LocalDateTime.of( 1985, 12, 31, 23, 59, 59, 123_456_000 )
+		} ) {
+			samples.put( value, TemporalPreservationSql.dateTimeLiteral( dialect, DATE_TIME.format( value ) ) );
 		}
 		for ( var value : new LocalTime[] { LocalTime.of( 2, 30, 15 ), LocalTime.MIDNIGHT } ) {
 			samples.put( value, TemporalPreservationSql.timeLiteral( dialect, TIME.format( value ) ) );
@@ -442,16 +439,12 @@ class TemporalPreservationTimeZoneTests {
 		if ( jdbcZone != null ) {
 			registryBuilder.applySetting( JdbcSettings.JDBC_TIME_ZONE, jdbcZone );
 		}
-		final Dialect dialect = DialectContext.getDialect();
 		try ( var registry = registryBuilder.build() ) {
 			final var sources = new MetadataSources( registry )
 					.addAnnotatedClass( WithLocalDate.class )
-					.addAnnotatedClass( WithInstant.class );
-			if ( !( dialect instanceof DB2Dialect ) ) {
-				// a LocalDateTime is not supported on DB2
-				sources.addAnnotatedClass( WithLocalDateTime.class );
-			}
-			sources.addAnnotatedClass( WithLocalTime.class );
+					.addAnnotatedClass( WithInstant.class )
+					.addAnnotatedClass( WithLocalDateTime.class )
+					.addAnnotatedClass( WithLocalTime.class );
 			try ( var factory = (SessionFactoryImplementor) sources.buildMetadata().buildSessionFactory() ) {
 				action.accept( factory );
 			}

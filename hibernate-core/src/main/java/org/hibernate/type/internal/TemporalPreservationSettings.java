@@ -1,5 +1,7 @@
 package org.hibernate.type.internal;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
 import java.util.Map;
 
 import org.hibernate.Internal;
@@ -44,5 +46,34 @@ public record TemporalPreservationSettings(boolean preservationEnabled, boolean 
 			);
 		}
 		return new TemporalPreservationSettings( preservationEnabled, preservationEnabled || directJdbc );
+	}
+
+	/// The Java Time classes which are mapped to the JDBC type registered
+	/// for the class itself rather than to that of its `java.sql` counterpart:
+	/// those which the JDBC driver exchanges directly and, with temporal
+	/// preservation enabled, those for which the Dialect
+	/// [registers a JDBC type of its own][Dialect#usesJavaTimeJdbcTypeForTemporalPreservation(Class)].
+	public static DirectJavaTimeJdbcSupport javaTimeJdbcTypeSupport(Dialect dialect, boolean preservationEnabled) {
+		final var direct = dialect.getDirectJavaTimeJdbcSupport();
+		if ( !preservationEnabled ) {
+			return direct;
+		}
+		return new DirectJavaTimeJdbcSupport() {
+			@Override
+			public boolean supports(Class<?> javaTimeType) {
+				return direct.supports( javaTimeType )
+					|| dialect.usesJavaTimeJdbcTypeForTemporalPreservation( javaTimeType );
+			}
+
+			@Override
+			public boolean supportsInStruct(Class<?> javaTimeType) {
+				return direct.supportsInStruct( javaTimeType );
+			}
+
+			@Override
+			public boolean supportsInArray(Class<?> javaTimeType) {
+				return direct.supportsInArray( javaTimeType );
+			}
+		};
 	}
 }

@@ -42,6 +42,7 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.ObjectJavaType;
 import org.hibernate.type.format.FormatMapper;
+import org.hibernate.type.internal.TemporalPreservationSettings;
 
 import jakarta.persistence.criteria.Nulls;
 
@@ -708,10 +709,10 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 */
 	default boolean isDirectJavaTimeJdbcAccessEnabled(@Nonnull Class<?> javaTimeType) {
 		return isPreferJavaTimeJdbcTypesEnabled()
-				&& getServiceRegistry().requireService( JdbcServices.class )
-						.getDialect()
-						.getDirectJavaTimeJdbcSupport()
-						.supports( javaTimeType );
+				&& TemporalPreservationSettings.javaTimeJdbcTypeSupport(
+						getServiceRegistry().requireService( JdbcServices.class ).getDialect(),
+						isTemporalPreservationEnabled()
+				).supports( javaTimeType );
 	}
 
 	/**

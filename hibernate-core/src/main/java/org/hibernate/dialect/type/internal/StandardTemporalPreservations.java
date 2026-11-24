@@ -85,6 +85,19 @@ public final class StandardTemporalPreservations {
 		}
 	}
 
+	/// Report for a [LocalDateTime] stored through exactly the given JDBC
+	/// type class, with dates preserved from the given first day through the
+	/// year 9999. Answers [TemporalPreservation#unknown()] for anything else.
+	public static TemporalPreservation localDateTime(
+			JavaType<?> javaType,
+			JdbcType jdbcType,
+			Class<? extends JdbcType> jdbcTypeClass,
+			LocalDate firstDay) {
+		return isPair( javaType, jdbcType, LocalDateTimeJavaType.class, jdbcTypeClass )
+				? TemporalPreservation.ofDateTime( firstDay.atStartOfDay(), lastMoment() )
+				: TemporalPreservation.unknown();
+	}
+
 	/// Report for a [LocalDate] exchanged with the JDBC driver as a
 	/// [java.sql.Date], with dates preserved from the given first day through
 	/// the year 9999. Only for a driver which has been established to store

@@ -380,6 +380,13 @@ public interface PersistenceContext {
 	@Nullable
 	Object getCollectionOwner(@Nonnull Object key, @Nonnull CollectionPersister collectionPersister);
 
+	/// Resolve the owner by the collection key when the caller already has its wrapper.
+	@Nullable
+	default Object getCollectionOwner(
+			@Nonnull Object key, @Nonnull CollectionPersister persister, @Nullable PersistentCollection<?> collection) {
+		return getCollectionOwner( key, persister );
+	}
+
 	/**
 	 * Get the entity that owned this persistent collection when it was loaded
 	 *

@@ -274,7 +274,7 @@ public class ResultsHelper {
 			PersistentCollection<?> collection,
 			Object key,
 			SharedSessionContractImplementor session) {
-		final Object collectionOwner = context.getCollectionOwner( key, collectionDescriptor );
+		final Object collectionOwner = context.getCollectionOwner( key, collectionDescriptor, collection );
 		if ( collectionOwner == null ) {
 			// This happens when the collection key is defined by a property-ref. In this case, the collection key
 			// and the owner key would not match up. Use the key of the owner instance associated with the collection
@@ -287,7 +287,8 @@ public class ResultsHelper {
 					final Object ownerKey =
 							collectionDescriptor.getOwnerEntityPersister()
 									.getIdentifier( linkedOwner, session );
-					return context.getCollectionOwner( ownerKey, collectionDescriptor );
+					return ownerKey == null ? null : context.getEntity( session.generateEntityKey(
+							ownerKey, collectionDescriptor.getOwnerEntityPersister() ) );
 				}
 			}
 			return null;

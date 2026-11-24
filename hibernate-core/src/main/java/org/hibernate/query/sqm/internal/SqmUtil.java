@@ -231,7 +231,8 @@ public class SqmUtil {
 			return targetMapping;
 		}
 		// We only need to do this for queries
-		if ( sqlAstCreationState.getCurrentClauseStack().getCurrent() != Clause.FROM
+		if ( ( sqlAstCreationState.getCurrentClauseStack().getCurrent() != Clause.FROM
+						|| preservesTarget( sqmPath.getLhs() ) )
 				&& modelPartContainer.getPartMappingType() != modelPartContainer
 				&& sqmPath.getLhs() instanceof SqmFrom<?, ?> ) {
 			final var modelPart =
@@ -244,6 +245,16 @@ public class SqmUtil {
 			}
 		}
 		return modelPartContainer;
+	}
+
+	/**
+	 * A right or full join returns an associated entity to which no foreign key refers,
+	 * so the key of the entity is never read from the foreign key, not even in the
+	 * predicate of a join.
+	 */
+	private static boolean preservesTarget(@Nullable SqmPath<?> path) {
+		return path instanceof SqmJoin<?, ?> join
+			&& ( join.getSqmJoinType() == SqmJoinType.RIGHT || join.getSqmJoinType() == SqmJoinType.FULL );
 	}
 
 	private static ModelPartContainer getRestrictedTargetMapping(

@@ -598,6 +598,12 @@ class SQLJoinTableRestrictionQueryTest {
 		assertRightJoinInParameterBindings( "unrestrictedItems", operator, scope );
 	}
 
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-21258")
+	void restrictedRightJoinBindsIdentifiersForNotInParameter(SessionFactoryScope scope) {
+		assertRightJoinInParameterBindings( "items", "not in", scope );
+	}
+
 	private void assertRightJoinInParameterBindings(
 			String collection, String operator, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {

@@ -1176,6 +1176,10 @@ public class PluralAttributeMappingImpl
 				keyPredicateCollector::applyPredicate,
 				creationState
 		) );
+		if ( preservesElements( requestedJoinType, navigablePath, creationState ) ) {
+			return targetRead.read( influencers, () -> createElementPreservingJoin(
+					navigablePath, (PluralTableGroup) tableGroup, keyPredicateCollector, creationState ) );
+		}
 		final var restrictionCollector = new PredicateCollector();
 		final var auxiliaryRestrictionCollector = new PredicateCollector();
 		final boolean preserveCollection = requestedJoinType == SqlAstJoinType.RIGHT || requestedJoinType == SqlAstJoinType.FULL;
@@ -1231,6 +1235,71 @@ public class PluralAttributeMappingImpl
 				tableGroup,
 				joinPredicate
 		);
+	}
+
+	/**
+	 * Whether a join of the given type preserves the entities which are the elements
+	 * of this collection.
+	 * <p>
+	 * A right join of a many-to-many association returns every entity of the associated
+	 * type, even one which belongs to no collection. So the collection table is joined
+	 * to the owner by an inner join, and the table of the entity is then joined by the
+	 * right join.
+	 */
+	private boolean preservesElements(
+			@Nullable SqlAstJoinType joinType, NavigablePath navigablePath, SqlAstCreationState creationState) {
+		return joinType == SqlAstJoinType.RIGHT
+			&& !collectionDescriptor.isOneToMany()
+			&& associatedEntity( elementDescriptor ) != null
+			// the join of an entity or embeddable which is the key of a map follows the join of the element
+			&& ( indexDescriptor == null || indexDescriptor.asBasicValuedModelPart() != null )
+			// the collection of a revision is read together with the revision of its owner
+			&& ownerRevision( navigablePath, creationState ) == null;
+	}
+
+	/**
+	 * Create an inner join of the collection table, where the given table group has
+	 * a right join of the table of the entity which is the element of the collection.
+	 * <p>
+	 * A row of the collection table is returned only with its owner, so an owner
+	 * which an earlier join excludes brings back no row with no owner. A restriction
+	 * on the collection table belongs to the right join, like the predicate of the
+	 * join, where a row which it hides joins no owner to the entity. A restriction
+	 * on the entity hides the entity itself, so it is applied before the entity is
+	 * joined, since in the predicate of the join it would only leave the entity with
+	 * no owner.
+	 */
+	private TableGroupJoin createElementPreservingJoin(
+			NavigablePath navigablePath,
+			PluralTableGroup tableGroup,
+			PredicateCollector keyPredicateCollector,
+			SqlAstCreationState creationState) {
+		final var influencers = creationState.getLoadQueryInfluencers();
+		final var filters = influencers.getEnabledFilters();
+		final var aliases = creationState.getSqlAliasBaseGenerator();
+		final var elementTableGroup = castNonNull( tableGroup.getElementTableGroup() );
+		// the join of the table of the entity is rendered even if nothing refers to the entity
+		elementTableGroup.getPrimaryTableReference();
+
+		final Consumer<Predicate> rowRestrictions =
+				castNonNull( tableGroup.findTableGroupJoin( elementTableGroup ) )::applyPredicate;
+		applyBaseRestrictions( rowRestrictions, tableGroup, true, filters, false, null, creationState );
+		if ( auxiliaryMapping != null ) {
+			auxiliaryMapping.applyAssociationRestrictions( this, tableGroup, null,
+					rowRestrictions, rowRestrictions, aliases, influencers );
+		}
+
+		final var elementRestrictionCollector = new PredicateCollector();
+		final Consumer<Predicate> elementRestrictions = elementRestrictionCollector::applyPredicate;
+		applyBaseManyToManyRestrictions( elementRestrictions, tableGroup, true, filters, null, creationState );
+		applyPartRestriction( elementDescriptor, elementTableGroup, null,
+				elementRestrictions, elementRestrictions, aliases, influencers );
+		final var restrictions = elementRestrictionCollector.getPredicate();
+		if ( restrictions != null ) {
+			joinInsideCollection( elementTableGroup, creationState ).applyPredicate( restrictions );
+		}
+
+		return new TableGroupJoin( navigablePath, SqlAstJoinType.INNER, tableGroup, keyPredicateCollector.getPredicate() );
 	}
 
 	/**
@@ -1580,7 +1649,9 @@ public class PluralAttributeMappingImpl
 						.getSessionFactory()
 		);
 
-		final boolean nestedJoin = isNestedJoin( joinType, addsPredicate, creationState );
+		// a join which preserves the elements has the element table joined to the collection table by the outer join
+		final boolean nestedJoin = !preservesElements( joinType, navigablePath, creationState )
+				&& isNestedJoin( joinType, addsPredicate, creationState );
 
 		if ( elementDescriptor instanceof TableGroupJoinProducer tableGroupJoinProducer ) {
 			final var tableGroupJoin = tableGroupJoinProducer.createTableGroupJoin(

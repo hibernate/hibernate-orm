@@ -261,9 +261,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		}
 	}
 
-	/**
-	 * The changeset the proxied entity is read at, or {@code null} for current state.
-	 */
+	@Override
 	public @Nullable Object getTemporalIdentifier() {
 		return temporalIdentifier;
 	}

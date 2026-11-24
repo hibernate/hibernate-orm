@@ -1,5 +1,7 @@
 package org.hibernate.proxy;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -37,6 +39,11 @@ public interface LazyInitializer {
 	 * @return The identifier value.
 	 */
 	Object getIdentifier();
+
+	/// The changeset captured by this proxy, or null for current state.
+	default @Nullable Object getTemporalIdentifier() {
+		return null;
+	}
 
 	/**
 	 * Set the identifier value for the entity our owning proxy represents.

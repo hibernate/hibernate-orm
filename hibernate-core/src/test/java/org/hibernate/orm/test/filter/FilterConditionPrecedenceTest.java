@@ -139,7 +139,7 @@ class FilterConditionPrecedenceTest {
 	@Table(name = "filter_item")
 	@FilterDef(
 			name = "visible",
-			defaultCondition = ":includeDeleted = true or deleted = false",
+			defaultCondition = "deleted = :includeDeleted or deleted = false",
 			parameters = @ParamDef(name = "includeDeleted", type = Boolean.class)
 	)
 	@FilterDef(name = "parameterless", defaultCondition = "id = 1 or deleted = false")

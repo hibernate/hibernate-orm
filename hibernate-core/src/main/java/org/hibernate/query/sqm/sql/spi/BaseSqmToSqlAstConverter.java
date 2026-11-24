@@ -8222,15 +8222,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// Interpret the non-parameter operand first so its selected comparison key
 			// determines both the rendered columns and entity-parameter extraction.
 			rhs = interpretComparisonOperand( right, () -> determineValueMapping( left, fromClauseIndex ) );
-			lhs = interpretComparisonOperand( left, () -> rhs instanceof EntityValuedPathInterpretation<?> entityPath
-					? entityPath.getParameterInferenceMapping()
-					: determineValueMapping( right, fromClauseIndex ) );
+			lhs = interpretComparisonOperand( left, () -> determineComparisonMapping( rhs, right, fromClauseIndex ) );
 		}
 		else {
 			lhs = interpretComparisonOperand( left, () -> determineValueMapping( right, fromClauseIndex ) );
 			rhs = interpretComparisonOperand( right, () -> right instanceof SqmParameter<?>
-					&& lhs instanceof EntityValuedPathInterpretation<?> entityPath
-					? entityPath.getParameterInferenceMapping()
+					? determineComparisonMapping( lhs, left, fromClauseIndex )
 					: determineValueMapping( left, fromClauseIndex ) );
 		}
 
@@ -8256,6 +8253,18 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		finally {
 			inferrableTypeAccessStack.pop();
 		}
+	}
+
+	/// The mapping from which an operand compared with the given operand is inferred.
+	/// An entity-valued path is rendered as a primary key or as a foreign key, and the
+	/// other operand must be rendered with the same key, or bound to it if it is a parameter.
+	private MappingModelExpressible<?> determineComparisonMapping(
+			Expression interpretation,
+			SqmExpression<?> operand,
+			FromClauseIndex fromClauseIndex) {
+		return interpretation instanceof EntityValuedPathInterpretation<?> entityPath
+				? entityPath.getParameterInferenceMapping()
+				: determineValueMapping( operand, fromClauseIndex );
 	}
 
 	private Predicate toBooleanExpressionPredicate(Expression lhs, ComparisonOperator operator, Expression rhs) {
@@ -8605,9 +8614,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final var inPredicate = new InListPredicate( testExpression, predicate.isNegated(), getBooleanType() );
 
-		inferrableTypeAccessStack.push( () -> testExpression instanceof EntityValuedPathInterpretation<?> entityPath
-				? entityPath.getParameterInferenceMapping()
-				: determineValueMapping( predicate.getTestExpression(), fromClauseIndex ) );
+		inferrableTypeAccessStack.push(
+				() -> determineComparisonMapping( testExpression, predicate.getTestExpression(), fromClauseIndex ) );
 
 		try {
 			for ( var expression : listExpressions ) {
@@ -8698,11 +8706,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 
 		inferrableTypeAccessStack.push(
-				// Match entity parameter extraction to the PK or FK actually rendered on the left.
-				() -> testExpression instanceof EntityValuedPathInterpretation<?> entityPath
-						? entityPath.getParameterInferenceMapping()
-						: determineValueMapping( sqmPredicate.getTestExpression(), fromClauseIndex )
-		);
+				() -> determineComparisonMapping( testExpression, sqmPredicate.getTestExpression(), fromClauseIndex ) );
 
 		try {
 			inListPredicate.addExpression( consumeSingleSqmParameter( sqmParameter ) );

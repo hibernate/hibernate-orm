@@ -81,6 +81,34 @@ class TemporalIdentityOrderingTest {
 		checkInitialVersion( scope, batchSize );
 	}
 
+	@Test
+	@JiraKey("HHH-21221")
+	@SessionFactory
+	@DomainModel(annotatedClasses = Parent.class)
+	@ServiceRegistry(settings = {
+			@Setting(name = TEMPORAL_TABLE_STRATEGY, value = "HISTORY_TABLE"),
+			@Setting(name = CHANGESET_ID_SUPPLIER, value = SUPPLIER)
+	})
+	void updateIdentityWithHistoryTable(SessionFactoryScope scope) {
+		final var parent = new Parent();
+		parent.name = "before";
+		final var before = scope.fromTransaction( session -> {
+			session.persist( parent );
+			return session.getCurrentChangesetIdentifier();
+		} );
+		final var after = scope.fromTransaction( session -> {
+			session.find( Parent.class, parent.id ).name = "after";
+			return session.getCurrentChangesetIdentifier();
+		} );
+		final var factory = scope.getSessionFactory();
+		try (var session = factory.withOptions().atChangeset( before ).openSession()) {
+			assertEquals( "before", session.find( Parent.class, parent.id ).name );
+		}
+		try (var session = factory.withOptions().atChangeset( after ).openSession()) {
+			assertEquals( "after", session.find( Parent.class, parent.id ).name );
+		}
+	}
+
 	private static void checkInitialVersion(SessionFactoryScope scope, Integer batchSize) {
 		final var changeset = scope.fromTransaction( session -> {
 			session.setJdbcBatchSize( batchSize );
@@ -108,6 +136,7 @@ class TemporalIdentityOrderingTest {
 	@Temporal
 	static class Parent {
 		@Id @GeneratedValue(strategy = IDENTITY) Long id;
+		String name;
 	}
 
 	@Entity(name = "Child")

@@ -65,7 +65,7 @@ public class BatchingPlanStepExecutor extends StandardPlanStepExecutor implement
 
 	@Override
 	public void executePreparable(PreparableMutationOperation preparable, FlushOperation flushOperation) {
-		if ( !preparable.canBeBatched( flushOperation.getShapeKey(), batchSize ) ) {
+		if ( !canBeBatched( preparable, flushOperation ) ) {
 			if ( batchKey != null ) {
 				executeBatch();
 			}
@@ -89,6 +89,10 @@ public class BatchingPlanStepExecutor extends StandardPlanStepExecutor implement
 			prepareBatch( flushOperation, preparable );
 			applyToBatch( preparable, flushOperation, flushOperation.getBindPlan(), -1, true );
 		}
+	}
+
+	private boolean canBeBatched(PreparableMutationOperation operation, FlushOperation flushOperation) {
+		return !flushOperation.isBatchingDisabled() && operation.canBeBatched( flushOperation.getShapeKey(), batchSize );
 	}
 
 	private void prepareBatch(FlushOperation flushOperation, PreparableMutationOperation preparable) {
@@ -131,7 +135,7 @@ public class BatchingPlanStepExecutor extends StandardPlanStepExecutor implement
 				|| flushOperation.isExecutionSkipped()
 				|| flushOperation.getBindPlan().getGeneratedValuesCollector() != null
 				|| !(flushOperation.getJdbcOperation() instanceof PreparableMutationOperation preparable)
-				|| !preparable.canBeBatched( flushOperation.getShapeKey(), batchSize ) ) {
+				|| !canBeBatched( preparable, flushOperation ) ) {
 			super.afterOperationExecution( flushOperation, newlyManagedEntityConsumer, fixupOperationConsumer );
 		}
 	}

@@ -57,6 +57,11 @@ public class NativeGenerator
 	}
 
 	@Override
+	public boolean requiresIdentityColumn() {
+		return generationType == GenerationType.IDENTITY;
+	}
+
+	@Override
 	public boolean generatedOnExecution() {
 		return dialectNativeGenerator.generatedOnExecution();
 	}

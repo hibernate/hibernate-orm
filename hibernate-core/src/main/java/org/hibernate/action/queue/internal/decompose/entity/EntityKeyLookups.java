@@ -42,7 +42,9 @@ final class EntityKeyLookups {
 
 	/// The lookups of a table, by position of the attribute. Empty if it has none.
 	KeyLookup[] of(EntityTableDescriptor table) {
-		return lookups.computeIfAbsent( table.name(),
+		// Called for every row, so read before computeIfAbsent, which may lock
+		final var tableLookups = lookups.get( table.name() );
+		return tableLookups != null ? tableLookups : lookups.computeIfAbsent( table.name(),
 				name -> KeyLookup.forAttributes( table, kind == MutationKind.INSERT, factory ) );
 	}
 

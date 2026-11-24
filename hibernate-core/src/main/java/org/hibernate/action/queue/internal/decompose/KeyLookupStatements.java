@@ -18,8 +18,11 @@ import org.hibernate.sql.ast.spi.AbstractSqlAstWalker;
 import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
 import org.hibernate.sql.ast.spi.model.ColumnValueParameter;
 import org.hibernate.sql.ast.spi.model.ColumnWriteFragment;
+import org.hibernate.sql.ast.spi.model.OptionalTableUpdate;
+import org.hibernate.sql.ast.spi.model.TableInsertCustomSql;
 import org.hibernate.sql.ast.spi.model.TableInsertStandard;
 import org.hibernate.sql.ast.spi.model.TableMutation;
+import org.hibernate.sql.ast.spi.model.TableUpdateCustomSql;
 import org.hibernate.sql.ast.spi.model.TableUpdateStandard;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
@@ -67,8 +70,12 @@ public final class KeyLookupStatements {
 
 	/// @return `null` if the mutation has no form which reads the given keys
 	public Statement resolve(List<KeyLookup.Shape> shapes) {
-		return statements.computeIfAbsent( shapes,
-				key -> Optional.ofNullable( derive( mutation, key, null, table, kind, factory ) ) ).orElse( null );
+		var statement = statements.get( shapes );
+		if ( statement == null ) {
+			statement = statements.computeIfAbsent( shapes,
+					key -> Optional.ofNullable( derive( mutation, key, null, table, kind, factory ) ) );
+		}
+		return statement.orElse( null );
 	}
 
 	/// Derive the form of a mutation which reads the given keys.
@@ -99,6 +106,20 @@ public final class KeyLookupStatements {
 		private Rewriter(List<KeyLookup.Shape> shapes, SessionFactoryImplementor factory) {
 			this.shapes = shapes;
 			this.factory = factory;
+		}
+
+		// The base walker rejects these. They have no form which reads a key.
+
+		@Override
+		public void visitCustomTableInsert(TableInsertCustomSql insert) {
+		}
+
+		@Override
+		public void visitCustomTableUpdate(TableUpdateCustomSql update) {
+		}
+
+		@Override
+		public void visitOptionalTableUpdate(OptionalTableUpdate update) {
 		}
 
 		@Override

@@ -15,9 +15,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.SecondaryTable;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Generated;
+import org.hibernate.annotations.SQLInsert;
+import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.jdbc.spi.InsertSelectExecution;
 import org.hibernate.generator.EventType;
@@ -41,7 +44,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @BytecodeEnhanced(runNotEnhancedAsWell = true)
 @DomainModel(annotatedClasses = { Catalog.class, Item.class, RegionalItem.class,
-		PropertyRefMutationTest.Stock.class, PropertyRefMutationTest.Reservation.class, PropertyRefMutationTest.Invoice.class })
+		PropertyRefMutationTest.Stock.class, PropertyRefMutationTest.Reservation.class, PropertyRefMutationTest.Invoice.class,
+		PropertyRefMutationTest.Ledger.class, PropertyRefMutationTest.Dispatch.class,
+		PropertyRefMutationTest.Sender.class, PropertyRefMutationTest.Receiver.class })
 @ServiceRegistry(settings = {
 		@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "graph"),
 		@Setting(name = AvailableSettings.GRAPH_DEFER_IDENTITY_INSERTS, value = "true") },
@@ -153,6 +158,110 @@ class PropertyRefMutationTest {
 		scope.inSession( session -> assertThat( session.createNativeQuery(
 				"select featured_code from Catalog where code>1 order by code", String.class ).getResultList() )
 				.containsExactly( "KEY1", "KEY2", "KEY1", "KEY2" ) );
+	}
+
+	@Entity(name = "Sender")
+	static class Sender {
+		@Id
+		int id;
+
+		@ManyToOne
+		Receiver receiver;
+
+		@ManyToOne
+		@JoinColumn(name = "item_code", referencedColumnName = "code")
+		Item item;
+	}
+
+	@Entity(name = "Receiver")
+	static class Receiver {
+		@Id
+		int id;
+
+		@ManyToOne
+		Sender sender;
+
+		@ManyToOne
+		@JoinColumn(name = "item_code", referencedColumnName = "code")
+		Item item;
+	}
+
+	@Test
+	void insertInForeignKeyCycle(SessionFactoryScope scope) {
+		final var sql = scope.getCollectingStatementInspector();
+		scope.inTransaction( session -> {
+			final var sender = new Sender();
+			sender.id = 1;
+			sender.item = session.getReference( Item.class, 1 );
+			final var receiver = new Receiver();
+			receiver.id = 1;
+			receiver.item = session.getReference( Item.class, 2 );
+			sender.receiver = receiver;
+			receiver.sender = sender;
+			session.persist( sender );
+			session.persist( receiver );
+			sql.clear();
+			session.flush();
+			// One insert has its foreign key to the other nulled and assigned later.
+			// The key it reads from an Item is unaffected, since that row exists.
+			assertThat( sql.getSqlQueries() ).noneMatch( statement -> statement.startsWith( "select" )
+					&& statement.contains( " from Item " ) );
+			assertThat( Hibernate.isInitialized( sender.item ) ).isFalse();
+		} );
+		scope.inSession( session -> {
+			assertThat( session.createNativeQuery( "select receiver_id, item_code from Sender", Object[].class )
+					.getSingleResult() ).containsExactly( 1, "KEY1" );
+			assertThat( session.createNativeQuery( "select sender_id, item_code from Receiver", Object[].class )
+					.getSingleResult() ).containsExactly( 1, "KEY2" );
+		} );
+	}
+
+	@Entity(name = "Ledger")
+	@SecondaryTable(name = "ledger_detail")
+	static class Ledger {
+		@Id
+		int id;
+
+		@ManyToOne
+		@JoinColumn(name = "item_code", table = "ledger_detail", referencedColumnName = "code")
+		Item item;
+	}
+
+	@Entity(name = "Dispatch")
+	@SQLInsert(sql = "insert into Dispatch (item_code, id) values (?, ?)")
+	@SQLUpdate(sql = "update Dispatch set item_code=? where id=?")
+	static class Dispatch {
+		@Id
+		int id;
+
+		@ManyToOne
+		@JoinColumn(name = "item_code", referencedColumnName = "code")
+		Item item;
+	}
+
+	@Test
+	void statementsWithoutAFormWhichReadsTheKey(SessionFactoryScope scope) {
+		// An optional table is updated by an upsert, and custom SQL is used as written
+		scope.inTransaction( session -> {
+			final var ledger = new Ledger();
+			ledger.id = 1;
+			ledger.item = session.getReference( Item.class, 1 );
+			session.persist( ledger );
+			final var dispatch = new Dispatch();
+			dispatch.id = 1;
+			dispatch.item = session.getReference( Item.class, 1 );
+			session.persist( dispatch );
+		} );
+		scope.inTransaction( session -> {
+			session.find( Ledger.class, 1 ).item = session.getReference( Item.class, 2 );
+			session.find( Dispatch.class, 1 ).item = session.getReference( Item.class, 3 );
+		} );
+		scope.inSession( session -> {
+			assertThat( session.createNativeQuery( "select item_code from ledger_detail", String.class )
+					.getSingleResult() ).isEqualTo( "KEY2" );
+			assertThat( session.createNativeQuery( "select item_code from Dispatch", String.class )
+					.getSingleResult() ).isEqualTo( "KEY3" );
+		} );
 	}
 
 	@Test

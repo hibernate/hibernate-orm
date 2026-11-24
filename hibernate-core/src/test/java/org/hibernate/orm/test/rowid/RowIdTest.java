@@ -42,9 +42,8 @@ public class RowIdTest {
 	void testRowId(SessionFactoryScope scope) {
 		final String updatedName = "Smart phone";
 		scope.inTransaction( session -> {
-			String rowId = scope.getSessionFactory().getJdbcServices().getDialect()
-					.getRowIdSupport()
-					.resolveExpression( "" );
+			final var rowIdSupport = scope.getSessionFactory().getJdbcServices().getDialect().getRowIdSupport();
+			String rowId = rowIdSupport.resolveExpression( "" );
 
 			CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 			statementInspector.clear();
@@ -71,6 +70,16 @@ public class RowIdTest {
 			assertThat(  rowId == null
 					|| sqls.get( 0 ).matches( "(?i).*\\bupdate\\s+product\\b.+?\\bwhere\\s+" + rowId + "\\s*=.*" ),
 					is( true ) );
+
+			product.setNumber( "987-654-3210" );
+			statementInspector.clear();
+			session.flush();
+			sqls = statementInspector.getSqlQueries();
+			assertThat( sqls, hasSize( 1 ) );
+			if ( rowId != null ) {
+				assertThat( sqls.get( 0 ).matches( "(?i).*\\bwhere\\s+" + rowId + "\\s*=.*" ),
+						is( rowIdSupport.isStableAcrossUpdates() ) );
+			}
 		} );
 
 		scope.inTransaction( session -> {

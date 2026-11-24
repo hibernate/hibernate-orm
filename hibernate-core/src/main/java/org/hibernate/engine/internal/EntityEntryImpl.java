@@ -63,7 +63,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	private Object version;
 	private final EntityPersister persister; // permanent but we only need the entityName state in a non transient way
 	private transient EntityKey cachedEntityKey; // cached EntityKey (lazy-initialized)
-	private final transient Object rowId;
+	private transient Object rowId;
 	private final transient PersistenceContext persistenceContext;
 	private transient @Nullable ImmutableBitSet maybeLazySet;
 	private EntityEntryExtraState next;
@@ -288,6 +288,10 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	@Nullable
 	public Object getRowId() {
 		return rowId;
+	}
+
+	void setRowId(@Nullable Object rowId) {
+		this.rowId = rowId;
 	}
 
 	@Override

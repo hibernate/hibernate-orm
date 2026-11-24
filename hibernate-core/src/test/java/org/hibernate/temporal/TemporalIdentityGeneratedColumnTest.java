@@ -60,9 +60,13 @@ class TemporalIdentityGeneratedColumnTest {
 			// The replacement must hydrate the managed instance, not just the next load.
 			assertEquals( id, managed.id );
 			assertEquals( 26, managed.doubled );
+
+			managed.quantity = 17;
+			session.flush();
+			checkVersion( managed, id, 17, 34 );
 		} );
 
-		scope.inSession( session -> checkVersion( session.find( Item.class, id ), id, 13, 26 ) );
+		scope.inSession( session -> checkVersion( session.find( Item.class, id ), id, 17, 34 ) );
 		try ( var session = scope.getSessionFactory().withOptions().atChangeset( before ).openSession() ) {
 			checkVersion( session.find( Item.class, id ), id, 7, 14 );
 		}

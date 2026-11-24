@@ -256,6 +256,19 @@ public class EntityUpdateAction extends EntityAction {
 		return rowId;
 	}
 
+	public boolean hasUnstableRowId() {
+		return getPersister().getRowIdMapping() != null
+				&& !getSession().getDialect().getRowIdSupport().isStableAcrossUpdates();
+	}
+
+	/// A subsequent mutation must use the primary key if this update invalidated the row locator.
+	public void invalidateRowIdAfterUpdate() {
+		final var context = getSession().getPersistenceContextInternal();
+		if ( context.getEntry( getInstance() ) != null ) {
+			context.replaceEntityEntryRowId( getInstance(), null );
+		}
+	}
+
 	protected void setLock(@Nullable SoftLock lock) {
 		this.lock = lock;
 	}
@@ -301,6 +314,9 @@ public class EntityUpdateAction extends EntityAction {
 			final var entry = session.getPersistenceContextInternal().getEntry( instance );
 			if ( entry == null ) {
 				throw new AssertionFailure( "possible non thread safe access to session" );
+			}
+			if ( hasUnstableRowId() ) {
+				invalidateRowIdAfterUpdate();
 			}
 			handleGeneratedProperties( entry, generatedValues );
 			handleDeleted( entry );

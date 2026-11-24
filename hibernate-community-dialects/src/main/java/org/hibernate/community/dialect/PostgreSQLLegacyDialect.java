@@ -1580,7 +1580,7 @@ public class PostgreSQLLegacyDialect extends Dialect implements CurrentTemporalS
 	@Override
 	@SPI({ IMPLEMENT, SUPPLY })
 	public RowIdSupport getRowIdSupport() {
-		return RowIdSupports.fixed( "ctid", OTHER );
+		return RowIdSupports.fixed( "ctid", OTHER, false );
 	}
 
 	@Override

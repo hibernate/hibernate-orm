@@ -4654,9 +4654,19 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				tableGroupToUse = null;
 			}
 			else if ( inferredEntityMapping instanceof EntityMappingType entityMappingType ) {
-				// Render the identifier mapping if the inferred mapping is an EntityMappingType
-				resultModelPart = entityMappingType.getIdentifierMapping();
-				interpretationModelPart = inferredEntityMapping;
+				if ( entityValuedModelPart instanceof ManyToManyCollectionPart manyToManyPart ) {
+					final boolean useCollectionKey = !(path instanceof SqmJoin<?, ?>)
+													|| isFkOptimizationAllowed( path, manyToManyPart );
+					// Match the collection key used by the entity-root side, unless the join
+					// semantics require reading the target entity's identifier instead.
+					resultModelPart = useCollectionKey
+							? manyToManyPart.getForeignKeyDescriptor().getKeyPart()
+							: entityMappingType.getIdentifierMapping();
+				}
+				else {
+					resultModelPart = entityMappingType.getIdentifierMapping();
+				}
+				interpretationModelPart = entityValuedModelPart;
 				tableGroupToUse = null;
 			}
 			else {
@@ -6342,6 +6352,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final var mappingModelExpressible =
 					resolveMappingModelExpressible( sqmExpression, domainModel,
 							fromClauseIndex::findTableGroup );
+			if ( sqmExpression instanceof SqmJoin<?, ?> sqmJoin ) {
+				final var modelPart = mappingModelExpressible instanceof PluralAttributeMapping pluralAttributeMapping
+						? pluralAttributeMapping.getElementDescriptor()
+						: mappingModelExpressible;
+				if ( modelPart instanceof ManyToManyCollectionPart collectionPart
+						&& !isFkOptimizationAllowed( sqmJoin, collectionPart ) ) {
+					// Both operands must use the identifier when the join semantics rule out the collection FK.
+					return collectionPart.getAssociatedEntityMappingType();
+				}
+			}
 			if ( mappingModelExpressible != null ) {
 				return mappingModelExpressible;
 			}
@@ -6624,8 +6644,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// For parameters, we resolve to the element descriptor
 			inferredValueMapping = pluralAttributeMapping.getElementDescriptor();
 		}
-		if ( inferredValueMapping instanceof EntityCollectionPart entityCollectionPart ) {
-			// For parameters, we resolve to the entity mapping type to bind the primary key
+		if ( inferredValueMapping instanceof EntityCollectionPart entityCollectionPart
+			&& !(entityCollectionPart instanceof EntityAssociationMapping) ) {
+			// One-to-many elements use the entity identifier. Join-table associations must
+			// retain their FK mapping, which may reference a unique key instead of the PK.
 			return entityCollectionPart.getAssociatedEntityMappingType();
 		}
 		return inferredValueMapping;
@@ -8581,7 +8603,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final var inPredicate = new InListPredicate( testExpression, predicate.isNegated(), getBooleanType() );
 
-		inferrableTypeAccessStack.push( () -> determineValueMapping( predicate.getTestExpression(), fromClauseIndex ) );
+		inferrableTypeAccessStack.push( () -> testExpression instanceof EntityValuedPathInterpretation<?> entityPath
+				? entityPath.getParameterInferenceMapping()
+				: determineValueMapping( predicate.getTestExpression(), fromClauseIndex ) );
 
 		try {
 			for ( var expression : listExpressions ) {
@@ -8654,8 +8678,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			QueryParameterBinding<?> domainParamBinding) {
 		final var iterator = domainParamBinding.getBindValues().iterator();
 
+		final var testExpression = (Expression) visitWithRequiredResult( sqmPredicate.getTestExpression() );
 		final var inListPredicate = new InListPredicate(
-				(Expression) visitWithRequiredResult( sqmPredicate.getTestExpression() ),
+				testExpression,
 				sqmPredicate.isNegated(),
 				getBooleanType()
 		);
@@ -8670,7 +8695,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 
 		inferrableTypeAccessStack.push(
-				() -> determineValueMapping( sqmPredicate.getTestExpression(), fromClauseIndex )
+				// Match entity parameter extraction to the PK or FK actually rendered on the left.
+				() -> testExpression instanceof EntityValuedPathInterpretation<?> entityPath
+						? entityPath.getParameterInferenceMapping()
+						: determineValueMapping( sqmPredicate.getTestExpression(), fromClauseIndex )
 		);
 
 		try {
@@ -8694,9 +8722,28 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public InSubQueryPredicate visitInSubQueryPredicate(SqmInSubQueryPredicate<?> predicate) {
 		final var testExpression = predicate.getTestExpression();
 		final var subQueryExpression = predicate.getSubQueryExpression();
+		final var fromClauseIndex = fromClauseIndexStack.getCurrent();
+		final Expression sqlTestExpression = visitWithInferredType( testExpression, subQueryExpression );
 		return new InSubQueryPredicate(
-				visitWithInferredType( testExpression, subQueryExpression ),
-				visitWithInferredType( subQueryExpression, testExpression ),
+				sqlTestExpression,
+				(SelectStatement) visitWithInferredType(
+						subQueryExpression,
+						() -> {
+							final var testMapping = determineValueMapping( testExpression, fromClauseIndex );
+							final var entityMapping = testMapping instanceof PluralAttributeMapping pluralAttributeMapping
+									? pluralAttributeMapping.getElementDescriptor()
+									: testMapping;
+							// Preserve PK association inference so a UK-based subquery selection
+							// cannot fall back to rendering its own foreign key.
+							if ( entityMapping instanceof EntityAssociationMapping associationMapping
+									&& associationMapping.isReferenceToPrimaryKey() ) {
+								return testMapping;
+							}
+							return sqlTestExpression instanceof EntityValuedPathInterpretation<?> entityPath
+									? entityPath.getParameterInferenceMapping()
+									: testMapping;
+						}
+				),
 				predicate.isNegated(),
 				getBooleanType()
 		);

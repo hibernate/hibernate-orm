@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.NonUniqueResultException;
 import jakarta.persistence.criteria.JoinType;
@@ -17,6 +19,7 @@ import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.ComponentDescription;
+import org.hibernate.envers.internal.entities.EntitiesConfigurations;
 import org.hibernate.envers.internal.entities.ComponentDescription.ComponentType;
 import org.hibernate.envers.internal.entities.RelationDescription;
 import org.hibernate.envers.internal.entities.RelationType;
@@ -91,13 +94,20 @@ public abstract class AbstractAuditAssociationQuery<Q extends AuditQueryImplemen
 		);
 		String prefixedPropertyName = componentPrefix.concat( propertyName );
 
-		relationDescription = CriteriaTools.getRelatedEntity(
+		final String declaringEntityName = determineDeclaringEntityName(
 				enversService,
 				ownerEntityName,
+				propertyName,
 				prefixedPropertyName
 		);
 
-		componentDescription = CriteriaTools.getComponent( enversService, ownerEntityName, prefixedPropertyName );
+		relationDescription = CriteriaTools.getRelatedEntity(
+				enversService,
+				declaringEntityName,
+				prefixedPropertyName
+		);
+
+		componentDescription = CriteriaTools.getComponent( enversService, declaringEntityName, prefixedPropertyName );
 
 		if ( relationDescription == null && componentDescription == null ) {
 			throw new IllegalArgumentException(
@@ -115,13 +125,46 @@ public abstract class AbstractAuditAssociationQuery<Q extends AuditQueryImplemen
 		}
 		else {
 			aliasToComponentPropertyNameMap.put( alias, componentDescription.getPropertyName() );
-			this.entityName = ownerEntityName;
+			this.entityName = declaringEntityName;
 		}
 		aliasToEntityNameMap.put( this.alias, entityName );
 		this.aliasToEntityNameMap = aliasToEntityNameMap;
 		this.aliasToComponentPropertyNameMap = aliasToComponentPropertyNameMap;
 		parameters = queryBuilder.addParameters( this.alias );
 		this.onClauseCriterion = onClauseCriterion;
+	}
+
+	/**
+	 * Determines the entity declaring the property to traverse: the owner entity, or one of its
+	 * super entities, or, if the property is declared on neither, the only sub entity of the owner
+	 * entity which declares it.
+	 */
+	private static String determineDeclaringEntityName(
+			EnversService enversService,
+			String ownerEntityName,
+			String propertyName,
+			String prefixedPropertyName) {
+		final EntitiesConfigurations entitiesConfigurations = enversService.getEntitiesConfigurations();
+		if ( entitiesConfigurations.getRelationDescription( ownerEntityName, prefixedPropertyName ) != null
+				|| entitiesConfigurations.getComponentDescription( ownerEntityName, prefixedPropertyName ) != null ) {
+			return ownerEntityName;
+		}
+		final Set<String> subEntityNames = entitiesConfigurations.getSubEntityNamesDeclaringProperty(
+				ownerEntityName,
+				prefixedPropertyName
+		);
+		if ( subEntityNames.size() > 1 ) {
+			throw new IllegalArgumentException(
+					String.format(
+							Locale.ENGLISH,
+							"Property %s of entity %s is declared on multiple sub entities %s and cannot be resolved unambiguously for queries",
+							propertyName,
+							ownerEntityName,
+							new TreeSet<>( subEntityNames )
+					)
+			);
+		}
+		return subEntityNames.isEmpty() ? ownerEntityName : subEntityNames.iterator().next();
 	}
 
 	@Override

@@ -30,6 +30,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Locking;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.Timeouts;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -328,6 +329,8 @@ class CompositeCollectionLockingTest {
 	}
 
 	static SelectionQuery<Owner> query(SessionImplementor session, Route route, LockMode mode) {
+		assumeFalse( !route.followOn && session.getDialect() instanceof InformixDialect,
+				"Informix does not support direct locking with ORDER BY" );
 		final String hql = "select o from CollectionKeyOwner o" + (route.scope == FETCHED ? " join fetch o.tags" : "")
 				+ " where o.chosen = true order by o.id.tenant, o.id.local";
 		final var query = session.createQuery( hql, Owner.class ).setHibernateLockMode( mode ).setLockScope( route.scope )

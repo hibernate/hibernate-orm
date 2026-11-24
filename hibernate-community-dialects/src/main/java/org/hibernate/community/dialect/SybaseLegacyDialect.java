@@ -30,6 +30,7 @@ import org.hibernate.dialect.sql.ast.spi.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
 import org.hibernate.dialect.type.spi.NationalizationSupport;
+import org.hibernate.dialect.jdbc.spi.InsertSelectExecution;
 import org.hibernate.dialect.jdbc.spi.SybaseDriverKind;
 import org.hibernate.dialect.jdbc.spi.JdbcMetadataOverrides;
 import org.hibernate.dialect.jdbc.spi.ParameterLimits;
@@ -178,6 +179,14 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect implements C
 
 	public SybaseDriverKind getDriverKind() {
 		return driverKind;
+	}
+
+	@Override
+	public boolean supports(InsertSelectExecution execution) {
+		// jConnect only exposes generated keys for an INSERT with VALUES.
+		return execution == InsertSelectExecution.GENERATED_KEYS
+				? driverKind == SybaseDriverKind.JTDS
+				: super.supports( execution );
 	}
 
 	@Override

@@ -4320,7 +4320,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			return;
 		}
 
-		if ( lockingClauseStrategy == null ) {
+		if ( lockingClauseStrategy == null && getLockOptions() != null ) {
 			lockingClauseStrategy = dialect.getLockingClauseStrategy( querySpec, getLockOptions() );
 		}
 

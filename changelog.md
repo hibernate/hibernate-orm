@@ -1,5 +1,113 @@
 # Hibernate ORM Changelog
 
+## 8.0.0.CR2 (November 24, 2026)
+
+[Full changelog](https://hibernate.atlassian.net/projects/HHH/versions/40542)
+
+
+### Bug
+* [HHH-21244](https://hibernate.atlassian.net/browse/HHH-21244) - Adding an element to an idbag at an index loses rows of the collection table
+* [HHH-21243](https://hibernate.atlassian.net/browse/HHH-21243) - Replacing an element of an idbag updates the wrong row with the graph-based action queue
+* [HHH-21240](https://hibernate.atlassian.net/browse/HHH-21240) - Updates of a loaded one-to-many map or array are lost or fail with the graph-based action queue
+* [HHH-21239](https://hibernate.atlassian.net/browse/HHH-21239) - Writing a one-to-many collection fails for TABLE_PER_CLASS elements
+* [HHH-21233](https://hibernate.atlassian.net/browse/HHH-21233) - Session factory fails to start with an @Audited entity on MariaDB and Db2
+* [HHH-21232](https://hibernate.atlassian.net/browse/HHH-21232) - Custom SQL fails for a temporal or audited entity or collection
+* [HHH-21229](https://hibernate.atlassian.net/browse/HHH-21229) - Foreign key referring to an unfetched lazy unique key is written as null
+* [HHH-21228](https://hibernate.atlassian.net/browse/HHH-21228) - Audited mappedBy list or map with an index column cannot be read at a changeset
+* [HHH-21225](https://hibernate.atlassian.net/browse/HHH-21225) - HQL inserts into a to-one association fail with an enabled load-by-key filter
+* [HHH-21224](https://hibernate.atlassian.net/browse/HHH-21224) - Hibernate.get() can compare the value identifier when looking up an entity-valued map key
+* [HHH-21223](https://hibernate.atlassian.net/browse/HHH-21223) - Hibernate.size() miscounts an empty list with a positive index base and embeddables with a null first column
+* [HHH-21222](https://hibernate.atlassian.net/browse/HHH-21222) - Hibernate.size() and Hibernate.isEmpty() return stale counts for initialized or modified collections
+* [HHH-21218](https://hibernate.atlassian.net/browse/HHH-21218) - Historical find() overflows the stack when fetching mutually referencing temporal entities
+* [HHH-21217](https://hibernate.atlassian.net/browse/HHH-21217) - Inserting and updating temporal entities in one flush can close the replacement row
+* [HHH-21216](https://hibernate.atlassian.net/browse/HHH-21216) - Historical collection left joins expose obsolete memberships and size() counts rows across audit revisions
+* [HHH-21215](https://hibernate.atlassian.net/browse/HHH-21215) - size(), member of and max/min(elements()) over a collection ignore soft delete and many-to-many restrictions
+* [HHH-21214](https://hibernate.atlassian.net/browse/HHH-21214) - A restriction on the join table of a many-to-many association is lost when the table of the associated entity is not joined
+* [HHH-21213](https://hibernate.atlassian.net/browse/HHH-21213) - An implicit join of a collection with soft delete is rendered as a left join
+* [HHH-21209](https://hibernate.atlassian.net/browse/HHH-21209) - HbmXmlTransformer drops unique and sql-type from the column of a <many-to-one>
+* [HHH-21206](https://hibernate.atlassian.net/browse/HHH-21206) - Mapping XSD rejects <generated> together with an explicit type in <basic>, so a transformed hbm.xml property cannot be read back
+* [HHH-21203](https://hibernate.atlassian.net/browse/HHH-21203) - @OnDelete on an entity class which is not a JOINED subclass is not rejected
+* [HHH-21196](https://hibernate.atlassian.net/browse/HHH-21196) - Schema script URL failures hide the IOException and can leak the opened stream
+* [HHH-21195](https://hibernate.atlassian.net/browse/HHH-21195) - TimeUtcAsJdbcTimeJdbcType doesn't handle times going before EPOCH
+* [HHH-21186](https://hibernate.atlassian.net/browse/HHH-21186) - Removing entries inflates the LRU access queue count in BoundedConcurrentHashMap
+* [HHH-21178](https://hibernate.atlassian.net/browse/HHH-21178) - EDB: current_timestamp treated as stable within a transaction
+* [HHH-21177](https://hibernate.atlassian.net/browse/HHH-21177) - toHqlString() renders a with clause which the HQL translator does not accept
+* [HHH-21176](https://hibernate.atlassian.net/browse/HHH-21176) - toHqlString() renders a correlation as an element of the from clause of a subquery
+* [HHH-21174](https://hibernate.atlassian.net/browse/HHH-21174) - toHqlString() fails for a join of a correlated root which is not an attribute join
+* [HHH-21173](https://hibernate.atlassian.net/browse/HHH-21173) - ProcedureCall accepts an embeddable Type for a parameter or function return without a single-column mapping
+* [HHH-21172](https://hibernate.atlassian.net/browse/HHH-21172) - Multi-column BETWEEN renders row-value syntax on dialects without row ordering support
+* [HHH-21170](https://hibernate.atlassian.net/browse/HHH-21170) - Oracle: null nested XML aggregate is read as an empty embeddable, and is null predicates miss it
+* [HHH-21169](https://hibernate.atlassian.net/browse/HHH-21169) - SQL Server: explicit fractional-second precision is ignored for TIME columns
+* [HHH-21168](https://hibernate.atlassian.net/browse/HHH-21168) - Cast type sizing uses the converter’s domain Java type instead of the relational type
+* [HHH-21167](https://hibernate.atlassian.net/browse/HHH-21167) - Oracle: binding a null @Struct value fails because the object type name is not passed
+* [HHH-21166](https://hibernate.atlassian.net/browse/HHH-21166) - Audit work queue keeps pending work after a transaction rollback
+* [HHH-21165](https://hibernate.atlassian.net/browse/HHH-21165) - An inner join of a collection of soft-deleted entities is rendered as a left join
+* [HHH-21164](https://hibernate.atlassian.net/browse/HHH-21164) - json_value failing in some cases
+* [HHH-21163](https://hibernate.atlassian.net/browse/HHH-21163) - A restriction given with on() to a join of a correlated root is ignored
+* [HHH-21161](https://hibernate.atlassian.net/browse/HHH-21161) - Key-based pagination with a case-insensitive order skips and repeats rows
+* [HHH-21160](https://hibernate.atlassian.net/browse/HHH-21160) - Copying an xmltable() function modifies the original and fails with ConcurrentModificationException
+* [HHH-21159](https://hibernate.atlassian.net/browse/HHH-21159) - Structural comparison of SQM maps accepts a missing key, so queries with different JSON PASSING names are treated as the same query
+* [HHH-21157](https://hibernate.atlassian.net/browse/HHH-21157) - An empty criteria junction used as an operand generates invalid SQL or matches every row
+* [HHH-21156](https://hibernate.atlassian.net/browse/HHH-21156) - Negating an already negated criteria comparison predicate leaves it negated
+* [HHH-21155](https://hibernate.atlassian.net/browse/HHH-21155) - Use the SQM tree as the query plan cache key for key-based pagination
+* [HHH-21153](https://hibernate.atlassian.net/browse/HHH-21153) - getResultCount() / createCountQuery() fails for a distinct or grouped criteria query with no explicit selection
+* [HHH-21152](https://hibernate.atlassian.net/browse/HHH-21152) - distinct(true) on a criteria query with no explicit selection is not rendered in SQL, so setMaxResults() limits joined rows instead of distinct roots
+* [HHH-21151](https://hibernate.atlassian.net/browse/HHH-21151) - Versioned entity with @PreUpdate: auto-flush writes the old version to the database, the next update fails with OptimisticLockException
+* [HHH-21135](https://hibernate.atlassian.net/browse/HHH-21135) - A filter on a collection which names an undefined filter is silently accepted
+* [HHH-21133](https://hibernate.atlassian.net/browse/HHH-21133) - Removing an entity which references itself through a non-optional @ManyToOne with @OnDelete(CASCADE) fails with PropertyValueException on MariaDB
+* [HHH-21132](https://hibernate.atlassian.net/browse/HHH-21132) - {alias} placeholder is not replaced in a @Filter on a to-one association with deduceAliasInjectionPoints = false
+* [HHH-21130](https://hibernate.atlassian.net/browse/HHH-21130) - A filter condition containing a top-level OR is combined with other restrictions without parentheses
+* [HHH-21129](https://hibernate.atlassian.net/browse/HHH-21129) - hibernate.validate_xml is documented as defaulting to true, but mapping XML is not validated unless it is set
+* [HHH-21128](https://hibernate.atlassian.net/browse/HHH-21128) - Negated comparison predicate has the same HQL string as the unnegated one, giving wrong results from key-based pagination with the criteria plan cache
+* [HHH-21120](https://hibernate.atlassian.net/browse/HHH-21120) - Static metamodel field for a @CompositeType attribute is generated as TemporalAttribute and left null at runtime (HHH005001)
+* [HHH-21118](https://hibernate.atlassian.net/browse/HHH-21118) - Callback registered with EntityManagerFactory.addListener fires twice for an hbm.xml class mapped with entity-name
+* [HHH-21112](https://hibernate.atlassian.net/browse/HHH-21112) - hibernate.transform_hbm_xml.enabled changes the schema of a constrained hbm.xml one-to-one and drops on-delete
+* [HHH-21111](https://hibernate.atlassian.net/browse/HHH-21111) - on-delete declared for a one-to-one in mapping XML is silently ignored
+* [HHH-21105](https://hibernate.atlassian.net/browse/HHH-21105) - AltibaseDialect renders "case end" for a CASE expression without WHEN fragments
+* [HHH-21102](https://hibernate.atlassian.net/browse/HHH-21102) - Prevent lost mutations when legacy JDBC executors alternate batch keys
+* [HHH-21101](https://hibernate.atlassian.net/browse/HHH-21101) - Correct collection history maintenance during action queue mutations
+* [HHH-21061](https://hibernate.atlassian.net/browse/HHH-21061) - Session.isDirty() throws ConcurrentModificationException when a mapped getter initializes a lazy association
+* [HHH-20980](https://hibernate.atlassian.net/browse/HHH-20980) - StandardLockingSupports.parameterized(..., supportsInnerJoins, resolver) passes supportsInnerJoins as readsWaitForUncommittedWrites
+
+### Improvement
+* [HHH-21235](https://hibernate.atlassian.net/browse/HHH-21235) - Custom SQL on a mappedBy collection is silently ignored
+* [HHH-21202](https://hibernate.atlassian.net/browse/HHH-21202) - Reject @Table on an abstract entity class in a TABLE_PER_CLASS hierarchy
+* [HHH-21175](https://hibernate.atlassian.net/browse/HHH-21175) - Remove unused private and package-private code
+* [HHH-21171](https://hibernate.atlassian.net/browse/HHH-21171) - Resolve the audit changeset identifier mapping from the audit column
+* [HHH-21148](https://hibernate.atlassian.net/browse/HHH-21148) - Route entity and embeddable instantiation through the accessor factory
+* [HHH-21122](https://hibernate.atlassian.net/browse/HHH-21122) - @Cache on a @ManyToOne is silently ignored
+* [HHH-21113](https://hibernate.atlassian.net/browse/HHH-21113) - @Column on a @CompositeType attribute is silently ignored
+* [HHH-21100](https://hibernate.atlassian.net/browse/HHH-21100) - Enable Types.NULL binding for untyped nulls in PostgreSQLLegacyDialect
+* [HHH-20759](https://hibernate.atlassian.net/browse/HHH-20759) - Update MySQL JDBC driver to 26.7.0
+* [HHH-20616](https://hibernate.atlassian.net/browse/HHH-20616) - Improvements to Spanner Dialects
+* [HHH-20592](https://hibernate.atlassian.net/browse/HHH-20592) - comparing embeddables to tuples
+* [HHH-20549](https://hibernate.atlassian.net/browse/HHH-20549) - Update Jackson 3 to 3.2.1
+
+### New Feature
+* [HHH-20999](https://hibernate.atlassian.net/browse/HHH-20999) - Update Spanner emulator to 1.5.59 and enable supported features
+
+### Sub-task
+* [HHH-21158](https://hibernate.atlassian.net/browse/HHH-21158) - Remove support for HSQLDB versions older than 2.7
+* [HHH-21063](https://hibernate.atlassian.net/browse/HHH-21063) - Remove support for PostgreSQL Advanced Server versions older than 14
+* [HHH-21057](https://hibernate.atlassian.net/browse/HHH-21057) - Remove support for PostgreSQL versions older than 14
+
+### Task
+* [HHH-21201](https://hibernate.atlassian.net/browse/HHH-21201) - Update Agroal to 3.3
+* [HHH-21185](https://hibernate.atlassian.net/browse/HHH-21185) - reject nonsensical join types
+* [HHH-21147](https://hibernate.atlassian.net/browse/HHH-21147) - Upgrade c3p0 to 0.15.0
+* [HHH-21126](https://hibernate.atlassian.net/browse/HHH-21126) - Update Spanner JDBC driver to 2.49.0
+* [HHH-21125](https://hibernate.atlassian.net/browse/HHH-21125) - Update Jackson 3 to 3.3.0 and Jackson 2 to 2.23.0
+* [HHH-21069](https://hibernate.atlassian.net/browse/HHH-21069) - Update Spanner JDBC driver to 2.47.0
+* [HHH-21068](https://hibernate.atlassian.net/browse/HHH-21068) - Update Oracle JDBC driver to 23.26.4.0.0
+* [HHH-21059](https://hibernate.atlassian.net/browse/HHH-21059) - Remove support for database versions that are unsupported by vendors 8.0 edition
+* [HHH-21046](https://hibernate.atlassian.net/browse/HHH-21046) - Update MariaDB JDBC driver to 4.0.0
+* [HHH-21045](https://hibernate.atlassian.net/browse/HHH-21045) - Update MySQL JDBC driver to 26.10.0
+* [HHH-21040](https://hibernate.atlassian.net/browse/HHH-21040) - Update Spanner JDBC driver to 2.46.0
+* [HHH-20930](https://hibernate.atlassian.net/browse/HHH-20930) - Update SAP HANA JDBC driver to 2.30.11
+* [HHH-20888](https://hibernate.atlassian.net/browse/HHH-20888) - Update SQL Server JDBC driver to 13.6.0.jre11
+* [HHH-20859](https://hibernate.atlassian.net/browse/HHH-20859) - Update Spanner JDBC driver to 2.44.0
+* [HHH-19927](https://hibernate.atlassian.net/browse/HHH-19927) - Add Kotlin testing capability to ORM
+
 ## 8.0.0.CR1 (November 12, 2026)
 
 [Full changelog](https://hibernate.atlassian.net/projects/HHH/versions/40500)

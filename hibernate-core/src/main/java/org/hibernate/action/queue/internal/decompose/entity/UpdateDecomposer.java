@@ -53,6 +53,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static java.util.Collections.unmodifiableMap;
+import static org.hibernate.action.queue.internal.decompose.entity.DecompositionHelper.hasSqlGeneratedUpdate;
 import static org.hibernate.action.queue.internal.decompose.entity.DecompositionHelper.hasValueGenerationOnExecution;
 import static org.hibernate.engine.internal.TenantIdHelper.MissingRowPolicy.THROW;
 import static org.hibernate.generator.EventType.UPDATE;
@@ -985,7 +986,8 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 					final int stateArrayPosition = attribute.getStateArrayPosition();
 					if ( tableDescriptor.updateDetails().getCustomSql() != null
 							? updateable[stateArrayPosition]
-							: shouldIncludeInDynamicUpdate( attribute, updateable, valuesAnalysis ) ) {
+							: shouldIncludeInDynamicUpdate( attribute, updateable, valuesAnalysis )
+								|| hasSqlGeneratedUpdate( attribute.getGenerator(), entity, session ) ) {
 						if ( state[stateArrayPosition] != LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
 							applyValueAssignment( entity,
 									entityPersister.getVersionMapping(),

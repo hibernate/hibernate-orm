@@ -4,10 +4,18 @@ package org.hibernate.action.queue.internal.decompose.entity;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
+import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 
 /// @author Steve Ebersole
 public class DecompositionHelper {
+	static boolean hasSqlGeneratedUpdate(Generator generator, Object entity, SharedSessionContractImplementor session) {
+		return generator instanceof OnExecutionGenerator onExecution
+				&& generator.generatesOnUpdate()
+				&& hasValueGenerationOnExecution( onExecution, EventType.UPDATE, entity, session,
+						session.getFactory().getJdbcServices().getDialect() );
+	}
+
 	public static boolean hasValueGenerationOnExecution(
 			OnExecutionGenerator generator,
 			EventType eventType,

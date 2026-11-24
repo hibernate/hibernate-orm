@@ -94,14 +94,30 @@ def __addFallback(repositories, String repoName, String originalUrl, __MirrorCon
     repositories.add(repositories.indexOf(original) + 1, fallback)
 }
 
+// Maven Central has no snapshots, so neither its mirror nor the fallback should be asked for one.
+// A snapshot comes from a repository declared after them, which Gradle never reaches if the
+// lookup here fails with anything other than "not found", for example when Maven Central
+// answers the fallback with "429 Too Many Requests".
+def __releasesOnly(repositories, String repoName) {
+    repositories.withType(MavenArtifactRepository).configureEach { repo ->
+        if (repo.name == repoName) {
+            repo.mavenContent { it.releasesOnly() }
+        }
+    }
+}
+
 def __rewriteAll(repositories, centralMirror, snapshotsMirror, pluginPortalMirror) {
     __rewriteRepo(repositories, 'MavenRepo', centralMirror)
+    if (centralMirror) {
+        __releasesOnly(repositories, 'MavenRepo')
+    }
     __rewriteRepo(repositories, 'Central Portal Snapshots', snapshotsMirror)
     __rewriteRepo(repositories, 'Gradle Central Plugin Repository', pluginPortalMirror)
 }
 
 def __addAllFallbacks(repositories, centralMirror, snapshotsMirror, pluginPortalMirror) {
     __addFallback(repositories, 'MavenRepo', 'https://repo.maven.apache.org/maven2/', centralMirror)
+    __releasesOnly(repositories, 'MavenRepo (fallback)')
     __addFallback(repositories, 'Central Portal Snapshots', 'https://central.sonatype.com/repository/maven-snapshots/', snapshotsMirror)
     __addFallback(repositories, 'Gradle Central Plugin Repository', 'https://plugins.gradle.org/m2', pluginPortalMirror)
 }

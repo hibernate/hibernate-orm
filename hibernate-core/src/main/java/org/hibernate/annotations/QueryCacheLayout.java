@@ -12,6 +12,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Configures the layout for the entity or collection data in a query cache.
+ * An entity snapshot selected by an all-changesets query is cached with its
+ * fetched state, since a deletion revision can only be read from the audit log.
  *
  * @see CacheLayout
  * @see jakarta.persistence.Cacheable

@@ -234,13 +234,21 @@ public final class CacheHelper {
 			javaType = converter.getRelationalJavaType();
 			convertedValue = converter.toRelationalValue( value );
 		}
-		if ( convertedValue == null ) {
+		addBasicValueToCacheKey( cacheKey, convertedValue, javaType, session );
+	}
+
+	public static <T> void addBasicValueToCacheKey(
+			MutableCacheKeyBuilder cacheKey,
+			T value,
+			JavaType<T> javaType,
+			SharedSessionContractImplementor session) {
+		if ( value == null ) {
 			cacheKey.addValue( null );
 			cacheKey.addHashCode( 0 );
 		}
 		else {
-			cacheKey.addValue( javaType.getMutabilityPlan().disassemble( convertedValue, session ) );
-			cacheKey.addHashCode( javaType.extractHashCode( convertedValue ) );
+			cacheKey.addValue( javaType.getMutabilityPlan().disassemble( value, session ) );
+			cacheKey.addHashCode( javaType.extractHashCode( value ) );
 		}
 	}
 }

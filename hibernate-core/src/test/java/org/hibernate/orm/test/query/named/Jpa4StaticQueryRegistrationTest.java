@@ -66,6 +66,14 @@ class Jpa4StaticQueryRegistrationTest {
 			queryName( Book.class, "nativeDeleteByTitle", String.class );
 	private static final String BOOK_NATIVE_DELETE_BY_TITLE_WITH_OPTIONS =
 			queryName( Book.class, "nativeDeleteByTitleWithOptions", String.class );
+	private static final String BOOK_RENAME = queryName( Book.class, "rename", String.class, String.class );
+	private static final String BOOK_REMOVE_BY_TITLE_WITH_OPTIONS =
+			queryName( Book.class, "removeByTitleWithOptions", String.class );
+	private static final String BOOK_NATIVE_REMOVE_BY_TITLE =
+			queryName( Book.class, "nativeRemoveByTitle", String.class );
+	private static final String BOOK_NATIVE_REMOVE_BY_TITLE_WITH_OPTIONS =
+			queryName( Book.class, "nativeRemoveByTitleWithOptions", String.class );
+	private static final String BOOK_NATIVE_REMOVE_ALL = queryName( Book.class, "nativeRemoveAll" );
 	private static final String BOOK_REPOSITORY_INHERITED_FIND_BY_TITLE =
 			queryName( BookRepository.class, "inheritedFindByTitle", String.class );
 	private static final String BOOK_REPOSITORY_INHERITED_GENERIC_FIND_BY_TITLE =
@@ -349,6 +357,71 @@ class Jpa4StaticQueryRegistrationTest {
 					List.of( "NativeDeleteMe" )
 			);
 			assertThat( session.createStatement( nativeStatementReference ).executeUpdate() ).isEqualTo( 1 );
+		} );
+	}
+
+	@Test
+	void registersMethodLevelStatementsAsNamedStatements(SessionFactoryScope scope) {
+		final var namedObjectRepository = scope.getSessionFactory()
+				.getQueryEngine()
+				.getNamedObjectRepository();
+
+		assertThat( namedObjectRepository.getMutationQueryMemento( BOOK_RENAME ) ).isNotNull();
+		assertThat( namedObjectRepository.getMutationQueryMemento( BOOK_REMOVE_BY_TITLE_WITH_OPTIONS ) ).isNotNull();
+		assertThat( namedObjectRepository.getMutationQueryMemento( BOOK_NATIVE_REMOVE_BY_TITLE ) ).isNotNull();
+		assertThat( namedObjectRepository.getMutationQueryMemento( BOOK_NATIVE_REMOVE_BY_TITLE_WITH_OPTIONS ) ).isNotNull();
+		assertThat( namedObjectRepository.getMutationQueryMemento( BOOK_NATIVE_REMOVE_ALL ) ).isNotNull();
+	}
+
+	@Test
+	void appliesStaticStatementOptionsFromNamedStatementMemento(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var statementOptions = session.createNamedMutationQuery( BOOK_REMOVE_BY_TITLE_WITH_OPTIONS )
+					.unwrap( MutationQueryImplementor.class )
+					.getQueryOptions();
+			assertThat( statementOptions.getTimeout() ).isEqualTo( Timeout.milliseconds( 456 ) );
+			assertThat( statementOptions.getQueryFlushMode() ).isEqualTo( QueryFlushMode.NO_FLUSH );
+
+			final var nativeStatementOptions = session.createNamedMutationQuery( BOOK_NATIVE_REMOVE_BY_TITLE_WITH_OPTIONS )
+					.unwrap( MutationQueryImplementor.class )
+					.getQueryOptions();
+			assertThat( nativeStatementOptions.getTimeout() ).isEqualTo( Timeout.milliseconds( 567 ) );
+			assertThat( nativeStatementOptions.getQueryFlushMode() ).isEqualTo( QueryFlushMode.FLUSH );
+
+			final var defaultOptions = session.createNamedMutationQuery( BOOK_RENAME )
+					.unwrap( MutationQueryImplementor.class )
+					.getQueryOptions();
+			assertThat( defaultOptions.getTimeout() ).isNull();
+		} );
+	}
+
+	@Test
+	void executesRegisteredMethodLevelStatements(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.persist( new Book( 11, "RenameMe" ) );
+			session.persist( new Book( 12, "NativeRemoveMe" ) );
+		} );
+
+		scope.inTransaction( session -> {
+			assertThat( session.createNamedStatement( BOOK_RENAME )
+					.setParameter( "title", "Renamed" )
+					.setParameter( "previousTitle", "RenameMe" )
+					.execute() ).isEqualTo( 1 );
+			assertThat( session.find( Book.class, 11 ).getTitle() ).isEqualTo( "Renamed" );
+
+			final var statementReference = new StaticStatementReference(
+					BOOK_REMOVE_BY_TITLE_WITH_OPTIONS,
+					Book.class,
+					"removeByTitleWithOptions",
+					List.of( String.class ),
+					List.of( "title" ),
+					List.of( "Renamed" )
+			);
+			assertThat( session.createStatement( statementReference ).executeUpdate() ).isEqualTo( 1 );
+
+			assertThat( session.createNamedStatement( BOOK_NATIVE_REMOVE_BY_TITLE )
+					.setParameter( 1, "NativeRemoveMe" )
+					.execute() ).isEqualTo( 1 );
 		} );
 	}
 

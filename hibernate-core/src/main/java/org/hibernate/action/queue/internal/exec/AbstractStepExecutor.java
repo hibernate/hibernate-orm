@@ -102,7 +102,14 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 				afterOperationExecution( flushOperation, newlyManagedEntityConsumer, fixupOperationConsumer );
 			}
 			catch (RuntimeException | Error failure) {
-				afterFailedExecution( flushOperation );
+				try {
+					afterFailedExecution( flushOperation );
+				}
+				catch (RuntimeException | Error cleanupFailure) {
+					if ( cleanupFailure != failure ) {
+						failure.addSuppressed( cleanupFailure );
+					}
+				}
 				throw failure;
 			}
 		}

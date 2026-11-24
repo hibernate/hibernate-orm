@@ -21,6 +21,12 @@ public class AbstractTransactSQLIdentityColumnSupport extends IdentityColumnSupp
 	}
 
 	@Override
+	public IdentityInsertCommands getExplicitIdentityInsertCommands(String tableName) {
+		final String command = "set identity_insert " + tableName;
+		return new IdentityInsertCommands( command + " on", command + " off" );
+	}
+
+	@Override
 	public String getIdentitySelectString(String table, String column, int type) throws MappingException {
 		return "select @@identity";
 	}

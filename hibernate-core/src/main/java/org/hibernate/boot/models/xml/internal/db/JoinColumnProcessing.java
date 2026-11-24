@@ -166,8 +166,12 @@ public class JoinColumnProcessing {
 			JaxbForeignKeyImpl jaxbPrimaryKeyForeignKey,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		// no synthesized default column: a @PrimaryKeyJoinColumn would turn the association into a true one-to-one
-		if ( CollectionHelper.isEmpty( jaxbJoinColumns ) ) {
+		// A <primary-key-foreign-key/> without any <primary-key-join-column/> becomes an empty container
+		//   @PrimaryKeyJoinColumns(value = {}, foreignKey = @ForeignKey(...))
+		// which maps the association to the primary key with defaulted join columns.
+		// Without either element nothing is applied: a @PrimaryKeyJoinColumns would turn the association
+		// into a true one-to-one.
+		if ( CollectionHelper.isEmpty( jaxbJoinColumns ) && jaxbPrimaryKeyForeignKey == null ) {
 			return;
 		}
 

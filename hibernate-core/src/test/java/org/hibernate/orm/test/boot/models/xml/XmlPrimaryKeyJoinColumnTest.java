@@ -8,8 +8,11 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Join;
+import org.hibernate.mapping.ManyToOne;
+import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
@@ -100,6 +103,46 @@ public class XmlPrimaryKeyJoinColumnTest {
 		assertThat( foreignKeyNames( join.getTable() ) ).containsExactly( "fk_detail_table" );
 	}
 
+	@Test
+	void oneToOnePrimaryKeyForeignKeyWithoutJoinColumnMapsToThePrimaryKey() {
+		final PersistentClass passport = bindOneToOne( "<primary-key-foreign-key name=\"fk_passport_person\"/>" );
+
+		assertThat( passport.getProperty( "person" ).getValue() ).isInstanceOf( OneToOne.class );
+		assertThat( passport.getTable().getColumns() ).extracting( Column::getName ).containsExactly( "id" );
+	}
+
+	@Test
+	void oneToOneWithoutPrimaryKeyJoinElementsMapsToAForeignKeyColumn() {
+		final PersistentClass passport = bindOneToOne( "" );
+
+		assertThat( passport.getProperty( "person" ).getValue() ).isInstanceOf( ManyToOne.class );
+		assertThat( passport.getTable().getColumns() ).extracting( Column::getName )
+				.containsExactlyInAnyOrder( "id", "person_id" );
+	}
+
+	private static PersistentClass bindOneToOne(String primaryKeyJoinElements) {
+		final String xml = """
+				<entity-mappings xmlns="https://www.hibernate.org/xsd/orm/mapping" version="7.0">
+					<entity class="%s" name="Person" access="FIELD" metadata-complete="true">
+						<table name="person"/>
+						<attributes>
+							<id name="id"/>
+						</attributes>
+					</entity>
+					<entity class="%s" name="Passport" access="FIELD" metadata-complete="true">
+						<table name="passport"/>
+						<attributes>
+							<id name="id"/>
+							<one-to-one name="person">
+								%s
+							</one-to-one>
+						</attributes>
+					</entity>
+				</entity-mappings>
+				""".formatted( Person.class.getName(), Passport.class.getName(), primaryKeyJoinElements );
+		return buildMetadata( xml ).getEntityBinding( Passport.class.getName() );
+	}
+
 	private static PersistentClass bindJoinedSubclass(String primaryKeyJoinElements) {
 		final String xml = """
 				<entity-mappings xmlns="https://www.hibernate.org/xsd/orm/mapping" version="7.0">
@@ -182,6 +225,15 @@ public class XmlPrimaryKeyJoinColumnTest {
 
 	public static class Dog extends Animal {
 		String breed;
+	}
+
+	public static class Person {
+		Long id;
+	}
+
+	public static class Passport {
+		Long id;
+		Person person;
 	}
 
 	public static class Owner {

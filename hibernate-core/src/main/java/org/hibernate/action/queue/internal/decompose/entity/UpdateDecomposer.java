@@ -57,6 +57,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static org.hibernate.action.queue.internal.decompose.entity.DecompositionHelper.hasSqlGeneratedUpdate;
 import static org.hibernate.action.queue.internal.decompose.entity.DecompositionHelper.hasValueGenerationOnExecution;
 import static org.hibernate.generator.EventType.UPDATE;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
@@ -1009,7 +1010,8 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 				var attribute = tableDescriptor.attributes().get( i );
 				if ( tableDescriptor.updateDetails().getCustomSql() != null
 						? updateable[attribute.getStateArrayPosition()]
-						: shouldIncludeInDynamicUpdate( attribute, updateable, valuesAnalysis ) ) {
+						: shouldIncludeInDynamicUpdate( attribute, updateable, valuesAnalysis )
+							|| hasSqlGeneratedUpdate( attribute.getGenerator(), entity, session ) ) {
 					if ( state[attribute.getStateArrayPosition()] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
 						// it was not fetched and so could not have changed, skip it
 						continue;

@@ -19,6 +19,7 @@ import org.hibernate.annotations.Temporal;
 import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -93,6 +94,34 @@ class TemporalLazyBasicTest {
 			assertEquals( "First title", first.title );
 			assertEquals( 2L, session.createSelectionQuery(
 					"select count(e) from AuditEvent e where e.id = 6", Long.class ).getSingleResult() );
+		}
+	}
+
+	@Test
+	@JiraKey("HHH-21227")
+	void updateTitleWhileBodyIsUnfetched(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var document = new Document();
+			document.id = 7;
+			document.title = "before";
+			document.body = "unchanged";
+			session.persist( document );
+		} );
+		scope.getSessionFactory().getCache().evictEntityData( Document.class, 7 );
+		final var after = scope.fromTransaction( session -> {
+			final var document = session.find( Document.class, 7 );
+			assertFalse( isPropertyInitialized( document, "body" ) );
+			document.title = "after";
+			return session.getCurrentChangesetIdentifier();
+		} );
+		scope.inSession( session -> {
+			final var document = session.find( Document.class, 7 );
+			assertEquals( "after", document.title );
+			assertEquals( "unchanged", document.body );
+		} );
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( after ).openSession()) {
+			assertEquals( "unchanged", session.createSelectionQuery(
+					"select d.body from Document d where d.id = 7 and d.title = 'after'", String.class ).getSingleResult() );
 		}
 	}
 

@@ -9,7 +9,6 @@ import org.hibernate.processor.test.util.WithClasses;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
-import static org.hibernate.processor.test.util.TestUtil.assertNoMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -42,9 +41,8 @@ class InnerClassTest {
 		assertMetamodelClassGeneratedFor( Person.class );
 		assertMetamodelClassGeneratedFor( Person.class, true );
 		assertMetamodelClassGeneratedFor( Person.PersonId.class );
-		assertNoMetamodelClassGeneratedFor( Dummy.class );
+		assertMetamodelClassGeneratedFor( Dummy.class );
 		assertMetamodelClassGeneratedFor( Dummy.DummyEmbeddable.class );
-		/*assertNoMetamodelClassGeneratedFor( Dummy.class );*/
 	}
 
 	@Entity(name = "Inner")

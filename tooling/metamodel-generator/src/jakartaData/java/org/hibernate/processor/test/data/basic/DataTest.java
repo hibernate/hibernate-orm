@@ -137,7 +137,9 @@ class DataTest {
 		assertMetamodelClassGeneratedFor( BookAuthorRepository.class );
 		assertMetamodelClassGeneratedFor( Concrete.class, true );
 		assertMetamodelClassGeneratedFor( Concrete.class );
-		assertNoMetamodelClassGeneratedFor( IdOperations.class );
+		// a holder for static query references, but no repository implementation
+		assertMetamodelClassGeneratedFor( IdOperations.class );
+		assertNoMetamodelClassGeneratedFor( IdOperations.class, true );
 	}
 
 	@Test

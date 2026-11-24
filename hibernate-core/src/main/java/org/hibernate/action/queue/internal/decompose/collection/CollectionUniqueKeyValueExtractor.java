@@ -106,7 +106,8 @@ final class CollectionUniqueKeyValueExtractor {
 		if ( entry instanceof SnapshotIndexed<?> snapshotIndexed ) {
 			return snapshotIndexed.snapshotIndex();
 		}
-		if ( entryIndex < 0 ) {
+		// Map entries carry their key even when the binder has no entry position.
+		if ( entryIndex < 0 && !( entry instanceof Map.Entry<?, ?> ) ) {
 			return null;
 		}
 		try {

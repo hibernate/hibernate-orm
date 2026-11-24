@@ -142,6 +142,7 @@ public class StructAggregateEmbeddableInheritanceTest implements AdditionalMappi
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "GaussDB does not support struct types in functions: gsjdbc4 translates `{ ? = call f() }` to `select * from f(?)` (the OUT placeholder is passed as an IN parameter), so the function is reported as not existing (probe-verified on 505.2; native `select f()` works)" )
 	public void testFunction(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final ProcedureCall structFunction = session.createStoredProcedureCall( "structFunction" )

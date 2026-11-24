@@ -1801,6 +1801,10 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 	@Override
 	@SPI({ IMPLEMENT, SUPPLY })
 	public InformationExtractor getInformationExtractor(ExtractionContext extractionContext) {
-		return InformationExtractors.postgresql( extractionContext );
+		// Standard JDBC-metadata extraction, like the pre-8.0 Dialect default: the PostgreSQL
+		// bulk-index SQL (information_schema._pg_expandarray SRF join + `i.indoption[ic.n - 1] & 1::smallint`)
+		// is rejected by GaussDB's openGauss kernel ("invalid reference to FROM-clause entry for table i"),
+		// while the driver's DatabaseMetaData.getIndexInfo works in both compatibility modes.
+		return InformationExtractors.jdbcMetadata( extractionContext );
 	}
 }

@@ -218,6 +218,15 @@ tasks.withType( Test.class ).configureEach { test ->
     test.systemProperties['hibernate.highlight_sql'] = false
     test.systemProperties += providers.systemPropertiesPrefixedBy("hibernate.").get()
 
+    // GaussDB M mode reserves extra keywords (e.g. `excluded`, used as a column name by the
+    // 8.0 temporal tests via @Temporal.Excluded) that PostgreSQL treats as non-reserved, so
+    // Hibernate would emit them unquoted in DDL and the GaussDB parser rejects them. Enable
+    // keyword auto-quoting (together with the GaussDBDialect keyword registration) so such
+    // identifiers are quoted automatically. Scoped to the gaussdb test profile only.
+    if ( db == 'gaussdb' ) {
+        test.systemProperties['hibernate.auto_quote_keyword'] = 'true'
+    }
+
     test.enableAssertions = true
 
     // Allow to exclude specific tests

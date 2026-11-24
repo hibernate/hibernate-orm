@@ -51,7 +51,13 @@ public class GaussDBLockingSupport
 
 	@Override
 	public org.hibernate.dialect.lock.spi.TransactionConcurrencyResolver getTransactionConcurrencyResolver() {
-		return GaussDBTransactionConcurrencyResolver.INSTANCE;
+		// A mode (openGauss PG kernel) shares the PostgreSQL transaction-concurrency semantics:
+		// MVCC versioned reads, REPEATABLE_READ as the snapshot isolation with a fixed snapshot for
+		// locking reads too (probe-verified on 505.2: `select ... for update` in a REPEATABLE_READ
+		// transaction does not see rows concurrently inserted and committed after the snapshot).
+		// Reuse the PostgreSQL resolver so consumers that classify behavior by resolver type
+		// (e.g. PessimisticRefreshSnapshotTest#hasFixedLockingSnapshot) treat GaussDB correctly.
+		return org.hibernate.dialect.lock.internal.PostgreSQLTransactionConcurrencyResolver.INSTANCE;
 	}
 
 	@Override

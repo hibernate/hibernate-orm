@@ -1,5 +1,7 @@
 package org.hibernate.dialect.identity.spi;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.MappingException;
 import org.hibernate.SPI;
 
@@ -49,6 +51,14 @@ public interface IdentityColumnSupport {
 	/// The value keyword written for an identity column, or `null` when the
 	/// identity column is omitted from the insert.
 	String getIdentityInsertString();
+
+	/// Connection commands to run around an insert which supplies an existing identity.
+	record IdentityInsertCommands(String enable, String disable) {}
+
+	/// Return null when the insert needs no special handling.
+	default @Nullable IdentityInsertCommands getExplicitIdentityInsertCommands(String tableName) {
+		return null;
+	}
 
 	/// Whether [#getIdentityInsertString()] supplies a value keyword.
 	default boolean hasIdentityInsertKeyword() {

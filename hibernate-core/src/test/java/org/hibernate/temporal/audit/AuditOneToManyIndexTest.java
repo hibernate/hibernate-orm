@@ -22,7 +22,9 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.internal.CollectionLookupLoader;
 import org.hibernate.loader.ast.internal.CollectionLookupLoader.Operation;
 import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -161,6 +163,7 @@ class AuditOneToManyIndexTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void mapKeyAssociationOfJoinColumn(SessionFactoryScope scope) {
 		final Object first = scope.fromTransaction( session -> {
 			final var bookcase = new Bookcase();
@@ -196,6 +199,7 @@ class AuditOneToManyIndexTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void mapKeyAssociationReferringToUniqueKey(SessionFactoryScope scope) {
 		final Object changeset = scope.fromTransaction( session -> {
 			// the code of each tag is the identifier of the other

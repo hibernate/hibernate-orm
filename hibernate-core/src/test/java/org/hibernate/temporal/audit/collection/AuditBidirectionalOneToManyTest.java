@@ -280,6 +280,7 @@ class AuditBidirectionalOneToManyTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void testSizeAtJoinedParentsRevision(SessionFactoryScope scope) {
 		try (var session = scope.getSessionFactory().withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
 			// The parent's only revision predates the addition of the sibling. A parent reached from

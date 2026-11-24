@@ -22,7 +22,9 @@ import org.hibernate.annotations.AnyKeyJavaClass;
 import org.hibernate.annotations.Audited;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -180,6 +182,7 @@ class AllChangesetsRevisionStateTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void toOneInEmbeddableElementOfRevision(SessionFactoryScope scope) {
 		try (var session = scope.getSessionFactory().withOptions().atChangeset( ALL_CHANGESETS ).openSession()) {
 			assertEquals( List.of( "I1", "I2" ), session.createSelectionQuery(
@@ -198,6 +201,7 @@ class AllChangesetsRevisionStateTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void entityMapKeyOfRevision(SessionFactoryScope scope) {
 		try (var session = scope.getSessionFactory().withOptions().atChangeset( ALL_CHANGESETS ).openSession()) {
 			assertEquals( List.of( "I1", "I2" ), session.createSelectionQuery(
@@ -212,6 +216,7 @@ class AllChangesetsRevisionStateTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void temporalCollectionFetchedThroughToOneOfRevision(SessionFactoryScope scope) {
 		try (var session = scope.getSessionFactory().withOptions().atChangeset( ALL_CHANGESETS ).openSession()) {
 			final var titles = new ArrayList<List<String>>();
@@ -288,6 +293,7 @@ class AllChangesetsRevisionStateTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void lookupsMatchSnapshots(SessionFactoryScope scope) {
 		try (var session = scope.getSessionFactory().withOptions().atChangeset( ALL_CHANGESETS ).openSession()) {
 			final var current = session.find( Image.class, 1 );
@@ -356,6 +362,7 @@ class AllChangesetsRevisionStateTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void plainJoinThroughUnchangedTargetOfRevision(SessionFactoryScope scope) {
 		try (var session = scope.getSessionFactory().withOptions().atChangeset( ALL_CHANGESETS ).openSession()) {
 			// the article is unchanged, so both revisions of the event join its first revision

@@ -214,6 +214,7 @@ class AuditManyToManyTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void testAuditColumnsOfJoinedCourse(SessionFactoryScope scope) {
 		// The course predates both this student and the membership row.
 		scope.inTransaction( session -> {

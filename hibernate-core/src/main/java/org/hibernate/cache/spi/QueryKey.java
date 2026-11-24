@@ -10,6 +10,7 @@ import java.util.Set;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 
 /**
  * A key that identifies a particular query with bound parameter values.
@@ -36,6 +37,23 @@ public class QueryKey implements Serializable {
 			Limit limit,
 			QueryParameterBindings parameterBindings,
 			SharedSessionContractImplementor session) {
+		return from( sqlQueryString, limit, parameterBindings.generateQueryKeyMemento( session ), session );
+	}
+
+	public static QueryKey from(
+			JdbcSelect select,
+			Limit limit,
+			QueryParameterBindings parameterBindings,
+			SharedSessionContractImplementor session) {
+		return from( select.getSqlString(), limit,
+				parameterBindings.generateQueryKeyMemento( session, select.getParameterBinders() ), session );
+	}
+
+	private static QueryKey from(
+			String sqlQueryString,
+			Limit limit,
+			ParameterBindingsMemento memento,
+			SharedSessionContractImplementor session) {
 		// todo (6.0) : here is where we should centralize cacheable-or-not
 		//		if this method returns null, the query should be considered un-cacheable
 		//
@@ -44,7 +62,7 @@ public class QueryKey implements Serializable {
 		final Limit limitToUse = limit == null ? Limit.NONE : limit;
 		return new QueryKey(
 				sqlQueryString,
-				parameterBindings.generateQueryKeyMemento( session ),
+				memento,
 				limitToUse.getFirstRow(),
 				limitToUse.getMaxRows(),
 				session.getLoadQueryInfluencers().getEnabledFilterNames()

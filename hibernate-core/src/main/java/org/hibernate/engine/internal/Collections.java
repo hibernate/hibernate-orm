@@ -1,6 +1,7 @@
 package org.hibernate.engine.internal;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.action.internal.DelayedPostInsertIdentifier;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -141,6 +142,7 @@ public final class Collections {
 			Object entity,
 			EventSource session,
 			FlushProcessingContext flushProcessingContext) {
+		final boolean sameOwner = collection.getOwner() == entity;
 		collection.setOwner( entity );
 		final var collectionEntry =
 				session.getPersistenceContextInternal()
@@ -157,8 +159,13 @@ public final class Collections {
 						.getCollectionDescriptor( type.getRole() );
 
 		collectionEntry.setCurrentPersister( persister );
-		//TODO: better to pass the id in as an argument?
-		collectionEntry.setCurrentKey( type.getKeyOfOwner( entity, session ) );
+		final String keyProperty = type.getLHSPropertyName();
+		// Loading the collection wrapper already read its foreign key, even if the owner's
+		// corresponding lazy property has never been accessed.
+		collectionEntry.setCurrentKey( sameOwner && collectionEntry.getLoadedPersister() == persister
+				&& keyProperty != null && !Hibernate.isPropertyInitialized( entity, keyProperty )
+				? collectionEntry.getLoadedKey()
+				: type.getKeyOfOwner( entity, session ) );
 
 		final boolean isBytecodeEnhanced =
 				persister.getOwnerEntityPersister()

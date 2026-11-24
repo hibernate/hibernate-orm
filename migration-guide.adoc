@@ -794,6 +794,13 @@ provider implementation requirements change as part of this stabilization.
 mutation, and result-processing contracts retain their existing lifecycle status.
 
 
+[[persistence-context-temporal-revisions]]
+=== Tracking temporal revisions across flushes
+
+Custom implementations of `PersistenceContext` must implement `registerUpdatedTemporalRevision(EntityKey)` and `wasTemporalRevisionUpdated(EntityKey)`.
+Record the entity key when an update inserts a replacement revision, keep it across flushes and `Session.clear()`, and discard it at transaction completion.
+This lets a second flush update the revision already created by the transaction.
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Changes in Behavior
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

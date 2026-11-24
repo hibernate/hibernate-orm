@@ -840,6 +840,11 @@ public interface PersistenceContext {
 	 */
 	boolean wasInsertedDuringTransaction(EntityPersister persister, Object id);
 
+	/// Remember that an update created a temporal revision in this transaction.
+	void registerUpdatedTemporalRevision(EntityKey key);
+
+	boolean wasTemporalRevisionUpdated(EntityKey key);
+
 	/**
 	 * Checks if a certain {@link EntityKey} was registered as nullifiable on this {@link PersistenceContext}.
 	 *

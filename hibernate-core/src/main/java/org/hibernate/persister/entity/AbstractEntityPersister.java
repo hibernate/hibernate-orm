@@ -1457,7 +1457,7 @@ public abstract class AbstractEntityPersister
 
 	@Nonnull
 	private SingleIdArrayLoadPlan createLazyLoadPlan(
-			@Nonnull List<ModelPart> partsToSelect,
+			@Nonnull List<? extends ModelPart> partsToSelect,
 			@Nonnull LoadQueryInfluencers influencers) {
 		assert !partsToSelect.isEmpty();
 		final var lockOptions = new LockOptions();
@@ -1707,6 +1707,41 @@ public abstract class AbstractEntityPersister
 			}
 		}
 		return conjunction;
+	}
+
+	@Override
+	public void initializeLazyProperties(
+			@Nonnull Object entity,
+			@Nonnull List<AttributeMapping> attributes,
+			@Nonnull SharedSessionContractImplementor session) {
+		final var entry = session.getPersistenceContextInternal().getEntry( entity );
+		if ( attributes.size() <= 1 || entry == null ) {
+			EntityPersister.super.initializeLazyProperties( entity, attributes, session );
+			return;
+		}
+		if ( canReadFromCache() && session.getCacheMode().isGetEnabled() && isLazyPropertiesCacheable()
+				&& !entry.getEntityKey().isTemporal() ) {
+			final var cacheAccess = getCacheAccessStrategy();
+			final Object cacheKey = cacheAccess.generateCacheKey( entry.getId(), this, factory, session.getTenantIdentifier() );
+			final Object structuredEntry = fromSharedCache( session, cacheKey, this, cacheAccess );
+			if ( structuredEntry != null ) {
+				initializeLazyPropertiesFromCache( attributes.get( 0 ).getAttributeName(), entity, session, entry,
+						(CacheEntry) getCacheEntryStructure().destructure( structuredEntry, factory ) );
+			}
+		}
+		final var missing = attributes.stream()
+				.filter( attribute -> !getBytecodeEnhancementMetadata().isAttributeLoaded( entity, attribute.getAttributeName() ) )
+				.toList();
+		if ( !missing.isEmpty() ) {
+			final var values = createLazyLoadPlan( missing, session.getLoadQueryInfluencers() ).load( entry.getId(), session );
+			if ( values == null ) {
+				throw new ObjectNotFoundException( entry.getId(), getEntityName() );
+			}
+			for ( int i = 0; i < missing.size(); i++ ) {
+				final int index = missing.get( i ).getStateArrayPosition();
+				initializeLazyProperty( entity, entry, values[i], index, getPropertyTypes()[index] );
+			}
+		}
 	}
 
 	@Nullable

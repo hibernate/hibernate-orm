@@ -9,7 +9,7 @@ import org.hibernate.dialect.rowid.spi.RowIdSupport;
 /// @author Steve Ebersole
 /// @since 8.0
 public final class StandardRowIdSupport implements RowIdSupport {
-	private enum Kind { NONE, FIXED, REQUESTED }
+	private enum Kind { NONE, FIXED, TRANSIENT, REQUESTED }
 
 	private static final RowIdSupport NONE = new StandardRowIdSupport( Kind.NONE, null, 0, null );
 
@@ -33,11 +33,11 @@ public final class StandardRowIdSupport implements RowIdSupport {
 		return NONE;
 	}
 
-	public static RowIdSupport fixed(String expression, int sqlTypeCode) {
+	public static RowIdSupport fixed(String expression, int sqlTypeCode, boolean stableAcrossUpdates) {
 		if ( expression == null || expression.isEmpty() ) {
 			throw new IllegalArgumentException( "Fixed row-id expression must not be null or empty" );
 		}
-		return new StandardRowIdSupport( Kind.FIXED, expression, sqlTypeCode, null );
+		return new StandardRowIdSupport( stableAcrossUpdates ? Kind.FIXED : Kind.TRANSIENT, expression, sqlTypeCode, null );
 	}
 
 	public static RowIdSupport requestedName(
@@ -53,10 +53,15 @@ public final class StandardRowIdSupport implements RowIdSupport {
 	}
 
 	@Override
+	public boolean isStableAcrossUpdates() {
+		return kind != Kind.TRANSIENT;
+	}
+
+	@Override
 	public @Nullable String resolveExpression(@Nullable String requestedName) {
 		return switch ( kind ) {
 			case NONE -> null;
-			case FIXED -> expression;
+			case FIXED, TRANSIENT -> expression;
 			case REQUESTED -> requestedName == null || requestedName.isEmpty() ? expression : requestedName;
 		};
 	}

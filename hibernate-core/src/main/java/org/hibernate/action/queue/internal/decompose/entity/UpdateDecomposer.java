@@ -281,13 +281,13 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		}
 
 		var generatedValuesCollector = GeneratedValuesCollector.forUpdate( entityPersister, sessionFactory );
-		final PostUpdateHandling postUpdateHandling = new PostUpdateHandling(
+		final PostExecutionCallback postUpdateHandling = new PostUpdateHandling(
 				action,
 				cacheUpdate,
 				previousVersion,
 				generatedValuesCollector,
 				entityEntry
-		);
+		).forInPlaceUpdate();
 
 		final var versionMapping = entityPersister.getVersionMapping();
 		if ( versionMapping != null ) {

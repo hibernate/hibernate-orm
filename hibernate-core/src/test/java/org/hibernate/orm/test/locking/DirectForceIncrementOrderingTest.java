@@ -19,6 +19,7 @@ import jakarta.persistence.Version;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Locking;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.ScrollMode;
 import org.hibernate.Session;
 import org.hibernate.annotations.Cache;
@@ -30,6 +31,7 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -122,6 +124,7 @@ class DirectForceIncrementOrderingTest {
 
 	@ParameterizedTest
 	@ValueSource(booleans = { false, true })
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not support direct locking with ORDER BY")
 	void listsAcquireEveryCollectionBeforeAnyIncrementAndTransformation(boolean managed, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			if ( managed ) {
@@ -257,6 +260,7 @@ class DirectForceIncrementOrderingTest {
 
 	@ParameterizedTest
 	@ValueSource(booleans = { false, true })
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not support direct locking with ORDER BY")
 	void cursorDoesNotIncrementUnconsumedResults(boolean fetch, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final var query = session.createQuery( "from DirectForceItem i " + (fetch ? "join fetch i.tags " : "") + "order by i.id", Item.class )
@@ -320,6 +324,7 @@ class DirectForceIncrementOrderingTest {
 
 	@ParameterizedTest
 	@ValueSource(booleans = { false, true })
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not support direct locking with joins")
 	void allEntityTypesAcquireBeforeEitherIncrement(boolean scroll, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			scope.getCollectingStatementObserver().clear();
@@ -344,6 +349,7 @@ class DirectForceIncrementOrderingTest {
 
 	@ParameterizedTest
 	@ValueSource(booleans = { false, true })
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not support direct locking with joins or ORDER BY")
 	void duplicateRowsDoNotRepeatIncrement(boolean stream, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final var query = session.createQuery( "select i from DirectForceItem i join i.tags t where i.id=1 order by t", Item.class )
@@ -361,6 +367,7 @@ class DirectForceIncrementOrderingTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not support direct locking with ORDER BY")
 	void failedCursorCannotReplayPendingIncrement(SessionFactoryScope scope) {
 		try ( var session = scope.getSessionFactory().withOptions().statementInspector( (StatementInspector) sql -> {
 			if ( sql.contains( "from direct_force_labels " ) ) { throw new AssertionError( "collection failure" ); }

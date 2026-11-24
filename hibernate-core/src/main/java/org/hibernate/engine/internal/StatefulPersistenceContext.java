@@ -315,6 +315,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void afterTransactionCompletion() {
 		cleanUpInsertedKeysAfterTransaction();
+		updatedTemporalRevisions = null;
 		// Downgrade locks
 		entityEntryContext.downgradeLocks();
 	}
@@ -1788,19 +1789,8 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public void replaceEntityEntryRowId(Object entity, Object rowId) {
-		final var oldEntry = entityEntryContext.removeEntityEntry( entity );
-		final var entityEntry = addEntry(
-				entity,
-				oldEntry.getStatus(),
-				oldEntry.getLoadedState(),
-				rowId,
-				oldEntry.getId(),
-				oldEntry.getVersion(),
-				oldEntry.getLockMode(),
-				oldEntry.isExistsInDatabase(),
-				oldEntry.getPersister()
-		);
-		getEntityHolder( oldEntry.getEntityKey() ).setEntityEntry( entityEntry );
+		final var entry = (EntityEntryImpl) getEntry( entity );
+		entry.setRowId( rowId );
 	}
 
 	/**
@@ -2121,6 +2111,20 @@ class StatefulPersistenceContext implements PersistenceContext {
 	// INSERTED KEYS HANDLING ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private HashMap<String,HashSet<Object>> insertedKeysMap;
+	private HashSet<EntityKey> updatedTemporalRevisions;
+
+	@Override
+	public void registerUpdatedTemporalRevision(EntityKey key) {
+		if ( updatedTemporalRevisions == null ) {
+			updatedTemporalRevisions = new HashSet<>();
+		}
+		updatedTemporalRevisions.add( key );
+	}
+
+	@Override
+	public boolean wasTemporalRevisionUpdated(EntityKey key) {
+		return updatedTemporalRevisions != null && updatedTemporalRevisions.contains( key );
+	}
 
 	@Override
 	public void registerInsertedKey(EntityPersister persister, Object id) {

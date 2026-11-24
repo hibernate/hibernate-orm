@@ -1,13 +1,13 @@
 package org.hibernate.action.queue.internal.decompose.entity;
 
-import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor;
-
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.hibernate.action.queue.internal.decompose.collection.DecompositionSupport;
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.bind.BindPlan;
 import org.hibernate.action.queue.spi.bind.GeneratedValuesCollector;
+import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor;
 import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.spi.meta.TableDescriptorAsTableMapping;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
@@ -17,7 +17,6 @@ import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
-import org.hibernate.generator.Generator;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
@@ -27,6 +26,7 @@ import org.hibernate.sql.ast.spi.model.TableInsert;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilder;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 
+import static org.hibernate.action.queue.internal.decompose.entity.EntityTemporalEndBindPlan.isIncludedInOptimisticLock;
 import static org.hibernate.generator.EventType.UPDATE;
 
 /// Graph mutation plan contributor for single-table temporal entity mutations.
@@ -67,11 +67,19 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 	public boolean contributeReplacementUpdate(
 			UpdateContext context,
 			Consumer<FlushOperation> operationConsumer) {
+		if ( context.isBeingDeleted() ) {
+			// The delete closes this row in place. Preserve its historical association values.
+			operationConsumer.accept( DecompositionSupport.createNoOpCallbackCarrier(
+					entityPersister.getIdentifierTableDescriptor(), context.ordinalBase() * 1_000,
+					new PostUpdateHandling( context.action(), context.cacheUpdate(), context.previousVersion(),
+							null, context.entityEntry(), true ) ) );
+			return true;
+		}
 		if ( !context.requiresNewTemporalVersion() ) {
 			return false;
 		}
 
-		preUpdateInMemoryValueGeneration( context.entity(), context.state(), context.session() );
+		context.initializeStateForRevisionInsert( entityPersister.getIdentifierTableDescriptor() );
 
 		final OptimisticLockStyle effectiveOptLockStyle = effectiveOptimisticLockStyle(
 				context.previousVersion(),
@@ -174,12 +182,9 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 	private void contributeReplacementInsert(
 			UpdateContext context,
 			Consumer<FlushOperation> operationConsumer) {
-		final boolean hasStateDependentInsertGenerator = insertMutationPlanner.preInsertInMemoryValueGeneration(
-				context.state(),
-				context.entity(),
-				context.session()
-		);
-		final boolean[] effectiveInsertability = insertMutationPlanner.resolveInsertability( context.state() );
+		generateReplacementValues( context );
+		final boolean[] effectiveInsertability = context.revisionInsertability(
+				insertMutationPlanner.resolveInsertability( context.state() ) );
 		final boolean reusingGeneratedIdentifier = entityPersister.isIdentifierAssignedByInsert();
 		final GeneratedValuesCollector generatedValuesCollector = reusingGeneratedIdentifier
 				? GeneratedValuesCollector.forReplacementInsert( entityPersister, sessionFactory )
@@ -188,7 +193,7 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 				effectiveInsertability,
 				context.entity(),
 				context.identifier(),
-				hasStateDependentInsertGenerator,
+				effectiveInsertability != entityPersister.getPropertyInsertability(),
 				context.session(),
 				!reusingGeneratedIdentifier || generatedValuesCollector != null
 		);
@@ -246,40 +251,38 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 		}
 
 		if ( previousOperation != null ) {
+			context.recordRevisionAfterInsert( previousOperation );
+			final var rowIdMapping = entityPersister.getRowIdMapping();
+			if ( rowIdMapping != null ) {
+				// A replacement is a different physical row. Fall back to the entity key if
+				// the insert delegate did not return its row ID.
+				previousOperation.setPostExecutionCallback( session -> {
+					final var rowId = generatedValuesCollector == null ? null
+							: generatedValuesCollector.generatedValues().getGeneratedValue( rowIdMapping );
+					session.getPersistenceContextInternal().replaceEntityEntryRowId( context.entity(), rowId );
+				} );
+			}
 			previousOperation.setPostExecutionCallback( postUpdateHandling );
 			operationConsumer.accept( previousOperation );
 		}
 	}
 
-	private int[] preUpdateInMemoryValueGeneration(
-			Object object,
-			Object[] newValues,
-			SharedSessionContractImplementor session) {
+	private void generateReplacementValues(UpdateContext context) {
 		if ( !entityPersister.hasPreUpdateGeneratedProperties() ) {
-			return org.hibernate.internal.util.collections.ArrayHelper.EMPTY_INT_ARRAY;
+			return;
 		}
-
 		final var generators = entityPersister.getGenerators();
-		if ( generators.length != 0 ) {
-			final int[] fieldsPreUpdateNeeded = new int[generators.length];
-			int count = 0;
-			for ( int i = 0; i < generators.length; i++ ) {
-				final Generator generator = generators[i];
-				if ( generator != null
-						&& generator.generatesOnUpdate()
-						&& generator.generatedBeforeExecution( object, session ) ) {
-					newValues[i] = ( (BeforeExecutionGenerator) generator ).generate( session, object, newValues[i], UPDATE );
-					entityPersister.setValue( object, i, newValues[i] );
-					fieldsPreUpdateNeeded[count++] = i;
-				}
-			}
-
-			if ( count > 0 ) {
-				return org.hibernate.internal.util.collections.ArrayHelper.trim( fieldsPreUpdateNeeded, count );
+		for ( int i = 0; i < generators.length; i++ ) {
+			final var generator = generators[i];
+			if ( generator instanceof BeforeExecutionGenerator beforeExecution
+					&& generator.generatesOnUpdate()
+					&& generator.generatedBeforeExecution( context.entity(), context.session() ) ) {
+				// The physical insert represents an update to an existing entity.
+				final Object value = beforeExecution.generate( context.session(), context.entity(), context.state()[i], UPDATE );
+				context.state()[i] = value;
+				entityPersister.setValue( context.entity(), i, value );
 			}
 		}
-
-		return org.hibernate.internal.util.collections.ArrayHelper.EMPTY_INT_ARRAY;
 	}
 
 	private boolean needsDynamicEndOperation(
@@ -393,7 +396,7 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 		final boolean[] versionability = entityPersister.getPropertyVersionability();
 		for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
 			final var attribute = tableDescriptor.attributes().get( i );
-			if ( attribute.isPluralAttributeMapping() || !versionability[attribute.getStateArrayPosition()] ) {
+			if ( !isIncludedInOptimisticLock( attribute, versionability, loadedState ) ) {
 				continue;
 			}
 			attribute.breakDownJdbcValues(

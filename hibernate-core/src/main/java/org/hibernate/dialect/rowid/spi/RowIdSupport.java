@@ -20,6 +20,11 @@ public interface RowIdSupport {
 	/// Whether row-locator mapping is supported.
 	boolean isSupported();
 
+	/// Whether an update preserves the physical row locator.
+	default boolean isStableAcrossUpdates() {
+		return true;
+	}
+
 	/// Resolve the SQL row-locator expression from the optional mapping name.
 	@Nullable String resolveExpression(@Nullable String requestedName);
 

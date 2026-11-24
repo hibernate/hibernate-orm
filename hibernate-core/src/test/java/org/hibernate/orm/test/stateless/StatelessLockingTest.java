@@ -9,9 +9,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Version;
 
+import org.hibernate.Locking;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.query.Query;
 import org.hibernate.testing.orm.TransactionConcurrencyChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -117,16 +119,24 @@ class StatelessLockingTest {
 		assertStoredState( scope, "first", 0 );
 	}
 
+	static Stream<Arguments> duplicateQueryModes() {
+		return Stream.of( WRITE, OPTIMISTIC_FORCE_INCREMENT, PESSIMISTIC_FORCE_INCREMENT )
+				.flatMap( mode -> Stream.of( Locking.FollowOn.ALLOW, Locking.FollowOn.FORCE )
+						.map( strategy -> Arguments.of( mode, strategy ) ) );
+	}
+
 	@ParameterizedTest
-	@EnumSource(value = LockModeType.class, names = { "WRITE", "OPTIMISTIC_FORCE_INCREMENT", "PESSIMISTIC_FORCE_INCREMENT" })
-	void testDuplicateQueryResults(LockModeType mode, EntityManagerFactoryScope scope) {
+	@MethodSource("duplicateQueryModes")
+	void testDuplicateQueryResults(LockModeType mode, Locking.FollowOn strategy, EntityManagerFactoryScope scope) {
 		try ( var agent = scope.getEntityManagerFactory().createEntityAgent() ) {
 			final var transaction = agent.getTransaction();
 			transaction.begin();
 			try {
-				final var results = agent.createQuery(
-						"select l, other.id from StatelessLockable l cross join StatelessLockable other order by l.id, other.id",
-						Object[].class ).setLockMode( mode ).getResultList();
+				final var query = agent.createQuery(
+						"select l, 1 from StatelessLockable l cross join StatelessLockable other order by l.id, other.id",
+						Object[].class ).setLockMode( mode );
+				query.unwrap( Query.class ).setFollowOnStrategy( strategy );
+				final var results = query.getResultList();
 				assertEquals( 4, results.size() );
 				assertSame( results.get( 0 )[0], results.get( 1 )[0] );
 				assertSame( results.get( 2 )[0], results.get( 3 )[0] );

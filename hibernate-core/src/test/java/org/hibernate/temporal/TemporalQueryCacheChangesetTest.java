@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Temporal;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.TemporalJdbcParameter;
 import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
@@ -16,6 +17,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.cfg.CacheSettings.USE_QUERY_CACHE;
@@ -34,6 +36,8 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 })
 class TemporalQueryCacheChangesetTest {
 	@Test
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class,
+			reason = "The changeset id is a numeric column, which Spanner PostgreSQL does not allow in the primary key of the history table")
 	void queryCacheRespectsChangeset(SessionFactoryScope scope) {
 		final var first = scope.fromTransaction( session -> {
 			var article = new Article();
@@ -86,6 +90,8 @@ class TemporalQueryCacheChangesetTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class,
+			reason = "The changeset id is a numeric column, which Spanner PostgreSQL does not allow in the primary key of the history table")
 	void mappedChangesetTypeDeterminesCacheKey(SessionFactoryScope scope) {
 		final var changeset = scope.fromTransaction( session -> {
 			final var article = new Article();

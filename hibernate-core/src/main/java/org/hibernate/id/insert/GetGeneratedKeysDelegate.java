@@ -125,6 +125,7 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 
 			if ( session.getJdbcCoordinator().getResultSetReturn().executeUpdate( preparedStatement, sql ) == 0 ) {
 				row.verifyReferencedRows( session );
+				checkEmptyResult( operation, preparedStatement, sql, session );
 			}
 			return extractGeneratedValues( session, preparedStatement, sql,
 					() -> String.format( Locale.ROOT,

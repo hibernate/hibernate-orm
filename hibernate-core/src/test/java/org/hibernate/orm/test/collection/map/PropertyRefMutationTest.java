@@ -17,8 +17,10 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OptimisticLockException;
 
 import org.hibernate.Hibernate;
+import org.hibernate.annotations.Generated;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.jdbc.spi.InsertSelectExecution;
+import org.hibernate.generator.EventType;
 import org.hibernate.id.insert.GetGeneratedKeysDelegate;
 import org.hibernate.orm.test.collection.map.LazyUniqueKeyAssociationTest.Catalog;
 import org.hibernate.orm.test.collection.map.LazyUniqueKeyAssociationTest.Item;
@@ -190,6 +192,37 @@ class PropertyRefMutationTest {
 		@ManyToOne
 		@JoinColumn(name = "other_item_code", referencedColumnName = "code")
 		Item otherItem;
+
+		@Generated(event = EventType.UPDATE, sql = "42")
+		Integer revisionMarker;
+	}
+
+	@Test
+	void staleUpdateWithGeneratedValue(SessionFactoryScope scope) {
+		final Long id = scope.fromTransaction( session -> {
+			final var invoice = new Invoice();
+			session.persist( invoice );
+			session.flush();
+			return invoice.id;
+		} );
+		scope.inTransaction( session -> {
+			final var invoice = session.find( Invoice.class, id );
+			invoice.item = session.getReference( Item.class, 1 );
+			session.flush();
+			assertThat( invoice.revisionMarker ).isEqualTo( 42 );
+		} );
+		assertThrows( EntityNotFoundException.class, () -> scope.inTransaction( session -> {
+			final var invoice = session.find( Invoice.class, id );
+			invoice.item = session.getReference( Item.class, 99 );
+			session.flush();
+		} ) );
+		assertThrows( OptimisticLockException.class, () -> scope.inTransaction( session -> {
+			final var invoice = session.find( Invoice.class, id );
+			session.createNativeMutationQuery( "delete from Invoice where id=:id" ).setParameter( "id", id )
+					.executeUpdate();
+			invoice.item = session.getReference( Item.class, 2 );
+			session.flush();
+		} ) );
 	}
 
 	@Test

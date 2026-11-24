@@ -354,7 +354,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			queryCacheRegionName = queryCache.getRegion().getName();
 
 			queryResultsCacheKey = QueryKey.from(
-					jdbcSelect.getSqlString(),
+					jdbcSelect,
 					queryOptions.getLimit(),
 					executionContext.getQueryParameterBindings(),
 					session
@@ -385,7 +385,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			queryCacheRegionName = null;
 			if ( cacheable && cacheMode.isPutEnabled() ) {
 				queryResultsCacheKey = QueryKey.from(
-						jdbcSelect.getSqlString(),
+						jdbcSelect,
 						queryOptions.getLimit(),
 						executionContext.getQueryParameterBindings(),
 						session

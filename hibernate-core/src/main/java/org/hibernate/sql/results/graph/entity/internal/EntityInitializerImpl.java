@@ -164,7 +164,8 @@ public class EntityInitializerImpl
 		public EntityInitializerData(EntityInitializerImpl initializer, RowProcessingState rowProcessingState) {
 			super( rowProcessingState );
 			final var entityDescriptor = initializer.entityDescriptor;
-			shallowCached = rowProcessingState.isQueryCacheHit() && entityDescriptor.useShallowQueryCacheLayout();
+			shallowCached = initializer.auditChangesetIdAssembler == null
+					&& rowProcessingState.isQueryCacheHit() && entityDescriptor.useShallowQueryCacheLayout();
 			lockMode = rowProcessingState.determineEffectiveLockMode( initializer.sourceAlias );
 			if ( initializer.isResultInitializer() ) {
 				uniqueKeyAttributePath = rowProcessingState.getEntityUniqueKeyAttributePath();
@@ -185,7 +186,7 @@ public class EntityInitializerImpl
 			allRevisionsQuery = rowProcessingState.getSession().getLoadQueryInfluencers().isAllRevisions();
 			allRevisions = allRevisionsQuery && initializer.auditChangesetIdAssembler != null;
 			defaultConcreteDescriptor =
-					hasConcreteDescriptor( rowProcessingState, initializer.discriminatorAssembler, entityDescriptor )
+					hasConcreteDescriptor( shallowCached, initializer.discriminatorAssembler, entityDescriptor )
 							? entityDescriptor
 							: null;
 		}
@@ -212,12 +213,11 @@ public class EntityInitializerImpl
 	}
 
 	private static boolean hasConcreteDescriptor(
-			RowProcessingState rowProcessingState,
+			boolean shallowCached,
 			BasicResultAssembler<?> discriminatorAssembler,
 			EntityPersister entityDescriptor) {
 		return discriminatorAssembler == null
-			|| rowProcessingState.isQueryCacheHit()
-				&& entityDescriptor.useShallowQueryCacheLayout()
+			|| shallowCached
 				&& !entityDescriptor.storeDiscriminatorInShallowQueryCacheLayout();
 	}
 
@@ -639,11 +639,7 @@ public class EntityInitializerImpl
 					}
 					else {
 						if ( concreteDescriptor == null ) {
-							data.concreteDescriptor = determineConcreteEntityDescriptor(
-									rowProcessingState,
-									discriminatorAssembler,
-									entityDescriptor
-							);
+							data.concreteDescriptor = determineConcreteEntityDescriptor( data );
 							assert data.concreteDescriptor != null;
 						}
 						if ( hasKeyManyToOne ) {
@@ -879,9 +875,7 @@ public class EntityInitializerImpl
 	protected void resolveEntityKey(EntityInitializerData data, Object id) {
 		var concreteDescriptor = data.concreteDescriptor;
 		if ( concreteDescriptor == null ) {
-			concreteDescriptor = data.concreteDescriptor =
-					determineConcreteEntityDescriptor( data.getRowProcessingState(),
-							discriminatorAssembler, entityDescriptor );
+			concreteDescriptor = data.concreteDescriptor = determineConcreteEntityDescriptor( data );
 			assert concreteDescriptor != null;
 		}
 		final var rowProcessingState = data.getRowProcessingState();
@@ -1046,42 +1040,50 @@ public class EntityInitializerImpl
 			@Nullable BasicResultAssembler<?> discriminatorAssembler,
 			EntityPersister entityDescriptor)
 			throws WrongClassException {
-		if ( hasConcreteDescriptor( rowProcessingState, discriminatorAssembler, entityDescriptor ) ) {
-			return entityDescriptor;
+		final boolean shallowCached = rowProcessingState.isQueryCacheHit() && entityDescriptor.useShallowQueryCacheLayout();
+		return hasConcreteDescriptor( shallowCached, discriminatorAssembler, entityDescriptor )
+				? entityDescriptor
+				: readConcreteEntityDescriptor( rowProcessingState, castNonNull( discriminatorAssembler ), entityDescriptor );
+	}
+
+	private @Nullable EntityPersister determineConcreteEntityDescriptor(EntityInitializerData data) {
+		return data.defaultConcreteDescriptor != null ? data.defaultConcreteDescriptor
+				: readConcreteEntityDescriptor( data.getRowProcessingState(), castNonNull( discriminatorAssembler ), entityDescriptor );
+	}
+
+	private static @Nullable EntityPersister readConcreteEntityDescriptor(
+			RowProcessingState rowProcessingState,
+			BasicResultAssembler<?> discriminatorAssembler,
+			EntityPersister entityDescriptor) {
+		assert entityDescriptor.hasSubclasses()
+				: "Reading a discriminator from a result set should only happen if the entity has subclasses";
+		final var discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
+		assert discriminatorMapping != null;
+		final Object discriminator = discriminatorAssembler.extractRawValue( rowProcessingState );
+		final var discriminatorDetails = discriminatorMapping.resolveDiscriminatorValue( discriminator );
+		if ( discriminatorDetails == null ) {
+			assert discriminator == null : "Discriminator details should only be null for null values";
+			return null;
 		}
 		else {
-			assert entityDescriptor.hasSubclasses()
-					: "Reading a discriminator from a result set should only happen if the entity has subclasses";
-			final var discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
-			assert discriminatorMapping != null;
-			final Object discriminator = discriminatorAssembler.extractRawValue( rowProcessingState );
-			final var discriminatorDetails = discriminatorMapping.resolveDiscriminatorValue( discriminator );
-			if ( discriminatorDetails == null ) {
-				assert discriminator == null : "Discriminator details should only be null for null values";
-				return null;
+			final var indicatedEntity = discriminatorDetails.getIndicatedEntity();
+			if ( indicatedEntity.isTypeOrSuperType( entityDescriptor ) ) {
+				return indicatedEntity.getEntityPersister();
 			}
 			else {
-				final var indicatedEntity = discriminatorDetails.getIndicatedEntity();
-				if ( indicatedEntity.isTypeOrSuperType( entityDescriptor ) ) {
-					return indicatedEntity.getEntityPersister();
-				}
-				else {
-					throw new WrongClassException(
-							indicatedEntity.getEntityName(),
-							null,
-							entityDescriptor.getEntityName(),
-							discriminator
-					);
-				}
+				throw new WrongClassException(
+						indicatedEntity.getEntityName(),
+						null,
+						entityDescriptor.getEntityName(),
+						discriminator
+				);
 			}
 		}
 	}
 
 	protected boolean useEmbeddedIdentifierInstanceAsEntity(EntityInitializerData data) {
 		if ( data.canUseEmbeddedIdentifierInstanceAsEntity ) {
-			data.concreteDescriptor =
-					determineConcreteEntityDescriptor( data.getRowProcessingState(),
-							discriminatorAssembler, entityDescriptor );
+			data.concreteDescriptor = determineConcreteEntityDescriptor( data );
 			return data.concreteDescriptor != null
 				&& data.concreteDescriptor.isInstance( data.getRowProcessingState().getEntityId() );
 		}
@@ -1152,11 +1154,7 @@ public class EntityInitializerImpl
 			else if ( lazyInitializer.isUninitialized() ) {
 				data.setState( State.RESOLVED );
 				// Read the discriminator from the result set if necessary
-				data.concreteDescriptor =
-						discriminatorAssembler == null
-								? entityDescriptor
-								: determineConcreteEntityDescriptor( rowProcessingState,
-										discriminatorAssembler, entityDescriptor );
+				data.concreteDescriptor = determineConcreteEntityDescriptor( data );
 				assert data.concreteDescriptor != null;
 				resolveEntityKey( data, lazyInitializer.getInternalIdentifier() );
 				data.entityHolder = persistenceContext.claimEntityHolderIfPossible(
@@ -1541,16 +1539,14 @@ public class EntityInitializerImpl
 				// If this initializer owns the entity, we have to remove the entity holder,
 				// because the subsequent loading process will claim the entity
 				session.getPersistenceContextInternal().removeEntityHolder( data.entityKey );
-				return session.internalLoad(
-						data.concreteDescriptor.getEntityName(),
-						data.entityKey.getIdentifier(),
-						true,
-						false
-				);
-				}
-				// We have to query the second level cache if reference cache entries are used
-				// or if this fetch has an explicit graph cache retrieve mode
-				else if ( entityDescriptor.canUseReferenceCacheEntries() || fetchOptions.cacheRetrieveMode() != null ) {
+				return session.getLoadQueryInfluencers().withCapturedTemporalIdentifier(
+						data.entityKey.getChangesetId(),
+						() -> session.internalLoad( data.concreteDescriptor.getEntityName(),
+								data.entityKey.getIdentifier(), true, false ) );
+			}
+			// We have to query the second level cache if reference cache entries are used
+			// or if this fetch has an explicit graph cache retrieve mode
+			else if ( entityDescriptor.canUseReferenceCacheEntries() || fetchOptions.cacheRetrieveMode() != null ) {
 				final Object cached = resolveInstanceFromCache( data );
 				if ( cached != null ) {
 					// EARLY EXIT!!!
@@ -2148,11 +2144,7 @@ public class EntityInitializerImpl
 			if ( data.concreteDescriptor == null ) {
 				data.concreteDescriptor = data.defaultConcreteDescriptor;
 				if ( data.concreteDescriptor == null ) {
-					data.concreteDescriptor = determineConcreteEntityDescriptor(
-							data.getRowProcessingState(),
-							castNonNull( discriminatorAssembler ),
-							entityDescriptor
-					);
+					data.concreteDescriptor = determineConcreteEntityDescriptor( data );
 					if ( data.concreteDescriptor == null ) {
 						// this should imply the entity is missing
 						return;

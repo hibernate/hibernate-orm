@@ -26,6 +26,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import static org.hibernate.action.queue.internal.decompose.entity.BindPlanHelper.shouldBindJdbcValue;
+import static org.hibernate.action.queue.internal.decompose.entity.DecompositionHelper.hasSqlGeneratedUpdate;
 import static org.hibernate.generator.EventType.UPDATE;
 
 /// @author Steve Ebersole
@@ -257,7 +258,8 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 
 		if ( generator != null
 				&& generator.generatesOnUpdate()
-				&& generator.generatedBeforeExecution( entity, session ) ) {
+				&& ( generator.generatedBeforeExecution( entity, session )
+					|| hasSqlGeneratedUpdate( generator, entity, session ) ) ) {
 			return true;
 		}
 

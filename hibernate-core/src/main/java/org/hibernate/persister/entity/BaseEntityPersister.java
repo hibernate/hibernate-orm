@@ -338,9 +338,9 @@ abstract class BaseEntityPersister implements Serializable {
 							propertyUpdateability[i] =
 									writePropertyValue( (OnExecutionGenerator) generator, EventType.UPDATE );
 						}
-						foundPostUpdateGeneratedValues = foundPostInsertGeneratedValues
+						foundPostUpdateGeneratedValues = foundPostUpdateGeneratedValues
 								|| generatedOnExecution;
-						foundPreUpdateGeneratedValues = foundPreInsertGeneratedValues
+						foundPreUpdateGeneratedValues = foundPreUpdateGeneratedValues
 								|| !generatedOnExecution
 								|| generator instanceof BeforeExecutionGenerator;
 					}

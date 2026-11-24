@@ -151,6 +151,28 @@ class LazyUniqueKeyAssociationTest {
 		} );
 	}
 
+	@Test
+	@JiraKey("HHH-21237")
+	void insertCompositeMapKeyWithEnhancedProxy(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var item = new RegionalItem();
+			item.code = "KEY";
+			session.persist( item );
+		} );
+		scope.inTransaction( session -> {
+			final var item = session.getReference( RegionalItem.class, 1 );
+			assertFalse( Hibernate.isInitialized( item ) );
+			final var catalog = new Catalog();
+			catalog.regionalLabels.put( item, "member" );
+			session.persist( catalog );
+		} );
+		scope.inSession( session -> {
+			final var row = session.createNativeQuery( "select key_code, key_region from Catalog_regionalLabels", Object[].class ).getSingleResult();
+			assertEquals( "KEY", row[0] );
+			assertEquals( "EU", row[1] );
+		} );
+	}
+
 	@Entity(name = "Catalog")
 	static class Catalog {
 		// This identifier and the referenced unique key on Item share a property name.

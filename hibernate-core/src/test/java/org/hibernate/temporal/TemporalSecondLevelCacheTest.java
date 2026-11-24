@@ -9,6 +9,7 @@ import jakarta.persistence.ManyToOne;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Audited;
 import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.QueryCacheLayout;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -19,11 +20,14 @@ import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static jakarta.persistence.FetchType.LAZY;
 import static org.hibernate.annotations.CacheConcurrencyStrategy.READ_WRITE;
+import static org.hibernate.annotations.CacheLayout.SHALLOW;
 import static org.hibernate.audit.AuditLog.ALL_CHANGESETS;
+import static org.hibernate.cfg.CacheSettings.USE_QUERY_CACHE;
 import static org.hibernate.cfg.CacheSettings.USE_SECOND_LEVEL_CACHE;
 import static org.hibernate.cfg.StateManagementSettings.CHANGESET_ID_SUPPLIER;
 import static org.hibernate.cfg.StateManagementSettings.TEMPORAL_TABLE_STRATEGY;
@@ -38,10 +42,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		TemporalSecondLevelCacheTest.AuditedThing.class,
 		TemporalSecondLevelCacheTest.OrdinaryThing.class,
 		TemporalSecondLevelCacheTest.Article.class,
+		TemporalSecondLevelCacheTest.FeatureArticle.class,
 		TemporalSecondLevelCacheTest.ArticleReference.class
 })
 @ServiceRegistry(settings = {
 		@Setting(name = USE_SECOND_LEVEL_CACHE, value = "true"),
+		@Setting(name = USE_QUERY_CACHE, value = "true"),
 		@Setting(name = TEMPORAL_TABLE_STRATEGY, value = "HISTORY_TABLE"),
 		@Setting(name = CHANGESET_ID_SUPPLIER,
 				value = "org.hibernate.temporal.TemporalSecondLevelCacheTest$ChangesetIds")
@@ -54,6 +60,72 @@ class TemporalSecondLevelCacheTest {
 		public Integer generateIdentifier(SharedSessionContract session) {
 			return ++changeset;
 		}
+	}
+
+	@Test
+	void cacheRetainsDeletedRevision(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var article = new FeatureArticle();
+			article.section = "science";
+			article.id = 4;
+			article.title = "first";
+			session.persist( article );
+		} );
+		scope.inTransaction( session -> session.find( Article.class, 4 ).title = "last" );
+		scope.inTransaction( session -> session.remove( session.find( Article.class, 4 ) ) );
+
+		final var factory = scope.getSessionFactory();
+		final long hits = factory.getStatistics().getQueryCacheHitCount();
+		for ( int i = 0; i < 2; i++ ) {
+			try ( var session = factory.withOptions().atChangeset( ALL_CHANGESETS ).openSession() ) {
+				final long statements = factory.getStatistics().getPrepareStatementCount();
+				final var rows = session.createSelectionQuery(
+						"from Article a where a.id = 4 order by changesetId(a)", Article.class )
+						.setCacheable( true ).getResultList();
+				assertEquals( List.of( "first", "last", "last" ), rows.stream().map( a -> a.title ).toList() );
+				assertNotSame( rows.get( 1 ), rows.get( 2 ) );
+				assertEquals( "science", ((FeatureArticle) rows.get( 2 )).section );
+				assertEquals( i == 0 ? 1 : 0, factory.getStatistics().getPrepareStatementCount() - statements );
+			}
+		}
+		assertEquals( hits + 1, factory.getStatistics().getQueryCacheHitCount() );
+	}
+
+	@Test
+	void shallowCacheReloadsEachRevision(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var article = new Article();
+			article.id = 3;
+			article.title = "original";
+			session.persist( article );
+			final var ref = new ArticleReference();
+			ref.id = 3;
+			ref.article = article;
+			session.persist( ref );
+		} );
+		scope.inTransaction( session -> session.find( Article.class, 3 ).title = "latest" );
+
+		final var factory = scope.getSessionFactory();
+		final var hits = factory.getStatistics().getQueryCacheHitCount();
+		for ( int i = 0; i < 2; i++ ) {
+			try ( var session = factory.withOptions().atChangeset( ALL_CHANGESETS ).openSession() ) {
+				final var rows = session.createSelectionQuery( """
+						select revision, currentArticle from Article revision cross join ArticleReference ref
+						join ref.article currentArticle where revision.id = 3 and ref.id = 3
+						order by changesetId(revision)
+						""", Object[].class ).setCacheable( true ).getResultList();
+				assertEquals( 2, rows.size() );
+				final var first = (Article) rows.get( 0 )[0];
+				final var second = (Article) rows.get( 1 )[0];
+				final var current = (Article) rows.get( 0 )[1];
+				assertEquals( "original", first.title );
+				assertEquals( "latest", second.title );
+				assertEquals( "latest", current.title );
+				assertNotSame( first, second );
+				assertNotSame( second, current );
+			}
+		}
+		assertEquals( hits + 1, factory.getStatistics().getQueryCacheHitCount() );
 	}
 
 	@Test
@@ -240,6 +312,7 @@ class TemporalSecondLevelCacheTest {
 	}
 
 	@Entity(name = "Article")
+	@QueryCacheLayout(layout = SHALLOW)
 	@Audited
 	@Cacheable
 	@Cache(usage = READ_WRITE)
@@ -247,6 +320,12 @@ class TemporalSecondLevelCacheTest {
 		@Id int id;
 		String title;
 		@Audited.Excluded String note;
+	}
+
+	@Entity(name = "FeatureArticle")
+	@Audited
+	static class FeatureArticle extends Article {
+		String section;
 	}
 
 	@Entity(name = "ArticleReference")

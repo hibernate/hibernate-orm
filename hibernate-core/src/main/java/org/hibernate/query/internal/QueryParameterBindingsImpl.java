@@ -1,5 +1,6 @@
 package org.hibernate.query.internal;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -7,8 +8,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.function.BiConsumer;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.QueryParameterException;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
+import org.hibernate.audit.AuditLog;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -21,6 +25,8 @@ import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.sql.exec.internal.TemporalJdbcParameter;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.type.descriptor.java.JavaTypedExpressible;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -230,16 +236,57 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	@Override
 	public QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor session) {
+		// Callers with only SQL text cannot tell which implicit parameters were rendered.
+		return generateQueryKeyMemento( session, null );
+	}
+
+	@Override
+	public QueryKey.ParameterBindingsMemento generateQueryKeyMemento(
+			SharedSessionContractImplementor session, @Nullable List<? extends JdbcParameterBinder> binders) {
 		final var mutableCacheKey = new MutableCacheKeyImpl( parameterBindingMap.size() );
-		final var tenantIdentifierJavaType = session.getFactory().getTenantIdentifierJavaType();
-		final Object tenantId = session.getTenantIdentifierValue();
-		mutableCacheKey.addValue( tenantIdentifierJavaType.getMutabilityPlan().disassemble( tenantId, session ) );
-		mutableCacheKey.addHashCode( tenantId == null ? 0 : tenantIdentifierJavaType.extractHashCode( tenantId ) );
+		addBasicValueToCacheKey( mutableCacheKey, session.getTenantIdentifierValue(),
+				session.getFactory().getTenantIdentifierJavaType(), session );
+		if ( binders == null ) {
+			addSessionChangeset( mutableCacheKey, session );
+		}
+		else {
+			for ( int i = 0; i < binders.size(); i++ ) {
+				if ( binders.get( i ) instanceof TemporalJdbcParameter temporal ) {
+					// The same SQL may also be executed with explicit parameters in these positions.
+					mutableCacheKey.addValue( new TemporalParameterPosition( i ) );
+					mutableCacheKey.addHashCode( i );
+					final Object changeset = temporal.getHistoricalChangeset( session );
+					if ( changeset != null ) {
+						temporal.addToCacheKey( mutableCacheKey, changeset, session );
+					}
+				}
+			}
+		}
 		handleQueryParameters( session, mutableCacheKey );
 		handleFilterParameters( session, mutableCacheKey );
 		// Finally, build the overall cache key
 		return mutableCacheKey.build();
 	}
+
+	private static void addSessionChangeset(MutableCacheKeyBuilder key, SharedSessionContractImplementor session) {
+		final Object changeset = session.getLoadQueryInfluencers().getTemporalIdentifier();
+		if ( changeset == AuditLog.ALL_CHANGESETS ) {
+			key.addValue( AuditLog.ALL_CHANGESETS );
+			key.addHashCode( 1 );
+		}
+		else if ( changeset != null ) {
+			final var factory = session.getFactory();
+			final var javaType = factory.getTypeConfiguration().getJavaTypeRegistry()
+					.getDescriptor( factory.getChangesetCoordinator().getIdentifierType() );
+			addBasicValueToCacheKey( key, changeset, javaType, session );
+		}
+		else {
+			key.addValue( null );
+			key.addHashCode( 0 );
+		}
+	}
+
+	private record TemporalParameterPosition(int index) implements Serializable {}
 
 	private void handleQueryParameters(SharedSessionContractImplementor session, MutableCacheKeyImpl mutableCacheKey) {
 		final var typeConfiguration = session.getFactory().getTypeConfiguration();

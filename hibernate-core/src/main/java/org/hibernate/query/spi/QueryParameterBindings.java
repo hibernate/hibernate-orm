@@ -1,5 +1,6 @@
 package org.hibernate.query.spi;
 
+import java.util.List;
 import java.util.function.BiConsumer;
 
 import org.hibernate.Incubating;
@@ -7,6 +8,7 @@ import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 
 /**
  * Manages all the parameter bindings for a particular query.
@@ -79,6 +81,12 @@ public interface QueryParameterBindings {
 	 * in creating a {@link QueryKey}
 	 */
 	QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor session);
+
+	/// Include implicit parameters bound by the JDBC operation in the query result cache key.
+	default QueryKey.ParameterBindingsMemento generateQueryKeyMemento(
+			SharedSessionContractImplementor session, List<? extends JdbcParameterBinder> binders) {
+		return generateQueryKeyMemento( session );
+	}
 
 	void visitBindings(BiConsumer<? super QueryParameter<?>, ? super QueryParameterBinding<?>> action);
 

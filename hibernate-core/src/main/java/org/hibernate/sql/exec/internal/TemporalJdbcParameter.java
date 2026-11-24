@@ -1,5 +1,7 @@
 package org.hibernate.sql.exec.internal;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.sql.exec.ExecutionException;
@@ -34,15 +36,23 @@ public class TemporalJdbcParameter extends SqlTypedMappingJdbcParameter {
 	@Override
 	public void bindParameterValue(PreparedStatement statement, int startPosition, JdbcParameterBindings jdbcParamBindings, ExecutionContext executionContext)
 			throws SQLException {
-		final SharedSessionContractImplementor session = executionContext.getSession();
-		final Object temporalIdentifier = session.getLoadQueryInfluencers().getTemporalIdentifier();
-		final Object currentChangesetIdentifier = temporalIdentifier != null && !current
+		final Object bindValue = getJdbcMapping().convertToRelationalValue( getParameterValue( executionContext.getSession() ) );
+		bindParameterValue( getJdbcMapping(), statement, bindValue, startPosition, executionContext );
+	}
+
+	/// The historical value bound by this parameter, or null for a current read.
+	public @Nullable Object getHistoricalChangeset(SharedSessionContractImplementor session) {
+		return current ? null : session.getLoadQueryInfluencers().getTemporalIdentifier();
+	}
+
+	private Object getParameterValue(SharedSessionContractImplementor session) {
+		final Object temporalIdentifier = getHistoricalChangeset( session );
+		final Object currentChangesetIdentifier = temporalIdentifier != null
 				? temporalIdentifier
 				: session.getCurrentChangesetIdentifier();
 		if ( currentChangesetIdentifier == null ) {
 			throw new ExecutionException( "JDBC parameter value not bound - " + this );
 		}
-		final Object bindValue = getJdbcMapping().convertToRelationalValue( currentChangesetIdentifier );
-		bindParameterValue( getJdbcMapping(), statement, bindValue, startPosition, executionContext );
+		return currentChangesetIdentifier;
 	}
 }

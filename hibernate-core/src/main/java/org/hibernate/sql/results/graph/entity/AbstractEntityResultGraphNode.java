@@ -196,7 +196,8 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 		if ( auditChangesetIdResult != null ) {
 			auditChangesetIdResult.collectValueIndexesToCache( valueIndexes );
 		}
-		if ( !entityPersister.useShallowQueryCacheLayout() ) {
+		// A deletion revision is visible here even though a point-in-time load by id cannot retrieve it.
+		if ( auditChangesetIdResult != null || !entityPersister.useShallowQueryCacheLayout() ) {
 			if ( discriminatorFetch != null ) {
 				discriminatorFetch.collectValueIndexesToCache( valueIndexes );
 			}

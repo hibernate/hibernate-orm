@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.IntFunction;
 
+import org.hibernate.Hibernate;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.spi.IndexedConsumer;
@@ -633,6 +634,13 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		}
 		else {
 			// Otherwise, this is a key based on the target object i.e. without id-class
+			if ( targetObject != null && side == targetSide
+					&& modelPart instanceof VirtualEmbeddedAttributeMapping embedded ) {
+				final Object entity = Hibernate.unproxy( targetObject );
+				embedded.getEmbeddableTypeDescriptor().forEachAttributeMapping(
+						attribute -> Hibernate.initializeProperty( entity, attribute.getAttributeName() ) );
+				return entity;
+			}
 			return targetObject;
 		}
 	}

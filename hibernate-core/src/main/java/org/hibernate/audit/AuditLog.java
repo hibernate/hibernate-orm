@@ -55,7 +55,7 @@ public interface AuditLog extends AutoCloseable {
 	 *
 	 * @see #getHistory(Class, Object)
 	 */
-	Object ALL_CHANGESETS = new Object();
+	Object ALL_CHANGESETS = ChangesetSelection.ALL;
 
 	/**
 	 * List all changeset identifiers where the given entity
@@ -328,3 +328,6 @@ public interface AuditLog extends AutoCloseable {
 	<T> Map<Object, T> findChangesets(Class<T> changelogClass, Set<?> changesetIds);
 
 }
+
+// Enum identity survives serialization of a disconnected audit session.
+enum ChangesetSelection { ALL }

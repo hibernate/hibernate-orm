@@ -1,5 +1,6 @@
 package org.hibernate.temporal.audit;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -12,6 +13,8 @@ import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Audited;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.AuditedTest;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -65,6 +68,23 @@ class DetachHistoricalProxyTest {
 			book.tags.add( "later" );
 			session.find( Loan.class, 1 ).note = "second";
 		} );
+	}
+
+	@Test
+	void reloadCollectionAfterSessionSerialization(SessionFactoryScope scope) {
+		final String hql = "from Book b where b.title = 'old'";
+		final byte[] serialized;
+		try ( var session = scope.getSessionFactory().withOptions().atChangeset( ALL_CHANGESETS ).openSession() ) {
+			final var old = session.createSelectionQuery( hql, Book.class ).getSingleResult();
+			assertFalse( Hibernate.isInitialized( old.tags ) );
+			((SessionImplementor) session).getJdbcCoordinator().getLogicalConnection().manualDisconnect();
+			serialized = SerializationHelper.serialize( session );
+		}
+		try ( var session = (SessionImplementor) SerializationHelper.deserialize( serialized ) ) {
+			final var old = session.createSelectionQuery( hql, Book.class ).getSingleResult();
+			session.inTransaction( tx -> session.flush() );
+			assertEquals( Set.of( "original" ), old.tags );
+		}
 	}
 
 	@Test
@@ -196,7 +216,7 @@ class DetachHistoricalProxyTest {
 
 	@Entity(name = "Book")
 	@Audited
-	public static class Book {
+	public static class Book implements Serializable {
 		@Id
 		int id = 1;
 		String title;

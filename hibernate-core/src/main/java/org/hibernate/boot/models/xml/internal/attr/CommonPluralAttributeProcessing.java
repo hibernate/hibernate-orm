@@ -20,7 +20,6 @@ import org.hibernate.boot.models.annotations.internal.OrderByJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OrderColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.SortComparatorAnnotation;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
-import org.hibernate.boot.models.xml.internal.db.ForeignKeyProcessing;
 import org.hibernate.boot.models.xml.internal.db.JoinColumnProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.models.spi.ClassDetails;
@@ -208,11 +207,10 @@ public class CommonPluralAttributeProcessing {
 
 		JoinColumnProcessing.applyMapKeyJoinColumns(
 				jaxbPluralAttribute.getMapKeyJoinColumns(),
+				jaxbPluralAttribute.getMapKeyForeignKey(),
 				memberDetails,
 				xmlDocumentContext
 		);
-
-		ForeignKeyProcessing.applyForeignKey( jaxbPluralAttribute.getMapKeyForeignKey(), memberDetails, xmlDocumentContext );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// filters and custom sql

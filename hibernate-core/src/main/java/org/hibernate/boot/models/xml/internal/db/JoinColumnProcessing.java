@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.JoinColumnOrFormula;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbForeignKeyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPrimaryKeyJoinColumnImpl;
@@ -200,9 +201,13 @@ public class JoinColumnProcessing {
 
 	public static void applyMapKeyJoinColumns(
 			List<JaxbMapKeyJoinColumnImpl> jaxbJoinColumns,
+			JaxbForeignKeyImpl jaxbMapKeyForeignKey,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbJoinColumns ) ) {
+		// A <map-key-foreign-key/> without any <map-key-join-column/> becomes an empty container
+		//   @MapKeyJoinColumns(value = {}, foreignKey = @ForeignKey(...))
+		// which specifies the foreign key while defaulting the map key join columns.
+		if ( CollectionHelper.isEmpty( jaxbJoinColumns ) && jaxbMapKeyForeignKey == null ) {
 			return;
 		}
 
@@ -211,7 +216,19 @@ public class JoinColumnProcessing {
 				JpaAnnotations.MAP_KEY_JOIN_COLUMNS,
 				xmlDocumentContext.getModelBuildingContext()
 		);
+		// creates on the attribute
+		//   @MapKeyJoinColumns(
+		//       value = { @MapKeyJoinColumn(...), ... },   // from <map-key-join-column/>
+		//       foreignKey = @ForeignKey(...)              // from <map-key-foreign-key/>, if present
+		//   )
+		// There is no @MapKeyForeignKey annotation, MapKeyJoinColumns#foreignKey carries it instead.
 		joinColumnsUsage.value( transformMapKeyJoinColumns( jaxbJoinColumns, xmlDocumentContext ) );
+		if ( jaxbMapKeyForeignKey != null ) {
+			joinColumnsUsage.foreignKey( ForeignKeyProcessing.createNestedForeignKeyAnnotation(
+					jaxbMapKeyForeignKey,
+					xmlDocumentContext
+			) );
+		}
 	}
 
 	private static final MapKeyJoinColumn[] NO_KEY_JOIN_COLUMNS = new MapKeyJoinColumn[0];

@@ -91,7 +91,7 @@ class LazyUniqueKeyAssociationTest {
 			save.accept( session, catalog );
 		} );
 		scope.inSession( session -> assertEquals( "KEY",
-				session.createNativeQuery( "select featured_code from Catalog", String.class ).getSingleResult() ) );
+				session.createNativeQuery( "select featured_code from ItemCatalog", String.class ).getSingleResult() ) );
 	}
 
 	@Test
@@ -101,7 +101,7 @@ class LazyUniqueKeyAssociationTest {
 			final var item = session.find( Item.class, 1 );
 			assertFalse( Hibernate.isPropertyInitialized( item, "code" ) );
 			assertEquals( 1, session.createSelectionQuery(
-					"select id(c) from Catalog c where c.featuredItem = :item", Integer.class )
+					"select id(c) from ItemCatalog c where c.featuredItem = :item", Integer.class )
 					.setParameter( "item", item )
 					.getSingleResult() );
 		} );
@@ -167,13 +167,13 @@ class LazyUniqueKeyAssociationTest {
 			session.persist( catalog );
 		} );
 		scope.inSession( session -> {
-			final var row = session.createNativeQuery( "select key_code, key_region from Catalog_regionalLabels", Object[].class ).getSingleResult();
+			final var row = session.createNativeQuery( "select key_code, key_region from ItemCatalog_regionalLabels", Object[].class ).getSingleResult();
 			assertEquals( "KEY", row[0] );
 			assertEquals( "EU", row[1] );
 		} );
 	}
 
-	@Entity(name = "Catalog")
+	@Entity(name = "ItemCatalog")
 	static class Catalog {
 		// This identifier and the referenced unique key on Item share a property name.
 		@Id

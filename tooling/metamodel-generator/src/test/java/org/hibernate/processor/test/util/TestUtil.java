@@ -234,12 +234,19 @@ public class TestUtil {
 	}
 
 	public static void assertNoMetamodelClassGeneratedFor(Class<?> clazz) {
+		assertNoMetamodelClassGeneratedFor( clazz, false );
+	}
+
+	public static void assertNoMetamodelClassGeneratedFor(Class<?> clazz, boolean prefix) {
+		final Class<?> metamodelClass;
 		try {
-			getMetamodelClassFor( clazz );
-			fail();
+			metamodelClass = getMetamodelClassFor( clazz, prefix );
 		}
 		catch (AssertionError ae) {
+			// the metamodel class was not found, as expected
+			return;
 		}
+		fail( metamodelClass.getName() + " was generated." );
 	}
 
 	/**

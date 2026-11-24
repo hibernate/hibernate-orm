@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.CacheMode;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Audited;
 import org.hibernate.annotations.Cache;
@@ -40,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @BytecodeEnhanced
-@SessionFactory
+@SessionFactory(useCollectingStatementObserver = true)
 @DomainModel(annotatedClasses = {
 		TemporalLazyBasicTest.Document.class, TemporalLazyBasicTest.AuditedDocument.class,
 		TemporalLazyBasicTest.Edition.class, TemporalLazyBasicTest.AuditEvent.class
@@ -123,6 +124,72 @@ class TemporalLazyBasicTest {
 			assertEquals( "unchanged", session.createSelectionQuery(
 					"select d.body from Document d where d.id = 7 and d.title = 'after'", String.class ).getSingleResult() );
 		}
+	}
+
+	@Test
+	void cachedLazyPropertyPreservesPendingChanges(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var document = new Document();
+			document.id = 10;
+			document.body = "first draft";
+			document.notes = "cached notes";
+			session.persist( document );
+		} );
+		scope.inTransaction( session -> {
+			session.setCacheMode( CacheMode.REFRESH );
+			final var graph = session.createEntityGraph( Document.class );
+			graph.addAttributeNodes( "body", "notes", "title" );
+			final var document = session.find( graph, 10 );
+			assertTrue( isPropertyInitialized( document, "notes" ) );
+		} );
+		assertTrue( scope.getSessionFactory().getCache().containsEntity( Document.class, 10 ) );
+		final var changeset = scope.fromTransaction( session -> {
+			session.setCacheMode( CacheMode.GET );
+			final var document = session.createSelectionQuery( "from Document where id = 10", Document.class )
+					.getSingleResult();
+			assertFalse( isPropertyInitialized( document, "notes" ) );
+			document.body = "edited draft";
+			final var observer = scope.getCollectingStatementObserver();
+			observer.clear();
+			assertEquals( "cached notes", document.notes );
+			observer.assertStatements().isEmpty();
+			assertEquals( "edited draft", document.body );
+			return session.getCurrentChangesetIdentifier();
+		} );
+		try ( var session = scope.getSessionFactory().withOptions().atChangeset( changeset ).openSession() ) {
+			assertEquals( "edited draft", session.find( Document.class, 10 ).body );
+		}
+	}
+
+	@Test
+	void cachedNullAndUnfetchedField(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var document = new Document();
+			document.id = 11;
+			document.body = "uncached body";
+			session.persist( document );
+		} );
+		scope.inTransaction( session -> {
+			session.setCacheMode( CacheMode.REFRESH );
+			final var graph = session.createEntityGraph( Document.class );
+			graph.addAttributeNodes( "notes", "title" );
+			final var document = session.find( graph, 11 );
+			assertTrue( isPropertyInitialized( document, "notes" ) );
+			assertFalse( isPropertyInitialized( document, "body" ) );
+		} );
+		scope.inTransaction( session -> {
+			session.setCacheMode( CacheMode.GET );
+			final var document = session.createSelectionQuery( "from Document where id = 11", Document.class )
+					.getSingleResult();
+			final var observer = scope.getCollectingStatementObserver();
+			assertFalse( isPropertyInitialized( document, "notes" ) );
+			observer.clear();
+			assertNull( document.notes );
+			observer.assertStatements().isEmpty();
+			assertFalse( isPropertyInitialized( document, "body" ) );
+			assertEquals( "uncached body", document.body );
+			observer.assertStatements().hasSize( 1 );
+		} );
 	}
 
 	@Test
@@ -409,6 +476,7 @@ class TemporalLazyBasicTest {
 		@Id int id;
 		String title;
 		@Basic(fetch = LAZY) String body;
+		@Basic(fetch = LAZY) @LazyGroup("notes") String notes;
 	}
 
 	public static class ChangesetIds implements ChangesetIdentifierSupplier<Integer> {

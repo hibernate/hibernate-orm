@@ -410,6 +410,9 @@ public abstract class AbstractEntityPersister
 
 	@SuppressWarnings("NullAway.Init") // Initialized during mapping model creation.
 	private Map<String, SingleIdArrayLoadPlan> lazyLoadPlanByFetchGroup;
+	// Repeated flushes commonly need the same subset. Keep at most one plan per entity type.
+	private volatile @Nullable LazyAttributeLoadPlan lastLazyAttributeLoadPlan;
+	private record LazyAttributeLoadPlan(List<AttributeMapping> attributes, SingleIdArrayLoadPlan plan) {}
 	private final LockModeEnumMap<LockingStrategy> lockers = new LockModeEnumMap<>();
 	@SuppressWarnings("NullAway.Init") // Initialized during mapping model creation.
 	private String sqlVersionSelectString;
@@ -1719,21 +1722,15 @@ public abstract class AbstractEntityPersister
 			EntityPersister.super.initializeLazyProperties( entity, attributes, session );
 			return;
 		}
-		if ( canReadFromCache() && session.getCacheMode().isGetEnabled() && isLazyPropertiesCacheable()
-				&& !entry.getEntityKey().isTemporal() ) {
-			final var cacheAccess = getCacheAccessStrategy();
-			final Object cacheKey = cacheAccess.generateCacheKey( entry.getId(), this, factory, session.getTenantIdentifier() );
-			final Object structuredEntry = fromSharedCache( session, cacheKey, this, cacheAccess );
-			if ( structuredEntry != null ) {
-				initializeLazyPropertiesFromCache( attributes.get( 0 ).getAttributeName(), entity, session, entry,
-						(CacheEntry) getCacheEntryStructure().destructure( structuredEntry, factory ) );
-			}
+		final var cacheEntry = getCacheEntryForLazyProperties( entry, session );
+		if ( cacheEntry != null ) {
+			applyCachedLazyProperties( entity, session, entry, cacheEntry, null );
 		}
 		final var missing = attributes.stream()
 				.filter( attribute -> !getBytecodeEnhancementMetadata().isAttributeLoaded( entity, attribute.getAttributeName() ) )
 				.toList();
 		if ( !missing.isEmpty() ) {
-			final var values = createLazyLoadPlan( missing, session.getLoadQueryInfluencers() ).load( entry.getId(), session );
+			final var values = resolveLazyAttributeLoadPlan( missing, session.getLoadQueryInfluencers() ).load( entry.getId(), session );
 			if ( values == null ) {
 				throw new ObjectNotFoundException( entry.getId(), getEntityName() );
 			}
@@ -1742,6 +1739,20 @@ public abstract class AbstractEntityPersister
 				initializeLazyProperty( entity, entry, values[i], index, getPropertyTypes()[index] );
 			}
 		}
+	}
+
+	private SingleIdArrayLoadPlan resolveLazyAttributeLoadPlan(List<AttributeMapping> attributes, LoadQueryInfluencers influencers) {
+		if ( influencers.getTemporalIdentifier() != null || influencers.hasEnabledCascadingFetchProfile()
+				|| isAffectedByInfluencers( influencers, false ) ) {
+			return createLazyLoadPlan( attributes, influencers );
+		}
+		final var previous = lastLazyAttributeLoadPlan;
+		if ( previous != null && previous.attributes().equals( attributes ) ) {
+			return previous.plan();
+		}
+		final var plan = createLazyLoadPlan( attributes, new LoadQueryInfluencers( factory ) );
+		lastLazyAttributeLoadPlan = new LazyAttributeLoadPlan( attributes, plan );
+		return plan;
 	}
 
 	@Nullable
@@ -1770,34 +1781,30 @@ public abstract class AbstractEntityPersister
 			);
 		}
 
-		// attempt to read it from second-level cache
-		if ( session.getCacheMode().isGetEnabled()
-				&& canReadFromCache()
-				&& isLazyPropertiesCacheable()
-				&& !entry.getEntityKey().isTemporal() ) {
-			final var cacheAccess = getCacheAccessStrategy();
-			final Object cacheKey =
-					cacheAccess.generateCacheKey(
-							id,
-							this,
-							session.getFactory(),
-							session.getTenantIdentifier()
-					);
-			final Object structuredEntry = fromSharedCache( session, cacheKey, this, cacheAccess );
-			if ( structuredEntry != null ) {
-				final var cacheEntry = (CacheEntry) getCacheEntryStructure().destructure( structuredEntry, factory );
-				final Object initializedValue = initializeLazyPropertiesFromCache( fieldName, entity, session, entry, cacheEntry );
-				if ( initializedValue != LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
-					// The following should be redundant, since the setter should have set this already.
-					// interceptor.attributeInitialized(fieldName);
-
-					// NOTE EARLY EXIT!!!
-					return initializedValue;
-				}
+		final var cacheEntry = getCacheEntryForLazyProperties( entry, session );
+		if ( cacheEntry != null ) {
+			final Object value = initializeLazyPropertiesFromCache( fieldName, entity, session, entry, cacheEntry );
+			if ( value != LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+				return value;
 			}
 		}
-
 		return initializeLazyPropertiesFromDatastore( entity, id, entry, fieldName, session );
+	}
+
+	@Nullable
+	private CacheEntry getCacheEntryForLazyProperties(
+			@Nonnull EntityEntry entry, @Nonnull SharedSessionContractImplementor session) {
+		if ( !session.getCacheMode().isGetEnabled()
+				|| !canReadFromCache()
+				|| !isLazyPropertiesCacheable()
+				|| entry.getEntityKey().isTemporal() ) {
+			return null;
+		}
+		final var cacheAccess = getCacheAccessStrategy();
+		final Object cacheKey = cacheAccess.generateCacheKey( entry.getId(), this, factory, session.getTenantIdentifier() );
+		final Object structuredEntry = fromSharedCache( session, cacheKey, this, cacheAccess );
+		return structuredEntry == null ? null
+				: (CacheEntry) getCacheEntryStructure().destructure( structuredEntry, factory );
 	}
 
 	@Nonnull
@@ -2074,21 +2081,28 @@ public abstract class AbstractEntityPersister
 			@Nonnull final SharedSessionContractImplementor session,
 			@Nonnull final EntityEntry entry,
 			@Nonnull final CacheEntry cacheEntry) {
+		return applyCachedLazyProperties( entity, session, entry, cacheEntry, fieldName );
+	}
+
+	/// Apply the cached values and, for a single-field read, return the requested value.
+	private @Nullable Object applyCachedLazyProperties(
+			Object entity, SharedSessionContractImplementor session, EntityEntry entry,
+			CacheEntry cacheEntry, @Nullable String requestedField) {
 		CORE_LOGGER.initializingLazyPropertiesFromSecondLevelCache();
-		Object result = null;
+		Object result = LazyPropertyInitializer.UNFETCHED_PROPERTY;
 		final var disassembledValues = cacheEntry.getDisassembledState();
 		for ( int j = 0; j < lazyPropertyNames.length; j++ ) {
-			final var cachedValue = disassembledValues[lazyPropertyNumbers[j]];
-			if ( cachedValue == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
-				if ( fieldName.equals( lazyPropertyNames[j] ) ) {
-					result = LazyPropertyInitializer.UNFETCHED_PROPERTY;
+			final int index = lazyPropertyNumbers[j];
+			final var cachedValue = disassembledValues[index];
+			if ( cachedValue != LazyPropertyInitializer.UNFETCHED_PROPERTY
+					&& !getBytecodeEnhancementMetadata().isAttributeLoaded( entity, lazyPropertyNames[j] ) ) {
+				final var type = lazyPropertyTypes[j];
+				final Object value = type.assemble( cachedValue, session, entity );
+				if ( requestedField == null ) {
+					initializeLazyProperty( entity, entry, value, index, type );
 				}
-				// don't try to initialize the unfetched property
-			}
-			else {
-				final Object propValue = lazyPropertyTypes[j].assemble( cachedValue, session, entity );
-				if ( initializeLazyProperty( fieldName, entity, entry, j, propValue ) ) {
-					result = propValue;
+				else if ( initializeLazyProperty( requestedField, entity, entry, j, value ) ) {
+					result = value;
 				}
 			}
 		}
@@ -2105,30 +2119,8 @@ public abstract class AbstractEntityPersister
 			@Nonnull final EntityEntry entry,
 			final int index,
 			@Nullable final Object propValue) {
-		final int propertyNumber = lazyPropertyNumbers[index];
-		setPropertyValue( entity, propertyNumber, propValue );
-		final var maybeLazySet = entry.getMaybeLazySet();
-		if ( maybeLazySet != null ) {
-			final var bitSet = maybeLazySet.toBitSet();
-			bitSet.set( propertyNumber );
-			entry.setMaybeLazySet( ImmutableBitSet.valueOf( bitSet ) );
-		}
-		final var loadedState = entry.getLoadedState();
-		if ( loadedState != null ) {
-			// object have been loaded with setReadOnly(true); HHH-2236
-			loadedState[propertyNumber] = copiedLazyPropertyValue( index, propValue );
-		}
-		// If the entity has deleted state, then update that as well
-		final var deletedState = entry.getDeletedState();
-		if ( deletedState != null ) {
-			deletedState[propertyNumber] = copiedLazyPropertyValue( index, propValue );
-		}
+		initializeLazyProperty( entity, entry, propValue, lazyPropertyNumbers[index], lazyPropertyTypes[index] );
 		return fieldName.equals( lazyPropertyNames[index] );
-	}
-
-	@Nullable
-	private Object copiedLazyPropertyValue(int index, @Nullable Object propValue) {
-		return lazyPropertyTypes[index].deepCopy( propValue, factory );
 	}
 
 	/**

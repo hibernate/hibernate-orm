@@ -21,6 +21,7 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.type.internal.StandardTemporalPreservations;
@@ -69,6 +70,7 @@ class TemporalPreservationStorageTests {
 	@RequiresDialect(HSQLDialect.class)
 	@RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
 	@RequiresDialect(PostgresPlusDialect.class)
+	@RequiresDialect(CockroachDialect.class)
 	@RequiresDialect(MySQLDialect.class)
 	@RequiresDialect(SQLServerDialect.class)
 	@RequiresDialect(OracleDialect.class)
@@ -220,6 +222,7 @@ class TemporalPreservationStorageTests {
 	@RequiresDialect(HSQLDialect.class)
 	@RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
 	@RequiresDialect(PostgresPlusDialect.class)
+	@RequiresDialect(CockroachDialect.class)
 	@RequiresDialect(MySQLDialect.class)
 	@RequiresDialect(SQLServerDialect.class)
 	@RequiresDialect(OracleDialect.class)
@@ -305,6 +308,7 @@ class TemporalPreservationStorageTests {
 	@RequiresDialect(HSQLDialect.class)
 	@RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
 	@RequiresDialect(PostgresPlusDialect.class)
+	@RequiresDialect(CockroachDialect.class)
 	@RequiresDialect(MySQLDialect.class)
 	@RequiresDialect(SQLServerDialect.class)
 	@RequiresDialect(value = DB2Dialect.class, matchSubTypes = false)
@@ -511,6 +515,9 @@ class TemporalPreservationStorageTests {
 		else if ( dialect( scope ) instanceof DB2Dialect ) {
 			expression = TemporalPreservationSql.DB2_EPOCH;
 		}
+		else if ( dialect( scope ) instanceof CockroachDialect ) {
+			expression = TemporalPreservationSql.COCKROACH_EPOCH;
+		}
 		else {
 			expression = "extract(epoch from theValue)";
 		}
@@ -576,7 +583,7 @@ class TemporalPreservationStorageTests {
 		if ( dialect( scope ) instanceof H2Dialect ) {
 			firstDay = StandardTemporalPreservations.COMMON_ERA_START;
 		}
-		else if ( dialect( scope ) instanceof PostgreSQLDialect
+		else if ( ( dialect( scope ) instanceof PostgreSQLDialect || dialect( scope ) instanceof CockroachDialect )
 				|| dialect( scope ) instanceof MySQLDialect
 				|| dialect( scope ) instanceof SQLServerDialect
 				|| dialect( scope ) instanceof DB2Dialect ) {

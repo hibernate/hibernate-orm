@@ -56,6 +56,25 @@ PostgresPlusDialect,ZonedDateTime (NORMALIZED),TimestampUtcAsJdbcTimestampJdbcTy
 PostgresPlusDialect,OffsetTime (ADJUSTED),TimeUtcAsLocalTimeJdbcType,time(0),TIME,,,,QUALIFIED
 PostgresPlusDialect,OffsetDateTime (ADJUSTED),TimestampUtcAsJdbcTimestampJdbcType,timestamp(6) with time zone,INSTANT,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
 PostgresPlusDialect,ZonedDateTime (ADJUSTED),TimestampUtcAsJdbcTimestampJdbcType,timestamp(6) with time zone,INSTANT,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+CockroachDialect,LocalDate,LocalDateJdbcType,date,DATE,,0001-01-01,9999-12-31,QUALIFIED
+CockroachDialect,LocalTime,LocalTimeJdbcType,time(0),TIME,,,,QUALIFIED
+CockroachDialect,LocalDateTime,LocalDateTimeJdbcType,timestamp(6),DATE+TIME,,0001-01-01T00:00,9999-12-31T23:59:59.999999999,QUALIFIED
+CockroachDialect,Instant,TimestampUtcAsJdbcTimestampJdbcType,timestamp(6) with time zone,INSTANT,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+CockroachDialect,OffsetTime,TimeUtcAsLocalTimeJdbcType + IntegerJdbcType,time(0) + int4,TIME+OFFSET,,,,QUALIFIED
+CockroachDialect,OffsetDateTime,TimestampUtcAsJdbcTimestampJdbcType + IntegerJdbcType,timestamp(6) with time zone + int4,INSTANT+OFFSET,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+CockroachDialect,ZonedDateTime,TimestampUtcAsJdbcTimestampJdbcType + VarcharJdbcType,timestamp(6) with time zone + varchar(255),INSTANT+OFFSET+ZONE_ID,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+CockroachDialect,OffsetTime (INLINE),TimeUtcAsLocalTimeJdbcType,time(0),,,,,REJECTED
+CockroachDialect,OffsetDateTime (INLINE),TimestampUtcAsJdbcTimestampJdbcType,timestamp(6) with time zone,,,,,REJECTED
+CockroachDialect,ZonedDateTime (INLINE),TimestampUtcAsJdbcTimestampJdbcType,timestamp(6) with time zone,,,,,REJECTED
+CockroachDialect,OffsetTime (COLUMN),TimeUtcAsLocalTimeJdbcType + IntegerJdbcType,time(0) + int4,TIME+OFFSET,,,,QUALIFIED
+CockroachDialect,OffsetDateTime (COLUMN),TimestampUtcAsJdbcTimestampJdbcType + IntegerJdbcType,timestamp(6) with time zone + int4,INSTANT+OFFSET,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+CockroachDialect,ZonedDateTime (COLUMN),TimestampUtcAsJdbcTimestampJdbcType + VarcharJdbcType,timestamp(6) with time zone + varchar(255),INSTANT+OFFSET+ZONE_ID,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+CockroachDialect,OffsetTime (NORMALIZED),TimeUtcAsLocalTimeJdbcType,time(0),TIME,,,,QUALIFIED
+CockroachDialect,OffsetDateTime (NORMALIZED),TimestampUtcAsJdbcTimestampJdbcType,timestamp(6) with time zone,INSTANT,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+CockroachDialect,ZonedDateTime (NORMALIZED),TimestampUtcAsJdbcTimestampJdbcType,timestamp(6) with time zone,INSTANT,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+CockroachDialect,OffsetTime (ADJUSTED),TimeUtcAsLocalTimeJdbcType,time(0),TIME,,,,QUALIFIED
+CockroachDialect,OffsetDateTime (ADJUSTED),TimestampUtcAsJdbcTimestampJdbcType,timestamp(6) with time zone,INSTANT,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
+CockroachDialect,ZonedDateTime (ADJUSTED),TimestampUtcAsJdbcTimestampJdbcType,timestamp(6) with time zone,INSTANT,NATIVE,1583-01-01T00:00:00Z,9999-12-31T23:59:59.999999999Z,QUALIFIED
 OracleDialect,LocalDate,LocalDateJdbcType,date,DATE,,1582-10-15,9999-12-31,QUALIFIED
 OracleDialect,LocalTime,OracleLocalTimeJdbcType,timestamp(0),TIME,,,,QUALIFIED
 OracleDialect,LocalDateTime,LocalDateTimeJdbcType,timestamp(9),DATE+TIME,,1582-10-15T00:00,9999-12-31T23:59:59.999999999,QUALIFIED

@@ -20,6 +20,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -48,6 +49,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @RequiresDialect(HSQLDialect.class)
 @RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
 @RequiresDialect(PostgresPlusDialect.class)
+@RequiresDialect(CockroachDialect.class)
 @RequiresDialect(MySQLDialect.class)
 @RequiresDialect(SQLServerDialect.class)
 class TemporalPreservationProcedureTests {
@@ -128,7 +130,7 @@ class TemporalPreservationProcedureTests {
 		inEverySessionZone( true, session -> {
 			dialect[0] = session.getSessionFactory().unwrap( SessionFactoryImplementor.class ).getJdbcServices().getDialect();
 			// PostgreSQL returns a value from a procedure through an INOUT parameter
-			final var mode = dialect[0] instanceof PostgreSQLDialect ? ParameterMode.INOUT : ParameterMode.OUT;
+			final var mode = ( dialect[0] instanceof PostgreSQLDialect || dialect[0] instanceof CockroachDialect ) ? ParameterMode.INOUT : ParameterMode.OUT;
 			for ( boolean stored : new boolean[] { true, false } ) {
 				final int id = stored ? 1 : 2;
 				final var entity = new Stored();
@@ -200,7 +202,7 @@ class TemporalPreservationProcedureTests {
 	void valuesPassedOutAreReadWhenDisabled() {
 		inEverySessionZone( false, session -> {
 			final var dialect = session.getSessionFactory().unwrap( SessionFactoryImplementor.class ).getJdbcServices().getDialect();
-			final var mode = dialect instanceof PostgreSQLDialect ? ParameterMode.INOUT : ParameterMode.OUT;
+			final var mode = ( dialect instanceof PostgreSQLDialect || dialect instanceof CockroachDialect ) ? ParameterMode.INOUT : ParameterMode.OUT;
 			final var entity = new Stored();
 			entity.id = 1;
 			entity.localDateTime = LocalDateTime.of( 2021, 6, 1, 12, 0, 0 );
@@ -293,7 +295,7 @@ class TemporalPreservationProcedureTests {
 					"create procedure tp_echo(inout p_ld " + date + ") begin set p_ld = p_ld; end"
 			);
 		}
-		else if ( dialect instanceof PostgreSQLDialect ) {
+		else if ( ( dialect instanceof PostgreSQLDialect || dialect instanceof CockroachDialect ) ) {
 			return List.of(
 					"create procedure tp_store(in p_id int, in p_ldt " + dateTime + ", in p_ld " + date
 							+ ", in p_instant " + instant + ") language plpgsql as $$ begin " + insert

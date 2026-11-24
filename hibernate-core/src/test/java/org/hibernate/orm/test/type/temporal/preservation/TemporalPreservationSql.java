@@ -73,4 +73,9 @@ final class TemporalPreservationSql {
 	/// The seconds from the epoch to the instant in the column `theValue`, for SQL Server.
 	static final String SQL_SERVER_EPOCH =
 			"datediff_big(second, cast('1970-01-01 00:00:00 +00:00' as datetimeoffset), theValue)";
+
+	/// The seconds from the epoch to the instant in the column `theValue`, for
+	/// CockroachDB, which computes `extract(epoch from …)` in a range of some
+	/// 292 years either side of 1970, and returns a wrapped value outside it.
+	static final String COCKROACH_EPOCH = "cast(theValue as int8)";
 }

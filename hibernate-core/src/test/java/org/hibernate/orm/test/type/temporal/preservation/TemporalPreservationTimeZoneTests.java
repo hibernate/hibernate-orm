@@ -30,6 +30,7 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -72,6 +73,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @RequiresDialect(HSQLDialect.class)
 @RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
 @RequiresDialect(PostgresPlusDialect.class)
+@RequiresDialect(CockroachDialect.class)
 @RequiresDialect(MySQLDialect.class)
 @RequiresDialect(SQLServerDialect.class)
 @RequiresDialect(OracleDialect.class)
@@ -272,6 +274,9 @@ class TemporalPreservationTimeZoneTests {
 			else if ( dialect instanceof DB2Dialect ) {
 				epoch = TemporalPreservationSql.DB2_EPOCH;
 			}
+			else if ( dialect instanceof CockroachDialect ) {
+				epoch = TemporalPreservationSql.COCKROACH_EPOCH;
+			}
 			else {
 				epoch = "extract(epoch from theValue)";
 			}
@@ -392,7 +397,7 @@ class TemporalPreservationTimeZoneTests {
 			execute( connection, "alter session set time_zone = '" + zone + "'" );
 			return "alter session set time_zone = '" + current + "'";
 		}
-		else if ( dialect instanceof PostgreSQLDialect ) {
+		else if ( ( dialect instanceof PostgreSQLDialect || dialect instanceof CockroachDialect ) ) {
 			final String current = queryString( connection, "show time zone" );
 			execute( connection, "set time zone '" + zone + "'" );
 			return "set time zone '" + current + "'";

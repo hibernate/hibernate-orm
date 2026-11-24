@@ -25,6 +25,7 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -55,6 +56,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @RequiresDialect(HSQLDialect.class)
 @RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
 @RequiresDialect(PostgresPlusDialect.class)
+@RequiresDialect(CockroachDialect.class)
 @RequiresDialect(MySQLDialect.class)
 @RequiresDialect(SQLServerDialect.class)
 @RequiresDialect(OracleDialect.class)
@@ -127,7 +129,7 @@ class TemporalPreservationOffsetTimeTests {
 				// On H2 the column keeps the offset, and a literal with one is comparable with it.
 				// Where the time at UTC is stored in a plain time column, so is the literal rendered.
 				if ( dialect instanceof H2Dialect
-						|| dialect instanceof PostgreSQLDialect
+						|| ( dialect instanceof PostgreSQLDialect || dialect instanceof CockroachDialect )
 						|| dialect instanceof MySQLDialect ) {
 					assertThat( session.createQuery( query ).getSingleResult() ).isEqualTo( 1L );
 				}

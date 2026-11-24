@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 @JiraKey("HHH-21238")
 @BytecodeEnhanced
 @DomainModel(annotatedClasses = LazyOwnerCollectionKeyTest.Warehouse.class)
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 class LazyOwnerCollectionKeyTest {
 	@Test
 	void insertWithUnfetchedOwnerKey(SessionFactoryScope scope) {
@@ -39,7 +39,7 @@ class LazyOwnerCollectionKeyTest {
 			warehouse.labels.add( "member" );
 		} );
 		scope.inSession( session -> assertEquals( "OWNER",
-				session.createNativeQuery( "select owner_code from warehouse_labels", String.class ).getSingleResult() ) );
+				session.createNativeQuery( "select owner_code from warehouse_labels where labels = 'member'", String.class ).getSingleResult() ) );
 	}
 
 	@Test
@@ -53,11 +53,40 @@ class LazyOwnerCollectionKeyTest {
 		scope.inTransaction( session -> {
 			final var warehouse = session.find( Warehouse.class, 2 );
 			assertFalse( Hibernate.isPropertyInitialized( warehouse, "code" ) );
-			final var inspector = scope.getCollectingStatementInspector();
-			inspector.clear();
+			final var observer = scope.getCollectingStatementObserver();
+			observer.clear();
 			session.flush();
-			inspector.assertExecutedCount( 0 );
+			observer.assertStatements().isEmpty();
 			assertFalse( Hibernate.isPropertyInitialized( warehouse, "code" ) );
+		} );
+	}
+
+	@Test
+	void subselectFetchUsesCollectionKeys(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			for ( int id = 3; id <= 5; id++ ) {
+				final var warehouse = new Warehouse();
+				warehouse.id = id;
+				warehouse.code = "warehouse-" + id;
+				if ( id == 4 ) {
+					warehouse.labels.add( "subselect member" );
+				}
+				session.persist( warehouse );
+			}
+		} );
+		scope.inTransaction( session -> {
+			session.setSubselectFetchingEnabled( true );
+			final var warehouses = session.createSelectionQuery(
+					"from Warehouse where id between 3 and 5 order by id", Warehouse.class ).getResultList();
+			final var observer = scope.getCollectingStatementObserver();
+			observer.clear();
+			assertEquals( Set.of(), warehouses.get( 0 ).labels );
+			assertEquals( Set.of( "subselect member" ), warehouses.get( 1 ).labels );
+			assertEquals( Set.of(), warehouses.get( 2 ).labels );
+			observer.assertStatements().hasSize( 1 );
+			for ( var warehouse : warehouses ) {
+				assertFalse( Hibernate.isPropertyInitialized( warehouse, "code" ) );
+			}
 		} );
 	}
 

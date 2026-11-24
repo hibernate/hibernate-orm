@@ -3,6 +3,7 @@ package org.hibernate.bytecode.internal;
 import java.util.Set;
 
 import org.hibernate.LockMode;
+import org.hibernate.SPI;
 import org.hibernate.boot.Metadata;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
@@ -22,6 +23,7 @@ import org.hibernate.type.CompositeType;
 
 import jakarta.annotation.Nullable;
 
+import static org.hibernate.SPI.Role.IMPLEMENT;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptableType;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfManagedEntity;
@@ -220,6 +222,7 @@ public class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementM
 	}
 
 	@Override
+	@SPI(IMPLEMENT)
 	public LazyAttributeLoadingInterceptor createLazyAttributeLoadingInterceptor(
 			@Nullable Object identifier,
 			@Nullable SharedSessionContractImplementor session) {
@@ -232,6 +235,7 @@ public class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementM
 	/**
 	 * Build the interceptor of an enhanced entity used as a proxy, without injecting it.
 	 */
+	@SPI(IMPLEMENT)
 	protected EnhancementAsProxyLazinessInterceptor createEnhancementAsProxyLazinessInterceptor(
 			EntityKey entityKey,
 			SharedSessionContractImplementor session) {

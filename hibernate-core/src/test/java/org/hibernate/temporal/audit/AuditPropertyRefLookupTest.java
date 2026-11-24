@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * uninitialized collection whose foreign key refers to a unique key of an entity,
  * rather than its identifier, look up the entity by that unique key.
  */
-@SessionFactory
+@SessionFactory(useCollectingStatementObserver = true)
 @DomainModel(annotatedClasses = { AuditPropertyRefLookupTest.Owner.class, AuditPropertyRefLookupTest.Item.class })
 @ServiceRegistry(settings = @Setting(name = CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.AuditPropertyRefLookupTest$ChangesetIds"))
@@ -79,12 +79,17 @@ class AuditPropertyRefLookupTest {
 			final var item = new Item( 30, 40 );
 			item.tags.add( "first" );
 			session.persist( item );
+			session.persist( new Item( 40, 30 ) );
 		} );
+		final var observer = scope.getCollectingStatementObserver();
 		scope.inTransaction( session -> {
+			session.find( Item.class, 40 );
 			final var item = session.find( Item.class, 30 );
-			item.description = "revised";
 			item.tags.add( "second" );
+			observer.clear();
 		} );
+		// One collection row, its audit row, and the owner revision.
+		observer.assertQueries().hasSize( 3 ).allMatch( sql -> sql.startsWith( "insert" ) );
 		try ( var session = scope.getSessionFactory().withOptions().atChangeset( ALL_CHANGESETS ).openSession() ) {
 			session.setSubselectFetchingEnabled( true );
 			final var revisions = session.createSelectionQuery(
@@ -92,6 +97,8 @@ class AuditPropertyRefLookupTest {
 			assertEquals( 2, revisions.size() );
 			assertEquals( Set.of( "first" ), revisions.get( 0 ).tags );
 			assertEquals( Set.of( "first", "second" ), revisions.get( 1 ).tags );
+			assertEquals( 1L, session.createSelectionQuery(
+					"select count(i) from Item i where i.id = 40", Long.class ).getSingleResult() );
 		}
 	}
 
@@ -117,7 +124,6 @@ class AuditPropertyRefLookupTest {
 		int id;
 		@Column(unique = true)
 		int code;
-		String description;
 		@ElementCollection
 		@CollectionTable(name = "Item_tags", joinColumns = @JoinColumn(name = "item_code", referencedColumnName = "code"))
 		Set<String> tags = new HashSet<>();

@@ -4,6 +4,7 @@ import jakarta.annotation.Nullable;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.List;
 import static org.hibernate.processor.annotation.QueryMethod.PARAM_INDENT;
 import static org.hibernate.processor.util.Constants.HIB_ENABLED_FETCH_PROFILE;
 import static org.hibernate.processor.util.Constants.QUERY_OPTIONS;
+import static org.hibernate.processor.util.Constants.STATEMENT_OPTIONS;
 import static org.hibernate.processor.util.Constants.TIMEOUT;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationMirror;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationValue;
@@ -28,8 +30,22 @@ final class QueryOptionsSupport {
 			boolean update,
 			boolean nativeQuery) {
 		setQueryOptions( method, declaration,
-				getAnnotationMirror( method.method, QUERY_OPTIONS ),
+				update
+						? statementOptions( method.method )
+						: getAnnotationMirror( method.method, QUERY_OPTIONS ),
 				update, nativeQuery );
+	}
+
+	/**
+	 * The options of a statement, specified using {@code @StatementOptions},
+	 * or using {@code @QueryOptions} when the statement is declared by an
+	 * annotation for declaring queries.
+	 */
+	static @Nullable AnnotationMirror statementOptions(ExecutableElement method) {
+		final var statementOptions = getAnnotationMirror( method, STATEMENT_OPTIONS );
+		return statementOptions == null
+				? getAnnotationMirror( method, QUERY_OPTIONS )
+				: statementOptions;
 	}
 
 	static boolean appendEntityGraphArgument(

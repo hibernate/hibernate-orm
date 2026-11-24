@@ -44,6 +44,12 @@ class DataTest {
 		assertTrue( repository.contains( ".setHint(\"find.hint\", \"yes\")" ) );
 		assertTrue( repository.contains( ".setTimeout(Timeout.milliseconds(600))" ) );
 		assertTrue( repository.contains( ".setTimeout(Timeout.milliseconds(700))" ) );
+		assertTrue( repository.contains( ".setTimeout(Timeout.milliseconds(750))" ) );
+		assertTrue( repository.contains( "createStatement(BookAuthorRepository_.retitle(isbn, title))" ) );
+		assertTrue( repository.contains( "createStatement(BookAuthorRepository_.nativeRemove(isbn))" ) );
+		assertTrue( queryMetamodel.contains( "StatementReference retitle(String isbn, String title)" ) );
+		assertTrue( queryMetamodel.contains( "Timeout.milliseconds(800)" ) );
+		assertTrue( queryMetamodel.contains( "StatementReference nativeRemove(String isbn)" ) );
 		assertTrue( repository.contains( ".get(Book.class, isbn, Timeout.milliseconds(650), CacheRetrieveMode.BYPASS)" ) );
 		assertTrue( repository.contains( "_key.put(\"title\", title);" ) );
 		assertTrue( repository.contains( "_key.put(\"publicationDate\", publicationDate);" ) );

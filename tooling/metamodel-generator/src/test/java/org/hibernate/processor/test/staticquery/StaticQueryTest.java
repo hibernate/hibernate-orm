@@ -6,6 +6,7 @@ import jakarta.persistence.StatementReference;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQueryReference;
 import org.hibernate.processor.test.util.CompilationTest;
+import org.hibernate.processor.test.util.IgnoreCompilationErrors;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,7 @@ import java.lang.reflect.ParameterizedType;
 import java.util.List;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
+import static org.hibernate.processor.test.util.TestUtil.assertNoMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.getMethodFromMetamodelFor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -69,6 +71,36 @@ class StaticQueryTest {
 		assertEquals( List.of(), statementReference.getParameterTypes() );
 		assertEquals( List.of(), statementReference.getParameterNames() );
 		assertEquals( List.of(), statementReference.getArguments() );
+	}
+
+	@Test
+	@WithClasses({ Book.class, Library.class, NotARepo.class })
+	void testStaticStatementReferenceMethods() throws ReflectiveOperationException {
+		final Method retire = getMethodFromMetamodelFor( Library.class, "retire", String.class );
+		assertEquals( StatementReference.class, retire.getReturnType() );
+		final StatementReference retireReference =
+				(StatementReference) retire.invoke( null, "9781932394153" );
+		assertEquals( Library.class.getName() + "#retire(java.lang.String)", retireReference.getName() );
+		assertEquals( List.of( String.class ), retireReference.getParameterTypes() );
+		assertEquals( List.of( "isbn" ), retireReference.getParameterNames() );
+		assertEquals( List.of( "9781932394153" ), retireReference.getArguments() );
+		assertEquals( "retire", retireReference.getHints().get( "org.hibernate.comment" ) );
+		assertTrue( retireReference.getOptions().contains( QueryFlushMode.NO_FLUSH ) );
+		assertTrue( retireReference.getOptions().contains( Timeout.milliseconds( 750 ) ) );
+
+		final Method purge = getMethodFromMetamodelFor( Library.class, "purge" );
+		assertEquals( StatementReference.class, purge.getReturnType() );
+		final StatementReference purgeReference =
+				(StatementReference) purge.invoke( null );
+		assertEquals( Library.class.getName() + "#purge()", purgeReference.getName() );
+		assertEquals( List.of(), purgeReference.getArguments() );
+	}
+
+	@Test
+	@WithClasses({ Book.class, InvalidStaticStatement.class })
+	@IgnoreCompilationErrors
+	void staticStatementMustReturnMutationResultType() {
+		assertNoMetamodelClassGeneratedFor( InvalidStaticStatement.class );
 	}
 
 	@Test

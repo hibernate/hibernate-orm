@@ -67,6 +67,7 @@ import jakarta.persistence.AccessType;
 
 import static java.lang.Integer.parseInt;
 import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
+import static org.hibernate.processor.annotation.QueryOptionsSupport.statementOptions;
 import static org.hibernate.processor.annotation.QueryOptionsSupport.stringLiteral;
 import static org.hibernate.processor.util.StringUtil.decapitalize;
 import static java.lang.Boolean.FALSE;
@@ -1676,18 +1677,21 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 	}
 
 	public static boolean hasStaticQueryAnnotation(ExecutableElement method) {
-		return containsAnnotation( method, JAKARTA_QUERY, NATIVE_QUERY, JD_QUERY );
+		return containsAnnotation( method,
+				JAKARTA_QUERY, JAKARTA_STATEMENT, NATIVE_QUERY, NATIVE_STATEMENT, JD_QUERY );
 	}
 
 	public static boolean hasQueryStringAnnotation(ExecutableElement method) {
-		return containsAnnotation( method, HQL, SQL, JAKARTA_QUERY, NATIVE_QUERY, JD_QUERY );
+		return containsAnnotation( method, HQL, SQL,
+				JAKARTA_QUERY, JAKARTA_STATEMENT, NATIVE_QUERY, NATIVE_STATEMENT, JD_QUERY );
 	}
 
 	private boolean shouldGenerateStaticQueryMethodInMetamodel(ExecutableElement method) {
 		return element.getTypeParameters().isEmpty()
 			&& ( repositoryQueryMetamodel
 					? hasStaticQueryAnnotation( method )
-					: containsAnnotation( method, JAKARTA_QUERY, NATIVE_QUERY ) );
+					: containsAnnotation( method,
+							JAKARTA_QUERY, JAKARTA_STATEMENT, NATIVE_QUERY, NATIVE_STATEMENT ) );
 	}
 
 	private void addStaticQueryMethods(List<ExecutableElement> queryMethods) {
@@ -1710,9 +1714,17 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 		if ( jakartaQuery != null ) {
 			addStaticQueryMethod( method, methodName, jakartaQuery, false );
 		}
+		final var jakartaStatement = getAnnotationMirror( method, JAKARTA_STATEMENT );
+		if ( jakartaStatement != null ) {
+			addStaticQueryMethod( method, methodName, jakartaStatement, false );
+		}
 		final var nativeQuery = getAnnotationMirror( method, NATIVE_QUERY );
 		if ( nativeQuery != null ) {
 			addStaticQueryMethod( method, methodName, nativeQuery, true );
+		}
+		final var nativeStatement = getAnnotationMirror( method, NATIVE_STATEMENT );
+		if ( nativeStatement != null ) {
+			addStaticQueryMethod( method, methodName, nativeStatement, true );
 		}
 		final var jdql = getAnnotationMirror( method, JD_QUERY );
 		if ( jdql != null ) {
@@ -1769,7 +1781,9 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 									paramTypes,
 									referenceParamNames,
 									referenceParamTypes,
-									getAnnotationMirror( method, QUERY_OPTIONS )
+									queryReturnType.statement
+											? statementOptions( method )
+											: getAnnotationMirror( method, QUERY_OPTIONS )
 							);
 					putMember( attribute.getPropertyName() + referenceParamTypes, attribute );
 				}
@@ -1810,7 +1824,7 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 			AnnotationValue value,
 			String queryString,
 			boolean validate) {
-		final var statement = isMutationStatement( queryString );
+		final var statement = isStatement( mirror, queryString );
 		return switch ( methodReturnType.getKind() ) {
 			case VOID -> statement
 					? new StaticQueryReturnType( true, null, null, methodReturnType )
@@ -1834,6 +1848,9 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 				if ( statement && isValidUpdateReturnType( methodReturnType, method, hasReactiveReturn( method ) ) ) {
 					yield new StaticQueryReturnType( true, null, null, methodReturnType );
 				}
+				else if ( isStatementAnnotation( mirror ) ) {
+					yield illegalStaticQueryReturnType( method, mirror, value, validate );
+				}
 				else {
 					final var queryResultType = staticQueryResultType( (DeclaredType) methodReturnType );
 					if ( validate ) {
@@ -1846,14 +1863,34 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 				}
 			}
 			case ARRAY -> {
-				final var queryResultType = staticArrayQueryResultType( (ArrayType) methodReturnType );
-				yield new StaticQueryReturnType( false,
-						typeAsString( queryResultType ),
-						returnTypeClass( queryResultType ),
-						queryResultType );
+				if ( isStatementAnnotation( mirror ) ) {
+					yield illegalStaticQueryReturnType( method, mirror, value, validate );
+				}
+				else {
+					final var queryResultType = staticArrayQueryResultType( (ArrayType) methodReturnType );
+					yield new StaticQueryReturnType( false,
+							typeAsString( queryResultType ),
+							returnTypeClass( queryResultType ),
+							queryResultType );
+				}
 			}
 			default -> illegalStaticQueryReturnType( method, mirror, value, validate );
 		};
+	}
+
+	/**
+	 * Is the given query string a statement, either because it's declared using
+	 * {@code @JakartaStatement} or {@code @NativeStatement}, or because it begins
+	 * with {@code insert}, {@code update}, or {@code delete}?
+	 */
+	private static boolean isStatement(AnnotationMirror mirror, String queryString) {
+		return isStatementAnnotation( mirror )
+			|| isMutationStatement( queryString );
+	}
+
+	private static boolean isStatementAnnotation(AnnotationMirror mirror) {
+		return annotationTypeMatches( mirror, JAKARTA_STATEMENT )
+			|| annotationTypeMatches( mirror, NATIVE_STATEMENT );
 	}
 
 	private @Nullable StaticQueryReturnType illegalStaticQueryReturnType(
@@ -2215,9 +2252,17 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 		if ( jakartaQuery != null ) {
 			addQueryMethod( method, returnType, containerType, jakartaQuery, false );
 		}
+		final var jakartaStatement = getAnnotationMirror( method, JAKARTA_STATEMENT );
+		if ( jakartaStatement != null ) {
+			addQueryMethod( method, returnType, containerType, jakartaStatement, false );
+		}
 		final var nativeQuery = getAnnotationMirror( method, NATIVE_QUERY );
 		if ( nativeQuery != null ) {
 			addQueryMethod( method, returnType, containerType, nativeQuery, true );
+		}
+		final var nativeStatement = getAnnotationMirror( method, NATIVE_STATEMENT );
+		if ( nativeStatement != null ) {
+			addQueryMethod( method, returnType, containerType, nativeStatement, true );
 		}
 		final var jdql = getAnnotationMirror( method, JD_QUERY );
 		if ( jdql != null ) {
@@ -2962,7 +3007,7 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 			}
 			return null;
 		}
-		if ( isMutationStatement( queryString ) ) {
+		if ( isStatement( query, queryString ) ) {
 			if ( validate && explicitMethodSelect ) {
 				message( method, query,
 						"'@Select' may not be used on a mutation query",
@@ -4252,7 +4297,7 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 			processedQuery = addFromClauseIfNecessary( queryString, implicitEntityName( validationResultType ) );
 			validateHql( method, validationReturnType, mirror, value, processedQuery, paramNames, paramTypes );
 		}
-		final var mutation = isMutationStatement( queryString );
+		final var mutation = isStatement( mirror, queryString );
 		if ( mutation && hasAnnotation( method, JD_FIRST ) ) {
 			final var first = getAnnotationMirror( method, JD_FIRST );
 			if ( first == null ) {

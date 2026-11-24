@@ -67,8 +67,11 @@ public final class Constants {
 	public static final String TYPED_QUERY_REFERENCE = "jakarta.persistence.TypedQueryReference";
 	public static final String STATEMENT_REFERENCE = "jakarta.persistence.StatementReference";
 	public static final String JAKARTA_QUERY = "jakarta.persistence.query.JakartaQuery";
+	public static final String JAKARTA_STATEMENT = "jakarta.persistence.query.JakartaStatement";
 	public static final String NATIVE_QUERY = "jakarta.persistence.query.NativeQuery";
+	public static final String NATIVE_STATEMENT = "jakarta.persistence.query.NativeStatement";
 	public static final String QUERY_OPTIONS = "jakarta.persistence.query.QueryOptions";
+	public static final String STATEMENT_OPTIONS = "jakarta.persistence.query.StatementOptions";
 	public static final String STATIC_TYPED_QUERY_REFERENCE = "jakarta.persistence.query.StaticTypedQueryReference";
 	public static final String STATIC_STATEMENT_REFERENCE = "jakarta.persistence.query.StaticStatementReference";
 	public static final String ENTITY_GRAPH = "jakarta.persistence.EntityGraph";

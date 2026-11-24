@@ -63,6 +63,7 @@ public class FlushOperation implements OperationResultChecker {
 	private List<FlushOperation> executionPrerequisites = List.of();
 	private OperationExecutionMonitor executionMonitor;
 	private boolean executionSkipped;
+	private boolean batchingDisabled;
 	private CollectionMutationCompletion collectionMutationCompletion;
 	private boolean collectionMutationFixupReserved;
 
@@ -149,6 +150,14 @@ public class FlushOperation implements OperationResultChecker {
 
 	public StatementShapeKey getShapeKey() {
 		return shapeKey;
+	}
+
+	public void disableBatching() {
+		batchingDisabled = true;
+	}
+
+	public boolean isBatchingDisabled() {
+		return batchingDisabled;
 	}
 
 	public MutationOperation getJdbcOperation() {

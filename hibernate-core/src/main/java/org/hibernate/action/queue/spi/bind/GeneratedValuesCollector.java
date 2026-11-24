@@ -35,12 +35,32 @@ public final class GeneratedValuesCollector {
 	public static @Nullable GeneratedValuesCollector forInsert(
 			EntityPersister entityPersister,
 			SessionFactoryImplementor sessionFactory) {
+		return forParts( entityPersister, EventType.INSERT, generatedInsertParts( entityPersister, sessionFactory ) );
+	}
+
+	private static List<? extends ModelPart> generatedInsertParts(
+			EntityPersister entityPersister,
+			SessionFactoryImplementor sessionFactory) {
 		final var dialect = sessionFactory.getJdbcServices().getDialect();
 		final var generatedValuesSupport = dialect.getGeneratedValuesSupport();
 		final var supportsRowId = generatedValuesSupport.supports( GeneratedValuesSupport.Capability.INSERT_RETURNING )
 				&& generatedValuesSupport.supports( GeneratedValuesSupport.Capability.INSERT_RETURNING_ROW_ID )
 				&& noCustomSql( entityPersister, EventType.INSERT );
-		return forTiming( entityPersister, EventType.INSERT, supportsRowId );
+		return getActualGeneratedModelParts( entityPersister, EventType.INSERT, true, supportsRowId );
+	}
+
+	/// A temporal replacement binds the existing identifier; only other values may be generated.
+	public static @Nullable GeneratedValuesCollector forReplacementInsert(
+			EntityPersister entityPersister,
+			SessionFactoryImplementor sessionFactory) {
+		final var delegate = entityPersister.getInsertDelegate();
+		if ( delegate == null || !delegate.supportsArbitraryValues() ) {
+			return null;
+		}
+		final var generatedModelParts = generatedInsertParts( entityPersister, sessionFactory ).stream()
+				.filter( part -> !part.isEntityIdentifierMapping() )
+				.toList();
+		return forParts( entityPersister, EventType.INSERT, generatedModelParts );
 	}
 
 	public static @Nullable GeneratedValuesCollector forUpdate(
@@ -54,9 +74,7 @@ public final class GeneratedValuesCollector {
 			for ( var resultBuilder : mappingProducer.getResultBuilders() ) {
 				list.add( resultBuilder.getModelPart() );
 			}
-			return isEmpty( list )
-					? null
-					: new GeneratedValuesCollector( EventType.UPDATE, entityPersister, list );
+			return forParts( entityPersister, EventType.UPDATE, list );
 		}
 		return forTiming( entityPersister, EventType.UPDATE, false );
 	}
@@ -65,8 +83,13 @@ public final class GeneratedValuesCollector {
 			EntityPersister entityPersister,
 			EventType timing,
 			boolean supportsRowId) {
-		final var generatedModelParts =
-				getActualGeneratedModelParts( entityPersister, timing, true, supportsRowId );
+		return forParts( entityPersister, timing, getActualGeneratedModelParts( entityPersister, timing, true, supportsRowId ) );
+	}
+
+	private static @Nullable GeneratedValuesCollector forParts(
+			EntityPersister entityPersister,
+			EventType timing,
+			List<? extends ModelPart> generatedModelParts) {
 		return isEmpty( generatedModelParts )
 				? null
 				: new GeneratedValuesCollector( timing, entityPersister, generatedModelParts );

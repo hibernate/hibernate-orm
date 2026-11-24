@@ -238,6 +238,9 @@ The temporal table strategy is controlled by the following property setting:
 | link:{doc-javadoc-url}org/hibernate/cfg/StateManagementSettings.html#TEMPORAL_TABLE_STRATEGY[`hibernate.temporal.table_strategy`]  | Specifies the `TemporalTableStrategy`
 |===
 
+When a `SINGLE_TABLE` entity uses an `IDENTITY` identifier, each replacement row reuses the entity's existing identifier.
+On SQL Server and Sybase ASE, the database user must have permission to execute `SET IDENTITY_INSERT` for the entity table.
+
 In the `SINGLE_TABLE` strategy, the `@HistoryPartitioning` annotation allows historical data to be shifted to a separate partition.
 
 [source,java]

@@ -209,10 +209,15 @@ class PropertyRefMutationTest {
 			assertThat( Hibernate.isInitialized( sender.item ) ).isFalse();
 		} );
 		scope.inSession( session -> {
-			assertThat( session.createNativeQuery( "select receiver_id, item_code from Sender", Object[].class )
-					.getSingleResult() ).containsExactly( 1, "KEY1" );
-			assertThat( session.createNativeQuery( "select sender_id, item_code from Receiver", Object[].class )
-					.getSingleResult() ).containsExactly( 1, "KEY2" );
+			// The type of an integer column read by a native query depends on the database
+			final Object[] sender = session.createNativeQuery( "select receiver_id, item_code from Sender", Object[].class )
+					.getSingleResult();
+			assertThat( ( (Number) sender[0] ).intValue() ).isEqualTo( 1 );
+			assertThat( sender[1] ).isEqualTo( "KEY1" );
+			final Object[] receiver = session.createNativeQuery( "select sender_id, item_code from Receiver", Object[].class )
+					.getSingleResult();
+			assertThat( ( (Number) receiver[0] ).intValue() ).isEqualTo( 1 );
+			assertThat( receiver[1] ).isEqualTo( "KEY2" );
 		} );
 	}
 
@@ -309,6 +314,27 @@ class PropertyRefMutationTest {
 		scope.inSession( session -> assertThat( session.createNativeQuery(
 				"select labels from catalog_labels where key_code='KEY3'", String.class ).getSingleResult() )
 				.isEqualTo( "after" ) );
+	}
+
+	@Test
+	void updateOfVanishedCollectionRow(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.setJdbcBatchSize( 0 );
+			final var catalog = new Catalog();
+			catalog.code = 2;
+			final var item = session.getReference( Item.class, 3 );
+			catalog.labels.put( item, "before" );
+			session.persist( catalog );
+			session.flush();
+			session.createNativeMutationQuery( "delete from catalog_labels" ).executeUpdate();
+			catalog.labels.put( item, "after" );
+			// The key is read from an Item which exists, so this is an update of a
+			// collection row which is gone, and that is not an error
+			session.flush();
+			assertThat( Hibernate.isInitialized( item ) ).isFalse();
+		} );
+		scope.inSession( session -> assertThat( session.createNativeQuery(
+				"select labels from catalog_labels", String.class ).getResultList() ).isEmpty() );
 	}
 
 	@Test

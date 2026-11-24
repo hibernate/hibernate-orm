@@ -72,8 +72,14 @@ public class SingleRowUpdateBindPlan implements BindPlan {
 
 	@Override
 	public OperationResultChecker getOperationResultChecker() {
+		// The statement matches no row when a row it reads is missing, which must not
+		// pass. A collection row which is itself gone is accepted, as for any other
+		// update of a collection row.
 		return keyReferences == null ? null
-				: (rowCount, statement, position, sql, factory) -> KeyLookup.checkMatched( keyReferences, rowCount, sql );
+				: (rowCount, statement, position, sql, factory) -> {
+					KeyLookup.verify( keyReferences, rowCount );
+					return true;
+				};
 	}
 
 	@Override

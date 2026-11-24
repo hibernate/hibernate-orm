@@ -376,10 +376,6 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 				final String name = tableDescriptor.name();
 				final var tableUpdate = effectiveGroup.get( name );
 				if ( tableUpdate != null ) {
-					final var operation = cachedUpdates == null ? resolveJdbcUpdateOperation( name, tableUpdate )
-							: cachedUpdates.jdbcOperations().get( name );
-					final var shapeKey = cachedUpdates == null ? resolveStatementShapeKey( name, tableUpdate )
-							: cachedUpdates.shapeKeys().get( name );
 					// For static updates, only execute secondary tables when one of their
 					// attributes actually drove the update.  Static mutation groups may
 					// contain generated SQL assignments for joined-subclass tables, but
@@ -410,15 +406,21 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 								needsDynamicUpdate,
 								generatedValuesCollector
 						);
+						// Resolve the statement as given only if no other was chosen, since
+						// a dynamic one is built for each row
 						final var keyLookupUpdate = resolveKeyLookupUpdate( tableDescriptor, tableUpdate, bindPlan, session );
 						final var op = new FlushOperation(
 								tableDescriptor,
 								MutationKind.UPDATE,
-								keyLookupUpdate != null ? keyLookupUpdate.operation() : operation,
+								keyLookupUpdate != null ? keyLookupUpdate.operation()
+										: cachedUpdates != null ? cachedUpdates.jdbcOperations().get( name )
+										: resolveJdbcUpdateOperation( name, tableUpdate ),
 								bindPlan,
 								ordinalBase * 1_000 + (localOrd++),
 								origin,
-								keyLookupUpdate != null ? keyLookupUpdate.shapeKey() : shapeKey
+								keyLookupUpdate != null ? keyLookupUpdate.shapeKey()
+										: cachedUpdates != null ? cachedUpdates.shapeKeys().get( name )
+										: resolveStatementShapeKey( name, tableUpdate )
 						);
 						if ( previousOperation != null ) {
 							operationConsumer.accept( previousOperation );

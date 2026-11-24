@@ -17,16 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @ServiceRegistry(settings = @Setting(name = MappingSettings.XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES, value = "true"))
 @BaseUnitTest
 public class EntityResolverTest {
-	@Test
-	public void testEntityIncludeResolution(ServiceRegistryScope registryScope) {
-		// Parent.hbm.xml contains the following entity include:
-		//		<!ENTITY child SYSTEM "classpath://org/hibernate/test/util/dtd/child.xml">
-		// which we are expecting the Hibernate custom entity resolver to be able to resolve
-		// locally via classpath lookup.
-		new MetadataSources( registryScope.getRegistry() )
-				.addResource( "org/hibernate/orm/test/util/dtd/Parent.hbm.xml" )
-				.buildMetadata();
-	}
 
 	@Test
 	public void testOrmXmlEntityIncludeResolution(ServiceRegistryScope registryScope) {

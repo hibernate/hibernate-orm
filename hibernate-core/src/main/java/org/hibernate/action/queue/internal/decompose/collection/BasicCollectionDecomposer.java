@@ -20,8 +20,6 @@ import org.hibernate.action.queue.spi.meta.TableDescriptorAsTableMapping;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.collection.spi.CollectionChangeSet;
 import org.hibernate.collection.spi.CollectionMutationInterpretation;
-import org.hibernate.collection.spi.DeferredCollectionIdentifier;
-import org.hibernate.collection.spi.DeferredCollectionPosition;
 import org.hibernate.collection.spi.FrozenCollectionRows;
 import org.hibernate.collection.spi.PhysicalCollectionMutation;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -806,12 +804,12 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 				final int entryIndex;
 
 				if ( isMap ) {
-					rowValue = new AbstractMap.SimpleImmutableEntry<>( addition.index(), addition.element() );
+					rowValue = new AbstractMap.SimpleImmutableEntry<>( addition.rowKey(), addition.element() );
 					entryIndex = -1;
 				}
 				else {
 					rowValue = addition.element();
-					entryIndex = rowPosition( addition.index() );
+					entryIndex = addition.bindingPosition();
 				}
 
 				operationConsumer.accept( new FlushOperation(
@@ -872,12 +870,12 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 				final int entryIndex;
 
 				if ( persister.getCollectionSemantics().getCollectionClassification().isMap() ) {
-					entry = new AbstractMap.SimpleImmutableEntry<>( valueChange.index(), valueChange.newValue() );
+					entry = new AbstractMap.SimpleImmutableEntry<>( valueChange.rowKey(), valueChange.newValue() );
 					entryIndex = -1;
 				}
 				else {
 					entry = valueChange.newValue();
-					entryIndex = rowPosition( valueChange.index() );
+					entryIndex = valueChange.bindingPosition();
 				}
 
 				operationConsumer.accept( new FlushOperation(
@@ -898,23 +896,10 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 						updateShapeKey
 				) );
 				contributeAdditionalUpdate( collection, key,
-						new CollectionChangeSet.Removal( valueChange.oldValue(), valueChange.index() ), entryIndex,
+						valueChange.replacedRow(), entryIndex,
 						entry, entryIndex, ordinalBase, session, operationConsumer );
 			}
 		}
-	}
-
-	private static int rowPosition(Object position) {
-		if ( position instanceof Number number ) {
-			return number.intValue();
-		}
-		if ( position instanceof DeferredCollectionIdentifier identifier ) {
-			return identifier.entryPosition();
-		}
-		if ( position instanceof DeferredCollectionPosition deferredPosition ) {
-			return deferredPosition.resolve();
-		}
-		return -1;
 	}
 
 	private boolean canUpdateIndexedManyToManyValuesAtPositions(

@@ -21,6 +21,8 @@ import org.hibernate.collection.spi.CollectionInterpretationContext;
 import org.hibernate.collection.spi.CollectionInterpretationProduction;
 import org.hibernate.collection.spi.CollectionMutationInterpreter;
 import org.hibernate.collection.spi.CollectionSemantics;
+import org.hibernate.collection.spi.DeferredCollectionPosition;
+import org.hibernate.collection.spi.PersistedCollectionSize;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.collection.spi.PhysicalCollectionMutation;
 import org.hibernate.collection.spi.SemanticCollectionChange;
@@ -143,15 +145,30 @@ public class CollectionMutationInterpreterContractTest {
 	}
 
 	@Test
+	void listPositionsMayBeResolvedAfterTheChangeSetIsCreated() {
+		final var size = new PersistedCollectionSize();
+		final var index = new DeferredCollectionPosition( size, 1 );
+		final var addition = new CollectionChangeSet.Addition( "added", index );
+		final var replacement = new CollectionChangeSet.ValueChange( "old", "new", index );
+
+		size.resolve( 3 );
+		assertEquals( 4, addition.bindingPosition() );
+		assertEquals( 4, replacement.bindingPosition() );
+	}
+
+	@Test
 	void identifierBagUpdateProducesPhysicalRowChangesDirectly() {
 		final var collection = mock( PersistentCollection.class );
 		final var persister = persister();
 		when( collection.wasInitialized() ).thenReturn( true );
-		when( collection.getStoredSnapshot() ).thenReturn( new HashMap<>( Map.of( 1L, "removed" ) ) );
+		when( collection.getStoredSnapshot() ).thenReturn( new HashMap<>( Map.of( 1L, "removed", 100L, "before" ) ) );
 		when( collection.getDeletes( persister, true ) ).thenReturn( List.of( 1L ).iterator() );
-		when( collection.entries( persister ) ).thenReturn( List.of( "added" ).iterator() );
+		when( collection.entries( persister ) ).thenReturn( List.of( "added", "after" ).iterator() );
 		when( collection.getIdentifier( "added", 0 ) ).thenReturn( null );
-		when( collection.includeInInsert( any(), anyInt(), any(), any() ) ).thenReturn( true );
+		when( collection.getIdentifier( "after", 1 ) ).thenReturn( 100L );
+		when( collection.includeInInsert( "added", 0, collection, persister.getAttributeMapping() ) ).thenReturn( true );
+		when( collection.needsUpdating( "after", 1, persister.getAttributeMapping() ) ).thenReturn( true );
+		when( collection.getElement( "after" ) ).thenReturn( "after" );
 		when( collection.getElement( "added" ) ).thenReturn( "added" );
 
 		final var interpretation = produced( StandardIdentifierBagSemantics.INSTANCE
@@ -171,8 +188,11 @@ public class CollectionMutationInterpreterContractTest {
 		assertSame( "added", rowChanges.changes().additions().get( 0 ).element() );
 		assertInstanceOf(
 				org.hibernate.collection.spi.DeferredCollectionIdentifier.class,
-				rowChanges.changes().additions().get( 0 ).index()
+				rowChanges.changes().additions().get( 0 ).rowKey()
 		);
+		assertEquals( 0, rowChanges.changes().additions().get( 0 ).entryPosition() );
+		assertEquals( List.of( new CollectionChangeSet.ValueChange( "before", "after", 100L, 1 ) ),
+				rowChanges.changes().valueChanges() );
 	}
 
 	@Test

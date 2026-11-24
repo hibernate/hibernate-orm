@@ -173,7 +173,7 @@ final class LegacyCompatibleCollectionMutationInterpreter implements CollectionM
 			changes.add( new CollectionChange.Removal( removal.element(), removal.snapshotIndex() ) );
 		}
 		for ( var addition : changeSet.additions() ) {
-			changes.add( new CollectionChange.Addition( addition.element(), addition.index() ) );
+			changes.add( new CollectionChange.Addition( addition.element(), addition.rowKey() ) );
 		}
 		for ( var shift : changeSet.shifts() ) {
 			changes.add( new CollectionChange.PositionChange(
@@ -186,8 +186,8 @@ final class LegacyCompatibleCollectionMutationInterpreter implements CollectionM
 			changes.add( new CollectionChange.Replacement(
 					valueChange.oldValue(),
 					valueChange.newValue(),
-					valueChange.index(),
-					valueChange.index()
+					valueChange.rowKey(),
+					valueChange.rowKey()
 			) );
 		}
 		return changes;

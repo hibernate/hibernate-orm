@@ -212,9 +212,6 @@ enum StandardCollectionMutationInterpreter implements CollectionMutationInterpre
 		while ( entries.hasNext() ) {
 			final Object entry = entries.next();
 			final Object identifier = collection.getIdentifier( entry, position );
-			final Object rowIdentity = identifier == null
-					? new DeferredCollectionIdentifier( collection, position )
-					: identifier;
 			if ( collection.includeInInsert(
 					entry,
 					position,
@@ -222,14 +219,16 @@ enum StandardCollectionMutationInterpreter implements CollectionMutationInterpre
 					persister.getAttributeMapping() ) ) {
 				additions.add( new CollectionChangeSet.Addition(
 						collection.getElement( entry ),
-						rowIdentity
+						identifier == null ? new DeferredCollectionIdentifier( collection, position ) : identifier,
+						position
 				) );
 			}
 			else if ( collection.needsUpdating( entry, position, persister.getAttributeMapping() ) ) {
 				valueChanges.add( new CollectionChangeSet.ValueChange(
 						identifier == null ? null : snapshot.get( identifier ),
 						collection.getElement( entry ),
-						rowIdentity
+						identifier,
+						position
 				) );
 			}
 			position++;
@@ -265,14 +264,16 @@ enum StandardCollectionMutationInterpreter implements CollectionMutationInterpre
 					persister.getAttributeMapping() ) ) {
 				additions.add( new CollectionChangeSet.Addition(
 						collection.getElement( entry ),
-						currentPosition
+						currentPosition,
+						position
 				) );
 			}
 			else if ( collection.needsUpdating( entry, position, persister.getAttributeMapping() ) ) {
 				valueChanges.add( new CollectionChangeSet.ValueChange(
 						collection.getSnapshotElement( entry, position ),
 						collection.getElement( entry ),
-						currentPosition
+						currentPosition,
+						position
 				) );
 			}
 			position++;
@@ -294,7 +295,7 @@ enum StandardCollectionMutationInterpreter implements CollectionMutationInterpre
 			) );
 		}
 		for ( var addition : changes.additions() ) {
-			semanticChanges.add( new CollectionChange.Addition( addition.element(), addition.index() ) );
+			semanticChanges.add( new CollectionChange.Addition( addition.element(), addition.rowKey() ) );
 		}
 		for ( var shift : changes.shifts() ) {
 			semanticChanges.add( new CollectionChange.PositionChange(
@@ -307,8 +308,8 @@ enum StandardCollectionMutationInterpreter implements CollectionMutationInterpre
 			semanticChanges.add( new CollectionChange.Replacement(
 					valueChange.oldValue(),
 					valueChange.newValue(),
-					valueChange.index(),
-					valueChange.index()
+					valueChange.rowKey(),
+					valueChange.rowKey()
 			) );
 		}
 		return new CollectionDelta(

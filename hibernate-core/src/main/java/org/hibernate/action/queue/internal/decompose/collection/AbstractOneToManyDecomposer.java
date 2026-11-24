@@ -426,9 +426,9 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 		}
 		for ( var addition : changeSet.additions() ) {
 			final Object rowValue = map
-					? new SimpleImmutableEntry<>( addition.index(), addition.element() )
+					? new SimpleImmutableEntry<>( addition.rowKey(), addition.element() )
 					: addition.element();
-			final int rowPosition = addition.index() instanceof Number number ? number.intValue() : -1;
+			final int rowPosition = map ? -1 : addition.bindingPosition();
 			planInsert(
 					rowValue,
 					rowPosition,
@@ -449,7 +449,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 							jdbcOperations.tableDescriptor(),
 							jdbcOperations.updateIndexPlan(),
 							calculateOrdinal( ordinalBase, Slot.WRITEINDEX ),
-							"WriteIndex[" + addition.index() + "](" + persister.getRolePath() + ")",
+							"WriteIndex[" + addition.rowKey() + "](" + persister.getRolePath() + ")",
 							operationConsumer
 					);
 				}
@@ -467,9 +467,11 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 		final var additions = new ArrayList<>( changeSet.additions() );
 		for ( var valueChange : changeSet.valueChanges() ) {
 			if ( valueChange.oldValue() != null ) {
-				removals.add( new CollectionChangeSet.Removal( valueChange.oldValue(), valueChange.index() ) );
+				removals.add( valueChange.replacedRow() );
 			}
-			additions.add( new CollectionChangeSet.Addition( valueChange.newValue(), valueChange.index() ) );
+			additions.add( new CollectionChangeSet.Addition(
+					valueChange.newValue(), valueChange.rowKey(), valueChange.entryPosition()
+			) );
 		}
 		return new CollectionChangeSet( removals, additions, changeSet.shifts(), List.of() );
 	}
@@ -543,7 +545,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			}
 		}
 		for ( CollectionChangeSet.Addition addition : changeSet.additions() ) {
-			if ( !( addition.index() instanceof Number ) ) {
+			if ( !( addition.rowKey() instanceof Number ) ) {
 				return false;
 			}
 		}
@@ -759,17 +761,17 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 								collection,
 								key,
 								addition.element(),
-								( (Number) addition.index() ).intValue()
+								addition.bindingPosition()
 						),
 						insertOrdinal,
-						"InsertRow[" + addition.index() + "](" + persister.getRolePath() + ")"
+						"InsertRow[" + addition.rowKey() + "](" + persister.getRolePath() + ")"
 				) );
 				contributeAdditionalInsert(
 						jdbcOperations,
 						collection,
 						key,
 						addition.element(),
-						( (Number) addition.index() ).intValue(),
+						addition.bindingPosition(),
 						ordinalBase,
 						session,
 						operationConsumer
@@ -780,11 +782,11 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 						collection,
 						key,
 						addition.element(),
-						( (Number) addition.index() ).intValue(),
+						addition.bindingPosition(),
 						jdbcOperations.tableDescriptor(),
 						jdbcOperations.updateIndexPlan(),
 						writeIndexOrdinal,
-						"WriteIndex[" + addition.index() + "](" + persister.getRolePath() + ")",
+						"WriteIndex[" + addition.rowKey() + "](" + persister.getRolePath() + ")",
 						operationConsumer
 				);
 			}

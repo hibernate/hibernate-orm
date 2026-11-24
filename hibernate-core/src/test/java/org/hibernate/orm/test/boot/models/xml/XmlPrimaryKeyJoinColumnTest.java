@@ -54,6 +54,14 @@ public class XmlPrimaryKeyJoinColumnTest {
 	}
 
 	@Test
+	void joinedSubclassPrimaryKeyForeignKeyWithoutJoinColumnDefaultsTheKeyColumn() {
+		final PersistentClass dog = bindJoinedSubclass( "<primary-key-foreign-key name=\"fk_dog_entity\"/>" );
+
+		assertThat( columnNames( dog.getKey().getSelectables() ) ).containsExactly( "id" );
+		assertThat( foreignKeyNames( dog.getTable() ) ).containsExactly( "fk_dog_entity" );
+	}
+
+	@Test
 	void secondaryTableKeyColumnNameIsApplied() {
 		final Join join = bindSecondaryTable( "<primary-key-join-column name=\"detail_owner_id\"/>" );
 

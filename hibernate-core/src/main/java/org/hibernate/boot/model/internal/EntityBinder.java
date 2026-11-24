@@ -1307,12 +1307,19 @@ public class EntityBinder {
 		final var joinColumns = new AnnotatedJoinColumns();
 		joinColumns.setBuildingContext( context );
 		final var modelsContext = context.getBootstrapContext().getModelsContext();
-		if ( clazzToProcess.hasAnnotationUsage( PrimaryKeyJoinColumn.class, modelsContext ) ) {
-			final var columns = clazzToProcess.getRepeatedAnnotationUsages( PrimaryKeyJoinColumn.class, modelsContext );
-			if ( columns.length == 0 ) {
-				// PrimaryKeyJoinColumns must not be empty according to Javadoc
-				throw new AnnotationException( "Empty '@PrimaryKeyJoinColumns' annotation" );
-			}
+		final var columns = clazzToProcess.getRepeatedAnnotationUsages( PrimaryKeyJoinColumn.class, modelsContext );
+		if ( columns.length == 0 ) {
+			// either no @PrimaryKeyJoinColumn at all, or a @PrimaryKeyJoinColumns with no columns
+			// (e.g. one which only specifies a foreignKey): the join columns are defaulted
+			buildInheritanceJoinColumn(
+					null,
+					null,
+					superEntity.getIdentifier(),
+					joinColumns,
+					context
+			);
+		}
+		else {
 			for ( var column : columns ) {
 				buildInheritanceJoinColumn(
 						column,
@@ -1322,15 +1329,6 @@ public class EntityBinder {
 						context
 				);
 			}
-		}
-		else {
-			buildInheritanceJoinColumn(
-					null,
-					null,
-					superEntity.getIdentifier(),
-					joinColumns,
-					context
-			);
 		}
 		return joinColumns;
 	}

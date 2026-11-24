@@ -11,6 +11,7 @@ import org.hibernate.dialect.type.spi.ObjectNullBindingStrategy;
 import org.hibernate.dialect.type.spi.StandardDdlTypes;
 
 import org.hibernate.dialect.array.spi.ArraySupport;
+import org.hibernate.dialect.jdbc.spi.InsertSelectExecution;
 import org.hibernate.dialect.jdbc.spi.JdbcMetadataOverrides;
 import org.hibernate.dialect.jdbc.spi.LobMergeStrategy;
 import org.hibernate.dialect.jdbc.spi.ParameterLimits;
@@ -2867,6 +2868,14 @@ public abstract class Dialect implements ConversionContext, AlterTableSupport,
 	@SPI({ IMPLEMENT, SUPPLY })
 	public GeneratedValuesSupport getGeneratedValuesSupport() {
 		return GeneratedValuesSupport.STANDARD;
+	}
+
+	/// Whether JDBC can execute an INSERT sourced by a SELECT in the given mode.
+	///
+	/// @since 8.0
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public boolean supports(InsertSelectExecution execution) {
+		return true;
 	}
 
 	/// Supply the stable overrides applied to raw JDBC metadata reports.

@@ -18,6 +18,8 @@ import jakarta.persistence.OptimisticLockException;
 
 import org.hibernate.Hibernate;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.jdbc.spi.InsertSelectExecution;
+import org.hibernate.id.insert.GetGeneratedKeysDelegate;
 import org.hibernate.orm.test.collection.map.LazyUniqueKeyAssociationTest.Catalog;
 import org.hibernate.orm.test.collection.map.LazyUniqueKeyAssociationTest.Item;
 import org.hibernate.orm.test.collection.map.LazyUniqueKeyAssociationTest.RegionalItem;
@@ -105,7 +107,7 @@ class PropertyRefMutationTest {
 			assertThat( sql.getSqlQueries() ).anySatisfy( statement -> assertThat( statement )
 					.containsIgnoringCase( "catalog_labels" ).containsIgnoringCase( " from Item " ) );
 			assertThat( sql.getSqlQueries() ).filteredOn( statement -> statement.contains( "catalog_labels" )
-					&& statement.contains( " from Item " ) ).hasSize( 1 );
+					&& statement.contains( " from Item " ) ).hasSize( supportsInsertSelectBatch( scope ) ? 1 : 2 );
 			assertThat( Hibernate.isInitialized( second ) ).isFalse();
 			assertThat( Hibernate.isInitialized( third ) ).isFalse();
 		} );
@@ -199,9 +201,11 @@ class PropertyRefMutationTest {
 			sql.clear();
 			session.persist( invoice );
 			session.flush();
+			final boolean insertSelect = usesInsertSelectForInvoice( scope );
 			assertThat( sql.getSqlQueries() ).anySatisfy( statement -> assertThat( statement )
-					.containsIgnoringCase( "insert into Invoice" ).containsIgnoringCase( " from Item " ) );
-			assertThat( Hibernate.isInitialized( invoice.item ) ).isFalse();
+					.containsIgnoringCase( "insert into Invoice" )
+					.containsIgnoringCase( insertSelect ? " from Item " : "values" ) );
+			assertThat( Hibernate.isInitialized( invoice.item ) ).isEqualTo( !insertSelect );
 			return invoice.id;
 		} );
 		scope.inSession( session -> assertThat( session.createNativeQuery(
@@ -225,10 +229,13 @@ class PropertyRefMutationTest {
 			sql.clear();
 			session.persist( invoice );
 			session.flush();
-			assertThat( sql.getSqlQueries() ).anySatisfy( statement -> assertThat( statement )
-					.contains( "Item uk0", "Item uk1" ).doesNotContain( "exists" ) );
-			assertThat( Hibernate.isInitialized( invoice.item ) ).isFalse();
-			assertThat( Hibernate.isInitialized( invoice.otherItem ) ).isFalse();
+			final boolean insertSelect = usesInsertSelectForInvoice( scope );
+			if ( insertSelect ) {
+				assertThat( sql.getSqlQueries() ).anySatisfy( statement -> assertThat( statement )
+						.contains( "Item uk0", "Item uk1" ).doesNotContain( "exists" ) );
+			}
+			assertThat( Hibernate.isInitialized( invoice.item ) ).isEqualTo( !insertSelect );
+			assertThat( Hibernate.isInitialized( invoice.otherItem ) ).isEqualTo( !insertSelect );
 		} );
 		scope.inSession( session -> assertThat( session.createNativeQuery(
 				"select item_code, other_item_code from Invoice", Object[].class ).getSingleResult() )
@@ -242,6 +249,17 @@ class PropertyRefMutationTest {
 			session.flush();
 		} ) );
 		assertThat( failure ).hasMessageContaining( "99" );
+	}
+
+	private static boolean usesInsertSelectForInvoice(SessionFactoryScope scope) {
+		final var factory = scope.getSessionFactory();
+		return factory.getJdbcServices().getDialect().supports( InsertSelectExecution.GENERATED_KEYS )
+				|| !(factory.getMappingMetamodel().getEntityDescriptor( Invoice.class ).getInsertDelegate()
+						instanceof GetGeneratedKeysDelegate);
+	}
+
+	private static boolean supportsInsertSelectBatch(SessionFactoryScope scope) {
+		return scope.getSessionFactory().getJdbcServices().getDialect().supports( InsertSelectExecution.BATCH );
 	}
 
 	@Embeddable
@@ -377,7 +395,7 @@ class PropertyRefMutationTest {
 			session.persist( catalog );
 			session.flush();
 		} ) );
-		assertThat( masked.get() ).isEqualTo( 2 );
+		assertThat( masked.get() ).isEqualTo( supportsInsertSelectBatch( scope ) ? 2 : 0 );
 		assertThat( failure ).hasMessageContaining( "99" );
 		scope.inSession( session -> assertThat( session.find( Catalog.class, 2 ) ).isNull() );
 	}

@@ -53,9 +53,13 @@ public final class PropertyRefBindings extends JdbcValueBindings {
 	private List<EntityKey> referencedRows;
 
 	PropertyRefBindings(FlushOperation flushOperation, PreparableMutationOperation operation) {
+		this( flushOperation, operation, true );
+	}
+
+	private PropertyRefBindings(FlushOperation flushOperation, PreparableMutationOperation operation, boolean specialize) {
 		super( flushOperation.getMutatingTableDescriptor(), operation );
 		this.operation = operation;
-		model = getBindTemplate() != null && flushOperation.getBindingPatch() == null && operation instanceof AbstractJdbcMutation mutation
+		model = specialize && getBindTemplate() != null && flushOperation.getBindingPatch() == null && operation instanceof AbstractJdbcMutation mutation
 				? mutation.getMutationModel() : null;
 	}
 
@@ -96,6 +100,12 @@ public final class PropertyRefBindings extends JdbcValueBindings {
 
 	public static BoundRow bindRow(FlushOperation operation, SharedSessionContractImplementor session) {
 		return bindRow( (PreparableMutationOperation) operation.getJdbcOperation(), operation, -1, session );
+	}
+
+	/// Bind the mapped values directly when the driver requires an INSERT ... VALUES statement.
+	public static BoundRow bindValuesRow(FlushOperation operation, SharedSessionContractImplementor session) {
+		return new PropertyRefBindings( operation, (PreparableMutationOperation) operation.getJdbcOperation(), false )
+				.prepareRow( operation, -1, session );
 	}
 
 	static BoundRow bindRow(PreparableMutationOperation original, FlushOperation operation, int rowIndex,

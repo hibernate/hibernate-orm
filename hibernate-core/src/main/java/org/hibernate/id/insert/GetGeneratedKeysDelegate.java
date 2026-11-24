@@ -3,6 +3,7 @@ package org.hibernate.id.insert;
 import jakarta.annotation.Nullable;
 import org.hibernate.action.queue.internal.exec.PropertyRefBindings;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
+import org.hibernate.dialect.jdbc.spi.InsertSelectExecution;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -112,7 +113,9 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 			FlushOperation operation,
 			Object entity,
 			SharedSessionContractImplementor session) {
-		final var row = PropertyRefBindings.bindRow( operation, session );
+		final var row = getTiming() == EventType.INSERT && !dialect().supports( InsertSelectExecution.GENERATED_KEYS )
+				? PropertyRefBindings.bindValuesRow( operation, session )
+				: PropertyRefBindings.bindRow( operation, session );
 		final String sql = row.operation().getSqlString();
 		session.getJdbcServices().getSqlStatementLogger().logStatement( sql );
 

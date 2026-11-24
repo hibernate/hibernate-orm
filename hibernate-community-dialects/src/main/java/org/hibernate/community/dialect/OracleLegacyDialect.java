@@ -59,6 +59,7 @@ import org.hibernate.dialect.rowid.spi.RowIdSupport;
 import org.hibernate.dialect.rowid.spi.RowIdSupports;
 import org.hibernate.dialect.schema.spi.ExistenceCheckPlacement;
 import org.hibernate.dialect.sql.ast.spi.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.jdbc.spi.InsertSelectExecution;
 import org.hibernate.dialect.jdbc.spi.OracleServerConfiguration;
 import org.hibernate.dialect.jdbc.spi.ParameterLimits;
 import org.hibernate.dialect.temptable.spi.TemporaryTableStrategies;
@@ -1188,6 +1189,12 @@ public class OracleLegacyDialect extends Dialect implements CurrentTemporalSuppo
 			schemaDropSupport = new SchemaDropSupport( List.of(), ConstraintDropMode.IMPLICIT, " cascade constraints" );
 		}
 		return schemaDropSupport;
+	}
+
+	@Override
+	public boolean supports(InsertSelectExecution execution) {
+		// The Oracle driver appends a RETURNING clause, which Oracle rejects on INSERT ... SELECT.
+		return execution != InsertSelectExecution.GENERATED_KEYS && super.supports( execution );
 	}
 
 	@Override

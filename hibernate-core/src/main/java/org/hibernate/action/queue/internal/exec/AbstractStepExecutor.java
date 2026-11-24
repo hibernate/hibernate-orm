@@ -261,7 +261,11 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 			FlushOperation flushOperation,
 			int bindingIndex) {
 		final var row = PropertyRefBindings.bindRow( preparable, flushOperation, bindingIndex, session );
-		preparable = row.operation();
+		executePreparableDirectly( row, flushOperation );
+	}
+
+	protected void executePreparableDirectly(PropertyRefBindings.BoundRow row, FlushOperation flushOperation) {
+		final var preparable = row.operation();
 		try (var stmnt = session.getJdbcCoordinator()
 				.getStatementPreparer()
 				.prepareStatement( preparable.getSqlString(), preparable.isCallable() )) {

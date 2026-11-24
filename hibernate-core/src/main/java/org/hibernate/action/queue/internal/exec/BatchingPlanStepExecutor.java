@@ -8,11 +8,13 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.StatementShapeKey;
 import org.hibernate.action.queue.spi.bind.GroupedRowBindPlan;
+import org.hibernate.dialect.jdbc.spi.InsertSelectExecution;
 import org.hibernate.engine.jdbc.batch.spi.SingleStatementBatch;
 import org.hibernate.engine.jdbc.batch.spi.BatchObserver;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
+import org.hibernate.sql.spi.mutation.MutationType;
 import org.hibernate.sql.spi.mutation.SelfExecutingUpdateOperation;
 
 import java.util.function.Consumer;
@@ -150,6 +152,18 @@ public class BatchingPlanStepExecutor extends StandardPlanStepExecutor implement
 		final var valueBindings = getReusableValueBindings( preparable, flushOperation );
 		final var row = valueBindings.prepareRow( flushOperation, bindingIndex, session );
 		final var effective = row.operation();
+		if ( effective != preparable && effective.getMutationType() == MutationType.INSERT
+				&& !session.getJdbcServices().getDialect().supports( InsertSelectExecution.BATCH ) ) {
+			if ( batchKey != null ) {
+				executeBatch();
+			}
+			super.beforePhysicalExecution( flushOperation );
+			executePreparableDirectly( row, flushOperation );
+			if ( completesOperation ) {
+				super.afterOperationExecution( flushOperation, newlyManagedEntityConsumer, fixupOperationConsumer );
+			}
+			return;
+		}
 		final var table = flushOperation.getMutatingTableDescriptor();
 		final var shape = effective == preparable ? flushOperation.getShapeKey()
 				: StatementShapeKey.forMutation( table.name(), flushOperation.getKind(), table, effective );

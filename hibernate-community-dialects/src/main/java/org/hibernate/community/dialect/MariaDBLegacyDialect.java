@@ -15,6 +15,7 @@ import org.hibernate.dialect.schema.spi.InnoDBStorageEngine;
 
 import org.hibernate.dialect.schema.spi.MySQLStorageEngine;
 
+import org.hibernate.dialect.jdbc.spi.InsertSelectExecution;
 import org.hibernate.dialect.jdbc.spi.MySQLServerConfiguration;
 
 import org.hibernate.dialect.type.spi.NationalizationSupport;
@@ -327,6 +328,12 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 		);
 		}
 		return ifExistsSupport;
+	}
+
+	@Override
+	public boolean supports(InsertSelectExecution execution) {
+		// The MariaDB bulk prepared statement protocol rejects INSERT ... SELECT.
+		return execution != InsertSelectExecution.BATCH && super.supports( execution );
 	}
 
 	@Override

@@ -45,6 +45,8 @@ import org.hibernate.LockMode;
 import org.hibernate.Locking;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.annotations.SecondaryRow;
+import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -52,6 +54,8 @@ import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.SelectionQuery;
 
+import org.hibernate.testing.orm.domain.AbstractDomainModelDescriptor;
+import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -83,7 +87,7 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 /// validation across composite identifier representations at READ_COMMITTED.
 ///
 /// @author Steve Ebersole
-@DomainModel(overrideCacheStrategy = false, annotatedClasses = {
+@DomainModel(overrideCacheStrategy = false, modelDescriptorClasses = CompositeIdentifierFollowOnLockingTest.BinaryIdentifierModel.class, annotatedClasses = {
 		CompositeIdentifierFollowOnLockingTest.EmbeddedItem.class,
 		CompositeIdentifierFollowOnLockingTest.SingleItem.class,
 		CompositeIdentifierFollowOnLockingTest.NestedItem.class,
@@ -94,8 +98,6 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 		CompositeIdentifierFollowOnLockingTest.SecondaryItem.class,
 		CompositeIdentifierFollowOnLockingTest.JoinedRoot.class,
 		CompositeIdentifierFollowOnLockingTest.JoinedItem.class,
-		CompositeIdentifierFollowOnLockingTest.BinaryItem.class,
-		CompositeIdentifierFollowOnLockingTest.TypedItem.class,
 		CompositeIdentifierFollowOnLockingTest.Parent.class
 })
 @SessionFactory(useCollectingStatementObserver = true, generateStatistics = true)
@@ -140,11 +142,17 @@ class CompositeIdentifierFollowOnLockingTest {
 				final var joined = new JoinedItem();
 				joined.id = new Pair( 1, local );
 				joined.detail = "detail" + local;
-				final var binary = new BinaryItem();
-				binary.id = new byte[] { 1, (byte) local };
-				final var typed = new TypedItem();
-				typed.id = new TypedKey( new BigDecimal( "1.0" ), new byte[] { 1, (byte) local } );
-				for ( var item : List.of( embedded, single, nested, idClass, association, derived, virtual, secondary, joined, binary, typed ) ) {
+				final var items = new ArrayList<VersionedItem>( List.of(
+						embedded, single, nested, idClass, association, derived, virtual, secondary, joined ) );
+				if ( supportsBinaryIdentifiers() ) {
+					final var binary = new BinaryItem();
+					binary.id = new byte[] { 1, (byte) local };
+					final var typed = new TypedItem();
+					typed.id = new TypedKey( new BigDecimal( "1.0" ), new byte[] { 1, (byte) local } );
+					items.add( binary );
+					items.add( typed );
+				}
+				for ( var item : items ) {
 					item.title = "item" + local;
 					session.persist( item );
 				}
@@ -160,6 +168,7 @@ class CompositeIdentifierFollowOnLockingTest {
 	static Stream<Arguments> identifierMappings() {
 		return Stream.of( EmbeddedItem.class, SingleItem.class, NestedItem.class, IdClassItem.class,
 				AssociationItem.class, DerivedItem.class, VirtualItem.class, SecondaryItem.class, JoinedItem.class, BinaryItem.class, TypedItem.class )
+				.filter( type -> supportsBinaryIdentifiers() || type != BinaryItem.class && type != TypedItem.class )
 				.flatMap( type -> Stream.of( PESSIMISTIC_READ, PESSIMISTIC_WRITE, PESSIMISTIC_FORCE_INCREMENT )
 						.flatMap( mode -> Stream.of( false, true ).map( readOnly -> arguments( type, mode, readOnly ) ) ) );
 	}
@@ -397,9 +406,8 @@ class CompositeIdentifierFollowOnLockingTest {
 	}
 
 	@ParameterizedTest
-	@CsvSource({ "false", "true" })
-	void repeatedEntitySelectionsIncrementEachIdentityOnce(boolean binary, SessionFactoryScope scope) {
-		final var type = binary ? BinaryItem.class : AssociationItem.class;
+	@MethodSource("repeatedIdentifierMappings")
+	void repeatedEntitySelectionsIncrementEachIdentityOnce(Class<? extends VersionedItem> type, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final var name = session.getFactory().getMappingMetamodel().getEntityDescriptor( type ).getEntityName();
 			final var query = session.createQuery( "select a, b from " + name + " a join " + name
@@ -413,6 +421,35 @@ class CompositeIdentifierFollowOnLockingTest {
 			} );
 			assertThat( updates( scope ) ).isEqualTo( 2 );
 		} );
+	}
+
+	static Stream<Class<? extends VersionedItem>> repeatedIdentifierMappings() {
+		return supportsBinaryIdentifiers()
+				? Stream.of( AssociationItem.class, BinaryItem.class )
+				: Stream.of( AssociationItem.class );
+	}
+
+	private static boolean supportsBinaryIdentifiers() {
+		return supportsBinaryIdentifiers( DialectContext.getDialectClass() );
+	}
+
+	private static boolean supportsBinaryIdentifiers(Class<? extends Dialect> dialectClass) {
+		// Informix maps byte[] to BYTE, which cannot participate in a primary key.
+		return !InformixDialect.class.isAssignableFrom( dialectClass );
+	}
+
+	/// Omit unsupported binary-key tables before schema creation, while retaining
+	/// the non-binary fixture and its full locking coverage.
+	public static class BinaryIdentifierModel extends AbstractDomainModelDescriptor {
+		public BinaryIdentifierModel() {
+			this( DialectContext.getDialectClass() );
+		}
+
+		BinaryIdentifierModel(Class<? extends Dialect> dialectClass) {
+			super( supportsBinaryIdentifiers( dialectClass )
+					? new Class<?>[] { BinaryItem.class, TypedItem.class }
+					: new Class<?>[0] );
+		}
 	}
 
 	private static TableDetails tableFor(EntityPersister persister, String tableName) {

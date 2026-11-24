@@ -29,6 +29,7 @@ import org.hibernate.cache.spi.entry.StructuredMapCacheEntry;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
@@ -899,9 +900,19 @@ public abstract class AbstractCollectionPersister
 	@Nullable
 	private CollectionLoader resolveSubSelectLoader(@Nonnull Object key, @Nonnull SharedSessionContractImplementor session) {
 		final var persistenceContext = session.getPersistenceContextInternal();
-		final var subselect =
-				persistenceContext.getBatchFetchQueue()
-						.getSubselect( session.generateEntityKey( key, getOwnerEntityPersister() ) );
+		final EntityKey ownerKey;
+		if ( getCollectionType().useLHSPrimaryKey() ) {
+			ownerKey = session.generateEntityKey( key, getOwnerEntityPersister() );
+		}
+		else {
+			final var collection = persistenceContext.getCollection( session.generateCollectionKey( this, key ) );
+			final var ownerEntry = collection == null ? null : persistenceContext.getEntry( collection.getOwner() );
+			if ( ownerEntry == null ) {
+				return null;
+			}
+			ownerKey = ownerEntry.getEntityKey();
+		}
+		final var subselect = persistenceContext.getBatchFetchQueue().getSubselect( ownerKey );
 		if ( subselect == null ) {
 			return null;
 		}

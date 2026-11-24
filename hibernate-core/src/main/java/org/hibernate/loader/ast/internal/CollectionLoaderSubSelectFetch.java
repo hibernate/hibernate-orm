@@ -6,11 +6,11 @@ import jakarta.annotation.Nullable;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.LockOptions;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.CollectionKey;
-import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.internal.util.NullnessUtil;
@@ -80,30 +80,9 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 		final var jdbcServices = sessionFactory.getJdbcServices();
 		final var persistenceContext = session.getPersistenceContext();
 
-		// try to find a registered SubselectFetch
 		final var collection = persistenceContext.getCollection( collectionKey );
-		attributeMapping.getCollectionDescriptor().getCollectionType().getKeyOfOwner( collection.getOwner(), session );
-
 		final var batchFetchQueue = persistenceContext.getBatchFetchQueue();
-		final var ownerEntry = persistenceContext.getEntry( collection.getOwner() );
-		List<PersistentCollection<?>> subSelectFetchedCollections = null;
-		if ( ownerEntry != null ) {
-			final var triggerKeyOwnerKey = ownerEntry.getEntityKey();
-			final var registeredFetch = batchFetchQueue.getSubselect( triggerKeyOwnerKey );
-			if ( registeredFetch != null ) {
-				subSelectFetchedCollections = arrayList( registeredFetch.getResultingEntityKeys().size() );
-				// there was one, so we want to make sure to prepare the corresponding collection
-				// reference for reading
-				for ( var key : registeredFetch.getResultingEntityKeys() ) {
-					final var containedCollection = persistenceContext.getCollection( collectionKey( key, session ) );
-					if ( containedCollection != null && containedCollection != collection ) {
-						containedCollection.beginRead();
-						containedCollection.beforeInitialize( getLoadable().getCollectionDescriptor(), -1 );
-						subSelectFetchedCollections.add( containedCollection );
-					}
-				}
-			}
-		}
+		final var subSelectFetchedCollections = prepareCollections( collection, collectionKey.getChangesetId(), persistenceContext, session );
 
 		final var jdbcSelect =
 				jdbcServices.getJdbcEnvironment()
@@ -125,32 +104,55 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 				ListResultsConsumer.UniqueSemantic.NONE
 		);
 
-		if ( subSelectFetchedCollections != null && ! subSelectFetchedCollections.isEmpty() ) {
-			subSelectFetchedCollections.forEach(
-					c -> {
-						if ( !c.wasInitialized() ) {
-							final var persister = getLoadable().getCollectionDescriptor();
-							c.initializeEmptyCollection( persister );
-							ResultsHelper.finalizeCollectionLoading(
-									persistenceContext,
-									persister,
-									c,
-									NullnessUtil.castNonNull( c.getKey() ),
-									true,
-									null
-							);
-						}
-					}
-			);
-			subSelectFetchedCollections.clear();
+		for ( var fetched : subSelectFetchedCollections ) {
+			if ( !fetched.wasInitialized() ) {
+				final var persister = attributeMapping.getCollectionDescriptor();
+				fetched.initializeEmptyCollection( persister );
+				ResultsHelper.finalizeCollectionLoading(
+						persistenceContext, persister, fetched, NullnessUtil.castNonNull( fetched.getKey() ), true, null );
+			}
 		}
 
 		return collection;
 	}
 
-	@Nonnull
-	private CollectionKey collectionKey(@Nonnull EntityKey key, @Nonnull SharedSessionContractImplementor session) {
-		return session.generateCollectionKey( attributeMapping.getCollectionDescriptor(), key.getIdentifier() );
+	private List<PersistentCollection<?>> prepareCollections(
+			PersistentCollection<?> trigger,
+			@Nullable Object changesetId,
+			PersistenceContext persistenceContext,
+			SharedSessionContractImplementor session) {
+		final var persister = attributeMapping.getCollectionDescriptor();
+		final var ownerKeys = subselect.getResultingEntityKeys();
+		final List<PersistentCollection<?>> collections = arrayList( ownerKeys.size() );
+		if ( persister.getCollectionType().useLHSPrimaryKey() ) {
+			for ( var ownerKey : ownerKeys ) {
+				final var key = session.generateCollectionKey( persister, ownerKey.getIdentifier() );
+				prepareCollection( persistenceContext.getCollection( key ), trigger, collections );
+			}
+		}
+		else {
+			// The owner identifier is not the collection key. Use the registered wrappers
+			// so that preparing an empty collection does not fetch the owner's lazy key.
+			persistenceContext.getCollectionsByKey().forEach( (key, collection) -> {
+				if ( key.getRole().equals( persister.getRole() ) && Objects.equals( changesetId, key.getChangesetId() ) ) {
+					final var entry = persistenceContext.getEntry( collection.getOwner() );
+					if ( entry != null && ownerKeys.contains( entry.getEntityKey() ) ) {
+						prepareCollection( collection, trigger, collections );
+					}
+				}
+			} );
+		}
+		return collections;
 	}
 
+	private void prepareCollection(
+			@Nullable PersistentCollection<?> collection,
+			PersistentCollection<?> trigger,
+			List<PersistentCollection<?>> collections) {
+		if ( collection != null && collection != trigger && !collection.wasInitialized() ) {
+			collection.beginRead();
+			collection.beforeInitialize( attributeMapping.getCollectionDescriptor(), -1 );
+			collections.add( collection );
+		}
+	}
 }

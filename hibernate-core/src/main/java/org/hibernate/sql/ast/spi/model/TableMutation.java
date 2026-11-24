@@ -27,11 +27,6 @@ import org.hibernate.sql.spi.mutation.ValuesAnalysis;
  * @author Steve Ebersole
  */
 public interface TableMutation<O extends MutationOperation> extends Statement {
-	/// Whether this mutation is conditional on matching a referenced row.
-	default boolean requiresMatchedRow() {
-		return false;
-	}
-
 	/**
 	 * The table being mutated
 	 */

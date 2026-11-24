@@ -70,8 +70,7 @@ public abstract class AbstractTableInsert extends AbstractTableMutation<JdbcInse
 				sql,
 				isCallable(),
 				getExpectation(),
-				effectiveBinders,
-				getClass() == TableInsertStandard.class ? this : null
+				effectiveBinders
 		);
 	}
 }

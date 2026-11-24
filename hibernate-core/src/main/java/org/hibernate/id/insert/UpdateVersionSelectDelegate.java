@@ -5,7 +5,6 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.hibernate.StaleObjectStateException;
-import org.hibernate.action.queue.internal.exec.PropertyRefBindings;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
@@ -21,6 +20,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.sql.SimpleSelect;
+import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
 import org.hibernate.sql.ast.spi.model.builder.TableMutationBuilder;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 
@@ -101,16 +101,18 @@ public class UpdateVersionSelectDelegate extends AbstractGeneratedValuesMutation
 			FlushOperation operation,
 			Object entity,
 			SharedSessionContractImplementor session) {
-		final var row = PropertyRefBindings.bindRow( operation, session );
-		final String sql = row.operation().getSqlString();
+		final var jdbcOperation = (PreparableMutationOperation) operation.getJdbcOperation();
+		final String sql = jdbcOperation.getSqlString();
 		logSql( sql, session );
 		final PreparedStatement statement = prepareStatement( sql, session );
 		try {
-			row.beforeStatement( statement, session );
+			final var valueBindings = new org.hibernate.action.queue.spi.bind.JdbcValueBindings(
+					operation.getMutatingTableDescriptor(),
+					jdbcOperation
+			);
+			operation.getBindPlan().bindValues( valueBindings, operation, session );
+			valueBindings.beforeStatement( statement, session );
 			final int rowCount = session.getJdbcCoordinator().getResultSetReturn().executeUpdate( statement, sql );
-			if ( rowCount == 0 ) {
-				row.verifyReferencedRows( session );
-			}
 			operation.checkResult( rowCount, statement, -1, sql, session.getFactory() );
 		}
 		catch (SQLException e) {

@@ -8,7 +8,6 @@ import org.hibernate.SPI;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.JdbcValueDescriptorImpl;
 import org.hibernate.jdbc.Expectation;
-import org.hibernate.sql.ast.spi.model.TableMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.spi.mutation.MutationTarget;
 import org.hibernate.sql.spi.mutation.MutationType;
@@ -27,7 +26,6 @@ import static org.hibernate.SPI.Role.USE;
  */
 @SPI({ USE, IMPLEMENT })
 public abstract class AbstractJdbcMutation implements JdbcMutationOperation {
-	private final TableMutation<?> model;
 	private final TableMapping tableDetails;
 	private final MutationTarget mutationTarget;
 	private final String sql;
@@ -45,18 +43,6 @@ public abstract class AbstractJdbcMutation implements JdbcMutationOperation {
 			boolean callable,
 			Expectation expectation,
 			List<? extends JdbcParameterBinder> parameterBinders) {
-		this( tableDetails, mutationTarget, sql, callable, expectation, parameterBinders, null );
-	}
-
-	protected AbstractJdbcMutation(
-			TableMapping tableDetails,
-			MutationTarget mutationTarget,
-			String sql,
-			boolean callable,
-			Expectation expectation,
-			List<? extends JdbcParameterBinder> parameterBinders,
-			TableMutation<?> model) {
-		this.model = model;
 		this.tableDetails = tableDetails;
 		this.mutationTarget = mutationTarget;
 		this.sql = sql;
@@ -71,16 +57,6 @@ public abstract class AbstractJdbcMutation implements JdbcMutationOperation {
 							expectation.getNumberOfParametersUsed() + i + 1 );
 			this.jdbcValueDescriptors.add( parameterDescriptor );
 		}
-	}
-
-	@Override
-	public boolean requiresMatchedRow() {
-		return model != null && model.requiresMatchedRow();
-	}
-
-	/// The standard mutation AST, when available for specialization.
-	public final TableMutation<?> getMutationModel() {
-		return model;
 	}
 
 	@Override

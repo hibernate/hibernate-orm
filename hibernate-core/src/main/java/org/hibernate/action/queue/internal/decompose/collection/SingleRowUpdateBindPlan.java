@@ -3,7 +3,9 @@ package org.hibernate.action.queue.internal.decompose.collection;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionJdbcOperations;
 
 import org.hibernate.action.queue.internal.constraint.UniqueConstraint;
+import org.hibernate.action.queue.internal.decompose.KeyLookup;
 import org.hibernate.action.queue.spi.bind.BindPlan;
+import org.hibernate.action.queue.spi.bind.OperationResultChecker;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -21,6 +23,7 @@ public class SingleRowUpdateBindPlan implements BindPlan {
 	private final int entryIndex;
 	private final CollectionJdbcOperations.Values updateRowValues;
 	private final CollectionJdbcOperations.Restrictions updateRowRestrictions;
+	private final KeyLookup.Reference[] keyReferences;
 
 	public SingleRowUpdateBindPlan(
 			CollectionPersister persister,
@@ -30,6 +33,21 @@ public class SingleRowUpdateBindPlan implements BindPlan {
 			int entryIndex,
 			CollectionJdbcOperations.Values updateRowValues,
 			CollectionJdbcOperations.Restrictions updateRowRestrictions) {
+		this( persister, collection, key, entry, entryIndex, updateRowValues, updateRowRestrictions, null );
+	}
+
+	/// @param keyReferences the rows from which the statement reads foreign keys,
+	/// or `null` if the given values and restrictions bind every key
+	public SingleRowUpdateBindPlan(
+			CollectionPersister persister,
+			PersistentCollection<?> collection,
+			Object key,
+			Object entry,
+			int entryIndex,
+			CollectionJdbcOperations.Values updateRowValues,
+			CollectionJdbcOperations.Restrictions updateRowRestrictions,
+			KeyLookup.Reference[] keyReferences) {
+		this.keyReferences = keyReferences;
 		this.persister = persister;
 		this.collection = collection;
 		this.key = key;
@@ -45,6 +63,17 @@ public class SingleRowUpdateBindPlan implements BindPlan {
 		// the collection relationship (FK updates for one-to-many, join table rows for many-to-many).
 		// Returning the element creates artificial dependencies that fragment batches.
 		return null;
+	}
+
+	@Override
+	public boolean requiresMatchedRow() {
+		return keyReferences != null;
+	}
+
+	@Override
+	public OperationResultChecker getOperationResultChecker() {
+		return keyReferences == null ? null
+				: (rowCount, statement, position, sql, factory) -> KeyLookup.checkMatched( keyReferences, rowCount, sql );
 	}
 
 	@Override

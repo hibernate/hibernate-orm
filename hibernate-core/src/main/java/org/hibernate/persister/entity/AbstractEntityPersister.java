@@ -4678,7 +4678,8 @@ public abstract class AbstractEntityPersister
 //		}
 	}
 
-	private boolean hasNamedQueryLoader() {
+	@Override
+	public boolean hasNamedQueryLoader() {
 		return queryLoaderName != null;
 	}
 

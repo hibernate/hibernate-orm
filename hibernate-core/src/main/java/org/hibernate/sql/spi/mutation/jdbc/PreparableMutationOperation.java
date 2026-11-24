@@ -40,11 +40,6 @@ public interface PreparableMutationOperation extends MutationOperation {
 	 */
 	Expectation getExpectation();
 
-	/// Whether a zero update count would silently drop a reference to a missing target.
-	default boolean requiresMatchedRow() {
-		return false;
-	}
-
 	default boolean canRetry() {
 		return getExpectation() instanceof Expectation.RetryableRowCount;
 	}

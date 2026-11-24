@@ -74,25 +74,6 @@ public abstract class AbstractReturningDelegate
 		}
 	}
 
-	final void checkEmptyResult(FlushOperation operation, PreparedStatement statement, String sql,
-			SharedSessionContractImplementor session) {
-		if ( getTiming() == EventType.UPDATE ) {
-			try {
-				final var checker = operation.getOperationResultChecker();
-				if ( checker != null ) {
-					checker.checkResult( 0, statement, -1, sql, session.getFactory() );
-				}
-				else {
-					((PreparableMutationOperation) operation.getJdbcOperation()).getExpectation()
-							.verifyOutcome( 0, statement, -1, sql );
-				}
-			}
-			catch (SQLException e) {
-				throw session.getJdbcServices().getSqlExceptionHelper().convert( e, "Unable to check update outcome", sql );
-			}
-		}
-	}
-
 	@Override
 	public GeneratedValues performMutation(
 			PreparedStatementDetails statementDetails,

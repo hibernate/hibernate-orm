@@ -102,4 +102,10 @@ public interface BindPlan {
 	default ValuesAnalysis getValuesAnalysis() {
 		return null;
 	}
+
+	/// Whether the statement affects a row only if rows it reads from exist, so
+	/// that an execution which matched no row must have its result checked.
+	default boolean requiresMatchedRow() {
+		return false;
+	}
 }

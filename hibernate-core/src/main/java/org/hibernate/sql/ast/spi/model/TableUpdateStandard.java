@@ -98,6 +98,7 @@ public class TableUpdateStandard
 		this.returningColumns = Collections.emptyList();
 	}
 
+	/// A form of the given update with other bindings and an additional restriction.
 	public TableUpdateStandard(TableUpdateStandard original, List<ColumnValueBinding> values,
 			List<ColumnValueBinding> keys, Predicate restriction, List<ColumnValueParameter> restrictionParameters) {
 		super( original.getMutatingTable(), original.getMutationTarget(), original.getMutationComment(),
@@ -119,11 +120,7 @@ public class TableUpdateStandard
 		}
 	}
 
-	@Override
-	public boolean requiresMatchedRow() {
-		return restriction != null;
-	}
-
+	/// A restriction beyond the key and optimistic lock restrictions, or `null`.
 	public Predicate getAdditionalRestriction() {
 		return restriction;
 	}

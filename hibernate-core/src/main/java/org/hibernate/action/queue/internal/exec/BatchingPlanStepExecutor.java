@@ -8,13 +8,12 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.StatementShapeKey;
 import org.hibernate.action.queue.spi.bind.GroupedRowBindPlan;
-import org.hibernate.dialect.jdbc.spi.InsertSelectExecution;
+import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
 import org.hibernate.engine.jdbc.batch.spi.SingleStatementBatch;
 import org.hibernate.engine.jdbc.batch.spi.BatchObserver;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
-import org.hibernate.sql.spi.mutation.MutationType;
 import org.hibernate.sql.spi.mutation.SelfExecutingUpdateOperation;
 
 import java.util.function.Consumer;
@@ -26,14 +25,13 @@ public class BatchingPlanStepExecutor extends StandardPlanStepExecutor implement
 	private final int batchSize;
 
 	private StatementShapeKey batchKey;
-	private StatementShapeKey originalBatchKey;
 	private int currentBatchIndex;
 
 	private SingleStatementBatch batch;
 	private final FlushOperation[] batchOperations;
 	private final boolean[] batchOperationCompletions;
 	private PreparableMutationOperation reusableValueBindingsOperation;
-	private PropertyRefBindings reusableValueBindings;
+	private JdbcValueBindings reusableValueBindings;
 
 	private Consumer<Object> newlyManagedEntityConsumer;
 	private Consumer<FlushOperation> fixupOperationConsumer;
@@ -77,20 +75,24 @@ public class BatchingPlanStepExecutor extends StandardPlanStepExecutor implement
 		else if ( flushOperation.getBindPlan() instanceof GroupedRowBindPlan groupedRowBindPlan ) {
 			final int bindingCount = groupedRowBindPlan.getBindingCount();
 			for ( int bindingIndex = 0; bindingIndex < bindingCount; bindingIndex++ ) {
+				prepareBatch( flushOperation, preparable );
 				applyToBatch(
 						preparable,
 						flushOperation,
+						groupedRowBindPlan,
 						bindingIndex,
 						bindingIndex == bindingCount - 1
 				);
 			}
 		}
 		else {
-			applyToBatch( preparable, flushOperation, -1, true );
+			prepareBatch( flushOperation, preparable );
+			applyToBatch( preparable, flushOperation, flushOperation.getBindPlan(), -1, true );
 		}
 	}
 
-	private void prepareBatch(StatementShapeKey operationShapeKey, PreparableMutationOperation preparable) {
+	private void prepareBatch(FlushOperation flushOperation, PreparableMutationOperation preparable) {
+		final var operationShapeKey = flushOperation.getShapeKey();
 		if ( batchKey == null ) {
 			newBatch( operationShapeKey, preparable );
 		}
@@ -137,6 +139,8 @@ public class BatchingPlanStepExecutor extends StandardPlanStepExecutor implement
 	private void newBatch(StatementShapeKey operationShapeKey, PreparableMutationOperation preparable) {
 		batchKey = operationShapeKey;
 		currentBatchIndex = 0;
+		reusableValueBindingsOperation = null;
+		reusableValueBindings = null;
 		batch = session.getJdbcCoordinator().getSingleStatementBatch( operationShapeKey, batchSize, preparable );
 		batch.addObserver( this );
 	}
@@ -144,39 +148,25 @@ public class BatchingPlanStepExecutor extends StandardPlanStepExecutor implement
 	private void applyToBatch(
 			PreparableMutationOperation preparable,
 			FlushOperation flushOperation,
+			org.hibernate.action.queue.spi.bind.BindPlan bindPlan,
 			int bindingIndex,
 			boolean completesOperation) {
-		if ( batchKey != null && !flushOperation.getShapeKey().equals( originalBatchKey ) ) {
-			executeBatch();
+		var valueBindings = getReusableValueBindings( preparable, flushOperation );
+		if ( bindingIndex >= 0 && bindPlan instanceof GroupedRowBindPlan groupedRowBindPlan ) {
+			groupedRowBindPlan.bindValues( bindingIndex, valueBindings, flushOperation, session );
 		}
-		final var valueBindings = getReusableValueBindings( preparable, flushOperation );
-		final var row = valueBindings.prepareRow( flushOperation, bindingIndex, session );
-		final var effective = row.operation();
-		if ( effective != preparable && effective.getMutationType() == MutationType.INSERT
-				&& !session.getJdbcServices().getDialect().supports( InsertSelectExecution.BATCH ) ) {
-			if ( batchKey != null ) {
-				executeBatch();
-			}
-			super.beforePhysicalExecution( flushOperation );
-			executePreparableDirectly( row, flushOperation );
-			if ( completesOperation ) {
-				super.afterOperationExecution( flushOperation, newlyManagedEntityConsumer, fixupOperationConsumer );
-			}
-			return;
+		else {
+			bindPlan.bindValues( valueBindings, flushOperation, session );
 		}
-		final var table = flushOperation.getMutatingTableDescriptor();
-		final var shape = effective == preparable ? flushOperation.getShapeKey()
-				: StatementShapeKey.forMutation( table.name(), flushOperation.getKind(), table, effective );
-		prepareBatch( shape, effective );
-		originalBatchKey = flushOperation.getShapeKey();
+
 		batchOperations[currentBatchIndex] = flushOperation;
 		batchOperationCompletions[currentBatchIndex] = completesOperation;
 
-		final var resultChecker = flushOperation.getOperationResultChecker();
 		try {
 			batch.addToBatch(
-					row::beforeStatement,
-					row.batchResultChecker( resultChecker, session )
+					valueBindings::beforeStatement,
+					// The operation itself, so that the batch can ask whether a row must match
+					flushOperation.getOperationResultChecker() == null ? null : flushOperation
 			);
 		}
 		catch (ConstraintViolationException cve) {
@@ -199,15 +189,16 @@ public class BatchingPlanStepExecutor extends StandardPlanStepExecutor implement
 		}
 	}
 
-	private PropertyRefBindings getReusableValueBindings(
+	private JdbcValueBindings getReusableValueBindings(
 			PreparableMutationOperation preparable,
 			FlushOperation flushOperation) {
-		if ( preparable.canRetry() || flushOperation.getBindingPatch() != null ) {
-			return new PropertyRefBindings( flushOperation, preparable );
+		if ( preparable.canRetry() ) {
+			// A retried batch binds its rows again, so each row keeps its own values
+			return new JdbcValueBindings( flushOperation.getMutatingTableDescriptor(), preparable );
 		}
 		if ( reusableValueBindingsOperation != preparable ) {
 			reusableValueBindingsOperation = preparable;
-			reusableValueBindings = new PropertyRefBindings( flushOperation, preparable );
+			reusableValueBindings = new JdbcValueBindings( flushOperation.getMutatingTableDescriptor(), preparable );
 		}
 		else {
 			reusableValueBindings.clear();

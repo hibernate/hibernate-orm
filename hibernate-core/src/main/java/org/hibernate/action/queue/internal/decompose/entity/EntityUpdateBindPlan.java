@@ -4,6 +4,7 @@ package org.hibernate.action.queue.internal.decompose.entity;
 import jakarta.annotation.Nullable;
 import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.action.queue.internal.cyclebreak.CycleBreakPatcher;
+import org.hibernate.action.queue.internal.decompose.KeyLookup;
 import org.hibernate.action.queue.spi.bind.BindPlan;
 import org.hibernate.action.queue.spi.bind.Checkers;
 import org.hibernate.action.queue.spi.bind.GeneratedValuesCollector;
@@ -19,19 +20,17 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.ModelPart.JdbcValueBiConsumer;
-import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.spi.mutation.ValuesAnalysis;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import static org.hibernate.action.queue.internal.exec.PropertyRefBindings.bindIfUnfetched;
 import static org.hibernate.action.queue.internal.decompose.entity.BindPlanHelper.shouldBindJdbcValue;
 import static org.hibernate.generator.EventType.UPDATE;
 
 /// @author Steve Ebersole
-public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
+public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker, EntityKeyLookups.Row {
 
 	/// Static, non-capturing [JdbcValueBiConsumer] for binding attribute values for update assignment (SET).
 	private static final JdbcValueBiConsumer<EntityUpdateBindPlan, AttributeMapping> UPDATE_SET_BINDER =
@@ -68,6 +67,9 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 	private final UpdateValuesAnalysis valuesAnalysis;
 	private final boolean isDynamic;
 	private final GeneratedValuesCollector generatedValuesCollector;
+
+	// The rows this update reads foreign keys from, by position of the attribute in the table
+	private KeyLookup.Reference[] keyReferences;
 
 	// temporary state used during decomposition to allow model-part decomposition to be non-capturing
 	private JdbcValueBindings valueBindings;
@@ -123,6 +125,36 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 		return valuesAnalysis;
 	}
 
+	@Override
+	public EntityTableDescriptor getTableDescriptor() {
+		return tableDescriptor;
+	}
+
+	@Override
+	public Object writtenValue(int attributeIndex, SharedSessionContractImplementor session) {
+		final var attribute = tableDescriptor.attributes().get( attributeIndex );
+		final Object value = state[attribute.getStateArrayPosition()];
+		if ( value != LazyPropertyInitializer.UNFETCHED_PROPERTY && shouldIncludeInUpdate( attribute, session ) ) {
+			for ( int i = 0; i < attribute.getJdbcTypeCount(); i++ ) {
+				if ( !valuesAnalysis.includesColumn( attribute.getSelectable( i ) ) ) {
+					return null;
+				}
+			}
+			return value;
+		}
+		return null;
+	}
+
+	@Override
+	public void readKeysFrom(KeyLookup.Reference[] references) {
+		keyReferences = references;
+	}
+
+	@Override
+	public boolean requiresMatchedRow() {
+		return keyReferences != null;
+	}
+
 	/// Get the current (new) state of the entity.
 	/// Phase 3: Used for unique constraint value extraction.
 	public Object[] getState() {
@@ -162,7 +194,10 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 		try {
 			for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
 				var attribute = tableDescriptor.attributes().get( i );
-				if ( shouldIncludeInUpdate( attribute, session ) ) {
+				if ( keyReferences != null && keyReferences[i] != null ) {
+					keyReferences[i].bind( valueBindings );
+				}
+				else if ( shouldIncludeInUpdate( attribute, session ) ) {
 					decomposeAttributeForSet(
 							state[attribute.getStateArrayPosition()],
 							attribute,
@@ -212,12 +247,6 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 			return;
 		}
 
-		if ( attribute instanceof ToOneAttributeMapping
-				&& bindIfUnfetched( valueBindings, attribute, value, ParameterUsage.SET, session,
-						i -> attribute.getSelectable( i ).isUpdateable() && valuesAnalysis.includesColumn( attribute.getSelectable( i ) )
-								&& shouldBindUpdateValue( attribute, i, session ) ) ) {
-			return;
-		}
 		this.valueBindings = valueBindings;
 		this.bindingSession = session;
 		try {
@@ -480,6 +509,10 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 			int batchPosition,
 			String sqlString,
 			SessionFactoryImplementor sessionFactory) throws SQLException {
+		if ( keyReferences != null ) {
+			// A missing referenced row is reported before a stale row of this entity
+			KeyLookup.verify( keyReferences, affectedRowCount );
+		}
 		return Checkers.identifiedResultsCheck(
 				tableDescriptor.updateDetails().getExpectation(),
 				affectedRowCount,

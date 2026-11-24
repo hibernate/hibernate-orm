@@ -2,6 +2,7 @@ package org.hibernate.action.queue.internal.decompose.entity;
 
 
 import org.hibernate.action.internal.AbstractEntityInsertAction;
+import org.hibernate.action.queue.internal.decompose.KeyLookup;
 import org.hibernate.action.queue.internal.cyclebreak.CycleBreakPatcher;
 import org.hibernate.action.queue.spi.bind.BindPlan;
 import org.hibernate.action.queue.spi.bind.Checkers;
@@ -27,7 +28,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
 
-import static org.hibernate.action.queue.internal.exec.PropertyRefBindings.bindIfUnfetched;
 import static org.hibernate.action.queue.internal.decompose.entity.BindPlanHelper.shouldBindJdbcValue;
 import static org.hibernate.generator.EventType.INSERT;
 
@@ -35,7 +35,7 @@ import static org.hibernate.generator.EventType.INSERT;
 /// Uses on-demand decomposition to minimize allocation overhead.
 ///
 /// @author Steve Ebersole
-public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
+public class EntityInsertBindPlan implements BindPlan, OperationResultChecker, EntityKeyLookups.Row {
 
 	/// Static, non-capturing [JdbcValueBiConsumer] for binding attribute values for insert assignment (VALUES).
 	private static final JdbcValueBiConsumer<EntityInsertBindPlan, AttributeMapping> INSERT_SET_BINDER =
@@ -82,6 +82,9 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 	private final GeneratedValuesCollector generatedValuesCollector;
 	private final DecompositionContext decompositionContext;
 
+	// The rows this insert reads foreign keys from, by position of the attribute in the table
+	private KeyLookup.Reference[] keyReferences;
+
 	// temporary state used during decomposition to allow model-part decomposition to be non-capturing
 	private JdbcValueBindings valueBindings;
 	private SharedSessionContractImplementor bindingSession;
@@ -124,6 +127,27 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 	}
 
 	@Override
+	public EntityTableDescriptor getTableDescriptor() {
+		return tableDescriptor;
+	}
+
+	@Override
+	public Object writtenValue(int attributeIndex, SharedSessionContractImplementor session) {
+		final var attribute = tableDescriptor.attributes().get( attributeIndex );
+		return insertable[attribute.getStateArrayPosition()] ? resolveInsertAttributeValue( attribute, session ) : null;
+	}
+
+	@Override
+	public void readKeysFrom(KeyLookup.Reference[] references) {
+		keyReferences = references;
+	}
+
+	@Override
+	public boolean requiresMatchedRow() {
+		return keyReferences != null;
+	}
+
+	@Override
 	public void bindValues(
 			JdbcValueBindings valueBindings,
 			FlushOperation flushOperation,
@@ -145,15 +169,11 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 			// Decompose attribute values on-demand during binding
 			for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
 				final var attribute = tableDescriptor.attributes().get( i );
-				if ( !attribute.isPluralAttributeMapping() && insertable[attribute.getStateArrayPosition()] ) {
+				if ( keyReferences != null && keyReferences[i] != null ) {
+					keyReferences[i].bind( valueBindings );
+				}
+				else if ( !attribute.isPluralAttributeMapping() && insertable[attribute.getStateArrayPosition()] ) {
 					final Object attributeValue = resolveInsertAttributeValue( attribute, session );
-					if ( attribute instanceof ToOneAttributeMapping
-							&& bindIfUnfetched( valueBindings, attribute, attributeValue, ParameterUsage.SET, session,
-									column -> attribute.getSelectable( column ).isInsertable()
-											&& shouldBindInsertValue( attribute, column, session )
-											&& !isIdentifierColumn( attribute.getSelectable( column ).getSelectionExpression() ) ) ) {
-						continue;
-					}
 					this.valueBindings = valueBindings;
 					this.bindingSession = session;
 					this.bindingAttributeValue = attributeValue;
@@ -194,16 +214,6 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 		finally {
 			this.bindingFlushOperation = null;
 		}
-	}
-
-	// The identifier binder supplies the final value of a shared column.
-	private boolean isIdentifierColumn(String column) {
-		for ( var key : tableDescriptor.keyDescriptor().columns() ) {
-			if ( key.selectionExpression().equals( column ) ) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	private Object resolveInsertAttributeValue(
@@ -336,6 +346,9 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 			int batchPosition,
 			String sqlString,
 			SessionFactoryImplementor sessionFactory) throws SQLException {
+		if ( keyReferences != null ) {
+			KeyLookup.checkMatched( keyReferences, affectedRowCount, sqlString );
+		}
 		return Checkers.identifiedResultsCheck(
 				tableDescriptor.insertDetails().getExpectation(),
 				affectedRowCount,

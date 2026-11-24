@@ -21,7 +21,6 @@ import org.hibernate.annotations.Generated;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.jdbc.spi.InsertSelectExecution;
 import org.hibernate.generator.EventType;
-import org.hibernate.id.insert.GetGeneratedKeysDelegate;
 import org.hibernate.orm.test.collection.map.LazyUniqueKeyAssociationTest.Catalog;
 import org.hibernate.orm.test.collection.map.LazyUniqueKeyAssociationTest.Item;
 import org.hibernate.orm.test.collection.map.LazyUniqueKeyAssociationTest.RegionalItem;
@@ -102,16 +101,22 @@ class PropertyRefMutationTest {
 			sql.clear();
 			session.persist( catalog );
 			session.flush();
-			assertThat( sql.getSqlQueries() ).allSatisfy( statement ->
-					assertThat( statement ).startsWithIgnoringCase( "insert" ) );
-			assertThat( sql.getSqlQueries() ).anySatisfy( statement -> assertThat( statement )
-					.containsIgnoringCase( "catalog_labels" ).containsIgnoringCase( "values" ) );
-			assertThat( sql.getSqlQueries() ).anySatisfy( statement -> assertThat( statement )
-					.containsIgnoringCase( "catalog_labels" ).containsIgnoringCase( " from Item " ) );
-			assertThat( sql.getSqlQueries() ).filteredOn( statement -> statement.contains( "catalog_labels" )
-					&& statement.contains( " from Item " ) ).hasSize( supportsInsertSelectBatch( scope ) ? 1 : 2 );
-			assertThat( Hibernate.isInitialized( second ) ).isFalse();
-			assertThat( Hibernate.isInitialized( third ) ).isFalse();
+			if ( supportsInsertSelectBatch( scope ) ) {
+				assertThat( sql.getSqlQueries() ).allSatisfy( statement ->
+						assertThat( statement ).startsWithIgnoringCase( "insert" ) );
+				// The rows are batched by statement: one batch binds the loaded key, one reads the others
+				assertThat( sql.getSqlQueries() ).filteredOn( statement -> statement.contains( "catalog_labels" ) )
+						.hasSize( 2 )
+						.anySatisfy( statement -> assertThat( statement ).containsIgnoringCase( "values" ) )
+						.anySatisfy( statement -> assertThat( statement ).containsIgnoringCase( " from Item " ) );
+				assertThat( Hibernate.isInitialized( second ) ).isFalse();
+				assertThat( Hibernate.isInitialized( third ) ).isFalse();
+			}
+			else {
+				// A batched insert cannot read its row from a select, so the keys are fetched
+				assertThat( sql.getSqlQueries() ).filteredOn( statement -> statement.startsWith( "insert" ) )
+						.allSatisfy( statement -> assertThat( statement ).doesNotContain( " from Item " ) );
+			}
 		} );
 		scope.inSession( session -> {
 			assertThat( session.createNativeQuery( "select featured_code from Catalog where code=2", String.class )
@@ -119,6 +124,35 @@ class PropertyRefMutationTest {
 			assertThat( session.createNativeQuery( "select key_code from catalog_labels order by labels", String.class )
 					.getResultList() ).containsExactly( "KEY1", "KEY3", "KEY2" );
 		} );
+	}
+
+	@Test
+	void interleavedRowsAreBatchedByStatement(SessionFactoryScope scope) {
+		final var sql = scope.getCollectingStatementInspector();
+		scope.inTransaction( session -> {
+			session.setJdbcBatchSize( 8 );
+			final var loaded = session.find( Item.class, 1 );
+			Hibernate.initializeProperty( loaded, "code" );
+			final var unfetched = session.getReference( Item.class, 2 );
+			sql.clear();
+			for ( int code = 2; code <= 5; code++ ) {
+				final var catalog = new Catalog();
+				catalog.code = code;
+				catalog.featuredItem = code % 2 == 0 ? loaded : unfetched;
+				session.persist( catalog );
+			}
+			session.flush();
+			if ( supportsInsertSelectBatch( scope ) ) {
+				// One batch binds the loaded key and one reads the other, though the rows alternate
+				assertThat( sql.getSqlQueries() ).hasSize( 2 )
+						.anySatisfy( statement -> assertThat( statement ).containsIgnoringCase( "values" ) )
+						.anySatisfy( statement -> assertThat( statement ).containsIgnoringCase( " from Item " ) );
+				assertThat( Hibernate.isInitialized( unfetched ) ).isFalse();
+			}
+		} );
+		scope.inSession( session -> assertThat( session.createNativeQuery(
+				"select featured_code from Catalog where code>1 order by code", String.class ).getResultList() )
+				.containsExactly( "KEY1", "KEY2", "KEY1", "KEY2" ) );
 	}
 
 	@Test
@@ -285,10 +319,8 @@ class PropertyRefMutationTest {
 	}
 
 	private static boolean usesInsertSelectForInvoice(SessionFactoryScope scope) {
-		final var factory = scope.getSessionFactory();
-		return factory.getJdbcServices().getDialect().supports( InsertSelectExecution.GENERATED_KEYS )
-				|| !(factory.getMappingMetamodel().getEntityDescriptor( Invoice.class ).getInsertDelegate()
-						instanceof GetGeneratedKeysDelegate);
+		return scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( Invoice.class )
+				.getInsertDelegate().supportsInsertSelect();
 	}
 
 	private static boolean supportsInsertSelectBatch(SessionFactoryScope scope) {
@@ -428,6 +460,7 @@ class PropertyRefMutationTest {
 			session.persist( catalog );
 			session.flush();
 		} ) );
+		// Without a statement which reads the key, binding the missing key fails before the batch executes
 		assertThat( masked.get() ).isEqualTo( supportsInsertSelectBatch( scope ) ? 2 : 0 );
 		assertThat( failure ).hasMessageContaining( "99" );
 		scope.inSession( session -> assertThat( session.find( Catalog.class, 2 ) ).isNull() );

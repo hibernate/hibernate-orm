@@ -23,8 +23,11 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 @Incubating(since = "8.0")
 @FunctionalInterface
 public interface BatchedResultChecker {
-	/// Verify lookups made by this row's SQL when JDBC cannot confirm that it matched.
-	default void verifyReferencedRows() {
+	/// Whether the row's statement affects a row only if rows it reads from exist.
+	/// The batch then asks this checker about a row which JDBC reports matched
+	/// nothing, or for which it reports no count, whatever table the row is in.
+	default boolean requiresMatchedRow() {
+		return false;
 	}
 
 	/// Check the result for one row of a JDBC batch.

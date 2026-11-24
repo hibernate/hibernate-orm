@@ -2,11 +2,11 @@ package org.hibernate.action.queue.internal.exec;
 
 import jakarta.persistence.EntityExistsException;
 
-import org.hibernate.StaleStateException;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
+import org.hibernate.action.queue.spi.bind.GroupedRowBindPlan;
 import org.hibernate.action.queue.internal.cyclebreak.FixupSynthesizer;
 import org.hibernate.engine.jdbc.mutation.internal.JdbcValueBindingsImpl;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -260,25 +260,24 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 			PreparableMutationOperation preparable,
 			FlushOperation flushOperation,
 			int bindingIndex) {
-		final var row = PropertyRefBindings.bindRow( preparable, flushOperation, bindingIndex, session );
-		executePreparableDirectly( row, flushOperation );
-	}
-
-	protected void executePreparableDirectly(PropertyRefBindings.BoundRow row, FlushOperation flushOperation) {
-		final var preparable = row.operation();
 		try (var stmnt = session.getJdbcCoordinator()
 				.getStatementPreparer()
 				.prepareStatement( preparable.getSqlString(), preparable.isCallable() )) {
 			preparable.getExpectation().prepare( stmnt );
-			row.beforeStatement( stmnt, session );
+			var valueBindings = new JdbcValueBindings( flushOperation.getMutatingTableDescriptor(), preparable );
+			final var bindPlan = flushOperation.getBindPlan();
+			if ( bindingIndex >= 0 && bindPlan instanceof GroupedRowBindPlan groupedRowBindPlan ) {
+				groupedRowBindPlan.bindValues( bindingIndex, valueBindings, flushOperation, session );
+			}
+			else {
+				bindPlan.bindValues( valueBindings, flushOperation, session );
+			}
+			valueBindings.beforeStatement( stmnt, session );
 
 			final int affectedRowCount = session.getJdbcCoordinator()
 					.getResultSetReturn()
 					.executeUpdate( stmnt, preparable.getSqlString() );
 
-			if ( affectedRowCount == 0 ) {
-				row.verifyReferencedRows( session );
-			}
 			final var resultChecker = flushOperation.getOperationResultChecker();
 			if ( resultChecker != null ) {
 				resultChecker.checkResult( affectedRowCount, stmnt, -1, preparable.getSqlString(), session.getFactory() );
@@ -287,9 +286,6 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 				preparable.getExpectation().verifyOutcome( affectedRowCount, stmnt, -1, preparable.getSqlString() );
 			}
 
-			if ( affectedRowCount == 0 && preparable.requiresMatchedRow() ) {
-				throw new StaleStateException( "No row matched " + preparable.getSqlString() );
-			}
 			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( stmnt );
 		}
 		catch (ConstraintViolationException cve) {

@@ -122,8 +122,7 @@ public abstract class AbstractTableUpdate<O extends MutationOperation>
 				sql,
 				isCallable(),
 				getExpectation(),
-				effectiveBinders,
-				getClass() == TableUpdateStandard.class ? this : null
+				effectiveBinders
 		);
 	}
 }

@@ -47,23 +47,16 @@ public class JdbcValueBindings {
 		}
 	}
 
-	public void beforeStatement(PreparedStatement statement, SharedSessionContractImplementor session) {
-		beforeStatement( bindTemplate, statement, session );
-	}
-
 	@SuppressWarnings("unchecked")
-	protected void beforeStatement(MutationBindTemplate template, PreparedStatement statement,
-			SharedSessionContractImplementor session) {
-		if ( template == null ) {
+	public void beforeStatement(PreparedStatement statement, SharedSessionContractImplementor session) {
+		if ( bindTemplate == null ) {
 			bindingGroup.forEachBinding( binding -> bind( binding.getValueBinder(), binding.getValue(),
 					binding.getPosition(), statement, session ) );
 		}
 		else {
-			final var slots = template.slots();
-			for ( int i = 0; i < slots.length; i++ ) {
-				final var slot = slots[i];
+			for ( var slot : bindTemplate.slots() ) {
 				if ( boundSlots[slot.index()] ) {
-					bind( slot.jdbcMapping().getJdbcValueBinder(), template.jdbcValue( i, valuesBySlot[slot.index()] ),
+					bind( slot.jdbcMapping().getJdbcValueBinder(), valuesBySlot[slot.index()],
 							slot.jdbcPosition(), statement, session );
 				}
 			}
@@ -79,10 +72,6 @@ public class JdbcValueBindings {
 			throw session.getJdbcServices().getSqlExceptionHelper().convert( e,
 					String.format( Locale.ROOT, "Unable to bind parameter #%s - %s", position, value ) );
 		}
-	}
-
-	protected MutationBindTemplate getBindTemplate() {
-		return bindTemplate;
 	}
 
 	public static Object resolveValue(Object value) {

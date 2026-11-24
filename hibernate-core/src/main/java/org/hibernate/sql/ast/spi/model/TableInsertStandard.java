@@ -39,6 +39,7 @@ public class TableInsertStandard extends AbstractTableInsert implements TableIns
 		this.returningColumns = returningColumns;
 	}
 
+	/// A form of the given insert whose row is supplied by a select.
 	public TableInsertStandard(TableInsertStandard original, List<ColumnValueBinding> values,
 			SelectStatement sourceSelect, List<ColumnValueParameter> parameters) {
 		super( original.getMutatingTable(), original.getMutationTarget(), original.getMutationComment(), parameters, values );
@@ -52,11 +53,7 @@ public class TableInsertStandard extends AbstractTableInsert implements TableIns
 		return hasValueSubquery;
 	}
 
-	@Override
-	public boolean requiresMatchedRow() {
-		return sourceSelect != null;
-	}
-
+	/// The select which supplies the inserted row, or `null` if it is given by values.
 	public SelectStatement getSourceSelect() {
 		return sourceSelect;
 	}

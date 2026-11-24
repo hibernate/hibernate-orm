@@ -3,7 +3,9 @@ package org.hibernate.action.queue.internal.decompose.collection;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionJdbcOperations;
 
 import org.hibernate.action.queue.internal.constraint.UniqueConstraint;
+import org.hibernate.action.queue.internal.decompose.KeyLookup;
 import org.hibernate.action.queue.spi.bind.BindPlan;
+import org.hibernate.action.queue.spi.bind.OperationResultChecker;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -21,6 +23,7 @@ public class SingleRowInsertBindPlan implements BindPlan {
 	private final Object key;
 	private final Object entry;
 	private final int entryIndex;
+	private final KeyLookup.Reference[] keyReferences;
 
 	public SingleRowInsertBindPlan(
 			CollectionPersister persister,
@@ -29,6 +32,20 @@ public class SingleRowInsertBindPlan implements BindPlan {
 			Object key,
 			Object entry,
 			int entryIndex) {
+		this( persister, values, collection, key, entry, entryIndex, null );
+	}
+
+	/// @param keyReferences the rows from which the statement reads foreign keys,
+	/// or `null` if the given values bind every key
+	public SingleRowInsertBindPlan(
+			CollectionPersister persister,
+			CollectionJdbcOperations.Values values,
+			PersistentCollection<?> collection,
+			Object key,
+			Object entry,
+			int entryIndex,
+			KeyLookup.Reference[] keyReferences) {
+		this.keyReferences = keyReferences;
 		this.persister = persister;
 		this.values = values;
 		this.collection = collection;
@@ -43,6 +60,17 @@ public class SingleRowInsertBindPlan implements BindPlan {
 		// the collection relationship (FK updates for one-to-many, join table rows for many-to-many).
 		// Returning the element creates artificial dependencies that fragment batches.
 		return null;
+	}
+
+	@Override
+	public boolean requiresMatchedRow() {
+		return keyReferences != null;
+	}
+
+	@Override
+	public OperationResultChecker getOperationResultChecker() {
+		return keyReferences == null ? null
+				: (rowCount, statement, position, sql, factory) -> KeyLookup.checkMatched( keyReferences, rowCount, sql );
 	}
 
 	@Override

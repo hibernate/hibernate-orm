@@ -1,6 +1,5 @@
 package org.hibernate.id.insert;
 
-import org.hibernate.action.queue.internal.exec.PropertyRefBindings;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
@@ -9,6 +8,7 @@ import org.hibernate.generator.EventType;
 import org.hibernate.generator.values.AbstractGeneratedValuesMutationDelegate;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -68,16 +68,21 @@ public abstract class AbstractSelectingDelegate
 			FlushOperation operation,
 			Object entity,
 			SharedSessionContractImplementor session) {
-		var row = PropertyRefBindings.bindRow( operation, session );
-		final String sql = row.operation().getSqlString();
+		var jdbcOperation = (PreparableMutationOperation) operation.getJdbcOperation();
+		final String sql = jdbcOperation.getSqlString();
 		session.getJdbcServices().getSqlStatementLogger().logStatement( sql );
 
 		final PreparedStatement preparedStatement = prepareStatement( sql, session );
 		try {
-			row.beforeStatement( preparedStatement, session );
+			var valueBindings = new org.hibernate.action.queue.spi.bind.JdbcValueBindings(
+					operation.getMutatingTableDescriptor(),
+					jdbcOperation
+			);
+			operation.getBindPlan().bindValues( valueBindings, operation, session );
+			valueBindings.beforeStatement( preparedStatement, session );
 
 			if ( session.getJdbcCoordinator().getResultSetReturn().executeUpdate( preparedStatement, sql ) == 0 ) {
-				row.verifyReferencedRows( session );
+				checkUnmatchedRow( operation, preparedStatement, sql, session );
 			}
 		}
 		finally {

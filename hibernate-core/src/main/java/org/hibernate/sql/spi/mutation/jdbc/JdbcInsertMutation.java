@@ -3,7 +3,6 @@ package org.hibernate.sql.spi.mutation.jdbc;
 import java.util.List;
 
 import org.hibernate.jdbc.Expectation;
-import org.hibernate.sql.ast.spi.model.TableMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.spi.mutation.MutationTarget;
 import org.hibernate.sql.spi.mutation.MutationType;
@@ -22,18 +21,7 @@ public final class JdbcInsertMutation extends AbstractJdbcMutation {
 			boolean callable,
 			Expectation expectation,
 			List<? extends JdbcParameterBinder> parameterBinders) {
-		this( tableDetails, mutationTarget, sql, callable, expectation, parameterBinders, null );
-	}
-
-	public JdbcInsertMutation(
-			TableMapping tableDetails,
-			MutationTarget mutationTarget,
-			String sql,
-			boolean callable,
-			Expectation expectation,
-			List<? extends JdbcParameterBinder> parameterBinders,
-			TableMutation<?> model) {
-		super( tableDetails, mutationTarget, sql, callable, expectation, parameterBinders, model );
+		super( tableDetails, mutationTarget, sql, callable, expectation, parameterBinders );
 	}
 
 	@Override

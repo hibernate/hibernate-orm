@@ -1,23 +1,14 @@
 package org.hibernate.processor.test.data.restriction;
 
-import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collectors;
 
-import javax.tools.Diagnostic;
-import javax.tools.DiagnosticCollector;
-import javax.tools.JavaFileObject;
-import javax.tools.ToolProvider;
 
-import org.hibernate.processor.HibernateProcessor;
 import org.hibernate.processor.test.util.CompilationTest;
-import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
 import org.junit.jupiter.api.Test;
+import org.hibernate.processor.test.util.CompilationDiagnostics;
+import org.hibernate.processor.test.util.IgnoreCompilationErrors;
 
-import static java.nio.charset.Charset.defaultCharset;
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -91,101 +82,35 @@ class DataRestrictionTest {
 	}
 
 	@Test
-	void invalidAutomaticDeleteUsesMeaningfulDiagnostics() throws Exception {
-		final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
-		final var compiler = ToolProvider.getSystemJavaCompiler();
-		try ( var fileManager = compiler.getStandardFileManager( diagnostics, Locale.ROOT, defaultCharset() ) ) {
-			final var sourceFiles = List.of(
-					TestUtil.getSourceFile( DataRestrictionPublisher.class ),
-					TestUtil.getSourceFile( DataRestrictionBook.class ),
-					TestUtil.getSourceFile( InvalidDataRestrictionRepository.class )
-			);
-			final var task = compiler.getTask(
-					null,
-					fileManager,
-					diagnostics,
-					List.of(
-							"-d",
-							TestUtil.getOutBaseDir( DataRestrictionTest.class ).getAbsolutePath(),
-							"-processor",
-							HibernateProcessor.class.getName()
-					),
-					null,
-					fileManager.getJavaFileObjectsFromFiles( sourceFiles )
-			);
-			assertFalse( task.call() );
-		}
-		final var errorMessages = diagnostics.getDiagnostics()
-				.stream()
-				.filter( diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR )
-				.map( diagnostic -> diagnostic.getMessage( Locale.ROOT ) )
-				.toList();
-		final String messages = errorMessages.stream().collect( Collectors.joining( "\n" ) );
-
-		assertTrue( messages.contains(
-				"parameter of type 'jakarta.data.Limit' is not allowed on an automatic '@Delete' method" ) );
-		assertTrue( messages.contains(
-				"parameter of type 'jakarta.data.Order<? super org.hibernate.processor.test.data.restriction.DataRestrictionBook>' is not allowed on an automatic '@Delete' method" ) );
-		assertTrue( messages.contains(
-				"parameter of type 'jakarta.data.Sort<? super org.hibernate.processor.test.data.restriction.DataRestrictionBook>' is not allowed on an automatic '@Delete' method" ) );
-		assertTrue( messages.contains(
-				"parameter of type 'jakarta.data.page.PageRequest' is not allowed on an automatic '@Delete' method" ) );
-		assertTrue( messages.contains( "automatic '@Delete' methods may have at most one Restriction parameter" ) );
-		assertTrue( messages.contains(
-				"parameters matching entity attributes must appear before the Restriction parameter" ) );
-		assertTrue( messages.contains(
-				"automatic '@Delete' methods accept a single Restriction parameter, not a collection or array" ) );
-		assertTrue( messages.contains( "mismatched type of restriction (should be 'Restriction<? super DataRestrictionBook>')" ) );
-		assertTrue( messages.contains(
+	@WithClasses({ DataRestrictionPublisher.class, DataRestrictionBook.class, InvalidDataRestrictionRepository.class })
+	@IgnoreCompilationErrors
+	void invalidAutomaticDeleteUsesMeaningfulDiagnostics(CompilationDiagnostics diagnostics) {
+		diagnostics.assertError(
+				"parameter of type 'jakarta.data.Limit' is not allowed on an automatic '@Delete' method" );
+		diagnostics.assertError(
+				"parameter of type 'jakarta.data.Order<? super org.hibernate.processor.test.data.restriction.DataRestrictionBook>' is not allowed on an automatic '@Delete' method" );
+		diagnostics.assertError(
+				"parameter of type 'jakarta.data.Sort<? super org.hibernate.processor.test.data.restriction.DataRestrictionBook>' is not allowed on an automatic '@Delete' method" );
+		diagnostics.assertError(
+				"parameter of type 'jakarta.data.page.PageRequest' is not allowed on an automatic '@Delete' method" );
+		diagnostics.assertError( "automatic '@Delete' methods may have at most one Restriction parameter" );
+		diagnostics.assertError(
+				"parameters matching entity attributes must appear before the Restriction parameter" );
+		diagnostics.assertError(
+				"automatic '@Delete' methods accept a single Restriction parameter, not a collection or array" );
+		diagnostics.assertError( "mismatched type of restriction (should be 'Restriction<? super DataRestrictionBook>')" );
+		diagnostics.assertSingleError(
 				"'@NativeQuery' methods may not declare Restriction or Range parameters; "
-						+ "native SQL cannot be augmented with restrictions" ) );
-		assertTrue( messages.contains(
+						+ "native SQL cannot be augmented with restrictions" );
+		diagnostics.assertSingleError(
 				"'@NativeQuery' methods may not declare Order or Sort parameters or '@OrderBy'; "
-						+ "native SQL cannot be augmented with ordering" ) );
-		assertEquals( 1, countMessagesContaining( errorMessages,
-				"'@NativeQuery' methods may not declare Restriction or Range parameters" ) );
-		assertEquals( 1, countMessagesContaining( errorMessages,
-				"'@NativeQuery' methods may not declare Order or Sort parameters or '@OrderBy'" ) );
+						+ "native SQL cannot be augmented with ordering" );
 	}
 
 	@Test
-	void nonRepositoryNativeQueryWithRestrictionUsesSingleDiagnostic() throws Exception {
-		final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
-		final var compiler = ToolProvider.getSystemJavaCompiler();
-		try ( var fileManager = compiler.getStandardFileManager( diagnostics, Locale.ROOT, defaultCharset() ) ) {
-			final var sourceFiles = List.of(
-					TestUtil.getSourceFile( DataRestrictionPublisher.class ),
-					TestUtil.getSourceFile( DataRestrictionBook.class ),
-					TestUtil.getSourceFile( InvalidNativeStaticQuery.class )
-			);
-			final var task = compiler.getTask(
-					null,
-					fileManager,
-					diagnostics,
-					List.of(
-							"-d",
-							TestUtil.getOutBaseDir( DataRestrictionTest.class ).getAbsolutePath(),
-							"-processor",
-							HibernateProcessor.class.getName()
-					),
-					null,
-					fileManager.getJavaFileObjectsFromFiles( sourceFiles )
-			);
-			assertFalse( task.call() );
-		}
-		final var errorMessages = diagnostics.getDiagnostics()
-				.stream()
-				.filter( diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR )
-				.map( diagnostic -> diagnostic.getMessage( Locale.ROOT ) )
-				.toList();
-
-		assertEquals( 1, countMessagesContaining( errorMessages,
-				"'@NativeQuery' methods may not declare Restriction or Range parameters" ) );
-	}
-
-	private static long countMessagesContaining(List<String> messages, String text) {
-		return messages.stream()
-				.filter( message -> message.contains( text ) )
-				.count();
+	@WithClasses({ DataRestrictionPublisher.class, DataRestrictionBook.class, InvalidNativeStaticQuery.class })
+	@IgnoreCompilationErrors
+	void nonRepositoryNativeQueryWithRestrictionUsesSingleDiagnostic(CompilationDiagnostics diagnostics) {
+		diagnostics.assertSingleError( "'@NativeQuery' methods may not declare Restriction or Range parameters" );
 	}
 }

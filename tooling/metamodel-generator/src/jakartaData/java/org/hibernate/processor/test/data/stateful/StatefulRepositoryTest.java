@@ -1,27 +1,13 @@
 package org.hibernate.processor.test.data.stateful;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
-import javax.tools.Diagnostic;
-import javax.tools.DiagnosticCollector;
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.ToolProvider;
 
-import org.hibernate.processor.HibernateProcessor;
 import org.hibernate.processor.test.util.CompilationTest;
-import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
 import org.junit.jupiter.api.Test;
+import org.hibernate.processor.test.util.CompilationDiagnostics;
+import org.hibernate.processor.test.util.IgnoreCompilationErrors;
 
-import static java.nio.charset.Charset.defaultCharset;
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -110,34 +96,8 @@ class StatefulRepositoryTest {
 	}
 
 	@Test
-	void defaultConstructorPathInjectsEntityManagerAndEntityAgent() throws IOException {
-		final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
-		final var compiler = ToolProvider.getSystemJavaCompiler();
-		try ( var fileManager = compiler.getStandardFileManager( diagnostics, Locale.ROOT, defaultCharset() ) ) {
-			final var sourceFiles = List.of(
-					TestUtil.getSourceFile( StatefulBook.class ),
-					TestUtil.getSourceFile( StatefulBookRepository.class ),
-					TestUtil.getSourceFile( StatelessBookRepository.class )
-			);
-			final var options = List.of(
-					"-d",
-					TestUtil.getOutBaseDir( StatefulRepositoryTest.class ).getAbsolutePath(),
-					"-classpath",
-					classPathWithoutQuarkus(),
-					"-processor",
-					HibernateProcessor.class.getName()
-			);
-			final var task = compiler.getTask(
-					null,
-					fileManager,
-					diagnostics,
-					options,
-					null,
-					fileManager.getJavaFileObjectsFromFiles( sourceFiles )
-			);
-			assertTrue( task.call(), errorMessages( diagnostics ) );
-		}
-
+	@WithClasses({ StatefulBook.class, StatefulBookRepository.class, StatelessBookRepository.class })
+	void defaultConstructorPathInjectsEntityManagerAndEntityAgent() {
 		final String statefulRepository = getMetaModelSourceAsString( StatefulBookRepository.class, true );
 		assertTrue( statefulRepository.contains( "@PersistenceContext" ) );
 		assertTrue( statefulRepository.contains( "protected @Nonnull EntityManager entityManager;" ) );
@@ -171,54 +131,17 @@ class StatefulRepositoryTest {
 	}
 
 	@Test
-	void invalidStatefulRepositoryUsesMeaningfulDiagnostics() throws Exception {
-		final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
-		final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-		try ( StandardJavaFileManager fileManager = compiler.getStandardFileManager( diagnostics, null, null ) ) {
-			final List<File> sourceFiles = List.of(
-					TestUtil.getSourceFile( StatefulBook.class ),
-					TestUtil.getSourceFile( InvalidStatefulBookRepository.class ),
-					TestUtil.getSourceFile( InvalidStatelessBackedStatefulBookRepository.class )
-			);
-			final JavaCompiler.CompilationTask task = compiler.getTask(
-					null,
-					fileManager,
-					diagnostics,
-					List.of(
-							"-d",
-							TestUtil.getOutBaseDir( StatefulRepositoryTest.class ).getAbsolutePath(),
-							"-processor",
-							HibernateProcessor.class.getName()
-					),
-					null,
-					fileManager.getJavaFileObjectsFromFiles( sourceFiles )
-			);
-			assertFalse( task.call() );
-		}
-		final String messages = diagnostics.getDiagnostics()
-				.stream()
-				.filter( diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR )
-				.map( diagnostic -> diagnostic.getMessage( Locale.ROOT ) )
-				.collect( Collectors.joining( "\n" ) );
-
-		assertTrue( messages.contains( "repository mixes stateful and stateless lifecycle annotations" ) );
-		assertTrue( messages.contains(
-				"repository with stateful lifecycle methods must be backed by a 'Session' or 'EntityManager'" ) );
-		assertTrue( messages.contains( "method annotated '@Persist' must be declared 'void'" ) );
-		assertTrue( messages.contains( "method annotated '@Merge' must have the same return type as its parameter" ) );
-	}
-
-	private static String classPathWithoutQuarkus() {
-		return Arrays.stream( System.getProperty( "java.class.path" ).split( Pattern.quote( File.pathSeparator ) ) )
-				.filter( path -> !path.contains( "quarkus" ) )
-				.collect( Collectors.joining( File.pathSeparator ) );
-	}
-
-	private static String errorMessages(DiagnosticCollector<JavaFileObject> diagnostics) {
-		return diagnostics.getDiagnostics()
-				.stream()
-				.filter( diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR )
-				.map( diagnostic -> diagnostic.getMessage( Locale.ROOT ) )
-				.collect( Collectors.joining( "\n" ) );
+	@WithClasses({
+			StatefulBook.class,
+			InvalidStatefulBookRepository.class,
+			InvalidStatelessBackedStatefulBookRepository.class
+	})
+	@IgnoreCompilationErrors
+	void invalidStatefulRepositoryUsesMeaningfulDiagnostics(CompilationDiagnostics diagnostics) {
+		diagnostics.assertError( "repository mixes stateful and stateless lifecycle annotations" );
+		diagnostics.assertError(
+				"repository with stateful lifecycle methods must be backed by a 'Session' or 'EntityManager'" );
+		diagnostics.assertError( "method annotated '@Persist' must be declared 'void'" );
+		diagnostics.assertError( "method annotated '@Merge' must have the same return type as its parameter" );
 	}
 }

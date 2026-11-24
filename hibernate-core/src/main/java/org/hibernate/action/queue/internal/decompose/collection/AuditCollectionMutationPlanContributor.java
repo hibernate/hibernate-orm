@@ -47,7 +47,8 @@ public class AuditCollectionMutationPlanContributor implements CollectionMutatio
 				context.ordinalBase() * 1_000 + 900,
 				session -> {
 					final var collector = resolveCollector( session ).getAuditMutationCollector();
-					final var ownerChange = auditMutationSupport.resolveOwnerAuditChange(
+					final var ownerChange = CollectionAuditSupport.resolveOwnerAuditChange(
+							persister,
 							context.key(),
 							context.collection(),
 							session

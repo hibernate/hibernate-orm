@@ -56,7 +56,7 @@ class FilterConditionPrecedenceTest {
 	@ValueSource(booleans = { false, true })
 	void queryRetainsIdRestriction(boolean includeDeleted, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			session.enableFilter( "visible" ).setParameter( "includeDeleted", includeDeleted );
+			session.enableFilter( "visible" ).setParameter( "includeDeleted", includeDeleted ? 1 : 0 );
 			assertThat( session.createQuery(
 					"select i.id from FilterItem i where i.id = :id", Integer.class )
 					.setParameter( "id", 2 ).getResultList() ).containsExactly( 2 );
@@ -67,7 +67,7 @@ class FilterConditionPrecedenceTest {
 	@ValueSource(booleans = { false, true })
 	void collectionRetainsOwnerRestriction(boolean includeDeleted, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			session.enableFilter( "visible" ).setParameter( "includeDeleted", includeDeleted );
+			session.enableFilter( "visible" ).setParameter( "includeDeleted", includeDeleted ? 1 : 0 );
 			Owner owner = session.find( Owner.class, 1 );
 			assertThat( owner.items ).extracting( item -> item.id )
 					.containsExactlyInAnyOrderElementsOf( includeDeleted ? List.of( 2, 3 ) : List.of( 2 ) );
@@ -87,7 +87,7 @@ class FilterConditionPrecedenceTest {
 	@Test
 	void enabledFiltersAreCombinedWithAnd(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			session.enableFilter( "visible" ).setParameter( "includeDeleted", false );
+			session.enableFilter( "visible" ).setParameter( "includeDeleted", 0 );
 			session.enableFilter( "selectedIds" );
 			assertThat( session.createQuery(
 					"select i.id from FilterItem i", Integer.class ).getResultList() )
@@ -110,7 +110,7 @@ class FilterConditionPrecedenceTest {
 	@ValueSource(booleans = { false, true })
 	void fetchedCollectionRetainsOwnerRestriction(boolean includeDeleted, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			session.enableFilter( "visible" ).setParameter( "includeDeleted", includeDeleted );
+			session.enableFilter( "visible" ).setParameter( "includeDeleted", includeDeleted ? 1 : 0 );
 			Owner owner = session.createQuery(
 					"select o from FilterOwner o left join fetch o.items where o.id = :id", Owner.class )
 					.setParameter( "id", 1 ).getSingleResult();
@@ -123,7 +123,7 @@ class FilterConditionPrecedenceTest {
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsDmlTargetColumnQualifier.class)
 	void bulkUpdateRetainsIdRestriction(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			session.enableFilter( "visible" ).setParameter( "includeDeleted", true );
+			session.enableFilter( "visible" ).setParameter( "includeDeleted", 1 );
 			assertThat( session.createMutationQuery(
 					"update FilterItem set deleted = true where id = :id" )
 					.setParameter( "id", 2 ).executeUpdate() ).isEqualTo( 1 );
@@ -139,8 +139,8 @@ class FilterConditionPrecedenceTest {
 	@Table(name = "filter_item")
 	@FilterDef(
 			name = "visible",
-			defaultCondition = ":includeDeleted = true or deleted = false",
-			parameters = @ParamDef(name = "includeDeleted", type = Boolean.class)
+			defaultCondition = ":includeDeleted = 1 or deleted = false",
+			parameters = @ParamDef(name = "includeDeleted", type = Integer.class)
 	)
 	@FilterDef(name = "parameterless", defaultCondition = "id = 1 or deleted = false")
 	@FilterDef(name = "selectedIds", defaultCondition = "id = 2 or id = 3")

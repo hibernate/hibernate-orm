@@ -2,6 +2,8 @@ package org.hibernate.orm.test.query;
 
 import java.util.Set;
 
+import org.hibernate.annotations.SQLJoinTableRestriction;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -46,6 +48,33 @@ public class CompareEntityValuedPathsTest {
 									"from children_uks cu1_0 " +
 									"where p1_0.uk=cu1_0.owner_uk" +
 									")",
+							statementInspector.getSqlQueries().get( 0 )
+					);
+				}
+		);
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-18996")
+	public void testCompareOneToManyUKWithJoinTableRestriction(SessionFactoryScope scope) {
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
+		scope.inTransaction(
+				session -> {
+					statementInspector.clear();
+					session.createQuery(
+							"select 1 from Person p where p in (select c from p.childrenUkRestricted c)",
+							Integer.class
+					).list();
+
+					assertEquals(
+							"select "
+							+ "1 "
+							+ "from PERSON_TABLE p1_0 "
+							+ "where p1_0.uk in ("
+							+ "select cur1_0.child_uk "
+							+ "from children_uks cur1_0 "
+							+ "where p1_0.uk=cur1_0.owner_uk and (cur1_0.child_uk is not null)"
+							+ ")",
 							statementInspector.getSqlQueries().get( 0 )
 					);
 				}
@@ -395,6 +424,13 @@ public class CompareEntityValuedPathsTest {
 				inverseJoinColumns = @JoinColumn(name = "child_uk", referencedColumnName = "uk")
 		)
 		private Set<Person> childrenUk;
+		@OneToMany
+		@JoinTable(name = "children_uks",
+				joinColumns = @JoinColumn(name = "owner_uk", referencedColumnName = "uk"),
+				inverseJoinColumns = @JoinColumn(name = "child_uk", referencedColumnName = "uk")
+		)
+		@SQLJoinTableRestriction("child_uk is not null")
+		private Set<Person> childrenUkRestricted;
 		@OneToMany(mappedBy = "supervisor")
 		private Set<Person> employees;
 		@OneToMany(mappedBy = "supervisorUk")

@@ -376,9 +376,13 @@ public abstract class CollectionType extends AbstractType implements Association
 		}
 		else {
 			final Object loadedValue = entityEntry.getLoadedValue( foreignKeyPropertyName );
-			return loadedValue == null
-					? entityEntry.getPersister().getPropertyValue( owner, foreignKeyPropertyName )
-					: loadedValue;
+			if ( loadedValue == UNFETCHED_PROPERTY ) {
+				Hibernate.initializeProperty( owner, foreignKeyPropertyName );
+			}
+			else if ( loadedValue != null ) {
+				return loadedValue;
+			}
+			return entityEntry.getPersister().getPropertyValue( owner, foreignKeyPropertyName );
 		}
 	}
 

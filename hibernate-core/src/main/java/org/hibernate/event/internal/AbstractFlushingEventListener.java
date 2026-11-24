@@ -11,7 +11,6 @@ import org.hibernate.cascade.spi.CascadePoint;
 import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.cascade.spi.CascadingActions;
 import org.hibernate.engine.spi.CollectionEntry;
-import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -407,11 +406,8 @@ public abstract class AbstractFlushingEventListener {
 		persistenceContext.forEachCollectionEntry(
 				(persistentCollection, collectionEntry) -> {
 					collectionEntry.postFlush( persistentCollection, flushProcessingContext );
-					final var loadedPersister = collectionEntry.getLoadedPersister();
-					final Object key = collectionEntry.getLoadedKey();
-					if ( loadedPersister != null && key != null ) {
-						//otherwise recreate the mapping between the collection and its key
-						final var collectionKey = new CollectionKey( loadedPersister, key );
+					final var collectionKey = collectionEntry.getLoadedCollectionKey();
+					if ( collectionKey != null ) {
 						persistenceContext.addCollectionByKey( collectionKey, persistentCollection );
 					}
 					else {

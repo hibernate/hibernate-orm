@@ -16,7 +16,6 @@ import org.hibernate.event.spi.RefreshEvent;
 import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.proxy.AbstractLazyInitializer;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
@@ -114,8 +113,8 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			@Nullable LazyInitializer lazyInitializer,
 			@Nonnull Object object,
 			@Nonnull EventSource source) {
-		if ( lazyInitializer instanceof AbstractLazyInitializer abstractLazyInitializer ) {
-			return abstractLazyInitializer.getTemporalIdentifier();
+		if ( lazyInitializer != null ) {
+			return lazyInitializer.getTemporalIdentifier();
 		}
 		else {
 			// an enhanced proxy has an entry with the key of the snapshot

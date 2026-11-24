@@ -40,6 +40,7 @@ public final class CollectionEntry implements Serializable {
 	// with the current database state
 	private transient @Nullable CollectionPersister loadedPersister;
 	private @Nullable Object loadedKey;
+	private transient @Nullable Object loadedChangesetId;
 
 	// if we instantiate a collection during the flush() process,
 	// we must ignore it for the rest of the flush()
@@ -383,6 +384,19 @@ public final class CollectionEntry implements Serializable {
 	@Nullable
 	public Object getLoadedKey() {
 		return loadedKey;
+	}
+
+	/// The persistence context indexes each historical collection by its own changeset.
+	public void setLoadedChangesetId(@Nullable Object changesetId) {
+		loadedChangesetId = changesetId;
+	}
+
+	public @Nullable CollectionKey getLoadedCollectionKey() {
+		if ( loadedPersister == null || loadedKey == null ) {
+			return null;
+		}
+		return loadedChangesetId == null ? new CollectionKey( loadedPersister, loadedKey )
+				: new TemporalCollectionKey( loadedPersister, loadedKey, loadedChangesetId );
 	}
 
 	public void setRole(@Nullable String role) {

@@ -1120,6 +1120,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	private void addCollection(PersistentCollection<?> coll, CollectionEntry entry, Object key) {
 		putCollectionEntry( coll, entry );
 		final var collectionKey = session.generateCollectionKey( entry.getLoadedPersister(), key );
+		entry.setLoadedChangesetId( collectionKey.getChangesetId() );
 		final var old = addCollectionByKey( collectionKey, coll );
 		if ( old != null ) {
 			if ( old == coll ) {
@@ -2126,6 +2127,11 @@ class StatefulPersistenceContext implements PersistenceContext {
 					context.putCollectionEntry( collection,
 							CollectionEntry.deserialize( ois, session ) );
 				}
+				context.collectionsByKey.forEach( (key, collection) -> {
+					if ( key.isTemporal() ) {
+						context.getCollectionEntry( collection ).setLoadedChangesetId( key.getChangesetId() );
+					}
+				} );
 			}
 
 			{

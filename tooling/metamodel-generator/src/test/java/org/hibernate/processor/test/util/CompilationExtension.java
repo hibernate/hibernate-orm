@@ -6,6 +6,8 @@ import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.Extension;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ParameterContext;
+import org.junit.jupiter.api.extension.ParameterResolver;
 import org.junit.jupiter.api.extension.TestInstanceFactoryContext;
 import org.junit.jupiter.api.extension.TestInstancePreConstructCallback;
 
@@ -27,19 +29,21 @@ import java.util.Locale;
 import java.util.Map;
 
 public class CompilationExtension
-		implements Extension, BeforeEachCallback, AfterEachCallback, TestInstancePreConstructCallback {
+		implements Extension, BeforeEachCallback, AfterEachCallback, TestInstancePreConstructCallback,
+				ParameterResolver {
 
 	private static final Logger log = Logger.getLogger( CompilationExtension.class );
 	private static final String PACKAGE_SEPARATOR = ".";
 	private static final String ANNOTATION_PROCESSOR_OPTION_PREFIX = "-A";
 	private static final String COMPILATION_TEST_INFO = "CompilationTestInfo";
+	private static final String COMPILATION_DIAGNOSTICS = "CompilationDiagnostics";
 
 	@Override
 	public void beforeEach(ExtensionContext context) throws Exception {
 		CompilationTestInfo compilationTestInfo = getCompilationTestInfo( context )
 				.forMethod( context.getRequiredTestMethod() );
+		final List<Diagnostic<?>> compilationDiagnostics =  new ArrayList<>();
 		if ( compilationTestInfo.annotationProcessorNeedsToRun() ) {
-			final List<Diagnostic<?>> compilationDiagnostics =  new ArrayList<>();
 			// some test needs to compile some classes prior to the actual classes under test
 			if ( !compilationTestInfo.preCompileEntities.isEmpty() ) {
 				compile( getCompilationUnits( compilationTestInfo.preCompileEntities, null, compilationTestInfo ), compilationDiagnostics, compilationTestInfo );
@@ -53,6 +57,23 @@ public class CompilationExtension
 				TestUtil.assertNoCompilationError( compilationDiagnostics );
 			}
 		}
+		getDiagnosticsStore( context )
+				.put( COMPILATION_DIAGNOSTICS, new CompilationDiagnostics( compilationDiagnostics ) );
+	}
+
+	@Override
+	public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext context) {
+		return parameterContext.getParameter().getType() == CompilationDiagnostics.class;
+	}
+
+	@Override
+	public Object resolveParameter(ParameterContext parameterContext, ExtensionContext context) {
+		return getDiagnosticsStore( context ).get( COMPILATION_DIAGNOSTICS, CompilationDiagnostics.class );
+	}
+
+	private static ExtensionContext.Store getDiagnosticsStore(ExtensionContext context) {
+		return context.getStore( ExtensionContext.StoreScope.EXTENSION_CONTEXT,
+				ExtensionContext.Namespace.create( CompilationExtension.class ) );
 	}
 
 	@Override

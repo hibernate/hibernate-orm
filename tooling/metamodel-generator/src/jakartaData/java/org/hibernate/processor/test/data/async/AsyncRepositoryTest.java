@@ -1,24 +1,15 @@
 package org.hibernate.processor.test.data.async;
 
-import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collectors;
 
-import javax.tools.Diagnostic;
-import javax.tools.DiagnosticCollector;
-import javax.tools.JavaFileObject;
-import javax.tools.ToolProvider;
 
-import org.hibernate.processor.HibernateProcessor;
 import org.hibernate.processor.test.util.CompilationTest;
-import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
 import org.junit.jupiter.api.Test;
+import org.hibernate.processor.test.util.CompilationDiagnostics;
+import org.hibernate.processor.test.util.IgnoreCompilationErrors;
 
-import static java.nio.charset.Charset.defaultCharset;
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @CompilationTest
@@ -51,35 +42,9 @@ class AsyncRepositoryTest {
 	}
 
 	@Test
-	void asynchronousMethodReturningNonCompletionStageUsesMeaningfulDiagnostic() throws Exception {
-		final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
-		final var compiler = ToolProvider.getSystemJavaCompiler();
-		try ( var fileManager = compiler.getStandardFileManager( diagnostics, Locale.ROOT, defaultCharset() ) ) {
-			final var sourceFiles = List.of(
-					TestUtil.getSourceFile( AsyncBook.class ),
-					TestUtil.getSourceFile( InvalidAsyncBookRepository.class )
-			);
-			final var task = compiler.getTask(
-					null,
-					fileManager,
-					diagnostics,
-					List.of(
-							"-d",
-							TestUtil.getOutBaseDir( AsyncRepositoryTest.class ).getAbsolutePath(),
-							"-processor",
-							HibernateProcessor.class.getName()
-					),
-					null,
-					fileManager.getJavaFileObjectsFromFiles( sourceFiles )
-			);
-			assertFalse( task.call() );
-		}
-		final String messages = diagnostics.getDiagnostics()
-				.stream()
-				.filter( diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR )
-				.map( diagnostic -> diagnostic.getMessage( Locale.ROOT ) )
-				.collect( Collectors.joining( "\n" ) );
-
-		assertTrue( messages.contains( "method annotated '@Asynchronous' must return 'CompletionStage'" ) );
+	@WithClasses({ AsyncBook.class, InvalidAsyncBookRepository.class })
+	@IgnoreCompilationErrors
+	void asynchronousMethodReturningNonCompletionStageUsesMeaningfulDiagnostic(CompilationDiagnostics diagnostics) {
+		diagnostics.assertError( "method annotated '@Asynchronous' must return 'CompletionStage'" );
 	}
 }

@@ -1,21 +1,13 @@
 package org.hibernate.processor.test.data.select;
 
-import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collectors;
 
-import javax.tools.Diagnostic;
-import javax.tools.DiagnosticCollector;
-import javax.tools.JavaFileObject;
-import javax.tools.ToolProvider;
 
-import org.hibernate.processor.HibernateProcessor;
 import org.hibernate.processor.test.util.CompilationTest;
-import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
 import org.junit.jupiter.api.Test;
+import org.hibernate.processor.test.util.CompilationDiagnostics;
+import org.hibernate.processor.test.util.IgnoreCompilationErrors;
 
-import static java.nio.charset.Charset.defaultCharset;
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -93,45 +85,17 @@ class SelectionTest {
 	}
 
 	@Test
-	void invalidSelectAndFirstUsesMeaningfulDiagnostics() throws Exception {
-		final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
-		final var compiler = ToolProvider.getSystemJavaCompiler();
-		try ( var fileManager = compiler.getStandardFileManager( diagnostics, Locale.ROOT, defaultCharset() ) ) {
-			final var sourceFiles = List.of(
-					TestUtil.getSourceFile( SelectionStatus.class ),
-					TestUtil.getSourceFile( SelectionPublisher.class ),
-					TestUtil.getSourceFile( SelectionBook.class ),
-					TestUtil.getSourceFile( InvalidSelectionRepository.class )
-			);
-			final var task = compiler.getTask(
-					null,
-					fileManager,
-					diagnostics,
-					List.of(
-							"-d",
-							TestUtil.getOutBaseDir( SelectionTest.class ).getAbsolutePath(),
-							"-processor",
-							HibernateProcessor.class.getName()
-					),
-					null,
-					fileManager.getJavaFileObjectsFromFiles( sourceFiles )
-			);
-			assertFalse( task.call() );
-		}
-		final String messages = diagnostics.getDiagnostics()
-				.stream()
-				.filter( diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR )
-				.map( diagnostic -> diagnostic.getMessage( Locale.ROOT ) )
-				.collect( Collectors.joining( "\n" ) );
-
-		assertTrue( messages.contains( "no matching field named 'missing' in entity class" ) );
-		assertTrue( messages.contains( "selected attribute 'publisher' of entity" ) );
-		assertTrue( messages.contains( "is not a single-valued basic attribute" ) );
-		assertTrue( messages.contains( "has type 'java.lang.String', which does not match method return type 'java.lang.Integer'" ) );
-		assertTrue( messages.contains( "multiple '@Select' annotations require a record return type" ) );
-		assertTrue( messages.contains( "'@First' value must be greater than 0" ) );
-		assertTrue( messages.contains( "'@First' may not be combined with a parameter of type 'jakarta.data.Limit'" ) );
-		assertTrue( messages.contains(
-				"Jakarta Data repository method annotations are mutually exclusive: @Find, @Query" ) );
+	@WithClasses({ SelectionStatus.class, SelectionPublisher.class, SelectionBook.class, InvalidSelectionRepository.class })
+	@IgnoreCompilationErrors
+	void invalidSelectAndFirstUsesMeaningfulDiagnostics(CompilationDiagnostics diagnostics) {
+		diagnostics.assertError( "no matching field named 'missing' in entity class" );
+		diagnostics.assertError( "selected attribute 'publisher' of entity" );
+		diagnostics.assertError( "is not a single-valued basic attribute" );
+		diagnostics.assertError( "has type 'java.lang.String', which does not match method return type 'java.lang.Integer'" );
+		diagnostics.assertError( "multiple '@Select' annotations require a record return type" );
+		diagnostics.assertError( "'@First' value must be greater than 0" );
+		diagnostics.assertError( "'@First' may not be combined with a parameter of type 'jakarta.data.Limit'" );
+		diagnostics.assertError(
+				"Jakarta Data repository method annotations are mutually exclusive: @Find, @Query" );
 	}
 }

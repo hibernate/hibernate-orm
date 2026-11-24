@@ -2,23 +2,16 @@ package org.hibernate.processor.test.data.basic;
 
 import org.hibernate.processor.HibernateProcessor;
 import org.hibernate.processor.test.util.CompilationTest;
-import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
 import org.hibernate.processor.test.util.WithProcessorOption;
 import org.junit.jupiter.api.Test;
 
-import javax.tools.Diagnostic;
-import javax.tools.DiagnosticCollector;
-import javax.tools.JavaFileObject;
-import javax.tools.ToolProvider;
-import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collectors;
+import org.hibernate.processor.test.util.CompilationDiagnostics;
+import org.hibernate.processor.test.util.IgnoreCompilationErrors;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.assertNoMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -143,50 +136,12 @@ class DataTest {
 	}
 
 	@Test
-	void nonSequentialPositionalQueryParametersUseMeaningfulDiagnostic() throws Exception {
-		final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
-		final var compiler = ToolProvider.getSystemJavaCompiler();
-		try ( var fileManager = compiler.getStandardFileManager( diagnostics, Locale.ROOT, null ) ) {
-			final var sourceFiles = List.of(
-					TestUtil.getSourceFile( Author.class ),
-					TestUtil.getSourceFile( Book.class ),
-					TestUtil.getSourceFile( InvalidPositionalParameterRepository.class )
-			);
-			final var task = compiler.getTask(
-					null,
-					fileManager,
-					diagnostics,
-					List.of(
-							"-d",
-							TestUtil.getOutBaseDir( DataTest.class ).getAbsolutePath(),
-							"-processor",
-							HibernateProcessor.class.getName()
-					),
-					null,
-					fileManager.getJavaFileObjectsFromFiles( sourceFiles )
-			);
-			assertFalse( task.call() );
-		}
-		final var errorMessages = diagnostics.getDiagnostics()
-				.stream()
-				.filter( diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR )
-				.map( diagnostic -> diagnostic.getMessage( Locale.ROOT ) )
-				.toList();
-		final String messages = errorMessages.stream().collect( Collectors.joining( "\n" ) );
-
-		assertTrue( messages.contains(
-				"positional query parameters must be numbered sequentially starting at ?1" ) );
-		assertTrue( messages.contains(
-				"query parameters must be either all named or all positional" ) );
-		assertEquals( 1, countMessagesContaining( errorMessages,
-				"positional query parameters must be numbered sequentially starting at ?1" ) );
-		assertEquals( 1, countMessagesContaining( errorMessages,
-				"query parameters must be either all named or all positional" ) );
-	}
-
-	private static long countMessagesContaining(List<String> messages, String text) {
-		return messages.stream()
-				.filter( message -> message.contains( text ) )
-				.count();
+	@WithClasses({ Author.class, Book.class, InvalidPositionalParameterRepository.class })
+	@IgnoreCompilationErrors
+	void nonSequentialPositionalQueryParametersUseMeaningfulDiagnostic(CompilationDiagnostics diagnostics) {
+		diagnostics.assertSingleError(
+				"positional query parameters must be numbered sequentially starting at ?1" );
+		diagnostics.assertSingleError(
+				"query parameters must be either all named or all positional" );
 	}
 }

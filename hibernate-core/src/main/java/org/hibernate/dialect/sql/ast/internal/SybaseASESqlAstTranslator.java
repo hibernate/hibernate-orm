@@ -218,18 +218,24 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	protected void renderQueryGroup(QueryGroup queryGroup) {
 		if ( getSqlAst() instanceof SelectStatement select
 				&& select.getQueryPart() == queryGroup
-				&& needsLocking()
-				&& getEffectiveLockTimeout( getLockOptions().getLockMode() ) == Timeouts.SKIP_LOCKED_MILLI ) {
+				&& needsLocking() ) {
+			final boolean skipLocked =
+					getEffectiveLockTimeout( getLockOptions().getLockMode() ) == Timeouts.SKIP_LOCKED_MILLI;
 			final var kind = LockingSqlRewriterSupport.interpretLockKind( getLockOptions() );
-			if ( kind == PessimisticLockKind.UPDATE ) {
+			if ( skipLocked && kind == PessimisticLockKind.UPDATE ) {
 				throw new IllegalQueryOperationException(
 						"Sybase ASE does not support exclusive skip-locked locking of set queries (UNION, INTERSECT, EXCEPT)" );
 			}
+			// Locking is rendered as table hints, which belong to a table reference
+			// rather than to the statement, so every arm of the set query carries
+			// its own. Without this only the first arm would be locked.
 			queryGroup.visitQuerySpecs( lockingSetQueryArms::add );
 			try {
 				renderQueryGroupWithPagination( queryGroup );
-				appendSql( getDialect().getLockingSupport().getLockingClauseRenderer().render(
-						new LockingClauseRequest( kind, Timeouts.SKIP_LOCKED, List.of() ) ) );
+				if ( skipLocked ) {
+					appendSql( getDialect().getLockingSupport().getLockingClauseRenderer().render(
+							new LockingClauseRequest( kind, Timeouts.SKIP_LOCKED, List.of() ) ) );
+				}
 			}
 			finally {
 				lockingSetQueryArms.clear();

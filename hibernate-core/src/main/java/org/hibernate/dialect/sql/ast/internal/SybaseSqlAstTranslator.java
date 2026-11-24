@@ -1,7 +1,9 @@
 package org.hibernate.dialect.sql.ast.internal;
 
 import java.util.ArrayDeque;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.Locking;
 import org.hibernate.dialect.sql.ast.spi.DerivedTableRenderingSupport;
@@ -22,9 +24,11 @@ import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
 import org.hibernate.sql.ast.spi.query.expression.Summarization;
+import org.hibernate.sql.ast.spi.query.select.QueryGroup;
 import org.hibernate.sql.ast.spi.query.select.QueryPart;
 import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.ast.spi.query.select.SelectClause;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.ast.spi.query.select.SortSpecification;
 import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -35,6 +39,10 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  * @author Christian Beikov
  */
 public class SybaseSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+
+	/// The branches of a root set operation being rendered with locking, each of
+	/// which becomes the locking target while it is rendered.
+	private final Set<QuerySpec> lockingSetQueryBranches = new HashSet<>();
 
 	private final ArrayDeque<FullJoinEmulation> fullJoinEmulations = new ArrayDeque<>();
 
@@ -101,7 +109,32 @@ public class SybaseSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	}
 
 	@Override
+	protected void renderQueryGroup(QueryGroup queryGroup) {
+		if ( getSqlAst() instanceof SelectStatement select
+				&& select.getQueryPart() == queryGroup
+				&& needsLocking() ) {
+			// Locking is rendered as table hints, which belong to a table reference
+			// rather than to the statement, so every branch of the set operation
+			// carries its own. Without this only the first branch would be locked.
+			queryGroup.visitQuerySpecs( lockingSetQueryBranches::add );
+			try {
+				super.renderQueryGroup( queryGroup );
+			}
+			finally {
+				lockingSetQueryBranches.clear();
+				setLockingTarget( queryGroup.getFirstQuerySpec() );
+			}
+		}
+		else {
+			super.renderQueryGroup( queryGroup );
+		}
+	}
+
+	@Override
 	protected void renderQuerySpec(QuerySpec querySpec) {
+		if ( lockingSetQueryBranches.contains( querySpec ) ) {
+			setLockingTarget( querySpec );
+		}
 		final var helper = currentFullJoinEmulationHelper();
 		final boolean needsNestedHelper =
 				helper.hasActiveFullJoinEmulation()

@@ -12,9 +12,11 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.sql.ast.internal.OracleSqlAstTranslator;
 import org.hibernate.dialect.sql.ast.internal.SQLServerSqlAstTranslator;
 import org.hibernate.dialect.sql.ast.internal.SybaseASESqlAstTranslator;
+import org.hibernate.dialect.sql.ast.internal.SybaseSqlAstTranslator;
 import org.hibernate.dialect.sql.ast.spi.PostgreSQLSqlAstTranslator;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -55,6 +57,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -385,6 +388,77 @@ class LockingDecisionBaselineTest {
 
 		assertThat( operation.getSqlString() ).isEqualTo(
 				"select 1 from work_item w with (updlock,holdlock,rowlock) where exists("
+						+ "select 1 from archived_item a union all select 1 from purged_item p)" );
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Sybase locks through table hints, which every branch of a set operation carries
+
+	@ParameterizedTest
+	@CsvSource(delimiter = '|', textBlock = """
+			PESSIMISTIC_READ  | select 1 from work_item w holdlock union all select 1 from archived_item a holdlock
+			PESSIMISTIC_WRITE | select 1 from work_item w holdlock union all select 1 from archived_item a holdlock
+			""")
+	void sybaseAseSetOperationLockHints(LockMode lockMode, String expected) {
+		final var fixture = new Fixture( new SybaseASEDialect() );
+		final var options = new QueryOptionsImpl();
+		options.getLockOptions().setLockMode( lockMode );
+
+		final JdbcSelect operation = new SybaseASESqlAstTranslator<JdbcSelect>(
+				fixture.request( fixture.lockedUnionOfEntities() ) ).translate( null, options );
+
+		assertThat( operation.getSqlString() ).isEqualTo( expected );
+		assertThat( operation.getLockingApplication() ).isEqualTo( JdbcLockingApplication.RENDERED );
+	}
+
+	@ParameterizedTest
+	@CsvSource(delimiter = '|', textBlock = """
+			PESSIMISTIC_READ  | select 1 from work_item w holdlock union all select 1 from archived_item a holdlock
+			PESSIMISTIC_WRITE | select 1 from work_item w holdlock union all select 1 from archived_item a holdlock
+			""")
+	void sybaseSetOperationLockHints(LockMode lockMode, String expected) {
+		final var fixture = new Fixture( new SybaseDialect() );
+		final var options = new QueryOptionsImpl();
+		options.getLockOptions().setLockMode( lockMode );
+
+		final JdbcSelect operation = new SybaseSqlAstTranslator<JdbcSelect>(
+				fixture.request( fixture.lockedUnionOfEntities() ) ).translate( null, options );
+
+		assertThat( operation.getSqlString() ).isEqualTo( expected );
+		assertThat( operation.getLockingApplication() ).isEqualTo( JdbcLockingApplication.RENDERED );
+	}
+
+	@Test
+	void sybaseAseDoesNotLockASetOperationInASubquery() {
+		final var fixture = new Fixture( new SybaseASEDialect() );
+		final var root = fixture.lockedRoot( true );
+		final var subquery = new QueryGroup( false, SetOperator.UNION_ALL, List.of(
+				fixture.querySpec( false, "archived_item", "a", null, ARCHIVED_ITEM ),
+				fixture.querySpec( false, "purged_item", "p", null, PURGED_ITEM ) ) );
+		root.applyPredicate( new ExistsPredicate( new SelectStatement( subquery ), false, null ) );
+
+		final JdbcSelect operation = new SybaseASESqlAstTranslator<JdbcSelect>(
+				fixture.request( new SelectStatement( root ) ) ).translate( null, options( Locking.FollowOn.ALLOW ) );
+
+		assertThat( operation.getSqlString() ).isEqualTo(
+				"select 1 from work_item w holdlock where exists("
+						+ "select 1 from archived_item a union all select 1 from purged_item p)" );
+	}
+
+	@Test
+	void sybaseDoesNotLockASetOperationInASubquery() {
+		final var fixture = new Fixture( new SybaseDialect() );
+		final var root = fixture.lockedRoot( true );
+		final var subquery = new QueryGroup( false, SetOperator.UNION_ALL, List.of(
+				fixture.querySpec( false, "archived_item", "a", null, ARCHIVED_ITEM ),
+				fixture.querySpec( false, "purged_item", "p", null, PURGED_ITEM ) ) );
+		root.applyPredicate( new ExistsPredicate( new SelectStatement( subquery ), false, null ) );
+
+		final JdbcSelect operation = new SybaseSqlAstTranslator<JdbcSelect>(
+				fixture.request( new SelectStatement( root ) ) ).translate( null, options( Locking.FollowOn.ALLOW ) );
+
+		assertThat( operation.getSqlString() ).isEqualTo(
+				"select 1 from work_item w holdlock where exists("
 						+ "select 1 from archived_item a union all select 1 from purged_item p)" );
 	}
 

@@ -214,13 +214,32 @@ public class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementM
 					)
 			);
 		}
-		final var interceptor = new LazyAttributeLoadingInterceptor(
-				lazyAttributeLoadingInterceptorState,
-				identifier,
-				session
-		);
+		final var interceptor = createLazyAttributeLoadingInterceptor( identifier, session );
 		injectInterceptor( entity, interceptor, session );
 		return interceptor;
+	}
+
+	@Override
+	public LazyAttributeLoadingInterceptor createLazyAttributeLoadingInterceptor(
+			@Nullable Object identifier,
+			@Nullable SharedSessionContractImplementor session) {
+		if ( !enhancedForLazyLoading ) {
+			throw new NotInstrumentedException( "Entity class [" + entityClass.getName() + "] is not enhanced for lazy loading" );
+		}
+		return new LazyAttributeLoadingInterceptor( lazyAttributeLoadingInterceptorState, identifier, session );
+	}
+
+	/**
+	 * Build the interceptor of an enhanced entity used as a proxy, without injecting it.
+	 */
+	protected EnhancementAsProxyLazinessInterceptor createEnhancementAsProxyLazinessInterceptor(
+			EntityKey entityKey,
+			SharedSessionContractImplementor session) {
+		return new EnhancementAsProxyLazinessInterceptor(
+				getEnhancementAsProxyLazinessInterceptorMetastate( session ),
+				entityKey,
+				session
+		);
 	}
 
 	@Override
@@ -228,16 +247,7 @@ public class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementM
 			Object entity,
 			EntityKey entityKey,
 			SharedSessionContractImplementor session) {
-		EnhancementAsProxyLazinessInterceptor.EntityRelatedState meta = getEnhancementAsProxyLazinessInterceptorMetastate( session );
-		injectInterceptor(
-				entity,
-				new EnhancementAsProxyLazinessInterceptor(
-						meta,
-						entityKey,
-						session
-				),
-				session
-		);
+		injectInterceptor( entity, createEnhancementAsProxyLazinessInterceptor( entityKey, session ), session );
 	}
 
 	/*

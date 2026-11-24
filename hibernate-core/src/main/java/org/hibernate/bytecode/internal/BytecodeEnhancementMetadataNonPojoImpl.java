@@ -45,6 +45,13 @@ public class BytecodeEnhancementMetadataNonPojoImpl implements BytecodeEnhanceme
 	}
 
 	@Override
+	public LazyAttributeLoadingInterceptor createLazyAttributeLoadingInterceptor(
+			Object identifier,
+			SharedSessionContractImplementor session) throws NotInstrumentedException {
+		throw new NotInstrumentedException( errorMsg );
+	}
+
+	@Override
 	public LazyAttributeLoadingInterceptor injectInterceptor(
 			Object entity,
 			Object identifier,

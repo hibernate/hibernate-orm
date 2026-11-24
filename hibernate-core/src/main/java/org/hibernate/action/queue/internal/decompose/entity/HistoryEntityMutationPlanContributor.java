@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.Hibernate;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.bind.BindPlan;
 import org.hibernate.action.queue.spi.bind.Checkers;
@@ -118,6 +120,16 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 					context.previousVersion(),
 					context.previousState()
 			);
+			final Object[] state = context.state();
+			for ( final var attribute : historyTableDescriptor.attributes() ) {
+				final int index = attribute.getStateArrayPosition();
+				if ( entityPersister.getPropertyInsertability()[index]
+						&& state[index] == LazyPropertyInitializer.UNFETCHED_PROPERTY
+						&& !( attribute instanceof PluralAttributeMapping ) ) {
+					Hibernate.initializeProperty( context.entity(), attribute.getAttributeName() );
+					state[index] = attribute.getValue( context.entity() );
+				}
+			}
 			final var insert = createHistoryInsertOperation(
 					context.ordinalBase(),
 					501,

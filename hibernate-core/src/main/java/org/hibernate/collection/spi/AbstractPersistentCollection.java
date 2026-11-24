@@ -29,7 +29,6 @@ import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.proxy.AbstractLazyInitializer;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
@@ -472,8 +471,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 			final var lazyInitializer = extractLazyInitializer( value );
 			if ( lazyInitializer != null && lazyInitializer.isUninitialized() ) {
 				return lazyInitializer.getSession() == session
-					&& lazyInitializer instanceof AbstractLazyInitializer abstractLazyInitializer
-					&& !Objects.equals( abstractLazyInitializer.getTemporalIdentifier(), temporalIdentifier );
+						&& !Objects.equals( lazyInitializer.getTemporalIdentifier(), temporalIdentifier );
 			}
 			else {
 				final var entry = session.getPersistenceContextInternal()

@@ -42,6 +42,10 @@ public class DefaultEvictEventListener implements EvictEventListener {
 		}
 		final var lazyInitializer = extractLazyInitializer( object );
 		if ( lazyInitializer != null ) {
+			if ( lazyInitializer.getSession() != source ) {
+				// Another instance with the same entity key may be managed by this session.
+				return;
+			}
 			final Object id = lazyInitializer.getInternalIdentifier();
 			if ( id == null ) {
 				throw new IllegalArgumentException( "Could not determine identifier of proxy passed to evict()" );
@@ -49,7 +53,8 @@ public class DefaultEvictEventListener implements EvictEventListener {
 			final var persister =
 					source.getFactory().getMappingMetamodel()
 							.getEntityDescriptor( lazyInitializer.getEntityName() );
-			final var key = source.generateEntityKey( id, persister );
+			final var key = source.getLoadQueryInfluencers().withCapturedTemporalIdentifier(
+					lazyInitializer.getTemporalIdentifier(), () -> source.generateEntityKey( id, persister ) );
 			final var holder = persistenceContext.detachEntity( key );
 			// if the entity has been evicted then its holder is null
 			if ( holder != null && !lazyInitializer.isUninitialized() ) {

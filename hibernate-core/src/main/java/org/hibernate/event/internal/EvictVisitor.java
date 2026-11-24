@@ -2,7 +2,6 @@ package org.hibernate.event.internal;
 
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.type.CollectionType;
 
@@ -74,9 +73,9 @@ public class EvictVisitor extends AbstractVisitor {
 			if ( session.getLoadQueryInfluencers().effectivelyBatchLoadable( persister ) ) {
 				persistenceContext.getBatchFetchQueue().removeBatchLoadableCollection( ce );
 			}
-			if ( loadedKey != null ) {
-				//TODO: is this 100% correct?
-				persistenceContext.removeCollectionByKey( new CollectionKey( persister, loadedKey) );
+			final var collectionKey = ce.getLoadedCollectionKey();
+			if ( collectionKey != null ) {
+				persistenceContext.removeCollectionByKey( collectionKey );
 			}
 		}
 	}

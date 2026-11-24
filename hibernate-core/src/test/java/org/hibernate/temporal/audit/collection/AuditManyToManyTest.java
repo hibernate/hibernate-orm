@@ -191,6 +191,7 @@ class AuditManyToManyTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	void testLeftJoinAtChangeset(SessionFactoryScope scope) {
 		try (var session = scope.getSessionFactory().withOptions().atChangeset( revDrop ).openSession()) {
 			assertEquals( List.of( 2L ), session.createSelectionQuery(
@@ -203,6 +204,7 @@ class AuditManyToManyTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	void testRightJoinAtOwnerRevision(SessionFactoryScope scope) {
 		try (var session = scope.getSessionFactory().withOptions().atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
 			assertEquals( List.of( "Math" ), session.createSelectionQuery(
@@ -227,6 +229,7 @@ class AuditManyToManyTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	void testRightJoinExcludesDeletedMembership(SessionFactoryScope scope) {
 		assertNoDeletedMembership( scope, "right" );
 	}
@@ -351,6 +354,7 @@ class AuditManyToManyTest {
 
 	@Test
 	@Order(6)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	void testJoinFetchedCollectionRevisionIsolation(SessionFactoryScope scope) {
 		final var sf = scope.getSessionFactory();
 		final List<Integer> lazySizes;

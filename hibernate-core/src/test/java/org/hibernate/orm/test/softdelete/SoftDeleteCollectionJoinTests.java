@@ -106,6 +106,7 @@ public class SoftDeleteCollectionJoinTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void rightJoinDoesNotReturnHiddenNotes(SessionFactoryScope scope) {
 		assertThat( ids( scope, "select n.id from Parent p right join p.notes n" ) )
 				.containsExactlyInAnyOrder( 2, 3 );
@@ -120,6 +121,7 @@ public class SoftDeleteCollectionJoinTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void laterRightJoinKeepsItsRows(SessionFactoryScope scope) {
 		// every marker survives the last join, with no note for the deleted note and for the missing note
 		final Set<String> rows = new HashSet<>();

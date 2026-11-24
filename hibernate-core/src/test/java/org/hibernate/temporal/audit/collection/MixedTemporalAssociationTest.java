@@ -17,7 +17,9 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -86,6 +88,7 @@ class MixedTemporalAssociationTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	void rightJoinPreservesOnlyVisibleCourses(SessionFactoryScope scope) {
 		try (var session = scope.getSessionFactory().withOptions().atChangeset( firstChangeset ).openSession()) {
 			assertEquals( List.of( "Math" ), session.createSelectionQuery(

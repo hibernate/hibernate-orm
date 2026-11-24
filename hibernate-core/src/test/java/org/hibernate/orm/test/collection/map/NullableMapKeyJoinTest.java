@@ -10,8 +10,10 @@ import jakarta.persistence.OneToMany;
 
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -33,6 +35,7 @@ class NullableMapKeyJoinTest {
 
 	@ParameterizedTest
 	@ValueSource(booleans = { false, true })
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	void onConditionPreservesChildWithNullKey(boolean filterKeys, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final var owner = new Owner();

@@ -11,6 +11,8 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Version;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Temporal;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
@@ -40,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 abstract class AbstractTemporalEntityHistoryTest {
 
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	@Test void test(SessionFactoryScope scope) {
 		scope.getSessionFactory().inTransaction(
 				session -> {

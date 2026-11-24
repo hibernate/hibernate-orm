@@ -159,6 +159,7 @@ public class SoftDeleteJoinTableQueryTests {
 
 	@ParameterizedTest
 	@ValueSource(strings = {TAGS, NOTES, "byNote"})
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void innerJoinFetchKeepsOwnerWithOnlyDeletedRows(String collection, SessionFactoryScope scope) {
 		scope.inSession( session -> {
 			final var owners = session.createSelectionQuery(
@@ -342,6 +343,7 @@ public class SoftDeleteJoinTableQueryTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	void softDeletedMapKey(SessionFactoryScope scope) {
 		assertEquals( List.of( 20 ), ids( scope, "select key(v).id from Owner o join o.byNote v" ) );
 		assertEquals( List.of( 0, 1, 0 ), ids( scope, "select size(o.byNote) from Owner o order by o.id" ) );

@@ -13,8 +13,10 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -66,12 +68,14 @@ class MapKeyEntityFilterTest {
 
 	@ParameterizedTest
 	@EnumSource(FetchPath.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	void loadByKeyFilter(FetchPath path, SessionFactoryScope scope) {
 		assertKeys( scope, path, new Integer[] { 10 }, "loadNotes" );
 	}
 
 	@ParameterizedTest
 	@EnumSource(FetchPath.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	void bothKeyFilters(FetchPath path, SessionFactoryScope scope) {
 		assertKeys( scope, path, new Integer[] { 10 }, "queryNotes", "loadNotes" );
 	}

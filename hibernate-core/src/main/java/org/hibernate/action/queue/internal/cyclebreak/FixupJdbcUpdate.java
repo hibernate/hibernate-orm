@@ -42,10 +42,19 @@ public class FixupJdbcUpdate implements PreparableMutationOperation {
 			TableDescriptor tableDescriptor,
 			EntityPersister entityPersister,
 			Map<String, JdbcValueDescriptor> jdbcValueDescriptorMap) {
+		this( sql, tableDescriptor, entityPersister, jdbcValueDescriptorMap, Expectation.RowCount.INSTANCE );
+	}
+
+	public FixupJdbcUpdate(
+			String sql,
+			TableDescriptor tableDescriptor,
+			EntityPersister entityPersister,
+			Map<String, JdbcValueDescriptor> jdbcValueDescriptorMap,
+			Expectation expectation) {
 		this.sql = sql;
 		this.tableDescriptor = tableDescriptor;
 		this.entityPersister = entityPersister;
-		this.expectation = Expectation.RowCount.INSTANCE;
+		this.expectation = expectation;
 
 		this.jdbcValueDescriptorMap = jdbcValueDescriptorMap;
 		this.parameterBinders = CollectionHelper.arrayList( jdbcValueDescriptorMap.size() );

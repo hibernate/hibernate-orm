@@ -2157,11 +2157,11 @@ public class XmlAnnotationHelper {
 			JaxbEntityImpl jaxbEntity,
 			MutableClassDetails classDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		List<JaxbPrimaryKeyJoinColumnImpl> jaxbColumns = jaxbEntity.getPrimaryKeyJoinColumns();
+		final List<JaxbPrimaryKeyJoinColumnImpl> jaxbColumns = jaxbEntity.getPrimaryKeyJoinColumns();
 		// A <primary-key-foreign-key/> without any <primary-key-join-column/> becomes an empty container
 		//   @PrimaryKeyJoinColumns(value = {}, foreignKey = @ForeignKey(...))
 		// which JPA allows in order to specify the foreign key while defaulting the join columns.
-		if ( isEmpty( jaxbColumns ) && jaxbEntity.getPrimaryKeyForeignKey() == null ) {
+		if ( jaxbColumns.isEmpty() && jaxbEntity.getPrimaryKeyForeignKey() == null ) {
 			return;
 		}
 

@@ -14,6 +14,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 
@@ -62,8 +63,8 @@ public final class JpaDescriptorParser {
 		entityMappings = new ArrayList<>();
 		xmlParserHelper = new XmlParserHelper( context );
 		resourceStreamLocator = new ResourceStreamLocatorImpl( context );
-		configurationBinder = new ConfigurationBinder( resourceStreamLocator, this::mappingSetting );
-		mappingBinder = new MappingBinder( resourceStreamLocator, this::mappingSetting );
+		configurationBinder = new ConfigurationBinder( resourceStreamLocator, mappingSettings( context ) );
+		mappingBinder = new MappingBinder( resourceStreamLocator, mappingSettings( context ) );
 	}
 
 	/**
@@ -71,8 +72,9 @@ public final class JpaDescriptorParser {
 	 * XML validation stays enabled, and DTD/external entity support follows the
 	 * {@value org.hibernate.processor.HibernateProcessor#ALLOW_DTD_AND_EXTERNAL_ENTITIES} option.
 	 */
-	private @Nullable Object mappingSetting(String settingName) {
-		return switch ( settingName ) {
+	@SuppressWarnings("nullness") // a null value means the setting is not specified
+	private static Function<String, Object> mappingSettings(Context context) {
+		return settingName -> switch ( settingName ) {
 			case MappingSettings.VALIDATE_XML -> true;
 			case MappingSettings.XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES -> context.allowDtdAndExternalEntities();
 			default -> null;

@@ -1,5 +1,7 @@
 package org.hibernate.community.dialect;
 
+import java.sql.SQLException;
+
 import org.hibernate.dialect.identifier.spi.KeywordRegistration;
 
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
@@ -66,16 +68,40 @@ public class TiDBDialect extends MySQLDialect implements TemporalOperationSuppor
 	// v5.4 EOL date: 15 Feb 2026
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 5, 4 );
 
+	// Whether newly created foreign keys, including their referential actions, are enforced
+	private final boolean foreignKeysEnforced;
+
 	public TiDBDialect() {
 		this( MINIMUM_VERSION );
 	}
 
 	public TiDBDialect(DatabaseVersion version) {
 		super( version );
+		this.foreignKeysEnforced = false;
 	}
 
 	public TiDBDialect(DialectResolutionInfo info) {
 		super( createVersion( info, MINIMUM_VERSION ), MySQLServerConfiguration.fromDialectResolutionInfo( info ) );
+		this.foreignKeysEnforced = foreignKeysEnforced( info );
+	}
+
+	// TiDB enforces foreign keys since v6.6, but only those created while tidb_enable_foreign_key is ON
+	// (the default since v6.6, also set by the upgrade to v6.6). A foreign key created while it is OFF,
+	// or before v6.6, stays ineffective. Checks and referential actions at runtime are controlled by
+	// foreign_key_checks, which, as with MySQL, is assumed to be ON.
+	// See also: https://docs.pingcap.com/tidb/stable/foreign-key/
+	private static boolean foreignKeysEnforced(DialectResolutionInfo info) {
+		final var databaseMetaData = info.getDatabaseMetadata();
+		if ( databaseMetaData != null ) {
+			try ( var statement = databaseMetaData.getConnection().createStatement();
+					var resultSet = statement.executeQuery( "select @@global.tidb_enable_foreign_key" ) ) {
+				return resultSet.next() && resultSet.getBoolean( 1 );
+			}
+			catch (SQLException ex) {
+				// Ignore: TiDB before v6.6 does not have this variable
+			}
+		}
+		return false;
 	}
 
 	@Override
@@ -113,7 +139,12 @@ public class TiDBDialect extends MySQLDialect implements TemporalOperationSuppor
 	@Override
 	@SPI({ USE, IMPLEMENT })
 	public boolean supportsOnDeleteAction(org.hibernate.annotations.OnDeleteAction action) {
-		return action == org.hibernate.annotations.OnDeleteAction.NO_ACTION;
+		return switch ( action ) {
+			case NO_ACTION -> true;
+			case CASCADE, SET_NULL, RESTRICT -> foreignKeysEnforced;
+			// Accepted, but behaves like RESTRICT
+			case SET_DEFAULT -> false;
+		};
 	}
 
 	@Override

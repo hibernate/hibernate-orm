@@ -62,9 +62,13 @@
 
             <basic name="name"/>
 
-            <basic name="description" column="description_txt"/>
+            <basic name="description">
+                <column name="description_txt"/>
+            </basic>
 
-            <basic name="inactive" column="inactive_flag"/>
+            <basic name="inactive">
+                <column name="inactive_flag"/>
+            </basic>
         </attributes>
     </entity>
 

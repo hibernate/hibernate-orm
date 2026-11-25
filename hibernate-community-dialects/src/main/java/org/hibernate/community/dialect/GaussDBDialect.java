@@ -1125,15 +1125,19 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 	}
 
 	/**
-	 * Words reserved by GaussDB M mode that PostgreSQL treats as non-reserved, so Hibernate would otherwise
-	 * emit them unquoted as identifiers. Auto-quoting ({@code hibernate.auto_quote_keyword=true}) is scoped to
-	 * this curated set rather than the full ANSI/PostgreSQL keyword set ({@code Dialect#sqlKeywords}), which
-	 * over-reports words M mode actually permits as identifiers (e.g. {@code aggregate}) and would false-quote
-	 * legitimate identifier-named columns. {@code excluded} is also registered via {@link #registerKeyword} so
-	 * it is recognized as a keyword in SQL templates ({@code Template} uses {@code #getKeywords()}).
-	 * {@code match} is a MySQL reserved word (M mode) but non-reserved in PostgreSQL, so an unquoted
-	 * {@code create table Match (...)} raises a syntax error in M mode; it is added here only for M mode
-	 * (A mode keeps {@link #A_MODE_RESERVED_KEYWORDS} so existing A-mode behavior is unchanged).
+	 * Words reserved by GaussDB that PostgreSQL treats as non-reserved, so Hibernate would otherwise
+	 * emit them unquoted as identifiers. Keyword auto-quoting is forced {@code true} here (see
+	 * {@link #buildIdentifierHelper}) but scoped to this curated set rather than the full
+	 * ANSI/PostgreSQL keyword set, which over-reports words the modes permit as identifiers
+	 * (e.g. {@code aggregate}), and rather than the driver-reported keyword list
+	 * ({@code DatabaseMetaData#getSQLKeywords}, 485 words on gsjdbc4 506.0.0.b058 incl.
+	 * {@code document}, {@code event}, {@code text}, {@code comment}), which false-quotes
+	 * legitimate identifier-named tables/columns. {@code excluded} is also registered via
+	 * {@link #registerKeyword} so it is recognized as a keyword in SQL templates
+	 * ({@code Template} uses {@code #getKeywords()}). {@code match} is a MySQL reserved word
+	 * (M mode) but non-reserved in PostgreSQL, so an unquoted {@code create table Match (...)}
+	 * raises a syntax error in M mode; it is added here only for M mode (A mode keeps
+	 * {@link #A_MODE_RESERVED_KEYWORDS} so existing A-mode behavior is unchanged).
 	 */
 	private static final Set<String> M_MODE_RESERVED_KEYWORDS = Set.of( "excluded", "match" );
 	private static final Set<String> A_MODE_RESERVED_KEYWORDS = Set.of( "excluded" );
@@ -1150,16 +1154,17 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 		}
 		// Replicate the base builder but apply only the curated reserved words (see
 		// M_MODE_RESERVED_KEYWORDS / A_MODE_RESERVED_KEYWORDS) instead of the full inherited
-		// ANSI/PG keyword set (which over-reports words the modes permit, e.g. `aggregate`).
+		// ANSI/PG keyword set, and force auto-quoting on so the curated words are quoted
+		// dialect-side. This deliberately does NOT rely on the global
+		// {@code hibernate.auto_quote_keyword} setting: that leaks into every test/service
+		// registry (system properties are a settings source) and changes DDL rendering even
+		// for tests that explicitly select another dialect offline (e.g. RowLevelSecurityTest
+		// with PostgreSQLDialect renders quoted table names there).
+		builder.setAutoQuoteKeywords( true );
 		builder.setUnquotedCaseStrategy( jdbcMetadata.getUnquotedIdentifierCaseStrategy() );
 		builder.setQuotedCaseStrategy( jdbcMetadata.getQuotedIdentifierCaseStrategy() );
 		builder.clearReservedWords();
 		builder.applyReservedWords( isMMode() ? M_MODE_RESERVED_KEYWORDS : A_MODE_RESERVED_KEYWORDS );
-		builder.applyReservedWords(
-				jdbcMetadata.getSqlKeywords().stream()
-						.filter( request.keywordSupport()::acceptsJdbcKeyword )
-						.toList()
-		);
 		builder.setNameQualifierSupport( request.nameQualifierSupport() );
 		if ( isMMode() ) {
 			// M mode (MySQL-compatible) preserves unquoted identifier case — `create table AbCdEf` stores

@@ -13,6 +13,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.testing.orm.junit.DialectFeatureCheck;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -38,6 +39,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RequiresDialectFeature(feature = LocalDateTimeDaylightSavingTest.DirectLocalDateTimeSupport.class)
 @SkipForDialect(dialectClass = AltibaseDialect.class,
 		reason = "Altibase JDBC converts LocalDateTime through java.sql.Timestamp in the JVM default time zone, shifting values in daylight-saving gaps")
+@SkipForDialect(dialectClass = GaussDBDialect.class,
+		reason = "gsjdbc4 shifts LocalDateTime values falling in a daylight-saving gap (probe-verified on 505.2: 2023-03-26T01:00 Europe/Lisbon round-trips as 02:00)")
 @JiraKey("HHH-16722")
 @ResourceLock("java.util.TimeZone")
 public class LocalDateTimeDaylightSavingTest {

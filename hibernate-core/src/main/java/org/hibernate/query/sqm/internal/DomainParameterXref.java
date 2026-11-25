@@ -4,7 +4,9 @@ import jakarta.annotation.Nonnull;
 import org.hibernate.query.internal.QueryParameterIdentifiedImpl;
 import org.hibernate.query.internal.QueryParameterNamedImpl;
 import org.hibernate.query.internal.QueryParameterPositionalImpl;
+import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.query.sqm.sql.spi.AssociationKeyAccess;
 import org.hibernate.query.sqm.sql.spi.SqmParameterMapping;
 import org.hibernate.query.sqm.tree.spi.SqmStatement;
 import org.hibernate.query.sqm.tree.spi.expression.JpaCriteriaParameter;
@@ -13,6 +15,7 @@ import org.hibernate.query.sqm.tree.spi.expression.SqmParameter;
 import org.hibernate.type.BasicCollectionType;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -50,6 +53,7 @@ public class DomainParameterXref implements SqmParameterMapping {
 	private final IdentityHashMap<SqmParameter<?>, QueryParameterImplementor<?>> queryParamBySqmParam;
 
 	private Map<SqmParameter<?>,List<SqmParameter<?>>> expansions;
+	private Set<AssociationKeyAccess> associationKeyAccesses;
 
 	private DomainParameterXref() {
 		sqmParamsByQueryParam = new LinkedHashMap<>( 0 );
@@ -115,6 +119,30 @@ public class DomainParameterXref implements SqmParameterMapping {
 
 	public DomainParameterXref copy() {
 		return new DomainParameterXref( this );
+	}
+
+	/// Each cached translation owns its expansions and its assumptions about the bound entity keys.
+	public DomainParameterXref forTranslation() {
+		return hasParameters() ? copy() : EMPTY;
+	}
+
+	@Override
+	public void registerAssociationKeyAccess(AssociationKeyAccess access) {
+		if ( associationKeyAccesses == null ) {
+			associationKeyAccesses = new HashSet<>();
+		}
+		associationKeyAccesses.add( access );
+	}
+
+	public boolean matches(QueryParameterBindings bindings) {
+		if ( associationKeyAccesses != null ) {
+			for ( var access : associationKeyAccesses ) {
+				if ( !access.matches( bindings ) ) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 
 	/**

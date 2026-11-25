@@ -12,6 +12,7 @@ public final class EntityKeyJdbcParameter extends SqlTypedMappingJdbcParameter {
 		this.entityMapping = entityMapping;
 	}
 
+	@Override
 	public MappingModelExpressible<?> getEntityMapping() {
 		return entityMapping;
 	}

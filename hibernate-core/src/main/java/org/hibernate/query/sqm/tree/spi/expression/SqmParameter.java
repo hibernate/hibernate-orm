@@ -67,6 +67,11 @@ public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpressio
 	 */
 	boolean allowMultiValuedBinding();
 
+	/// Whether this expression wraps an entity literal which can only supply an association key.
+	default boolean isEntityWithoutIdentifier() {
+		return false;
+	}
+
 	/**
 	 * Based on the context it is declared, what is the anticipated type for
 	 * bind values?

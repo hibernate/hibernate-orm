@@ -9,8 +9,10 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import org.hibernate.Hibernate;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -219,8 +221,6 @@ class UniqueKeyJoinTableComparisonTest {
 	@CsvSource(delimiter = '|', value = {
 			"item = (select i from Item i where i.id = 1) | 1",
 			"(select i from Item i where i.id = 1) = item | 1",
-			"item = any (select i from Item i) | 1,2",
-			"item <> all (select i from Item i where i.id > 1) | 1",
 			"item in (select i from Item i) | 1,2",
 			"item in (select e from cart.items e) | 1,2",
 			"item in (select e from cart.alternateItems e) | 1,2",
@@ -231,6 +231,16 @@ class UniqueKeyJoinTableComparisonTest {
 				"select item.id from Cart cart join cart.items item where cart.id = 1 and " + predicate
 						+ " order by item.id",
 				Long.class ).getResultList() ) ) );
+	}
+
+	@ParameterizedTest
+	@CsvSource(delimiter = '|', value = {
+			"item = any (select i from Item i) | 1,2",
+			"item <> all (select i from Item i where i.id > 1) | 1"
+	})
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsAllQuantifiedSubqueriesWithComparison.class)
+	void elementComparedWithQuantifiedSubquery(String predicate, String expected, SessionFactoryScope scope) {
+		elementComparedWithSubquery( predicate, expected, scope );
 	}
 
 	@ParameterizedTest

@@ -22,8 +22,8 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Stateful;
+import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
-import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.persister.state.internal.HistoryStateManagement;
 import org.hibernate.persister.state.internal.NativeTemporalStateManagement;
 import org.hibernate.persister.state.internal.TemporalStateManagement;
@@ -149,19 +149,18 @@ public class TemporalHelper {
 				copyTableColumns( target.getMainTable(), target.getAuxiliaryTable() );
 				createHistoryTablePrimaryKey( target,
 						context.getMetadataCollector().getDatabase().getDialect() );
-				if ( target instanceof RootClass rootClass ) {
-					for ( var subclass : rootClass.getSubclasses() ) {
-						if ( subclass instanceof UnionSubclass unionSubclass ) {
-							bindSubclassHistoryTable( rootClass, unionSubclass, context );
-						}
-					}
-				}
 			} );
 		}
 	}
 
+	static void bindSubclassHistoryTables(RootClass rootClass, MetadataBuildingContext context) {
+		for ( var subclass : rootClass.getSubclasses() ) {
+			bindSubclassHistoryTable( rootClass, subclass, context );
+		}
+	}
+
 	private static void bindSubclassHistoryTable(
-			RootClass rootClass, UnionSubclass subclass, MetadataBuildingContext context) {
+			RootClass rootClass, Subclass subclass, MetadataBuildingContext context) {
 		final var modelsContext = context.getBootstrapContext().getModelsContext();
 		final var classDetails = subclass.getClassName() == null ? null
 				: modelsContext.getClassDetailsRegistry().getClassDetails( subclass.getClassName() );

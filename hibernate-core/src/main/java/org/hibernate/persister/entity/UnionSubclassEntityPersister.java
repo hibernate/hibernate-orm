@@ -35,6 +35,7 @@ import org.hibernate.persister.filter.internal.StaticFilterAliasGenerator;
 import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.mapping.AuditMapping;
 import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
@@ -42,6 +43,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.state.spi.StateManagement;
@@ -305,6 +307,37 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			}
 		}
 		return tableGroup;
+	}
+
+	@Override
+	@Nullable
+	public Function<String, String> createAuxiliaryTableResolver(
+			@Nonnull RootClass rootClass, @Nonnull String rootAuxiliaryTableName, @Nonnull List<String> extraColumns,
+			@Nonnull MappingModelCreationProcess creationProcess) {
+		if ( !rootClass.hasSubclasses() ) {
+			return null;
+		}
+		final var tableNames = new HashMap<String, String>();
+		tableNames.put( getRootTableName(), rootAuxiliaryTableName );
+		final var subclasses = rootClass.getSubclasses();
+		for ( var subclass : subclasses ) {
+			tableNames.put( determineTableName( subclass.getTable() ), determineTableName( subclass.getAuxiliaryTable() ) );
+		}
+		for ( var subclass : subclasses ) {
+			if ( subclass.hasSubclasses() ) {
+				addAuxiliaryUnion( subclass, tableNames, extraColumns, creationProcess );
+			}
+		}
+		addAuxiliaryUnion( rootClass, tableNames, extraColumns, creationProcess );
+		return name -> tableNames.getOrDefault( name, name );
+	}
+
+	private void addAuxiliaryUnion(
+			PersistentClass bootClass, Map<String, String> tableNames, List<String> extraColumns,
+			MappingModelCreationProcess creationProcess) {
+		final String tableExpression = creationProcess.getEntityPersister( bootClass.getEntityName() ).getTableName();
+		tableNames.put( tableExpression, generateSubquery( bootClass, tableNames::get,
+				extraColumns, creationProcess.getCreationContext().getMetadata() ) );
 	}
 
 	@Override

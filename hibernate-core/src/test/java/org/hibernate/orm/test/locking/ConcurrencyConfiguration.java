@@ -14,6 +14,7 @@ import jakarta.persistence.Version;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.*;
 import org.hibernate.dialect.lock.internal.H2TransactionConcurrencyResolver;
 import org.hibernate.dialect.lock.internal.SQLServerTransactionConcurrencyResolver;
@@ -63,6 +64,12 @@ public record ConcurrencyConfiguration(int isolation, Boolean rcsi, Boolean mari
 		}
 		if ( dialect instanceof H2Dialect ) {
 			return Stream.of( TRANSACTION_READ_COMMITTED, TRANSACTION_REPEATABLE_READ, TRANSACTION_H2_SNAPSHOT_ISOLATION, TRANSACTION_SERIALIZABLE ).map( ConcurrencyConfiguration::new );
+		}
+		if ( dialect instanceof TiDBDialect ) {
+			// TiDB rejects SERIALIZABLE (or, if the check is skipped, runs it as snapshot isolation)
+			// https://docs.pingcap.com/tidb/stable/transaction-isolation-levels/
+			// https://docs.pingcap.com/tidb/stable/pessimistic-transaction/#isolation-level
+			return Stream.of( TRANSACTION_READ_COMMITTED, TRANSACTION_REPEATABLE_READ ).map( ConcurrencyConfiguration::new );
 		}
 		if ( dialect instanceof PostgreSQLDialect || dialect instanceof MySQLDialect ) {
 			return Stream.of( TRANSACTION_READ_COMMITTED, TRANSACTION_REPEATABLE_READ, TRANSACTION_SERIALIZABLE ).map( ConcurrencyConfiguration::new );

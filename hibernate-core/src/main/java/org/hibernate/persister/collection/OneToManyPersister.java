@@ -31,6 +31,7 @@ import org.hibernate.jdbc.Expectation;
 import org.hibernate.loader.ast.internal.CollectionIndexSnapshotLoader;
 import org.hibernate.loader.ast.internal.EntityConcreteTypeLoader;
 import org.hibernate.mapping.Collection;
+import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.OneToManyCollectionPart;
@@ -121,6 +122,13 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 					&& !indexContainsFormula
 					&& isAnyTrue( indexColumnIsSettable )
 					&& !getElementPersister().managesColumns( castNonNull( indexColumnNames ) );
+
+		if ( isIndexNeverWritten( collectionBinding ) ) {
+			throw new UnsupportedMappingException( "Collection '" + collectionBinding.getRole()
+					+ "' is a one-to-many association with an order column which is not updatable"
+					+ " (the order column of a one-to-many association is written by an SQL 'update' statement,"
+					+ " so it would never be written)" );
+		}
 
 		auditIndex = doWriteEvenWhenInverse
 				&& collectionBinding.getCollectionTable().getAuditedInverseCollections().contains( collectionBinding );
@@ -565,6 +573,23 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				deleteAllEntriesOperationProducer,
 				deleteAllRowsBindings
 		);
+	}
+
+	/**
+	 * The index of a list is written by an SQL {@code update} of the table of
+	 * the element. So an index column which is insertable but not updatable is
+	 * never written, unless the element entity writes the column itself.
+	 */
+	private boolean isIndexNeverWritten(@Nonnull Collection collectionBinding) {
+		return hasIndex()
+			&& !indexContainsFormula
+			// the key of a map is written if it is insertable or updatable
+			&& !collectionBinding.isMap()
+			&& isAnyTrue( indexColumnIsSettable )
+			&& !isAnyTrue( indexColumnIsUpdatable )
+			// the element of an owned list with a non-null key inserts the index as a backref
+			&& ( isInverse || keyIsNullable )
+			&& !getElementPersister().managesColumns( castNonNull( indexColumnNames ) );
 	}
 
 	@Nonnull

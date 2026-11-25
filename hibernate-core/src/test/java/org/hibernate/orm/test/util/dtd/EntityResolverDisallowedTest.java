@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.orm.test.util.dtd;
 
 import org.hibernate.boot.MappingException;

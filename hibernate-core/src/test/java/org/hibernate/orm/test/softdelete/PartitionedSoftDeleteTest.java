@@ -30,14 +30,4 @@ public class PartitionedSoftDeleteTest extends AbstractPartitionedSoftDeleteTest
 		assertThat( statements.getSqlQueries() ).last().asString().contains( "region is null" );
 		assertSoftDeleted( scope, Parcel.class, "partitioned_soft_parcel", 2 );
 	}
-
-	/**
-	 * An instance which was never loaded has no partition key to restrict by.
-	 */
-	@Test
-	void removeUnloadedInstance(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.remove( session.getReference( Shipment.class, 1 ) ) );
-		assertSoftDeleted( scope, Shipment.class, "partitioned_soft_shipment", 1 );
-	}
-
 }

@@ -3,10 +3,13 @@ package org.hibernate.loader.ast.internal;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
+import java.util.List;
+
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.SingleIdEntityLoader;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ModelPart;
 
 import static org.hibernate.binder.internal.TenantIdBinder.FILTER_NAME;
 import static org.hibernate.binder.internal.TenantIdBinder.PARAMETER_NAME;
@@ -49,5 +52,18 @@ public abstract class SingleIdEntityLoaderSupport<T> implements SingleIdEntityLo
 			databaseSnapshotExecutor = new DatabaseSnapshotExecutor( entityDescriptor, sessionFactory );
 		}
 		return databaseSnapshotExecutor.loadDatabaseSnapshot( id, null, session );
+	}
+
+	/// Read the requested parts from the stored row, using the same tenant restriction as a full snapshot.
+	public static @Nullable Object[] loadAttributeSnapshot(
+			EntityMappingType entityDescriptor,
+			Object id,
+			List<? extends ModelPart> parts,
+			SharedSessionContractImplementor session) {
+		final var tenantFilter = session.getLoadQueryInfluencers().getEnabledFilter( FILTER_NAME );
+		final var executor = new DatabaseSnapshotExecutor( entityDescriptor, session.getFactory(), tenantFilter, parts );
+		return executor.loadDatabaseSnapshot(
+				id, tenantFilter == null ? null : tenantFilter.getParameterValue( PARAMETER_NAME ), session
+		);
 	}
 }

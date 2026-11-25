@@ -60,14 +60,21 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 			@Nonnull Object[] values,
 			@Nonnull ModificationType modificationType,
 			@Nonnull SharedSessionContractImplementor session) {
-		session.getAuditWorkQueue().enqueue(
-				entityKey,
-				entity,
-				values,
-				modificationType,
-				this,
-				session
-		);
+		if ( session.isEventSource() ) {
+			// the action queue of a stateful session decides where its audit entries are collected
+			session.asEventSource().getActionQueue()
+					.addAuditEntry( entityKey, entity, values, modificationType, this );
+		}
+		else {
+			session.getAuditWorkQueue().enqueue(
+					entityKey,
+					entity,
+					values,
+					modificationType,
+					this,
+					session
+			);
+		}
 	}
 
 	@Nonnull

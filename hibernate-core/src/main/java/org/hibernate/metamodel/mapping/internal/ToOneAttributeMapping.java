@@ -1060,7 +1060,20 @@ public class ToOneAttributeMapping
 		checkIsReady();
 		// Prefer resolving the key part of the foreign key rather than the target part if possible
 		// This way, we don't have to register table groups the target entity type
-		if ( canUseParentTableGroup && targetKeyPropertyNames.contains( name ) ) {
+		if ( canUseParentTableGroup ) {
+			final var foreignKeySubPart = findForeignKeySubPart( name, targetType );
+			if ( foreignKeySubPart != null ) {
+				return foreignKeySubPart;
+			}
+		}
+		return EntityValuedFetchable.super.findSubPart( name, targetType );
+	}
+
+	/// The part of the foreign key which holds the given property of the key
+	/// referenced by this association, or null if it is not such a property.
+	public @Nullable ModelPart findForeignKeySubPart(@Nonnull String name, @Nullable EntityMappingType targetType) {
+		checkIsReady();
+		if ( targetKeyPropertyNames.contains( name ) ) {
 			final var fkPart =
 					sideNature == ForeignKeyDescriptor.Nature.KEY
 							? foreignKeyDescriptor.getKeyPart()
@@ -1075,7 +1088,7 @@ public class ToOneAttributeMapping
 			}
 			return fkPart;
 		}
-		return EntityValuedFetchable.super.findSubPart( name, targetType );
+		return null;
 	}
 
 	@Nullable

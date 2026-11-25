@@ -18,20 +18,26 @@ import jakarta.annotation.Nullable;
 
 import static org.hibernate.query.sqm.internal.SqmUtil.canUseForeignKey;
 
-/// How an assignment, in the `SET` clause of an update, to a to-one is written.
+/// How an assignment, in the `SET` clause of an update, to a path through a to-one is
+/// written.
 ///
-/// An assignment to a to-one writes its foreign key. When a read of the association joins
-/// the target, because of `@NotFound`, `@SQLRestriction`, or `@SoftDelete`, the assignment
+/// An assignment to a to-one, to the key of its target, or to a part of that key writes
+/// the corresponding part of the foreign key. When a read of the association joins the
+/// target, because of `@NotFound`, `@SQLRestriction`, or `@SoftDelete`, the assignment
 /// still does not join the target, but renders the foreign key, as [#resolve] does.
 ///
-/// @param keyPart the foreign key which is assigned
-/// @param assignedPart the to-one which the path assigns
+/// @param keyPart the part of the foreign key which is assigned
+/// @param assignedPart the part which the path assigns, which is the to-one, or a part
+///                     of the key of its target
 /// @param ownerTableGroup the table group of the updated entity, which holds the foreign key
 public record ForeignKeyAssignment(ModelPart keyPart, ModelPart assignedPart, TableGroup ownerTableGroup) {
 
-	/// The foreign key assigned by the given path, which is a to-one of the updated
-	/// entity, perhaps reached through embeddables, whose target is joined for a read,
-	/// or null if it is no such path.
+	/// The part of a foreign key assigned by the given path, which is a to-one whose
+	/// target is joined for a read, the key of its target, or a part of that key, or
+	/// null if it is no such path. The to-one is the first one reached from the updated
+	/// entity, perhaps through embeddables. The parts after it are parts of the key of
+	/// its target, perhaps embeddables, or associations in them, as in
+	/// `set o.target.id.reference = :ref`.
 	///
 	/// The path is resolved from the mapping model, before any table group is created
 	/// for it, so that the target is never joined.
@@ -57,10 +63,9 @@ public record ForeignKeyAssignment(ModelPart keyPart, ModelPart assignedPart, Ta
 		while ( !names.isEmpty() ) {
 			final var part = container.findSubPart( names.pop(), null );
 			if ( part instanceof ToOneAttributeMapping toOne ) {
-				return names.isEmpty()
-					&& toOne.getSideNature() == ForeignKeyDescriptor.Nature.KEY
+				return toOne.getSideNature() == ForeignKeyDescriptor.Nature.KEY
 					&& !canUseForeignKey( toOne, creationState )
-						? new ForeignKeyAssignment( toOne.getForeignKeyDescriptor().getKeyPart(), toOne, ownerTableGroup )
+						? resolve( toOne, names, ownerTableGroup )
 						: null;
 			}
 			else if ( part instanceof EmbeddableValuedModelPart embeddable ) {
@@ -71,5 +76,27 @@ public record ForeignKeyAssignment(ModelPart keyPart, ModelPart assignedPart, Ta
 			}
 		}
 		return null;
+	}
+
+	private static @Nullable ForeignKeyAssignment resolve(
+			ToOneAttributeMapping toOne,
+			Deque<String> names,
+			TableGroup ownerTableGroup) {
+		if ( names.isEmpty() ) {
+			return new ForeignKeyAssignment( toOne.getForeignKeyDescriptor().getKeyPart(), toOne, ownerTableGroup );
+		}
+		final String name = names.pop();
+		ModelPart keyPart = toOne.findForeignKeySubPart( name, null );
+		ModelPart assignedPart = toOne.findSubPart( name, null );
+		while ( keyPart != null && assignedPart != null && !names.isEmpty() ) {
+			// the parts after the to-one are embeddables of the key of its target, or
+			// associations in them, and so are the corresponding parts of the foreign key
+			final String next = names.pop();
+			keyPart = ( (ModelPartContainer) keyPart ).findSubPart( next, null );
+			assignedPart = ( (ModelPartContainer) assignedPart ).findSubPart( next, null );
+		}
+		return keyPart == null || assignedPart == null
+				? null
+				: new ForeignKeyAssignment( keyPart, assignedPart, ownerTableGroup );
 	}
 }

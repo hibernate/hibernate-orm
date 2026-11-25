@@ -8,6 +8,8 @@ import org.hibernate.sql.ast.spi.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
 import org.hibernate.sql.ast.spi.model.OptionalTableUpdate;
+import org.hibernate.sql.ast.spi.query.insert.InsertSelectStatement;
+import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
 import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.spi.mutation.jdbc.DeleteOrUpsertOperation;
 import org.hibernate.sql.spi.mutation.jdbc.UpsertOperation;
@@ -24,6 +26,24 @@ public abstract class SqlAstTranslatorWithOnDuplicateKeyUpdate<T extends JdbcOpe
 	@SPI(SPI.Role.IMPLEMENT)
 	public SqlAstTranslatorWithOnDuplicateKeyUpdate(SqlAstTranslationRequest<? extends Statement, T> request) {
 		super( request );
+	}
+
+	/**
+	 * Whether the columns assigned by the statement are qualified. An update of
+	 * several tables, or with joins, qualifies them, since they are ambiguous when
+	 * the target table is joined with itself.
+	 */
+	protected boolean isQualifiedAssignment() {
+		final Statement statement = getStatement();
+		return !( statement instanceof InsertSelectStatement )
+			&& ( getAffectedTableNames().size() > 1
+				|| statement instanceof UpdateStatement updateStatement && hasJoins( updateStatement ) );
+	}
+
+	private static boolean hasJoins(UpdateStatement updateStatement) {
+		final var roots = updateStatement.getFromClause().getRoots();
+		return roots.size() > 1
+			|| roots.size() == 1 && roots.get( 0 ).hasRealJoins();
 	}
 
 	/**

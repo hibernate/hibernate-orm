@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
@@ -45,6 +46,60 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 @SessionFactory(useCollectingStatementObserver = true)
 @Jira("https://hibernate.atlassian.net/browse/HHH-21257")
 class UniqueKeyJoinTableComparisonTest {
+
+	@ParameterizedTest
+	@CsvSource(delimiter = '|', value = {
+			"c.favorite <> :item | 1 | 2 | A,A,-",
+			"c.favorite is null or c.favorite = :item | 2 | 2 | B,D,B"
+	})
+	void updateFavoriteWithParameterAlsoUsedInPredicate(
+			String predicate, long itemId, int updated, String expectedCodes, SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var item = session.find( Item.class, itemId );
+			final var observer = scope.getCollectingStatementObserver();
+			observer.clear();
+			assertEquals( updated, session.createMutationQuery( "update Cart c set c.favorite = :item where " + predicate )
+					.setParameter( "item", item ).executeUpdate() );
+			assertEquals( 1, observer.getSqlQueries().size() );
+			assertEquals( List.of( expectedCodes.split( "," ) ), session.createNativeQuery(
+					"select coalesce(favorite_code, '-') from Cart order by id", String.class )
+					.getResultList() );
+		} );
+	}
+
+	@Test
+	void deleteCartByFavorite(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			assertEquals( 1, session.createMutationQuery( "delete from Cart c where c.favorite = :item" )
+					.setParameter( "item", session.getReference( Item.class, 2L ) ).executeUpdate() );
+			assertEquals( List.of( 2L, 3L ), session.createQuery( "select c.id from Cart c order by c.id", Long.class )
+					.getResultList() );
+			assertEquals( List.of( "C", "D" ), session.createNativeQuery(
+					"select item_code from cart_items order by item_code", String.class ).getResultList() );
+		} );
+	}
+
+	@Test
+	void selectingFavoriteCodePreservesNullFavorite(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var rows = session.createQuery(
+					"select c.id, c.favorite.code from Cart c where c.id = 3 or c.favorite = :item order by c.id",
+					Object[].class ).setParameter( "item", session.getReference( Item.class, 2L ) ).getResultList();
+			assertEquals( 2, rows.size() );
+			assertArrayEquals( new Object[] { 1L, "B" }, rows.get( 0 ) );
+			assertArrayEquals( new Object[] { 3L, null }, rows.get( 1 ) );
+		} );
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
+	void correlatedFavoriteInJoinPredicate(SessionFactoryScope scope) {
+		scope.inTransaction( session -> assertEquals( List.of( 1L, 1L, 2L, 3L ), session.createQuery(
+				"select c.id from Cart c left join c.items i on exists "
+						+ "(select 1 from Item r where c.favorite = :item) order by c.id", Long.class )
+				.setParameter( "item", session.getReference( Item.class, 2L ) ).getResultList() ) );
+	}
+
 	@ParameterizedTest
 	@ValueSource(strings = { "item in (cart.favorite, :value)", "item in (:value, cart.favorite)" })
 	void toOneAndParameterUseIdentifier(String predicate, SessionFactoryScope scope) {
@@ -205,7 +260,6 @@ class UniqueKeyJoinTableComparisonTest {
 			"item in (cart.favorite, other, :value)"
 	})
 	void elementComparedWithToOneAndParameter(String predicate, SessionFactoryScope scope) {
-		// a to-one association which references a unique key is compared by that key, and so is everything else
 		final String from = predicate.contains( "other" )
 				? "Cart cart join cart.items item join cart.alternateItems other"
 				: "Cart cart join cart.items item";

@@ -85,6 +85,7 @@ import org.hibernate.sql.ast.spi.translation.Clause;
 import org.hibernate.sql.ast.spi.creation.SqlTreeCreationException;
 import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
 import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.exec.internal.EntityKeyJdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -654,7 +655,7 @@ public class SqmUtil {
 			else if ( !domainParamBinding.isBound() ) {
 				for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
 					final var jdbcParams = jdbcParamsBinds.get( i );
-					parameterType.forEachJdbcType( (position, jdbcMapping) ->
+					parameterTypeForOccurrence( parameterType, jdbcParams ).forEachJdbcType( (position, jdbcMapping) ->
 							jdbcParameterBindings.addBinding( jdbcParams.get( position ),
 									new JdbcParameterBindingImpl( jdbcMapping, null ) ) );
 				}
@@ -778,14 +779,22 @@ public class SqmUtil {
 		}
 	}
 
+	private static Bindable parameterTypeForOccurrence(Bindable parameterType, JdbcParametersList jdbcParams) {
+		// A single SQM parameter can supply the foreign key in SET and the identifier in WHERE.
+		return jdbcParams.size() > 0 && jdbcParams.get( 0 ) instanceof EntityKeyJdbcParameter keyParameter
+				? keyParameter.getEntityMapping()
+				: parameterType;
+	}
+
 	private static void createValueBindings(
 			JdbcParameterBindings jdbcParameterBindings,
 			QueryParameterImplementor<?> domainParam,
 			QueryParameterBinding<?> domainParamBinding,
-			Bindable parameterType,
+			Bindable defaultParameterType,
 			JdbcParametersList jdbcParams,
 			Object bindValue,
 			SharedSessionContractImplementor session) {
+		final var parameterType = parameterTypeForOccurrence( defaultParameterType, jdbcParams );
 		if ( parameterType == null ) {
 			throw new SqlTreeCreationException( "Unable to interpret mapping-model type for Query parameter: " + domainParam );
 		}

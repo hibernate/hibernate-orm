@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
+import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -65,9 +66,10 @@ class TablePerClassSiblingColumnTypeTest {
 	}
 
 	@Test
-	// MySQL and MariaDB both actually allow this :/
+	// MySQL, MariaDB and TiDB all actually allow this :/
 	@SkipForDialect(dialectClass = MySQLDialect.class)
 	@SkipForDialect(dialectClass = MariaDBDialect.class)
+	@SkipForDialect(dialectClass = TiDBDialect.class)
 	@FailureExpected(jiraKey = "HHH-5605", reason = "The polymorphic union combines same-named sibling columns with incompatible types")
 	void testPolymorphicQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> assertRows( session.createQuery(

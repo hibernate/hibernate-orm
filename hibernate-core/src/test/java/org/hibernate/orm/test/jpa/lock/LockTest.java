@@ -24,6 +24,7 @@ import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.community.dialect.DerbyDialect;
@@ -1303,6 +1304,7 @@ public class LockTest extends EntityManagerFactoryBasedFunctionalTest {
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Seems like FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "The USTORE storage engine does not support For Key Share and For No Key Update")
 	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "the foreign-key check waits for a shared lock on the exclusively locked parent row and nothing bounds the wait, so the broker drops the idle lock holder at its session timeout and that connection can no longer commit")
+	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "In a pessimistic transaction, the foreign-key check locks the parent row, which waits for the exclusive lock")
 	public void testLockInsertFkTarget() {
 		assertTimeout( Duration.ofSeconds(70), () -> {
 			Lock lock = new Lock();
@@ -1347,6 +1349,7 @@ public class LockTest extends EntityManagerFactoryBasedFunctionalTest {
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "The USTORE storage engine does not support For Key Share and For No Key Update")
 	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "the foreign-key check waits for a shared lock on the exclusively locked parent row and nothing bounds the wait, so the broker drops the idle lock holder at its session timeout and that connection can no longer commit")
+	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "In a pessimistic transaction, the foreign-key check locks the parent row, which waits for the exclusive lock")
 	public void testLockUpdateFkTarget() {
 		assertTimeout( Duration.ofSeconds(70), () -> {
 			Lock lock1 = new Lock();

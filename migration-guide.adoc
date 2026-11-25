@@ -224,18 +224,22 @@ parse if it uses internal entities, external entities, or entities declared in a
 </entity-mappings>
 ----
 
-For mapping documents coming from a trusted source, the previous behavior can be restored by setting
+For documents coming from a trusted source, the previous behavior can be restored by setting
 `hibernate.xml.allow_dtd_and_external_entities` to `true`:
 
 * for `orm.xml` and `hbm.xml` documents, the setting can be specified like any other configuration setting;
-* for `hibernate.cfg.xml`, the setting must be specified as a system property or in `hibernate.properties`,
-since it has to be known before the file is read.
+* for `hibernate.cfg.xml`, the setting has to be known before the file is read. With native bootstrap, it must
+be specified as a system property or in `hibernate.properties`. With JPA bootstrap, it may also be specified as
+a persistence unit property or passed as an integration setting when creating the `EntityManagerFactory`;
+* for `persistence.xml`, the setting cannot be specified in the file itself, since it has to be known before
+the file is read. It must be passed as an integration setting when creating the `EntityManagerFactory`, or
+specified as a system property or in `hibernate.properties`.
 
-`persistence.xml` and the values handled by `JaxbXmlFormatMapper` are always parsed with DTD processing and
-external entities disabled, regardless of this setting.
+The values handled by `JaxbXmlFormatMapper` are always parsed with DTD processing and external entities
+disabled, regardless of this setting.
 
-When the Hibernate Processor (metamodel generator) reads `orm.xml` documents, use the annotation processor
-option `-AallowDtdAndExternalEntities=true` to restore the previous behavior.
+When the Hibernate Processor (metamodel generator) reads `persistence.xml` and `orm.xml` documents, use the
+annotation processor option `-AallowDtdAndExternalEntities=true` to restore the previous behavior.
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // DDL changes

@@ -7544,8 +7544,13 @@ public abstract class AbstractEntityPersister
 		if ( contains( rootTableKeyColumnNames, columnName ) ) {
 			return true;
 		}
+		// a backref inserts the key or index of a collection, but never updates it
+		final boolean[] propertyInsertability = getPropertyInsertability();
+		final boolean[] propertyUpdateability = getPropertyUpdateability();
 		for ( int i = 0; i < propertyColumnNames.length; i++ ) {
 			if ( contains( propertyColumnNames[i], columnName )
+					&& propertyInsertability[i]
+					&& propertyUpdateability[i]
 					&& isAllTrue( propertyColumnInsertable[i] )
 					&& isAllTrue( propertyColumnUpdateable[i] ) ) {
 				return true;

@@ -116,12 +116,11 @@ public class XmlMapKeyForeignKeyTest {
 	}
 
 	private static Metadata buildMetadata(String xml, Class<?>... annotatedClasses) {
-		final var registry = new StandardServiceRegistryBuilder()
+		try ( var registry = new StandardServiceRegistryBuilder()
 				.applySetting( "hibernate.dialect", H2Dialect.class.getName() )
 				.applySetting( "hibernate.boot.allow_jdbc_metadata_access", false )
 				.applySetting( "hibernate.validate_xml", true )
-				.build();
-		try {
+				.build() ) {
 			final MetadataSources sources = new MetadataSources( registry );
 			for ( final Class<?> annotatedClass : annotatedClasses ) {
 				sources.addAnnotatedClass( annotatedClass );
@@ -129,9 +128,6 @@ public class XmlMapKeyForeignKeyTest {
 			return sources
 					.addInputStream( new ByteArrayInputStream( xml.getBytes( StandardCharsets.UTF_8 ) ) )
 					.buildMetadata();
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( registry );
 		}
 	}
 

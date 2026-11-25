@@ -106,6 +106,7 @@ import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -173,6 +174,7 @@ import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.action.queue.internal.decompose.entity.UpdateDecomposer;
 import org.hibernate.persister.filter.internal.FilterHelper;
 import org.hibernate.sql.ast.spi.query.predicate.SqlFragmentPredicate;
+import org.hibernate.persister.state.internal.HistoryStateManagement;
 import org.hibernate.persister.state.spi.StateManagement;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyValueAccessor;
@@ -6108,9 +6110,16 @@ public abstract class AbstractEntityPersister
 						(role, process) -> new EntityRowIdMappingImpl( rowIdName, getTableName(), this ) );
 		discriminatorMapping = generateDiscriminatorMapping( bootEntityDescriptor );
 		final var rootClass = bootEntityDescriptor.getRootClass();
-		auxiliaryMapping = rootClass == bootEntityDescriptor ?
-				stateManagement.createAuxiliaryMapping( this, rootClass, creationProcess ) :
-				castNonNull( superMappingType ).getAuxiliaryMapping();
+		if ( rootClass == bootEntityDescriptor ) {
+			auxiliaryMapping = stateManagement.createAuxiliaryMapping( this, rootClass, creationProcess );
+		}
+		else if ( bootEntityDescriptor instanceof UnionSubclass unionSubclass
+				&& stateManagement instanceof HistoryStateManagement historyStateManagement ) {
+			auxiliaryMapping = historyStateManagement.createSubclassHistoryMapping( this, unionSubclass, creationProcess );
+		}
+		else {
+			auxiliaryMapping = castNonNull( superMappingType ).getAuxiliaryMapping();
+		}
 		if ( auxiliaryMapping instanceof SoftDeleteMapping && rootClass.getCustomSQLDelete() != null ) {
 			throw new UnsupportedMappingException( "Entity may not define both @SoftDelete and @SQLDelete" );
 		}

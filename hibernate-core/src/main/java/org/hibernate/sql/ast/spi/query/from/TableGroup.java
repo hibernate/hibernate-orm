@@ -39,6 +39,14 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, PathIn
 
 	boolean canUseInnerJoins();
 
+	/**
+	 * Whether a {@linkplain #addTableGroupJoin join} added to this table group
+	 * may be a {@linkplain SqlAstJoinType#LEFT left join}.
+	 */
+	default boolean canUseLeftJoins() {
+		return true;
+	}
+
 	default boolean isLateral() {
 		return false;
 	}

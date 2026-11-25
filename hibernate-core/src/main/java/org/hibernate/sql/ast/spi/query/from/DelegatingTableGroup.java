@@ -107,6 +107,11 @@ public abstract class DelegatingTableGroup implements TableGroup {
 	}
 
 	@Override
+	public boolean canUseLeftJoins() {
+		return getTableGroup().canUseLeftJoins();
+	}
+
+	@Override
 	public boolean isLateral() {
 		return getTableGroup().isLateral();
 	}

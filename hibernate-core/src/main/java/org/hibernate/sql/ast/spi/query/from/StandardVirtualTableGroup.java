@@ -61,6 +61,11 @@ public class StandardVirtualTableGroup extends AbstractTableGroup implements Vir
 	}
 
 	@Override
+	public boolean canUseLeftJoins() {
+		return underlyingTableGroup.canUseLeftJoins();
+	}
+
+	@Override
 	public void applyAffectedTableNames(Consumer<String> nameCollector) {
 		underlyingTableGroup.applyAffectedTableNames( nameCollector );
 	}

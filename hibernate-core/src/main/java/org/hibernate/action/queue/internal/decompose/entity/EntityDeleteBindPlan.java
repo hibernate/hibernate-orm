@@ -168,22 +168,22 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 		if ( versionMapping == null ) {
 			return;
 		}
-		if ( tableDescriptor.name().equals( versionMapping.getContainingTableExpression() ) ) {
-				this.valueBindings = jdbcValueBindings;
-				try {
-					versionMapping.decompose(
-							version,
-							0,
-							this,
-							null,
-							VERSION_RESTRICTION_BINDER,
-							session
-					);
-				}
-				finally {
-					this.valueBindings = null;
-				}
+		if ( tableDescriptor.name().equals( entityPersister.physicalTableNameForMutation( versionMapping ) ) ) {
+			this.valueBindings = jdbcValueBindings;
+			try {
+				versionMapping.decompose(
+						version,
+						0,
+						this,
+						null,
+						VERSION_RESTRICTION_BINDER,
+						session
+				);
 			}
+			finally {
+				this.valueBindings = null;
+			}
+		}
 	}
 
 	protected void applyNonVersionOptLocking(

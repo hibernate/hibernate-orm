@@ -361,7 +361,7 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 		final var versionMapping = entityPersister.getVersionMapping();
 		if ( versionMapping != null
 				&& entityPersister.optimisticLockStyle().isVersion()
-				&& tableDescriptor.name().equals( versionMapping.getContainingTableExpression() ) ) {
+				&& tableDescriptor.name().equals( entityPersister.physicalTableNameForMutation( versionMapping ) ) ) {
 			updateBuilder.addOptimisticLockRestriction( versionMapping );
 		}
 	}

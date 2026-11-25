@@ -18,9 +18,11 @@ import org.hibernate.Hibernate;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.testing.jdbc.CollectingStatementObserver;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -54,6 +56,7 @@ class ToOneUniqueKeyParameterTest {
 				note.id = id;
 				note.label = "initial";
 				note.boxed = boxed;
+				note.boxedById = boxed;
 				note.primitive = primitive;
 				session.persist( note );
 			}
@@ -104,6 +107,72 @@ class ToOneUniqueKeyParameterTest {
 					.setParameter( "v", item ).getResultList() ).containsExactly( expected );
 			assertThat( observer.getSqlQueries() ).singleElement().asString().doesNotContainIgnoringCase( "BoxedItem" );
 		} );
+	}
+
+	@ParameterizedTest
+	@CsvSource(delimiter = '|', value = {
+			"in (:v, (select i from BoxedItem i where i.id = 1)) | 1,2",
+			"in ((select i from BoxedItem i where i.id = 1), :v) | 1,2",
+			"not in (:v, (select i from BoxedItem i where i.id = 2)) | 1",
+			"in (:v, (select i from BoxedItem i where i.id = 3)) | 2",
+			"not in ((select i from BoxedItem i where i.id = 3), :v) | ''",
+			"in (:v, (select i from BoxedItem i where i.id = n.id)) | 1,2",
+			"in (:v, (select other.boxed from Note other where other.id = 1)) | 1,2",
+			"in (:v, (select other.boxedById from Note other where other.id = 1)) | 1,2"
+	})
+	void parameterAndScalarSubquery(String predicate, String expected, SessionFactoryScope scope) {
+		final var transientItem = new BoxedItem();
+		transientItem.code = "12";
+		final var reference = scope.fromTransaction( session -> session.getReference( BoxedItem.class, 2L ) );
+		final var expectedIds = expected.isEmpty() ? List.<Long>of()
+				: Arrays.stream( expected.split( "," ) ).map( Long::valueOf ).toList();
+		scope.inTransaction( session -> {
+			final var query = session.createSelectionQuery(
+					"select n.id from Note n where n.boxed " + predicate + " order by n.id", Long.class );
+			final var observer = scope.getCollectingStatementObserver();
+			for ( var argument : List.of( transientItem, reference, transientItem ) ) {
+				observer.clear();
+				assertThat( query.setParameter( "v", argument ).getResultList() ).isEqualTo( expectedIds );
+				assertThat( observer.getSqlQueries() ).hasSize( 1 );
+			}
+			assertThat( Hibernate.isInitialized( reference ) ).isFalse();
+		} );
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnionInSubquery.class)
+	void subqueryWithDifferentKeysInUnion(SessionFactoryScope scope) {
+		final var item = new BoxedItem();
+		item.code = "12";
+		scope.inTransaction( session -> assertThat( session.createSelectionQuery(
+				"select n.id from Note n where n.boxed in (:v, "
+						+ "(select i from BoxedItem i where i.id = 3 union all "
+						+ "select m.boxedById from Note m where m.id = 1)) order by n.id", Long.class )
+				.setParameter( "v", item ).getResultList() ).containsExactly( 1L, 2L ) );
+	}
+
+	@Test
+	void transientTestExpressionWithScalarSubquery(SessionFactoryScope scope) {
+		final var item = new BoxedItem();
+		item.code = "12";
+		scope.inTransaction( session -> assertThat( session.createSelectionQuery(
+				"select n.id from Note n where :v in (n.boxed, (select i from BoxedItem i where i.id = 1))",
+				Long.class ).setParameter( "v", item ).getResultList() ).containsExactly( 2L ) );
+	}
+
+	@Test
+	void mixedInListPreservesNullableAssociation(SessionFactoryScope scope) {
+		final var item = new BoxedItem();
+		item.code = "12";
+		scope.inTransaction( session -> {
+			final var note = new Note();
+			note.id = 3;
+			session.persist( note );
+		} );
+		scope.inTransaction( session -> assertThat( session.createSelectionQuery(
+				"select n.id from Note n where n.id = 3 or n.boxed in "
+						+ "(:v, (select m.boxedById from Note m where m.id = 1)) order by n.id", Long.class )
+				.setParameter( "v", item ).getResultList() ).containsExactly( 1L, 2L, 3L ) );
 	}
 
 	@ParameterizedTest
@@ -228,7 +297,8 @@ class ToOneUniqueKeyParameterTest {
 	}
 
 	@ParameterizedTest
-	@ValueSource(strings = { "n.primitive = :v", "n.primitive in (:v, :v)", "n.primitive between :v and :v" })
+	@ValueSource(strings = { "n.primitive = :v", "n.primitive in (:v, :v)", "n.primitive between :v and :v",
+			"n.primitive in (:v, (select i from PrimitiveItem i where i.id = 3))" })
 	@RequiresDialect(H2Dialect.class)
 	void foreignKeyIndex(String predicate, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
@@ -242,7 +312,7 @@ class ToOneUniqueKeyParameterTest {
 						.containsExactly( argument == item ? 1L : 2L );
 				assertThat( observer.getSqlQueries() ).hasSize( 1 );
 				final String sql = observer.getSqlQueries().get( 0 );
-				if ( argument == item ) {
+				if ( argument == item && !predicate.contains( "select" ) ) {
 					assertThat( sql ).doesNotContainIgnoringCase( "PrimitiveItem" );
 				}
 				final String plan = session.doReturningWork( connection -> {
@@ -290,5 +360,8 @@ class ToOneUniqueKeyParameterTest {
 		@ManyToOne(fetch = FetchType.LAZY)
 		@JoinColumn(name = "boxed_code", referencedColumnName = "code")
 		BoxedItem boxed;
+		@ManyToOne(fetch = FetchType.LAZY)
+		@JoinColumn(name = "boxed_id")
+		BoxedItem boxedById;
 	}
 }

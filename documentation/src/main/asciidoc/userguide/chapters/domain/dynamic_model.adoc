@@ -23,16 +23,26 @@ This is a change from previous versions which allowed multiple entity modes for 
 Entity modes can now be mixed within a domain model; a dynamic entity might reference a POJO entity and vice versa.
 
 [[mapping-model-dynamic-example]]
-.Dynamic domain model Hibernate mapping
+.Dynamic domain model using Hibernate's XML mapping schema
 ====
 [source,xml]
 ----
-include::{example-dir-resources}/Book.hbm.xml[tag=mapping-model-dynamic-example, indent=0]
+include::{example-dir-resources}/Book.orm.xml[indent=0]
 ----
 ====
 
 [[mapping-model-dynamic-setting-example]]
-The mapping declares `entity-name="Book"` without a Java class, so Hibernate represents this entity using a `Map`.
+The mapping declares an `entity` with `name="Book"` and no Java class, so Hibernate represents this entity using a `Map`.
+In a legacy Hibernate `hbm.xml` mapping, declare a `class` with `entity-name="Book"` and omit the Java class name.
+
+.Dynamic domain model using HBM
+====
+[source,xml]
+----
+include::{example-dir-resources}/Book.hbm.xml[tag=mapping-model-dynamic-example,indent=0]
+----
+====
+
 No default entity-mode setting is required.
 Operations on the dynamic entity use its mapped entity name, as shown below.
 

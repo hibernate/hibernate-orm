@@ -15,11 +15,10 @@ import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
 import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
 
+import org.hibernate.boot.cfgxml.internal.XmlFactoryUtil;
 import org.hibernate.boot.jaxb.cfg.spi.ObjectFactory;
 
 import org.hibernate.processor.Context;
@@ -45,8 +44,6 @@ public class XmlParserHelper {
 	 * initial cache size.
 	 */
 	private static final int NUMBER_OF_SCHEMAS = 4;
-
-	private static final XMLInputFactory XML_INPUT_FACTORY = XMLInputFactory.newInstance();
 
 	private static final ConcurrentMap<String, Schema> SCHEMA_CACHE = new ConcurrentHashMap<>(
 			NUMBER_OF_SCHEMAS
@@ -144,8 +141,9 @@ public class XmlParserHelper {
 		}
 	}
 
-	private synchronized XMLEventReader createXmlEventReader(InputStream xmlStream) throws XMLStreamException {
-		return XML_INPUT_FACTORY.createXMLEventReader( xmlStream );
+	private XMLEventReader createXmlEventReader(InputStream xmlStream) throws XMLStreamException {
+		final var xmlInputFactory = XmlFactoryUtil.newXmlInputFactory( context.allowDtdAndExternalEntities() );
+		return xmlInputFactory.createXMLEventReader( xmlStream );
 	}
 
 	private String getPackage(String resourceName) {
@@ -172,7 +170,7 @@ public class XmlParserHelper {
 			throw new IllegalArgumentException( "Couldn't find schema on classpath: " + schemaName );
 		}
 
-		SchemaFactory sf = SchemaFactory.newInstance( javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI );
+		var sf = XmlFactoryUtil.newSchemaFactory();
 		try {
 			return sf.newSchema( schemaUrl );
 		}

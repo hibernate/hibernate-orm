@@ -36,6 +36,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitDefaultsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitMetadataImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.processor.Context;
 import org.hibernate.processor.util.AccessTypeInformation;
 import org.hibernate.processor.util.FileTimeStampChecker;
@@ -69,8 +70,22 @@ public class JpaDescriptorParser {
 		this.xmlParserHelper = new XmlParserHelper( context );
 
 		final ResourceStreamLocatorImpl resourceStreamLocator = new ResourceStreamLocatorImpl( context );
-		this.configurationBinder = new ConfigurationBinder( resourceStreamLocator );
-		this.mappingBinder = new MappingBinder( resourceStreamLocator, (Function<String,Object>) null );
+		this.configurationBinder = new ConfigurationBinder( resourceStreamLocator, mappingSettings( context ) );
+		this.mappingBinder = new MappingBinder( resourceStreamLocator, mappingSettings( context ) );
+	}
+
+	/**
+	 * Exposes to the {@link ConfigurationBinder} and {@link MappingBinder} the only settings relevant to the processor:
+	 * XML validation stays enabled, and DTD/external entity support follows the
+	 * {@value org.hibernate.processor.HibernateProcessor#ALLOW_DTD_AND_EXTERNAL_ENTITIES} option.
+	 */
+	@SuppressWarnings("nullness") // a null value means the setting is not specified
+	private static Function<String, Object> mappingSettings(Context context) {
+		return settingName -> switch ( settingName ) {
+			case MappingSettings.VALIDATE_XML -> true;
+			case MappingSettings.XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES -> context.allowDtdAndExternalEntities();
+			default -> null;
+		};
 	}
 
 	public void parseMappingXml() {

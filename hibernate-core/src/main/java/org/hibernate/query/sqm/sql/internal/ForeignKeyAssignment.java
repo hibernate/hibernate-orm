@@ -8,9 +8,11 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
 import org.hibernate.query.sqm.tree.spi.domain.SqmTreatedPath;
+import org.hibernate.sql.ast.spi.creation.FromClauseAccess;
 import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.ast.spi.translation.Clause;
 
@@ -25,6 +27,9 @@ import static org.hibernate.query.sqm.internal.SqmUtil.canUseForeignKey;
 /// the corresponding part of the foreign key. When a read of the association joins the
 /// target, because of `@NotFound`, `@SQLRestriction`, or `@SoftDelete`, the assignment
 /// still does not join the target, but renders the foreign key, as [#resolve] does.
+///
+/// The unowned side of an association has no foreign key, so an update cannot assign it,
+/// nor anything reached through it, as [#verifyAssignable] checks.
 ///
 /// @param keyPart the part of the foreign key which is assigned
 /// @param assignedPart the part which the path assigns, which is the to-one, or a part
@@ -98,5 +103,42 @@ public record ForeignKeyAssignment(ModelPart keyPart, ModelPart assignedPart, Ta
 		return keyPart == null || assignedPart == null
 				? null
 				: new ForeignKeyAssignment( keyPart, assignedPart, ownerTableGroup );
+	}
+
+	/// Reject an assignment to the unowned side of an association, or to a part reached
+	/// through it, perhaps via embeddables.
+	///
+	/// @param assigned the model part which the path is interpreted as
+	///
+	/// @throws SemanticException if the path is the unowned side of an association, or
+	///                           is reached through it
+	public static void verifyAssignable(SqmPath<?> path, ModelPart assigned, FromClauseAccess fromClauseAccess) {
+		final var unowned = unownedAssociation( path, assigned, fromClauseAccess );
+		if ( unowned != null ) {
+			throw new SemanticException( "Cannot assign '" + path.getNavigablePath().getFullPath()
+					+ "' since '" + unowned.getNavigableRole().getFullPath()
+					+ "' is the unowned side of an association (assign the owning side instead)" );
+		}
+	}
+
+	private static @Nullable ModelPart unownedAssociation(
+			SqmPath<?> path,
+			ModelPart assigned,
+			FromClauseAccess fromClauseAccess) {
+		if ( isUnownedAssociation( assigned ) ) {
+			return assigned;
+		}
+		for ( var lhs = path.getLhs(); lhs != null; lhs = lhs.getLhs() ) {
+			final var lhsTableGroup = fromClauseAccess.findTableGroup( lhs.getNavigablePath() );
+			if ( lhsTableGroup != null && isUnownedAssociation( lhsTableGroup.getModelPart() ) ) {
+				return lhsTableGroup.getModelPart();
+			}
+		}
+		return null;
+	}
+
+	private static boolean isUnownedAssociation(ModelPart part) {
+		return part instanceof ToOneAttributeMapping toOne
+			&& toOne.getSideNature() == ForeignKeyDescriptor.Nature.TARGET;
 	}
 }

@@ -38,6 +38,7 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 	private final TemporalMapping temporalMapping;
 	private final EntityInsertMutationPlanner insertMutationPlanner;
 	private final MutationOperation staticEndOperation;
+	private final MutationOperation unversionedStaticEndOperation;
 	private final IdentityInsertCommands identityInsertCommands;
 
 	public TemporalEntityMutationPlanContributor(
@@ -51,7 +52,12 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 						.getExplicitIdentityInsertCommands( entityPersister.getIdentifierTableName() )
 				: null;
 		this.insertMutationPlanner = new EntityInsertMutationPlanner( entityPersister, sessionFactory );
-		this.staticEndOperation = buildEndOperation( null, null, effectiveOptimisticLockStyle( null, null ), null );
+		final var staticLockStyle = entityPersister.optimisticLockStyle().isVersion()
+				&& entityPersister.getVersionMapping() != null ? OptimisticLockStyle.VERSION : OptimisticLockStyle.NONE;
+		this.staticEndOperation = buildEndOperation( null, null, staticLockStyle, null );
+		this.unversionedStaticEndOperation = staticLockStyle.isVersion()
+				? buildEndOperation( null, null, OptimisticLockStyle.NONE, null )
+				: staticEndOperation;
 	}
 
 	@Override
@@ -85,18 +91,12 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 				context.previousVersion(),
 				context.previousState()
 		);
-		final MutationOperation endOperation = needsDynamicEndOperation(
+		final MutationOperation endOperation = resolveEndOperation(
 				context.rowId(),
 				context.previousState(),
-				effectiveOptLockStyle
-		)
-				? buildEndOperation(
-						context.rowId(),
-						context.previousState(),
-						effectiveOptLockStyle,
-						context.session()
-				)
-				: staticEndOperation;
+				effectiveOptLockStyle,
+				context.session()
+		);
 
 		final var end = createEndOperation(
 				context.ordinalBase(),
@@ -126,9 +126,7 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 		final Object rowId = entityEntry == null ? null : entityEntry.getRowId();
 		final OptimisticLockStyle effectiveOptLockStyle = effectiveOptimisticLockStyle( context.version(), loadedState );
 
-		final MutationOperation operation = needsDynamicEndOperation( rowId, loadedState, effectiveOptLockStyle )
-				? buildEndOperation( rowId, loadedState, effectiveOptLockStyle, context.session() )
-				: staticEndOperation;
+		final MutationOperation operation = resolveEndOperation( rowId, loadedState, effectiveOptLockStyle, context.session() );
 
 		final FlushOperation flushOperation = createEndOperation(
 				context.ordinalBase(),
@@ -285,13 +283,16 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 		}
 	}
 
-	private boolean needsDynamicEndOperation(
+	private MutationOperation resolveEndOperation(
 			Object rowId,
 			Object[] loadedState,
-			OptimisticLockStyle effectiveOptLockStyle) {
-		return rowId != null
-			|| effectiveOptLockStyle.isAllOrDirty()
-			|| entityPersister.hasPartitionedSelectionMapping() && loadedState != null;
+			OptimisticLockStyle effectiveOptLockStyle,
+			SharedSessionContractImplementor session) {
+		if ( rowId != null || effectiveOptLockStyle.isAllOrDirty()
+				|| entityPersister.hasPartitionedSelectionMapping() && loadedState != null ) {
+			return buildEndOperation( rowId, loadedState, effectiveOptLockStyle, session );
+		}
+		return effectiveOptLockStyle.isVersion() ? staticEndOperation : unversionedStaticEndOperation;
 	}
 
 	private OptimisticLockStyle effectiveOptimisticLockStyle(Object version, Object[] loadedState) {
@@ -326,7 +327,9 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 
 		addKeyRestriction( updateBuilder, tableDescriptor, rowId );
 		addTemporalEnding( updateBuilder );
-		addVersionRestriction( updateBuilder, tableDescriptor );
+		if ( effectiveOptLockStyle.isVersion() ) {
+			addVersionRestriction( updateBuilder, tableDescriptor );
+		}
 		addNonVersionOptimisticLockRestrictions( updateBuilder, tableDescriptor, loadedState, effectiveOptLockStyle, session );
 		addPartitionedSelectionRestrictions( updateBuilder, tableDescriptor, loadedState );
 		TenantIdHelper.applyTenantRestriction( entityPersister, updateBuilder );

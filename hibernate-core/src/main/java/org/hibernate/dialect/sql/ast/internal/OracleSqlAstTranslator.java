@@ -762,12 +762,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 			String separator = " where ";
 			for ( ColumnValueBinding optimisticLockBinding : optimisticLockBindings ) {
 				appendSql( separator );
-				if ( renderTenantRestriction( optimisticLockBinding, "t" ) ) {
-					continue;
-				}
-				optimisticLockBinding.getColumnReference().appendReadExpression( this, "t" );
-				appendSql('=');
-				optimisticLockBinding.getValueExpression().accept( this );
+				renderMergeRestriction( optimisticLockBinding );
 				separator = " and ";
 			}
 		}

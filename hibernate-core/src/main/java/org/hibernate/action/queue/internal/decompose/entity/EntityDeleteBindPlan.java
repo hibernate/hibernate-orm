@@ -19,6 +19,7 @@ import org.hibernate.persister.entity.EntityPersister;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.List;
 
 /// @author Steve Ebersole
 public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
@@ -59,6 +60,7 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 	private final Object version;
 	private final Object[] state;
 	private final Object[] loadedState;
+	private final List<PartitionKeyValue> partitionKeys;
 	private final int[] sameFlushUpdatedAttributeIndexes;
 	private final OptimisticLockStyle effectiveOptLockStyle;
 
@@ -74,6 +76,7 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 			Object version,
 			Object[] state,
 			Object[] loadedState,
+			List<PartitionKeyValue> partitionKeys,
 			int[] sameFlushUpdatedAttributeIndexes,
 			OptimisticLockStyle effectiveOptLockStyle) {
 		this.tableDescriptor = tableDescriptor;
@@ -83,6 +86,7 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 		this.version = version;
 		this.state = state;
 		this.loadedState = loadedState;
+		this.partitionKeys = partitionKeys;
 		this.sameFlushUpdatedAttributeIndexes = sameFlushUpdatedAttributeIndexes;
 		this.effectiveOptLockStyle = effectiveOptLockStyle;
 	}
@@ -123,10 +127,9 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 			applyNonVersionOptLocking( valueBindings, session );
 		}
 
-		// Apply partitioned selection restrictions if needed
-		if ( entityPersister.hasPartitionedSelectionMapping() && loadedState != null ) {
-			applyPartitionedSelectionRestrictions( valueBindings, session );
-		}
+		PartitionKeyValue.bindRestrictions(
+				partitionKeys, tableDescriptor.name(), valueBindings, flushOperation.getJdbcOperation()
+		);
 	}
 
 	private void breakDownKeyJdbcValue(
@@ -242,41 +245,6 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 			}
 		}
 		return false;
-	}
-
-	protected void applyPartitionedSelectionRestrictions(
-			JdbcValueBindings jdbcValueBindings,
-			SharedSessionContractImplementor session) {
-		for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
-			var attribute = tableDescriptor.attributes().get( i );
-
-			attribute.forEachSelectable( (selectionIndex, selectableMapping) -> {
-				if ( selectableMapping.isPartitioned() ) {
-					final String tableNameForMutation = entityPersister.physicalTableNameForMutation( selectableMapping );
-					final Object value = loadedState != null
-							? loadedState[attribute.getStateArrayPosition()]
-							: null;
-					if ( value != null ) {
-						attribute.decompose(
-								value,
-								0,
-								jdbcValueBindings,
-								null,
-								(valueIndex, bindings, noop, jdbcValue, selectable) -> {
-									if ( selectable.isPartitioned() ) {
-										bindings.bindValue(
-												jdbcValue,
-												selectable.getSelectionExpression(),
-												ParameterUsage.RESTRICT
-										);
-									}
-								},
-								session
-						);
-					}
-				}
-			} );
-		}
 	}
 
 	@Override

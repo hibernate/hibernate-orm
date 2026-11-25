@@ -36,6 +36,7 @@ public class DeleteCoordinatorHistory
 	private final TemporalMapping temporalMapping;
 	private final BasicBatchKey historyBatchKey;
 	private final MutationOperationGroup historyEndUpdateGroup;
+	private final MutationOperationGroup unversionedHistoryEndUpdateGroup;
 
 	public DeleteCoordinatorHistory(
 			@Nonnull EntityPersister entityPersister,
@@ -48,7 +49,10 @@ public class DeleteCoordinatorHistory
 				createAuxiliaryTableMapping( entityPersister.getIdentifierTableMapping(),
 						entityPersister, temporalMapping.getTableName() );
 		this.historyBatchKey = new BasicBatchKey( entityPersister.getEntityName() + "#HISTORY_DELETE" );
-		this.historyEndUpdateGroup = buildHistoryEndUpdateGroup();
+		final boolean versioned = entityPersister.optimisticLockStyle().isVersion()
+				&& entityPersister.getVersionMapping() != null;
+		this.historyEndUpdateGroup = buildHistoryEndUpdateGroup( versioned );
+		this.unversionedHistoryEndUpdateGroup = versioned ? buildHistoryEndUpdateGroup( false ) : historyEndUpdateGroup;
 	}
 
 	@Nullable
@@ -65,7 +69,7 @@ public class DeleteCoordinatorHistory
 
 	@Override
 	public void delete(
-			@Nonnull Object entity,
+			@Nullable Object entity,
 			@Nonnull Object id,
 			@Nullable Object version,
 			@Nonnull SharedSessionContractImplementor session) {
@@ -74,23 +78,24 @@ public class DeleteCoordinatorHistory
 	}
 
 	private void performHistoryEndingUpdate(
-			@Nonnull Object entity,
+			@Nullable Object entity,
 			@Nonnull Object id,
 			@Nullable Object oldVersion,
 			@Nonnull SharedSessionContractImplementor session) {
+		final var operationGroup = entity == null ? unversionedHistoryEndUpdateGroup : historyEndUpdateGroup;
 		final var mutationExecutor =
-				mutationExecutorService.createExecutor( resolveBatchKeyAccess( false, session ),
-						historyEndUpdateGroup, session );
+				mutationExecutorService.createExecutor( resolveBatchKeyAccess( operationGroup != historyEndUpdateGroup, session ),
+						operationGroup, session );
 		try {
 			final var jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
-			for ( int i = 0; i < historyEndUpdateGroup.getNumberOfOperations(); i++ ) {
-				final var operation = historyEndUpdateGroup.getOperation( i );
+			for ( int i = 0; i < operationGroup.getNumberOfOperations(); i++ ) {
+				final var operation = operationGroup.getOperation( i );
 				breakDownKeyJdbcValues( id, null, session, jdbcValueBindings,
 						(EntityTableMapping) operation.getTableDetails() );
 			}
 
 			final var versionMapping = entityPersister().getVersionMapping();
-			if ( versionMapping != null && entityPersister().optimisticLockStyle().isVersion() ) {
+			if ( entity != null && versionMapping != null && entityPersister().optimisticLockStyle().isVersion() ) {
 				jdbcValueBindings.bindValue(
 						oldVersion,
 						historyTableMapping.getTableName(),
@@ -124,13 +129,13 @@ public class DeleteCoordinatorHistory
 	}
 
 	@Nonnull
-	private MutationOperationGroup buildHistoryEndUpdateGroup() {
+	private MutationOperationGroup buildHistoryEndUpdateGroup(boolean applyVersion) {
 		final var tableUpdateBuilder =
 				new TableUpdateBuilderStandard<>( entityPersister(), historyTableMapping, factory() );
 
 		applyKeyRestriction( null, entityPersister(), tableUpdateBuilder, historyTableMapping );
 		applyTemporalEnding( tableUpdateBuilder, temporalMapping );
-		if ( entityPersister().optimisticLockStyle().isVersion() ) {
+		if ( applyVersion ) {
 			applyVersionOptimisticLocking( tableUpdateBuilder );
 		}
 

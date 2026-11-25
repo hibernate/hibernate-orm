@@ -36,12 +36,14 @@ public class DeleteCoordinatorSoft extends AbstractDeleteCoordinator {
 		applyKeyRestriction( rowId, entityPersister(), tableUpdateBuilder, rootTableMapping );
 		applySoftDelete( entityPersister().getSoftDeleteMapping(), tableUpdateBuilder );
 		applyPartitionKeyRestriction( tableName -> tableUpdateBuilder );
-		applyOptimisticLocking(
-				entityPersister().optimisticLockStyle(),
-				tableMutationBuilderResolver( tableUpdateBuilder ),
-				loadedState,
-				session
-		);
+		if ( applyVersion ) {
+			applyOptimisticLocking(
+					entityPersister().optimisticLockStyle(),
+					tableMutationBuilderResolver( tableUpdateBuilder ),
+					loadedState,
+					session
+			);
+		}
 		applyTenantRestriction( tableUpdateBuilder );
 
 		return createMutationOperationGroup( tableUpdateBuilder );

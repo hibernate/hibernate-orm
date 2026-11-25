@@ -50,7 +50,7 @@ public abstract class AbstractDeleteCoordinator
 
 		batchKey = new BasicBatchKey( entityPersister.getEntityName() + "#DELETE" );
 		staticOperationGroup = generateOperationGroup( "", null, true, null );
-		if ( !entityPersister.isVersioned() ) {
+		if ( !entityPersister.isVersioned() && !entityPersister.hasRowId() ) {
 			noVersionDeleteGroup = staticOperationGroup;
 		}
 	}
@@ -76,21 +76,22 @@ public abstract class AbstractDeleteCoordinator
 
 	@Override
 	public void delete(
-			@Nonnull Object entity,
+			@Nullable Object entity,
 			@Nonnull Object id,
 			@Nullable Object version,
 			@Nonnull SharedSessionContractImplementor session) {
 		TenantIdHelper.validateIdentifierTenant( id, entityPersister(), session );
 		final boolean isImpliedOptimisticLocking = entityPersister().optimisticLockStyle().isAllOrDirty();
 
-		final var entry = session.getPersistenceContextInternal().getEntry( entity );
+		final var entry = entity == null ? null : session.getPersistenceContextInternal().getEntry( entity );
 		final var filteredState = entry == null ? null : entry.getExtraState( FilteredAssociationState.class );
 		final Object[] originalLoadedState = entry == null ? null : entry.getLoadedState();
 		final Object[] loadedState = filteredState == null ? originalLoadedState
 				: filteredState.physicalState( originalLoadedState, entityPersister() );
 		final Object rowId = entry != null ? entry.getRowId() : null;
 
-		if ( isImpliedOptimisticLocking && loadedState != null || rowId == null && entityPersister().hasRowId() ) {
+		if ( entity != null && ( isImpliedOptimisticLocking && loadedState != null
+				|| rowId == null && entityPersister().hasRowId() ) ) {
 			doDynamicDelete( entity, id, rowId, loadedState, session );
 		}
 		else {
@@ -266,8 +267,8 @@ public abstract class AbstractDeleteCoordinator
 		}
 
 		final var mutationExecutor = executor( session, operationGroupToUse );
-		for ( int position = 0; position < staticOperationGroup.getNumberOfOperations(); position++ ) {
-			final var mutation = staticOperationGroup.getOperation( position );
+		for ( int position = 0; position < operationGroupToUse.getNumberOfOperations(); position++ ) {
+			final var mutation = operationGroupToUse.getOperation( position );
 			if ( mutation != null ) {
 				mutationExecutor.getPreparedStatementDetails( mutation.getTableDetails().getTableName() );
 			}
@@ -321,13 +322,14 @@ public abstract class AbstractDeleteCoordinator
 
 	@Nonnull
 	private MutationExecutor executor(@Nonnull SharedSessionContractImplementor session, @Nonnull MutationOperationGroup group) {
-		return mutationExecutorService.createExecutor( resolveBatchKeyAccess( false, session ), group, session );
+		return mutationExecutorService.createExecutor( resolveBatchKeyAccess( group != staticOperationGroup, session ),
+				group, session );
 	}
 
 	@Nonnull
 	protected MutationOperationGroup resolveNoVersionDeleteGroup(@Nonnull SharedSessionContractImplementor session) {
 		if ( noVersionDeleteGroup == null ) {
-			noVersionDeleteGroup = generateOperationGroup( "", null, false, session );
+			noVersionDeleteGroup = generateOperationGroup( null, null, false, session );
 		}
 		return noVersionDeleteGroup;
 	}

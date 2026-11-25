@@ -1,5 +1,7 @@
 package org.hibernate.sql.results.graph.collection.internal;
 
+import java.util.function.BiConsumer;
+
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
@@ -47,5 +49,10 @@ public class DetachedCollectionAssembler<T> implements DomainResultAssembler<T> 
 	@Override
 	public void resolveState(RowProcessingState rowProcessingState) {
 		collectionKeyAssembler.resolveState( rowProcessingState );
+	}
+
+	@Override
+	public void forEachResultAssembler(BiConsumer consumer, Object arg) {
+		collectionKeyAssembler.forEachResultAssembler( consumer, arg );
 	}
 }

@@ -1828,10 +1828,7 @@ See <<basic-jpa-convert-mutability>> for converted-value dirty checking.
 
 
 [[basic-hbm-attribute-converter]]
-===== Mapping an AttributeConverter using HBM mappings
-
-HBM mappings can use a Jakarta Persistence `AttributeConverter` because Hibernate supports
-such mapping via the `type` attribute as demonstrated by the following example.
+===== Mapping an AttributeConverter in XML
 
 Consider the following application-specific `Money` type:
 
@@ -1840,7 +1837,7 @@ Consider the following application-specific `Money` type:
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-basic-mapping}/converter/hbm/Money.java[tags=basic-hbm-attribute-converter-mapping-money-example]
+include::{example-dir-basic-mapping}/converter/xml/Money.java[tags=basic-hbm-attribute-converter-mapping-money-example]
 ----
 ====
 
@@ -1851,7 +1848,7 @@ The `Account` entity uses `Money` as an attribute type:
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-basic-mapping}/converter/hbm/Account.java[tags=basic-hbm-attribute-converter-mapping-account-example]
+include::{example-dir-basic-mapping}/converter/xml/Account.java[tags=basic-hbm-attribute-converter-mapping-account-example]
 ----
 ====
 
@@ -1862,22 +1859,31 @@ The following `MoneyConverter` implements `AttributeConverter` to convert `Money
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-basic-mapping}/converter/hbm/MoneyConverter.java[tags=basic-hbm-attribute-converter-mapping-moneyconverter-example]
+include::{example-dir-basic-mapping}/converter/xml/MoneyConverter.java[tags=basic-hbm-attribute-converter-mapping-moneyconverter-example]
 ----
 ====
 
-To specify `MoneyConverter` in an HBM mapping, use the `converted::` prefix in the `type`
-attribute of the `property` element.
+In a legacy Hibernate `hbm.xml` mapping, apply `MoneyConverter` to the `balance` property by prefixing the fully qualified converter class name with `converted::` in the `type` attribute.
 
 [[basic-hbm-attribute-converter-mapping-xml-config-example]]
 .HBM mapping for `AttributeConverter`
 ====
-[source, java, indent=0]
+[source,xml,indent=0]
 ----
 include::{example-dir-resources}/mapping/converter/hbm/MoneyConverterHbmTest.hbm.xml[]
 ----
 ====
 
+The Jakarta Persistence mapping schema supports a `convert` element inside the `basic` element.
+The following example uses the same element in Hibernate's extended mapping schema.
+
+.XML mapping for `AttributeConverter`
+====
+[source,xml,indent=0]
+----
+include::{example-dir-resources}/mapping/converter/xml/MoneyConverterTest.orm.xml[]
+----
+====
 
 Mutability of converted values is discussed in <<basic-jpa-convert-mutability>>.
 

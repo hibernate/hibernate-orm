@@ -105,8 +105,8 @@ import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
-import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -174,7 +174,6 @@ import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.action.queue.internal.decompose.entity.UpdateDecomposer;
 import org.hibernate.persister.filter.internal.FilterHelper;
 import org.hibernate.sql.ast.spi.query.predicate.SqlFragmentPredicate;
-import org.hibernate.persister.state.internal.HistoryStateManagement;
 import org.hibernate.persister.state.spi.StateManagement;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyValueAccessor;
@@ -5794,6 +5793,15 @@ public abstract class AbstractEntityPersister
 		);
 	}
 
+	/// Resolves table names and polymorphic query expressions for hierarchies with per-class auxiliary tables.
+	@Internal
+	@Nullable
+	public Function<String, String> createAuxiliaryTableResolver(
+			@Nonnull RootClass rootClass, @Nonnull String rootAuxiliaryTableName, @Nonnull List<String> extraColumns,
+			@Nonnull MappingModelCreationProcess creationProcess) {
+		return null;
+	}
+
 	/**
 	 * Consolidated these onto a single helper because the 2 pieces work in tandem.
 	 */
@@ -6149,12 +6157,9 @@ public abstract class AbstractEntityPersister
 		if ( rootClass == bootEntityDescriptor ) {
 			auxiliaryMapping = stateManagement.createAuxiliaryMapping( this, rootClass, creationProcess );
 		}
-		else if ( bootEntityDescriptor instanceof UnionSubclass unionSubclass
-				&& stateManagement instanceof HistoryStateManagement historyStateManagement ) {
-			auxiliaryMapping = historyStateManagement.createSubclassHistoryMapping( this, unionSubclass, creationProcess );
-		}
 		else {
-			auxiliaryMapping = castNonNull( superMappingType ).getAuxiliaryMapping();
+			auxiliaryMapping = stateManagement.createAuxiliaryMapping( this, bootEntityDescriptor,
+					castNonNull( superMappingType ).getAuxiliaryMapping(), creationProcess );
 		}
 		if ( auxiliaryMapping instanceof SoftDeleteMapping && rootClass.getCustomSQLDelete() != null ) {
 			throw new UnsupportedMappingException( "Entity may not define both @SoftDelete and @SQLDelete" );

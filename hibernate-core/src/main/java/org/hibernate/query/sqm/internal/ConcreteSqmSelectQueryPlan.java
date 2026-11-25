@@ -442,10 +442,10 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		var localCopy = cacheableSqmInterpretation;
 		JdbcParameterBindings jdbcParameterBindings = null;
 
-		if ( localCopy == null ) {
+		if ( localCopy == null || !localCopy.matches( executionContext.getQueryParameterBindings() ) ) {
 			synchronized ( this ) {
 				localCopy = cacheableSqmInterpretation;
-				if ( localCopy == null ) {
+				if ( localCopy == null || !localCopy.matches( executionContext.getQueryParameterBindings() ) ) {
 					final MutableObject<JdbcParameterBindings> mutableValue = new MutableObject<>();
 					localCopy = buildInterpretation( sqm, domainParameterXref, executionContext, mutableValue );
 					jdbcParameterBindings = mutableValue.get();
@@ -499,7 +499,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			DomainQueryExecutionContext executionContext) {
 		return SqmUtil.createJdbcParameterBindings(
 				executionContext.getQueryParameterBindings(),
-				domainParameterXref,
+				sqmInterpretation.parameterXrefOr( domainParameterXref ),
 				sqmInterpretation.jdbcParamsXref(),
 				new SqmParameterMappingModelResolutionAccess() {
 					//this is pretty ugly!
@@ -524,6 +524,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		final var sessionFactory = session.getFactory();
 		final var queryOptions = executionContext.getQueryOptions();
 
+		domainParameterXref = domainParameterXref.forTranslation();
 		final var sqmTranslator =
 				sessionFactory.getQueryEngine().getSqmTranslatorFactory()
 						.createSelectTranslator(
@@ -565,7 +566,8 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				sqmInterpretation.getSqlAst(),
 				selectTranslator.translate( jdbcParameterBindings, queryOptions ),
 				jdbcParamsXref,
-				sqmInterpretation.getSqmParameterMappingModelTypeResolutions()
+				sqmInterpretation.getSqmParameterMappingModelTypeResolutions(),
+				domainParameterXref
 		);
 	}
 

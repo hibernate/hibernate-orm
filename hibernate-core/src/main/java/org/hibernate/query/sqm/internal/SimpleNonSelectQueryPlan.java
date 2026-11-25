@@ -76,7 +76,7 @@ public class SimpleNonSelectQueryPlan implements NonSelectQueryPlan {
 			DomainQueryExecutionContext executionContext) {
 		return SqmUtil.createJdbcParameterBindings(
 				executionContext.getQueryParameterBindings(),
-				domainParameterXref,
+				sqmInterpretation.parameterXrefOr( domainParameterXref ),
 				sqmInterpretation.jdbcParamsXref(),
 				new SqmParameterMappingModelResolutionAccess() {
 					//this is pretty ugly!
@@ -113,10 +113,10 @@ public class SimpleNonSelectQueryPlan implements NonSelectQueryPlan {
 		Interpretation builtInterpretation = null;
 		CacheableSqmInterpretation<MutationStatement, JdbcOperationQueryMutation> localCopy = interpretation;
 
-		if ( localCopy == null ) {
+		if ( localCopy == null || !localCopy.matches( context.getQueryParameterBindings() ) ) {
 			synchronized ( this ) {
 				localCopy = interpretation;
-				if ( localCopy == null ) {
+				if ( localCopy == null || !localCopy.matches( context.getQueryParameterBindings() ) ) {
 					builtInterpretation = buildInterpretation( statement, domainParameterXref, context );
 					localCopy = builtInterpretation.interpretation;
 					interpretation = builtInterpretation.interpretation;
@@ -150,7 +150,7 @@ public class SimpleNonSelectQueryPlan implements NonSelectQueryPlan {
 						localCopy.sqmParameterMappingModelTypes(),
 						jdbcParameterBindings,
 						context
-				);
+				).withParameterXref( localCopy.domainParameterXref() );
 				interpretation = builtInterpretation.interpretation;
 			}
 			else {
@@ -164,7 +164,14 @@ public class SimpleNonSelectQueryPlan implements NonSelectQueryPlan {
 	protected record Interpretation(
 			CacheableSqmInterpretation<MutationStatement, JdbcOperationQueryMutation> interpretation,
 			JdbcParameterBindings jdbcParameterBindings
-	) {}
+	) {
+		Interpretation withParameterXref(DomainParameterXref xref) {
+			return new Interpretation(
+					new CacheableSqmInterpretation<>( interpretation.statement(), interpretation.jdbcOperation(),
+							interpretation.jdbcParamsXref(), interpretation.sqmParameterMappingModelTypes(), xref ),
+					jdbcParameterBindings );
+		}
+	}
 
 	protected Interpretation buildInterpretation(
 			SqmDmlStatement<?> sqm,
@@ -172,6 +179,7 @@ public class SimpleNonSelectQueryPlan implements NonSelectQueryPlan {
 			DomainQueryExecutionContext executionContext) {
 		final var session = executionContext.getSession();
 
+		domainParameterXref = domainParameterXref.forTranslation();
 		final var sqmInterpretation = buildTranslation( sqm, domainParameterXref, executionContext );
 		final var jdbcParamsXref =
 				generateJdbcParamsXref( domainParameterXref, sqmInterpretation::getJdbcParamsBySqmParam );
@@ -198,7 +206,7 @@ public class SimpleNonSelectQueryPlan implements NonSelectQueryPlan {
 				parameterModelTypeResolutions,
 				jdbcParameterBindings,
 				executionContext
-		);
+		).withParameterXref( domainParameterXref );
 	}
 
 	protected Interpretation buildInterpretation(

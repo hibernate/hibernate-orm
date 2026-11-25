@@ -85,7 +85,6 @@ import org.hibernate.sql.ast.spi.translation.Clause;
 import org.hibernate.sql.ast.spi.creation.SqlTreeCreationException;
 import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
 import org.hibernate.sql.ast.spi.query.from.TableGroup;
-import org.hibernate.sql.exec.internal.EntityKeyJdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -781,9 +780,8 @@ public class SqmUtil {
 
 	private static Bindable parameterTypeForOccurrence(Bindable parameterType, JdbcParametersList jdbcParams) {
 		// A single SQM parameter can supply the foreign key in SET and the identifier in WHERE.
-		return jdbcParams.size() > 0 && jdbcParams.get( 0 ) instanceof EntityKeyJdbcParameter keyParameter
-				? keyParameter.getEntityMapping()
-				: parameterType;
+		final var entityMapping = jdbcParams.size() == 0 ? null : jdbcParams.get( 0 ).getEntityMapping();
+		return entityMapping == null ? parameterType : entityMapping;
 	}
 
 	private static void createValueBindings(

@@ -8300,11 +8300,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	/// The mapping which the given operands of a comparison require of the other operand:
-	/// that of the first operand to require one, or the identifier if any is an entity parameter.
+	/// that of the first operand to require one. But an entity parameter requires the
+	/// identifier, whatever the other operands are, unless one of them is a to-one
+	/// association, which has no key but its foreign key when its target is not joined.
 	private MappingModelExpressible<?> determineRequiredMapping(
 			List<? extends SqmExpression<?>> operands,
 			FromClauseIndex fromClauseIndex) {
 		MappingModelExpressible<?> required = null;
+		MappingModelExpressible<?> identifier = null;
+		MappingModelExpressible<?> foreignKey = null;
 		for ( var operand : operands ) {
 			final var mapping = determineValueMapping( operand, fromClauseIndex );
 			if ( mapping != null ) {
@@ -8313,14 +8317,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					return required == null ? mapping : required;
 				}
 				else if ( operand instanceof SqmParameter<?> ) {
-					return mapping;
+					identifier = mapping;
 				}
-				else if ( required == null && !isComparedByAnyKey( operand, fromClauseIndex ) ) {
-					required = mapping;
+				else if ( !isComparedByAnyKey( operand, fromClauseIndex ) ) {
+					if ( required == null ) {
+						required = mapping;
+					}
+					if ( foreignKey == null && mapping instanceof ToOneAttributeMapping ) {
+						foreignKey = mapping;
+					}
 				}
 			}
 		}
-		return required;
+		return identifier == null ? required
+				: foreignKey == null ? identifier
+				: foreignKey;
 	}
 
 	private boolean isComparedByAnyKey(SqmExpression<?> operand, FromClauseIndex fromClauseIndex) {

@@ -65,6 +65,27 @@ public abstract class AbstractPartitionedSoftDeleteTest {
 		assertSoftDeleted( scope, Invoice.class, "partitioned_soft_invoice", 1 );
 	}
 
+	/**
+	 * An unloaded reference is loaded before it is removed, since its partition key is not known.
+	 */
+	@Test
+	void removeUnloadedReference(SessionFactoryScope scope) {
+		final var statements = scope.getCollectingStatementObserver();
+		statements.clear();
+		scope.inTransaction( session -> session.remove( session.getReference( Shipment.class, 1 ) ) );
+		assertThat( statements.getSqlQueries() ).last().asString().contains( "region=?" );
+		assertSoftDeleted( scope, Shipment.class, "partitioned_soft_shipment", 1 );
+	}
+
+	@Test
+	void removeUnloadedVersionedReference(SessionFactoryScope scope) {
+		final var statements = scope.getCollectingStatementObserver();
+		statements.clear();
+		scope.inTransaction( session -> session.remove( session.getReference( Invoice.class, 1 ) ) );
+		assertThat( statements.getSqlQueries() ).last().asString().contains( "region=?", "version=?" );
+		assertSoftDeleted( scope, Invoice.class, "partitioned_soft_invoice", 1 );
+	}
+
 	static void assertSoftDeleted(SessionFactoryScope scope, Class<?> entityClass, String table, int id) {
 		scope.inTransaction( session -> {
 			assertNull( session.find( entityClass, id ) );

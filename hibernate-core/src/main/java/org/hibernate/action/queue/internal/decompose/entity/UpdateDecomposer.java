@@ -349,11 +349,11 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 				|| preUpdateGeneratedAttributeIndexes.length > 0
 				|| entityPersister.hasUninitializedLazyProperties( entity );
 		final var partitionKeys = PartitionKeyValue.fromState( entityPersister, previousState, session );
-		final boolean hasNullPartitionKey = PartitionKeyValue.hasNull( partitionKeys );
+		final boolean dynamicPartitionKey = PartitionKeyValue.needsDynamicRestriction( entityPersister, partitionKeys );
 
 		CachedUpdates cachedUpdates = null;
 		if ( filteredAssociations.isActive() && FilteredUpdateCache.supports( entityPersister )
-				&& !hasNullPartitionKey
+				&& !dynamicPartitionKey
 				&& rowId == null && !entityPersister.hasUninitializedLazyProperties( entity )
 				&& entityEntry != null && entityEntry.isModifiableEntity()
 				&& ( !entityPersister.isVersioned() || previousVersion != null )
@@ -375,8 +375,8 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 				: needsDynamicUpdate
 						? generateDynamicUpdateOperations( entity, identifier, rowId, state, previousState,
 								previousVersion, updateability, valuesAnalysis,
-								hasNullPartitionKey ? partitionKeys : null, session )
-						: hasNullPartitionKey ? generateStaticOperations( partitionKeys ) : staticUpdateOperations;
+								dynamicPartitionKey ? partitionKeys : null, session )
+						: dynamicPartitionKey ? generateStaticOperations( partitionKeys ) : staticUpdateOperations;
 
 		int localOrd = 0;
 		FlushOperation previousOperation = null;

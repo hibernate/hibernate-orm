@@ -36,6 +36,7 @@ import org.hibernate.sql.ast.spi.model.builder.MutationGroupBuilder;
 import org.hibernate.sql.ast.spi.model.builder.RestrictedTableMutationBuilder;
 
 import static java.lang.System.arraycopy;
+import static org.hibernate.action.internal.EntityIdentityInsertAction.compositeGeneratedId;
 import static org.hibernate.engine.jdbc.mutation.internal.ModelMutationHelper.identifiedResultsCheck;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.manyOperations;
@@ -79,6 +80,13 @@ public abstract class AbstractMutationCoordinator {
 				: generatedValues.getGeneratedValue( entityPersister.getIdentifierMapping() );
 		if ( generatedId != null ) {
 			return generatedId;
+		}
+		if ( generatedValues != null ) {
+			// the insert generated only some attributes of a composite identifier
+			final Object compositeId = compositeGeneratedId( entityPersister, entity, generatedValues, session );
+			if ( compositeId != null ) {
+				return compositeId;
+			}
 		}
 		final Object entityId = entityPersister.getIdentifier( entity, session );
 		if ( entityId == null ) {

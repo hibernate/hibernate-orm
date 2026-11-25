@@ -157,6 +157,13 @@ import org.mockito.Mockito;
  * @author Yoobin Yoon
  */
 abstract public class DialectFeatureChecks {
+
+	public static class SupportsNullablePartitionKey implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return !dialect.addPartitionKeyToPrimaryKey();
+		}
+	}
 	public static FollowOnLockingRequest followOnLockingProbe() {
 		return new FollowOnLockingRequest(
 				"select distinct 1",

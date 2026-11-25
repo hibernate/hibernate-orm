@@ -277,12 +277,21 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 		appendSql( "when matched" );
 		for ( ColumnValueBinding binding : optimisticLockBindings ) {
 			appendSql( " and " );
-			if ( renderTenantRestriction( binding, "t" ) ) {
-				continue;
-			}
+			renderMergeRestriction( binding );
+		}
+	}
+
+	protected final void renderMergeRestriction(ColumnValueBinding binding) {
+		if ( !renderTenantRestriction( binding, "t" ) ) {
 			binding.getColumnReference().appendReadExpression( this, "t" );
-			appendSql( "=" );
-			binding.getValueExpression().accept( this );
+			final var expression = binding.getValueExpression();
+			if ( expression == null ) {
+				appendSql( " is null" );
+			}
+			else {
+				appendSql( '=' );
+				expression.accept( this );
+			}
 		}
 	}
 }

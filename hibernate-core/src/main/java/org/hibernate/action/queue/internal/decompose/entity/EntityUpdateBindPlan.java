@@ -24,6 +24,7 @@ import org.hibernate.sql.spi.mutation.ValuesAnalysis;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.List;
 
 import static org.hibernate.action.queue.internal.decompose.entity.BindPlanHelper.shouldBindJdbcValue;
 import static org.hibernate.action.queue.internal.decompose.entity.DecompositionHelper.hasSqlGeneratedUpdate;
@@ -61,6 +62,7 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 	private final Object rowId;
 	private final Object[] state;
 	private final Object[] previousState;
+	private final List<PartitionKeyValue> partitionKeys;
 	private final Object version;
 	private final boolean[] propertyUpdateability;
 	private final OptimisticLockStyle effectiveOptLockStyle;
@@ -81,6 +83,7 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 			Object rowId,
 			Object[] state,
 			Object[] previousState,
+			List<PartitionKeyValue> partitionKeys,
 			Object version,
 			boolean[] propertyUpdateability,
 			OptimisticLockStyle effectiveOptLockStyle,
@@ -94,6 +97,7 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 		this.rowId = rowId;
 		this.state = state;
 		this.previousState = previousState;
+		this.partitionKeys = partitionKeys;
 		this.version = version;
 		this.propertyUpdateability = propertyUpdateability;
 		this.effectiveOptLockStyle = effectiveOptLockStyle;
@@ -188,10 +192,9 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 				applyNonVersionOptLocking( valueBindings, session );
 			}
 
-			// Apply partitioned selection restrictions if needed
-			if ( entityPersister.hasPartitionedSelectionMapping() && previousState != null ) {
-				applyPartitionedSelectionRestrictions( valueBindings, session );
-			}
+			PartitionKeyValue.bindRestrictions(
+					partitionKeys, tableDescriptor.name(), valueBindings, flushOperation.getJdbcOperation()
+			);
 		}
 		finally {
 			this.bindingFlushOperation = null;
@@ -397,41 +400,6 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 				},
 				session
 		);
-	}
-
-	protected void applyPartitionedSelectionRestrictions(
-			JdbcValueBindings jdbcValueBindings,
-			SharedSessionContractImplementor session) {
-		for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
-			var attribute = tableDescriptor.attributes().get( i );
-
-			attribute.forEachSelectable( (selectionIndex, selectableMapping) -> {
-				if ( selectableMapping.isPartitioned() ) {
-					final String tableNameForMutation = entityPersister.physicalTableNameForMutation( selectableMapping );
-					final Object value = previousState != null
-							? previousState[attribute.getStateArrayPosition()]
-							: null;
-					if ( value != null ) {
-						attribute.decompose(
-								value,
-								0,
-								jdbcValueBindings,
-								null,
-								(valueIndex, bindings, noop, jdbcValue, selectable) -> {
-									if ( selectable.isPartitioned() && jdbcValue != null ) {
-										bindings.bindValue(
-												jdbcValue,
-												selectable.getSelectionExpression(),
-												ParameterUsage.RESTRICT
-										);
-									}
-								},
-								session
-						);
-					}
-				}
-			} );
-		}
 	}
 
 	@Override

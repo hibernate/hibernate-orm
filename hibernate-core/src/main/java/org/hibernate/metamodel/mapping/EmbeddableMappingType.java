@@ -143,6 +143,7 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 
 	/**
 	 * Different from {@link #getJdbcTypeCount()} as this will treat an aggregate as a single element.
+	 * The discriminator of this embeddable, if any, is not included.
 	 */
 	default int getJdbcValueCount() {
 		final int numberOfAttributeMappings = getNumberOfAttributeMappings();
@@ -150,9 +151,10 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
 			final AttributeMapping attributeMapping = getAttributeMapping( i );
 			final MappingType mappedType = attributeMapping.getMappedType();
-			if ( mappedType instanceof EmbeddableMappingType embeddableMappingType
-					&& embeddableMappingType.getAggregateMapping() != null ) {
-				count++;
+			if ( mappedType instanceof EmbeddableMappingType embeddableMappingType ) {
+				count += embeddableMappingType.getAggregateMapping() == null
+						? embeddableMappingType.getJdbcValueCount() + ( embeddableMappingType.isPolymorphic() ? 1 : 0 )
+						: 1;
 			}
 			else {
 				count += attributeMapping.getJdbcTypeCount();
@@ -207,7 +209,7 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 					if ( subSelectable != null ) {
 						return subSelectable;
 					}
-					count += embeddableMappingType.getJdbcValueCount();
+					count += embeddableMappingType.getJdbcValueCount() + ( embeddableMappingType.isPolymorphic() ? 1 : 0 );
 				}
 				else {
 					if ( count == columnIndex ) {
@@ -253,7 +255,7 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 					if ( selectableIndex != -1 ) {
 						return offset + selectableIndex;
 					}
-					offset += embeddableMappingType.getJdbcTypeCount();
+					offset += embeddableMappingType.getJdbcValueCount() + ( embeddableMappingType.isPolymorphic() ? 1 : 0 );
 				}
 			}
 			else if ( attributeMapping instanceof SelectableMapping selectableMapping) {

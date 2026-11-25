@@ -73,7 +73,7 @@ public interface AuditLog extends AutoCloseable {
 	 * (ADD/MOD/DEL) for an entity at a specific changeset.
 	 *
 	 * @param entityClass the audited entity class
-	 * @param id "at the entity identifier
+	 * @param id the entity identifier
 	 * @param changesetId the changeset identifier
 	 *
 	 * @return the modification type, or {@code null} if the

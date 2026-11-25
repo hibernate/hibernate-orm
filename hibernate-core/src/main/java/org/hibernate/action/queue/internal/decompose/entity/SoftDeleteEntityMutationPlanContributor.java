@@ -28,7 +28,9 @@ import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 public class SoftDeleteEntityMutationPlanContributor implements EntityMutationPlanContributor {
 	private final EntityPersister entityPersister;
 	private final SessionFactoryImplementor sessionFactory;
+	private final boolean versioned;
 	private final TableUpdate<?> softDeleteOperation;
+	private final TableUpdate<?> unversionedSoftDeleteOperation;
 
 	public SoftDeleteEntityMutationPlanContributor(
 			EntityPersister entityPersister,
@@ -37,7 +39,12 @@ public class SoftDeleteEntityMutationPlanContributor implements EntityMutationPl
 				? entityPersister
 				: entityPersister.getRootEntityDescriptor().getEntityPersister();
 		this.sessionFactory = sessionFactory;
-		this.softDeleteOperation = generateSoftDeleteOperation();
+		this.versioned = this.entityPersister.optimisticLockStyle().isVersion()
+				&& this.entityPersister.getVersionMapping() != null;
+		this.softDeleteOperation = generateSoftDeleteOperation( versioned );
+		this.unversionedSoftDeleteOperation = versioned
+				? generateSoftDeleteOperation( false )
+				: softDeleteOperation;
 	}
 
 	@Override
@@ -50,9 +57,13 @@ public class SoftDeleteEntityMutationPlanContributor implements EntityMutationPl
 			DeleteContext context,
 			Consumer<FlushOperation> operationConsumer) {
 		final Object identifier = context.identifier();
-		final Object version = context.version();
+		// An entity which is deleted without being loaded has no version to check
+		final boolean applyVersion = versioned && context.action().getInstance() != null;
+		final Object version = applyVersion ? context.version() : null;
 
-		final var mutation = softDeleteOperation.createMutationOperation( null, sessionFactory );
+		final var mutation =
+				( applyVersion ? softDeleteOperation : unversionedSoftDeleteOperation )
+						.createMutationOperation( null, sessionFactory );
 		final var tableMapping = (TableDescriptorAsTableMapping) mutation.getTableDetails();
 		final var tableDescriptor = (EntityTableDescriptor) tableMapping.descriptor();
 
@@ -62,7 +73,7 @@ public class SoftDeleteEntityMutationPlanContributor implements EntityMutationPl
 				identifier,
 				version,
 				null,
-				OptimisticLockStyle.NONE
+				applyVersion ? OptimisticLockStyle.VERSION : OptimisticLockStyle.NONE
 		);
 
 		final FlushOperation operation = new FlushOperation(
@@ -79,7 +90,7 @@ public class SoftDeleteEntityMutationPlanContributor implements EntityMutationPl
 		return true;
 	}
 
-	private TableUpdate<?> generateSoftDeleteOperation() {
+	private TableUpdate<?> generateSoftDeleteOperation(boolean applyVersion) {
 		final SoftDeleteMapping softDeleteMapping = entityPersister.getSoftDeleteMapping();
 		assert softDeleteMapping != null;
 
@@ -101,7 +112,7 @@ public class SoftDeleteEntityMutationPlanContributor implements EntityMutationPl
 		applySoftDelete( softDeleteMapping, tableUpdateBuilder );
 		applyPartitionKeyRestrictionForSoftDelete( tableUpdateBuilder );
 
-		if ( entityPersister.optimisticLockStyle().isVersion() && entityPersister.getVersionMapping() != null ) {
+		if ( applyVersion ) {
 			tableUpdateBuilder.addOptimisticLockRestriction( entityPersister.getVersionMapping() );
 		}
 		TenantIdHelper.applyTenantRestriction( entityPersister, tableUpdateBuilder );

@@ -129,7 +129,6 @@ public class EntityDeleteAction extends EntityAction {
 		final var persister = getPersister();
 		final var session = getSession();
 		final Object instance = getInstance();
-		assert instance != null;
 
 		final boolean veto = isInstanceLoaded() && preDelete();
 

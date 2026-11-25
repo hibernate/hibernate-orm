@@ -83,12 +83,14 @@ public class DeleteCoordinatorTemporal extends AbstractDeleteCoordinator {
 		applyKeyRestriction( rowId, entityPersister(), tableUpdateBuilder, rootTableMapping );
 		applyTemporalEnding( tableUpdateBuilder, entityPersister().getTemporalMapping() );
 		applyPartitionKeyRestriction( tableName -> tableUpdateBuilder );
-		applyOptimisticLocking(
-				entityPersister().optimisticLockStyle(),
-				tableMutationBuilderResolver( tableUpdateBuilder ),
-				loadedState,
-				session
-		);
+		if ( applyVersion ) {
+			applyOptimisticLocking(
+					entityPersister().optimisticLockStyle(),
+					tableMutationBuilderResolver( tableUpdateBuilder ),
+					loadedState,
+					session
+			);
+		}
 		applyTenantRestriction( tableUpdateBuilder );
 
 		return createMutationOperationGroup( tableUpdateBuilder );

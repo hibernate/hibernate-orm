@@ -1006,6 +1006,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				assignedPathInterpretation =
 						(PathInterpretation<?>)
 								visitWithRequiredResult( sqmAssignment.getTargetPath() );
+				ForeignKeyAssignment.verifyAssignable( sqmAssignment.getTargetPath(),
+						assignedPathInterpretation.getExpressionType(), getFromClauseIndex() );
 			}
 			finally {
 				currentClauseStack.pop();

@@ -116,8 +116,10 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		super( collectionBinding, cacheAccessStrategy, creationContext );
 		keyIsNullable = collectionBinding.getKey().isNullable();
 
+		// the index is written by an update of its column alone when the key is not written by
+		// the collection, because the association is inverse, or its join column not updatable
 		doWriteEvenWhenInverse =
-				isInverse
+				( isInverse || !collectionBinding.getKey().isUpdateable() )
 					&& hasIndex()
 					&& !indexContainsFormula
 					&& isAnyTrue( indexColumnIsSettable )
@@ -327,6 +329,15 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 	public boolean isDoWriteEvenWhenInverse() {
 		return doWriteEvenWhenInverse;
+	}
+
+	/// Whether the update which writes the index of an element is also restricted by
+	/// the key of the collection. The index of an owned list whose join column is not
+	/// updatable is written by an update of its own, but the key is never changed, so
+	/// an element which belongs to the list of another owner keeps its row, and its
+	/// index, in that list.
+	public boolean isIndexWrittenWithKeyRestriction() {
+		return doWriteEvenWhenInverse && !isInverse;
 	}
 
 	@Nonnull
@@ -784,6 +795,9 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		if ( identifierDescriptor != null ) {
 			updateBuilder.addKeyRestrictionsLeniently( identifierDescriptor );
 		}
+		if ( isIndexWrittenWithKeyRestriction() ) {
+			updateBuilder.addKeyRestrictionsLeniently( attributeMapping.getKeyDescriptor().getKeyPart() );
+		}
 		// for each index column:
 		// 		* add a restriction based on the previous value (WHERE clause)
 		//		* add an assignment for the new value (SET clause)
@@ -848,6 +862,20 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			);
 		}
 
+		if ( isIndexWrittenWithKeyRestriction() ) {
+			attributeMapping.getKeyDescriptor().getKeyPart().decompose(
+					key,
+					0,
+					jdbcValueBindings,
+					null,
+					(valueIndex, bindings, noop, value, jdbcValueMapping) -> {
+						if ( !jdbcValueMapping.isFormula() ) {
+							bindings.bindValue( value, jdbcValueMapping, ParameterUsage.RESTRICT );
+						}
+					},
+					session
+			);
+		}
 	}
 
 

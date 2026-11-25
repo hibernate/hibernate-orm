@@ -9,6 +9,7 @@ import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.domain.gambit.MutableValue;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -57,6 +58,16 @@ public class XmlEmbeddableTest {
 	@AfterEach
 	protected void cleanupTest(SessionFactoryScope scope) {
 		scope.dropData();
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-21270")
+	public void testUpdateAggregateParameter(SessionFactoryScope scope) {
+		scope.inTransaction( session -> assertEquals( 1, session.createMutationQuery(
+				"update XmlHolder b set b.aggregate=:value where b.id=1" )
+				.setParameter( "value", EmbeddableAggregate.createAggregate2() ).executeUpdate() ) );
+		scope.inTransaction( session -> EmbeddableAggregate.assertEquals(
+				EmbeddableAggregate.createAggregate2(), session.find( XmlHolder.class, 1L ).getAggregate() ) );
 	}
 
 	@Test

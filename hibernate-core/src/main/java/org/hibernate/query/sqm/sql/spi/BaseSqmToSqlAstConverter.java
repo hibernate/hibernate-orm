@@ -6602,6 +6602,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final var paramSqmType = creationContext.resolveExpressible( paramType );
 		if ( paramSqmType instanceof SqmPath<?> sqmPath ) {
 			final var modelPart = determineValueMapping( sqmPath );
+			if ( modelPart instanceof EmbeddableValuedModelPart embeddedPart ) {
+				final var inferredValueMapping = getInferredValueMapping();
+				if ( inferredValueMapping instanceof EmbeddableValuedModelPart inferredPart
+						&& inferredPart.getJavaType().getJavaTypeClass() == embeddedPart.getJavaType().getJavaTypeClass() ) {
+					// An anticipated path is shared; the current occurrence may use another representation.
+					return inferredPart;
+				}
+			}
 			if ( modelPart instanceof PluralAttributeMapping pluralAttributeMapping ) {
 				return resolveInferredValueMappingForParameter( pluralAttributeMapping.getElementDescriptor() );
 			}
@@ -6699,10 +6707,18 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					new EntityKeyJdbcParameter( selectable, parameterId + index, valueMapping ) ) );
 			return;
 		}
-		final int parameterId = jdbcParams == null
-				? jdbcParameters.getJdbcParameters().size()
-				: castNonNull( jdbcParams.get( 0 ).get( 0 ).getParameterId() );
-		if ( valueMapping instanceof SelectableMappings selectableMappings ) {
+		final var aggregateMapping = valueMapping instanceof EmbeddableValuedModelPart embedded
+				? embedded.getEmbeddableTypeDescriptor().getAggregateMapping()
+				: null;
+		final int parameterId = valueMapping instanceof EmbeddableValuedModelPart
+				? embeddableParameterId( aggregateMapping == null ? valueMapping : aggregateMapping.getJdbcMapping(), jdbcParams )
+				: jdbcParams == null
+						? jdbcParameters.getJdbcParameters().size()
+						: castNonNull( jdbcParams.get( 0 ).get( 0 ).getParameterId() );
+		if ( aggregateMapping != null ) {
+			jdbcParameterConsumer.accept( 0, new SqlTypedMappingJdbcParameter( aggregateMapping, parameterId ) );
+		}
+		else if ( valueMapping instanceof SelectableMappings selectableMappings ) {
 			selectableMappings.forEachSelectable(
 					(index, selectableMapping)
 							-> jdbcParameterConsumer.accept( index,
@@ -6732,6 +6748,24 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						new SqlTypedMappingJdbcParameter( sqlTypedMapping, parameterId ) );
 			}
 		}
+	}
+
+	private int embeddableParameterId(JdbcMappingContainer mapping, List<List<JdbcParameter>> occurrences) {
+		if ( occurrences != null ) {
+			for ( var occurrence : occurrences ) {
+				if ( occurrence.size() == mapping.getJdbcTypeCount() ) {
+					int i = 0;
+					while ( i < occurrence.size()
+							&& occurrence.get( i ).getExpressionType().getSingleJdbcMapping() == mapping.getJdbcMapping( i ) ) {
+						i++;
+					}
+					if ( i == occurrence.size() ) {
+						return castNonNull( occurrence.get( 0 ).getParameterId() );
+					}
+				}
+			}
+		}
+		return jdbcParameters.getJdbcParameters().size();
 	}
 
 	// Dialects with numbered parameter markers may reuse a marker only for the same key.

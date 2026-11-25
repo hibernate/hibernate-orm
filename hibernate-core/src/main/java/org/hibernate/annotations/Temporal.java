@@ -186,6 +186,9 @@ public @interface Temporal {
 	 * Specifies the name of the separate history table for
 	 * a {@linkplain Temporal temporal entity or collection}
 	 * when the history table strategy is used.
+	 * In a {@linkplain jakarta.persistence.InheritanceType#TABLE_PER_CLASS
+	 * table-per-class} hierarchy, each concrete entity has its own history
+	 * table, and this annotation names the history table of the annotated class.
 	 *
 	 * @see TemporalTableStrategy#HISTORY_TABLE
 	 */

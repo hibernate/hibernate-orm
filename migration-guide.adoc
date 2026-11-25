@@ -139,6 +139,14 @@ A `@Table` annotation on such a class is now rejected with an `AnnotationExcepti
 Previously the annotation was silently ignored, along with any indexes or constraints it declared.
 Indexes and constraints should instead be declared by the `@Table` annotation of each concrete subclass.
 
+[[temporal-table-per-class-history]]
+=== History tables for temporal `TABLE_PER_CLASS` hierarchies
+
+With the `HISTORY_TABLE` temporal strategy, each concrete entity class in a `TABLE_PER_CLASS` hierarchy now writes to its own history table.
+The table name defaults to the name of the corresponding current table with the suffix `_history` and can be set using `@Temporal.HistoryTable` on that class.
+If a database already contains subclass revisions in the root history table, move those revisions to the corresponding subclass history tables before upgrading.
+The old history table does not store a discriminator, so identifying the concrete type of those revisions may require application data.
+
 [[on-delete-on-entity-class]]
 === `@OnDelete` on an entity class which is not a `JOINED` subclass
 

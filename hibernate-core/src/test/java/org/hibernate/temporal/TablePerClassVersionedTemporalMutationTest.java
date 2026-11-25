@@ -60,9 +60,13 @@ class TablePerClassVersionedTemporalMutationTest {
 			assertThat( session.find( Vehicle.class, 1 ) ).isExactlyInstanceOf( Vehicle.class );
 			assertThat( session.find( Car.class, 2 ) ).isNotNull();
 			assertThat( session.createNativeQuery(
-					"select id from temporal_versioned_vehicle_history where effective is not null and superseded is null order by id",
+					"select id from temporal_versioned_vehicle_history where effective is not null and superseded is null",
 					Integer.class
-			).getResultList() ).containsExactly( 1, 2 );
+			).getResultList() ).containsExactly( 1 );
+			assertThat( session.createNativeQuery(
+					"select id from temporal_versioned_car_history where effective is not null and superseded is null",
+					Integer.class
+			).getResultList() ).containsExactly( 2 );
 		} );
 	}
 

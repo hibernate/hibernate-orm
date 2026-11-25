@@ -337,11 +337,7 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransl
 
 	@Override
 	protected void renderAssignmentColumn(ColumnReference column) {
-		column.appendColumnForWrite(
-				this,
-				getAffectedTableNames().size() > 1 && !(getStatement() instanceof InsertSelectStatement)
-						? determineColumnReferenceQualifier( column )
-						: null );
+		column.appendColumnForWrite( this, isQualifiedAssignment() ? determineColumnReferenceQualifier( column ) : null );
 	}
 
 	private boolean needsDmlSubqueryWrapper() {

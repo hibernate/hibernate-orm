@@ -93,6 +93,25 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 		return new BasicValuedPathInterpretation<>( columnReference( expression ), navigablePath, mapping, tableGroup );
 	}
 
+	/**
+	 * An assignment to a part of a foreign key, as {@linkplain ForeignKeyAssignment#resolve resolved}
+	 * for an assignment through a to-one.
+	 */
+	public static <T> BasicValuedPathInterpretation<T> from(
+			SqmBasicValuedSimplePath<T> sqmPath,
+			ForeignKeyAssignment foreignKey,
+			SqmToSqlAstConverter sqlAstCreationState) {
+		final var navigablePath = sqmPath.getNavigablePath();
+		final var keyPart = castNonNull( foreignKey.keyPart().asBasicValuedModelPart() );
+		final var ownerTableGroup = foreignKey.ownerTableGroup();
+		final var tableReference =
+				ownerTableGroup.resolveTableReference( navigablePath, keyPart, keyPart.getContainingTableExpression() );
+		final var expression =
+				sqlAstCreationState.getSqlExpressionResolver()
+						.resolveSqlExpression( tableReference, keyPart );
+		return new BasicValuedPathInterpretation<>( columnReference( expression ), navigablePath, keyPart, ownerTableGroup );
+	}
+
 	private static <T> void modelPartError(
 			SqmBasicValuedSimplePath<T> sqmPath,
 			boolean jpaQueryComplianceEnabled,

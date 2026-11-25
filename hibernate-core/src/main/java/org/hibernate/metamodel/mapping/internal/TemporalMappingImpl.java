@@ -41,7 +41,9 @@ import org.hibernate.sql.exec.internal.TemporalJdbcParameter;
 import org.hibernate.sql.ast.spi.model.builder.MutationGroupBuilder;
 import org.hibernate.sql.ast.spi.model.builder.TableInsertBuilder;
 
+import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static java.util.Collections.emptyList;
@@ -60,6 +62,7 @@ import static org.hibernate.query.sqm.ComparisonOperator.LESS_THAN_OR_EQUAL;
  */
 public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMutationSupport {
 	private final String tableName;
+	@Nullable private final Function<String, String> historyTableResolver;
 	private final SelectableMapping startingColumnMapping;
 	private final SelectableMapping endingColumnMapping;
 	private final JdbcMapping jdbcMapping;
@@ -71,7 +74,16 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 			Stateful bootMapping,
 			String tableName,
 			MappingModelCreationProcess creationProcess) {
+		this( bootMapping, tableName, null, creationProcess );
+	}
+
+	public TemporalMappingImpl(
+			Stateful bootMapping,
+			String tableName,
+			@Nullable Function<String, String> historyTableResolver,
+			MappingModelCreationProcess creationProcess) {
 		this.tableName = tableName;
+		this.historyTableResolver = historyTableResolver;
 
 		final var creationContext = creationProcess.getCreationContext();
 		temporalTableStrategy =
@@ -150,6 +162,19 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 	@Override
 	public String getTableName() {
 		return tableName;
+	}
+
+	@Nonnull
+	@Override
+	public String resolveTableName(@Nonnull String originalTableName) {
+		return historyTableResolver == null ? tableName : historyTableResolver.apply( originalTableName );
+	}
+
+	@Nonnull
+	@Override
+	public List<String> getExtraSelectExpressions() {
+		return historyTableResolver == null ? List.of() : List.of(
+				startingColumnMapping.getSelectionExpression(), endingColumnMapping.getSelectionExpression() );
 	}
 
 	@Nonnull

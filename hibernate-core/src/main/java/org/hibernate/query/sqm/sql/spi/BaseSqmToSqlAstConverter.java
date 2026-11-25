@@ -4654,16 +4654,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				tableGroupToUse = null;
 			}
 			else if ( inferredEntityMapping instanceof EntityMappingType entityMappingType ) {
-				if ( entityValuedModelPart instanceof ManyToManyCollectionPart manyToManyPart ) {
-					final boolean useCollectionKey = !(path instanceof SqmJoin<?, ?>)
-													|| isFkOptimizationAllowed( path, manyToManyPart );
-					// Match the collection key used by the entity-root side, unless the join
-					// semantics require reading the target entity's identifier instead.
-					resultModelPart = useCollectionKey
-							? manyToManyPart.getForeignKeyDescriptor().getKeyPart()
-							: entityMappingType.getIdentifierMapping();
+				if ( entityValuedModelPart instanceof ManyToManyCollectionPart manyToManyPart
+						&& manyToManyPart.isReferenceToPrimaryKey()
+						&& ( !( path instanceof SqmJoin<?, ?> ) || isFkOptimizationAllowed( path, manyToManyPart ) ) ) {
+					// The foreign key in the join table is the identifier of the element
+					resultModelPart = manyToManyPart.getForeignKeyDescriptor().getKeyPart();
 				}
 				else {
+					// Render the identifier mapping if the inferred mapping is an EntityMappingType
 					resultModelPart = entityMappingType.getIdentifierMapping();
 				}
 				interpretationModelPart = entityValuedModelPart;
@@ -6644,10 +6642,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// For parameters, we resolve to the element descriptor
 			inferredValueMapping = pluralAttributeMapping.getElementDescriptor();
 		}
-		if ( inferredValueMapping instanceof EntityCollectionPart entityCollectionPart
-			&& !(entityCollectionPart instanceof EntityAssociationMapping) ) {
-			// One-to-many elements use the entity identifier. Join-table associations must
-			// retain their FK mapping, which may reference a unique key instead of the PK.
+		if ( inferredValueMapping instanceof EntityCollectionPart entityCollectionPart ) {
+			// For parameters, we resolve to the entity mapping type to bind the primary key
 			return entityCollectionPart.getAssociatedEntityMappingType();
 		}
 		return inferredValueMapping;
@@ -8155,11 +8151,24 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final var tableGroup = createCollectionSubQueryRoot( pluralAttributeMapping, ownerTableGroup,
 					pluralPath.getNavigablePath(), subQuerySpec );
 
-			pluralAttributeMapping.getElementDescriptor().getInclusionCheckPart().applySqlSelections(
-					pluralPath.getNavigablePath(),
-					tableGroup,
-					this
-			);
+			final var elementDescriptor = pluralAttributeMapping.getElementDescriptor();
+			if ( predicate.getLeftHandExpression() instanceof SqmParameter<?>
+					&& elementDescriptor instanceof EntityAssociationMapping association
+					&& !association.isReferenceToPrimaryKey() ) {
+				// An entity parameter is compared by its identifier, which is not what the join table holds
+				association.getAssociatedEntityMappingType().getIdentifierMapping().applySqlSelections(
+						pluralPath.getNavigablePath().append( elementDescriptor.getPartName() ),
+						( (PluralTableGroup) tableGroup ).getElementTableGroup(),
+						this
+				);
+			}
+			else {
+				elementDescriptor.getInclusionCheckPart().applySqlSelections(
+						pluralPath.getNavigablePath(),
+						tableGroup,
+						this
+				);
+			}
 			final var subQuerySpecSelectClause = subQuerySpec.getSelectClause();
 			subQuerySpec.applyPredicate(
 					new ComparisonPredicate(
@@ -8215,18 +8224,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final var right = predicate.getRightHandExpression();
 		final Expression lhs;
 		final Expression rhs;
-		if ( left instanceof SqmParameter<?> && right instanceof SqmPath<?> rightPath
+		if ( ( left instanceof SqmParameter<?> || left instanceof SqmSubQuery<?> )
+				&& right instanceof SqmPath<?> rightPath
 				&& rightPath.getExpressible() instanceof EntityDomainType<?> ) {
-			// Interpret the non-parameter operand first so its selected comparison key
-			// determines both the rendered columns and entity-parameter extraction.
-			rhs = interpretComparisonOperand( right, () -> determineValueMapping( left, fromClauseIndex ) );
+			// Interpret the path first so its selected comparison key determines both the
+			// rendered columns and entity-parameter extraction, or the selection of the subquery.
+			rhs = interpretComparisonOperand( right, () -> determineRequiredMapping( left, fromClauseIndex ) );
 			lhs = interpretComparisonOperand( left, () -> determineComparisonMapping( rhs, right, fromClauseIndex ) );
 		}
 		else {
-			lhs = interpretComparisonOperand( left, () -> determineValueMapping( right, fromClauseIndex ) );
-			rhs = interpretComparisonOperand( right, () -> right instanceof SqmParameter<?>
-					? determineComparisonMapping( lhs, left, fromClauseIndex )
-					: determineValueMapping( left, fromClauseIndex ) );
+			lhs = interpretComparisonOperand( left, () -> determineRequiredMapping( right, fromClauseIndex ) );
+			rhs = interpretComparisonOperand( right, () -> determineComparisonMapping( right, lhs, left, fromClauseIndex ) );
 		}
 
 		final var sqmOperator = predicate.getEffectiveOperator();
@@ -8263,6 +8271,65 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return interpretation instanceof EntityValuedPathInterpretation<?> entityPath
 				? entityPath.getParameterInferenceMapping()
 				: determineValueMapping( operand, fromClauseIndex );
+	}
+
+	/// The mapping from which the given operand is inferred, when it is compared with
+	/// an operand which was already interpreted. A parameter, and an entity which may be
+	/// compared by any of its keys, takes the key with which the other operand was rendered.
+	/// Two associations are each rendered according to the mapping of the other.
+	private MappingModelExpressible<?> determineComparisonMapping(
+			SqmExpression<?> operand,
+			Expression otherInterpretation,
+			SqmExpression<?> other,
+			FromClauseIndex fromClauseIndex) {
+		return operand instanceof SqmParameter<?>
+			|| isComparedByAnyKey( operand, fromClauseIndex )
+			|| isComparedByAnyKey( other, fromClauseIndex )
+				? determineComparisonMapping( otherInterpretation, other, fromClauseIndex )
+				: determineValueMapping( other, fromClauseIndex );
+	}
+
+	/// The mapping which the given operand of a comparison requires of the other operand,
+	/// if that operand is interpreted first, or `null` if it requires none. An association
+	/// is compared by its foreign key, and an entity parameter by its identifier, which is
+	/// always available, and has one value however many times the parameter occurs. An
+	/// entity which is an element of the `from` clause, or which a subquery selects, may
+	/// be compared by any of its keys.
+	private MappingModelExpressible<?> determineRequiredMapping(SqmExpression<?> operand, FromClauseIndex fromClauseIndex) {
+		return isComparedByAnyKey( operand, fromClauseIndex ) ? null : determineValueMapping( operand, fromClauseIndex );
+	}
+
+	/// The mapping which the given operands of a comparison require of the other operand:
+	/// that of the first operand to require one, or the identifier if any is an entity parameter.
+	private MappingModelExpressible<?> determineRequiredMapping(
+			List<? extends SqmExpression<?>> operands,
+			FromClauseIndex fromClauseIndex) {
+		MappingModelExpressible<?> required = null;
+		for ( var operand : operands ) {
+			final var mapping = determineValueMapping( operand, fromClauseIndex );
+			if ( mapping != null ) {
+				if ( !( mapping instanceof EntityValuedModelPart || mapping instanceof PluralAttributeMapping ) ) {
+					// not a comparison of entities
+					return required == null ? mapping : required;
+				}
+				else if ( operand instanceof SqmParameter<?> ) {
+					return mapping;
+				}
+				else if ( required == null && !isComparedByAnyKey( operand, fromClauseIndex ) ) {
+					required = mapping;
+				}
+			}
+		}
+		return required;
+	}
+
+	private boolean isComparedByAnyKey(SqmExpression<?> operand, FromClauseIndex fromClauseIndex) {
+		// a join of an association which cannot be compared by its foreign key has the mapping of its entity too
+		return ( operand instanceof SqmFrom<?, ?> && !( operand instanceof SqmAttributeJoin<?, ?> )
+					|| operand instanceof SqmSubQuery<?>
+					|| operand instanceof SqmAny<?>
+					|| operand instanceof SqmEvery<?> )
+			&& determineValueMapping( operand, fromClauseIndex ) instanceof EntityMappingType;
 	}
 
 	private Predicate toBooleanExpressionPredicate(Expression lhs, ComparisonOperator operator, Expression rhs) {
@@ -8469,10 +8536,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final Expression upperBound;
 
 		inferrableTypeAccessStack.push(
-				() -> coalesceSuppliedValues(
-						() -> determineValueMapping( predicate.getLowerBound(), fromClauseIndex ),
-						() -> determineValueMapping( predicate.getUpperBound(), fromClauseIndex )
-				)
+				() -> determineRequiredMapping( List.of( predicate.getLowerBound(), predicate.getUpperBound() ), fromClauseIndex )
 		);
 
 		try {
@@ -8484,7 +8548,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		inferrableTypeAccessStack.push(
 				() -> coalesceSuppliedValues(
-						() -> determineValueMapping( predicate.getExpression(), fromClauseIndex ),
+						() -> determineComparisonMapping( predicate.getLowerBound(), expression, predicate.getExpression(), fromClauseIndex ),
 						() -> determineValueMapping( predicate.getUpperBound(), fromClauseIndex )
 				)
 		);
@@ -8497,7 +8561,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		inferrableTypeAccessStack.push(
 				() -> coalesceSuppliedValues(
-						() -> determineValueMapping( predicate.getExpression(), fromClauseIndex ),
+						() -> determineComparisonMapping( predicate.getUpperBound(), expression, predicate.getExpression(), fromClauseIndex ),
 						() -> determineValueMapping( predicate.getLowerBound(), fromClauseIndex )
 				)
 		);
@@ -8591,17 +8655,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		// otherwise - no special case...
 		final var fromClauseIndex = fromClauseIndexStack.getCurrent();
-		inferrableTypeAccessStack.push(
-				() -> {
-					for ( var listExpression : listExpressions ) {
-						final var mapping = determineValueMapping( listExpression, fromClauseIndex );
-						if ( mapping != null ) {
-							return mapping;
-						}
-					}
-					return null;
-				}
-		);
+		inferrableTypeAccessStack.push( () -> determineRequiredMapping( listExpressions, fromClauseIndex ) );
 		final Expression testExpression;
 		try {
 			testExpression = (Expression) visitWithRequiredResult( predicate.getTestExpression() );
@@ -8686,14 +8740,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			QueryParameterBinding<?> domainParamBinding) {
 		final var iterator = domainParamBinding.getBindValues().iterator();
 
-		final var testExpression = (Expression) visitWithRequiredResult( sqmPredicate.getTestExpression() );
+		final var fromClauseIndex = fromClauseIndexStack.getCurrent();
+		final var testExpression = interpretComparisonOperand( sqmPredicate.getTestExpression(),
+				() -> determineValueMapping( sqmParameter, fromClauseIndex ) );
 		final var inListPredicate = new InListPredicate(
 				testExpression,
 				sqmPredicate.isNegated(),
 				getBooleanType()
 		);
-
-		final var fromClauseIndex = fromClauseIndexStack.getCurrent();
 
 		if ( !iterator.hasNext() ) {
 			final var expressible =
@@ -8727,7 +8781,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final var testExpression = predicate.getTestExpression();
 		final var subQueryExpression = predicate.getSubQueryExpression();
 		final var fromClauseIndex = fromClauseIndexStack.getCurrent();
-		final Expression sqlTestExpression = visitWithInferredType( testExpression, subQueryExpression );
+		final var sqlTestExpression = interpretComparisonOperand( testExpression,
+				() -> determineRequiredMapping( subQueryExpression, fromClauseIndex ) );
 		return new InSubQueryPredicate(
 				sqlTestExpression,
 				(SelectStatement) visitWithInferredType(

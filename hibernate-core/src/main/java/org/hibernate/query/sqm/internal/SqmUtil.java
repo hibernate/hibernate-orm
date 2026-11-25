@@ -299,6 +299,18 @@ public class SqmUtil {
 		return false;
 	}
 
+	/**
+	 * Whether the foreign key of an association stands for the identifier of its target,
+	 * so that the target need not be joined. It does not when the target is joined for
+	 * every read, because the association is {@code @NotFound}, because the target has
+	 * {@code @SQLRestriction} or {@code @SoftDelete}, or because an enabled filter or a
+	 * changeset {@linkplain #hasRestrictedTarget restricts the target}.
+	 */
+	public static boolean canUseForeignKey(
+			EntityAssociationMapping association, SqmToSqlAstConverter creationState) {
+		return association.isFkOptimizationAllowed() && !hasRestrictedTarget( association, creationState );
+	}
+
 	private static boolean shouldRenderTargetSide(
 			SqmPath<?> sqmPath,
 			EntityAssociationMapping association,

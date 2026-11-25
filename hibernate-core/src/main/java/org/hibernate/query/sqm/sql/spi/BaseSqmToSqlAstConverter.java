@@ -127,6 +127,7 @@ import org.hibernate.sql.ast.spi.result.DomainResultProducer;
 import org.hibernate.query.sqm.sql.internal.EmbeddableValuedExpression;
 import org.hibernate.query.sqm.sql.internal.EmbeddableValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.EntityValuedPathInterpretation;
+import org.hibernate.query.sqm.sql.internal.ForeignKeyAssignment;
 import org.hibernate.query.sqm.sql.internal.NonAggregatedCompositeValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.PluralValuedSimplePathInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqlAstProcessingStateImpl;
@@ -4907,6 +4908,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public Expression visitEntityValuedPath(SqmEntityValuedSimplePath<?> sqmPath) {
 		final var inferredMapping = getInferredValueMapping();
+		final var foreignKey = inferredMapping == null ? ForeignKeyAssignment.resolve( sqmPath, this ) : null;
+		if ( foreignKey != null ) {
+			return EntityValuedPathInterpretation.from( sqmPath, foreignKey, this );
+		}
 		final var fromClauseIndex = getFromClauseIndex();
 		if ( inferredMapping instanceof EntityMappingType
 				&& resolveMappingModelExpressible( sqmPath, getMappingMetamodel(), fromClauseIndex::findTableGroup )

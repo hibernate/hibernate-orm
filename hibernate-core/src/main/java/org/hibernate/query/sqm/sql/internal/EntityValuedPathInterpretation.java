@@ -17,7 +17,6 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
-import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleEntityValuedModelPart;
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
@@ -52,6 +51,26 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 	private final Expression sqlExpression;
 	private final ModelPart parameterInferenceMapping;
 	private final @Nullable String affectedTableName;
+
+	/**
+	 * An assignment to a foreign key, or to a part of it, as {@linkplain ForeignKeyAssignment#resolve resolved}
+	 * for an assignment through a to-one.
+	 */
+	public static <T> EntityValuedPathInterpretation<T> from(
+			SqmEntityValuedSimplePath<T> sqmPath,
+			ForeignKeyAssignment foreignKey,
+			SqmToSqlAstConverter sqlAstCreationState) {
+		// an entity-valued path assigns a to-one
+		final var mapping = (EntityValuedModelPart) foreignKey.assignedPart();
+		return from(
+				sqmPath.getNavigablePath(),
+				foreignKey.ownerTableGroup(),
+				foreignKey.keyPart(),
+				mapping,
+				mapping,
+				sqlAstCreationState
+		);
+	}
 
 	public static <T> EntityValuedPathInterpretation<T> from(
 			SqmEntityValuedSimplePath<T> sqmPath,
@@ -197,15 +216,6 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 					resultTableGroup = tableGroup;
 				}
 			}
-			else if ( inferredMapping == null
-					&& hasNotFound( mapping )
-					&& sqlAstCreationState.getCurrentClauseStack().getCurrent() == Clause.SET ) {
-				// for not-found mappings encountered in the SET clause of an UPDATE statement
-				// we will want to (1) not join and (2) render the fk
-				resultModelPart = keyTargetMatchPart;
-				resultTableGroup = sqlAstCreationState.getFromClauseAccess()
-						.findTableGroup( tableGroup.getNavigablePath().getParent() );
-			}
 			else {
 				// If the mapping is an inverse association, use the PK and disallow FK optimizations
 				resultModelPart = associationMapping.getAssociatedEntityMappingType().getIdentifierMapping();
@@ -259,10 +269,6 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		else {
 			return  false;
 		}
-	}
-
-	private static boolean hasNotFound(EntityValuedModelPart mapping) {
-		return mapping instanceof ToOneAttributeMapping && ( (ToOneAttributeMapping) mapping ).hasNotFoundAction();
 	}
 
 	private static boolean hasJoinTable(EntityAssociationMapping associationMapping) {

@@ -2,10 +2,12 @@ package org.hibernate.orm.test.query.hql;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import org.hibernate.Hibernate;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -31,7 +33,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
  * is compared by some other key by its identifier too.
  * <p>
  * Cart 1 holds items 1 and 2, cart 2 holds items 3 and 4, and cart 3 is empty. Item 5 is
- * in no cart. Every collection of a cart holds the same items.
+ * in no cart. Every collection of a cart holds the same items, and the favorite item of
+ * a cart is its last item.
  */
 @DomainModel(annotatedClasses = {
 		UniqueKeyJoinTableComparisonTest.Cart.class,
@@ -61,6 +64,7 @@ class UniqueKeyJoinTableComparisonTest {
 						cart.alternateItems.add( item );
 						cart.pkItems.add( item );
 					}
+					cart.favorite = items[2 * id];
 				}
 				session.persist( cart );
 			}
@@ -95,6 +99,25 @@ class UniqueKeyJoinTableComparisonTest {
 						Long.class )
 				.setParameter( "value", session.find( Item.class, 1L ) )
 				.getResultList() ) ) );
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {
+			"item in (cart.favorite, :value)", "item in (:value, cart.favorite)",
+			"item between :value and cart.favorite", "cart.favorite in (:value, item)",
+			"item in (cart.favorite, other, :value)"
+	})
+	void elementComparedWithToOneAndParameter(String predicate, SessionFactoryScope scope) {
+		// a to-one association which references a unique key is compared by that key, and so is everything else
+		final String from = predicate.contains( "other" )
+				? "Cart cart join cart.items item join cart.alternateItems other"
+				: "Cart cart join cart.items item";
+		scope.inTransaction( session -> assertEquals( predicate.startsWith( "cart.favorite" ) ? "2" : predicate.contains( "other" ) ? "1,1,2,2" : "1,2",
+				ids( session.createQuery(
+								"select item.id from " + from + " where cart.id = 1 and " + predicate + " order by item.id",
+								Long.class )
+						.setParameter( "value", session.find( Item.class, 1L ) )
+						.getResultList() ) ) );
 	}
 
 	@ParameterizedTest
@@ -263,6 +286,10 @@ class UniqueKeyJoinTableComparisonTest {
 	public static class Cart {
 		@Id
 		public long id;
+
+		@ManyToOne(fetch = FetchType.LAZY)
+		@JoinColumn(name = "favorite_code", referencedColumnName = "code")
+		public Item favorite;
 
 		@ManyToMany
 		@JoinTable(

@@ -8349,8 +8349,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	/// if that operand is interpreted first, or `null` if it requires none. An association
 	/// is compared by its foreign key, and an entity parameter by its identifier, which is
 	/// always available, and has one value however many times the parameter occurs. An
-	/// entity which is an element of the `from` clause, or which a subquery selects, may
-	/// be compared by any of its keys.
+	/// entity which is an element of the `from` clause, which a subquery selects, or which
+	/// is a literal, may be compared by any of its keys.
 	private MappingModelExpressible<?> determineRequiredMapping(SqmExpression<?> operand, FromClauseIndex fromClauseIndex) {
 		return isComparedByAnyKey( operand, fromClauseIndex ) ? null : determineValueMapping( operand, fromClauseIndex );
 	}
@@ -8392,7 +8392,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return ( operand instanceof SqmFrom<?, ?> && !( operand instanceof SqmAttributeJoin<?, ?> )
 					|| operand instanceof SqmSubQuery<?>
 					|| operand instanceof SqmAny<?>
-					|| operand instanceof SqmEvery<?> )
+					|| operand instanceof SqmEvery<?>
+					// the value of a literal is at hand, along with every key of the entity
+					|| operand instanceof SqmLiteral<?> )
 			&& determineValueMapping( operand, fromClauseIndex ) instanceof EntityMappingType;
 	}
 

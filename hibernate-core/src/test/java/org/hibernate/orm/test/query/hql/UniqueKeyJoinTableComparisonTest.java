@@ -101,6 +101,31 @@ class UniqueKeyJoinTableComparisonTest {
 	}
 
 	@ParameterizedTest
+	@ValueSource(booleans = { false, true })
+	void toOneComparedWithEntityLiteral(boolean managed, SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final Item item;
+			if ( managed ) {
+				item = session.find( Item.class, 2L );
+			}
+			else {
+				// a literal is compared by the key it holds, so it needs no identifier
+				item = new Item();
+				item.code = "B";
+			}
+			final var builder = session.getCriteriaBuilder();
+			final var equal = builder.createQuery( Long.class );
+			final var cart = equal.from( Cart.class );
+			equal.select( cart.get( "id" ) ).where( builder.equal( cart.get( "favorite" ), builder.literal( item ) ) );
+			assertEquals( List.of( 1L ), session.createQuery( equal ).getResultList() );
+			final var in = builder.createQuery( Long.class );
+			final var other = in.from( Cart.class );
+			in.select( other.get( "id" ) ).where( other.get( "favorite" ).in( builder.literal( item ) ) );
+			assertEquals( List.of( 1L ), session.createQuery( in ).getResultList() );
+		} );
+	}
+
+	@ParameterizedTest
 	@ValueSource(strings = { "item in (cart.favorite, :value)", "item in (:value, cart.favorite)" })
 	void toOneAndParameterUseIdentifier(String predicate, SessionFactoryScope scope) {
 		final var observer = scope.getCollectingStatementObserver();

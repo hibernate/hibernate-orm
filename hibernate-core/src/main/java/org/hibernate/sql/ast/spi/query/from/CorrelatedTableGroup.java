@@ -45,6 +45,15 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 		return correlatedTableGroup;
 	}
 
+	/**
+	 * A join is added to the from clause of the subquery as a root, with its
+	 * predicate in the where clause, so it is always an inner join.
+	 */
+	@Override
+	public boolean canUseLeftJoins() {
+		return false;
+	}
+
 	@Override
 	public void addTableGroupJoin(TableGroupJoin join) {
 		assert !getTableGroupJoins().contains( join );

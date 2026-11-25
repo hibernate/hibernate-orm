@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 
 import static jakarta.persistence.InheritanceType.TABLE_PER_CLASS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.cfg.FlushSettings.FLUSH_QUEUE_TYPE;
 import static org.hibernate.cfg.StateManagementSettings.TEMPORAL_TABLE_STRATEGY;
 import static org.hibernate.testing.orm.junit.DialectContext.awaitTimestampTick;
 
@@ -39,6 +40,30 @@ class TablePerClassVersionedTemporalMutationTest {
 		scope.inTransaction( session -> assertThat( session.createNativeQuery(
 				"select count(*) from temporal_versioned_vehicle where id = 1 and superseded is not null", Long.class
 		).getSingleResult() ).isEqualTo( 1L ) );
+	}
+
+	@Test
+	@SessionFactory
+	@ServiceRegistry(settings = {
+		@Setting(name = TEMPORAL_TABLE_STRATEGY, value = "HISTORY_TABLE"),
+		@Setting(name = FLUSH_QUEUE_TYPE, value = "graph")
+	})
+	@JiraKey("HHH-21275")
+	void persistRootAndLeafWithHistory(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.persist( new Vehicle( 1 ) );
+			final var car = new Car();
+			car.id = 2;
+			session.persist( car );
+		} );
+		scope.inTransaction( session -> {
+			assertThat( session.find( Vehicle.class, 1 ) ).isExactlyInstanceOf( Vehicle.class );
+			assertThat( session.find( Car.class, 2 ) ).isNotNull();
+			assertThat( session.createNativeQuery(
+					"select id from temporal_versioned_vehicle_history where effective is not null and superseded is null order by id",
+					Integer.class
+			).getResultList() ).containsExactly( 1, 2 );
+		} );
 	}
 
 	@Entity(name = "Vehicle")

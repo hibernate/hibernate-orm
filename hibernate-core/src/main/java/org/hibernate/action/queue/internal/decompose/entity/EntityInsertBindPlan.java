@@ -29,6 +29,7 @@ import java.util.List;
 
 import static org.hibernate.action.queue.internal.decompose.entity.BindPlanHelper.shouldBindJdbcValue;
 import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.temporal.TemporalTableStrategy.SINGLE_TABLE;
 
 /// Bind plan for entity insert operations.
 /// Uses on-demand decomposition to minimize allocation overhead.
@@ -239,7 +240,9 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 			JdbcValueBindings valueBindings,
 			SharedSessionContractImplementor session) {
 		final TemporalMapping temporalMapping = entityPersister.getTemporalMapping();
-		if ( temporalMapping == null || !TemporalMutationHelper.isUsingParameters( session ) ) {
+		if ( temporalMapping == null
+				|| session.getFactory().getSessionFactoryOptions().getTemporalTableStrategy() != SINGLE_TABLE
+				|| !TemporalMutationHelper.isUsingParameters( session ) ) {
 			return;
 		}
 

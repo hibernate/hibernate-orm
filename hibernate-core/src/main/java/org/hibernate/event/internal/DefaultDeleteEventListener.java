@@ -288,6 +288,8 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 			&& TenantIdHelper.tenantIdAttribute( persister ) == null
 			// the audit log records the state of a deleted entity
 			&& persister.getAuditMapping() == null
+			// the row is restricted by its partition key, which is only known once it is read
+			&& !persister.hasPartitionedSelectionMapping()
 			&& !persister.hasSubclasses() //TODO: should be unnecessary, using EntityPersister.getSubclassPropertyTypeClosure(), etc
 			&& !persister.hasCascadeDelete()
 			&& !persister.hasNaturalIdentifier()

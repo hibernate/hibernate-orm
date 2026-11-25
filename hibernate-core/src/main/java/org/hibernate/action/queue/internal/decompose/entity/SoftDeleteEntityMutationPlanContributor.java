@@ -32,7 +32,7 @@ public class SoftDeleteEntityMutationPlanContributor implements EntityMutationPl
 	private final SessionFactoryImplementor sessionFactory;
 	private final boolean versioned;
 	private final TableUpdate<?> softDeleteOperation;
-	private final TableUpdate<?> unloadedSoftDeleteOperation;
+	private final TableUpdate<?> unversionedSoftDeleteOperation;
 
 	public SoftDeleteEntityMutationPlanContributor(
 			EntityPersister entityPersister,
@@ -43,8 +43,8 @@ public class SoftDeleteEntityMutationPlanContributor implements EntityMutationPl
 		this.sessionFactory = sessionFactory;
 		this.versioned = this.entityPersister.optimisticLockStyle().isVersion()
 				&& this.entityPersister.getVersionMapping() != null;
-		this.softDeleteOperation = generateSoftDeleteOperation( true, null );
-		this.unloadedSoftDeleteOperation = versioned || this.entityPersister.hasPartitionedSelectionMapping()
+		this.softDeleteOperation = generateSoftDeleteOperation( versioned, null );
+		this.unversionedSoftDeleteOperation = versioned
 				? generateSoftDeleteOperation( false, null )
 				: softDeleteOperation;
 	}
@@ -59,21 +59,17 @@ public class SoftDeleteEntityMutationPlanContributor implements EntityMutationPl
 			DeleteContext context,
 			Consumer<FlushOperation> operationConsumer) {
 		final Object identifier = context.identifier();
-		// An entity which is deleted without being loaded has no version to check,
-		// and no state from which to restrict by its partition key
-		final boolean loaded = context.action().getInstance() != null;
-		final boolean applyVersion = versioned && loaded;
-		final var loadedState = loaded ? loadedState( context ) : null;
+		// An entity which is deleted without being loaded has no version to check.
+		// An entity with a partition key is always loaded before it is deleted.
+		final boolean applyVersion = versioned && context.action().getInstance() != null;
+		final var loadedState = loadedState( context );
 		final var partitionKeys = PartitionKeyValue.fromState( entityPersister, loadedState, context.session() );
 		final TableUpdate<?> update;
-		if ( !loaded ) {
-			update = unloadedSoftDeleteOperation;
-		}
-		else if ( PartitionKeyValue.hasNull( partitionKeys ) ) {
-			update = generateSoftDeleteOperation( true, partitionKeys );
+		if ( PartitionKeyValue.needsDynamicRestriction( entityPersister, partitionKeys ) ) {
+			update = generateSoftDeleteOperation( applyVersion, partitionKeys );
 		}
 		else {
-			update = softDeleteOperation;
+			update = applyVersion ? softDeleteOperation : unversionedSoftDeleteOperation;
 		}
 		final var mutation = update.createMutationOperation( null, sessionFactory );
 		final var tableMapping = (TableDescriptorAsTableMapping) mutation.getTableDetails();
@@ -100,17 +96,19 @@ public class SoftDeleteEntityMutationPlanContributor implements EntityMutationPl
 		return true;
 	}
 
+	/// The state of the entity when it was loaded, or `null` if there is no snapshot
+	/// of it, as for a read-only entity, whose current state may differ from the
+	/// persistent state
 	private static Object[] loadedState(DeleteContext context) {
-		final var entityEntry =
-				context.session().getPersistenceContextInternal()
-						.getEntry( context.action().getInstance() );
-		final Object[] loadedState = entityEntry == null ? null : entityEntry.getLoadedState();
-		return loadedState == null ? context.state() : loadedState;
+		final Object instance = context.action().getInstance();
+		final var entityEntry = instance == null ? null
+				: context.session().getPersistenceContextInternal().getEntry( instance );
+		return entityEntry == null ? null : entityEntry.getLoadedState();
 	}
 
 	/// @param partitionKeys the partition key of the instance, or `null` for a
 	///                      statement with a parameter for each column
-	private TableUpdate<?> generateSoftDeleteOperation(boolean loaded, List<PartitionKeyValue> partitionKeys) {
+	private TableUpdate<?> generateSoftDeleteOperation(boolean applyVersion, List<PartitionKeyValue> partitionKeys) {
 		final var softDeleteMapping = entityPersister.getSoftDeleteMapping();
 		assert softDeleteMapping != null;
 
@@ -130,16 +128,14 @@ public class SoftDeleteEntityMutationPlanContributor implements EntityMutationPl
 
 		tableUpdateBuilder.addKeyRestrictions( rootTableDescriptor.keyDescriptor() );
 		applySoftDelete( softDeleteMapping, tableUpdateBuilder );
-		if ( loaded ) {
-			if ( entityPersister.hasPartitionedSelectionMapping() ) {
-				// only the partition key columns of the root table restrict the soft delete
-				PartitionKeyValue.addRestrictions( entityPersister,
-						Map.of( rootTableDescriptor.name(), tableUpdateBuilder ), partitionKeys,
-						TableMapping::getUpdateDetails );
-			}
-			if ( versioned ) {
-				tableUpdateBuilder.addOptimisticLockRestriction( entityPersister.getVersionMapping() );
-			}
+		if ( entityPersister.hasPartitionedSelectionMapping() ) {
+			// only the partition key columns of the root table restrict the soft delete
+			PartitionKeyValue.addRestrictions( entityPersister,
+					Map.of( rootTableDescriptor.name(), tableUpdateBuilder ), partitionKeys,
+					TableMapping::getUpdateDetails );
+		}
+		if ( applyVersion ) {
+			tableUpdateBuilder.addOptimisticLockRestriction( entityPersister.getVersionMapping() );
 		}
 		TenantIdHelper.applyTenantRestriction( entityPersister, tableUpdateBuilder );
 

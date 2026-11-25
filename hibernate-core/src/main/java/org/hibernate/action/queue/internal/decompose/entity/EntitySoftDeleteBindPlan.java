@@ -104,7 +104,7 @@ public class EntitySoftDeleteBindPlan implements BindPlan, OperationResultChecke
 		if ( versionMapping == null ) {
 			return;
 		}
-		if ( tableDescriptor.name().equals( versionMapping.getContainingTableExpression() ) ) {
+		if ( tableDescriptor.name().equals( entityPersister.physicalTableNameForMutation( versionMapping ) ) ) {
 			versionMapping.decompose(
 					version,
 					0,

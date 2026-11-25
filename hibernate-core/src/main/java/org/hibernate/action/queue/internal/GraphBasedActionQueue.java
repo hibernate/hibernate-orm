@@ -25,9 +25,12 @@ import org.hibernate.action.queue.internal.constraint.DeferrableConstraintMode;
 import org.hibernate.action.queue.internal.plan.FlushPlan;
 import org.hibernate.action.queue.internal.support.GraphBasedActionQueueFactory;
 import org.hibernate.action.spi.Executable;
+import org.hibernate.audit.ModificationType;
+import org.hibernate.audit.spi.AuditWriter;
 import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
 import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.TransactionCompletionCallbacksImplementor;
 import org.hibernate.event.spi.EventSource;
@@ -1023,6 +1026,24 @@ public class GraphBasedActionQueue implements ActionQueue {
 	@Override
 	public void setAuditChangesetContext(Object changelog, org.hibernate.Session changesetSession) {
 		// Graph audit execution resolves changelog context directly from the session.
+	}
+
+	@Override
+	public void addAuditEntry(
+			EntityKey entityKey,
+			Object entity,
+			Object[] values,
+			ModificationType modificationType,
+			AuditWriter writer) {
+		// The audit rows of this queue are written from the changes it collects,
+		// which the entry of an immediately executed insert must be merged with.
+		auditMutationCollector.entityChanged(
+				entityKey,
+				entity,
+				values,
+				modificationType,
+				entityKey.getPersister().getEntityAuditSupport()
+		);
 	}
 
 	/// Performs cleanup of any held cache soft locks.

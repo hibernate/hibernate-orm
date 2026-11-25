@@ -84,7 +84,7 @@ public class AuditLogImpl implements AuditLog {
 		final var entityName = requireAuditedEntityName( entityClass );
 		return auditSession.createSelectionQuery(
 				"select changesetId(e) from " + entityName + " e"
-						+ " where e.id = :id"
+						+ " where id(e) = :id"
 						+ " order by changesetId(e)",
 				Object.class
 		).setParameter( "id", id ).getResultList();
@@ -98,7 +98,7 @@ public class AuditLogImpl implements AuditLog {
 		final var entityName = requireAuditedEntityName( entityClass );
 		return auditSession.createSelectionQuery(
 						"select modificationType(e) from " + entityName + " e"
-								+ " where e.id = :id"
+								+ " where id(e) = :id"
 								+ " and changesetId(e) = :csId",
 						ModificationType.class
 				).setParameter( "id", id )
@@ -232,13 +232,13 @@ public class AuditLogImpl implements AuditLog {
 					+ " from " + entityName + " e"
 					+ " join " + changelogName + " r"
 					+ " on r." + changesetIdProperty + " = changesetId(e)"
-					+ " where e.id = :id"
+					+ " where id(e) = :id"
 					+ " order by changesetId(e)";
 		}
 		else {
 			hql = "select e, changesetId(e), modificationType(e)"
 					+ " from " + entityName + " e"
-					+ " where e.id = :id"
+					+ " where id(e) = :id"
 					+ " order by changesetId(e)";
 		}
 

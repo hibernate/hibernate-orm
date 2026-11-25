@@ -25,8 +25,15 @@ public final class GaussDBMModeSequenceInformationExtractor {
 
 	public static final SequenceInformationExtractor INSTANCE =
 			SequenceInformationExtractors.builder( "select c.relname as relname, (pg_sequence_parameters(c.oid)).increment as increment from pg_class c where c.relkind='S'" )
+					// the Builder's default readers read fixed column labels ("sequence_name",
+					// "start_value", ...); the lookup SQL only exposes relname + increment, so
+					// every column reader must either be mapped or disabled explicitly
+					.sequenceNameColumn( "relname" )
 					.withoutCatalog()
 					.withoutSchema()
+					.withoutStartValue()
+					.withoutMinimumValue()
+					.withoutMaximumValue()
 					// pg_sequence_parameters(oid) exposes the increment as its "increment" field; aliased to
 					// "increment" in the lookup SQL above. Non-null so SequenceInformation.getIncrementValue()
 					// works (HHH-12973).

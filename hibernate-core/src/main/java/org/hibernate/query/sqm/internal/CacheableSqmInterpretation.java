@@ -1,6 +1,9 @@
 package org.hibernate.query.sqm.internal;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
+import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.tree.spi.expression.SqmParameter;
 import org.hibernate.sql.ast.spi.Statement;
@@ -17,6 +20,21 @@ public record CacheableSqmInterpretation<S extends Statement, J extends JdbcOper
 		S statement,
 		J jdbcOperation,
 		Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref,
-		Map<SqmParameter<?>, MappingModelExpressible<?>> sqmParameterMappingModelTypes) {
+		Map<SqmParameter<?>, MappingModelExpressible<?>> sqmParameterMappingModelTypes,
+		@Nullable DomainParameterXref domainParameterXref) {
 
+	public CacheableSqmInterpretation(
+			S statement, J jdbcOperation,
+			Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref,
+			Map<SqmParameter<?>, MappingModelExpressible<?>> sqmParameterMappingModelTypes) {
+		this( statement, jdbcOperation, jdbcParamsXref, sqmParameterMappingModelTypes, null );
+	}
+
+	public DomainParameterXref parameterXrefOr(DomainParameterXref fallback) {
+		return domainParameterXref == null ? fallback : domainParameterXref;
+	}
+
+	public boolean matches(QueryParameterBindings bindings) {
+		return domainParameterXref == null || domainParameterXref.matches( bindings );
+	}
 }

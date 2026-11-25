@@ -75,6 +75,7 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T> {
 	}
 
 	/// A transient criteria value may identify the target of an association by its unique key alone.
+	@Override
 	public boolean isEntityWithoutIdentifier() {
 		return entityWithoutIdentifier;
 	}

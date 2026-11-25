@@ -4779,14 +4779,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Expression visitBasicValuedPath(SqmBasicValuedSimplePath<?> sqmPath) {
-		final var path = prepareReusablePath(
-				sqmPath,
-				() -> BasicValuedPathInterpretation.from(
+		final var foreignKey = ForeignKeyAssignment.resolve( sqmPath, this );
+		final BasicValuedPathInterpretation<?> path = foreignKey != null
+				? BasicValuedPathInterpretation.from( sqmPath, foreignKey, this )
+				: prepareReusablePath(
 						sqmPath,
-						this,
-						jpaQueryComplianceEnabled
-				)
-		);
+						() -> BasicValuedPathInterpretation.from(
+								sqmPath,
+								this,
+								jpaQueryComplianceEnabled
+						)
+				);
 		Expression result = path;
 		if ( isDuration( sqmPath.getNodeType() ) ) {
 
@@ -4871,6 +4874,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Expression visitEmbeddableValuedPath(SqmEmbeddedValuedSimplePath<?> sqmPath) {
+		final var foreignKey = ForeignKeyAssignment.resolve( sqmPath, this );
+		if ( foreignKey != null ) {
+			return EmbeddableValuedPathInterpretation.from( sqmPath, foreignKey, this );
+		}
 		return withTreatRestriction(
 				prepareReusablePath(
 						sqmPath,

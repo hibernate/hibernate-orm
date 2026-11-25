@@ -18,6 +18,15 @@ this guide explains how to implement, package, and verify one. Read the
 link:{doc-spi-url}[SPI and Service Provider Guide] first for the meaning of
 `USE`, `IMPLEMENT`, and `SUPPLY`.
 
+A few terms recur throughout:
+
+provider:: The independently published artifact which contains the Dialect, and its author.
+provider-owned:: Written and maintained by the provider, as opposed to supplied by Hibernate.
+strategy:: An object which describes one coherent piece of database behavior, such as
+identifier quoting or pagination. A _focused_ strategy covers that one piece and nothing else.
+supply point:: The Dialect method from which Hibernate obtains a strategy.
+profile:: An immutable strategy which answers several related questions together.
+
 == Provider project setup
 
 Compile against the normal `org.hibernate.orm:hibernate-core` artifact. Do not
@@ -70,13 +79,12 @@ the `DialectResolutionInfo` version before inherited registration begins.
 Keep minimum-version resolution construction-safe: it must not read subclass
 fields before the superclass constructor has completed.
 
-Applications may select a Dialect explicitly with `hibernate.dialect`.
-
 [[dialect-provider-selection-and-resolution]]
 === Explicit names and automatic resolution
 
-Prefer automatic resolution when the database and driver metadata reliably
-identify the provider's database. Implement `DialectResolver`, return the
+Applications may select a Dialect explicitly with `hibernate.dialect`. Prefer
+automatic resolution when the database and driver metadata reliably identify
+the provider's database, since it needs no configuration. Implement `DialectResolver`, return the
 provider Dialect for recognized `DialectResolutionInfo`, and return `null` to
 let the next resolver try. Register the implementation as a Java service:
 
@@ -197,6 +205,24 @@ provider already knows its database version and the resolution-info constructor
 when bootstrap metadata determines it. Do not infer an implementation contract
 from package placement or Java visibility alone.
 
+=== Incubating contracts
+
+[NOTE]
+====
+The aggregate-column, locking, row-level-security, and temporal-table
+extension families are incubating. Their contracts may change within an
+`X.Y` release family and are excluded from the corresponding SPI compatibility
+guarantee. Check the generated Javadoc for `@Incubating` before depending on a
+strategy, request, result, or SQL AST contract.
+
+The central SQL AST and translator contracts, translator factories and requests,
+`JdbcParameterFactory`, and `JdbcOperations` builders are stable.
+The specialized `SqlAstTranslator.renderNamedSetReturningFunction()` hook and
+`SetReturningFunctionType`, together with the SQM-coupled `QueryTransformer`,
+are incubating. The separate execution, mapping-model mutation, and
+result-processing contracts each carry their own lifecycle markers.
+====
+
 === Identifier, metadata, and literal strategies
 
 See the link:{doc-javadoc-url}org/hibernate/dialect/identifier/spi/package-summary.html[identifier SPI],
@@ -249,6 +275,11 @@ for the complete contracts.
 |Choose name- or label-based extraction according to reliable driver behavior.
 |===
 
+JDBC metadata is authoritative only when it is accessible and trustworthy.
+Metadata-free bootstrap must obtain every required fallback from the Dialect.
+Keyword contribution is therefore a lifecycle operation, while identifier and
+metadata support objects are stable strategies.
+
 [[dialect-provider-delegating-identifier-helper]]
 ==== Decorating identifier helpers
 
@@ -298,8 +329,9 @@ link:{doc-javadoc-url}org/hibernate/dialect/literal/spi/StandardDateTimeLiteralR
 utility supplies just the standard date or time value between those
 database-specific elements.
 
-For example, a database which requires its own timestamp introducer but accepts
-the standard value representation may compose the two concerns:
+For example, a database which requires its own introducers but accepts the
+standard value representation may compose the two concerns. The requested
+precision decides which kind of literal is rendered:
 
 [source,java]
 ----
@@ -309,14 +341,33 @@ public void appendDateTimeLiteral(
         TemporalAccessor temporalAccessor,
         TemporalType precision,
         TimeZone jdbcTimeZone) {
-    appender.appendSql( "vendor_timestamp '" );
-    StandardDateTimeLiteralRendering.appendAsTimestampWithMicros(
-            appender,
-            temporalAccessor,
-            getTemporalValueSemantics().supportsLiteralOffset(),
-            jdbcTimeZone,
-            ZeroOffsetLiteralStyle.NUMERIC_OFFSET
-    );
+    final boolean offset = getTemporalValueSemantics().supportsLiteralOffset();
+    switch ( precision ) {
+        case DATE -> {
+            appender.appendSql( "vendor_date '" );
+            StandardDateTimeLiteralRendering.appendAsDate( appender, temporalAccessor );
+        }
+        case TIME -> {
+            appender.appendSql( "vendor_time '" );
+            StandardDateTimeLiteralRendering.appendAsTime(
+                    appender,
+                    temporalAccessor,
+                    offset,
+                    jdbcTimeZone,
+                    ZeroOffsetLiteralStyle.NUMERIC_OFFSET
+            );
+        }
+        case TIMESTAMP -> {
+            appender.appendSql( "vendor_timestamp '" );
+            StandardDateTimeLiteralRendering.appendAsTimestampWithMicros(
+                    appender,
+                    temporalAccessor,
+                    offset,
+                    jdbcTimeZone,
+                    ZeroOffsetLiteralStyle.NUMERIC_OFFSET
+            );
+        }
+    }
     appender.appendSql( '\'' );
 }
 ----
@@ -327,28 +378,6 @@ Use the overload matching the database's fractional-second precision, and use
 the local-time variants only when the literal syntax intentionally excludes an
 offset. Providers should not import the internal `DateTimeUtils`; the public
 utility is the supported composition boundary.
-
-JDBC metadata is authoritative only when it is accessible and trustworthy.
-Metadata-free bootstrap must obtain every required fallback from the Dialect.
-Keyword contribution is therefore a lifecycle operation, while identifier and
-metadata support objects are stable strategies.
-
-[NOTE]
-====
-The aggregate-column, locking, row-level-security, and temporal-table
-extension families are incubating. Their contracts may change within an
-`X.Y` release family and are excluded from the corresponding SPI compatibility
-guarantee. Check the generated Javadoc for `@Incubating` before depending on a
-strategy, request, result, or SQL AST contract.
-
-The central SQL AST and translator contracts, translator factories and requests,
-`JdbcParameterFactory`, and `JdbcOperations` builders are no longer incubating.
-The specialized `SqlAstTranslator.renderNamedSetReturningFunction()` hook and
-`SetReturningFunctionType`, together with the SQM-coupled `QueryTransformer`,
-remain incubating. This does not stabilize the separate execution, mapping-model
-mutation, or result-processing contracts; their individual lifecycle markers
-continue to apply.
-====
 
 === Type and temporal strategies
 
@@ -422,6 +451,11 @@ for the complete contracts.
 |`TemporalValueSemantics`
 |`getTemporalValueSemantics()`
 |Describe precision loss, rounding, and offset preservation.
+
+|Temporal preservation
+|`TemporalPreservation`
+|`getTemporalPreservation(...)`
+|Report, on evidence, what each pair of descriptors stores of a Java Time value. See <<dialect-provider-temporal-preservation>>.
 
 |System-versioned tables
 |`TemporalTableSupport`
@@ -497,72 +531,159 @@ representation and logs the known limitation once per Java Time class, with
 the offset pair logged together.
 
 Direct access is requested with `hibernate.type.java_time_use_direct_jdbc`,
-and is implied by enabling temporal preservation with
-`hibernate.type.temporal_preservation`. With temporal preservation enabled,
-Hibernate additionally asks the Dialect, through
-link:{doc-javadoc-url}org/hibernate/dialect/Dialect.html#getTemporalPreservation(org.hibernate.type.descriptor.java.JavaType,org.hibernate.type.descriptor.jdbc.JdbcType)[`getTemporalPreservation()`],
-whether each combination of `JavaType` and `JdbcType` used for a Java Time
-value preserves it, and rejects any mapping, and any bound or extracted
-value, for which the answer is not a definite yes.
+and is implied by enabling <<dialect-provider-temporal-preservation,temporal preservation>>.
 
-The answer is a
+[[dialect-provider-temporal-preservation]]
+==== Temporal preservation
+
+An application enables temporal preservation with
+`hibernate.type.temporal_preservation`. Hibernate then stores a Java Time
+value only where it has been told that the value is stored correctly, and
+rejects it everywhere else. It is the Dialect which tells it.
+
+Hibernate asks
+link:{doc-javadoc-url}org/hibernate/dialect/Dialect.html#getTemporalPreservation(org.hibernate.type.descriptor.java.JavaType,org.hibernate.type.descriptor.jdbc.JdbcType)[`Dialect#getTemporalPreservation()`]
+about each combination of `JavaType` and `JdbcType` used for a Java Time
+value. The answer is a
 link:{doc-javadoc-url}org/hibernate/dialect/type/spi/TemporalPreservation.html[`TemporalPreservation`],
 which reports each part of a value (date, time, instant, offset, zone
 identity) as supported, unsupported or unknown, together with the least and
 greatest value which is preserved. The default answer is unknown for
 everything, so a Dialect supports nothing until it says otherwise.
 
+Hibernate rejects a mapping whose combination does not preserve every part
+which the mapping's preservation policy requires, and rejects a bound or
+extracted value which lies outside the reported range.
+
+Build the answer with the factories of `TemporalPreservation`: `ofDate()`,
+`ofTime()`, `ofDateTime()` and `ofInstant()`, or its constructor where the
+parts differ, and `unknown()` for everything else:
+
+[source,java]
+----
+@Override
+public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
+    // established for the vendor's database with version 4.2 of its driver
+    if ( javaType.getClass() == LocalDateJavaType.class
+            && jdbcType.getClass() == LocalDateJdbcType.class ) {
+        return TemporalPreservation.ofDate( LocalDate.of( 1, 1, 1 ), LocalDate.of( 9999, 12, 31 ) );
+    }
+    if ( javaType.getClass() == InstantJavaType.class
+            && jdbcType.getClass() == TimestampUtcAsJdbcTimestampJdbcType.class ) {
+        // the driver uses the Julian calendar for a java.sql.Timestamp before 1582-10-15
+        return TemporalPreservation.ofInstant(
+                TemporalPreservation.InstantBasis.NATIVE,
+                Instant.parse( "1583-01-01T00:00:00Z" ),
+                Instant.parse( "9999-12-31T23:59:59.999999999Z" )
+        );
+    }
+    return TemporalPreservation.unknown();
+}
+----
+
+The helper which Hibernate's own Dialects use for this,
+`StandardTemporalPreservations`, is internal. Do not import it.
+
+===== What to report
+
+Report a combination as supported only on evidence.::
+The evidence must come from the database and its JDBC driver, and must show
+that the stored SQL value is correct by the database's own semantics. A value
+which merely reads back equal proves nothing: a driver may alter it the same
+way in both directions.
+
+Match the exact classes of the two descriptors.::
+A SQL type code, a Java class, or a descriptor's superclass does not establish
+anything, since a subclass may exchange the value differently.
+
+Report each part for what the combination really does.::
+Leave it to the application's preservation policy to decide which parts it
+needs. For an `OffsetDateTime` stored in a column which keeps only the instant,
+report the instant as supported and the offset as unsupported. The mapping is
+then accepted with the `NORMALIZED` policy and rejected with the default one.
+
+Narrow the range.::
+Exclude values for which the driver or the database uses a different calendar
+than Java Time, and values which, read back, cannot be told apart from a
+different stored value.
+
+A conversion may be reported as supported.::
+A combination which converts the value, for example through
+`java.sql.Timestamp`, qualifies on the same evidence, provided the conversion
+uses a fixed time zone. It must not use `hibernate.jdbc.time_zone`, the default
+time zone of the JVM, or the time zone of the database session.
+
+Do not retry another way.::
+A descriptor which retries through a different JDBC call when the driver fails
+must not do so with temporal preservation enabled. The other call has not been
+assessed.
+
+Override inherited answers for a different database.::
+A Dialect which extends another inherits its answers. If it targets a
+different database or driver, those answers were not established for it.
+
+===== Descriptors of the provider
+
 Where the Dialect answers unknown, a `JdbcType` which implements
 link:{doc-javadoc-url}org/hibernate/type/descriptor/jdbc/TemporalJdbcType.html[`TemporalJdbcType`]
 is asked to report for itself. A descriptor which a provider ships alongside
-its Dialect may be reported on in either place; the answer of the Dialect,
+its Dialect may be reported on in either place. The answer of the Dialect,
 when it gives one, is the one which is used.
 
-Report each part for what the combination really does, and leave it to the
-application's preservation policy to decide which parts it needs. For an
-`OffsetDateTime` stored in a column which keeps only the instant, report the
-instant as supported and the offset as unsupported: the mapping is then
-accepted with the `NORMALIZED` policy and rejected with the default one.
+Hibernate checks each value against the report as it passes through
+`BasicBinder` and `BasicExtractor`. A descriptor used for a Java Time value
+must therefore return a `BasicBinder` and a `BasicExtractor` of its own, and
+must not override `BasicExtractor#extract()`. A mapping which uses a
+descriptor that does otherwise is rejected, since its values would escape the
+check.
 
-Report a combination as supported only on evidence from the database and its
-JDBC driver that the stored SQL value is correct by the database's own
-semantics, and not merely that the value reads back equal. Match the
-combination by the exact classes of the two descriptors; a SQL type code, a
-Java class, or a descriptor's superclass does not establish anything. Narrow
-the range to exclude values for which the driver or the database uses a
-different calendar than Java Time, or for which a value read back cannot be
-told apart from a different stored value. A combination which converts the
-value, for example through `java.sql.Timestamp`, may be reported as supported
-on the same evidence, provided the conversion uses a fixed time zone and not
-`hibernate.jdbc.time_zone`, the default time zone of the JVM, or the time zone
-of the database session. A descriptor which retries through a different JDBC
-call when the driver fails must not do so with temporal preservation enabled.
-A Dialect which extends another
-inherits its answers, and must override them if it targets a different
-database or driver.
+Some drivers preserve a value by no JDBC call at all, and the value has to be
+exchanged some other way, for example as text which the database itself
+converts. Register a descriptor which does so under the type code of the
+Java Time class, such as `SqlTypes.LOCAL_DATE_TIME`, when temporal preservation
+is enabled, and return `true` from
+`Dialect#usesJavaTimeJdbcTypeForTemporalPreservation()` for that class.
+Hibernate then maps the class to that descriptor although
+`DirectJavaTimeJdbcSupport` does not report it. A descriptor may wrap the
+parameter and the selected column in SQL through
+`JdbcType#appendWriteExpression()` and `wrapTopLevelSelectionExpression()`.
+`DB2Dialect` does this for a `LocalDateTime`.
 
-A Dialect which reports an instant as stored by the UTC convention, as its date
-and time at UTC in a column which knows of no time zone, should also implement
-`CurrentTemporalSupport.currentUtcTimestamp()` with an expression for the
+===== Instants in a column without a time zone
+
+An instant may be held in a column which itself denotes an instant, reported as
+`InstantBasis.NATIVE`, or as its date and time at UTC in a column which knows
+of no time zone, reported as `InstantBasis.UTC_CONVENTION`.
+
+A Dialect which reports `UTC_CONVENTION` should also implement
+`CurrentTemporalSupport#currentUtcTimestamp()`, with an expression for the
 current date and time at UTC which does not depend on the time zone of the
-database session. It is used for a timestamp generated by the database for
-such a column, for the `instant` and `offset datetime` functions of HQL, for
-`current_timestamp` and `local datetime` where a query compares them with an
-instant, for the timestamp of a soft delete, and for the timestamps of
-temporal and audit tables which come from the database. Without it, each of
-those is rejected. The expression is compared with such a column as well as
-stored in it, so it must have the type of the column: a timestamp without a
-time zone. A timestamp at UTC which still carries a time zone may be stored
-correctly and yet be compared in the time zone of the session.
+database session. Hibernate uses it for:
+
+* a timestamp generated by the database for such a column;
+* the `instant` and `offset datetime` functions of HQL;
+* `current_timestamp` and `local datetime` where a query compares them with an
+  instant;
+* the timestamp of a soft delete; and
+* the timestamps of temporal and audit tables which come from the database.
+
+Without it, each of those is rejected. The expression is compared with such a
+column as well as stored in it, so it must have the type of the column: a
+timestamp without a time zone. A timestamp at UTC which still carries a time
+zone may be stored correctly and yet be compared in the time zone of the
+session.
+
+===== Comparing the current timestamp with an instant
 
 Where a query compares the current date or time of the database with an
 instant held in a column with a time zone, Hibernate relies on the database
-reading the first in the time zone in which it is expressed. A Dialect for a
-database which does not, as SQL Server reads a date and time without a time
-zone as being at UTC while its current timestamp is in the time zone of the
-server, should return `false` from
-`CurrentTemporalSupport.isLocalDateTimeReadInTimeZoneOfCurrentTimestamp()`,
-and such a comparison is then rejected.
+reading the first in the time zone in which it is expressed.
+
+Not every database does. SQL Server reads a date and time without a time zone
+as being at UTC, while its current timestamp is in the time zone of the
+server. A Dialect for such a database should return `false` from
+`CurrentTemporalSupport#isLocalDateTimeReadInTimeZoneOfCurrentTimestamp()`.
+Hibernate then rejects such a comparison.
 
 === Implementing and contributing Java/JDBC types
 
@@ -610,20 +731,9 @@ For independently reusable types, expose a `TypeContributor` as a Java service
 or register it programmatically. A contributor may register both sides of the
 pair and any parameterized constructor in one callback:
 
-[source,java]
+[source,java,indent=0]
 ----
-public final class ProviderTypeContributor implements TypeContributor {
-    @Override
-    public void contribute(
-            TypeContributions contributions,
-            ServiceRegistry serviceRegistry) {
-        contributions.contributeJavaType( ProviderJavaType.INSTANCE );
-        contributions.contributeJdbcType( ProviderJdbcType.INSTANCE );
-        contributions.contributeJdbcTypeConstructor(
-                ProviderJdbcTypeConstructor.INSTANCE
-        );
-    }
-}
+include::{provider-fixture-main-dir}/ExampleTypeContributor.java[tags=type-contributor]
 ----
 
 A Dialect may perform database-specific registration from
@@ -689,7 +799,9 @@ Focused facilities cover common composition needs without exposing their Core
 implementations:
 
 * `DB2JdbcTypes` supplies stable stock descriptors, including the seven Java
-  temporal descriptors with DB2's null-safe typed-`getObject` behavior;
+  temporal descriptors with Db2's null-safe typed-`getObject` behavior. With
+  temporal preservation enabled, `DB2Dialect` itself registers a different
+  descriptor for a `LocalDateTime`;
 * `LobDataExtraction` materializes a binary stream or CLOB using Hibernate's
   standard closing and exception-conversion behavior. It closes the consumed
   stream or reader, but the caller remains responsible for freeing the JDBC
@@ -837,7 +949,7 @@ for the complete contracts.
 |Query hints
 |`QueryHintPlacement`
 |`getQueryHintPlacement()`
-|Coordinate placement with the retained focused hint-rendering methods.
+|Coordinate placement with the Dialect's hint-rendering methods.
 |===
 
 Prefer a named standard profile for a standard database rule:
@@ -855,9 +967,9 @@ must be stated together:
 include::{provider-fixture-main-dir}/ExampleDialect.java[tags=built-query-strategies]
 ----
 
-`SyntheticTableGroupSupport` is the canonical example of this architecture. A
-focused capability replaced database-specific SQM converters which existed
-only to add a synthetic table root for literal grouping or ordering.
+`SyntheticTableGroupSupport` is the canonical example of this architecture. It
+states when a synthetic table root is needed for literal grouping or ordering,
+so no database-specific SQM converter is needed to add one.
 
 [[dialect-provider-function-contracts]]
 === Function contribution and descriptor contracts
@@ -949,6 +1061,7 @@ link:{doc-javadoc-url}org/hibernate/dialect/generated/spi/package-summary.html[g
 link:{doc-javadoc-url}org/hibernate/dialect/rowid/spi/package-summary.html[row-id SPI],
 and link:{doc-javadoc-url}org/hibernate/dialect/rowsecurity/spi/package-summary.html[row-security SPI]
 for the complete contracts.
+
 [cols="23,30,25,22",options="header"]
 |===
 |Concern |Primary contract |Dialect supply point |Provider guidance
@@ -1268,6 +1381,7 @@ parameterBinders)` so the mapping model retains ownership of the concrete
 operation, expectation, callable state, and table metadata.
 ====
 
+[[dialect-provider-translator-operations]]
 Translator subclasses may call
 `getVersionSeedMapping(Expression)` to recognize Hibernate's generated version
 seed and obtain its public mapping, or
@@ -1306,9 +1420,11 @@ parameter ordering, expectation selection, and operation construction. The
 full-MERGE base does not imply that the adjacent `SqlAstTranslatorWithUpsert`
 is a supported provider base.
 
-`Dialect#getHqlTranslator()` and `Dialect#getSqmTranslatorFactory()` no longer
-exist. HQL parsing and general SQM conversion are query-engine-wide concerns,
-not Dialect supply points. Framework integrations which intentionally replace
+=== The global HQL and SQM translators
+
+A Dialect does not supply an HQL translator or an SQM translator factory. HQL
+parsing and general SQM conversion are query-engine-wide concerns, not Dialect
+supply points. Framework integrations which intentionally replace
 them use the global settings `hibernate.query.hql.translator` and
 `hibernate.query.sqm.translator`, exposed downstream by
 link:{doc-javadoc-url}org/hibernate/query/spi/QueryEngineOptions.html[`QueryEngineOptions#getCustomHqlTranslator()` and `getCustomSqmTranslatorFactory()`].
@@ -1370,28 +1486,6 @@ stable API; it does not make the Hibernate API an implementation extension
 point for ordinary provider classes. Extending, implementing, or overriding a
 Hibernate SPI still requires the target contract to declare `IMPLEMENT`.
 
-=== Reviewing internal-use warnings
-
-An internal-use warning is never a compatibility promise. It means the
-provider has chosen to depend on an implementation detail which may change in
-any release. The preferred response is to migrate to a documented API or SPI
-and make the warning disappear.
-
-Hibernate's community Dialects are checked with the same provider-boundary
-engine. Their remaining internal-use warnings stay visible in the generated
-report and carry the same lack of compatibility guarantees. The published
-Gradle plugin intentionally has no allowlist or suppression mechanism.
-
-Common supported migrations include:
-
-* use `org.hibernate.jdbc.spi.JdbcExceptionHelper` to inspect a JDBC exception
-  chain instead of importing the former internal utility;
-* select complete vendor profiles through
-  `TemporaryTableStrategies` instead of importing vendor implementations from
-  `org.hibernate.dialect.temptable.internal`; and
-* use the focused translator operations described below instead of naming
-  internal SQL AST expression or selection implementations.
-
 For Maven, Ant, or intentionally manual test-kit use, expose one
 provider-owned JUnit test factory:
 
@@ -1409,6 +1503,28 @@ be skipped. Mark an optional contract inapplicable only with a nonblank reason.
 These tests verify internal consistency and provider integration. They do not
 certify SQL by executing it against a database. Keep live-database and container
 tests in the provider's own test matrix.
+
+=== Reviewing internal-use warnings
+
+An internal-use warning is never a compatibility promise. It means the
+provider has chosen to depend on an implementation detail which may change in
+any release. The preferred response is to migrate to a documented API or SPI
+and make the warning disappear.
+
+Hibernate's community Dialects are checked with the same provider-boundary
+engine. Their remaining internal-use warnings stay visible in the generated
+report and carry the same lack of compatibility guarantees. The published
+Gradle plugin intentionally has no allowlist or suppression mechanism.
+
+Common supported migrations include:
+
+* use `org.hibernate.jdbc.spi.JdbcExceptionHelper` to inspect a JDBC exception
+  chain instead of importing an internal utility;
+* select complete vendor profiles through
+  `TemporaryTableStrategies` instead of importing vendor implementations from
+  `org.hibernate.dialect.temptable.internal`; and
+* use the <<dialect-provider-translator-operations,translator operations>> instead of naming
+  internal SQL AST expression or selection implementations.
 
 == Provider-specific assertions
 

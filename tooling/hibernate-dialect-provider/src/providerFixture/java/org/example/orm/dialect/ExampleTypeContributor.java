@@ -7,6 +7,7 @@ import org.hibernate.service.ServiceRegistry;
 /// Registers the external fixture's paired Java and JDBC descriptors.
 ///
 /// @author Steve Ebersole
+// tag::type-contributor[]
 public final class ExampleTypeContributor implements TypeContributor {
 	@Override
 	public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
@@ -15,3 +16,4 @@ public final class ExampleTypeContributor implements TypeContributor {
 		typeContributions.contributeJdbcTypeConstructor( ExampleJdbcTypeConstructor.INSTANCE );
 	}
 }
+// end::type-contributor[]

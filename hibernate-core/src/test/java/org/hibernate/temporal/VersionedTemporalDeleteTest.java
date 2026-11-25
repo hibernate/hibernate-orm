@@ -66,6 +66,20 @@ class VersionedTemporalDeleteTest {
 	}
 
 	@Test
+	@SessionFactory
+	@ServiceRegistry(settings = {
+		@Setting(name = TEMPORAL_TABLE_STRATEGY, value = "SINGLE_TABLE"),
+		@Setting(name = FLUSH_QUEUE_TYPE, value = "legacy")
+	})
+	@JiraKey("HHH-21264")
+	void removeUnloadedReferenceInLegacyQueue(SessionFactoryScope scope) {
+		removeUnloadedReference( scope, Item.class );
+		assertEquals( 1L, countClosedRevisions( scope, "temporal_versioned_item" ) );
+		removeUnloadedReference( scope, Car.class );
+		assertEquals( 1L, countClosedRevisions( scope, "temporal_delete_car" ) );
+	}
+
+	@Test
 	void rejectStaleLoadedRevision(SessionFactoryScope scope) {
 		scope.inSession( session -> {
 			final var transaction = session.beginTransaction();

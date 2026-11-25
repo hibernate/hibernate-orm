@@ -49,6 +49,13 @@ public abstract class AbstractVersionedSoftDeleteTest {
 	}
 
 	@Test
+	@JiraKey("HHH-21264")
+	void removeUnloadedInstance(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.remove( session.getReference( Item.class, 1 ) ) );
+		assertSoftDeleted( scope, Item.class, "versioned_soft_item" );
+	}
+
+	@Test
 	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner requires a WHERE clause in the setup UPDATE")
 	void removeStaleInstance(SessionFactoryScope scope) {
 		scope.inSession( session -> {

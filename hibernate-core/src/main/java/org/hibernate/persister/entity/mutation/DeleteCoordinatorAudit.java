@@ -11,6 +11,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperationGroup;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Delete coordinator for audited entities.
  */
@@ -34,10 +36,11 @@ public class DeleteCoordinatorAudit extends AbstractAuditCoordinator implements 
 
 	@Override
 	public void delete(
-			@Nonnull Object entity,
+			@Nullable Object instance,
 			@Nonnull Object id,
 			@Nullable Object version,
 			@Nonnull SharedSessionContractImplementor session) {
+		final var entity = requireNonNull( instance );
 		final var entityEntry = session.getPersistenceContextInternal().getEntry( entity );
 		final Object[] state;
 		final EntityKey entityKey;

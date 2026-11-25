@@ -27,6 +27,7 @@ public class InsertRowsCoordinatorAudit implements InsertRowsCoordinator, Collec
 	private final SessionFactoryImplementor sessionFactory;
 	private final MutationExecutorService mutationExecutorService;
 	private final BasicBatchKey auditBatchKey;
+	private final BasicBatchKey transactionEndBatchKey;
 	@Nullable
 	private final boolean[] indexColumnIsSettable;
 	private final boolean[] elementColumnIsSettable;
@@ -49,6 +50,7 @@ public class InsertRowsCoordinatorAudit implements InsertRowsCoordinator, Collec
 		this.elementColumnIsSettable = elementColumnIsSettable;
 		this.indexIncrementer = indexIncrementer;
 		this.auditBatchKey = new BasicBatchKey( mutationTarget.getRolePath() + "#AUDIT_INSERT" );
+		this.transactionEndBatchKey = new BasicBatchKey( mutationTarget.getRolePath() + "#AUDIT_TRANSACTION_END" );
 		this.mutationExecutorService = sessionFactory.getServiceRegistry().getService( MutationExecutorService.class );
 	}
 
@@ -155,7 +157,7 @@ public class InsertRowsCoordinatorAudit implements InsertRowsCoordinator, Collec
 			return;
 		}
 		final var mutationExecutor = mutationExecutorService.createExecutor(
-				() -> auditBatchKey,
+				() -> transactionEndBatchKey,
 				updateGroup,
 				session
 		);

@@ -2,6 +2,8 @@ package org.hibernate.query.sqm.tree.spi.expression;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import org.hibernate.Hibernate;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.type.BindableType;
 import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.spi.SqmBindableType;
@@ -19,6 +21,7 @@ import java.util.Objects;
  */
 public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T> {
 	private final @Nullable T value;
+	private final boolean entityWithoutIdentifier;
 
 	public ValueBindJpaCriteriaParameter(@Nullable BindableType<? super T> type, @Nullable T value, @Nonnull NodeBuilder nodeBuilder) {
 		super( null, null, false, nodeBuilder );
@@ -35,6 +38,11 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T> {
 						: null
 		);
 		this.value = value;
+		entityWithoutIdentifier = value != null && sqmBindableType != null
+				&& sqmBindableType.getSqmType() instanceof EntityDomainType<?> entity
+				&& Hibernate.isInitialized( value )
+				&& nodeBuilder.getMappingMetamodel().getEntityDescriptor( entity.getHibernateEntityName() )
+						.getIdentifierMapping().getIdentifier( value ) == null;
 	}
 
 	private ValueBindJpaCriteriaParameter(@Nonnull ValueBindJpaCriteriaParameter<T> original) {
@@ -44,6 +52,7 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T> {
 				original.getJavaTypeDescriptor()
 		);
 		this.value = original.value;
+		this.entityWithoutIdentifier = original.entityWithoutIdentifier;
 	}
 
 	@Nonnull
@@ -65,8 +74,22 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T> {
 		SqmLiteral.appendHqlString( hql, getJavaTypeDescriptor(), value );
 	}
 
-	// For caching purposes, any two ValueBindJpaCriteriaParameter objects are compatible as ensured by the parent impl,
-	// but for equals/hashCode, use equals/hashCode of the underlying value, if available, from the nodes JavaType
+	/// A transient criteria value may identify the target of an association by its unique key alone.
+	@Override
+	public boolean isEntityWithoutIdentifier() {
+		return entityWithoutIdentifier;
+	}
+
+	@Override
+	public boolean isCompatible(@Nullable Object object) {
+		return super.isCompatible( object )
+				&& entityWithoutIdentifier == ((ValueBindJpaCriteriaParameter<?>) object).entityWithoutIdentifier;
+	}
+
+	@Override
+	public int cacheHashCode() {
+		return Boolean.hashCode( entityWithoutIdentifier );
+	}
 
 	@Override
 	public final boolean equals(@Nullable Object object) {

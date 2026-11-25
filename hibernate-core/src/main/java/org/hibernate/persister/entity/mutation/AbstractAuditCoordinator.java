@@ -28,6 +28,7 @@ import org.hibernate.sql.model.MutationOperationGroup;
 @Internal
 abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator implements AuditWriter {
 	protected final BasicBatchKey auditBatchKey;
+	private final BasicBatchKey transactionEndBatchKey;
 	protected final boolean[] auditedPropertyMask;
 	@Nullable
 	private final MutationOperationGroup staticAuditInsertGroup;
@@ -40,6 +41,7 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 		this.entityAuditSupport = entityPersister.getEntityAuditSupport();
 		this.auditedPropertyMask = entityAuditSupport.getAuditedPropertyMask();
 		this.auditBatchKey = new BasicBatchKey( entityPersister.getEntityName() + "#AUDIT_INSERT" );
+		this.transactionEndBatchKey = new BasicBatchKey( entityPersister.getEntityName() + "#AUDIT_TRANSACTION_END" );
 		final var staticAuditInsertMutationGroup = entityAuditSupport.getStaticAuditInsertMutationGroup();
 		this.staticAuditInsertGroup = staticAuditInsertMutationGroup == null
 				? null
@@ -58,14 +60,21 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 			@Nonnull Object[] values,
 			@Nonnull ModificationType modificationType,
 			@Nonnull SharedSessionContractImplementor session) {
-		session.getAuditWorkQueue().enqueue(
-				entityKey,
-				entity,
-				values,
-				modificationType,
-				this,
-				session
-		);
+		if ( session.isEventSource() ) {
+			// the action queue of a stateful session decides where its audit entries are collected
+			session.asEventSource().getActionQueue()
+					.addAuditEntry( entityKey, entity, values, modificationType, this );
+		}
+		else {
+			session.getAuditWorkQueue().enqueue(
+					entityKey,
+					entity,
+					values,
+					modificationType,
+					this,
+					session
+			);
+		}
 	}
 
 	@Nonnull
@@ -169,7 +178,7 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 			return;
 		}
 		final var mutationExecutor = mutationExecutorService.createExecutor(
-				() -> auditBatchKey,
+				() -> transactionEndBatchKey,
 				transactionEndUpdateGroup,
 				session
 		);

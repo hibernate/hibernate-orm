@@ -231,7 +231,8 @@ public class SqmUtil {
 			return targetMapping;
 		}
 		// We only need to do this for queries
-		if ( sqlAstCreationState.getCurrentClauseStack().getCurrent() != Clause.FROM
+		if ( ( sqlAstCreationState.getCurrentClauseStack().getCurrent() != Clause.FROM
+						|| preservesTarget( sqmPath.getLhs() ) )
 				&& modelPartContainer.getPartMappingType() != modelPartContainer
 				&& sqmPath.getLhs() instanceof SqmFrom<?, ?> ) {
 			final var modelPart =
@@ -244,6 +245,16 @@ public class SqmUtil {
 			}
 		}
 		return modelPartContainer;
+	}
+
+	/**
+	 * A right or full join returns an associated entity to which no foreign key refers,
+	 * so the key of the entity is never read from the foreign key, not even in the
+	 * predicate of a join.
+	 */
+	private static boolean preservesTarget(@Nullable SqmPath<?> path) {
+		return path instanceof SqmJoin<?, ?> join
+			&& ( join.getSqmJoinType() == SqmJoinType.RIGHT || join.getSqmJoinType() == SqmJoinType.FULL );
 	}
 
 	private static ModelPartContainer getRestrictedTargetMapping(
@@ -643,7 +654,7 @@ public class SqmUtil {
 			else if ( !domainParamBinding.isBound() ) {
 				for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
 					final var jdbcParams = jdbcParamsBinds.get( i );
-					parameterType.forEachJdbcType( (position, jdbcMapping) ->
+					parameterTypeForOccurrence( parameterType, jdbcParams ).forEachJdbcType( (position, jdbcMapping) ->
 							jdbcParameterBindings.addBinding( jdbcParams.get( position ),
 									new JdbcParameterBindingImpl( jdbcMapping, null ) ) );
 				}
@@ -767,14 +778,21 @@ public class SqmUtil {
 		}
 	}
 
+	private static Bindable parameterTypeForOccurrence(Bindable parameterType, JdbcParametersList jdbcParams) {
+		// A single SQM parameter can supply the foreign key in SET and the identifier in WHERE.
+		final var entityMapping = jdbcParams.size() == 0 ? null : jdbcParams.get( 0 ).getEntityMapping();
+		return entityMapping == null ? parameterType : entityMapping;
+	}
+
 	private static void createValueBindings(
 			JdbcParameterBindings jdbcParameterBindings,
 			QueryParameterImplementor<?> domainParam,
 			QueryParameterBinding<?> domainParamBinding,
-			Bindable parameterType,
+			Bindable defaultParameterType,
 			JdbcParametersList jdbcParams,
 			Object bindValue,
 			SharedSessionContractImplementor session) {
+		final var parameterType = parameterTypeForOccurrence( defaultParameterType, jdbcParams );
 		if ( parameterType == null ) {
 			throw new SqlTreeCreationException( "Unable to interpret mapping-model type for Query parameter: " + domainParam );
 		}

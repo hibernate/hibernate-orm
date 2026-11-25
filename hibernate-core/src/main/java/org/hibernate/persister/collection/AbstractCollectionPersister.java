@@ -215,6 +215,8 @@ public abstract class AbstractCollectionPersister
 	protected final boolean[] indexColumnIsGettable;
 	@Nullable
 	protected final boolean[] indexColumnIsSettable;
+	@Nullable
+	protected final boolean[] indexColumnIsUpdatable;
 	protected final String[] elementColumnNames;
 	protected final String[] elementColumnWriters;
 	protected final String[] elementColumnReaders;
@@ -442,6 +444,7 @@ public abstract class AbstractCollectionPersister
 			indexFormulas = new String[indexSpan];
 			indexColumnIsGettable = new boolean[indexSpan];
 			indexColumnIsSettable = new boolean[indexSpan];
+			indexColumnIsUpdatable = new boolean[indexSpan];
 			indexColumnAliases = new String[indexSpan];
 			int i = 0;
 			boolean hasFormula = false;
@@ -465,6 +468,7 @@ public abstract class AbstractCollectionPersister
 					indexColumnNames[i] = indexColumn.getQuotedName( dialect );
 					indexColumnIsGettable[i] = true;
 					indexColumnIsSettable[i] = indexColumnInsertability[i] || indexColumnUpdatability[i];
+					indexColumnIsUpdatable[i] = indexColumnUpdatability[i];
 				}
 				i++;
 			}
@@ -474,6 +478,7 @@ public abstract class AbstractCollectionPersister
 			indexContainsFormula = false;
 			indexColumnIsGettable = null;
 			indexColumnIsSettable = null;
+			indexColumnIsUpdatable = null;
 			indexFormulaTemplates = null;
 			indexFormulas = null;
 			indexType = null;

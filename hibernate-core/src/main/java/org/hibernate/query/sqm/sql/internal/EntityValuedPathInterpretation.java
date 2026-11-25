@@ -164,7 +164,15 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 					associationMapping.getForeignKeyDescriptor()
 							.getPart( associationMapping.getSideNature() );
 
-			if ( associationMapping.isFkOptimizationAllowed()
+			if ( inferredMapping instanceof EntityMappingType
+					&& hasJoinTable( associationMapping )
+					&& !associationMapping.isReferenceToPrimaryKey() ) {
+				// The mapping of the entity requires its identifier, as for an entity parameter,
+				// and a join table which references a unique key does not hold the identifier
+				resultModelPart = associationMapping.getAssociatedEntityMappingType().getIdentifierMapping();
+				resultTableGroup = tableGroup;
+			}
+			else if ( associationMapping.isFkOptimizationAllowed()
 					&& !hasRestrictedTarget( associationMapping, sqlAstCreationState ) ) {
 				if ( forceUseOfForeignKeyAssociationSidePart( inferredMapping,
 						associationMapping, keyTargetMatchPart ) ) {

@@ -117,6 +117,11 @@ public class OneToManyTableGroup extends AbstractColumnReferenceQualifier implem
 	}
 
 	@Override
+	public boolean canUseLeftJoins() {
+		return elementTableGroup.canUseLeftJoins();
+	}
+
+	@Override
 	public void addTableGroupJoin(TableGroupJoin join) {
 		if ( join.getJoinedGroup() != elementTableGroup ) {
 			elementTableGroup.addTableGroupJoin( join );

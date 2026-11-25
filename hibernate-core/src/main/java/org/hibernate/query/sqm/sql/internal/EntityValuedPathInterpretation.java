@@ -12,11 +12,13 @@ import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleEntityValuedModelPart;
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
@@ -34,6 +36,7 @@ import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
 import org.hibernate.sql.ast.spi.query.expression.SqlTupleContainer;
+import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.ast.spi.query.from.TableReference;
 import org.hibernate.sql.ast.spi.query.update.Assignable;
@@ -43,8 +46,8 @@ import org.hibernate.sql.results.graph.Fetchable;
 import jakarta.persistence.criteria.Selection;
 import jakarta.annotation.Nullable;
 
+import static org.hibernate.query.sqm.internal.SqmUtil.canUseForeignKey;
 import static org.hibernate.query.sqm.internal.SqmUtil.determineAffectedTableName;
-import static org.hibernate.query.sqm.internal.SqmUtil.hasRestrictedTarget;
 
 public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpretation<T>
 		implements SqlTupleContainer, Assignable {
@@ -191,8 +194,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 				resultModelPart = associationMapping.getAssociatedEntityMappingType().getIdentifierMapping();
 				resultTableGroup = tableGroup;
 			}
-			else if ( associationMapping.isFkOptimizationAllowed()
-					&& !hasRestrictedTarget( associationMapping, sqlAstCreationState ) ) {
+			else if ( canUseForeignKey( associationMapping, sqlAstCreationState ) ) {
 				if ( forceUseOfForeignKeyAssociationSidePart( inferredMapping,
 						associationMapping, keyTargetMatchPart ) ) {
 					resultModelPart = associationMapping.getForeignKeyDescriptor()
@@ -214,6 +216,30 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 						resultModelPart = keyTargetMatchPart;
 					}
 					resultTableGroup = tableGroup;
+				}
+			}
+			else if ( isForeignKeySide( mapping ) && isGroupOrOrder( sqlAstCreationState )
+					&& !expandToAllColumns( navigablePath, tableGroup, sqlAstCreationState ) ) {
+				// a to-one whose target is joined for a read, because of @NotFound, @SQLRestriction,
+				// or @SoftDelete, is grouped or sorted by its foreign key, and never by an inner join
+				// to the target, which would lose the rows with no visible target
+				final var ownerTableGroup = sqlAstCreationState.getFromClauseAccess()
+						.findTableGroup( tableGroup.getNavigablePath().getParent() );
+				if ( sqlAstCreationState.getCurrentClauseStack().getCurrent() == Clause.GROUP
+						&& ( tableGroup.isInitialized() || isLeftJoined( ownerTableGroup, tableGroup ) ) ) {
+					// group also by the identifier of the target, since the select list and having
+					// clause read it, to tell a target which is not visible from no target at all
+					return foreignKeyAndTargetIdentifier( navigablePath, ownerTableGroup, tableGroup,
+							keyTargetMatchPart, (ToOneAttributeMapping) mapping, sqlAstCreationState );
+				}
+				else if ( tableGroup.isInitialized() ) {
+					// sort by the identifier of the target, which is joined anyway
+					resultModelPart = associationMapping.getAssociatedEntityMappingType().getIdentifierMapping();
+					resultTableGroup = tableGroup;
+				}
+				else {
+					resultModelPart = keyTargetMatchPart;
+					resultTableGroup = ownerTableGroup;
 				}
 			}
 			else {
@@ -271,6 +297,56 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		}
 	}
 
+	private static boolean isForeignKeySide(EntityValuedModelPart mapping) {
+		return mapping instanceof ToOneAttributeMapping toOne
+			&& toOne.getSideNature() == ForeignKeyDescriptor.Nature.KEY;
+	}
+
+	private static boolean isLeftJoined(TableGroup ownerTableGroup, TableGroup tableGroup) {
+		final var join = ownerTableGroup.findTableGroupJoin( tableGroup );
+		return join != null && join.getJoinType() == SqlAstJoinType.LEFT;
+	}
+
+	private static boolean isGroupOrOrder(SqmToSqlAstConverter sqlAstCreationState) {
+		final var currentClause = sqlAstCreationState.getCurrentClauseStack().getCurrent();
+		return currentClause == Clause.GROUP || currentClause == Clause.ORDER;
+	}
+
+	/// The foreign key of a to-one, followed by the identifier of its joined target,
+	/// which is null when the target is not visible.
+	private static <T> EntityValuedPathInterpretation<T> foreignKeyAndTargetIdentifier(
+			NavigablePath navigablePath,
+			TableGroup ownerTableGroup,
+			TableGroup targetTableGroup,
+			ValuedModelPart foreignKeyPart,
+			ToOneAttributeMapping toOne,
+			SqmToSqlAstConverter sqlAstCreationState) {
+		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+		final var identifierMapping = toOne.getAssociatedEntityMappingType().getIdentifierMapping();
+		final List<Expression> expressions =
+				new ArrayList<>( foreignKeyPart.getJdbcTypeCount() + identifierMapping.getJdbcTypeCount() );
+		foreignKeyPart.forEachSelectable( (selectionIndex, selectableMapping) -> expressions.add(
+				sqlExpressionResolver.resolveSqlExpression(
+						ownerTableGroup.resolveTableReference( navigablePath, foreignKeyPart,
+								selectableMapping.getContainingTableExpression() ),
+						selectableMapping
+				)
+		) );
+		identifierMapping.forEachSelectable( (selectionIndex, selectableMapping) -> expressions.add(
+				sqlExpressionResolver.resolveSqlExpression(
+						targetTableGroup.resolveTableReference( navigablePath, identifierMapping,
+								selectableMapping.getContainingTableExpression() ),
+						selectableMapping
+				)
+		) );
+		return new EntityValuedPathInterpretation<>(
+				new SqlTuple( expressions, toOne ),
+				navigablePath,
+				targetTableGroup,
+				toOne
+		);
+	}
+
 	private static boolean hasJoinTable(EntityAssociationMapping associationMapping) {
 		return associationMapping instanceof EntityCollectionPart entityCollectionPart
 			&& entityCollectionPart.getCardinality() == EntityCollectionPart.Cardinality.MANY_TO_MANY;
@@ -283,31 +359,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			EntityValuedModelPart mapping,
 			EntityValuedModelPart treatedMapping,
 			SqmToSqlAstConverter sqlAstCreationState) {
-		final boolean expandToAllColumns;
-		final var currentClause = sqlAstCreationState.getCurrentClauseStack().getCurrent();
-		if ( currentClause == Clause.GROUP || currentClause == Clause.ORDER ) {
-			assert sqlAstCreationState.getCurrentSqmQueryPart().isSimpleQueryPart();
-			final SqmQuerySpec<?> querySpec = sqlAstCreationState.getCurrentSqmQueryPart().getFirstQuerySpec();
-			if ( currentClause == Clause.ORDER && !querySpec.groupByClauseContains( navigablePath, sqlAstCreationState ) ) {
-				// We must ensure that the order by expression be expanded but only if the group by
-				// contained the same expression, and that was expanded as well
-				expandToAllColumns = false;
-			}
-			else {
-				// When the table group is selected and the navigablePath is selected we need to expand
-				// to all columns, as we must make sure we include all columns present in the select clause
-				expandToAllColumns = isSelected(
-						tableGroup,
-						navigablePath,
-						querySpec,
-						sqlAstCreationState.getCurrentProcessingState().isTopLevel()
-				);
-			}
-		}
-		else {
-			expandToAllColumns = false;
-		}
-
+		final boolean expandToAllColumns = expandToAllColumns( navigablePath, tableGroup, sqlAstCreationState );
 		final var sqlExprResolver = sqlAstCreationState.getSqlExpressionResolver();
 		final Expression sqlExpression;
 		if ( expandToAllColumns ) {
@@ -342,6 +394,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 					}
 				}
 			}
+			addJoinedTargetIdentifiers( navigablePath, tableGroup, entityMappingType, expressions, sqlAstCreationState );
 			sqlExpression = new SqlTuple( expressions, entityMappingType );
 		}
 		else {
@@ -381,6 +434,68 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 						? identifierMapping.findContainingEntityMapping()
 						: mapping
 		);
+	}
+
+	/// The select list reads the identifier of the target of a to-one which joins its target,
+	/// because of @NotFound, @SQLRestriction, or @SoftDelete, to tell a target which is not
+	/// visible from no target at all. That identifier is not functionally dependent on the
+	/// identifier of the entity, so the entity is grouped by it too.
+	private static void addJoinedTargetIdentifiers(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			EntityMappingType entityMappingType,
+			List<Expression> expressions,
+			SqmToSqlAstConverter sqlAstCreationState) {
+		final var fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
+		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+		for ( int i = 0; i < entityMappingType.getNumberOfFetchables(); i++ ) {
+			if ( entityMappingType.getFetchable( i ) instanceof ToOneAttributeMapping toOne
+					&& toOne.getSideNature() == ForeignKeyDescriptor.Nature.KEY
+					&& !canUseForeignKey( toOne, sqlAstCreationState ) ) {
+				final var targetPath = navigablePath.append( toOne.getFetchableName() );
+				final var targetTableGroup = fromClauseAccess.findTableGroup( targetPath );
+				if ( targetTableGroup != null && targetTableGroup != tableGroup
+						&& targetTableGroup.isInitialized() ) {
+					final var identifierMapping = toOne.getAssociatedEntityMappingType().getIdentifierMapping();
+					identifierMapping.forEachSelectable( (selectionIndex, selectableMapping) -> expressions.add(
+							sqlExpressionResolver.resolveSqlExpression(
+									targetTableGroup.resolveTableReference( targetPath, identifierMapping,
+											selectableMapping.getContainingTableExpression() ),
+									selectableMapping
+							)
+					) );
+				}
+			}
+		}
+	}
+
+	private static boolean expandToAllColumns(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			SqmToSqlAstConverter sqlAstCreationState) {
+		final var currentClause = sqlAstCreationState.getCurrentClauseStack().getCurrent();
+		if ( currentClause == Clause.GROUP || currentClause == Clause.ORDER ) {
+			assert sqlAstCreationState.getCurrentSqmQueryPart().isSimpleQueryPart();
+			final SqmQuerySpec<?> querySpec = sqlAstCreationState.getCurrentSqmQueryPart().getFirstQuerySpec();
+			if ( currentClause == Clause.ORDER && !querySpec.groupByClauseContains( navigablePath, sqlAstCreationState ) ) {
+				// We must ensure that the order by expression be expanded but only if the group by
+				// contained the same expression, and that was expanded as well
+				return false;
+			}
+			else {
+				// When the table group is selected and the navigablePath is selected we need to expand
+				// to all columns, as we must make sure we include all columns present in the select clause
+				return isSelected(
+						tableGroup,
+						navigablePath,
+						querySpec,
+						sqlAstCreationState.getCurrentProcessingState().isTopLevel()
+				);
+			}
+		}
+		else {
+			return false;
+		}
 	}
 
 	private static boolean isSelected(

@@ -79,6 +79,30 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 		);
 	}
 
+	/**
+	 * An assignment to a part of a foreign key, as {@linkplain ForeignKeyAssignment#resolve resolved}
+	 * for an assignment through a to-one.
+	 */
+	public static <T> EmbeddableValuedPathInterpretation<T> from(
+			SqmEmbeddedValuedSimplePath<T> sqmPath,
+			ForeignKeyAssignment foreignKey,
+			SqmToSqlAstConverter sqlAstCreationState) {
+		// the key of the target is an embeddable, and so is the foreign key
+		final var keyPart = (EmbeddableValuedModelPart) foreignKey.keyPart();
+		final var ownerTableGroup = foreignKey.ownerTableGroup();
+		return new EmbeddableValuedPathInterpretation<>(
+				keyPart.toSqlExpression(
+						ownerTableGroup,
+						sqlAstCreationState.getCurrentClauseStack().getCurrent(),
+						sqlAstCreationState,
+						sqlAstCreationState
+				),
+				sqmPath.getNavigablePath(),
+				keyPart,
+				ownerTableGroup
+		);
+	}
+
 	private final SqlTuple sqlExpression;
 	private final @Nullable String affectedTableName;
 

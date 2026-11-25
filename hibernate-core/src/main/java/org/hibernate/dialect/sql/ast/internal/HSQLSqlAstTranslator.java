@@ -19,8 +19,10 @@ import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorWithMerge;
 import org.hibernate.sql.ast.spi.query.select.SqlSelection;
 import org.hibernate.sql.ast.spi.Statement;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.sql.ast.spi.query.PathInterpretation;
 import org.hibernate.sql.ast.spi.query.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.spi.query.expression.CaseSimpleExpression;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
@@ -31,10 +33,13 @@ import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.ast.spi.query.from.TableGroupJoin;
 import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.ast.spi.query.predicate.BooleanExpressionPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.BetweenPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.InArrayPredicate;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
+
+import static org.hibernate.sql.Template.TEMPLATE;
 
 /**
  * A SQL AST translator for HSQL.
@@ -275,6 +280,30 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 			SqlTuple tuple,
 			ComparisonOperator operator) {
 		emulateSelectTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
+	}
+
+	@Override
+	public void visitBetweenPredicate(BetweenPredicate predicate) {
+		final var expression = predicate.getExpression();
+		final var column = sqlExpression( expression );
+		if ( column instanceof ColumnReference reference
+				&& reference.equals( sqlExpression( predicate.getLowerBound() ) )
+				&& !reference.isColumnExpressionFormula()
+				&& ( reference.getReadExpression() == null
+						|| ( TEMPLATE + '.' + reference.getColumnExpression() ).equals( reference.getReadExpression() ) ) ) {
+			// HSQLDB 2.7.4 returns no rows for an indexed column in "col between col and ?".
+			// The upper-bound comparison alone also gives UNKNOWN for a null column.
+			visitRelationalPredicate( new ComparisonPredicate( expression,
+					predicate.isNegated() ? ComparisonOperator.GREATER_THAN : ComparisonOperator.LESS_THAN_OR_EQUAL,
+					predicate.getUpperBound() ) );
+		}
+		else {
+			super.visitBetweenPredicate( predicate );
+		}
+	}
+
+	private static Expression sqlExpression(Expression expression) {
+		return expression instanceof PathInterpretation<?> path ? path.getSqlExpression() : expression;
 	}
 
 	@Override

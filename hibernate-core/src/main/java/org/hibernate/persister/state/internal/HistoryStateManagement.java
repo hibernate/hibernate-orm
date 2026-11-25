@@ -1,8 +1,6 @@
 package org.hibernate.persister.state.internal;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
@@ -10,7 +8,6 @@ import jakarta.annotation.Nullable;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
-import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPlanContributor;
 import org.hibernate.action.queue.internal.decompose.collection.HistoryCollectionMutationPlanContributor;
 import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor;
@@ -34,7 +31,6 @@ import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorHistory;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorNoOp;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
 import org.hibernate.persister.entity.mutation.DeleteCoordinatorHistory;
 import org.hibernate.persister.entity.mutation.InsertCoordinator;
@@ -234,43 +230,26 @@ public final class HistoryStateManagement implements StateManagement, StateManag
 		final String tableName = temporalTable == null
 				? persister.getIdentifierTableName()
 				: entityPersister.determineTableName( temporalTable );
-		if ( persister instanceof UnionSubclassEntityPersister && rootClass.hasSubclasses() ) {
-			final var tableNames = new HashMap<String, String>();
-			tableNames.put( persister.getRootTableName(), tableName );
-			final var subclasses = rootClass.getSubclasses();
-			for ( var subclass : subclasses ) {
-				tableNames.put( entityPersister.determineTableName( subclass.getTable() ),
-						entityPersister.determineTableName( subclass.getAuxiliaryTable() ) );
-			}
-			final var dialect = creationProcess.getCreationContext().getDialect();
-			final var temporalColumns = List.of( rootClass.getAuxiliaryColumn( ROW_START ).getQuotedName( dialect ),
-					rootClass.getAuxiliaryColumn( ROW_END ).getQuotedName( dialect ) );
-			for ( var subclass : subclasses ) {
-				if ( subclass.hasSubclasses() ) {
-					addHistoryUnion( subclass, tableNames, temporalColumns, creationProcess );
-				}
-			}
-			addHistoryUnion( rootClass, tableNames, temporalColumns, creationProcess );
-			return new TemporalMappingImpl( rootClass, tableName,
-					name -> tableNames.getOrDefault( name, name ), creationProcess );
+		final var dialect = creationProcess.getCreationContext().getDialect();
+		final var temporalColumns = List.of( rootClass.getAuxiliaryColumn( ROW_START ).getQuotedName( dialect ),
+				rootClass.getAuxiliaryColumn( ROW_END ).getQuotedName( dialect ) );
+		final var resolver = entityPersister.createAuxiliaryTableResolver( rootClass, tableName, temporalColumns, creationProcess );
+		return new TemporalMappingImpl( rootClass, tableName, resolver, creationProcess );
+	}
+
+	@Nullable
+	@Override
+	public AuxiliaryMapping createAuxiliaryMapping(
+			@Nonnull EntityPersister persister,
+			@Nonnull PersistentClass bootDescriptor,
+			@Nullable AuxiliaryMapping supertypeMapping,
+			@Nonnull MappingModelCreationProcess creationProcess) {
+		if ( bootDescriptor.getAuxiliaryTable() == null ) {
+			return supertypeMapping;
 		}
-		return new TemporalMappingImpl( rootClass, tableName, creationProcess );
-	}
-
-	private static void addHistoryUnion(
-			PersistentClass bootClass,
-			Map<String, String> tableNames,
-			List<String> temporalColumns,
-			MappingModelCreationProcess creationProcess) {
-		final var persister = (UnionSubclassEntityPersister) creationProcess.getEntityPersister( bootClass.getEntityName() );
-		tableNames.put( persister.getTableName(), persister.generateSubquery( bootClass, tableNames::get,
-				temporalColumns, creationProcess.getCreationContext().getMetadata() ) );
-	}
-
-	public AuxiliaryMapping createSubclassHistoryMapping(
-			AbstractEntityPersister persister, UnionSubclass subclass, MappingModelCreationProcess creationProcess) {
 		final var rootMapping = persister.getRootEntityDescriptor().getAuxiliaryMapping();
-		return new TemporalMappingImpl( subclass.getRootClass(), persister.determineTableName( subclass.getAuxiliaryTable() ),
+		final var tableName = rootMapping.resolveTableName( persister.getIdentifierTableName() );
+		return new TemporalMappingImpl( bootDescriptor.getRootClass(), tableName,
 				rootMapping::resolveTableName, creationProcess );
 	}
 

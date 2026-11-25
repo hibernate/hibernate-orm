@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.query.hql;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -15,6 +16,8 @@ import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
 import org.hibernate.Hibernate;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.query.SelectionQuery;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -25,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -39,7 +43,8 @@ class ToOneUniqueKeyParameterTest {
 			for ( long id = 1; id <= 2; id++ ) {
 				var boxed = new BoxedItem();
 				boxed.id = id;
-				boxed.code = String.valueOf( 10 + id );
+				// The unique keys and identifiers sort in opposite orders.
+				boxed.code = id == 1 ? "21" : "12";
 				session.persist( boxed );
 				var primitive = new PrimitiveItem();
 				primitive.id = id;
@@ -79,6 +84,86 @@ class ToOneUniqueKeyParameterTest {
 						.setParameter( "v", argument ).getResultList();
 			}
 			assertThat( ids ).containsExactly( 2L );
+		} );
+	}
+
+	@ParameterizedTest
+	@CsvSource(delimiter = '|', value = {
+			"n.boxed in (:v) | 2", "n.boxed not in (:v) | 1", ":v in (n.boxed) | 2", ":v not in (n.boxed) | 1",
+			"n.boxed in (:v, :v) | 2", "n.boxed between :v and :v | 2", "n.boxed not between :v and :v | 1",
+			":v between n.boxed and n.boxed | 2", "n.boxed between n.boxed and :v | 2",
+			"n.boxed not between n.boxed and :v | 1"
+	})
+	void transientParameterInPredicate(String predicate, long expected, SessionFactoryScope scope) {
+		final var item = new BoxedItem();
+		item.code = "12";
+		scope.inTransaction( session -> {
+			final var observer = scope.getCollectingStatementObserver();
+			observer.clear();
+			assertThat( session.createQuery( "select n.id from Note n where " + predicate, Long.class )
+					.setParameter( "v", item ).getResultList() ).containsExactly( expected );
+			assertThat( observer.getSqlQueries() ).singleElement().asString().doesNotContainIgnoringCase( "BoxedItem" );
+		} );
+	}
+
+	@ParameterizedTest
+	@ValueSource(booleans = { false, true })
+	void listOfEntities(boolean negated, SessionFactoryScope scope) {
+		final var item = new BoxedItem();
+		item.code = "12";
+		final var reference = scope.fromTransaction( session -> session.getReference( BoxedItem.class, 1L ) );
+		scope.inTransaction( session -> {
+			final var observer = scope.getCollectingStatementObserver();
+			final var query = session.createQuery(
+					"select n.id from Note n where n.boxed " + ( negated ? "not in" : "in" ) + " :items order by n.id",
+					Long.class );
+			assertListResult( observer, query, List.of(), negated ? List.of( 1L, 2L ) : List.of() );
+			assertListResult( observer, query, List.of( item ), negated ? List.of( 1L ) : List.of( 2L ) );
+			assertListResult( observer, query, List.of( reference, item ), negated ? List.of() : List.of( 1L, 2L ) );
+			assertListResult( observer, query, List.of( item, reference ), negated ? List.of() : List.of( 1L, 2L ) );
+			assertListResult( observer, query, Arrays.asList( item, null ), negated ? List.of() : List.of( 2L ) );
+			assertThat( Hibernate.isInitialized( reference ) ).isFalse();
+		} );
+	}
+
+	private static void assertListResult(CollectingStatementObserver observer, SelectionQuery<Long> query,
+			List<BoxedItem> values, List<Long> expected) {
+		observer.clear();
+		assertThat( query.setParameterList( "items", values ).getResultList() ).isEqualTo( expected );
+		assertThat( observer.getSqlQueries() ).hasSize( 1 );
+	}
+
+	@Test
+	void criteriaListParameter(SessionFactoryScope scope) {
+		final var item = new PrimitiveItem();
+		item.code = "12";
+		final var reference = scope.fromTransaction( session -> session.getReference( PrimitiveItem.class, 1L ) );
+		scope.inTransaction( session -> {
+			final var builder = session.getCriteriaBuilder();
+			final var criteria = builder.createQuery( Long.class );
+			final var note = criteria.from( Note.class );
+			final var items = builder.listParameter( PrimitiveItem.class );
+			criteria.select( note.get( "id" ) ).where( note.get( "primitive" ).in( items ) )
+					.orderBy( builder.asc( note.get( "id" ) ) );
+			final var observer = scope.getCollectingStatementObserver();
+			observer.clear();
+			assertThat( session.createQuery( criteria ).setParameter( items, List.of( reference, item ) ).getResultList() )
+					.containsExactly( 1L, 2L );
+			assertThat( observer.getSqlQueries() ).hasSize( 1 );
+			assertThat( Hibernate.isInitialized( reference ) ).isFalse();
+		} );
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = { "n.boxed between :lo and :hi", "n.boxed >= :lo and n.boxed <= :hi",
+			":lo <= n.boxed and :hi >= n.boxed" })
+	void rangeUsesUniqueKeyOrder(String predicate, SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var low = session.find( BoxedItem.class, 2L );
+			final var high = session.find( BoxedItem.class, 1L );
+			final var query = session.createQuery( "select n.id from Note n where " + predicate + " order by n.id", Long.class );
+			assertThat( query.setParameter( "lo", low ).setParameter( "hi", high ).getResultList() ).containsExactly( 1L, 2L );
+			assertThat( query.setParameter( "lo", high ).setParameter( "hi", low ).getResultList() ).isEmpty();
 		} );
 	}
 
@@ -142,14 +227,15 @@ class ToOneUniqueKeyParameterTest {
 		} );
 	}
 
-	@Test
+	@ParameterizedTest
+	@ValueSource(strings = { "n.primitive = :v", "n.primitive in (:v, :v)", "n.primitive between :v and :v" })
 	@RequiresDialect(H2Dialect.class)
-	void foreignKeyIndex(SessionFactoryScope scope) {
+	void foreignKeyIndex(String predicate, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final var observer = scope.getCollectingStatementObserver();
 			final var item = session.find( PrimitiveItem.class, 1L );
 			final var reference = session.getReference( PrimitiveItem.class, 2L );
-			final var query = session.createQuery( "select n.id from Note n where n.primitive = :v", Long.class );
+			final var query = session.createQuery( "select n.id from Note n where " + predicate, Long.class );
 			for ( var argument : List.of( item, reference, item ) ) {
 				observer.clear();
 				assertThat( query.setParameter( "v", argument ).getResultList() )
@@ -157,7 +243,7 @@ class ToOneUniqueKeyParameterTest {
 				assertThat( observer.getSqlQueries() ).hasSize( 1 );
 				final String sql = observer.getSqlQueries().get( 0 );
 				if ( argument == item ) {
-					assertThat( sql ).containsPattern( "primitive_code\\s*=\\s*\\?" );
+					assertThat( sql ).doesNotContainIgnoringCase( "PrimitiveItem" );
 				}
 				final String plan = session.doReturningWork( connection -> {
 					try ( var statement = connection.prepareStatement( "explain " + sql ) ) {
@@ -169,7 +255,7 @@ class ToOneUniqueKeyParameterTest {
 				} );
 				// A scan of the FK index also mentions its name. Check the actual index search condition.
 				assertThat( plan.toUpperCase( Locale.ROOT ) )
-						.containsPattern( "IX_NOTE_PRIMITIVE:\\s+PRIMITIVE_CODE =" );
+						.containsPattern( "IX_NOTE_PRIMITIVE:\\s+PRIMITIVE_CODE (?:=|IN|>=)" );
 			}
 			assertThat( Hibernate.isInitialized( reference ) ).isFalse();
 		} );

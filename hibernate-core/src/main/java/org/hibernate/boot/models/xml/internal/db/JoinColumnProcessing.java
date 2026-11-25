@@ -204,25 +204,24 @@ public class JoinColumnProcessing {
 			JaxbForeignKeyImpl jaxbMapKeyForeignKey,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		// A <map-key-foreign-key/> without any <map-key-join-column/> becomes an empty container
-		//   @MapKeyJoinColumns(value = {}, foreignKey = @ForeignKey(...))
-		// which specifies the foreign key while defaulting the map key join columns.
 		if ( CollectionHelper.isEmpty( jaxbJoinColumns ) && jaxbMapKeyForeignKey == null ) {
 			return;
 		}
 
+		final var modelsContext = xmlDocumentContext.getModelBuildingContext();
+		// A <map-key-foreign-key/> without <map-key-join-column/> only supplements the mapping:
+		// keep the join columns already declared (in override mode, by annotations)
+		final MapKeyJoinColumn[] joinColumns = CollectionHelper.isEmpty( jaxbJoinColumns )
+				? memberDetails.getRepeatedAnnotationUsages( JpaAnnotations.MAP_KEY_JOIN_COLUMN, modelsContext )
+				: transformMapKeyJoinColumns( jaxbJoinColumns, xmlDocumentContext );
+
+		// There is no @MapKeyForeignKey, the foreign key is carried by @MapKeyJoinColumns#foreignKey
 		final MapKeyJoinColumnsJpaAnnotation joinColumnsUsage = (MapKeyJoinColumnsJpaAnnotation) memberDetails.replaceAnnotationUsage(
 				JpaAnnotations.MAP_KEY_JOIN_COLUMN,
 				JpaAnnotations.MAP_KEY_JOIN_COLUMNS,
-				xmlDocumentContext.getModelBuildingContext()
+				modelsContext
 		);
-		// creates on the attribute
-		//   @MapKeyJoinColumns(
-		//       value = { @MapKeyJoinColumn(...), ... },   // from <map-key-join-column/>
-		//       foreignKey = @ForeignKey(...)              // from <map-key-foreign-key/>, if present
-		//   )
-		// There is no @MapKeyForeignKey annotation, MapKeyJoinColumns#foreignKey carries it instead.
-		joinColumnsUsage.value( transformMapKeyJoinColumns( jaxbJoinColumns, xmlDocumentContext ) );
+		joinColumnsUsage.value( joinColumns );
 		if ( jaxbMapKeyForeignKey != null ) {
 			joinColumnsUsage.foreignKey( ForeignKeyProcessing.createNestedForeignKeyAnnotation(
 					jaxbMapKeyForeignKey,

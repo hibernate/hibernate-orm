@@ -11,13 +11,14 @@ import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.cfg.spi.JaxbCfgHibernateConfiguration;
 import org.hibernate.boot.jaxb.internal.stax.LocalXmlResourceResolver;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationException;
 import org.hibernate.internal.util.xml.XsdException;
 import org.jboss.logging.Logger;
 import org.xml.sax.SAXException;
 
-import javax.xml.XMLConstants;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
@@ -35,13 +36,15 @@ import javax.xml.stream.events.XMLEvent;
 import javax.xml.stream.util.EventReaderDelegate;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+
+import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 
 /**
  * @author Steve Ebersole
@@ -54,9 +57,21 @@ public class JaxbCfgProcessor {
 	private final ClassLoaderService classLoaderService;
 	private final LocalXmlResourceResolver xmlResourceResolver;
 
+	/**
+	 * Settings gathered (from system properties and {@code /hibernate.properties}) before
+	 * {@code hibernate.cfg.xml} is parsed. Null when no such settings source is available, in
+	 * which case the XML-security-related settings fall back to their secure defaults.
+	 */
+	private final @Nullable Map<String, Object> settings;
+
 	public JaxbCfgProcessor(ClassLoaderService classLoaderService) {
+		this( classLoaderService, null );
+	}
+
+	public JaxbCfgProcessor(ClassLoaderService classLoaderService, @Nullable Map<String, Object> settings) {
 		this.classLoaderService = classLoaderService;
 		this.xmlResourceResolver = new LocalXmlResourceResolver( classLoaderService );
+		this.settings = settings;
 	}
 
 	public JaxbCfgHibernateConfiguration unmarshal(InputStream stream, Origin origin) {
@@ -82,15 +97,27 @@ public class JaxbCfgProcessor {
 
 	private XMLInputFactory staxFactory() {
 		if ( staxFactory == null ) {
-			staxFactory = buildStaxFactory();
+			staxFactory = buildStaxFactory( isDtdAndExternalEntitiesAllowed() );
 		}
 		return staxFactory;
 	}
 
-	private XMLInputFactory buildStaxFactory() {
-		XMLInputFactory staxFactory = XMLInputFactory.newInstance();
+	private XMLInputFactory buildStaxFactory(boolean allowDtdAndExternalEntities) {
+		final XMLInputFactory staxFactory = XmlFactoryUtil.newXmlInputFactory( allowDtdAndExternalEntities );
 		staxFactory.setXMLResolver( xmlResourceResolver );
 		return staxFactory;
+	}
+
+	private boolean isDtdAndExternalEntitiesAllowed() {
+		return readBooleanSetting( MappingSettings.XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES );
+	}
+
+	private boolean readBooleanSetting(String settingName) {
+		if ( settings == null ) {
+			return false;
+		}
+		final Object setting = settings.get( settingName );
+		return setting != null && BOOLEAN.convert( setting );
 	}
 
 	private JaxbCfgHibernateConfiguration unmarshal(XMLEventReader staxEventReader, final Origin origin) {
@@ -148,10 +175,6 @@ public class JaxbCfgProcessor {
 	}
 
 	private Schema resolveLocalSchema(String schemaName) {
-		return resolveLocalSchema( schemaName, XMLConstants.W3C_XML_SCHEMA_NS_URI );
-	}
-
-	private Schema resolveLocalSchema(String schemaName, String schemaLanguage) {
 		URL url = classLoaderService.locateResource( schemaName );
 		if ( url == null ) {
 			throw new XsdException( "Unable to locate schema [" + schemaName + "] via classpath", schemaName );
@@ -159,11 +182,10 @@ public class JaxbCfgProcessor {
 		try {
 			InputStream schemaStream = url.openStream();
 			try {
-				StreamSource source = new StreamSource( url.openStream() );
-				SchemaFactory schemaFactory = SchemaFactory.newInstance( schemaLanguage );
-				return schemaFactory.newSchema( source );
+				return XmlFactoryUtil.newSchemaFactory()
+						.newSchema( new StreamSource( schemaStream ) );
 			}
-			catch ( SAXException | IOException e ) {
+			catch ( SAXException e ) {
 				throw new XsdException( "Unable to load schema [" + schemaName + "]", e, schemaName );
 			}
 			finally {

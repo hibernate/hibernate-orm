@@ -76,6 +76,7 @@ public final class Context {
 	private final ProcessingEnvironment processingEnvironment;
 	private final boolean logDebug;
 	private final boolean lazyXmlParsing;
+	private final boolean allowDtdAndExternalEntities;
 	private final String persistenceXmlLocation;
 	private final List<String> ormXmlFiles;
 
@@ -141,6 +142,7 @@ public final class Context {
 		}
 
 		lazyXmlParsing = parseBoolean( options.get( HibernateProcessor.LAZY_XML_PARSING ) );
+		allowDtdAndExternalEntities = parseBoolean( options.get( HibernateProcessor.ALLOW_DTD_AND_EXTERNAL_ENTITIES ) );
 		logDebug = parseBoolean( options.get( HibernateProcessor.DEBUG_OPTION ) );
 	}
 
@@ -374,6 +376,10 @@ public final class Context {
 
 	public boolean doLazyXmlParsing() {
 		return lazyXmlParsing;
+	}
+
+	public boolean allowDtdAndExternalEntities() {
+		return allowDtdAndExternalEntities;
 	}
 
 	public void message(Element method, String message, Diagnostic.Kind severity) {

@@ -29,6 +29,7 @@ import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.xsd.MappingXsdSupport;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.config.ConfigurationException;
@@ -36,6 +37,8 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.jboss.logging.Logger;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
@@ -55,6 +58,13 @@ public class MappingBinder extends AbstractBinder<BindableMappingDescriptor> {
 
 	private final Supplier<Options> optionsAccess;
 	private final Supplier<UnsupportedFeatureHandling> unsupportedHandlingAccess;
+
+	/**
+	 * Null when this binder was not given access to Hibernate settings (e.g. built
+	 * directly with an {@link Options} instance), in which case the XML-security-related
+	 * setting {@link #isDtdAndExternalEntitiesAllowed()} falls back to its secure default.
+	 */
+	private final @Nullable Function<String, Object> settingsAccess;
 
 	private JAXBContext hbmJaxbContext;
 	private JAXBContext entityMappingsJaxbContext;
@@ -99,6 +109,7 @@ public class MappingBinder extends AbstractBinder<BindableMappingDescriptor> {
 		super( resourceStreamLocator );
 		this.optionsAccess = optionsAccess;
 		this.unsupportedHandlingAccess = unsupportedHandlingAccess;
+		this.settingsAccess = null;
 	}
 
 	/**
@@ -116,6 +127,7 @@ public class MappingBinder extends AbstractBinder<BindableMappingDescriptor> {
 			Function<String, Object> settingsAccess) {
 		super( resourceStreamLocator == null ? MappingBinder.class.getClassLoader()::getResourceAsStream : resourceStreamLocator );
 
+		this.settingsAccess = settingsAccess;
 		if ( settingsAccess == null ) {
 			this.optionsAccess = () -> VALIDATING;
 			this.unsupportedHandlingAccess = () -> UnsupportedFeatureHandling.ERROR;
@@ -197,6 +209,19 @@ public class MappingBinder extends AbstractBinder<BindableMappingDescriptor> {
 	@Override
 	public boolean isValidationEnabled() {
 		return optionsAccess.get().validateMappings();
+	}
+
+	@Override
+	public boolean isDtdAndExternalEntitiesAllowed() {
+		return readBooleanSetting( MappingSettings.XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES );
+	}
+
+	private boolean readBooleanSetting(String settingName) {
+		if ( settingsAccess == null ) {
+			return false;
+		}
+		final Object setting = settingsAccess.apply( settingName );
+		return setting != null && BOOLEAN.convert( setting );
 	}
 
 	@Override

@@ -1,5 +1,6 @@
 package org.hibernate.temporal;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -12,9 +13,11 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
 import org.hibernate.Session;
+import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Temporal;
+import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -28,8 +31,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hibernate.Hibernate.isInitialized;
 import static org.hibernate.cfg.FlushSettings.FLUSH_QUEUE_TYPE;
+import static org.hibernate.cfg.StateManagementSettings.CHANGESET_ID_SUPPLIER;
 import static org.hibernate.cfg.StateManagementSettings.TEMPORAL_TABLE_STRATEGY;
-import static org.hibernate.testing.orm.junit.DialectContext.awaitTimestampTick;
 
 @DomainModel(annotatedClasses = {
 		TablePerClassHistoryTest.Vehicle.class,
@@ -42,9 +45,12 @@ import static org.hibernate.testing.orm.junit.DialectContext.awaitTimestampTick;
 })
 @JiraKey("HHH-21277")
 class TablePerClassHistoryTest {
+	private static final String CHANGESETS = "org.hibernate.temporal.TablePerClassHistoryTest$Changesets";
+
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
+		@Setting(name = CHANGESET_ID_SUPPLIER, value = CHANGESETS),
 		@Setting(name = TEMPORAL_TABLE_STRATEGY, value = "HISTORY_TABLE"),
 		@Setting(name = FLUSH_QUEUE_TYPE, value = "graph")
 	})
@@ -55,6 +61,7 @@ class TablePerClassHistoryTest {
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
+		@Setting(name = CHANGESET_ID_SUPPLIER, value = CHANGESETS),
 		@Setting(name = TEMPORAL_TABLE_STRATEGY, value = "HISTORY_TABLE"),
 		@Setting(name = FLUSH_QUEUE_TYPE, value = "legacy")
 	})
@@ -72,14 +79,12 @@ class TablePerClassHistoryTest {
 			session.persist( new Truck( 6, 20 ) );
 			return session.getCurrentChangesetIdentifier();
 		} );
-		awaitTimestampTick();
 		final var updatedAt = scope.fromTransaction( session -> {
 			session.find( Car.class, 2 ).doors = 5;
 			session.find( ElectricCar.class, 3 ).battery = 80;
 			session.find( Report.class, 5 ).title = "published";
 			return session.getCurrentChangesetIdentifier();
 		} );
-		awaitTimestampTick();
 		assertThatThrownBy( () -> scope.inTransaction( session -> {
 			final var stale = session.find( Car.class, 2 );
 			assertThat( session.createNativeMutationQuery(
@@ -126,7 +131,6 @@ class TablePerClassHistoryTest {
 			assertThat( session.find( Truck.class, 4 ).capacity ).isEqualTo( 16 );
 			assertThat( session.find( ElectricCar.class, 3 ) ).isNull();
 		} );
-		awaitTimestampTick();
 		scope.inTransaction( session -> {
 			session.remove( session.find( Truck.class, 6 ) );
 			final var reference = session.getReference( Truck.class, 4 );
@@ -145,6 +149,17 @@ class TablePerClassHistoryTest {
 	private void withHistoryAt(SessionFactoryScope scope, Object changeset, Consumer<Session> work) {
 		try (var session = scope.getSessionFactory().withOptions().atChangeset( changeset ).openSession()) {
 			session.inTransaction( transaction -> work.accept( session ) );
+		}
+	}
+
+	public static class Changesets implements ChangesetIdentifierSupplier<Instant> {
+		private static final Instant FIRST = Instant.parse( "2026-01-01T00:00:00Z" );
+		private long next;
+
+		@Override
+		public Instant generateIdentifier(SharedSessionContract session) {
+			// A whole second survives storage at the database's timestamp precision.
+			return FIRST.plusSeconds( next++ );
 		}
 	}
 

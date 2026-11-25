@@ -18,10 +18,12 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Stateful;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.persister.state.internal.HistoryStateManagement;
 import org.hibernate.persister.state.internal.NativeTemporalStateManagement;
 import org.hibernate.persister.state.internal.TemporalStateManagement;
@@ -147,8 +149,35 @@ public class TemporalHelper {
 				copyTableColumns( target.getMainTable(), target.getAuxiliaryTable() );
 				createHistoryTablePrimaryKey( target,
 						context.getMetadataCollector().getDatabase().getDialect() );
+				if ( target instanceof RootClass rootClass ) {
+					for ( var subclass : rootClass.getSubclasses() ) {
+						if ( subclass instanceof UnionSubclass unionSubclass ) {
+							bindSubclassHistoryTable( rootClass, unionSubclass, context );
+						}
+					}
+				}
 			} );
 		}
+	}
+
+	private static void bindSubclassHistoryTable(
+			RootClass rootClass, UnionSubclass subclass, MetadataBuildingContext context) {
+		final var modelsContext = context.getBootstrapContext().getModelsContext();
+		final var classDetails = subclass.getClassName() == null ? null
+				: modelsContext.getClassDetailsRegistry().getClassDetails( subclass.getClassName() );
+		final var historyTable = createHistoryTable( subclass.getTable(),
+				classDetails == null ? null : classDetails.getDirectAnnotationUsage( Temporal.HistoryTable.class ),
+				context );
+		final var startingColumn = rootClass.getAuxiliaryColumn( ROW_START ).clone();
+		final var endingColumn = rootClass.getAuxiliaryColumn( ROW_END ).clone();
+		historyTable.addColumn( startingColumn );
+		historyTable.addColumn( endingColumn );
+		subclass.setAuxiliaryTable( historyTable );
+		addExtraDeclarationsAndOptions( historyTable, startingColumn, endingColumn, false, null, null, context );
+		addTemporalCheckConstraint( historyTable, startingColumn, endingColumn, context );
+		addAuxiliaryObjects( historyTable, startingColumn, endingColumn, false, null, null, context );
+		createEntityHistoryPrimaryKey( subclass, historyTable, startingColumn,
+				context.getMetadataCollector().getDatabase().getDialect() );
 	}
 
 	private static Table createHistoryTable(
@@ -205,30 +234,7 @@ public class TemporalHelper {
 		final var historyTable = target.getAuxiliaryTable();
 		final var startingColumn = target.getAuxiliaryColumn( ROW_START );
 		if ( target instanceof RootClass rootClass ) {
-			final var primaryKey = new PrimaryKey( historyTable );
-			addColumnsByName( primaryKey, historyTable,
-					rootClass.getKey().getColumns() );
-			if ( dialect.addPartitionKeyToPrimaryKey() ) {
-				for ( var property : rootClass.getProperties() ) {
-					if ( property.getValue().isPartitionKey() ) {
-						addColumnsByName( primaryKey, historyTable,
-								property.getValue().getColumns() );
-					}
-				}
-			}
-			if ( primaryKey.getColumnSpan() > 0 ) {
-				if ( rootClass.isVersioned() ) {
-					final var versionProperty = rootClass.getVersion();
-					if ( versionProperty != null ) {
-						addColumnsByName( primaryKey, historyTable,
-								versionProperty.getValue().getColumns() );
-					}
-				}
-				else {
-					primaryKey.addColumn( startingColumn );
-				}
-				historyTable.setPrimaryKey( primaryKey );
-			}
+			createEntityHistoryPrimaryKey( rootClass, historyTable, startingColumn, dialect );
 		}
 		else if ( target instanceof Collection collection ) {
 			final var table = collection.getCollectionTable();
@@ -244,6 +250,31 @@ public class TemporalHelper {
 					historyTable.setPrimaryKey( primaryKey );
 				}
 			}
+		}
+	}
+
+	private static void createEntityHistoryPrimaryKey(
+			PersistentClass entity, Table historyTable, Column startingColumn, Dialect dialect) {
+		final var primaryKey = new PrimaryKey( historyTable );
+		addColumnsByName( primaryKey, historyTable, entity.getKey().getColumns() );
+		if ( dialect.addPartitionKeyToPrimaryKey() ) {
+			for ( var property : entity.getPropertyClosure() ) {
+				if ( property.getValue().isPartitionKey() ) {
+					addColumnsByName( primaryKey, historyTable, property.getValue().getColumns() );
+				}
+			}
+		}
+		if ( primaryKey.getColumnSpan() > 0 ) {
+			if ( entity.isVersioned() ) {
+				final var versionProperty = entity.getVersion();
+				if ( versionProperty != null ) {
+					addColumnsByName( primaryKey, historyTable, versionProperty.getValue().getColumns() );
+				}
+			}
+			else {
+				primaryKey.addColumn( startingColumn );
+			}
+			historyTable.setPrimaryKey( primaryKey );
 		}
 	}
 

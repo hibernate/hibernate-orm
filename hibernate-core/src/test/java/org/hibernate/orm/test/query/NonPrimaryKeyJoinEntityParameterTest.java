@@ -84,7 +84,7 @@ public class NonPrimaryKeyJoinEntityParameterTest {
 					+ ( parameterFirst ? ":a = b.a" : "b.a = :a" ), B.class )
 					.setParameter( "a", target )
 					.getResultList();
-			statements.assertQuery( 0 ).doesNotContain( "join" );
+			statements.assertQuery( 0 ).doesNotContain( "join", "tbl_a" );
 			assertThat( results ).hasSize( 1 );
 			assertThat( results.get( 0 ).a.getPrimaryKey() ).isEqualTo( 1 );
 			assertThat( results.get( 0 ).a.getUniqueKey() ).isEqualTo( 9 );

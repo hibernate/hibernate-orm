@@ -27,6 +27,10 @@ public interface SqmParameterMapping {
 	@Nullable
 	QueryParameterImplementor<?> getQueryParameter(SqmParameter<?> sqmParameter);
 
+	/// Record a choice of comparison key that depends on the current binding.
+	default void registerAssociationKeyAccess(AssociationKeyAccess access) {
+	}
+
 	/// Register an SQM parameter produced by expanding a multi-valued binding.
 	void addExpansion(
 			QueryParameterImplementor<?> queryParameter,

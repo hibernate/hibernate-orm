@@ -162,6 +162,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpt
 import static org.hibernate.jpa.boot.internal.CallbackDefinitionResolver.resolveLifecycleCallbacks;
 import static org.hibernate.models.spi.TypeDetailsHelper.resolveRelativeType;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.EMBEDDED;
+import static org.hibernate.temporal.TemporalTableStrategy.HISTORY_TABLE;
 
 
 /**
@@ -259,7 +260,7 @@ public class EntityBinder {
 		if ( persistentClass instanceof RootClass rootClass ) {
 			collector.addSecondPass( new CreateKeySecondPass( rootClass ) );
 			bindSoftDelete( clazzToProcess, rootClass, context );
-			bindTemporal( clazzToProcess, rootClass, context );
+			bindTemporal( clazzToProcess, rootClass, inheritanceState.getType(), context );
 			bindAudited( clazzToProcess, rootClass, context );
 		}
 		if ( persistentClass instanceof Subclass subclass ) {
@@ -339,6 +340,7 @@ public class EntityBinder {
 	private static void bindTemporal(
 			ClassDetails classDetails,
 			RootClass rootClass,
+			InheritanceType inheritanceType,
 			MetadataBuildingContext context) {
 		final var temporal = extract( Temporal.class, classDetails, context );
 		if ( temporal != null ) {
@@ -350,6 +352,11 @@ public class EntityBinder {
 					classDetails.getDirectAnnotationUsage( Temporal.HistoryPartitioning.class ),
 					context
 			);
+			if ( inheritanceType == InheritanceType.TABLE_PER_CLASS
+					&& context.getTemporalTableStrategy() == HISTORY_TABLE ) {
+				context.getMetadataCollector().addSecondPass( (OptionalDeterminationSecondPass) ignored ->
+						TemporalHelper.bindSubclassHistoryTables( rootClass, context ) );
+			}
 		}
 	}
 

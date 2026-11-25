@@ -316,7 +316,7 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 			return;
 		}
 
-		if ( tableDescriptor.name().equals( versionMapping.getContainingTableExpression() ) ) {
+		if ( tableDescriptor.name().equals( entityPersister.physicalTableNameForMutation( versionMapping ) ) ) {
 			versionMapping.decompose(
 					version,
 					0,

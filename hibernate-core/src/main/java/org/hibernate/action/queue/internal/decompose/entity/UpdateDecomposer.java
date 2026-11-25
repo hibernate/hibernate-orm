@@ -472,7 +472,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 	}
 
 	private boolean isVersionMappingTable(EntityTableDescriptor table) {
-		return table.name().equals( entityPersister.getVersionMapping().getContainingTableExpression() );
+		return table.name().equals( entityPersister.physicalTableNameForMutation( entityPersister.getVersionMapping() ) );
 	}
 
 	private void logImmutablePropertyModifications(int[] dirtyAttributeIndexes, boolean[] updateability) {
@@ -1070,8 +1070,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 
 	private void applyVersionBasedOptLocking(EntityTableDescriptor tableDescriptor, TableUpdateBuilder<?> tableUpdateBuilder) {
 		final var versionMapping = entityPersister.getVersionMapping();
-		if ( versionMapping != null
-				&& tableDescriptor.name().equals( versionMapping.getContainingTableExpression() ) ) {
+		if ( versionMapping != null && isVersionMappingTable( tableDescriptor ) ) {
 			tableUpdateBuilder.addOptimisticLockRestriction( versionMapping );
 		}
 	}

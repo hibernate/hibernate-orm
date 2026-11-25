@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -14,6 +15,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -93,6 +95,36 @@ class RestrictedSecondaryTableTest {
 			assertThat( projects.get( 0 ).linkedDocuments ).extracting( d -> d.id ).containsExactly( 1L );
 			assertThat( projects.get( 1 ).documents ).isEmpty();
 			assertThat( projects.get( 1 ).linkedDocuments ).isEmpty();
+		} );
+	}
+
+	@Test
+	@JiraKey("HHH-4246")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
+	void sizeOfUninitializedCollection(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final Project first = session.find( Project.class, 1L );
+			final Project second = session.find( Project.class, 2L );
+			assertThat( Hibernate.size( first.documents ) ).isEqualTo( 1 );
+			assertThat( Hibernate.size( first.linkedDocuments ) ).isEqualTo( 1 );
+			assertThat( Hibernate.size( second.documents ) ).isZero();
+			assertThat( Hibernate.size( second.linkedDocuments ) ).isZero();
+			assertThat( Hibernate.isInitialized( first.documents ) ).isFalse();
+			assertThat( Hibernate.isInitialized( first.linkedDocuments ) ).isFalse();
+		} );
+	}
+
+	@Test
+	@JiraKey("HHH-4246")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
+	void sizeFunction(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			assertThat( session.createSelectionQuery(
+					"select size(p.documents) from Project p order by p.id", Integer.class ).getResultList() )
+					.containsExactly( 1, 0 );
+			assertThat( session.createSelectionQuery(
+					"select size(p.linkedDocuments) from Project p order by p.id", Integer.class ).getResultList() )
+					.containsExactly( 1, 0 );
 		} );
 	}
 

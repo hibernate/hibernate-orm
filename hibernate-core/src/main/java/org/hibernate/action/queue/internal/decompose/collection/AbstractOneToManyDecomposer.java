@@ -1292,6 +1292,9 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			elementType.getIdentifierMapping().forEachColumn( (index, selectableMapping) -> {
 				updateBuilder.addKeyRestriction( selectableMapping );
 			} );
+			if ( persister.isIndexWrittenWithKeyRestriction() ) {
+				updateBuilder.addKeyRestrictionsLeniently( attributeMapping.getKeyDescriptor().getKeyPart() );
+			}
 
 			return new CollectionJdbcOperations.UpdateRowPlan(
 					updateBuilder.buildMutation().createMutationOperation( null, factory ),
@@ -1340,6 +1343,17 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 				jdbcValueBindings::bindRestriction,
 				session
 		);
+		if ( persister.isIndexWrittenWithKeyRestriction() ) {
+			attributeMapping.getKeyDescriptor().getKeyPart().decompose(
+					key,
+					(valueIndex, jdbcValue, jdbcValueMapping) -> {
+						if ( !jdbcValueMapping.isFormula() ) {
+							jdbcValueBindings.bindRestriction( valueIndex, jdbcValue, jdbcValueMapping );
+						}
+					},
+					session
+			);
+		}
 	}
 
 	/// Generates operation to perform "delete" SQL in the form -

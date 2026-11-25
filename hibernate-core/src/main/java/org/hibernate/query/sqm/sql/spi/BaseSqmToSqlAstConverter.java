@@ -215,6 +215,7 @@ import org.hibernate.query.sqm.tree.spi.expression.SqmToDuration;
 import org.hibernate.query.sqm.tree.spi.expression.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.spi.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.spi.expression.SqmUnaryOperation;
+import org.hibernate.query.sqm.tree.spi.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.spi.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.spi.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.spi.from.SqmCteJoin;
@@ -370,6 +371,7 @@ import org.hibernate.sql.ast.spi.query.select.SortSpecification;
 import org.hibernate.sql.ast.spi.query.update.Assignable;
 import org.hibernate.sql.ast.spi.query.update.Assignment;
 import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
+import org.hibernate.sql.exec.internal.EntityKeyJdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
@@ -4259,12 +4261,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						? resolveEntityPersister( (EntityDomainType<?>) treatedPath.getTreatTarget() )
 						: null
 		);
-		if ( allowLeftJoins && parentTableGroup instanceof CorrelatedTableGroup correlated
-				&& subPart instanceof ToOneAttributeMapping toOne && !toOne.isReferenceToPrimaryKey() ) {
-			// A correlated table group can only turn inner joins into subquery roots.
-			// Keep the nullable join on the correlated owner in the enclosing query.
-			return createTableGroup( correlated.getCorrelatedTableGroup(), joinedPath, true );
-		}
 
 		final TableGroup tableGroup;
 		if ( subPart instanceof TableGroupJoinProducer joinProducer ) {
@@ -4285,9 +4281,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				queryNodeProcessingState.getFromClause().addRoot( tableGroup );
 			}
 			else {
-				final boolean mayLackTarget = mayLackTarget( joinProducer )
-						|| allowLeftJoins && joinProducer instanceof ToOneAttributeMapping toOne
-								&& !toOne.isReferenceToPrimaryKey();
+				final boolean mayLackTarget = mayLackTarget( joinProducer );
 				final var compatibleLeftJoin =
 						mayLackTarget
 								? parentTableGroup.findCompatibleJoin( joinProducer, SqlAstJoinType.LEFT )
@@ -4917,12 +4911,43 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Expression visitEntityValuedPath(SqmEntityValuedSimplePath<?> sqmPath) {
+		final var inferredMapping = getInferredValueMapping();
+		final var fromClauseIndex = getFromClauseIndex();
+		if ( inferredMapping instanceof EntityMappingType
+				&& resolveMappingModelExpressible( sqmPath, getMappingMetamodel(), fromClauseIndex::findTableGroup )
+						instanceof ToOneAttributeMapping toOne
+				&& toOne.getSideNature() == ForeignKeyDescriptor.Nature.KEY
+				&& !toOne.isReferenceToPrimaryKey() ) {
+			final var owner = prepareReusablePath( fromClauseIndex, sqmPath, group -> {} );
+			return withTreatRestriction( associationIdentifier( sqmPath.getNavigablePath(), owner, toOne ), sqmPath );
+		}
 		return withTreatRestriction(
-				prepareReusablePath( sqmPath, fromClauseIndexStack.getCurrent(),
-						() -> EntityValuedPathInterpretation.from( sqmPath, getInferredValueMapping(), this ),
-						getInferredValueMapping() instanceof EntityMappingType ),
+				prepareReusablePath( sqmPath, () -> EntityValuedPathInterpretation.from( sqmPath, inferredMapping, this ) ),
 				sqmPath
 		);
+	}
+
+	/// Resolve the identifier using the unique key stored on the owner. Keep the lookup in the
+	/// expression so it can also be used in an ON clause or copied into a collection-table delete.
+	private Expression associationIdentifier(NavigablePath path, TableGroup owner, ToOneAttributeMapping toOne) {
+		final var join = toOne.createTableGroupJoin( path, owner, null, null, SqlAstJoinType.INNER, false, true, this );
+		final var target = join.getJoinedGroup();
+		target.getPrimaryTableReference(); // initialize the join predicate and association restrictions
+		final var entity = toOne.getAssociatedEntityMappingType();
+		final var id = entity.getIdentifierMapping();
+		final List<Expression> expressions = new ArrayList<>( id.getJdbcTypeCount() );
+		id.forEachSelectable( (index, column) -> {
+			final var query = new QuerySpec( false );
+			query.getFromClause().addRoot( target );
+			query.applyPredicate( join.getPredicate() );
+			final var table = target.resolveTableReference( column.getContainingTableExpression() );
+			query.getSelectClause().addSqlSelection( new SqlSelectionImpl(
+					getSqlExpressionResolver().resolveSqlExpression( table, column ) ) );
+			expressions.add( new SelectStatement( query ) );
+		} );
+		return new EntityValuedPathInterpretation<>(
+				id.asBasicValuedModelPart() != null ? expressions.get( 0 ) : new SqlTuple( expressions, id ),
+				path, target, entity );
 	}
 
 	@Override
@@ -6667,29 +6692,35 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			BiConsumer<Integer,JdbcParameter> jdbcParameterConsumer) {
 		sqmParameterMappingModelTypes.put( expression, valueMapping );
 		final var jdbcParams = jdbcParamsBySqmParam.get( expression );
+		final var entityKey = entityParameterKey( valueMapping );
+		if ( entityKey != null ) {
+			final int parameterId = entityParameterId( valueMapping, jdbcParams );
+			entityKey.forEachSelectable( (index, selectable) -> jdbcParameterConsumer.accept( index,
+					new EntityKeyJdbcParameter( selectable, parameterId + index, valueMapping ) ) );
+			return;
+		}
 		final int parameterId = jdbcParams == null
 				? jdbcParameters.getJdbcParameters().size()
 				: castNonNull( jdbcParams.get( 0 ).get( 0 ).getParameterId() );
-		final var bindable = bindable( valueMapping );
-		if ( bindable instanceof SelectableMappings selectableMappings ) {
+		if ( valueMapping instanceof SelectableMappings selectableMappings ) {
 			selectableMappings.forEachSelectable(
 					(index, selectableMapping)
 							-> jdbcParameterConsumer.accept( index,
 									new SqlTypedMappingJdbcParameter( selectableMapping, parameterId + index ) )
 			);
 		}
-		else if ( bindable instanceof SelectableMapping selectableMapping ) {
+		else if ( valueMapping instanceof SelectableMapping selectableMapping ) {
 			jdbcParameterConsumer.accept( 0,
 					new SqlTypedMappingJdbcParameter( selectableMapping, parameterId ) );
 		}
 		else {
-			final var sqlTypedMapping = sqlTypedMapping( expression, bindable );
+			final var sqlTypedMapping = sqlTypedMapping( expression, valueMapping );
 			if ( sqlTypedMapping == null ) {
-				if ( bindable == null ) {
+				if ( valueMapping == null ) {
 					throw new ConversionException(
 							"Could not determine neither the SqlTypedMapping nor the Bindable value for SqmParameter: " + expression );
 				}
-				bindable.forEachJdbcType(
+				valueMapping.forEachJdbcType(
 						(index, jdbcMapping) -> jdbcParameterConsumer.accept(
 								index,
 								new JdbcParameterImpl( jdbcMapping, parameterId + index )
@@ -6701,6 +6732,19 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						new SqlTypedMappingJdbcParameter( sqlTypedMapping, parameterId ) );
 			}
 		}
+	}
+
+	// Dialects with numbered parameter markers may reuse a marker only for the same key.
+	private int entityParameterId(MappingModelExpressible<?> mapping, List<List<JdbcParameter>> occurrences) {
+		if ( occurrences != null ) {
+			for ( var occurrence : occurrences ) {
+				if ( occurrence.get( 0 ) instanceof EntityKeyJdbcParameter parameter
+						&& parameter.getEntityMapping() == mapping ) {
+					return castNonNull( parameter.getParameterId() );
+				}
+			}
+		}
+		return jdbcParameters.getJdbcParameters().size();
 	}
 
 	private SqlTypedMapping sqlTypedMapping(SqmParameter<?> expression, Bindable bindable) {
@@ -6759,7 +6803,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 	}
 
-	private static Bindable bindable(MappingModelExpressible<?> valueMapping) {
+	private static @Nullable ValuedModelPart entityParameterKey(MappingModelExpressible<?> valueMapping) {
 		if ( valueMapping instanceof EntityAssociationMapping mapping ) {
 			return mapping.getForeignKeyDescriptor().getPart( mapping.getSideNature() );
 		}
@@ -6767,7 +6811,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return entityMappingType.getIdentifierMapping();
 		}
 		else {
-			return valueMapping;
+			return null;
 		}
 	}
 
@@ -8326,13 +8370,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					// not a comparison of entities
 					return required == null ? mapping : required;
 				}
+				else if ( isComparedByAnyKey( operand, fromClauseIndex ) ) {
+					continue;
+				}
 				else if ( operand instanceof SqmParameter<?> ) {
 					identifier = mapping;
 				}
-				else if ( !isComparedByAnyKey( operand, fromClauseIndex ) ) {
-					if ( required == null ) {
-						required = mapping;
-					}
+				else if ( required == null ) {
+					required = mapping;
 				}
 			}
 		}
@@ -8340,6 +8385,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private boolean isComparedByAnyKey(SqmExpression<?> operand, FromClauseIndex fromClauseIndex) {
+		if ( operand instanceof ValueBindJpaCriteriaParameter<?> value && value.isEntityWithoutIdentifier() ) {
+			return true;
+		}
 		// a join of an association which cannot be compared by its foreign key has the mapping of its entity too
 		return ( operand instanceof SqmFrom<?, ?> && !( operand instanceof SqmAttributeJoin<?, ?> )
 					|| operand instanceof SqmSubQuery<?>
@@ -8678,7 +8726,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		// otherwise - no special case...
 		final var fromClauseIndex = fromClauseIndexStack.getCurrent();
 		inferrableTypeAccessStack.push( () -> {
-			if ( predicate.getTestExpression() instanceof SqmParameter<?> ) {
+			if ( predicate.getTestExpression() instanceof SqmParameter<?> parameter
+					&& !isComparedByAnyKey( parameter, fromClauseIndex ) ) {
 				final var mapping = determineValueMapping( predicate.getTestExpression(), fromClauseIndex );
 				if ( mapping instanceof EntityMappingType ) {
 					return mapping;
@@ -8708,7 +8757,26 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			inferrableTypeAccessStack.pop();
 		}
 		handleTypeComparison( inPredicate );
+		final var elements = inPredicate.getListExpressions();
+		if ( !elements.isEmpty() && isAssociationIdentifierSubquery( elements.get( 0 ) ) ) {
+			// A leading scalar subquery is ambiguous with IN (subquery), which has different null semantics.
+			final var operator = predicate.isNegated() ? ComparisonOperator.NOT_EQUAL : ComparisonOperator.EQUAL;
+			final var junction = new Junction( predicate.isNegated() ? Junction.Nature.CONJUNCTION : Junction.Nature.DISJUNCTION,
+					getBooleanType() );
+			for ( var element : elements ) {
+				junction.add( new ComparisonPredicate( testExpression, operator, element, getBooleanType() ) );
+			}
+			return junction;
+		}
 		return inPredicate;
+	}
+
+	private static boolean isAssociationIdentifierSubquery(Expression expression) {
+		if ( expression instanceof EntityValuedPathInterpretation<?> path ) {
+			final var sql = path.getSqlExpression();
+			return ( sql instanceof SqlTuple tuple ? tuple.getExpressions().get( 0 ) : sql ) instanceof SelectStatement;
+		}
+		return false;
 	}
 
 	private void handleTypeComparison(InListPredicate inPredicate) {

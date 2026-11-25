@@ -47,6 +47,13 @@ public class NonPkAssociationEqualityPredicateParameterTest {
 
 					List<Order> orders = entityManager.createQuery( orderCriteria ).getResultList();
 					assertEquals( 0, orders.size() );
+
+					Customer customer = new Customer( "C", "Customer" );
+					customer.setCustomerNumber( 123L );
+					entityManager.persist( customer );
+					Order order = new Order( "O", customer );
+					entityManager.persist( order );
+					assertEquals( List.of( order ), entityManager.createQuery( orderCriteria ).getResultList() );
 				}
 		);
 	}

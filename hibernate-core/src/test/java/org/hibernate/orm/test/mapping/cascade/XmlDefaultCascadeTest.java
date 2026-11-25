@@ -98,6 +98,7 @@ class XmlDefaultCascadeTest {
 				.isEqualTo( expected );
 	}
 
+	@SuppressWarnings("unused")
 	public static class Parent {
 		private Integer id;
 		private Set<Child> children;
@@ -105,18 +106,22 @@ class XmlDefaultCascadeTest {
 		private Set<Unrelated> unrelated;
 	}
 
+	@SuppressWarnings("unused")
 	public static class Child {
 		private Integer id;
 	}
 
+	@SuppressWarnings("unused")
 	public static class Other {
 		private Integer id;
 	}
 
+	@SuppressWarnings("unused")
 	public static class Unrelated {
 		private Integer id;
 	}
 
+	@SuppressWarnings("unused")
 	public static class Holder {
 		private Integer id;
 		private Set<Child> items;

@@ -208,23 +208,18 @@ public class XmlDocumentImpl implements XmlDocument {
 		private final boolean autoImport;
 		private final boolean impliedLaziness;
 
-		private DefaultsImpl(
-				String pckg,
-				AccessType accessType,
-				String accessorStrategy,
-				String catalog,
-				String schema,
-				Boolean autoImport,
-				Boolean impliedLaziness,
-				String cascade) {
-			this.pckg = pckg;
-			this.accessType = accessType;
-			this.accessorStrategy = accessorStrategy;
-			this.catalog = catalog;
-			this.schema = schema;
-			this.autoImport = NullnessHelper.nullif( autoImport, true );
-			this.impliedLaziness = NullnessHelper.nullif( impliedLaziness, false );
-			this.cascade = cascade;
+		private DefaultsImpl(JaxbEntityMappingsImpl jaxbRoot, PersistenceUnitMetadata metadata) {
+			this.pckg = jaxbRoot.getPackage();
+			this.accessType = NullnessHelper.coalesce( jaxbRoot.getAccess(), metadata.getAccessType() );
+			this.accessorStrategy = NullnessHelper.coalesce(
+					jaxbRoot.getAttributeAccessor(),
+					metadata.getDefaultAccessStrategyName()
+			);
+			this.catalog = jaxbRoot.getCatalog();
+			this.schema = jaxbRoot.getSchema();
+			this.autoImport = NullnessHelper.nullif( jaxbRoot.isAutoImport(), true );
+			this.impliedLaziness = NullnessHelper.nullif( jaxbRoot.isDefaultLazy(), false );
+			this.cascade = jaxbRoot.getDefaultCascade();
 		}
 
 		@Override
@@ -268,16 +263,7 @@ public class XmlDocumentImpl implements XmlDocument {
 		}
 
 		static DefaultsImpl consume(JaxbEntityMappingsImpl jaxbRoot, PersistenceUnitMetadata metadata) {
-			return new DefaultsImpl(
-					jaxbRoot.getPackage(),
-					NullnessHelper.coalesce( jaxbRoot.getAccess(), metadata.getAccessType() ),
-					NullnessHelper.coalesce( jaxbRoot.getAttributeAccessor(), metadata.getDefaultAccessStrategyName() ),
-					jaxbRoot.getCatalog(),
-					jaxbRoot.getSchema(),
-					jaxbRoot.isAutoImport(),
-					jaxbRoot.isDefaultLazy(),
-					jaxbRoot.getDefaultCascade()
-			);
+			return new DefaultsImpl( jaxbRoot, metadata );
 		}
 	}
 

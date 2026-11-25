@@ -8324,11 +8324,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				hasParameter = true;
 			}
 			else if ( operand instanceof SqmEntityValuedSimplePath<?> path ) {
-				final var mapping = resolveMappingModelExpressible( path, getMappingMetamodel(),
-						getFromClauseIndex()::findTableGroup );
-				if ( !( mapping instanceof ToOneAttributeMapping toOne )
-						|| toOne.isReferenceToPrimaryKey() || !toOne.isFkOptimizationAllowed()
-						|| hasRestrictedTarget( toOne, this ) ) {
+				final var toOne = comparisonAssociation( path );
+				if ( toOne == null ) {
 					return null;
 				}
 				if ( association != null && association.getForeignKeyDescriptor().getTargetPart()
@@ -8342,6 +8339,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 		}
 		return hasParameter ? association : null;
+	}
+
+	private @Nullable ToOneAttributeMapping comparisonAssociation(SqmEntityValuedSimplePath<?> path) {
+		final var mapping = resolveMappingModelExpressible( path, getMappingMetamodel(),
+				getFromClauseIndex()::findTableGroup );
+		return mapping instanceof ToOneAttributeMapping toOne && !toOne.isReferenceToPrimaryKey()
+				&& toOne.isFkOptimizationAllowed() && !hasRestrictedTarget( toOne, this ) ? toOne : null;
 	}
 
 	private Expression comparisonKey(SqmExpression<?> operand, ToOneAttributeMapping association) {
@@ -8358,19 +8362,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private Expression parameterKey(SqmParameter<?> parameter, ToOneAttributeMapping association, boolean available) {
-		return available ? consumeSqmParameter( parameter, association, (i, p) -> {} )
-				: lookupParameterKey( association, parameter );
+		if ( available ) {
+			return consumeSqmParameter( parameter, association, (i, p) -> {} );
+		}
+		final var identifier = consumeSqmParameter( parameter, association.getAssociatedEntityMappingType(), (i, p) -> {} );
+		return lookupKeyByIdentifier( association, identifier );
 	}
 
-	private Expression lookupParameterKey(ToOneAttributeMapping association, SqmParameter<?> parameter) {
+	private Expression lookupKeyByIdentifier(ToOneAttributeMapping association, Expression identifier) {
 		final var entity = association.getAssociatedEntityMappingType();
 		final var restrictions = new PredicateCollector();
 		final var target = entity.createRootTableGroup( true, new NavigablePath( entity.getEntityName() ),
 				null, null, () -> restrictions, this );
 		final var id = buildColumnReferenceExpression( target, entity.getIdentifierMapping(),
 				getSqlExpressionResolver(), getCreationContext().getSessionFactory() );
-		final var argumentId = consumeSqmParameter( parameter, entity, (i, p) -> {} );
-		restrictions.accept( new ComparisonPredicate( id, ComparisonOperator.EQUAL, argumentId, getBooleanType() ) );
+		restrictions.accept( new ComparisonPredicate( id, ComparisonOperator.EQUAL, identifier, getBooleanType() ) );
 		return selectKey( association.getForeignKeyDescriptor().getTargetPart(), target, restrictions.getPredicate() );
 	}
 
@@ -8785,14 +8791,40 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private @Nullable ToOneAttributeMapping foreignKeyForInList(SqmInListPredicate<?> predicate) {
 		final var test = predicate.getTestExpression();
-		if ( !( test instanceof SqmEntityValuedSimplePath<?> || test instanceof SqmParameter<?>
-				|| test instanceof SqmLiteral<?> ) ) {
+		final var elements = predicate.getListExpressions();
+		if ( test instanceof SqmEntityValuedSimplePath<?> path ) {
+			return elements.stream().anyMatch( SqmParameter.class::isInstance ) ? comparisonAssociation( path ) : null;
+		}
+		if ( !( test instanceof SqmParameter<?> || test instanceof SqmLiteral<?> ) ) {
 			return null;
 		}
-		final List<SqmExpression<?>> operands = new ArrayList<>( predicate.getListExpressions().size() + 1 );
+		final List<SqmExpression<?>> operands = new ArrayList<>( elements.size() + 1 );
 		operands.add( test );
-		operands.addAll( predicate.getListExpressions() );
+		for ( var element : elements ) {
+			if ( !( element instanceof SqmSubQuery<?> ) ) {
+				operands.add( element );
+			}
+		}
 		return foreignKeyForComparison( operands );
+	}
+
+	private Expression inListComparisonKey(SqmExpression<?> element, ToOneAttributeMapping association) {
+		if ( element instanceof SqmParameter<?> || element instanceof SqmLiteral<?> ) {
+			return comparisonKey( element, association );
+		}
+		final var entity = association.getAssociatedEntityMappingType();
+		// The first selection alone does not determine the key for every branch of a set operation.
+		final var required = element instanceof SqmSubQuery<?> subQuery && !subQuery.getQueryPart().isSimpleQueryPart()
+				? entity : determineRequiredMapping( element, getFromClauseIndex() );
+		if ( required == null
+				|| required instanceof ToOneAttributeMapping toOne
+						&& toOne.isFkOptimizationAllowed() && !hasRestrictedTarget( toOne, this )
+						&& toOne.getForeignKeyDescriptor().getTargetPart() == association.getForeignKeyDescriptor().getTargetPart() ) {
+			return comparisonKey( element, association );
+		}
+		// The element exposes a different key. Resolve the referenced key on that side
+		// of the comparison so the owner can still be searched by its foreign key.
+		return lookupKeyByIdentifier( association, interpretComparisonOperand( element, () -> entity ) );
 	}
 
 	@Override
@@ -8815,7 +8847,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final var inList = new InListPredicate( comparisonKey( predicate.getTestExpression(), association ),
 					predicate.isNegated(), getBooleanType() );
 			for ( var expression : listExpressions ) {
-				inList.addExpression( comparisonKey( expression, association ) );
+				inList.addExpression( inListComparisonKey( expression, association ) );
 			}
 			return finishInListPredicate( inList, true );
 		}

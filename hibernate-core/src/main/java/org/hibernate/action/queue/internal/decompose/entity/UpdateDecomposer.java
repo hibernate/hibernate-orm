@@ -113,7 +113,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		this.staticUpdateOperations = entityPersister.isDynamicUpdate()
 				// entity specified dynamic-update - skip static operations
 				? null
-				: generateStaticOperations();
+				: generateStaticOperations( null );
 		this.staticJdbcUpdateOperations = staticUpdateOperations == null
 				? null
 				: generateStaticJdbcOperations( staticUpdateOperations );
@@ -348,9 +348,12 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 				|| effectiveOptLockStyle.isAllOrDirty()
 				|| preUpdateGeneratedAttributeIndexes.length > 0
 				|| entityPersister.hasUninitializedLazyProperties( entity );
+		final var partitionKeys = PartitionKeyValue.fromState( entityPersister, previousState, session );
+		final boolean hasNullPartitionKey = PartitionKeyValue.hasNull( partitionKeys );
 
 		CachedUpdates cachedUpdates = null;
 		if ( filteredAssociations.isActive() && FilteredUpdateCache.supports( entityPersister )
+				&& !hasNullPartitionKey
 				&& rowId == null && !entityPersister.hasUninitializedLazyProperties( entity )
 				&& entityEntry != null && entityEntry.isModifiableEntity()
 				&& ( !entityPersister.isVersioned() || previousVersion != null )
@@ -362,7 +365,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 			final Object currentIdentifier = identifier;
 			cachedUpdates = filteredUpdateCache.resolve( key, sessionFactory, () -> {
 				final var updates = generateDynamicUpdateOperations( entity, currentIdentifier, null,
-						currentState, oldState, previousVersion, updateability, valuesAnalysis, session );
+						currentState, oldState, previousVersion, updateability, valuesAnalysis, null, session );
 				final var jdbcOperations = generateStaticJdbcOperations( updates );
 				return new CachedUpdates( updates, jdbcOperations, generateStaticStatementShapeKeys( jdbcOperations ) );
 			} );
@@ -371,8 +374,9 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		final var effectiveGroup = cachedUpdates != null ? cachedUpdates.updates()
 				: needsDynamicUpdate
 						? generateDynamicUpdateOperations( entity, identifier, rowId, state, previousState,
-								previousVersion, updateability, valuesAnalysis, session )
-						: staticUpdateOperations;
+								previousVersion, updateability, valuesAnalysis,
+								hasNullPartitionKey ? partitionKeys : null, session )
+						: hasNullPartitionKey ? generateStaticOperations( partitionKeys ) : staticUpdateOperations;
 
 		int localOrd = 0;
 		FlushOperation previousOperation = null;
@@ -422,6 +426,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 					rowId,
 					state,
 					previousState,
+					partitionKeys,
 					previousVersion,
 					updateability,
 					effectiveOptLockStyle,
@@ -741,7 +746,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		return optimisticLockStyle;
 	}
 
-	private Map<String, LogicalTableUpdate<?>> generateStaticOperations() {
+	private Map<String, LogicalTableUpdate<?>> generateStaticOperations(List<PartitionKeyValue> partitionKeys) {
 		// todo : we should be skipping static update generation for DIRTY opt locking?
 
 		final Map<String, TableUpdateBuilder<?>> staticOperationBuilders = new HashMap<>();
@@ -758,7 +763,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 			);
 		} );
 
-		applyStaticUpdateDetails( staticOperationBuilders );
+		applyStaticUpdateDetails( staticOperationBuilders, partitionKeys );
 
 		final Map<String, LogicalTableUpdate<?>> staticOperations = new HashMap<>();
 		staticOperationBuilders.forEach( (name, operationBuilder) -> {
@@ -859,6 +864,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 			Object version,
 			boolean[] updateable,
 			UpdateValuesAnalysis valuesAnalysis,
+			List<PartitionKeyValue> partitionKeys,
 			SharedSessionContractImplementor session) {
 		final Map<String, TableUpdateBuilder<?>> operationBuilders = new HashMap<>();
 		final var versionMapping = entityPersister.getVersionMapping();
@@ -888,6 +894,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 				rowId,
 				valuesAnalysis,
 				updateable,
+				partitionKeys,
 				session
 		);
 
@@ -901,7 +908,9 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		return operations;
 	}
 
-	private void applyStaticUpdateDetails(Map<String, TableUpdateBuilder<?>> builders) {
+	private void applyStaticUpdateDetails(
+			Map<String, TableUpdateBuilder<?>> builders,
+			List<PartitionKeyValue> partitionKeys) {
 		final boolean[] propertyUpdateability = entityPersister.getPropertyUpdateability();
 
 		entityPersister.forEachMutableTableDescriptor( (tableDescriptor) -> {
@@ -933,7 +942,8 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 
 		// Apply partitioned selection restrictions if needed
 		if ( entityPersister.hasPartitionedSelectionMapping() ) {
-			applyPartitionedSelectionRestrictions( builders );
+			PartitionKeyValue.addRestrictions( entityPersister, builders, partitionKeys,
+					TableMapping::getUpdateDetails );
 		}
 		for ( var builder : builders.values() ) {
 			TenantIdHelper.applyTenantRestriction( entityPersister, builder );
@@ -997,6 +1007,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 			Object rowId,
 			UpdateValuesAnalysis valuesAnalysis,
 			boolean[] updateable,
+			List<PartitionKeyValue> partitionKeys,
 			SharedSessionContractImplementor session) {
 		entityPersister.forEachMutableTableDescriptor( (tableDescriptor) -> {
 			final var builder = builders.get( tableDescriptor.name() );
@@ -1029,7 +1040,8 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 
 		// Apply partitioned selection restrictions if needed
 		if ( entityPersister.hasPartitionedSelectionMapping() ) {
-			applyPartitionedSelectionRestrictions( builders );
+			PartitionKeyValue.addRestrictions( entityPersister, builders, partitionKeys,
+					TableMapping::getUpdateDetails );
 		}
 		for ( var builder : builders.values() ) {
 			TenantIdHelper.applyTenantRestriction( entityPersister, builder );
@@ -1150,26 +1162,6 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		}
 	}
 
-	private void applyPartitionedSelectionRestrictions(Map<String, TableUpdateBuilder<?>> builders) {
-		final var attributeMappings = entityPersister.getAttributeMappings();
-
-		for ( int m = 0; m < attributeMappings.size(); m++ ) {
-			final var attributeMapping = attributeMappings.get( m );
-			final int jdbcTypeCount = attributeMapping.getJdbcTypeCount();
-			for ( int i = 0; i < jdbcTypeCount; i++ ) {
-				final var selectableMapping = attributeMapping.getSelectable( i );
-				if ( selectableMapping.isPartitioned() ) {
-					final String tableNameForMutation =
-							entityPersister.physicalTableNameForMutation( selectableMapping );
-					final TableUpdateBuilder<?> builder = builders.get( tableNameForMutation );
-					if ( builder != null ) {
-						builder.addKeyRestrictionLeniently( selectableMapping );
-					}
-				}
-			}
-		}
-	}
-
 	private EntityUpdateBindPlan createUpdateBindPlan(
 			EntityTableDescriptor tableDescriptor,
 			Object entity,
@@ -1177,6 +1169,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 			Object rowId,
 			Object[] state,
 			Object[] previousState,
+			List<PartitionKeyValue> partitionKeys,
 			Object version,
 			boolean[] updateable,
 			OptimisticLockStyle effectiveOptLockStyle,
@@ -1200,6 +1193,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 				rowId,
 				state,
 				previousState,
+				partitionKeys,
 				version,
 				updateable,
 				effectiveOptLockStyle,

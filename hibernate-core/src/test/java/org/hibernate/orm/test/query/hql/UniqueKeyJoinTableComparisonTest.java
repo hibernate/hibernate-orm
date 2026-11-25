@@ -45,6 +45,101 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 @SessionFactory(useCollectingStatementObserver = true)
 @Jira("https://hibernate.atlassian.net/browse/HHH-21257")
 class UniqueKeyJoinTableComparisonTest {
+	@ParameterizedTest
+	@ValueSource(strings = { "item in (cart.favorite, :value)", "item in (:value, cart.favorite)" })
+	void toOneAndParameterUseIdentifier(String predicate, SessionFactoryScope scope) {
+		final var observer = scope.getCollectingStatementObserver();
+		scope.inTransaction( session -> {
+			final Item reference = session.getReference( Item.class, 1L );
+			observer.clear();
+			assertEquals( List.of( 1L, 2L ), session.createQuery(
+					"select item.id from Cart cart join cart.items item, Item root "
+							+ "where cart.id = 1 and " + predicate + " and root = :value order by item.id", Long.class )
+					.setParameter( "value", reference ).getResultList() );
+			assertFalse( Hibernate.isInitialized( reference ) );
+			assertEquals( 1, observer.getSqlQueries().size() );
+		} );
+	}
+
+	@Test
+	void toOneAndDetachedParameterUseIdentifier(SessionFactoryScope scope) {
+		final Item reference = scope.fromTransaction( session -> session.getReference( Item.class, 1L ) );
+		final var observer = scope.getCollectingStatementObserver();
+		scope.inTransaction( session -> {
+			observer.clear();
+			assertEquals( List.of( 1L, 2L ), session.createQuery(
+					"select item.id from Cart cart join cart.items item where cart.id = 1 "
+							+ "and item in (cart.favorite, :value) order by item.id", Long.class )
+					.setParameter( "value", reference ).getResultList() );
+			assertEquals( 1, observer.getSqlQueries().size() );
+		} );
+		assertFalse( Hibernate.isInitialized( reference ) );
+	}
+
+	@Test
+	void nullParameterWithToOne(SessionFactoryScope scope) {
+		scope.inTransaction( session -> assertEquals( List.of( 2L ), session.createQuery(
+				"select item.id from Cart cart join cart.items item where cart.id = 1 "
+						+ "and item in (cart.favorite, :value) order by item.id", Long.class )
+				.setParameter( "value", null ).getResultList() ) );
+	}
+
+	@Test
+	void parameterOnLeftOfInWithToOne(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final Item reference = session.getReference( Item.class, 1L );
+			assertEquals( List.of( 1L ), session.createQuery(
+					"select item.id from Cart cart join cart.items item where cart.id = 1 "
+							+ "and :value in (cart.favorite, item) order by item.id", Long.class )
+					.setParameter( "value", reference ).getResultList() );
+			assertFalse( Hibernate.isInitialized( reference ) );
+		} );
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = { "cart.favorite = :value", ":value = cart.favorite" })
+	void toOneComparisonWithParameter(String predicate, SessionFactoryScope scope) {
+		final var observer = scope.getCollectingStatementObserver();
+		scope.inTransaction( session -> {
+			final Item reference = session.getReference( Item.class, 2L );
+			observer.clear();
+			assertEquals( List.of( 1L ), session.createQuery(
+					"select cart.id from Cart cart where " + predicate, Long.class )
+					.setParameter( "value", reference ).getResultList() );
+			assertFalse( Hibernate.isInitialized( reference ) );
+			assertEquals( 1, observer.getSqlQueries().size() );
+		} );
+	}
+
+	@Test
+	void nullToOneMakesNotInUnknown(SessionFactoryScope scope) {
+		scope.inTransaction( session -> assertEquals( List.of(), session.createQuery(
+				"select cart.id from Cart cart where cart.id = 3 and :value not in (cart.favorite)", Long.class )
+				.setParameter( "value", session.getReference( Item.class, 1L ) ).getResultList() ) );
+	}
+
+	@Test
+	void nullableToOneInCorrelatedSubquery(SessionFactoryScope scope) {
+		scope.inTransaction( session -> assertEquals( List.of( 3L ), session.createQuery(
+				"select cart.id from Cart cart where cart.id = 3 and exists "
+						+ "(select 1 from Item root where cart.id = 3 or cart.favorite = :value)", Long.class )
+				.setParameter( "value", session.getReference( Item.class, 1L ) ).getResultList() ) );
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = { "cart.favorite in (:value, cart.favorite)",
+			"cart.favorite not in (:value, cart.favorite)",
+			"cart.favorite between :value and cart.favorite" })
+	void nullableToOneRetainsOwnerInDisjunction(String predicate, SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final Item reference = session.getReference( Item.class, 1L );
+			assertEquals( List.of( 3L ), session.createQuery(
+					"select cart.id from Cart cart where cart.id = 3 and (cart.id = 3 or "
+							+ predicate + ")", Long.class )
+					.setParameter( "value", reference ).getResultList() );
+			assertFalse( Hibernate.isInitialized( reference ) );
+		} );
+	}
 
 	@BeforeEach
 	void setUp(SessionFactoryScope scope) {

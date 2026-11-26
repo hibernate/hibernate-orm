@@ -1104,7 +1104,16 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 	@Override
 	@SPI({ USE, IMPLEMENT })
 	public CurrentTimestampSelection getCurrentTimestampSelection() {
-		return CurrentTimestampSelection.prepared( "select now()" );
+		// M mode (MySQL kernel): `now()` is second-precision (MySQL NOW semantics), so two
+		// DB-clock version values generated within the same second compare equal and
+		// version-dependent tests fail (VersionSourceTest, DbVersionTest). Use `now(6)` to
+		// match currentTimestamp() and the datetime($p) column precision. A mode (openGauss
+		// PG kernel): `now()` is microsecond-precision.
+		return CurrentTimestampSelection.prepared(
+				isMMode()
+						? "select now(" + getTypeSizingProfile().defaultTimestampPrecision() + ")"
+						: "select now()"
+		);
 	}
 
 	@Override

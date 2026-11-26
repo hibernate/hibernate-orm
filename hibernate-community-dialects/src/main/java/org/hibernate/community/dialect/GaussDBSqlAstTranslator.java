@@ -250,10 +250,12 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends PostgreSQL
 		// SET-clause columns of the target table are ambiguous when the joined tables have
 		// the same column names ("Column reference ... is ambiguous"), so qualify them with
 		// the target table's identification variable (probe-verified: `set p1_0.code=` works,
-		// bare `set code=` is rejected).
+		// bare `set code=` is rejected). Simple single-table updates keep the unqualified
+		// column: they always carry a FROM-clause root (the target table itself), so the
+		// test must be for a non-trivial FROM clause (joined tables), not just non-empty.
 		if ( getDialect() instanceof GaussDBDialect g && g.isMMode()
 				&& getCurrentDmlStatement() instanceof UpdateStatement updateStatement
-				&& !updateStatement.getFromClause().getRoots().isEmpty() ) {
+				&& hasNonTrivialFromClause( updateStatement.getFromClause() ) ) {
 			final String dmlAlias = updateStatement.getTargetTable().getIdentificationVariable();
 			if ( dmlAlias != null ) {
 				column.appendColumnForWrite( this, dmlAlias );
@@ -272,7 +274,7 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends PostgreSQL
 			// bare `set code=` is rejected).
 			if ( getClauseStack().getCurrent() == Clause.SET
 					&& getCurrentDmlStatement() instanceof UpdateStatement updateStatement
-					&& !updateStatement.getFromClause().getRoots().isEmpty() ) {
+					&& hasNonTrivialFromClause( updateStatement.getFromClause() ) ) {
 				final String dmlAlias = updateStatement.getTargetTable().getIdentificationVariable();
 				if ( columnReference.getQualifier() == null && dmlAlias != null ) {
 					return dmlAlias;

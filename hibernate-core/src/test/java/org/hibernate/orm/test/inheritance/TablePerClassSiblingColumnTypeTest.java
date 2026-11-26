@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -68,6 +69,7 @@ class TablePerClassSiblingColumnTypeTest {
 	// MySQL and MariaDB both actually allow this :/
 	@SkipForDialect(dialectClass = MySQLDialect.class)
 	@SkipForDialect(dialectClass = MariaDBDialect.class)
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "GaussDB M mode (MySQL-compatible) also allows mixing the incompatible sibling column types, so the HHH-5605 expected failure never occurs and the @FailureExpected check throws")
 	@FailureExpected(jiraKey = "HHH-5605", reason = "The polymorphic union combines same-named sibling columns with incompatible types")
 	void testPolymorphicQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> assertRows( session.createQuery(

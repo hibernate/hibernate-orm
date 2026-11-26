@@ -19,8 +19,10 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.mutation.PartitionKeyValue;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.spi.mutation.TableMapping;
 import org.hibernate.sql.ast.spi.model.MutatingTableReference;
 import org.hibernate.sql.ast.spi.model.TableInsert;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilder;
@@ -333,7 +335,7 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 			addVersionRestriction( updateBuilder, tableDescriptor );
 		}
 		addNonVersionOptimisticLockRestrictions( updateBuilder, tableDescriptor, loadedState, effectiveOptLockStyle, session );
-		addPartitionedSelectionRestrictions( updateBuilder, tableDescriptor, loadedState );
+		addPartitionedSelectionRestrictions( updateBuilder, tableDescriptor, loadedState, session );
 		TenantIdHelper.applyTenantRestriction( entityPersister, updateBuilder );
 
 		return updateBuilder.buildMutation().createMutationOperation( null, sessionFactory );
@@ -374,17 +376,13 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 	private void addPartitionedSelectionRestrictions(
 			TableUpdateBuilderStandard<MutationOperation> updateBuilder,
 			EntityTableDescriptor tableDescriptor,
-			Object[] loadedState) {
-		if ( loadedState == null || !entityPersister.hasPartitionedSelectionMapping() ) {
-			return;
-		}
-		for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
-			final var attribute = tableDescriptor.attributes().get( i );
-			attribute.forEachSelectable( (selectionIndex, selectableMapping) -> {
-				if ( selectableMapping.isPartitioned() ) {
-					updateBuilder.addKeyRestrictionLeniently( selectableMapping );
-				}
-			} );
+			Object[] loadedState,
+			SharedSessionContractImplementor session) {
+		if ( loadedState != null && entityPersister.hasPartitionedSelectionMapping() ) {
+			PartitionKeyValue.addRestrictions( entityPersister,
+					table -> tableDescriptor.name().equals( table ) ? updateBuilder : null,
+					PartitionKeyValue.fromState( entityPersister, loadedState, session ),
+					TableMapping::getUpdateDetails );
 		}
 	}
 

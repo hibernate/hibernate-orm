@@ -193,6 +193,26 @@ public record PartitionKeyValue(String table, SelectableMapping selectable, Obje
 		}
 	}
 
+	/// Bind the restrictions of an operation which mutates a table with the
+	/// partition key columns of the given table of the entity, executed by a
+	/// [org.hibernate.engine.jdbc.mutation.MutationExecutor].
+	public static void bindRestrictions(
+			List<PartitionKeyValue> values,
+			String table,
+			org.hibernate.engine.jdbc.mutation.JdbcValueBindings bindings,
+			MutationOperation operation) {
+		for ( var key : values ) {
+			if ( key.table.equals( table ) ) {
+				final var column = key.selectable.getSelectionExpression();
+				// IS NULL has no parameter. Custom SQL can still have one for a null value.
+				if ( key.value != null || operation.findValueDescriptor( column, ParameterUsage.RESTRICT ) != null ) {
+					bindings.bindValue( key.value, operation.getTableDetails().getTableName(), column,
+							ParameterUsage.RESTRICT );
+				}
+			}
+		}
+	}
+
 	private static int columnCount(EntityPersister persister) {
 		if ( !persister.hasPartitionedSelectionMapping() ) {
 			return 0;

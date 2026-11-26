@@ -12,8 +12,11 @@ import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.spi.mutation.MutationType;
+import org.hibernate.sql.spi.mutation.TableMapping;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.internal.MutationGroupSingle;
+
+import java.util.List;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.persister.entity.mutation.AbstractTemporalUpdateCoordinator.applyTemporalEnding;
@@ -51,8 +54,9 @@ public class DeleteCoordinatorHistory
 		this.historyBatchKey = new BasicBatchKey( entityPersister.getEntityName() + "#HISTORY_DELETE" );
 		final boolean versioned = entityPersister.optimisticLockStyle().isVersion()
 				&& entityPersister.getVersionMapping() != null;
-		this.historyEndUpdateGroup = buildHistoryEndUpdateGroup( versioned );
-		this.unversionedHistoryEndUpdateGroup = versioned ? buildHistoryEndUpdateGroup( false ) : historyEndUpdateGroup;
+		this.historyEndUpdateGroup = buildHistoryEndUpdateGroup( versioned, null );
+		this.unversionedHistoryEndUpdateGroup =
+				versioned ? buildHistoryEndUpdateGroup( false, null ) : historyEndUpdateGroup;
 	}
 
 	@Nullable
@@ -82,7 +86,19 @@ public class DeleteCoordinatorHistory
 			@Nonnull Object id,
 			@Nullable Object oldVersion,
 			@Nonnull SharedSessionContractImplementor session) {
-		final var operationGroup = entity == null ? unversionedHistoryEndUpdateGroup : historyEndUpdateGroup;
+		final var persister = entityPersister();
+		final var versionMapping = persister.getVersionMapping();
+		final boolean applyVersion =
+				entity != null && versionMapping != null && persister.optimisticLockStyle().isVersion();
+		final var partitionKeys = partitionKeys( entity, session );
+		final MutationOperationGroup operationGroup;
+		if ( PartitionKeyValue.needsDynamicRestriction( persister, partitionKeys ) ) {
+			// a null or unknown partition key cannot be bound to the static statement
+			operationGroup = buildHistoryEndUpdateGroup( applyVersion, partitionKeys );
+		}
+		else {
+			operationGroup = entity == null ? unversionedHistoryEndUpdateGroup : historyEndUpdateGroup;
+		}
 		final var mutationExecutor =
 				mutationExecutorService.createExecutor( resolveBatchKeyAccess( operationGroup != historyEndUpdateGroup, session ),
 						operationGroup, session );
@@ -94,8 +110,10 @@ public class DeleteCoordinatorHistory
 						(EntityTableMapping) operation.getTableDetails() );
 			}
 
-			final var versionMapping = entityPersister().getVersionMapping();
-			if ( entity != null && versionMapping != null && entityPersister().optimisticLockStyle().isVersion() ) {
+			PartitionKeyValue.bindRestrictions( partitionKeys, persister.getIdentifierTableMapping().getTableName(),
+					jdbcValueBindings, operationGroup.getSingleOperation() );
+
+			if ( applyVersion ) {
 				jdbcValueBindings.bindValue(
 						oldVersion,
 						historyTableMapping.getTableName(),
@@ -128,13 +146,42 @@ public class DeleteCoordinatorHistory
 		}
 	}
 
+	/**
+	 * The partition key of the row, taken from its loaded state, or from the given
+	 * instance if it does not belong to a persistence context, as in a stateless
+	 * session. An unloaded reference to an entity with a partition key is always
+	 * loaded before it is deleted.
+	 */
 	@Nonnull
-	private MutationOperationGroup buildHistoryEndUpdateGroup(boolean applyVersion) {
+	private List<PartitionKeyValue> partitionKeys(
+			@Nullable Object entity,
+			@Nonnull SharedSessionContractImplementor session) {
+		final var persister = entityPersister();
+		if ( entity == null || !persister.hasPartitionedSelectionMapping() ) {
+			return List.of();
+		}
+		final var entry = session.getPersistenceContextInternal().getEntry( entity );
+		return PartitionKeyValue.fromState( persister,
+				entry == null ? persister.getValues( entity ) : entry.getLoadedState(), session );
+	}
+
+	/**
+	 * @param partitionKeys the partition key of the row, or {@code null} for
+	 *                      a parameter for each of its columns
+	 */
+	@Nonnull
+	private MutationOperationGroup buildHistoryEndUpdateGroup(
+			boolean applyVersion,
+			@Nullable List<PartitionKeyValue> partitionKeys) {
 		final var tableUpdateBuilder =
 				new TableUpdateBuilderStandard<>( entityPersister(), historyTableMapping, factory() );
 
 		applyKeyRestriction( null, entityPersister(), tableUpdateBuilder, historyTableMapping );
 		applyTemporalEnding( tableUpdateBuilder, temporalMapping );
+		// the history table has the partition key columns of the identifier table
+		applyPartitionKeyRestriction( tableUpdateBuilder,
+				entityPersister().getIdentifierTableMapping().getTableName(),
+				partitionKeys, TableMapping::getUpdateDetails );
 		if ( applyVersion ) {
 			applyVersionOptimisticLocking( tableUpdateBuilder );
 		}

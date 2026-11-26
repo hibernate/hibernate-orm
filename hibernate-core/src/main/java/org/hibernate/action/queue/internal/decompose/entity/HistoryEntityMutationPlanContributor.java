@@ -28,8 +28,10 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.mutation.PartitionKeyValue;
 import org.hibernate.persister.entity.mutation.TemporalMutationHelper;
 import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.spi.mutation.TableMapping;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.model.LogicalTableUpdate;
 import org.hibernate.sql.ast.spi.model.MutatingTableReference;
@@ -62,6 +64,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 	private final TableInsert staticHistoryInsert;
 	private final MutationOperation staticHistoryEndOperation;
 	private final MutationOperation unversionedHistoryEndOperation;
+	private final boolean versioned;
 
 	public HistoryEntityMutationPlanContributor(
 			EntityPersister entityPersister,
@@ -77,10 +80,11 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 				false
 		);
 		this.staticHistoryInsert = buildHistoryInsert( entityPersister.getPropertyInsertability(), null, null );
-		final boolean versioned = entityPersister.optimisticLockStyle() == OptimisticLockStyle.VERSION
+		this.versioned = entityPersister.optimisticLockStyle() == OptimisticLockStyle.VERSION
 				&& entityPersister.getVersionMapping() != null;
-		this.staticHistoryEndOperation = buildHistoryEndOperation( versioned );
-		this.unversionedHistoryEndOperation = versioned ? buildHistoryEndOperation( false ) : staticHistoryEndOperation;
+		this.staticHistoryEndOperation = buildHistoryEndOperation( versioned, null );
+		this.unversionedHistoryEndOperation =
+				versioned ? buildHistoryEndOperation( false, null ) : staticHistoryEndOperation;
 	}
 
 	@Override
@@ -126,7 +130,8 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 					"EntityUpdateAction(" + entityPersister.getEntityName() + "#history-end)",
 					context.identifier(),
 					context.previousVersion(),
-					context.previousState()
+					context.previousState(),
+					context.session()
 			);
 			initializeStateForRevisionInsert( context, historyTableDescriptor );
 			final var insert = createHistoryInsertOperation( context );
@@ -149,7 +154,8 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 				"EntityDeleteAction(" + entityPersister.getEntityName() + "#history)",
 				context.identifier(),
 				context.version(),
-				loadedState
+				loadedState,
+				context.session()
 		) );
 	}
 
@@ -159,11 +165,14 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 		final int[] dirtyFields = context.action().getDirtyFields();
 		final boolean revisionFromCurrentTransaction = context.updatesRevisionFromCurrentTransaction();
 		if ( revisionFromCurrentTransaction || dirtyFields != null && dirtyFields.length != 0 ) {
+			final Object[] loadedState = context.previousState() == null ? context.state() : context.previousState();
+			final var partitionKeys = PartitionKeyValue.fromState( entityPersister, loadedState, context.session() );
 			final var details = buildHistoryInPlaceUpdate(
 					context.entity(),
 					context.state(),
 					dirtyFields,
 					revisionFromCurrentTransaction,
+					partitionKeys,
 					context.session()
 			);
 			if ( details != null ) {
@@ -175,7 +184,8 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 								context.entity(),
 								context.identifier(),
 								context.state(),
-								context.previousState() == null ? context.state() : context.previousState(),
+								loadedState,
+								partitionKeys,
 								context.previousVersion(),
 								details.attributeIndexes,
 								details.applyVersionRestriction
@@ -192,15 +202,26 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 			String description,
 			Object identifier,
 			Object version,
-			Object[] loadedState) {
+			Object[] loadedState,
+			SharedSessionContractImplementor session) {
+		// the partition key is unknown when there is no loaded state, as for a read-only entity
+		final var partitionKeys = PartitionKeyValue.fromState( entityPersister, loadedState, session );
+		final MutationOperation operation;
+		if ( PartitionKeyValue.needsDynamicRestriction( entityPersister, partitionKeys ) ) {
+			operation = buildHistoryEndOperation( versioned && version != null, partitionKeys );
+		}
+		else {
+			operation = version == null ? unversionedHistoryEndOperation : staticHistoryEndOperation;
+		}
 		return new FlushOperation(
 				historyTableDescriptor,
 				MutationKind.UPDATE,
-				version == null ? unversionedHistoryEndOperation : staticHistoryEndOperation,
+				operation,
 				new HistoryEndBindPlan(
 						identifier,
 						version,
-						loadedState
+						loadedState,
+						partitionKeys
 				),
 				ordinalBase * 1_000 + 500,
 				description
@@ -293,7 +314,9 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 		historyTableDescriptor.keyDescriptor().columns().forEach( insertBuilder::addColumnAssignment );
 	}
 
-	private MutationOperation buildHistoryEndOperation(boolean applyVersionRestriction) {
+	private MutationOperation buildHistoryEndOperation(
+			boolean applyVersionRestriction,
+			List<PartitionKeyValue> partitionKeys) {
 		final var updateBuilder = new TableUpdateBuilderStandard<>(
 				entityPersister,
 				new MutatingTableReference( historyTableMapping ),
@@ -302,7 +325,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 
 		historyTableDescriptor.keyDescriptor().columns().forEach( updateBuilder::addKeyRestriction );
 		addTemporalEnding( updateBuilder );
-		applyPartitionKeyRestriction( updateBuilder );
+		applyPartitionKeyRestriction( updateBuilder, partitionKeys );
 		if ( applyVersionRestriction ) {
 			updateBuilder.addOptimisticLockRestriction( entityPersister.getVersionMapping() );
 		}
@@ -315,6 +338,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 			Object[] state,
 			int[] dirtyAttributeIndexes,
 			boolean revisionFromCurrentTransaction,
+			List<PartitionKeyValue> partitionKeys,
 			SharedSessionContractImplementor session) {
 		final boolean[] dirtyFlags = new boolean[entityPersister.getAttributeMappings().size()];
 		if ( dirtyAttributeIndexes != null ) {
@@ -372,7 +396,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 
 		historyTableDescriptor.keyDescriptor().columns().forEach( updateBuilder::addKeyRestriction );
 		addCurrentRowRestriction( updateBuilder );
-		applyPartitionKeyRestriction( updateBuilder );
+		applyPartitionKeyRestriction( updateBuilder, partitionKeys );
 		if ( entityPersister.optimisticLockStyle() == OptimisticLockStyle.VERSION
 				&& entityPersister.getVersionMapping() != null ) {
 			updateBuilder.addOptimisticLockRestriction( entityPersister.getVersionMapping() );
@@ -403,19 +427,26 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 		updateBuilder.addNonKeyRestriction( temporalMapping.createNullEndingValueBinding( endingColumn ) );
 	}
 
-	private void applyPartitionKeyRestriction(TableUpdateBuilderStandard<MutationOperation> updateBuilder) {
+	/// @param partitionKeys the partition key of the row, or `null` for a
+	///                      statement with a parameter for each column
+	private void applyPartitionKeyRestriction(
+			TableUpdateBuilderStandard<MutationOperation> updateBuilder,
+			List<PartitionKeyValue> partitionKeys) {
 		if ( entityPersister.hasPartitionedSelectionMapping() ) {
-			final var attributeMappings = entityPersister.getAttributeMappings();
-			for ( int m = 0; m < attributeMappings.size(); m++ ) {
-				final var attributeMapping = attributeMappings.get( m );
-				for ( int i = 0; i < attributeMapping.getJdbcTypeCount(); i++ ) {
-					final var selectableMapping = attributeMapping.getSelectable( i );
-					if ( selectableMapping.isPartitioned() ) {
-						updateBuilder.addKeyRestrictionLeniently( selectableMapping );
-					}
-				}
-			}
+			// the history table has the partition key columns of the identifier table
+			final String identifierTable = entityPersister.getIdentifierTableDescriptor().name();
+			PartitionKeyValue.addRestrictions( entityPersister,
+					table -> identifierTable.equals( table ) ? updateBuilder : null,
+					partitionKeys, TableMapping::getUpdateDetails );
 		}
+	}
+
+	private void bindPartitionKeyRestriction(
+			List<PartitionKeyValue> partitionKeys,
+			JdbcValueBindings valueBindings,
+			FlushOperation flushOperation) {
+		PartitionKeyValue.bindRestrictions( partitionKeys, entityPersister.getIdentifierTableDescriptor().name(),
+				valueBindings, flushOperation.getJdbcOperation() );
 	}
 
 	private static boolean[] getPropertiesToInsert(Object[] fields) {
@@ -580,14 +611,17 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 		private final Object identifier;
 		private final Object version;
 		private final Object[] loadedState;
+		private final List<PartitionKeyValue> partitionKeys;
 
 		private HistoryEndBindPlan(
 				Object identifier,
 				Object version,
-				Object[] loadedState) {
+				Object[] loadedState,
+				List<PartitionKeyValue> partitionKeys) {
 			this.identifier = identifier;
 			this.version = version;
 			this.loadedState = loadedState;
+			this.partitionKeys = partitionKeys;
 		}
 
 		@Override
@@ -610,7 +644,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 			if ( version != null ) {
 				bindVersionRestriction( version, valueBindings, session );
 			}
-			bindPartitionRestrictions( loadedState, valueBindings, session );
+			bindPartitionKeyRestriction( partitionKeys, valueBindings, flushOperation );
 		}
 
 		@Override
@@ -644,6 +678,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 		private final Object identifier;
 		private final Object[] state;
 		private final Object[] loadedState;
+		private final List<PartitionKeyValue> partitionKeys;
 		private final Object version;
 		private final int[] attributeIndexes;
 		private final boolean applyVersionRestriction;
@@ -653,6 +688,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 				Object identifier,
 				Object[] state,
 				Object[] loadedState,
+				List<PartitionKeyValue> partitionKeys,
 				Object version,
 				int[] attributeIndexes,
 				boolean applyVersionRestriction) {
@@ -660,6 +696,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 			this.identifier = identifier;
 			this.state = state;
 			this.loadedState = loadedState;
+			this.partitionKeys = partitionKeys;
 			this.version = version;
 			this.attributeIndexes = attributeIndexes;
 			this.applyVersionRestriction = applyVersionRestriction;
@@ -689,7 +726,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 			if ( applyVersionRestriction ) {
 				bindVersionRestriction( version, valueBindings, session );
 			}
-			bindPartitionRestrictions( loadedState, valueBindings, session );
+			bindPartitionKeyRestriction( partitionKeys, valueBindings, flushOperation );
 			for ( int attributeIndex : attributeIndexes ) {
 				final var attribute = entityPersister.getAttributeMapping( attributeIndex );
 				if ( !( attribute instanceof PluralAttributeMapping ) ) {
@@ -789,41 +826,6 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 					versionMapping.getSelectionExpression(),
 					ParameterUsage.RESTRICT
 			);
-		}
-	}
-
-	private void bindPartitionRestrictions(
-			Object[] loadedState,
-			JdbcValueBindings valueBindings,
-			SharedSessionContractImplementor session) {
-		if ( loadedState == null || !entityPersister.hasPartitionedSelectionMapping() ) {
-			return;
-		}
-
-		for ( var attribute : historyTableDescriptor.attributes() ) {
-			attribute.forEachSelectable( (selectionIndex, selectableMapping) -> {
-				if ( selectableMapping.isPartitioned() ) {
-					final Object value = loadedState[attribute.getStateArrayPosition()];
-					if ( value != null ) {
-						attribute.decompose(
-								value,
-								0,
-								valueBindings,
-								null,
-								(valueIndex, bindings, noop, jdbcValue, selectable) -> {
-									if ( selectable.isPartitioned() ) {
-										bindings.bindValue(
-												jdbcValue,
-												selectable.getSelectionExpression(),
-												ParameterUsage.RESTRICT
-										);
-									}
-								},
-								session
-						);
-					}
-				}
-			} );
 		}
 	}
 

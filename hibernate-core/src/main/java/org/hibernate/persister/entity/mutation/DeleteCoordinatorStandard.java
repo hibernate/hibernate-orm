@@ -61,11 +61,16 @@ public class DeleteCoordinatorStandard extends AbstractDeleteCoordinator {
 		entityPersister().forEachMutableTableReverse( tableMapping ->
 				deleteGroupBuilder.addTableDetailsBuilder( tableMapping.isCascadeDeleteEnabled()
 						? new TableDeleteBuilderSkipped( tableMapping )
-						: new TableDeleteBuilderStandard( entityPersister(), tableMapping, factory() ) ) );
+						: createTableDeleteBuilder( tableMapping ) ) );
 
 		applyTableDeleteDetails( deleteGroupBuilder, rowId, loadedState, partitionKeys, applyVersion, session );
 
 		return createOperationGroup( null, deleteGroupBuilder.buildMutationGroup() );
+	}
+
+	@Nonnull
+	TableDeleteBuilder createTableDeleteBuilder(@Nonnull EntityTableMapping tableMapping) {
+		return new TableDeleteBuilderStandard( entityPersister(), tableMapping, factory() );
 	}
 
 	private void applyTableDeleteDetails(

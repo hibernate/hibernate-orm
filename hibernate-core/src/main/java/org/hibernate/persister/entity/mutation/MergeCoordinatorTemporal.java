@@ -19,7 +19,9 @@ import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.model.MutationOperationGroup;
+
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+import static org.hibernate.persister.entity.mutation.TemporalMutationHelper.isRevisionFromCurrentTransaction;
 
 /**
  * Merge coordinator for
@@ -32,7 +34,6 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 public class MergeCoordinatorTemporal extends AbstractTemporalUpdateCoordinator {
 	private final TemporalMapping temporalMapping;
 	private final MutationOperationGroup endingUpdateGroup;
-	private final BasicBatchKey batchKey;
 	private final UpdateCoordinator versionUpdateDelegate;
 	private final String currentRowSelectSql;
 
@@ -40,7 +41,6 @@ public class MergeCoordinatorTemporal extends AbstractTemporalUpdateCoordinator 
 		super( entityPersister, factory );
 		this.temporalMapping = castNonNull( entityPersister.getTemporalMapping() );
 		this.endingUpdateGroup = buildEndingUpdateGroup( entityPersister.getIdentifierTableMapping(), temporalMapping );
-		this.batchKey = new BasicBatchKey( entityPersister.getEntityName() + "#TEMPORAL_MERGE" );
 		this.versionUpdateDelegate = new MergeCoordinatorStandard( entityPersister, factory );
 		this.currentRowSelectSql = buildCurrentRowSelect();
 	}
@@ -67,7 +67,8 @@ public class MergeCoordinatorTemporal extends AbstractTemporalUpdateCoordinator 
 	@Nullable
 	@Override
 	protected BasicBatchKey getBatchKey() {
-		return batchKey;
+		// An upsert needs the affected row count before it can decide whether to insert.
+		return null;
 	}
 
 	@Nullable
@@ -82,8 +83,16 @@ public class MergeCoordinatorTemporal extends AbstractTemporalUpdateCoordinator 
 			@Nullable int[] dirtyAttributeIndexes,
 			boolean hasDirtyCollection,
 			@Nonnull SharedSessionContractImplementor session) {
-		if ( entityPersister()
-				.excludedFromTemporalVersioning( dirtyAttributeIndexes, hasDirtyCollection ) ) {
+		final var persister = entityPersister();
+		if ( isRevisionFromCurrentTransaction( persister, id, session ) ) {
+			// The transaction may already have deleted the revision it created.
+			if ( currentRowExists( id, session ) ) {
+				return persister.getUpdateCoordinator().update(
+						entity, id, rowId, values, oldVersion, incomingOldValues,
+						dirtyAttributeIndexes, hasDirtyCollection, session );
+			}
+		}
+		else if ( persister.excludedFromTemporalVersioning( dirtyAttributeIndexes, hasDirtyCollection ) ) {
 			return versionUpdateDelegate.update(
 					entity,
 					id,
@@ -102,8 +111,10 @@ public class MergeCoordinatorTemporal extends AbstractTemporalUpdateCoordinator 
 			if ( !rowEnded && currentRowExists( id, session ) ) {
 				throw new StaleObjectStateException( entityPersister().getEntityName(), id );
 			}
-			return entityPersister().getInsertCoordinator().insert( entity, id, values, session );
 		}
+		final var generatedValues = persister.getInsertCoordinator().insert( entity, id, values, session );
+		registerUpdatedRevision( id, session );
+		return generatedValues;
 	}
 
 	boolean performRowEndUpdate(

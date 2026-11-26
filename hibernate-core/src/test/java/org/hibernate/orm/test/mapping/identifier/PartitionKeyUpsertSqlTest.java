@@ -7,6 +7,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.orm.test.mapping.identifier.AbstractPartitionKeyMutationTest.Box;
 import org.hibernate.orm.test.mapping.identifier.AbstractPartitionKeyMutationTest.Parrot;
 import org.hibernate.orm.test.mapping.identifier.AbstractPartitionKeyMutationTest.Pet;
+import org.hibernate.orm.test.mapping.identifier.AbstractPartitionKeyMutationTest.SealedCarton;
 import org.hibernate.orm.test.mapping.identifier.AbstractPartitionKeyMutationTest.Truck;
 import org.hibernate.orm.test.mapping.identifier.AbstractPartitionKeyMutationTest.Vehicle;
 import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
@@ -29,7 +30,7 @@ import static org.hibernate.cfg.JdbcSettings.DIALECT;
  * key. On other databases it is a column like any other. The statements are
  * only generated, and never executed.
  */
-@DomainModel(annotatedClasses = { Box.class, Vehicle.class, Truck.class, Pet.class, Parrot.class })
+@DomainModel(annotatedClasses = { Box.class, Vehicle.class, Truck.class, Pet.class, Parrot.class, SealedCarton.class })
 @RequiresDialect(H2Dialect.class)
 @JiraKey("HHH-21281")
 public class PartitionKeyUpsertSqlTest {
@@ -110,6 +111,25 @@ public class PartitionKeyUpsertSqlTest {
 				.contains( " on (t.id=s.id and t.region=s.region) " )
 				.contains( " insert (id,region,label) " )
 				.contains( " update set label=s.label" );
+		assertMergeChecksStoredPartitionKey( scope );
+	}
+
+	@Test
+	@ServiceRegistry(settings = {
+			@Setting(name = DIALECT, value = "org.hibernate.dialect.DB2Dialect"),
+			@Setting(name = ALLOW_METADATA_ON_BOOT, value = "false")
+	})
+	@SessionFactory(exportSchema = false)
+	void db2MergeChecksStoredPartitionKey(SessionFactoryScope scope) {
+		assertMergeChecksStoredPartitionKey( scope );
+	}
+
+	private static void assertMergeChecksStoredPartitionKey(SessionFactoryScope scope) {
+		assertThat( upsertStatements( scope, SealedCarton.class ) )
+				.filteredOn( sql -> sql.startsWith( "merge into partition_sealed_carton_detail " ) )
+				.singleElement().asString()
+				.contains( "when matched and s.label is null and t.region is null then delete" )
+				.contains( "then update set label=s.label" );
 	}
 
 	@Test

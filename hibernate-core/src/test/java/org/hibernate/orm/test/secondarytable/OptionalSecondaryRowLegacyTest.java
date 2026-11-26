@@ -15,7 +15,7 @@ import org.hibernate.testing.orm.junit.Setting;
 		AbstractOptionalSecondaryRowTest.DynamicShipment.class,
 		AbstractOptionalSecondaryRowTest.Memo.class
 })
-@SessionFactory
+@SessionFactory(useCollectingStatementObserver = true)
 @ServiceRegistry(settings = @Setting(name = FlushSettings.FLUSH_QUEUE_TYPE, value = "legacy"))
 @JiraKey("HHH-21283")
 public class OptionalSecondaryRowLegacyTest extends AbstractOptionalSecondaryRowTest {

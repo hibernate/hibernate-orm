@@ -480,7 +480,8 @@ public abstract sealed class PersistentClass
 		primaryKey.setName( PK_ALIAS.toAliasString( table.getName() ) );
 		primaryKey.addColumns( getKey() );
 		if ( addPartitionKeyToPrimaryKey() ) {
-			for ( var property : getProperties() ) {
+			// a partition key column of a secondary table belongs to the primary key of that table
+			for ( var property : getUnjoinedProperties() ) {
 				if ( property.getValue().isPartitionKey() ) {
 					primaryKey.addColumns( property.getValue() );
 				}
@@ -489,7 +490,7 @@ public abstract sealed class PersistentClass
 		return primaryKey;
 	}
 
-	private boolean addPartitionKeyToPrimaryKey() {
+	boolean addPartitionKeyToPrimaryKey() {
 		return metadataBuildingContext.getMetadataCollector()
 				.getDatabase().getDialect()
 				.addPartitionKeyToPrimaryKey();

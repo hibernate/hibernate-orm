@@ -9,7 +9,6 @@ import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.JdbcValueDescriptorImpl;
 import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.jdbc.mutation.internal.PreparedStatementGroupSingleTable;
-import org.hibernate.engine.jdbc.mutation.spi.Binding;
 import org.hibernate.engine.jdbc.mutation.spi.BindingGroup;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -40,9 +39,9 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.joining;
 import static org.hibernate.exception.ConstraintViolationException.ConstraintKind.UNIQUE;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.internal.util.collections.CollectionHelper.combine;
@@ -66,12 +65,16 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	private final List<ColumnValueBinding> keyBindings;
 	private final List<ColumnValueBinding> optimisticLockBindings;
 	private final List<ColumnValueParameter> parameters;
+	private final List<ColumnValueParameter> deleteParameters;
+	private final List<String> unassignedColumns;
+	private final List<ColumnValueBinding> insertableStateBindings;
 
 	private final List<JdbcValueDescriptor> jdbcValueDescriptors;
 
 	// Each statement depends only on the bindings, so it is translated once,
 	// however many times the operation is performed.
 	private volatile JdbcMutationOperation translatedUpdate;
+	private volatile JdbcMutationOperation translatedUpdateWithStoredValues;
 	private volatile JdbcMutationOperation translatedInsert;
 	private volatile JdbcDeleteMutation translatedDelete;
 
@@ -93,6 +96,15 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		this.keyBindings = upsert.getKeyBindings();
 		this.optimisticLockBindings = upsert.getOptimisticLockBindings();
 		this.parameters = upsert.getParameters();
+		final var deleteDetails = tableMapping.getDeleteDetails();
+		final boolean customDelete = deleteDetails != null && deleteDetails.getCustomSql() != null;
+		this.deleteParameters = AbstractTableUpdate.collectParameters(
+				emptyList(), keyBindings, customDelete ? emptyList() : optimisticLockBindings );
+		// Custom DML supplies its own predicates.
+		final var updateDetails = tableMapping.getUpdateDetails();
+		this.unassignedColumns = !customDelete && (updateDetails == null || updateDetails.getCustomSql() == null)
+				? upsert.getUnassignedColumns() : List.of();
+		this.insertableStateBindings = unassignedColumns.isEmpty() ? List.of() : upsert.getInsertableStateBindings();
 
 		this.jdbcValueDescriptors = arrayList( parameters.size() );
 		for ( int i = 0; i < parameters.size(); i++ ) {
@@ -155,7 +167,8 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		if ( valuesAnalysis.getTablesNeedingUpdate().contains( tableMapping )
 				|| valuesAnalysis.getTablesNeedingDynamicUpdate().contains( tableMapping ) ) {
 			try {
-				if ( valuesAnalysis.getTablesWithNonNullValues().contains( tableMapping ) ) {
+				if ( !unassignedColumns.isEmpty()
+						|| valuesAnalysis.getTablesWithNonNullValues().contains( tableMapping ) ) {
 					performUpdateOrInsert( jdbcValueBindings, session, valuesAnalysis );
 				}
 				// all the new values for this table were null - possibly delete the row
@@ -173,155 +186,106 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 			JdbcValueBindings jdbcValueBindings,
 			SharedSessionContractImplementor session,
 			UpdateValuesAnalysis valuesAnalysis) {
-		// there are some non-null values for the table - we need to update or insert the values.
-		// first, try the update and see if any row was affected
 		final boolean needsUpdate = valuesAnalysis.getTablesWithPreviousNonNullValues().contains( tableMapping );
-		final boolean wasUpdated;
+		final var bindings = jdbcValueBindings.getBindingGroup( tableMapping.getTableName() );
+		final boolean needsStoredValues = needsUpdate && !unassignedColumns.isEmpty()
+				&& valueBindings.stream().filter( ColumnValueBinding::isAttributeUpdatable )
+						.noneMatch( binding -> hasValue( binding, bindings ) );
 		if ( needsUpdate ) {
-			// either
-			// 		1) not know if the values for this table were previously all null (because old values are not known)
-			//		2) the values for this table were previously had at least one non-null
-			wasUpdated = performUpdate( jdbcValueBindings, session );
-		}
-		else {
-			wasUpdated = false;
+			if ( performUpdate( jdbcValueBindings, session, needsStoredValues ) ) {
+				return;
+			}
+			// With no assigned data, the UPDATE matches only a row with stored
+			// data. Delete a row with no stored data before considering an INSERT.
+			if ( needsStoredValues && performDelete( jdbcValueBindings, session ) ) {
+				return;
+			}
 		}
 
-		if ( !wasUpdated ) {
-			MODEL_MUTATION_LOGGER.upsertUpdateNoRowsPerformingInsert( tableMapping.getTableName() );
-			try {
-				boolean retryUpdate = performInsert( jdbcValueBindings, session );
-				if ( needsUpdate && retryUpdate ) {
-					// In a concurrent insert-or-update scenario, the insert can be skipped, so we need to retry the
-					// update one last time to ensure we write the correct data for this transaction
-					final boolean updated = performUpdate( jdbcValueBindings, session );
-					if ( !updated ) {
-						// The row might have been deleted again in the meantime,
-						// so report a stale state instead of trying again
-						throw new StaleStateException( mutationTarget.getRolePath() );
-					}
+		if ( !unassignedColumns.isEmpty()
+				&& insertableStateBindings.stream().noneMatch( binding -> hasValue( binding, bindings ) ) ) {
+			return;
+		}
+		performInsertWithRetry( jdbcValueBindings, session, needsUpdate, needsStoredValues );
+	}
+
+	private void performInsertWithRetry(
+			JdbcValueBindings jdbcValueBindings,
+			SharedSessionContractImplementor session,
+			boolean needsUpdate,
+			boolean needsStoredValues) {
+		MODEL_MUTATION_LOGGER.upsertUpdateNoRowsPerformingInsert( tableMapping.getTableName() );
+		try {
+			final boolean retryUpdate = performInsert( jdbcValueBindings, session );
+			if ( needsUpdate && retryUpdate ) {
+				// In a concurrent insert-or-update scenario, the insert can be skipped, so we need to retry the
+				// update one last time to ensure we write the correct data for this transaction
+				final boolean updated = performUpdate( jdbcValueBindings, session, needsStoredValues );
+				if ( !updated ) {
+					// The row might have been deleted again in the meantime,
+					// so report a stale state instead of trying again
+					throw new StaleStateException( mutationTarget.getRolePath() );
 				}
 			}
-			catch (ConstraintViolationException cve) {
-				if ( cve.getKind() == UNIQUE ) {
-					// Ignore primary key violation if the insert is composed of just the primary key
-					// or if we skipped the UPDATE attempt because no columns were updatable
-					if ( valueBindings.stream().anyMatch( ColumnValueBinding::isAttributeUpdatable ) ) {
-						if ( optimisticLockBindings.isEmpty() && !tableMapping.isOptional() ) {
-							// In a concurrent insert-or-update scenario, the insert can fail, so we need to retry the
-							// update one last time to ensure we write the correct data for this transaction
-							final boolean updated = performUpdate( jdbcValueBindings, session );
-							if ( !updated ) {
-								// The row might have been deleted again in the meantime,
-								// so report a stale state instead of trying again
-								throw new StaleStateException( mutationTarget.getRolePath(), cve );
-							}
-						}
-						else {
-							// assume it was the primary key constraint which was violated,
-							// due to a new version of the row existing in the database
+		}
+		catch (ConstraintViolationException cve) {
+			if ( cve.getKind() == UNIQUE ) {
+				// Ignore primary key violation if the insert is composed of just the primary key
+				// or if we skipped the UPDATE attempt because no columns were updatable
+				if ( valueBindings.stream().anyMatch( ColumnValueBinding::isAttributeUpdatable ) ) {
+					if ( optimisticLockBindings.isEmpty() && !tableMapping.isOptional() ) {
+						// In a concurrent insert-or-update scenario, the insert can fail, so we need to retry the
+						// update one last time to ensure we write the correct data for this transaction
+						final boolean updated = performUpdate( jdbcValueBindings, session, needsStoredValues );
+						if ( !updated ) {
+							// The row might have been deleted again in the meantime,
+							// so report a stale state instead of trying again
 							throw new StaleStateException( mutationTarget.getRolePath(), cve );
 						}
 					}
+					else {
+						// assume it was the primary key constraint which was violated,
+						// due to a new version of the row existing in the database
+						throw new StaleStateException( mutationTarget.getRolePath(), cve );
+					}
 				}
-				else {
-					throw cve;
-				}
+			}
+			else {
+				throw cve;
 			}
 		}
 	}
 
-	private void performDelete(JdbcValueBindings jdbcValueBindings, SharedSessionContractImplementor session) {
+	private static boolean hasValue(ColumnValueBinding binding, BindingGroup bindings) {
+		final var expression = binding.getValueExpression();
+		if ( expression == null ) {
+			return false;
+		}
+		if ( expression.getParameters().isEmpty() ) {
+			return !"null".equalsIgnoreCase( expression.getFragment() );
+		}
+		for ( var parameter : expression.getParameters() ) {
+			if ( bindings.getBinding( parameter.getColumnReference().getColumnExpression(), parameter.getUsage() )
+					.getValue() != null ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean performDelete(JdbcValueBindings jdbcValueBindings, SharedSessionContractImplementor session) {
 		final var jdbcDelete = translatedDelete( session );
 		final var jdbcCoordinator = session.getJdbcCoordinator();
 		final var deleteStatement = createStatementDetails( jdbcDelete, jdbcCoordinator );
 		session.getJdbcServices().getSqlStatementLogger().logStatement( jdbcDelete.getSqlString() );
 		session.getJdbcSessionContext().getStatementObserver().performingSql( jdbcDelete.getSqlString(), -1 );
-		bindKeyValues( jdbcValueBindings, deleteStatement, jdbcDelete, session );
 		try {
-			session.getJdbcCoordinator().getResultSetReturn()
-					.executeUpdate( deleteStatement, jdbcDelete.getSqlString() );
+			bindParameters( jdbcValueBindings, deleteStatement, deleteParameters, jdbcDelete.getSqlString(), session );
+			return jdbcCoordinator.getResultSetReturn().executeUpdate( deleteStatement, jdbcDelete.getSqlString() ) > 0;
 		}
 		finally {
 			jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( deleteStatement );
 			jdbcCoordinator.afterStatementExecution();
-		}
-	}
-
-	private void bindKeyValues(
-			JdbcValueBindings jdbcValueBindings,
-			PreparedStatement statement,
-			JdbcDeleteMutation jdbcDelete,
-			SharedSessionContractImplementor session) {
-		final var bindingGroup = jdbcValueBindings.getBindingGroup( tableMapping.getTableName() );
-		if ( bindingGroup == null ) {
-			throw new IllegalStateException(
-					String.format(
-							Locale.ROOT,
-							"No value bindings for table on insert : %s",
-							tableMapping.getTableName()
-					)
-			);
-		}
-
-		int jdbcBindingPosition = 1;
-		boolean foundKeyBindings = false;
-		// leverage the fact that bindings are contiguous to avoid full nested iterations
-		final var keyBindingsItr = keyBindings.iterator();
-		bindings: for ( var binding : bindingGroup.getBindings() ) {
-			// binding-position here is 1-based (JDBC)
-			final var valueDescriptor = jdbcValueDescriptors.get( binding.getPosition() - 1 );
-			// key bindings would have a usage of RESTRICT relative to the UPDATE
-			if ( valueDescriptor.getUsage() == ParameterUsage.RESTRICT ) {
-				while ( keyBindingsItr.hasNext() ) {
-					if ( Objects.equals( keyBindingsItr.next().getColumnReference().getColumnExpression(),
-							binding.getColumnName() ) ) {
-						// binding is for a key column
-						foundKeyBindings = true;
-						bindKeyValue(
-								jdbcBindingPosition++,
-								binding,
-								valueDescriptor,
-								statement,
-								jdbcDelete.getSqlString(),
-								tableMapping,
-								session
-						);
-						break;
-					}
-					else {
-						if ( foundKeyBindings ) {
-							// we are now "beyond" the key bindings
-							break bindings;
-						}
-					}
-				}
-			}
-		}
-	}
-
-	private static void bindKeyValue(
-			int jdbcPosition,
-			Binding binding,
-			JdbcValueDescriptor valueDescriptor,
-			PreparedStatement statement,
-			String sql,
-			TableMapping tableMapping,
-			SharedSessionContractImplementor session) {
-		try {
-			binding.getValueBinder().bind( statement, binding.getValue(), jdbcPosition, session );
-		}
-		catch (SQLException e) {
-			throw session.getJdbcServices().getSqlExceptionHelper().convert(
-					e,
-					String.format(
-							Locale.ROOT,
-							"Unable to bind parameter for upsert insert : %s.%s",
-							tableMapping.getTableName(),
-							valueDescriptor.getColumnName()
-					),
-					sql
-			);
 		}
 	}
 
@@ -330,11 +294,13 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		final var deleteDetails = tableMapping.getDeleteDetails();
 		final var table = new MutatingTableReference( tableMapping );
 		final var target = getMutationTarget();
-		String comment = "upsert delete for " + mutationTarget.getRolePath();
+		final String comment = "upsert delete for " + mutationTarget.getRolePath();
+		final String where = unassignedColumns.isEmpty() ? null
+				: unassignedColumns.stream().map( column -> column + " is null" ).collect( joining( " and " ) );
 		final var tableDelete =
 				deleteDetails != null && deleteDetails.getCustomSql() != null
-						? new TableDeleteCustomSql( table, target, comment, keyBindings, optimisticLockBindings, parameters )
-						: new TableDeleteStandard( table, target, comment, keyBindings, optimisticLockBindings, parameters );
+						? new TableDeleteCustomSql( table, target, comment, keyBindings, optimisticLockBindings, deleteParameters )
+						: new TableDeleteStandard( table, target, comment, keyBindings, optimisticLockBindings, deleteParameters, where );
 
 		final var factory = session.getSessionFactory();
 		return factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
@@ -344,7 +310,8 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 
 	private boolean performUpdate(
 			JdbcValueBindings jdbcValueBindings,
-			SharedSessionContractImplementor session) {
+			SharedSessionContractImplementor session,
+			boolean needsStoredValues) {
 		MODEL_MUTATION_LOGGER.performingUpdate( tableMapping.getTableName() );
 
 		final var jdbcServices = session.getJdbcServices();
@@ -352,7 +319,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		final var updateParameters = collectUpdateParameters( updateValueBindings );
 		final var statementDetails =
 				new PreparedStatementGroupSingleTable(
-						translatedUpdate( session, updateValueBindings, updateParameters ),
+						translatedUpdate( session, updateValueBindings, updateParameters, needsStoredValues ),
 						session
 				)
 						.resolvePreparedStatementDetails( tableMapping.getTableName() );
@@ -361,7 +328,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 			final var updateStatement = statementDetails.resolveStatement();
 			jdbcServices.getSqlStatementLogger().logStatement( sql );
 			session.getJdbcSessionContext().getStatementObserver().performingSql( sql, -1 );
-			bindUpdateValues( jdbcValueBindings, updateStatement, updateParameters, sql, session );
+			bindParameters( jdbcValueBindings, updateStatement, updateParameters, sql, session );
 			final int rowCount =
 					session.getJdbcCoordinator().getResultSetReturn()
 							.executeUpdate( updateStatement, sql );
@@ -393,10 +360,21 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	private JdbcMutationOperation translatedUpdate(
 			SharedSessionContractImplementor session,
 			List<ColumnValueBinding> updateValueBindings,
-			List<ColumnValueParameter> updateParameters) {
+			List<ColumnValueParameter> updateParameters,
+			boolean needsStoredValues) {
+		if ( needsStoredValues ) {
+			var update = translatedUpdateWithStoredValues;
+			if ( update == null ) {
+				final String where = unassignedColumns.stream().map( column -> column + " is not null" )
+						.collect( joining( " or " ) );
+				translatedUpdateWithStoredValues = update =
+						createJdbcUpdate( session, updateValueBindings, updateParameters, where );
+			}
+			return update;
+		}
 		var update = translatedUpdate;
 		if ( update == null ) {
-			translatedUpdate = update = createJdbcUpdate( session, updateValueBindings, updateParameters );
+			translatedUpdate = update = createJdbcUpdate( session, updateValueBindings, updateParameters, null );
 		}
 		return update;
 	}
@@ -421,13 +399,14 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	protected JdbcMutationOperation createJdbcUpdate(SharedSessionContractImplementor session) {
 		final var updateValueBindings = getUpdatableValueBindings();
 		final var updateParameters = collectUpdateParameters( updateValueBindings );
-		return createJdbcUpdate( session, updateValueBindings, updateParameters );
+		return createJdbcUpdate( session, updateValueBindings, updateParameters, null );
 	}
 
 	private JdbcMutationOperation createJdbcUpdate(
 			SharedSessionContractImplementor session,
 			List<ColumnValueBinding> updateValueBindings,
-			List<ColumnValueParameter> updateParameters) {
+			List<ColumnValueParameter> updateParameters,
+			String whereFragment) {
 		final var updateDetails = tableMapping.getUpdateDetails();
 		final String comment = "upsert update for " + mutationTarget.getRolePath();
 		final var table = new MutatingTableReference( tableMapping );
@@ -437,7 +416,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 						? new TableUpdateCustomSql( table, target, comment, updateValueBindings,
 								keyBindings, optimisticLockBindings, updateParameters )
 						: new TableUpdateStandard( table, target, comment, updateValueBindings,
-								keyBindings, optimisticLockBindings, updateParameters );
+								keyBindings, optimisticLockBindings, updateParameters, whereFragment, null );
 
 		return session.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
 				.buildTranslator( new SqlAstTranslationRequest.ModelMutation<>( session.getFactory(), tableUpdate ) )
@@ -621,10 +600,10 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		);
 	}
 
-	private void bindUpdateValues(
+	private void bindParameters(
 			JdbcValueBindings jdbcValueBindings,
 			PreparedStatement statement,
-			List<ColumnValueParameter> updateParameters,
+			List<ColumnValueParameter> statementParameters,
 			String sql,
 			SharedSessionContractImplementor session) {
 		final var bindingGroup =
@@ -633,20 +612,20 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 			throw new IllegalStateException(
 					String.format(
 							Locale.ROOT,
-							"No value bindings for table on update : %s",
+							"No value bindings for table : %s",
 							tableMapping.getTableName()
 					)
 			);
 		}
 
 		int jdbcBindingPosition = 1;
-		for ( var parameter : updateParameters ) {
-			final var binding = findBinding( bindingGroup, parameter );
+		for ( var parameter : statementParameters ) {
+			final var binding = bindingGroup.findBinding( parameter.getColumnReference().getColumnExpression(), parameter.getUsage() );
 			if ( binding == null ) {
 				throw new IllegalStateException(
 						String.format(
 								Locale.ROOT,
-								"Missing value binding for update : %s.%s (%s)",
+								"Missing value binding : %s.%s (%s)",
 								tableMapping.getTableName(),
 								parameter.getColumnReference().getColumnExpression(),
 								parameter.getUsage()
@@ -660,21 +639,10 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 			catch (SQLException e) {
 				throw session.getJdbcServices().getSqlExceptionHelper().convert(
 						e,
-						"Unable to bind parameter for upsert update",
+						"Unable to bind parameter for optional table mutation",
 						sql
 				);
 			}
 		}
-	}
-
-	private static Binding findBinding(BindingGroup bindingGroup, ColumnValueParameter parameter) {
-		final String columnName = parameter.getColumnReference().getColumnExpression();
-		for ( var binding : bindingGroup.getBindings() ) {
-			if ( binding.getValueDescriptor()
-					.matches( columnName, parameter.getUsage() ) ) {
-				return binding;
-			}
-		}
-		return null;
 	}
 }

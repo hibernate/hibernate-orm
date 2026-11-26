@@ -440,20 +440,15 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	public MutationOperation createMergeOperation(OptionalTableUpdate optionalTableUpdate, boolean hasUpdatableBindings) {
-		renderInsertOrUpdate( optionalTableUpdate, hasUpdatableBindings );
-
-		final UpsertOperation upsertOperation = new UpsertOperation(
-				optionalTableUpdate.getMutatingTable().getTableMapping(),
-				optionalTableUpdate.getMutationTarget(),
-				getSql(),
-				hasUpdatableBindings ? new Expectation.RowCount() : new Expectation.OptionalRowCount(),
-				getParameterBinders()
-		);
-
-		return new DeleteOrUpsertOperation(
-				upsertOperation,
-				optionalTableUpdate
-		);
+		return DeleteOrUpsertOperation.create( optionalTableUpdate, () -> {
+			renderInsertOrUpdate( optionalTableUpdate, hasUpdatableBindings );
+			return new UpsertOperation(
+					optionalTableUpdate.getMutatingTable().getTableMapping(),
+					optionalTableUpdate.getMutationTarget(), getSql(),
+					hasUpdatableBindings ? new Expectation.RowCount() : new Expectation.OptionalRowCount(),
+					getParameterBinders()
+			);
+		} );
 	}
 
 	protected void renderInsertOrUpdate(OptionalTableUpdate optionalTableUpdate, boolean hasUpdatableBindings) {

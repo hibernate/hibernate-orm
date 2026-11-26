@@ -672,7 +672,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	protected void renderMergeInsert(OptionalTableUpdate optionalTableUpdate) {
 		appendSql( "when not matched then " );
 		renderMergeInsertValues( optionalTableUpdate );
-		if ( !optionalTableUpdate.getUnassignedColumns().isEmpty() ) {
+		if ( optionalTableUpdate.getMutatingTable().isOptional() ) {
 			appendSql( " where " );
 			renderMergeInsertCondition( optionalTableUpdate );
 		}

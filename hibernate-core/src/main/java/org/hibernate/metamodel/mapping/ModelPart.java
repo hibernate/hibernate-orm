@@ -143,6 +143,11 @@ public interface ModelPart extends MappingModelExpressible {
 		return null;
 	}
 
+	@Nullable
+	default EntityAssociationMapping asEntityAssociationMapping() {
+		return null;
+	}
+
 	/// A shorthand form of [#breakDownJdbcValues(Object,int,Object,Object,JdbcValueBiConsumer,SharedSessionContractImplementor)],
 	/// that passes `0` as offset and null for the two values `X` and `Y`.
 	default int breakDownJdbcValues(

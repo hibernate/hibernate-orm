@@ -43,6 +43,7 @@ import org.hibernate.dialect.function.spi.Replacer;
 import org.hibernate.dialect.jdbc.spi.OracleTypes;
 import org.hibernate.dialect.jdbc.spi.ParameterLimits;
 
+import org.hibernate.dialect.jdbc.spi.InsertSelectExecution;
 import org.hibernate.dialect.jdbc.spi.OracleServerConfiguration;
 
 import org.hibernate.dialect.type.spi.TimeZoneSupport;
@@ -1285,6 +1286,12 @@ public class OracleDialect extends Dialect implements CurrentTemporalSupport, Te
 	@SPI({ USE, IMPLEMENT })
 	public String alterColumnType(AlterColumnTypeRequest request) {
 		return "modify " + request.columnName() + " " + request.columnType();
+	}
+
+	@Override
+	public boolean supports(InsertSelectExecution execution) {
+		// The Oracle driver appends a RETURNING clause, which Oracle rejects on INSERT ... SELECT.
+		return execution != InsertSelectExecution.GENERATED_KEYS && super.supports( execution );
 	}
 
 	@Override

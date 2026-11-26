@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.hibernate.action.internal.AbstractEntityInsertAction;
+import org.hibernate.action.queue.internal.decompose.KeyLookup;
+import org.hibernate.action.queue.internal.decompose.KeyLookupStatements;
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.StatementShapeKey;
 import org.hibernate.action.queue.spi.bind.GeneratedValuesCollector;
@@ -49,6 +51,7 @@ class EntityInsertMutationPlanner {
 	private final Map<String, JdbcInsertMutation> staticJdbcInsertOperations;
 	private final Map<String, StatementShapeKey> staticStatementShapeKeys;
 	private final boolean hasOptionalMutableTables;
+	private final EntityKeyLookups keyLookups;
 
 	EntityInsertMutationPlanner(
 			EntityPersister entityPersister,
@@ -56,6 +59,7 @@ class EntityInsertMutationPlanner {
 		this.entityPersister = entityPersister;
 		this.sessionFactory = sessionFactory;
 		this.hasOptionalMutableTables = determineHasOptionalMutableTables();
+		this.keyLookups = new EntityKeyLookups( MutationKind.INSERT, sessionFactory );
 		if ( entityPersister.isDynamicInsert() ) {
 			staticInsertOperations = null;
 			staticJdbcInsertOperations = null;
@@ -95,6 +99,43 @@ class EntityInsertMutationPlanner {
 			return staticStatementShapeKeys.get( tableName );
 		}
 		return null;
+	}
+
+	/// Choose the statement which reads foreign keys from the rows they reference,
+	/// when the entity references rows whose keys are not in memory. The given bind
+	/// plan then binds for that statement.
+	///
+	/// @return `null` if the insert should be performed as given
+	KeyLookupStatements.Statement resolveKeyLookupInsert(
+			EntityTableDescriptor tableDescriptor,
+			TableInsert tableInsert,
+			EntityInsertBindPlan bindPlan,
+			InsertValuesAnalysis valuesAnalysis,
+			SharedSessionContractImplementor session) {
+		final var lookups = keyLookups.of( bindPlan.getTableDescriptor() );
+		return lookups.length == 0 || !canInsertFromSelect( tableDescriptor, bindPlan, session )
+				? null
+				: keyLookups.resolve(
+						lookups,
+						bindPlan,
+						tableDescriptor,
+						tableInsert,
+						staticInsertOperations != null && tableInsert == staticInsertOperations.get( tableDescriptor.name() ),
+						valuesAnalysis,
+						session
+				);
+	}
+
+	private boolean canInsertFromSelect(
+			EntityTableDescriptor tableDescriptor,
+			EntityInsertBindPlan bindPlan,
+			SharedSessionContractImplementor session) {
+		if ( bindPlan.getGeneratedValuesCollector() == null ) {
+			return KeyLookup.canInsertInBatch( session );
+		}
+		// An insert which generates values is never batched
+		final var delegate = entityPersister.getInsertDelegate();
+		return !tableDescriptor.isIdentifierTable() || delegate == null || delegate.supportsInsertSelect();
 	}
 
 	boolean[] resolveInsertability(Object[] state) {

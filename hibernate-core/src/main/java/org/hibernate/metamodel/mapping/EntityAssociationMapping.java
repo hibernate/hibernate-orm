@@ -18,6 +18,11 @@ public interface EntityAssociationMapping extends ModelPart, Association, TableG
 		return org.hibernate.internal.util.NullnessUtil.castNonNull( getPartName() );
 	}
 
+	@Override
+	default EntityAssociationMapping asEntityAssociationMapping() {
+		return this;
+	}
+
 	@Nonnull
 	EntityMappingType getAssociatedEntityMappingType();
 

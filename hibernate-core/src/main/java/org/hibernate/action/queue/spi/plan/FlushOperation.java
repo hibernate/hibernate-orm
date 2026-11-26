@@ -13,6 +13,7 @@ import org.hibernate.action.queue.spi.bind.OperationExecutionMonitor;
 import org.hibernate.action.queue.spi.bind.PostExecutionCallback;
 import org.hibernate.action.queue.spi.bind.PreExecutionCallback;
 import org.hibernate.action.queue.spi.meta.TableDescriptor;
+import org.hibernate.engine.jdbc.batch.spi.BatchedResultChecker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.spi.mutation.ValuesAnalysis;
@@ -31,7 +32,7 @@ import java.util.Map;
 /// @author Steve Ebersole
 /// @since 8.0
 @Incubating(since = "8.0", group = "action-queue")
-public class FlushOperation implements OperationResultChecker {
+public class FlushOperation implements OperationResultChecker, BatchedResultChecker {
 	private final TableDescriptor tableDescriptor;
 	private final MutationKind kind;
 	private final StatementShapeKey shapeKey;
@@ -180,6 +181,11 @@ public class FlushOperation implements OperationResultChecker {
 			String sqlString,
 			SessionFactoryImplementor sessionFactory) throws SQLException {
 		return bindPlan.checkResult( this, affectedRowCount, statement, batchPosition, sqlString, sessionFactory );
+	}
+
+	@Override
+	public boolean requiresMatchedRow() {
+		return bindPlan.requiresMatchedRow();
 	}
 
 	public BindingPatch getBindingPatch() {

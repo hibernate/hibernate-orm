@@ -421,6 +421,16 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	boolean isMutable();
 
 	/**
+	 * Determine whether instances of this entity are loaded by a named query
+	 * supplied by the application, instead of by SQL which Hibernate generates.
+	 *
+	 * @since 8.0
+	 */
+	default boolean hasNamedQueryLoader() {
+		return false;
+	}
+
+	/**
 	 * Determine whether the entity is inherited one or more other entities.
 	 * In other words, is this entity a subclass of other entities.
 	 *

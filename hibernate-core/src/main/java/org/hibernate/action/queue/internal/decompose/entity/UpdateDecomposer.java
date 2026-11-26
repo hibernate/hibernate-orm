@@ -2,6 +2,7 @@ package org.hibernate.action.queue.internal.decompose.entity;
 
 import jakarta.annotation.Nullable;
 import org.hibernate.action.internal.EntityUpdateAction;
+import org.hibernate.action.queue.internal.decompose.KeyLookupStatements;
 import org.hibernate.action.queue.internal.decompose.collection.DecompositionSupport;
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.StatementShapeKey;
@@ -87,6 +88,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 	private final MutationOperation versionJdbcUpdate;
 	private final Map<String, StatementShapeKey> staticStatementShapeKeys;
 	private final FilteredUpdateCache<CachedUpdates> filteredUpdateCache = new FilteredUpdateCache<>();
+	private final EntityKeyLookups keyLookups;
 	private final String origin;
 
 	private record CachedUpdates(
@@ -106,6 +108,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		super( entityPersister, sessionFactory );
 
 		this.mutationPlanContributor = mutationPlanContributor;
+		this.keyLookups = new EntityKeyLookups( MutationKind.UPDATE, sessionFactory );
 
 		this.staticUpdateOperations = entityPersister.isDynamicUpdate()
 				// entity specified dynamic-update - skip static operations
@@ -374,10 +377,6 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 				final String name = tableDescriptor.name();
 				final var tableUpdate = effectiveGroup.get( name );
 				if ( tableUpdate != null ) {
-					final var operation = cachedUpdates == null ? resolveJdbcUpdateOperation( name, tableUpdate )
-							: cachedUpdates.jdbcOperations().get( name );
-					final var shapeKey = cachedUpdates == null ? resolveStatementShapeKey( name, tableUpdate )
-							: cachedUpdates.shapeKeys().get( name );
 					// For static updates, only execute secondary tables when one of their
 					// attributes actually drove the update.  Static mutation groups may
 					// contain generated SQL assignments for joined-subclass tables, but
@@ -394,27 +393,35 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 					// This should be a rare enough occurrence that it is probably not worth even checking for.)
 					final boolean canBeSkipped = isBeingDeleted && tableDescriptor.isOptional();
 					if ( needsUpdate && !canBeSkipped ) {
+						final var bindPlan = createUpdateBindPlan(
+								tableDescriptor,
+								entity,
+								identifier,
+								rowId,
+								state,
+								previousState,
+								previousVersion,
+								updateability,
+								effectiveOptLockStyle,
+								valuesAnalysis,
+								needsDynamicUpdate,
+								generatedValuesCollector
+						);
+						// Resolve the statement as given only if no other was chosen, since
+						// a dynamic one is built for each row
+						final var keyLookupUpdate = resolveKeyLookupUpdate( tableDescriptor, tableUpdate, bindPlan, session );
 						final var op = new FlushOperation(
 								tableDescriptor,
 								MutationKind.UPDATE,
-								operation,
-								createUpdateBindPlan(
-										tableDescriptor,
-										entity,
-										identifier,
-										rowId,
-										state,
-										previousState,
-										previousVersion,
-										updateability,
-										effectiveOptLockStyle,
-										valuesAnalysis,
-										needsDynamicUpdate,
-										generatedValuesCollector
-								),
+								keyLookupUpdate != null ? keyLookupUpdate.operation()
+										: cachedUpdates != null ? cachedUpdates.jdbcOperations().get( name )
+										: resolveJdbcUpdateOperation( name, tableUpdate ),
+								bindPlan,
 								ordinalBase * 1_000 + (localOrd++),
 								origin,
-								shapeKey
+								keyLookupUpdate != null ? keyLookupUpdate.shapeKey()
+										: cachedUpdates != null ? cachedUpdates.shapeKeys().get( name )
+										: resolveStatementShapeKey( name, tableUpdate )
 						);
 						if ( previousOperation != null ) {
 							operationConsumer.accept( previousOperation );
@@ -428,6 +435,30 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		final List<FlushOperation> additionalOperations = new ArrayList<>();
 		mutationPlanContributor.contributeAdditionalUpdate( context, additionalOperations::add );
 		emitTailOperations( previousOperation, additionalOperations, postUpdateHandling, ordinalBase, operationConsumer );
+	}
+
+	/// Choose the statement which reads foreign keys from the rows they reference,
+	/// when the entity references rows whose keys are not in memory. The given bind
+	/// plan then binds for that statement.
+	///
+	/// @return `null` if the update should be performed as given
+	private KeyLookupStatements.Statement resolveKeyLookupUpdate(
+			EntityTableDescriptor tableDescriptor,
+			LogicalTableUpdate<?> tableUpdate,
+			EntityUpdateBindPlan bindPlan,
+			SharedSessionContractImplementor session) {
+		final var lookups = keyLookups.of( bindPlan.getTableDescriptor() );
+		return lookups.length == 0
+				? null
+				: keyLookups.resolve(
+						lookups,
+						bindPlan,
+						tableDescriptor,
+						tableUpdate,
+						staticUpdateOperations != null && tableUpdate == staticUpdateOperations.get( tableDescriptor.name() ),
+						null,
+						session
+				);
 	}
 
 	private FilteredUpdateCache.Key filteredUpdateKey(

@@ -2,6 +2,7 @@ package org.hibernate.id.insert;
 
 import jakarta.annotation.Nullable;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
+import org.hibernate.dialect.jdbc.spi.InsertSelectExecution;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -108,6 +109,11 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 	}
 
 	@Override
+	public boolean supportsInsertSelect() {
+		return dialect().supports( InsertSelectExecution.GENERATED_KEYS );
+	}
+
+	@Override
 	public GeneratedValues performGraphMutation(
 			FlushOperation operation,
 			Object entity,
@@ -129,7 +135,9 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 			operation.getBindPlan().bindValues( valueBindings, operation, session );
 			valueBindings.beforeStatement( preparedStatement, session );
 
-			session.getJdbcCoordinator().getResultSetReturn().executeUpdate( preparedStatement, sql );
+			if ( session.getJdbcCoordinator().getResultSetReturn().executeUpdate( preparedStatement, sql ) == 0 ) {
+				checkUnmatchedRow( operation, preparedStatement, sql, session );
+			}
 			return extractGeneratedValues( session, preparedStatement, sql,
 					() -> String.format( Locale.ROOT,
 							"Unable to extract generated key for '%s'",

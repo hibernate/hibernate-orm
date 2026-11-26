@@ -81,9 +81,10 @@ public abstract class AbstractSelectingDelegate
 			operation.getBindPlan().bindValues( valueBindings, operation, session );
 			valueBindings.beforeStatement( preparedStatement, session );
 
-			session.getJdbcCoordinator()
-					.getResultSetReturn()
-					.executeUpdate( preparedStatement, sql );
+			if ( session.getJdbcCoordinator().getResultSetReturn().executeUpdate( preparedStatement, sql ) == 0
+					&& operation.requiresMatchedRow() ) {
+				checkUnmatchedRow( operation, preparedStatement, sql, session );
+			}
 		}
 		finally {
 			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( preparedStatement );

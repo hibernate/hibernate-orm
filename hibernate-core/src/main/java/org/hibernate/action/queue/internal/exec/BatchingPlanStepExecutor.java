@@ -166,11 +166,11 @@ public class BatchingPlanStepExecutor extends StandardPlanStepExecutor implement
 		batchOperations[currentBatchIndex] = flushOperation;
 		batchOperationCompletions[currentBatchIndex] = completesOperation;
 
-		final var resultChecker = flushOperation.getOperationResultChecker();
 		try {
 			batch.addToBatch(
 					valueBindings::beforeStatement,
-					resultChecker == null ? null : resultChecker::checkResult
+					// The operation itself, so that the batch can ask whether a row must match
+					flushOperation.getOperationResultChecker() == null ? null : flushOperation
 			);
 		}
 		catch (ConstraintViolationException cve) {
@@ -196,6 +196,10 @@ public class BatchingPlanStepExecutor extends StandardPlanStepExecutor implement
 	private JdbcValueBindings getReusableValueBindings(
 			PreparableMutationOperation preparable,
 			FlushOperation flushOperation) {
+		if ( preparable.canRetry() ) {
+			// A retried batch binds its rows again, so each row keeps its own values
+			return new JdbcValueBindings( flushOperation.getMutatingTableDescriptor(), preparable );
+		}
 		if ( reusableValueBindingsOperation != preparable ) {
 			reusableValueBindingsOperation = preparable;
 			reusableValueBindings = new JdbcValueBindings( flushOperation.getMutatingTableDescriptor(), preparable );

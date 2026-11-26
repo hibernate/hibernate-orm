@@ -9,6 +9,7 @@ import org.hibernate.engine.jdbc.mutation.spi.BindingGroup;
 import org.hibernate.engine.jdbc.mutation.spi.JdbcValueDescriptorAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
 
 import java.sql.PreparedStatement;
@@ -47,55 +48,29 @@ public class JdbcValueBindings {
 	}
 
 	@SuppressWarnings("unchecked")
-	public void beforeStatement(PreparedStatement preparedStatement, SharedSessionContractImplementor session) {
+	public void beforeStatement(PreparedStatement statement, SharedSessionContractImplementor session) {
 		if ( bindTemplate == null ) {
-			bindingGroup.forEachBinding( (binding) -> {
-				try {
-					binding.getValueBinder().bind(
-							preparedStatement,
-							resolveValue( binding.getValue() ),
-							binding.getPosition(),
-							session
-					);
-				}
-				catch (SQLException e) {
-					throw session.getJdbcServices().getSqlExceptionHelper().convert(
-							e,
-							String.format(
-									Locale.ROOT,
-									"Unable to bind parameter #%s - %s",
-									binding.getPosition(),
-									binding.getValue()
-							)
-					);
-				}
-			} );
-			return;
+			bindingGroup.forEachBinding( binding -> bind( binding.getValueBinder(), binding.getValue(),
+					binding.getPosition(), statement, session ) );
 		}
+		else {
+			for ( var slot : bindTemplate.slots() ) {
+				if ( boundSlots[slot.index()] ) {
+					bind( slot.jdbcMapping().getJdbcValueBinder(), valuesBySlot[slot.index()],
+							slot.jdbcPosition(), statement, session );
+				}
+			}
+		}
+	}
 
-		for ( var slot : bindTemplate.slots() ) {
-			if ( !boundSlots[slot.index()] ) {
-				continue;
-			}
-			try {
-				slot.jdbcMapping().getJdbcValueBinder().bind(
-						preparedStatement,
-						resolveValue( valuesBySlot[slot.index()] ),
-						slot.jdbcPosition(),
-						session
-				);
-			}
-			catch (SQLException e) {
-				throw session.getJdbcServices().getSqlExceptionHelper().convert(
-						e,
-						String.format(
-								Locale.ROOT,
-								"Unable to bind parameter #%s - %s",
-								slot.jdbcPosition(),
-								valuesBySlot[slot.index()]
-						)
-				);
-			}
+	private static void bind(ValueBinder<Object> binder, Object value, int position, PreparedStatement statement,
+			SharedSessionContractImplementor session) {
+		try {
+			binder.bind( statement, resolveValue( value ), position, session );
+		}
+		catch (SQLException e) {
+			throw session.getJdbcServices().getSqlExceptionHelper().convert( e,
+					String.format( Locale.ROOT, "Unable to bind parameter #%s - %s", position, value ) );
 		}
 	}
 

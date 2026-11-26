@@ -128,33 +128,43 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 			if ( valuesAnalysis != null && !valuesAnalysis.include( tableDescriptor ) ) {
 				continue;
 			}
-			var operation = insertMutationPlanner.resolveJdbcInsertOperation(
-					tableDescriptor.name(),
-					tableInsert,
-					valuesAnalysis
+			final var bindPlan = insertMutationPlanner.createInsertBindPlan(
+					tableDescriptor,
+					entity,
+					identifier,
+					state,
+					effectiveInsertability,
+					action,
+					generatedValuesCollector,
+					decompositionContext
 			);
-			final var shapeKey = insertMutationPlanner.resolveStatementShapeKey(
-					tableDescriptor.name(),
-					tableInsert
+			final var keyLookupInsert = insertMutationPlanner.resolveKeyLookupInsert(
+					tableDescriptor,
+					tableInsert,
+					bindPlan,
+					valuesAnalysis,
+					session
 			);
 
 			final var op = new FlushOperation(
 					tableDescriptor,
 					MutationKind.INSERT,
-					operation,
-					insertMutationPlanner.createInsertBindPlan(
-							tableDescriptor,
-							entity,
-							identifier,
-							state,
-							effectiveInsertability,
-							action,
-							generatedValuesCollector,
-							decompositionContext
-					),
+					keyLookupInsert != null
+							? keyLookupInsert.operation()
+							: insertMutationPlanner.resolveJdbcInsertOperation(
+									tableDescriptor.name(),
+									tableInsert,
+									valuesAnalysis
+							),
+					bindPlan,
 					ordinalBase * 1_000 + (localOrd++),
 					origin,
-					shapeKey,
+					keyLookupInsert != null
+							? keyLookupInsert.shapeKey()
+							: insertMutationPlanner.resolveStatementShapeKey(
+									tableDescriptor.name(),
+									tableInsert
+							),
 					needsIdPrePhase
 			);
 

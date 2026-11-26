@@ -4320,7 +4320,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			return;
 		}
 
-		if ( lockingClauseStrategy == null ) {
+		if ( lockingClauseStrategy == null && getLockOptions() != null ) {
 			lockingClauseStrategy = dialect.getLockingClauseStrategy( querySpec, getLockOptions() );
 		}
 
@@ -10404,7 +10404,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
 		} );
 
-		// A table-less SELECT produces one row even if a scalar subquery finds no match.
+		if ( tableInsert.getSourceSelect() != null ) {
+			appendSql( ") " );
+			tableInsert.getSourceSelect().accept( this );
+			return;
+		}
+
 		final boolean selectSource = tableInsert.hasValueSubquery()
 				&& !dialect.getSubquerySupport().supports( SubquerySupport.Feature.INSERT_VALUES );
 		getCurrentClauseStack().push( selectSource ? Clause.SELECT : Clause.VALUES );
@@ -10471,7 +10476,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					MutationKind.UPDATE,
 					ReturningMutationSource.MODEL,
 					tableUpdate.getReturningColumns(),
-					() -> renderStandardTableUpdate( tableUpdate )
+					() -> {
+						renderStandardTableUpdate( tableUpdate );
+						if ( tableUpdate.getAdditionalRestriction() != null ) {
+							appendSql( " and " );
+							tableUpdate.getAdditionalRestriction().accept( this );
+						}
+					}
 			);
 		}
 		finally {

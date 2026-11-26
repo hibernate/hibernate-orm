@@ -10,6 +10,8 @@ import jakarta.annotation.Nonnull;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.action.queue.internal.PreparedCollectionMutation;
+import org.hibernate.action.queue.internal.decompose.KeyLookup;
+import org.hibernate.action.queue.internal.decompose.KeyLookupStatements;
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.StatementShapeKey;
 import org.hibernate.action.queue.spi.bind.BindPlan;
@@ -28,6 +30,7 @@ import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 import org.hibernate.persister.entity.mutation.TemporalMutationHelper;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
@@ -66,6 +69,17 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 	private final CollectionJdbcOperations jdbcOperations;
 	private final boolean tableHasNonPrimaryUniqueConstraints;
 	private final CollectionRowCompaction rowCompaction;
+	private final StatementShapeKey insertRowShapeKey;
+	private final StatementShapeKey updateRowShapeKey;
+
+	// The keys of the index and of the element which a row statement may read from
+	// the rows they reference, and the forms of the statements which do so
+	private final KeyLookup insertIndexLookup;
+	private final KeyLookup insertElementLookup;
+	private final KeyLookup updateIndexLookup;
+	private final KeyLookup updateElementLookup;
+	private KeyLookupStatements insertRowLookupStatements;
+	private KeyLookupStatements updateRowLookupStatements;
 
 	private final String insertOrigin;
 	private final String updateRowOrigin;
@@ -83,12 +97,33 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		this.persister = persister;
 		this.tableDescriptor = persister.getCollectionTableDescriptor();
 		this.mutationPlanContributor = mutationPlanContributor;
-		this.jdbcOperations = buildJdbcOperations( factory );
 		this.tableHasNonPrimaryUniqueConstraints = factory.getMappingMetamodel()
 				.getConstraintModel()
 				.getUniqueConstraintsForTable( tableDescriptor.name() )
 				.stream()
 				.anyMatch( uniqueConstraint -> !uniqueConstraint.isPrimaryKey() );
+
+		final var attribute = persister.getAttributeMapping();
+		final var index = attribute.getIndexDescriptor();
+		final var element = attribute.getElementDescriptor();
+		this.insertIndexLookup = attribute.getIdentifierDescriptor() != null ? null
+				: keyLookup( index, ParameterUsage.SET, persister.getIndexColumnIsSettable() );
+		this.insertElementLookup = keyLookup( element, ParameterUsage.SET, persister.getElementColumnIsSettable() );
+		// An update of a unique column may have its value nulled and assigned again
+		// later, which needs the value in memory.
+		this.updateIndexLookup = tableHasNonPrimaryUniqueConstraints || !persister.hasPhysicalIndexColumn() ? null
+				: keyLookup( index, ParameterUsage.RESTRICT, null );
+		this.updateElementLookup = tableHasNonPrimaryUniqueConstraints ? null
+				: keyLookup( element, ParameterUsage.SET, null );
+
+		this.jdbcOperations = buildJdbcOperations( factory );
+		final var insertRowPlan = jdbcOperations.insertRowPlan();
+		this.insertRowShapeKey = insertRowPlan == null || insertRowPlan.jdbcOperation() == null ? null
+				: shapeKey( MutationKind.INSERT, insertRowPlan.jdbcOperation() );
+		// A row with nothing to assign has an update plan without a statement
+		final var updateRowPlan = jdbcOperations.updateRowPlan();
+		this.updateRowShapeKey = updateRowPlan == null || updateRowPlan.jdbcOperation() == null ? null
+				: shapeKey( MutationKind.UPDATE, updateRowPlan.jdbcOperation() );
 		this.rowCompaction = new CollectionRowCompaction(
 				persister,
 				mutationPlanContributor,
@@ -215,14 +250,6 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			collection.preInsert( persister );
 
 			final var insertOrdinal = calculateOrdinal( ordinalBase, Slot.INSERT );
-			final var insertValues = insertRowPlan.values();
-			final var insertJdbcOperation = insertRowPlan.jdbcOperation();
-			final var insertShapeKey = StatementShapeKey.forMutation(
-					tableDescriptor.name(),
-					MutationKind.INSERT,
-					tableDescriptor,
-					insertJdbcOperation
-			);
 
 			final var entries = collection.entries( persister );
 			if ( !entries.hasNext() ) {
@@ -238,22 +265,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 							collection.includeInRecreate( entry, entryCount, collection,
 									persister.getAttributeMapping() );
 					if ( include ) {
-						final var plannedOp = new FlushOperation(
-								tableDescriptor,
-								MutationKind.INSERT,
-								insertJdbcOperation,
-								new SingleRowInsertBindPlan(
-										persister,
-										insertValues,
-										collection,
-										key,
-										entry,
-										entryCount
-								),
-								insertOrdinal,
-								insertOrigin,
-								insertShapeKey
-						);
+						final var plannedOp = planInsertRow( collection, key, entry, entryCount, insertOrdinal, session );
 
 						operations.add( plannedOp );
 						contributeAdditionalInsert(
@@ -305,50 +317,34 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 
 		collection.preInsert( persister );
 		final var insertOrdinal = calculateOrdinal( ordinalBase, Slot.INSERT );
-		final var insertValues = insertRowPlan.values();
-		final var insertJdbcOperation = insertRowPlan.jdbcOperation();
-		final var insertShapeKey = StatementShapeKey.forMutation(
-				tableDescriptor.name(),
-				MutationKind.INSERT,
-				tableDescriptor,
-				insertJdbcOperation
-		);
 		final List<FlushOperation> operations = new ArrayList<>();
 		if ( compactRows && rows.size() > 0 ) {
-			operations.add( new FlushOperation(
-					tableDescriptor,
-					MutationKind.INSERT,
-					insertJdbcOperation,
-					new GroupedCollectionInsertBindPlan(
-							persister,
-							insertValues,
-							collection,
-							key,
-							rows
-					),
-					insertOrdinal,
-					insertOrigin,
-					insertShapeKey
-			) );
+			if ( readsKeys( rows, collection, session ) ) {
+				// The grouped plan shares one statement, so plan each row with its own
+				rows.forEach( (entry, position) ->
+						operations.add( planInsertRow( collection, key, entry, position, insertOrdinal, session ) ) );
+			}
+			else {
+				operations.add( new FlushOperation(
+						tableDescriptor,
+						MutationKind.INSERT,
+						insertRowPlan.jdbcOperation(),
+						new GroupedCollectionInsertBindPlan(
+								persister,
+								insertRowPlan.values(),
+								collection,
+								key,
+								rows
+						),
+						insertOrdinal,
+						insertOrigin,
+						insertRowShapeKey
+				) );
+			}
 			return operations;
 		}
 		rows.forEach( (entry, position) -> {
-			operations.add( new FlushOperation(
-					tableDescriptor,
-					MutationKind.INSERT,
-					insertJdbcOperation,
-					new SingleRowInsertBindPlan(
-							persister,
-							insertValues,
-							collection,
-							key,
-							entry,
-							position
-					),
-					insertOrdinal,
-					insertOrigin,
-					insertShapeKey
-			) );
+			operations.add( planInsertRow( collection, key, entry, position, insertOrdinal, session ) );
 			contributeAdditionalInsert(
 					collection,
 					key,
@@ -687,29 +683,9 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 
 			if ( canUpdateValuesAtPositions && updateRowPlan != null ) {
 				final int updateOrdinal = calculateOrdinal( ordinalBase, Slot.UPDATE );
-				final var updateJdbcOperation = updateRowPlan.jdbcOperation();
-				final var updateValues = updateRowPlan.values();
-				final var updateRestrictions = updateRowPlan.restrictions();
-				final var updateShapeKey = shapeKey( MutationKind.UPDATE, updateJdbcOperation );
 
 				for ( var shift : changeSet.shifts() ) {
-					operationConsumer.accept( new FlushOperation(
-							tableDescriptor,
-							MutationKind.UPDATE,
-							updateJdbcOperation,
-							new SingleRowUpdateBindPlan(
-									persister,
-									collection,
-									key,
-									shift.element(),
-									(int) shift.currentIndex(),
-									updateValues,
-									updateRestrictions
-							),
-							updateOrdinal,
-							updateRowOrigin,
-							updateShapeKey
-					) );
+					operationConsumer.accept( planUpdateRow( collection, key, shift.element(), (int) shift.currentIndex(), updateOrdinal, updateRowOrigin, session ) );
 					contributeAdditionalUpdate( collection, key,
 							new CollectionChangeSet.Removal( shift.element(), shift.snapshotIndex() ), (int) shift.snapshotIndex(),
 							shift.element(), (int) shift.currentIndex(), ordinalBase, session, operationConsumer );
@@ -785,9 +761,6 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		if ( insertRowPlan != null && !changeSet.additions().isEmpty() ) {
 			collection.preInsert( persister );
 			final int insertOrdinal = calculateOrdinal( ordinalBase, Slot.INSERT );
-			final var insertJdbcOperation = insertRowPlan.jdbcOperation();
-			final var insertValues = insertRowPlan.values();
-			final var insertShapeKey = shapeKey( MutationKind.INSERT, insertJdbcOperation );
 			for ( var addition : changeSet.additions() ) {
 				final Object rowValue;
 				final int entryIndex;
@@ -800,22 +773,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 					entryIndex = addition.bindingPosition();
 				}
 
-				operationConsumer.accept( new FlushOperation(
-						tableDescriptor,
-						MutationKind.INSERT,
-						insertJdbcOperation,
-						new SingleRowInsertBindPlan(
-								persister,
-								insertValues,
-								collection,
-								key,
-								rowValue,
-								entryIndex
-						),
-						insertOrdinal,
-						insertOrigin,
-						insertShapeKey
-				) );
+				operationConsumer.accept( planInsertRow( collection, key, rowValue, entryIndex, insertOrdinal, session ) );
 				contributeAdditionalInsert(
 						collection,
 						key,
@@ -833,10 +791,6 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		final var updateRowPlan = jdbcOperations.updateRowPlan();
 		if ( updateRowPlan != null && !changeSet.valueChanges().isEmpty() ) {
 			final int updateOrdinal = calculateOrdinal( ordinalBase, Slot.UPDATE );
-			final var updateJdbcOperation = updateRowPlan.jdbcOperation();
-			final var updateValues = updateRowPlan.values();
-			final var updateRestrictions = updateRowPlan.restrictions();
-			final var updateShapeKey = shapeKey( MutationKind.UPDATE, updateJdbcOperation );
 			for ( var valueChange : changeSet.valueChanges() ) {
 				final boolean complete = mutationPlanContributor.contributeValueChange(
 						new CollectionMutationPlanContributor.ValueChangeContext(
@@ -863,23 +817,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 						entryIndex = valueChange.bindingPosition();
 					}
 
-					operationConsumer.accept( new FlushOperation(
-							tableDescriptor,
-							MutationKind.UPDATE,
-							updateJdbcOperation,
-							new SingleRowUpdateBindPlan(
-									persister,
-									collection,
-									key,
-									entry,
-									entryIndex,
-									updateValues,
-									updateRestrictions
-							),
-							updateOrdinal,
-							updateValueOrigin,
-							updateShapeKey
-					) );
+					operationConsumer.accept( planUpdateRow( collection, key, entry, entryIndex, updateOrdinal, updateValueOrigin, session ) );
 					contributeAdditionalUpdate( collection, key,
 							valueChange.replacedRow(), entryIndex,
 							entry, entryIndex, ordinalBase, session, operationConsumer );
@@ -1021,32 +959,12 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		if ( entries.hasNext() ) {
 			final var updateOrdinal = calculateOrdinal( ordinalBase, Slot.UPDATE );
 			final List<FlushOperation> updateOperations = new ArrayList<>();
-			final var updateJdbcOperation = updateRowPlan.jdbcOperation();
-			final var updateValues = updateRowPlan.values();
-			final var updateRestrictions = updateRowPlan.restrictions();
-			final var updateShapeKey = shapeKey( MutationKind.UPDATE, updateJdbcOperation );
 
 			int entryCount = 0;
 			while ( entries.hasNext() ) {
 				final Object entry = entries.next();
 				if ( collection.needsUpdating( entry, entryCount, persister.getAttributeMapping() ) ) {
-					updateOperations.add( new FlushOperation(
-							tableDescriptor,
-							MutationKind.UPDATE,
-							updateJdbcOperation,
-							new SingleRowUpdateBindPlan(
-									persister,
-									collection,
-									key,
-									entry,
-									entryCount,
-									updateValues,
-									updateRestrictions
-							),
-							updateOrdinal,
-							updateRowOrigin,
-							updateShapeKey
-					) );
+					updateOperations.add( planUpdateRow( collection, key, entry, entryCount, updateOrdinal, updateRowOrigin, session ) );
 					final var oldIdentity = persister.getAttributeMapping().getIdentifierDescriptor() != null
 							? collection.getIdentifier( entry, entryCount )
 							: persister.hasIndex() ? collection.getIndex( entry, entryCount, persister ) : null;
@@ -1081,9 +999,6 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			// For entity collections (join tables), use entity-based tracking if available
 			final boolean useEntityTracking = persister.getElementType().isEntityType();
 			final var insertOrdinal = calculateOrdinal( ordinalBase, Slot.INSERT );
-			final var insertJdbcOperation = insertRowPlan.jdbcOperation();
-			final var insertValues = insertRowPlan.values();
-			final var insertShapeKey = shapeKey( MutationKind.INSERT, insertJdbcOperation );
 
 			if ( useEntityTracking ) {
 				// Try entity-based tracking first; for indexed collections that override getAddedEntities()
@@ -1097,10 +1012,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 							session,
 							operationConsumer,
 							addedEntities,
-							insertJdbcOperation,
-							insertValues,
-							insertOrdinal,
-							insertShapeKey
+							insertOrdinal
 					);
 					return;
 				}
@@ -1115,10 +1027,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 					ordinalBase,
 					session,
 					operationConsumer,
-					insertJdbcOperation,
-					insertValues,
-					insertOrdinal,
-					insertShapeKey
+					insertOrdinal
 			);
 		}
 	}
@@ -1129,10 +1038,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			Consumer<FlushOperation> operationConsumer,
-			MutationOperation insertJdbcOperation,
-			CollectionJdbcOperations.Values insertValues,
-			int insertOrdinal,
-			StatementShapeKey insertShapeKey) {
+			int insertOrdinal) {
 		final var entries = collection.entries( persister );
 		if ( entries.hasNext() ) {
 			int entryCount = 0;
@@ -1140,22 +1046,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 				final Object entry = entries.next();
 				if ( collection.includeInInsert( entry, entryCount, collection,
 						persister.getAttributeMapping() ) ) {
-					operationConsumer.accept( new FlushOperation(
-							tableDescriptor,
-							MutationKind.INSERT,
-							insertJdbcOperation,
-							new SingleRowInsertBindPlan(
-									persister,
-									insertValues,
-									collection,
-									key,
-									entry,
-									entryCount
-							),
-							insertOrdinal,
-							insertOrigin,
-							insertShapeKey
-					) );
+					operationConsumer.accept( planInsertRow( collection, key, entry, entryCount, insertOrdinal, session ) );
 					contributeAdditionalInsert(
 							collection,
 							key,
@@ -1178,10 +1069,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			SharedSessionContractImplementor session,
 			Consumer<FlushOperation> operationConsumer,
 			Iterator<?> addedEntities,
-			MutationOperation insertJdbcOperation,
-			CollectionJdbcOperations.Values insertValues,
-			int insertOrdinal,
-			StatementShapeKey insertShapeKey) {
+			int insertOrdinal) {
 		final var entries = collection.entries( persister );
 		final List<Object> entryList = new ArrayList<>();
 		while ( entries.hasNext() ) {
@@ -1201,22 +1089,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			}
 
 			if ( position >= 0 ) {
-				operationConsumer.accept( new FlushOperation(
-						tableDescriptor,
-						MutationKind.INSERT,
-						insertJdbcOperation,
-						new SingleRowInsertBindPlan(
-								persister,
-								insertValues,
-								collection,
-								key,
-								addedEntity,
-								position
-						),
-						insertOrdinal,
-						insertOrigin,
-						insertShapeKey
-				) );
+				operationConsumer.accept( planInsertRow( collection, key, addedEntity, position, insertOrdinal, session ) );
 				contributeAdditionalInsert(
 						collection,
 						key,
@@ -1298,6 +1171,141 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 					"RemoveAllRows(" + persister.getRolePath() + ")"
 			);
 		}
+	}
+
+	/// Plan the insert of one row, choosing the statement which reads its index
+	/// and element keys from the rows they reference when they are not in memory.
+	private FlushOperation planInsertRow(
+			PersistentCollection<?> collection,
+			Object key,
+			Object rowValue,
+			int rowPosition,
+			int ordinal,
+			SharedSessionContractImplementor session) {
+		final var plan = jdbcOperations.insertRowPlan();
+		final var references = insertRowReferences( collection, rowValue, rowPosition, session );
+		final var statement = references == null ? null
+				: insertRowLookupStatements.resolve( KeyLookup.shapes( references ) );
+		return new FlushOperation(
+				tableDescriptor,
+				MutationKind.INSERT,
+				statement == null ? plan.jdbcOperation() : statement.operation(),
+				statement == null
+						? new SingleRowInsertBindPlan( persister, plan.values(), collection, key, rowValue, rowPosition )
+						: new SingleRowInsertBindPlan( persister,
+								(rowCollection, rowKey, row, position, rowSession, bindings) -> bindInsertRowValues(
+										rowCollection, rowKey, row, position, rowSession, bindings, references ),
+								collection, key, rowValue, rowPosition, references ),
+				ordinal,
+				insertOrigin,
+				statement == null ? insertRowShapeKey : statement.shapeKey()
+		);
+	}
+
+	/// Plan the update of one row, choosing the statement which reads its index
+	/// and element keys from the rows they reference when they are not in memory.
+	private FlushOperation planUpdateRow(
+			PersistentCollection<?> collection,
+			Object key,
+			Object rowValue,
+			int rowPosition,
+			int ordinal,
+			String origin,
+			SharedSessionContractImplementor session) {
+		final var plan = jdbcOperations.updateRowPlan();
+		final var references = updateRowReferences( collection, rowValue, rowPosition, session );
+		final var statement = references == null ? null
+				: updateRowLookupStatements.resolve( KeyLookup.shapes( references ) );
+		return new FlushOperation(
+				tableDescriptor,
+				MutationKind.UPDATE,
+				statement == null ? plan.jdbcOperation() : statement.operation(),
+				statement == null
+						? new SingleRowUpdateBindPlan( persister, collection, key, rowValue, rowPosition,
+								plan.values(), plan.restrictions() )
+						: new SingleRowUpdateBindPlan( persister, collection, key, rowValue, rowPosition,
+								(rowCollection, rowKey, row, position, rowSession, bindings) -> bindUpdateRowValues(
+										rowCollection, rowKey, row, position, rowSession, bindings, references[1] ),
+								(rowCollection, rowKey, row, position, rowSession, bindings) -> bindUpdateRowRestrictions(
+										rowCollection, rowKey, row, position, rowSession, bindings, references[0] ),
+								references ),
+				ordinal,
+				origin,
+				statement == null ? updateRowShapeKey : statement.shapeKey()
+		);
+	}
+
+	/// The rows from which an inserted row may read the keys of its index and of
+	/// its element, in that order.
+	///
+	/// @return `null` if both keys are available in memory
+	private KeyLookup.Reference[] insertRowReferences(
+			PersistentCollection<?> collection,
+			Object rowValue,
+			int rowPosition,
+			SharedSessionContractImplementor session) {
+		if ( insertRowLookupStatements == null || !KeyLookup.canInsertInBatch( session ) ) {
+			return null;
+		}
+		return references(
+				insertIndexLookup == null ? null
+						: insertIndexLookup.resolve( collection.getIndex( rowValue, rowPosition, persister ), session ),
+				insertElementLookup == null ? null
+						: insertElementLookup.resolve( collection.getElement( rowValue ), session )
+		);
+	}
+
+	/// The rows from which an updated row may read the key of the index which
+	/// locates it and the key of its element, in that order.
+	///
+	/// @return `null` if both keys are available in memory
+	private KeyLookup.Reference[] updateRowReferences(
+			PersistentCollection<?> collection,
+			Object rowValue,
+			int rowPosition,
+			SharedSessionContractImplementor session) {
+		if ( updateRowLookupStatements == null ) {
+			return null;
+		}
+		return references(
+				updateIndexLookup == null ? null
+						: updateIndexLookup.resolve( collection.getIndex( rowValue, rowPosition, persister ), session ),
+				updateElementLookup == null ? null
+						: updateElementLookup.resolve( collection.getElement( rowValue ), session )
+		);
+	}
+
+	private static KeyLookup.Reference[] references(KeyLookup.Reference index, KeyLookup.Reference element) {
+		return index == null && element == null ? null : new KeyLookup.Reference[] { index, element };
+	}
+
+	private boolean readsKeys(
+			FrozenCollectionRows rows,
+			PersistentCollection<?> collection,
+			SharedSessionContractImplementor session) {
+		if ( insertRowLookupStatements != null ) {
+			for ( int i = 0; i < rows.size(); i++ ) {
+				if ( insertRowReferences( collection, rows.entry( i ), rows.position( i ), session ) != null ) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	/// @param settable which columns of the part the statement writes, or `null`
+	/// if that is decided by whether each column is updatable
+	private KeyLookup keyLookup(CollectionPart part, ParameterUsage usage, boolean[] settable) {
+		final var lookup = part == null ? null
+				: KeyLookup.of( part.asEntityAssociationMapping(), tableDescriptor.name(), usage );
+		if ( lookup != null ) {
+			for ( int i = 0; i < lookup.columnCount(); i++ ) {
+				if ( !( settable == null ? lookup.keyColumn( i ).isUpdateable() : settable[i] ) ) {
+					return null;
+				}
+			}
+		}
+		return lookup;
 	}
 
 	private StatementShapeKey shapeKey(MutationKind kind, MutationOperation jdbcOperation) {
@@ -1407,9 +1415,14 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 					factory
 			);
 			applyInsertDetails( builder, persister, factory );
+			final var insert = builder.buildMutation();
+			if ( insertIndexLookup != null || insertElementLookup != null ) {
+				insertRowLookupStatements = new KeyLookupStatements( insert, tableDescriptor, MutationKind.INSERT, factory );
+			}
 			return new CollectionJdbcOperations.InsertRowPlan(
-					builder.buildMutation().createMutationOperation( null, factory ),
-					this::bindInsertRowValues
+					insert.createMutationOperation( null, factory ),
+					(collection, key, row, position, session, bindings) ->
+							bindInsertRowValues( collection, key, row, position, session, bindings, null )
 			);
 		}
 	}
@@ -1464,13 +1477,16 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		}
 	}
 
+	/// @param references the rows from which the statement reads the keys of the
+	/// index and of the element, in that order, or `null` if it reads neither
 	private void bindInsertRowValues(
 			PersistentCollection<?> collection,
 			Object key,
 			Object rowValue,
 			int rowPosition,
 			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings) {
+			JdbcValueBindings jdbcValueBindings,
+			KeyLookup.Reference[] references) {
 		if ( key == null ) {
 			throw new IllegalArgumentException( "null key for collection: "
 					+ persister.getNavigableRole().getFullPath() );
@@ -1493,7 +1509,10 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		}
 		else {
 			final var indexDescriptor = attributeMapping.getIndexDescriptor();
-			if ( indexDescriptor != null ) {
+			if ( references != null && references[0] != null ) {
+				references[0].bind( jdbcValueBindings );
+			}
+			else if ( indexDescriptor != null ) {
 				indexDescriptor.decompose(
 						persister.incrementIndexByBase( collection.getIndex( rowValue, rowPosition, persister ) ),
 						(valueIndex, value, jdbcValueMapping) -> {
@@ -1506,15 +1525,20 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			}
 		}
 
-		attributeMapping.getElementDescriptor().decompose(
-				collection.getElement( rowValue ),
-				(valueIndex, value, jdbcValueMapping) -> {
-					if ( persister.getElementColumnIsSettable()[valueIndex] ) {
-						jdbcValueBindings.bindAssignment( valueIndex, value, jdbcValueMapping );
-					}
-				},
-				session
-		);
+		if ( references != null && references[1] != null ) {
+			references[1].bind( jdbcValueBindings );
+		}
+		else {
+			attributeMapping.getElementDescriptor().decompose(
+					collection.getElement( rowValue ),
+					(valueIndex, value, jdbcValueMapping) -> {
+						if ( persister.getElementColumnIsSettable()[valueIndex] ) {
+							jdbcValueBindings.bindAssignment( valueIndex, value, jdbcValueMapping );
+						}
+					},
+					session
+			);
+		}
 
 		final var temporalMapping = attributeMapping.getTemporalMapping();
 		if ( temporalMapping != null
@@ -1586,10 +1610,16 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 				} );
 			}
 
+			final var update = builder.buildMutation();
+			if ( updateIndexLookup != null || updateElementLookup != null ) {
+				updateRowLookupStatements = new KeyLookupStatements( update, tableDescriptor, MutationKind.UPDATE, factory );
+			}
 			return new CollectionJdbcOperations.UpdateRowPlan(
-					builder.buildMutation().createMutationOperation( null, factory ),
-					this::bindUpdateRowValues,
-					this::bindUpdateRowRestrictions
+					update.createMutationOperation( null, factory ),
+					(collection, key, row, position, session, bindings) ->
+							bindUpdateRowValues( collection, key, row, position, session, bindings, null ),
+					(collection, key, row, position, session, bindings) ->
+							bindUpdateRowRestrictions( collection, key, row, position, session, bindings, null )
 			);
 		}
 		else {
@@ -1650,13 +1680,16 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		}
 	}
 
+	/// @param element the row from which the statement reads the key of the
+	/// element, or `null` if the key is bound
 	private void bindUpdateRowValues(
 			PersistentCollection<?> collection,
 			Object key,
 			Object rowValue,
 			int rowPosition,
 			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings) {
+			JdbcValueBindings jdbcValueBindings,
+			KeyLookup.Reference element) {
 		if ( key == null ) {
 			throw new IllegalArgumentException( "null key for collection: " + persister.getNavigableRole().getFullPath() );
 		}
@@ -1664,6 +1697,10 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		final var attribute = persister.getAttributeMapping();
 		final var elementDescriptor = attribute.getElementDescriptor();
 
+		if ( element != null ) {
+			element.bind( jdbcValueBindings );
+			return;
+		}
 		// For Maps, rowValue is a Map.Entry - extract the element (value) first
 		elementDescriptor.decompose(
 				collection.getElement( rowValue ),
@@ -1672,13 +1709,16 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		);
 	}
 
+	/// @param index the row from which the statement reads the key of the index
+	/// which locates the row, or `null` if the key is bound
 	private void bindUpdateRowRestrictions(
 			PersistentCollection<?> collection,
 			Object key,
 			Object rowValue,
 			int rowPosition,
 			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings) {
+			JdbcValueBindings jdbcValueBindings,
+			KeyLookup.Reference index) {
 		if ( key == null ) {
 			throw new IllegalArgumentException( "null key for collection: " + persister.getNavigableRole().getFullPath() );
 		}
@@ -1694,7 +1734,10 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		// Bind index/element/identifier to identify the specific row to update
 		final var indexDescriptor = attribute.getIndexDescriptor();
 		final var identifierDescriptor = attribute.getIdentifierDescriptor();
-		if ( indexDescriptor != null && persister.hasPhysicalIndexColumn() ) {
+		if ( index != null ) {
+			index.bind( jdbcValueBindings );
+		}
+		else if ( indexDescriptor != null && persister.hasPhysicalIndexColumn() ) {
 			// For indexed collections (lists, maps), restrict by the index position
 			// This identifies which row in the collection table to update
 			final Object indexValue = collection.getIndex( rowValue, rowPosition, persister );

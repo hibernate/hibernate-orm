@@ -20,7 +20,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.model.MutatingTableReference;
 import org.hibernate.sql.ast.spi.model.builder.TableMutationBuilder;
-import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
 
 import static java.sql.Statement.NO_GENERATED_KEYS;
 import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getActualGeneratedModelPart;
@@ -96,21 +95,7 @@ public class InsertReturningDelegate extends AbstractReturningDelegate {
 			SharedSessionContractImplementor session,
 			FlushOperation operation) {
 		return executeAndExtractReturning( sql, preparedStatement, session,
-				getTiming() == EventType.UPDATE ? () -> {
-					try {
-						final var checker = operation.getOperationResultChecker();
-						if ( checker != null ) {
-							checker.checkResult( 0, preparedStatement, -1, sql, session.getFactory() );
-						}
-						else {
-							((PreparableMutationOperation) operation.getJdbcOperation()).getExpectation()
-									.verifyOutcome( 0, preparedStatement, -1, sql );
-						}
-					}
-					catch (SQLException e) {
-						throw session.getJdbcServices().getSqlExceptionHelper().convert( e, "Unable to check update outcome", sql );
-					}
-				} : null );
+				() -> checkUnmatchedRow( operation, preparedStatement, sql, session ) );
 	}
 
 	private GeneratedValues executeAndExtractReturning(

@@ -345,6 +345,7 @@ public class SingleStatementBatchImpl implements SingleStatementBatch {
 			);
 		}
 
+		checkUnmatchedRows( rowCounts );
 		if ( !operation.getTableDetails().isIdentifierTable() ) {
 			return;
 		}
@@ -360,6 +361,26 @@ public class SingleStatementBatchImpl implements SingleStatementBatch {
 				throw session.getJdbcServices()
 						.getSqlExceptionHelper()
 						.convert( e, "Unable to check batched mutation result - " + sqlString );
+			}
+		}
+	}
+
+	private void checkUnmatchedRows(int[] rowCounts) {
+		for ( int i = 0; i < batchPosition; i++ ) {
+			final var checker = resultCheckers[i];
+			if ( checker != null && checker.requiresMatchedRow() ) {
+				final int rowCount = i < rowCounts.length ? rowCounts[i] : Statement.SUCCESS_NO_INFO;
+				if ( rowCount == 0 || rowCount == Statement.SUCCESS_NO_INFO ) {
+					try {
+						if ( !checker.checkResult( rowCount, statement, i, sqlString, session.getFactory() ) ) {
+							throw new StaleStateException( "No row matched " + sqlString );
+						}
+					}
+					catch (SQLException e) {
+						throw session.getJdbcServices().getSqlExceptionHelper()
+								.convert( e, "Unable to check batched mutation result - " + sqlString );
+					}
+				}
 			}
 		}
 	}

@@ -66,6 +66,17 @@ public interface GeneratedValuesMutationDelegate {
 	EventType getTiming();
 
 	/**
+	 * Returns {@code true} when this delegate can retrieve the values generated
+	 * by an insert whose row is supplied by a {@code select} instead of by
+	 * {@code values}.
+	 *
+	 * @since 8.0
+	 */
+	default boolean supportsInsertSelect() {
+		return true;
+	}
+
+	/**
 	 * Returns {@code true} when this delegate supports retrieving arbitrary generated values,
 	 * or {@code false} when it only supports identifiers.
 	 */

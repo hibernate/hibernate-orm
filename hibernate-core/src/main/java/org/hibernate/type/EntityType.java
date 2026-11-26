@@ -307,8 +307,8 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			return cached;
 		}
 		else {
-			if ( original == target ) {
-				return target;
+			if ( original == target || getRHSUniqueKeyPropertyName() != null && session.isManaged( original ) ) {
+				return original;
 			}
 			if ( session.getContextEntityIdentifier( original ) == null
 					&& isTransient( associatedEntityName, original, Boolean.FALSE, session ) ) {
@@ -386,6 +386,11 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		return keyType.getReturnedClass().isInstance( entity )
 				? entity
 				: getUniqueKeyPropertyValue( entity, persister );
+	}
+
+	protected boolean hasUnfetchedUniqueKey(Object entity) {
+		return entity != null && !isReferenceToPrimaryKey() && uniqueKeyPropertyName != null
+				&& !Hibernate.isPropertyInitialized( entity, root( uniqueKeyPropertyName ) );
 	}
 
 	private Object getUniqueKeyPropertyValue(Object entity, EntityPersister persister) {

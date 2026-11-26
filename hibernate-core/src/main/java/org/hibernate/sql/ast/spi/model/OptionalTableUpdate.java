@@ -28,6 +28,7 @@ public class OptionalTableUpdate
 		implements LogicalTableUpdate<MutationOperation> {
 	private final List<ColumnValueBinding> valueBindings;
 	private final boolean versionedTarget;
+	private final boolean requiresExistingRowForOptimisticLock;
 	private final List<String> unassignedColumns;
 
 	public OptionalTableUpdate(
@@ -108,6 +109,9 @@ public class OptionalTableUpdate
 		);
 		this.valueBindings = valueBindings;
 		this.versionedTarget = versionedTarget;
+		this.requiresExistingRowForOptimisticLock = mutatingTable.isOptional() && !versionedTarget
+				&& optLockRestrictionBindings instanceof ColumnValueBindingList bindings
+				&& bindings.hasNonNullOldValue();
 		this.unassignedColumns = mutatingTable.isOptional() ? List.copyOf( unassignedColumns ) : List.of();
 	}
 
@@ -151,6 +155,11 @@ public class OptionalTableUpdate
 
 	public List<ColumnValueBinding> getValueBindings() {
 		return valueBindings;
+	}
+
+	/// A non-null old column value in a DIRTY or ALL restriction proves the row existed.
+	public boolean requiresExistingRowForOptimisticLock() {
+		return requiresExistingRowForOptimisticLock;
 	}
 
 	/// The columns whose stored values contribute to the state of the updated row.

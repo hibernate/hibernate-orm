@@ -9,6 +9,7 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Stateful;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -121,8 +122,8 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 	}
 
 	public TemporalMappingImpl forSubclass(
-			Stateful rootMapping, String identifierTableName, MappingModelCreationProcess creationProcess) {
-		return new TemporalMappingImpl( rootMapping, resolveTableName( identifierTableName ), tableExpressions, creationProcess );
+			RootClass rootClass, String identifierTableName, MappingModelCreationProcess creationProcess) {
+		return new TemporalMappingImpl( rootClass, resolveTableName( identifierTableName ), tableExpressions, creationProcess );
 	}
 
 	@Nonnull

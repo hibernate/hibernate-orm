@@ -234,7 +234,7 @@ public final class HistoryStateManagement implements StateManagement, StateManag
 		final var temporalColumns = List.of( rootClass.getAuxiliaryColumn( ROW_START ).getQuotedName( dialect ),
 				rootClass.getAuxiliaryColumn( ROW_END ).getQuotedName( dialect ) );
 		final var tableExpressions = entityPersister.getAuxiliaryTableExpressions(
-				rootClass, tableName, temporalColumns, creationProcess );
+				rootClass, temporalColumns, creationProcess );
 		return new TemporalMappingImpl( rootClass, tableName, tableExpressions, creationProcess );
 	}
 

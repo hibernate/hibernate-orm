@@ -281,16 +281,15 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 	private static void addAuditSubquery(
 			@Nonnull Map<String, AuditMappingImpl.TableAuditInfo> map,
 			@Nonnull PersistentClass bootClass,
-			@Nullable List<String> extraColumns,
+			@Nonnull List<String> extraColumns,
 			@Nonnull MappingModelCreationProcess creationProcess) {
 		assert !bootClass.getSubclasses().isEmpty();
 		final var unionPersister = (UnionSubclassEntityPersister)
 				creationProcess.getEntityPersister( bootClass.getEntityName() );
 		final var rootInfo = map.values().iterator().next();
 		final String originalSubquery = unionPersister.getTableName();
-		final String auditSubquery = unionPersister.generateSubquery(
+		final String auditSubquery = unionPersister.generateAuxiliarySubquery(
 				bootClass,
-				true,
 				extraColumns,
 				creationProcess.getCreationContext().getMetadata()
 		);

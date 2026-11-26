@@ -5797,7 +5797,7 @@ public abstract class AbstractEntityPersister
 	@Internal
 	@Nonnull
 	public Map<String, String> getAuxiliaryTableExpressions(
-			@Nonnull RootClass rootClass, @Nonnull String rootAuxiliaryTableName, @Nonnull List<String> extraColumns,
+			@Nonnull RootClass rootClass, @Nonnull List<String> extraColumns,
 			@Nonnull MappingModelCreationProcess creationProcess) {
 		return Map.of();
 	}

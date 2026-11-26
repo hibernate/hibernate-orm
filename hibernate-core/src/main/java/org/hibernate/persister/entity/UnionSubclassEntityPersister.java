@@ -312,13 +312,13 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	@Override
 	@Nonnull
 	public Map<String, String> getAuxiliaryTableExpressions(
-			@Nonnull RootClass rootClass, @Nonnull String rootAuxiliaryTableName, @Nonnull List<String> extraColumns,
+			@Nonnull RootClass rootClass, @Nonnull List<String> extraColumns,
 			@Nonnull MappingModelCreationProcess creationProcess) {
 		if ( !rootClass.hasSubclasses() ) {
 			return Map.of();
 		}
 		final var tableNames = new HashMap<String, String>();
-		tableNames.put( getRootTableName(), rootAuxiliaryTableName );
+		tableNames.put( getRootTableName(), determineTableName( rootClass.getAuxiliaryTable() ) );
 		final var subclasses = rootClass.getSubclasses();
 		for ( var subclass : subclasses ) {
 			tableNames.put( determineTableName( subclass.getTable() ), determineTableName( subclass.getAuxiliaryTable() ) );
@@ -334,8 +334,8 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			PersistentClass bootClass, Map<String, String> tableNames, List<String> extraColumns,
 			MappingModelCreationProcess creationProcess) {
 		final String tableExpression = creationProcess.getEntityPersister( bootClass.getEntityName() ).getTableName();
-		tableNames.put( tableExpression, generateSubquery( bootClass, true,
-				extraColumns, creationProcess.getCreationContext().getMetadata() ) );
+		tableNames.put( tableExpression, generateAuxiliarySubquery( bootClass, extraColumns,
+				creationProcess.getCreationContext().getMetadata() ) );
 	}
 
 	@Override
@@ -540,22 +540,21 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	protected @Nonnull String generateSubquery(@Nonnull PersistentClass model, @Nonnull MappingContext mappingContext) {
-		return generateSubquery( model, false, null, mappingContext );
+		return generateSubquery( model, false, List.of(), mappingContext );
 	}
 
-	/**
-	 * Generate a union subquery for the given model.
-	 *
-	 * @param model the persistent class model to create the subquery for
-	 * @param useAuxiliaryTables whether to read each branch from its auxiliary table
-	 * @param extraSelectExpressions additional column expressions to include in
-	 *                               each SELECT of the union (e.g. REV, REVTYPE)
-	 * @param mappingContext the mapping context
-	 */
-	public @Nonnull String generateSubquery(
+	/// Generates a union over the auxiliary tables, selecting the extra expressions in each branch.
+	public @Nonnull String generateAuxiliarySubquery(
+			@Nonnull PersistentClass model,
+			@Nonnull List<String> extraSelectExpressions,
+			@Nonnull MappingContext mappingContext) {
+		return generateSubquery( model, true, extraSelectExpressions, mappingContext );
+	}
+
+	private @Nonnull String generateSubquery(
 			@Nonnull PersistentClass model,
 			boolean useAuxiliaryTables,
-			@Nullable List<String> extraSelectExpressions,
+			@Nonnull List<String> extraSelectExpressions,
 			@Nonnull MappingContext mappingContext) {
 		final var factory = getFactory();
 		final var sqlStringGenerationContext = factory.getSqlStringGenerationContext();
@@ -596,10 +595,8 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 						subquery.append( column.getQuotedName( dialect ) )
 								.append( ", " );
 					}
-					if ( extraSelectExpressions != null ) {
-						for ( var expr : extraSelectExpressions ) {
-							subquery.append( expr ).append( ", " );
-						}
+					for ( var expr : extraSelectExpressions ) {
+						subquery.append( expr ).append( ", " );
 					}
 					subquery.append( persistentClass.getSubclassId() )
 							.append( " as clazz_" );

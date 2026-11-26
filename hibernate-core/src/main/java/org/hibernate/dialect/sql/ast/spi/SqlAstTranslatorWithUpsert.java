@@ -27,18 +27,14 @@ public class SqlAstTranslatorWithUpsert<T extends JdbcOperation> extends Abstrac
 	 * Create the MutationOperation for performing the DELETE or UPSERT
 	 */
 	public MutationOperation createMergeOperation(OptionalTableUpdate optionalTableUpdate) {
-		renderUpsertStatement( optionalTableUpdate );
-
-		final UpsertOperation upsertOperation = new UpsertOperation(
-				optionalTableUpdate.getMutatingTable().getTableMapping(),
-				optionalTableUpdate.getMutationTarget(),
-				getSql(),
-				// Without value bindings, the upsert may have an update count of 0
-				expectation( optionalTableUpdate ),
-				getParameterBinders()
-		);
-
-		return new DeleteOrUpsertOperation( upsertOperation, optionalTableUpdate );
+		return DeleteOrUpsertOperation.create( optionalTableUpdate, () -> {
+			renderUpsertStatement( optionalTableUpdate );
+			return new UpsertOperation(
+					optionalTableUpdate.getMutatingTable().getTableMapping(),
+					optionalTableUpdate.getMutationTarget(), getSql(),
+					expectation( optionalTableUpdate ), getParameterBinders()
+			);
+		} );
 	}
 
 	protected Expectation expectation(OptionalTableUpdate optionalTableUpdate) {

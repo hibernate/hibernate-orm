@@ -5,11 +5,11 @@ import org.hibernate.Locking;
 import org.hibernate.dialect.sql.ast.spi.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.sql.ast.spi.DerivedTableRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingRequest;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.PredicateSupport.Capability;
 import org.hibernate.dialect.sql.ast.spi.StandardDerivedTableRenderingSupport;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
 import org.hibernate.dialect.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.query.select.SqlSelection;
 import org.hibernate.sql.ast.spi.query.MutationStatement;
@@ -18,9 +18,6 @@ import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.dialect.sql.ast.spi.InsertConflictRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardInsertConflictRenderingSupport;
 import org.hibernate.sql.ast.spi.query.delete.DeleteStatement;
-import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.spi.query.expression.CaseSearchedExpression;
-import org.hibernate.sql.ast.spi.query.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
@@ -35,7 +32,6 @@ import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 /**
  * A SQL AST translator for Sybase ASE.
@@ -91,54 +87,6 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	// so we cast the first result arm if we encounter this condition
 
 	@Override
-	protected void visitAnsiCaseSearchedExpression(
-			CaseSearchedExpression caseSearchedExpression,
-			Consumer<Expression> resultRenderer) {
-		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSearchedExpression ) ) {
-			final List<CaseSearchedExpression.WhenFragment> whenFragments = caseSearchedExpression.getWhenFragments();
-			final Expression firstResult = whenFragments.get( 0 ).getResult();
-			super.visitAnsiCaseSearchedExpression(
-					caseSearchedExpression,
-					e -> {
-						if ( e == firstResult ) {
-							renderCasted( e );
-						}
-						else {
-							resultRenderer.accept( e );
-						}
-					}
-			);
-		}
-		else {
-			super.visitAnsiCaseSearchedExpression( caseSearchedExpression, resultRenderer );
-		}
-	}
-
-	@Override
-	protected void visitAnsiCaseSimpleExpression(
-			CaseSimpleExpression caseSimpleExpression,
-			Consumer<Expression> resultRenderer) {
-		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSimpleExpression ) ) {
-			final List<CaseSimpleExpression.WhenFragment> whenFragments = caseSimpleExpression.getWhenFragments();
-			final Expression firstResult = whenFragments.get( 0 ).getResult();
-			super.visitAnsiCaseSimpleExpression(
-					caseSimpleExpression,
-					e -> {
-						if ( e == firstResult ) {
-							renderCasted( e );
-						}
-						else {
-							resultRenderer.accept( e );
-						}
-					}
-			);
-		}
-		else {
-			super.visitAnsiCaseSimpleExpression( caseSimpleExpression, resultRenderer );
-		}
-	}
-
-	@Override
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
 			Locking.FollowOn followOnStrategy) {
@@ -151,6 +99,10 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 
 	@Override
 	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		return PaginationRenderingSupport.withValidation( paginationPlanSelection(), this::validatePaginationRequest );
+	}
+
+	private PaginationRenderingSupport paginationPlanSelection() {
 		return request -> request.queryPart() instanceof QueryGroup || supportsTopClause()
 				? new PaginationRenderingPlan.Top( true, false )
 				: new PaginationRenderingPlan.None();
@@ -165,7 +117,7 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	}
 
 	@Override
-	public void visitQueryGroup(QueryGroup queryGroup) {
+	protected void renderQueryGroup(QueryGroup queryGroup) {
 		if ( queryGroup.hasSortSpecifications() || queryGroup.hasOffsetOrFetchClause() ) {
 			appendSql( "select " );
 			renderTopClause(
@@ -185,10 +137,10 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 				appendSql( i );
 			}
 			appendSql( ')' );
-			visitOrderBy( queryGroup.getSortSpecifications() );
+			renderOrderBy( queryGroup.getSortSpecifications() );
 		}
 		else {
-			super.visitQueryGroup( queryGroup );
+			super.renderQueryGroup( queryGroup );
 		}
 	}
 
@@ -197,15 +149,14 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 		return StandardDerivedTableRenderingSupport.VALUES_SELECT_UNION;
 	}
 
-	@Override
-	public void visitOffsetFetchClause(QueryPart queryPart) {
+	private void validatePaginationRequest(PaginationRenderingRequest request) {
+		final QueryPart queryPart = request.queryPart();
 		assertRowsOnlyFetchClauseType( queryPart );
 		if ( !queryPart.isRoot() && queryPart.hasOffsetOrFetchClause() ) {
 			if ( queryPart.getFetchClauseExpression() != null && !supportsTopClause() || queryPart.getOffsetClauseExpression() != null ) {
 				throw new IllegalArgumentException( "Can't emulate offset fetch clause in subquery" );
 			}
 		}
-		super.visitOffsetFetchClause( queryPart );
 	}
 
 	@Override
@@ -375,15 +326,6 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	}
 
 	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		appendSql( OPEN_PARENTHESIS );
-		visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
-		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-		visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
-		appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
 	protected String determineColumnReferenceQualifier(ColumnReference columnReference) {
 		final DmlTargetColumnQualifierSupport qualifierSupport = getDialect().getDmlTargetColumnQualifierSupport();
 		final MutationStatement currentDmlStatement;
@@ -396,7 +338,7 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 		}
 		// Sybase needs a table name prefix
 		// but not if this is a restricted union table reference subquery
-		final QuerySpec currentQuerySpec = (QuerySpec) getQueryPartStack().getCurrent();
+		final QuerySpec currentQuerySpec = (QuerySpec) getCurrentQueryPart();
 		final List<TableGroup> roots;
 		if ( currentQuerySpec != null && !currentQuerySpec.isRoot()
 				&& (roots = currentQuerySpec.getFromClause().getRoots()).size() == 1

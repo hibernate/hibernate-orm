@@ -1,5 +1,6 @@
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.sql.ast.spi.ArithmeticSupport;
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
@@ -31,6 +32,7 @@ import org.hibernate.dialect.schema.spi.IndexNameQualification;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.dialect.lock.internal.NonLockingClauseStrategy;
 import org.hibernate.dialect.lock.internal.TransactSQLLockingClauseStrategy;
 import org.hibernate.dialect.lock.spi.LockingClauseStrategy;
 import org.hibernate.sql.spi.SqlAppender;
@@ -236,7 +238,9 @@ public abstract class AbstractTransactSQLDialect extends Dialect implements Curr
 
 	@Override
 	public LockingClauseStrategy getLockingClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
-		return new TransactSQLLockingClauseStrategy( lockOptions.getScope(), querySpec.getRootPathsForLocking() );
+		return lockOptions == null
+				? NonLockingClauseStrategy.NON_CLAUSE_STRATEGY
+				: new TransactSQLLockingClauseStrategy( lockOptions.getScope(), querySpec.getRootPathsForLocking() );
 	}
 
 
@@ -250,6 +254,13 @@ public abstract class AbstractTransactSQLDialect extends Dialect implements Curr
 	public NullOrderingSupport getNullOrderingSupport() {
 		return NullOrderingSupport.builder( super.getNullOrderingSupport() )
 				.defaultOrdering( NullOrdering.SMALLEST )
+				.build();
+	}
+
+	@Override
+	public ArithmeticSupport getArithmeticSupport() {
+		return ArithmeticSupport.builder( super.getArithmeticSupport() )
+				.moduloForm( ArithmeticSupport.ModuloForm.OPERATOR )
 				.build();
 	}
 

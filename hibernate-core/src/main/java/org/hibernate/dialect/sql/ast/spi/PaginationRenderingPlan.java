@@ -19,7 +19,27 @@ public sealed interface PaginationRenderingPlan {
 	///
 	/// @param renderOffsetRowsKeyword whether an existing offset expression is
 	/// followed by the `rows` keyword; this flag does not synthesize an offset
-	record OffsetFetch(boolean renderOffsetRowsKeyword) implements PaginationRenderingPlan {
+	/// @param renderZeroOffsetIfAbsent whether `offset 0 rows` is rendered when
+	/// there is no offset, for grammars where a fetch clause requires an offset
+	/// clause
+	/// @param requireOrdering whether the clause requires an `order by`; when the
+	/// query part has none, the translator renders its placeholder ordering
+	record OffsetFetch(
+			boolean renderOffsetRowsKeyword,
+			boolean renderZeroOffsetIfAbsent,
+			boolean requireOrdering) implements PaginationRenderingPlan {
+		/// A plan which neither synthesizes an offset nor requires an ordering.
+		public OffsetFetch(boolean renderOffsetRowsKeyword) {
+			this( renderOffsetRowsKeyword, false, false );
+		}
+	}
+
+	/// A trailing `offset 0 rows` and nothing else, whatever offset or fetch the
+	/// query part itself carries.
+	///
+	/// Some grammars accept an `order by` in a branch of a set operation only
+	/// when an offset clause follows it.
+	record ZeroOffset() implements PaginationRenderingPlan {
 	}
 
 	/// Separate trailing `limit` and `offset` clauses, for example

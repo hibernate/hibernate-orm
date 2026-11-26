@@ -80,8 +80,27 @@ public interface SqlAstTranslator<T extends JdbcOperation> extends SqlAstWalker 
 	/// The query part at the top of the translator's traversal stack.
 	QueryPart getCurrentQueryPart();
 
-	/// Read-only access to the translator's current clause stack. Providers should
-	/// inspect but not mutate this stack.
+	/// The clause currently being rendered, or `null` outside any clause.
+	///
+	/// @since 8.0
+	Clause getCurrentClause();
+
+	/// Render within the given clause. The clause is current for the duration of
+	/// `renderer`, and the previous clause is restored afterwards, including when
+	/// `renderer` throws.
+	///
+	/// @param clause the clause to make current
+	/// @param renderer the rendering to perform within that clause
+	///
+	/// @since 8.0
+	void withClause(Clause clause, Runnable renderer);
+
+	/// Access to the translator's current clause stack.
+	///
+	/// @deprecated Exposes the translator's mutable state. Use [#getCurrentClause()]
+	/// to inspect the current clause and [#withClause(Clause, Runnable)] to render
+	/// within a clause.
+	@Deprecated(since = "8.0", forRemoval = true)
 	Stack<Clause> getCurrentClauseStack();
 
 	/**

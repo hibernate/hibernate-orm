@@ -41,7 +41,7 @@ public class SpannerPostgreSQLSqlAstTranslator<T extends JdbcOperation> extends 
 		registerAffectedTable(tableReference);
 		// ALWAYS render the alias for the target table since Spanner doesn't support
 		// FROM in UPDATE
-		final Clause currentClause = getClauseStack().getCurrent();
+		final Clause currentClause = getCurrentClause();
 		if ( currentClause == Clause.UPDATE || currentClause == Clause.DELETE) {
 			renderTableReferenceIdentificationVariable(tableReference);
 		}
@@ -169,7 +169,7 @@ public class SpannerPostgreSQLSqlAstTranslator<T extends JdbcOperation> extends 
 	}
 
 	@Override
-	public void visitUnaryOperationExpression(UnaryOperation unaryOperationExpression) {
+	protected void renderUnaryOperationExpression(UnaryOperation unaryOperationExpression) {
 		// Spanner PostgreSQL doesn't support unary plus, so we just render the operand
 		if ( unaryOperationExpression.getOperator() == UnaryArithmeticOperator.UNARY_MINUS ) {
 			appendSql( UnaryArithmeticOperator.UNARY_MINUS.getOperatorChar() );

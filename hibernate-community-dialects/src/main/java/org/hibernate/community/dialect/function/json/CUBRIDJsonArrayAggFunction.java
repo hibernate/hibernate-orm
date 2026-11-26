@@ -57,10 +57,10 @@ public class CUBRIDJsonArrayAggFunction extends JsonArrayAggFunction {
 			if ( nullBehavior != JsonNullBehavior.ABSENT ) {
 				throw new QueryException( "Can't emulate json_arrayagg filter clause when using 'null on null' clause.", (String) null );
 			}
-			translator.getCurrentClauseStack().push( Clause.WHERE );
-			sqlAppender.appendSql( "case when " );
-			filter.accept( translator );
-			translator.getCurrentClauseStack().pop();
+			translator.withClause( Clause.WHERE, () -> {
+				sqlAppender.appendSql( "case when " );
+				filter.accept( translator );
+			} );
 			sqlAppender.appendSql( " then " );
 			renderArgument( sqlAppender, arg, nullBehavior, translator );
 			sqlAppender.appendSql( " else null end" );

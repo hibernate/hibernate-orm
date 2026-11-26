@@ -49,9 +49,9 @@ public class OracleArrayToStringFunction extends ArrayToStringFunction {
 			sqlAppender.append( "listagg(" );
 			if ( filter != null ) {
 				sqlAppender.appendSql( "case when " );
-				walker.getCurrentClauseStack().push( Clause.WHERE );
-				filter.accept( walker );
-				walker.getCurrentClauseStack().pop();
+				walker.withClause( Clause.WHERE, () -> {
+					filter.accept( walker );
+				} );
 				sqlAppender.appendSql( " then " );
 			}
 			if ( defaultExpression != null ) {
@@ -71,15 +71,15 @@ public class OracleArrayToStringFunction extends ArrayToStringFunction {
 			sqlAppender.appendSql( ')' );
 
 			if ( withinGroup != null && !withinGroup.isEmpty() ) {
-				walker.getCurrentClauseStack().push( Clause.WITHIN_GROUP );
-				sqlAppender.appendSql( " within group (order by " );
-				withinGroup.get( 0 ).accept( walker );
-				for ( int i = 1; i < withinGroup.size(); i++ ) {
-					sqlAppender.appendSql( ',' );
-					withinGroup.get( i ).accept( walker );
-				}
-				sqlAppender.appendSql( ')' );
-				walker.getCurrentClauseStack().pop();
+				walker.withClause( Clause.WITHIN_GROUP, () -> {
+					sqlAppender.appendSql( " within group (order by " );
+					withinGroup.get( 0 ).accept( walker );
+					for ( int i = 1; i < withinGroup.size(); i++ ) {
+						sqlAppender.appendSql( ',' );
+						withinGroup.get( i ).accept( walker );
+					}
+					sqlAppender.appendSql( ')' );
+				} );
 			}
 		}
 		else if ( expressionType.getSingleJdbcMapping().getJdbcType().getDefaultSqlTypeCode() ==  SqlTypes.JSON_ARRAY ) {

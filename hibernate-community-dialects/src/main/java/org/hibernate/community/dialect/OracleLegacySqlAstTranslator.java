@@ -7,6 +7,7 @@ import org.hibernate.Internal;
 import org.hibernate.Locking;
 import org.hibernate.dialect.sql.ast.spi.DerivedTableRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingRequest;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.QueryMutationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardQueryMutationRenderingSupport;
@@ -14,7 +15,6 @@ import org.hibernate.dialect.sql.ast.spi.StandardDerivedTableRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.SetReturningFunctionRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardSetReturningFunctionRenderingSupport;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
-import org.hibernate.spi.Stack;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -94,7 +94,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getCurrentClause() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}
@@ -116,25 +116,14 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 
 		LockStrategy strategy = super.determineLockingStrategy( querySpec, followOnStrategy );
 
-		// Oracle also doesn't support locks with set operators
+		// Oracle doesn't support locks with set operators either; the base handles a
+		// query spec within a query group, this handles a union table group in the FROM clause.
 		// See https://docs.oracle.com/cd/B19306_01/server.102/b14200/statements_10002.htm#i2066346
-		if ( strategy != LockStrategy.FOLLOW_ON && isPartOfQueryGroup() ) {
-			if ( followOnStrategy == Locking.FollowOn.DISALLOW ) {
-				throw new IllegalQueryOperationException( "Locking with set operators is not supported" );
-			}
-			else if ( followOnStrategy != Locking.FollowOn.IGNORE ) {
-				strategy = LockStrategy.NONE;
-			}
-			else {
-				strategy = LockStrategy.FOLLOW_ON;
-			}
-		}
-
 		if ( strategy != LockStrategy.FOLLOW_ON && hasSetOperations( querySpec ) ) {
 			if ( followOnStrategy == Locking.FollowOn.DISALLOW ) {
 				throw new IllegalQueryOperationException( "Locking with set operators is not supported" );
 			}
-			else if ( followOnStrategy != Locking.FollowOn.IGNORE ) {
+			else if ( followOnStrategy == Locking.FollowOn.IGNORE ) {
 				strategy = LockStrategy.NONE;
 			}
 			else {
@@ -146,7 +135,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 			if ( followOnStrategy == Locking.FollowOn.DISALLOW ) {
 				throw new IllegalQueryOperationException( "Locking with OFFSET/FETCH is not supported" );
 			}
-			else if ( followOnStrategy != Locking.FollowOn.IGNORE ) {
+			else if ( followOnStrategy == Locking.FollowOn.IGNORE ) {
 				strategy = LockStrategy.NONE;
 			}
 			else {
@@ -161,10 +150,6 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 		return querySpec.getFromClause().queryTableGroups( group -> group instanceof UnionTableGroup ? group : null ) != null;
 	}
 
-	private boolean isPartOfQueryGroup() {
-		return getQueryPartStack().findCurrentFirst( part -> part instanceof QueryGroup ? part : null ) != null;
-	}
-
 	@Override
 	protected boolean shouldEmulateLateralWithIntersect(QueryPart queryPart) {
 		// On Oracle 11 where there is no lateral support,
@@ -174,14 +159,34 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 
 	@Override
 	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		return PaginationRenderingSupport.withValidation( paginationPlanSelection(), this::validatePaginationRequest );
+	}
+
+	private void validatePaginationRequest(PaginationRenderingRequest request) {
+		if ( !isRowNumberingCurrentQueryPart() && !supportsOffsetFetchClause() ) {
+			assertRowsOnlyFetchClauseType( request.queryPart() );
+		}
+	}
+
+	private PaginationRenderingSupport paginationPlanSelection() {
 		return request -> {
+			final QueryPart queryPart = request.queryPart();
+			if ( supportsOffsetFetchClause()
+					&& request.isNestedInQueryGroup()
+					&& queryPart.hasSortSpecifications()
+					&& ( queryPart.isRoot() && !request.usesQueryOptionsLimit()
+							|| !queryPart.hasOffsetOrFetchClause() ) ) {
+				// If the query part has a query group parent, no offset/fetch clause, but an order by clause,
+				// then we must render "offset 0 rows" as that is needed for the SQL to be valid
+				return new PaginationRenderingPlan.ZeroOffset();
+			}
 			if ( !request.hasOffset() && !request.hasFetch() ) {
 				return new PaginationRenderingPlan.OffsetFetch( true );
 			}
 			if ( !supportsOffsetFetchClause()
 					// Work around an Oracle segmentation fault for insert queries with a plain query group and fetch clause.
 					|| request.queryPart() instanceof QueryGroup
-							&& getClauseStack().isEmpty()
+							&& getCurrentClause() == null
 							&& getStatement() instanceof InsertSelectStatement ) {
 				return new PaginationRenderingPlan.Window( true );
 			}
@@ -190,7 +195,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	}
 
 	@Override
-	protected void visitOrderBy(List<SortSpecification> sortSpecifications) {
+	protected void renderOrderBy(List<SortSpecification> sortSpecifications) {
 		// If we have a query part for row numbering, there is no need to render the order by clause
 		// as that is part of the row numbering window function already, by which we then order by in the outer query
 		final QueryPart queryPartForRowNumbering = getQueryPartForRowNumbering();
@@ -220,21 +225,16 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 							appendSql( " where " );
 						}
 						appendSql( "rownum<=" );
-						final Stack<Clause> clauseStack = getClauseStack();
-						clauseStack.push( Clause.WHERE );
-						try {
+						withClause( Clause.WHERE, () -> {
 							if ( querySpec.isRoot() && hasLimit() ) {
 								getLimitParameter().accept( this );
 							}
 							else {
 								querySpec.getFetchClauseExpression().accept( this );
 							}
-						}
-						finally {
-							clauseStack.pop();
-						}
+						} );
 						renderOrderByClause( sortSpecifications );
-						visitForUpdateClause( querySpec );
+						renderForUpdateClause( querySpec );
 					}
 				}
 			}
@@ -258,7 +258,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	}
 
 	@Override
-	public void visitQuerySpec(QuerySpec querySpec) {
+	protected void renderQuerySpec(QuerySpec querySpec) {
 		final EntityIdentifierMapping identifierMappingForLockingWrapper = identifierMappingForLockingWrapper( querySpec );
 		final Expression offsetExpression;
 		final Expression fetchExpression;
@@ -274,10 +274,10 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 			fetchClauseType = querySpec.getFetchClauseType();
 		}
 		if ( identifierMappingForLockingWrapper == null ) {
-			super.visitQuerySpec( querySpec );
+			super.renderQuerySpec( querySpec );
 		}
 		else {
-			super.visitQuerySpec(
+			super.renderQuerySpec(
 					createLockingWrapper(
 							querySpec,
 							offsetExpression,
@@ -286,8 +286,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 							identifierMappingForLockingWrapper
 					)
 			);
-			// Render the for update clause for the original query spec, because the locking wrapper is marked as non-root
-			visitForUpdateClause( querySpec );
+			// the locking wrapper is the locking target, so its rendering includes the locking clause
 		}
 	}
 
@@ -329,6 +328,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 
 		// Mark the query spec as non-root even if it might be the root, to avoid applying the pagination there
 		final QuerySpec lockingWrapper = new QuerySpec( false, 1 );
+		setLockingTarget( lockingWrapper );
 		lockingWrapper.getFromClause().addRoot( rootTableGroup );
 		for ( SqlSelection sqlSelection : querySpec.getSelectClause().getSqlSelections() ) {
 			lockingWrapper.getSelectClause().addSqlSelection( sqlSelection );
@@ -346,7 +346,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 		// We only need a locking wrapper for very simple queries
 		if ( canApplyLockingWrapper( querySpec )
 				// There must be the need for locking in this query
-				&& needsLocking( querySpec )
+				&& needsLocking()
 				// The query uses some sort of pagination which makes the wrapper necessary
 				&& needsLockingWrapper( querySpec )
 				// The query may not have a group by, having and distinct clause, or use aggregate functions,
@@ -370,30 +370,14 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	}
 
 	private boolean needsLockingWrapper(QuerySpec querySpec) {
+		if ( getLockOptions() != null && getLockOptions().getFollowOnStrategy() == Locking.FollowOn.FORCE ) {
+			// user explicitly asked for follow-on locking, which locks the original query spec
+			return false;
+		}
+
 		return querySpec.getFetchClauseType() != FetchClauseType.ROWS_ONLY
 				|| hasOffset( querySpec )
 				|| hasLimit( querySpec );
-	}
-
-	@Override
-	public void visitOffsetFetchClause(QueryPart queryPart) {
-		if ( !isRowNumberingCurrentQueryPart() ) {
-			if ( supportsOffsetFetchClause() ) {
-				if ( getQueryPartStack().depth() > 1 && queryPart.hasSortSpecifications()
-						&& getQueryPartStack().peek( 1 ) instanceof QueryGroup
-						&& ( queryPart.isRoot() && !hasLimit() || !queryPart.hasOffsetOrFetchClause() ) ) {
-					// If the current query part has a query group parent, no offset/fetch clause, but an order by clause,
-					// then we must render "offset 0 rows" as that is needed for the SQL to be valid
-					appendSql( " offset 0 rows" );
-				}
-				else {
-					renderOffsetFetchClause( queryPart, true );
-				}
-			}
-			else {
-				assertRowsOnlyFetchClauseType( queryPart );
-			}
-		}
 	}
 
 	@Override
@@ -410,7 +394,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	}
 
 	@Override
-	public void visitOver(Over<?> over) {
+	protected void renderOver(Over<?> over) {
 		final Expression expression = over.getExpression();
 		if ( expression instanceof FunctionExpression && "row_number".equals( ( (FunctionExpression) expression ).getFunctionName() ) ) {
 			if ( over.getPartitions().isEmpty() && over.getOrderList().isEmpty()
@@ -423,7 +407,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 				return;
 			}
 		}
-		super.visitOver( over );
+		super.renderOver( over );
 	}
 
 	@Override
@@ -513,17 +497,17 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 					case NOT_DISTINCT_FROM:
 						appendSql( arrayTypeName );
 						appendSql( "_distinct(" );
-						visitSqlSelectExpression( lhs );
+						renderSqlSelectExpression( lhs );
 						appendSql( ',' );
-						visitSqlSelectExpression( rhs );
+						renderSqlSelectExpression( rhs );
 						appendSql( ")" );
 						break;
 					default:
 						appendSql( arrayTypeName );
 						appendSql( "_cmp(" );
-						visitSqlSelectExpression( lhs );
+						renderSqlSelectExpression( lhs );
 						appendSql( ',' );
-						visitSqlSelectExpression( rhs );
+						renderSqlSelectExpression( rhs );
 						appendSql( ")" );
 						break;
 				}
@@ -569,13 +553,13 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	}
 
 	@Override
-	protected void visitCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression, boolean inSelect) {
+	protected void renderCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression, boolean inSelect) {
 		// Oracle did not add support for CASE until 9i
 		if ( getDialect().getVersion().isBefore( 9 ) ) {
-			visitDecodeCaseSearchedExpression( caseSearchedExpression );
+			renderDecodeCaseSearchedExpression( caseSearchedExpression );
 		}
 		else {
-			super.visitCaseSearchedExpression( caseSearchedExpression, inSelect );
+			super.renderCaseSearchedExpression( caseSearchedExpression, inSelect );
 		}
 	}
 

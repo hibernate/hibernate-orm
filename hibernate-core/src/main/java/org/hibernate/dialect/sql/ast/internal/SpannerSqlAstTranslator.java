@@ -23,7 +23,6 @@ import org.hibernate.sql.ast.spi.query.select.SqlSelection;
 import org.hibernate.sql.ast.spi.query.MutationStatement;
 import org.hibernate.sql.ast.spi.Statement;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
-import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.spi.query.expression.CastTarget;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
@@ -229,14 +228,8 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	@Override
-	public void visitOptionalTableUpdate(OptionalTableUpdate tableUpdate) {
-		getClauseStack().push( Clause.UPDATE );
-		try {
-			visitSpannerTableUpdate( tableUpdate );
-		}
-		finally {
-			getClauseStack().pop();
-		}
+	protected void renderOptionalTableUpdate(OptionalTableUpdate tableUpdate) {
+		visitSpannerTableUpdate( tableUpdate );
 	}
 
 	/**
@@ -254,8 +247,7 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 		appendSql( " " + alias );
 		registerAffectedTable( tableUpdate.getMutatingTable().getTableName() );
 
-		getClauseStack().push( Clause.SET );
-		try {
+		withClause( Clause.SET, () -> {
 			appendSql( " set" );
 			tableUpdate.forEachValueBinding( (columnPosition, columnValueBinding) -> {
 				if ( columnPosition == 0 ) {
@@ -269,13 +261,9 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 				appendSql( "=" );
 				columnValueBinding.getValueExpression().accept( this );
 			} );
-		}
-		finally {
-			getClauseStack().pop();
-		}
+		} );
 
-		getClauseStack().push( Clause.WHERE );
-		try {
+		withClause( Clause.WHERE, () -> {
 			appendSql( " where" );
 			tableUpdate.forEachKeyBinding( (position, columnValueBinding) -> {
 				if ( position == 0 ) {
@@ -308,22 +296,19 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 					}
 				} );
 			}
-		}
-		finally {
-			getClauseStack().pop();
-		}
+		} );
 	}
 
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getCurrentClause() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}
 
 	@Override
-	public void visitInArrayPredicate(InArrayPredicate inArrayPredicate) {
+	protected void renderInArrayPredicate(InArrayPredicate inArrayPredicate) {
 		inArrayPredicate.getTestExpression().accept( this );
 		appendSql( " in unnest(" );
 		inArrayPredicate.getArrayParameter().accept( this );
@@ -385,22 +370,7 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
-			// Spanner uses functional syntax: DIV(numerator, denominator)
-			appendSql( "div(" );
-			visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
-			appendSql( "," );
-			visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
-			appendSql( ")" );
-		}
-		else {
-			super.visitBinaryArithmeticExpression( arithmeticExpression );
-		}
-	}
-
-	@Override
-	protected void visitArithmeticOperand(Expression expression) {
+	protected void renderArithmeticOperand(Expression expression) {
 		// Spanner rejects untyped null literals as arithmetic operands.
 		castNullLiteral( expression ).accept( this );
 	}
@@ -411,7 +381,7 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	@Override
-	public <N extends Number> void visitUnparsedNumericLiteral(UnparsedNumericLiteral<N> literal) {
+	protected <N extends Number> void renderUnparsedNumericLiteral(UnparsedNumericLiteral<N> literal) {
 		final Class<?> javaTypeClass = literal.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass();
 		if ( BigDecimal.class.isAssignableFrom( javaTypeClass )
 			|| BigInteger.class.isAssignableFrom( javaTypeClass ) ) {
@@ -420,7 +390,7 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 			appendSql( "'" );
 		}
 		else {
-			super.visitUnparsedNumericLiteral( literal );
+			super.renderUnparsedNumericLiteral( literal );
 		}
 	}
 
@@ -428,7 +398,7 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	protected String determineColumnReferenceQualifier(ColumnReference columnReference) {
 		// Cloud Spanner does not support target table aliases in INSERT statements,
 		// so we must qualify column references with the actual table name to avoid ambiguity.
-		if ( getClauseStack().findCurrentFirst( clause -> clause == Clause.CONFLICT ? Boolean.TRUE : null ) != null ) {
+		if ( isWithinClause( Clause.CONFLICT ) ) {
 			if ( !"excluded".equalsIgnoreCase( columnReference.getQualifier() ) ) {
 				final MutationStatement currentDmlStatement = getCurrentDmlStatement();
 				if ( currentDmlStatement != null && currentDmlStatement.getTargetTable() != null ) {

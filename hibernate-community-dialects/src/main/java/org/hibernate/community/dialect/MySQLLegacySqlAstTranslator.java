@@ -26,7 +26,6 @@ import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.sql.ast.spi.query.expression.Summarization;
 import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
 import org.hibernate.sql.ast.spi.query.insert.InsertSelectStatement;
-import org.hibernate.sql.ast.spi.query.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.LikePredicate;
 import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.ast.spi.query.select.SelectStatement;
@@ -89,7 +88,7 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getCurrentClause() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}
@@ -102,14 +101,14 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 		// Since MySQL does not support aliasing the insert target table,
 		// we must detect column reference that are used in the conflict clause
 		// and use the table expression as qualifier instead
-		if ( getClauseStack().getCurrent() != Clause.SET
+		if ( getCurrentClause() != Clause.SET
 				|| !( ( currentDmlStatement = getCurrentDmlStatement() ) instanceof InsertSelectStatement )
 				|| ( dmlAlias = currentDmlStatement.getTargetTable().getIdentificationVariable() ) == null
 				|| !dmlAlias.equals( columnReference.getQualifier() ) ) {
 			return columnReference.getQualifier();
 		}
 		// Qualify the column reference with the table expression also when in subqueries
-		else if ( qualifierSupport != DmlTargetColumnQualifierSupport.NONE || !getQueryPartStack().isEmpty() ) {
+		else if ( qualifierSupport != DmlTargetColumnQualifierSupport.NONE || getCurrentQueryPart() != null ) {
 			return getCurrentDmlStatement().getTargetTable().getTableExpression();
 		}
 		else {
@@ -123,11 +122,11 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	protected void visitRecursivePath(Expression recursivePath, int sizeEstimate) {
+	protected void renderRecursivePath(Expression recursivePath, int sizeEstimate) {
 		// MySQL determines the type and size of a column in a recursive CTE based on the expression of the non-recursive part
 		// Due to that, we have to cast the path in the non-recursive path to a varchar of appropriate size to avoid data truncation errors
 		if ( sizeEstimate == -1 ) {
-			super.visitRecursivePath( recursivePath, sizeEstimate );
+			super.renderRecursivePath( recursivePath, sizeEstimate );
 		}
 		else {
 			appendSql( "cast(" );
@@ -135,18 +134,6 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 			appendSql( " as char(" );
 			appendSql( sizeEstimate );
 			appendSql( "))" );
-		}
-	}
-
-	@Override
-	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
-		final boolean isNegated = booleanExpressionPredicate.isNegated();
-		if ( isNegated ) {
-			appendSql( "not(" );
-		}
-		booleanExpressionPredicate.getExpression().accept( this );
-		if ( isNegated ) {
-			appendSql( CLOSE_PARENTHESIS );
 		}
 	}
 
@@ -189,12 +176,12 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	public void visitLikePredicate(LikePredicate likePredicate) {
+	protected void renderLikePredicateExpression(LikePredicate likePredicate) {
 		// Custom implementation because MySQL uses backslash as the default escape character
 		if ( getDialect().getVersion().isSameOrAfter( 8, 0, 24 ) ) {
 			// From version 8.0.24 we can override this by specifying an empty escape character
 			// See https://dev.mysql.com/doc/refman/8.0/en/string-comparison-functions.html#operator_like
-			super.visitLikePredicate( likePredicate );
+			super.renderLikePredicateExpression( likePredicate );
 			if ( !getDialect().isNoBackslashEscapesEnabled() && likePredicate.getEscapeCharacter() == null ) {
 				appendSql( " escape ''" );
 			}

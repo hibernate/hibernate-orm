@@ -65,7 +65,20 @@ public final class ExpressionCoercionSupport {
 
 		/// Cast integer division to a floating type before applying division
 		/// semantics which require a non-integral result.
-		CAST_INTEGER_DIVISION_TO_FLOAT
+		CAST_INTEGER_DIVISION_TO_FLOAT,
+
+		/// Give a parameter used as an operand of an arithmetic expression an
+		/// explicit type, as the database cannot infer one.
+		TYPED_ARITHMETIC_PARAMETERS,
+
+		/// Give a parameter or a null literal used as an operand of an arithmetic
+		/// expression an explicit type. This is the stricter form of
+		/// [#TYPED_ARITHMETIC_PARAMETERS] and takes precedence over it.
+		TYPED_ARITHMETIC_OPERANDS,
+
+		/// Cast the first result arm of a CASE expression when every result arm
+		/// is a parameter, as the database needs one arm to supply the type.
+		CAST_CASE_RESULT_PARAMETER
 	}
 
 	/// Build an immutable expression-coercion-support profile.

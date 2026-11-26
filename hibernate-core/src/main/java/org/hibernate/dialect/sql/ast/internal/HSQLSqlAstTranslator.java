@@ -32,7 +32,6 @@ import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.ast.spi.query.from.TableGroupJoin;
 import org.hibernate.sql.ast.spi.query.select.QuerySpec;
-import org.hibernate.sql.ast.spi.query.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.BetweenPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.InArrayPredicate;
@@ -67,7 +66,7 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 	}
 
 	private boolean followsCorrelatedPath(TableGroup root) {
-		if ( getQueryPartStack().getCurrent() instanceof QuerySpec query && !query.isRoot() ) {
+		if ( getCurrentQueryPart() instanceof QuerySpec query && !query.isRoot() ) {
 			for ( var preceding : query.getFromClause().getRoots() ) {
 				if ( preceding == root ) {
 					break;
@@ -104,7 +103,7 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getCurrentClause() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}
@@ -120,19 +119,7 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 	}
 
 	@Override
-	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
-		final boolean isNegated = booleanExpressionPredicate.isNegated();
-		if ( isNegated ) {
-			appendSql( "not(" );
-		}
-		booleanExpressionPredicate.getExpression().accept( this );
-		if ( isNegated ) {
-			appendSql( CLOSE_PARENTHESIS );
-		}
-	}
-
-	@Override
-	public void visitInArrayPredicate(InArrayPredicate inArrayPredicate) {
+	protected void renderInArrayPredicate(InArrayPredicate inArrayPredicate) {
 		// column in ( unnest(?) )
 		inArrayPredicate.getTestExpression().accept( this );
 		appendSql( " in (unnest(" );
@@ -141,11 +128,11 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 	}
 
 	@Override
-	protected void visitRecursivePath(Expression recursivePath, int sizeEstimate) {
+	protected void renderRecursivePath(Expression recursivePath, int sizeEstimate) {
 		// HSQL determines the type and size of a column in a recursive CTE based on the expression of the non-recursive part
 		// Due to that, we have to cast the path in the non-recursive path to a varchar of appropriate size to avoid data truncation errors
 		if ( sizeEstimate == -1 ) {
-			super.visitRecursivePath( recursivePath, sizeEstimate );
+			super.renderRecursivePath( recursivePath, sizeEstimate );
 		}
 		else {
 			appendSql( "cast(" );
@@ -161,13 +148,13 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 	// so we cast the first result arm if we encounter this condition
 
 	@Override
-	protected void visitAnsiCaseSearchedExpression(
+	protected void renderAnsiCaseSearchedExpression(
 			CaseSearchedExpression expression,
 			Consumer<Expression> resultRenderer) {
 		if ( areAllResultsPlainParametersOrStringLiterals( expression ) ) {
 			final List<CaseSearchedExpression.WhenFragment> whenFragments = expression.getWhenFragments();
 			final Expression firstResult = whenFragments.get( 0 ).getResult();
-			super.visitAnsiCaseSearchedExpression(
+			super.renderAnsiCaseSearchedExpression(
 					expression,
 					e -> {
 						if ( e == firstResult ) {
@@ -180,18 +167,18 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 			);
 		}
 		else {
-			super.visitAnsiCaseSearchedExpression( expression, resultRenderer );
+			super.renderAnsiCaseSearchedExpression( expression, resultRenderer );
 		}
 	}
 
 	@Override
-	protected void visitAnsiCaseSimpleExpression(
+	protected void renderAnsiCaseSimpleExpression(
 			CaseSimpleExpression expression,
 			Consumer<Expression> resultRenderer) {
 		if ( areAllResultsPlainParametersOrStringLiterals( expression ) ) {
 			final List<CaseSimpleExpression.WhenFragment> whenFragments = expression.getWhenFragments();
 			final Expression firstResult = whenFragments.get( 0 ).getResult();
-			super.visitAnsiCaseSimpleExpression(
+			super.renderAnsiCaseSimpleExpression(
 					expression,
 					e -> {
 						if ( e == firstResult ) {
@@ -204,7 +191,7 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 			);
 		}
 		else {
-			super.visitAnsiCaseSimpleExpression( expression, resultRenderer );
+			super.renderAnsiCaseSimpleExpression( expression, resultRenderer );
 		}
 	}
 
@@ -283,7 +270,7 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 	}
 
 	@Override
-	public void visitBetweenPredicate(BetweenPredicate predicate) {
+	protected void renderBetweenPredicate(BetweenPredicate predicate) {
 		final var expression = predicate.getExpression();
 		final var column = sqlExpression( expression );
 		if ( column instanceof ColumnReference reference
@@ -298,7 +285,7 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 					predicate.getUpperBound() ) );
 		}
 		else {
-			super.visitBetweenPredicate( predicate );
+			super.renderBetweenPredicate( predicate );
 		}
 	}
 
@@ -307,17 +294,17 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 	}
 
 	@Override
-	public void visitRelationalPredicate(ComparisonPredicate comparisonPredicate) {
+	protected void renderRelationalPredicate(ComparisonPredicate comparisonPredicate) {
 		if ( isParameter( comparisonPredicate.getLeftHandExpression() )
 				&& isParameter( comparisonPredicate.getRightHandExpression() ) ) {
 			// HSQLDB doesn't like comparing two parameters with each other
 			withParameterRenderingMode(
 					SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER,
-					() -> super.visitRelationalPredicate( comparisonPredicate )
+					() -> super.renderRelationalPredicate( comparisonPredicate )
 			);
 		}
 		else {
-			super.visitRelationalPredicate( comparisonPredicate );
+			super.renderRelationalPredicate( comparisonPredicate );
 		}
 	}
 
@@ -363,12 +350,6 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 		else {
 			expression.accept( this );
 		}
-	}
-
-	@Override
-	protected void visitArithmeticOperand(Expression expression) {
-		// HSQL requires a type for both parameters and null literals in arithmetic expressions.
-		render( expression, SqlAstNodeRenderingMode.NO_UNTYPED );
 	}
 
 }

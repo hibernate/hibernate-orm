@@ -8,6 +8,7 @@ import org.hibernate.Locking;
 import org.hibernate.SPI;
 import org.hibernate.dialect.sql.ast.spi.DerivedTableRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingRequest;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.QueryMutationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardQueryMutationRenderingSupport;
@@ -34,7 +35,6 @@ import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.dialect.function.spi.WindowFunctionSupport;
 import org.hibernate.dialect.sql.ast.spi.InsertConflictRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardInsertConflictRenderingSupport;
-import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.spi.query.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.spi.query.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
@@ -47,7 +47,6 @@ import org.hibernate.sql.ast.spi.query.select.QueryGroup;
 import org.hibernate.sql.ast.spi.query.select.QueryPart;
 import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.ast.spi.query.select.SelectClause;
-import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.ast.spi.model.TableInsertStandard;
 
@@ -72,7 +71,7 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 	}
 
 	@Override
-	protected void visitQueryClauses(QuerySpec querySpec) {
+	protected void renderQueryClauses(QuerySpec querySpec) {
 		visitSelectClause( querySpec.getSelectClause() );
 		visitFromClause( querySpec.getFromClause() );
 		if ( !hasFrom( querySpec.getFromClause() )
@@ -84,14 +83,14 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 		visitWhereClause( querySpec.getWhereClauseRestrictions() );
 		visitGroupByClause( querySpec, getGroupBySelectItemReferenceStrategy() );
 		visitHavingClause( querySpec );
-		visitOrderBy( querySpec.getSortSpecifications() );
+		renderOrderBy( querySpec.getSortSpecifications() );
 		visitOffsetFetchClause( querySpec );
 	}
 
 	@Override
 	protected void renderSelectClause(SelectClause selectClause) {
 		appendSql( "select " );
-		final QuerySpec querySpec = (QuerySpec) getQueryPartStack().getCurrent();
+		final QuerySpec querySpec = (QuerySpec) getCurrentQueryPart();
 		final PaginationRenderingPlan plan = determinePaginationRenderingPlan( querySpec );
 		if ( plan instanceof PaginationRenderingPlan.SkipFirst ) {
 			renderSkipFirstClause( querySpec );
@@ -113,6 +112,10 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 
 	@Override
 	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		return PaginationRenderingSupport.withValidation( paginationPlanSelection(), this::validatePaginationRequest );
+	}
+
+	private PaginationRenderingSupport paginationPlanSelection() {
 		return request -> {
 			if ( request.hasFetch() && request.fetchClauseType() != FetchClauseType.ROWS_ONLY ) {
 				if ( getDialect().getWindowFunctionSupport()
@@ -158,13 +161,12 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 		}
 	}
 
-	@Override
-	public void visitOffsetFetchClause(QueryPart queryPart) {
+	private void validatePaginationRequest(PaginationRenderingRequest request) {
+		final QueryPart queryPart = request.queryPart();
 		// Informix only supports the SKIP clause in the top level query
 		if ( !queryPart.isRoot() && queryPart.getOffsetClauseExpression() != null ) {
 			throw new IllegalArgumentException( "Can't emulate offset clause in subquery" );
 		}
-		super.visitOffsetFetchClause( queryPart );
 	}
 
 	@Override
@@ -274,11 +276,6 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 		return StandardDerivedTableRenderingSupport.VALUES_SELECT_LIST;
 	}
 
-	@Override
-	protected void visitArithmeticOperand(Expression expression) {
-		render( expression, SqlAstNodeRenderingMode.NO_UNTYPED );
-	}
-
 	private static boolean isConcatFunction(Expression expression) {
 		return expression instanceof FunctionExpression fn
 			&& fn.getFunctionName().equals( "concat" );
@@ -301,28 +298,20 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 	}
 
 	@Override
-	protected void visitCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression, boolean inSelect) {
-		visitAnsiCaseSearchedExpression( caseSearchedExpression, this::caseArgument );
+	protected void renderCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression, boolean inSelect) {
+		renderAnsiCaseSearchedExpression( caseSearchedExpression, this::caseArgument );
 	}
 
 	@Override
-	protected void visitCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression, boolean inSelect) {
-		visitAnsiCaseSimpleExpression( caseSimpleExpression, this::caseArgument );
-	}
-
-	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
-			appendSql( "floor" );
-		}
-		super.visitBinaryArithmeticExpression( arithmeticExpression );
+	protected void renderCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression, boolean inSelect) {
+		renderAnsiCaseSimpleExpression( caseSimpleExpression, this::caseArgument );
 	}
 
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
 		if (getDialect().getVersion().isSameOrAfter( 12, 10 )) {
-			if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+			if ( getCurrentClause() != Clause.INSERT ) {
 				renderTableReferenceIdentificationVariable( tableReference );
 			}
 		}
@@ -367,15 +356,15 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 	}
 
 	@Override
-	public void visitQueryGroup(QueryGroup queryGroup) {
+	protected void renderQueryGroup(QueryGroup queryGroup) {
 		// Informix does not like set operators on the top level select for an insert, so wrap it
-		if ( getStatementStack().depth() == 1 && getStatement() instanceof InsertSelectStatement ) {
+		if ( getCurrentStatement() == getStatement() && getStatement() instanceof InsertSelectStatement ) {
 			appendSql( "select * from (" );
-			super.visitQueryGroup( queryGroup );
+			super.renderQueryGroup( queryGroup );
 			appendSql( ')' );
 		}
 		else {
-			super.visitQueryGroup( queryGroup );
+			super.renderQueryGroup( queryGroup );
 		}
 	}
 

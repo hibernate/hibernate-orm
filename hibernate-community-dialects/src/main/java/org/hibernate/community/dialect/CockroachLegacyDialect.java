@@ -1,5 +1,6 @@
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.sql.ast.spi.ArithmeticSupport;
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
@@ -648,6 +649,13 @@ public class CockroachLegacyDialect extends Dialect implements CurrentTemporalSu
 	@SPI({ USE, IMPLEMENT })
 	public boolean isCurrentTimestampStable() {
 		return true;
+	}
+
+	@Override
+	public ArithmeticSupport getArithmeticSupport() {
+		return ArithmeticSupport.builder( super.getArithmeticSupport() )
+				.integerDivisionForm( ArithmeticSupport.IntegerDivisionForm.FLOOR )
+				.build();
 	}
 
 	@Override

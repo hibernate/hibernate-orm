@@ -154,6 +154,23 @@ public final class ExampleDirectSqlAstTranslator<T extends JdbcOperation>
 	}
 
 	@Override
+	public Clause getCurrentClause() {
+		return clauseStack.getCurrent();
+	}
+
+	@Override
+	public void withClause(Clause clause, Runnable renderer) {
+		clauseStack.push( clause );
+		try {
+			renderer.run();
+		}
+		finally {
+			clauseStack.pop();
+		}
+	}
+
+	@Override
+	@SuppressWarnings("removal")
 	public Stack<Clause> getCurrentClauseStack() {
 		return clauseStack;
 	}

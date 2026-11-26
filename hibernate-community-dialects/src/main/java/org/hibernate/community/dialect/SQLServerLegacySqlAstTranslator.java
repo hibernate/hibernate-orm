@@ -10,6 +10,7 @@ import org.hibernate.dialect.sql.ast.spi.StandardSetReturningFunctionRenderingSu
 import org.hibernate.Locking;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingRequest;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.PredicateSupport.Capability;
 import org.hibernate.dialect.sql.ast.spi.SQLServerPaginationRenderingSupport;
@@ -17,7 +18,6 @@ import org.hibernate.dialect.sql.ast.spi.StandardTableJoinRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.TableJoinRenderingSupport;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.sql.ast.spi.translation.Clause;
 import org.hibernate.dialect.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.query.select.SqlSelection;
@@ -26,7 +26,6 @@ import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.dialect.sql.ast.spi.InsertConflictRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardInsertConflictRenderingSupport;
 import org.hibernate.sql.ast.spi.query.delete.DeleteStatement;
-import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
@@ -68,7 +67,17 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 
 	@Override
 	protected PaginationRenderingSupport getPaginationRenderingSupport() {
-		return paginationRenderingSupport;
+		return PaginationRenderingSupport.withValidation( paginationRenderingSupport, this::validatePaginationRequest );
+	}
+
+	private void validatePaginationRequest(PaginationRenderingRequest request) {
+		final QueryPart queryPart = request.queryPart();
+		if ( !isRowNumberingCurrentQueryPart()
+				&& getDialect().getVersion().isBefore( 9 )
+				&& !queryPart.isRoot()
+				&& queryPart.getOffsetClauseExpression() != null ) {
+			throw new IllegalArgumentException( "Can't emulate offset clause in subquery" );
+		}
 	}
 
 	@Override
@@ -99,7 +108,7 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getCurrentClause() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}
@@ -141,14 +150,14 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 
 	@Override
 	protected void renderSelectItems(SelectClause selectClause) {
-		final QuerySpec querySpec = (QuerySpec) getQueryPartStack().getCurrent();
+		final QuerySpec querySpec = (QuerySpec) getCurrentQueryPart();
 		final PaginationRenderingPlan paginationPlan = determinePaginationRenderingPlan( querySpec );
 		if ( paginationPlan instanceof PaginationRenderingPlan.Window window ) {
 			renderTopClause( querySpec, !window.emulateFetchClause(), true );
 		}
 		else if ( paginationPlan instanceof PaginationRenderingPlan.None
-				&& getQueryPartStack().depth() > 1 && querySpec.hasSortSpecifications()
-				&& getQueryPartStack().peek( 1 ) instanceof QueryGroup ) {
+				&& querySpec.hasSortSpecifications()
+				&& getParentQueryPart() instanceof QueryGroup ) {
 			// If the current query spec has a query group parent, no offset/fetch clause, but an order by clause,
 			// then we must render "top 100 percent" as that is needed for the SQL to be valid
 			appendSql( "top 100 percent " );
@@ -160,44 +169,6 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	protected void renderEmptyOrderBy() {
 		// Always need an order by clause: https://blog.jooq.org/2014/05/13/sql-server-trick-circumvent-missing-order-by-clause/
 		appendSql( "order by (select 0)" );
-	}
-
-	@Override
-	public void visitOffsetFetchClause(QueryPart queryPart) {
-		if ( !isRowNumberingCurrentQueryPart() ) {
-			if ( getDialect().getVersion().isBefore( 9 ) && !queryPart.isRoot() && queryPart.getOffsetClauseExpression() != null ) {
-				throw new IllegalArgumentException( "Can't emulate offset clause in subquery" );
-			}
-			if ( determinePaginationRenderingPlan( queryPart ) instanceof PaginationRenderingPlan.OffsetFetch ) {
-				if ( !queryPart.hasSortSpecifications() ) {
-					appendSql( ' ' );
-					renderEmptyOrderBy();
-				}
-				final Expression offsetExpression;
-				final Expression fetchExpression;
-				final FetchClauseType fetchClauseType;
-				if ( queryPart.isRoot() && hasLimit() ) {
-					offsetExpression = getOffsetParameter();
-					fetchExpression = getLimitParameter();
-					fetchClauseType = FetchClauseType.ROWS_ONLY;
-				}
-				else {
-					offsetExpression = queryPart.getOffsetClauseExpression();
-					fetchExpression = queryPart.getFetchClauseExpression();
-					fetchClauseType = queryPart.getFetchClauseType();
-				}
-				if ( offsetExpression == null ) {
-					appendSql( " offset 0 rows" );
-				}
-				else {
-					renderOffset( offsetExpression, true );
-				}
-
-				if ( fetchExpression != null ) {
-					renderFetch( fetchExpression, null, fetchClauseType );
-				}
-			}
-		}
 	}
 
 	@Override
@@ -214,15 +185,15 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 				case NOT_DISTINCT_FROM: {
 					if ( !getDialect().getPredicateSupport().supports( Capability.DISTINCT_FROM ) ) {
 						appendSql( "exists (select cast(" );
-						getClauseStack().push( Clause.SELECT );
-						visitSqlSelectExpression( lhs );
-						appendSql( " as nvarchar(max))" );
-						appendSql( getSelectOnlyFromClause() );
-						appendSql( " intersect select cast(" );
-						visitSqlSelectExpression( rhs );
-						appendSql( " as nvarchar(max))" );
-						appendSql( getSelectOnlyFromClause() );
-						getClauseStack().pop();
+						withClause( Clause.SELECT, () -> {
+							renderSqlSelectExpression( lhs );
+							appendSql( " as nvarchar(max))" );
+							appendSql( getSelectOnlyFromClause() );
+							appendSql( " intersect select cast(" );
+							renderSqlSelectExpression( rhs );
+							appendSql( " as nvarchar(max))" );
+							appendSql( getSelectOnlyFromClause() );
+						} );
 						appendSql( CLOSE_PARENTHESIS );
 						return;
 					}
@@ -272,15 +243,6 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 		else {
 			expression.accept( this );
 		}
-	}
-
-	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		appendSql( OPEN_PARENTHESIS );
-		visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
-		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-		visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
-		appendSql( CLOSE_PARENTHESIS );
 	}
 
 	@Override

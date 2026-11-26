@@ -209,13 +209,13 @@ public class SQLServerXmlAggFunction extends XmlAggFunction {
 			sqlAppender.appendSql( "cast(" );
 		}
 		if ( caseWrapper ) {
-			translator.getCurrentClauseStack().push( Clause.WHERE );
-			sqlAppender.appendSql( "case when " );
-			filter.accept( translator );
-			sqlAppender.appendSql( " then " );
-			arg.accept( translator );
-			sqlAppender.appendSql( " else null end" );
-			translator.getCurrentClauseStack().pop();
+			translator.withClause( Clause.WHERE, () -> {
+				sqlAppender.appendSql( "case when " );
+				filter.accept( translator );
+				sqlAppender.appendSql( " then " );
+				arg.accept( translator );
+				sqlAppender.appendSql( " else null end" );
+			} );
 		}
 		else {
 			arg.accept( translator );
@@ -225,22 +225,22 @@ public class SQLServerXmlAggFunction extends XmlAggFunction {
 		}
 		sqlAppender.appendSql( ",'')" );
 		if ( withinGroup != null && !withinGroup.isEmpty() ) {
-			translator.getCurrentClauseStack().push( Clause.WITHIN_GROUP );
-			sqlAppender.appendSql( " within group (order by " );
-			withinGroup.get( 0 ).accept( translator );
-			for ( int i = 1; i < withinGroup.size(); i++ ) {
-				sqlAppender.appendSql( ',' );
-				withinGroup.get( i ).accept( translator );
-			}
-			sqlAppender.appendSql( ')' );
-			translator.getCurrentClauseStack().pop();
+			translator.withClause( Clause.WITHIN_GROUP, () -> {
+				sqlAppender.appendSql( " within group (order by " );
+				withinGroup.get( 0 ).accept( translator );
+				for ( int i = 1; i < withinGroup.size(); i++ ) {
+					sqlAppender.appendSql( ',' );
+					withinGroup.get( i ).accept( translator );
+				}
+				sqlAppender.appendSql( ')' );
+			} );
 		}
 		if ( !caseWrapper && filter != null ) {
-			translator.getCurrentClauseStack().push( Clause.WHERE );
-			sqlAppender.appendSql( " filter (where " );
-			filter.accept( translator );
-			sqlAppender.appendSql( ')' );
-			translator.getCurrentClauseStack().pop();
+			translator.withClause( Clause.WHERE, () -> {
+				sqlAppender.appendSql( " filter (where " );
+				filter.accept( translator );
+				sqlAppender.appendSql( ')' );
+			} );
 		}
 		sqlAppender.appendSql( " as xml)" );
 	}

@@ -217,11 +217,11 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 							)
 					);
 					if ( caseWrapper ) {
-						translator.getCurrentClauseStack().push( Clause.WHERE );
-						sqlAppender.appendSql( "case when " );
-						filter.accept( translator );
-						sqlAppender.appendSql( " then " );
-						translator.getCurrentClauseStack().pop();
+						translator.withClause( Clause.WHERE, () -> {
+							sqlAppender.appendSql( "case when " );
+							filter.accept( translator );
+							sqlAppender.appendSql( " then " );
+						} );
 					}
 					if ( castDistinctStringConcat ) {
 						sqlAppender.appendSql( "cast(" );
@@ -307,9 +307,9 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 				else if ( tupleCountSupport.getNonDistinctSyntax() == TupleCountSupport.Syntax.UNSUPPORTED ) {
 					sqlAppender.appendSql( "case when " );
 					if ( caseWrapper ) {
-						translator.getCurrentClauseStack().push( Clause.WHERE );
-						filter.accept( translator );
-						translator.getCurrentClauseStack().pop();
+						translator.withClause( Clause.WHERE, () -> {
+							filter.accept( translator );
+						} );
 						sqlAppender.appendSql( " and " );
 					}
 					translator.render( expressions.get( 0 ), defaultArgumentRenderingMode );
@@ -340,11 +340,11 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 		}
 		sqlAppender.appendSql( ')' );
 		if ( filter != null && !caseWrapper ) {
-			translator.getCurrentClauseStack().push( Clause.WHERE );
-			sqlAppender.appendSql( " filter (where " );
-			filter.accept( translator );
-			sqlAppender.appendSql( ')' );
-			translator.getCurrentClauseStack().pop();
+			translator.withClause( Clause.WHERE, () -> {
+				sqlAppender.appendSql( " filter (where " );
+				filter.accept( translator );
+				sqlAppender.appendSql( ')' );
+			} );
 		}
 	}
 
@@ -400,10 +400,10 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			boolean caseWrapper,
 			SqlAstNode realArg) {
 		if ( caseWrapper ) {
-			translator.getCurrentClauseStack().push( Clause.WHERE );
-			sqlAppender.appendSql( "case when " );
-			filter.accept( translator );
-			translator.getCurrentClauseStack().pop();
+			translator.withClause( Clause.WHERE, () -> {
+				sqlAppender.appendSql( "case when " );
+				filter.accept( translator );
+			} );
 			sqlAppender.appendSql( " then " );
 			if ( realArg instanceof Star ) {
 				sqlAppender.appendSql( "1" );

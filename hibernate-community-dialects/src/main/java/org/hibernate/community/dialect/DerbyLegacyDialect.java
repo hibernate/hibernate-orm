@@ -4,6 +4,7 @@ import java.sql.SQLException;
 
 import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractSqlStateClassCode;
 
+import org.hibernate.dialect.sql.ast.spi.PredicateSupport;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
 import org.hibernate.dialect.identifier.spi.KeywordRegistration;
@@ -633,9 +634,20 @@ public class DerbyLegacyDialect extends Dialect implements CurrentTemporalSuppor
 	}
 
 	@Override
+	public PredicateSupport getPredicateSupport() {
+		return PredicateSupport.builder( super.getPredicateSupport() )
+				.capability( PredicateSupport.Capability.BOOLEAN_EXPRESSION, true )
+				.build();
+	}
+
+	@Override
 	public ExpressionCoercionSupport getExpressionCoercionSupport() {
 		return ExpressionCoercionSupport.builder()
 				.requirements( ExpressionCoercionSupport.Requirement.CAST_NON_STRING_CONCATENATION_ARGUMENTS )
+				.requirements(
+						ExpressionCoercionSupport.Requirement.TYPED_ARITHMETIC_PARAMETERS,
+						ExpressionCoercionSupport.Requirement.CAST_CASE_RESULT_PARAMETER
+				)
 				.build();
 	}
 

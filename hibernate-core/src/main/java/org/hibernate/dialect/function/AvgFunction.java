@@ -101,10 +101,10 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			throw new AssertionFailure( "Unexpected argument type" );
 		}
 		if ( caseWrapper ) {
-			translator.getCurrentClauseStack().push( Clause.WHERE );
-			sqlAppender.appendSql( "case when " );
-			filter.accept( translator );
-			translator.getCurrentClauseStack().pop();
+			translator.withClause( Clause.WHERE, () -> {
+				sqlAppender.appendSql( "case when " );
+				filter.accept( translator );
+			} );
 			sqlAppender.appendSql( " then " );
 			renderArgument( sqlAppender, translator, arg );
 			sqlAppender.appendSql( " else null end)" );
@@ -113,11 +113,11 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			renderArgument( sqlAppender, translator, arg );
 			sqlAppender.appendSql( ')' );
 			if ( filter != null ) {
-				translator.getCurrentClauseStack().push( Clause.WHERE );
-				sqlAppender.appendSql( " filter (where " );
-				filter.accept( translator );
-				sqlAppender.appendSql( ')' );
-				translator.getCurrentClauseStack().pop();
+				translator.withClause( Clause.WHERE, () -> {
+					sqlAppender.appendSql( " filter (where " );
+					filter.accept( translator );
+					sqlAppender.appendSql( ')' );
+				} );
 			}
 		}
 	}

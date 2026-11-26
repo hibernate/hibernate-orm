@@ -212,10 +212,10 @@ public class PatternRenderer {
 						if ( caseWrapper
 								&& !( arg instanceof Distinct )
 								&& !( arg instanceof Star ) ) {
-							translator.getCurrentClauseStack().push( Clause.WHERE );
-							sqlAppender.appendSql( "case when " );
-							filter.accept( translator );
-							translator.getCurrentClauseStack().pop();
+							translator.withClause( Clause.WHERE, () -> {
+								sqlAppender.appendSql( "case when " );
+								filter.accept( translator );
+							} );
 							sqlAppender.appendSql( " then " );
 							translator.render( arg, argumentRenderingMode );
 							sqlAppender.appendSql( " else null end" );
@@ -236,10 +236,10 @@ public class PatternRenderer {
 					if ( caseWrapper
 							&& !( arg instanceof Distinct )
 							&& !( arg instanceof Star ) ) {
-						translator.getCurrentClauseStack().push( Clause.WHERE );
-						sqlAppender.appendSql( "case when " );
-						filter.accept( translator );
-						translator.getCurrentClauseStack().pop();
+						translator.withClause( Clause.WHERE, () -> {
+							sqlAppender.appendSql( "case when " );
+							filter.accept( translator );
+						} );
 						sqlAppender.appendSql( " then " );
 						translator.render( arg, getArgumentRenderingMode(index) );
 						sqlAppender.appendSql( " else null end" );
@@ -255,15 +255,15 @@ public class PatternRenderer {
 		}
 
 		if ( withinGroup != null && !withinGroup.isEmpty() ) {
-			translator.getCurrentClauseStack().push( Clause.WITHIN_GROUP );
-			sqlAppender.appendSql( " within group (order by" );
-			translator.render( withinGroup.get( 0 ), getArgumentRenderingMode( 0 ) );
-			for ( int i = 1; i < withinGroup.size(); i++ ) {
-				sqlAppender.appendSql( SqlAppender.COMMA_SEPARATOR_CHAR );
+			translator.withClause( Clause.WITHIN_GROUP, () -> {
+				sqlAppender.appendSql( " within group (order by" );
 				translator.render( withinGroup.get( 0 ), getArgumentRenderingMode( 0 ) );
-			}
-			sqlAppender.appendSql( ')' );
-			translator.getCurrentClauseStack().pop();
+				for ( int i = 1; i < withinGroup.size(); i++ ) {
+					sqlAppender.appendSql( SqlAppender.COMMA_SEPARATOR_CHAR );
+					translator.render( withinGroup.get( i ), getArgumentRenderingMode( 0 ) );
+				}
+				sqlAppender.appendSql( ')' );
+			} );
 		}
 
 		if ( fromFirst != null ) {
@@ -274,11 +274,11 @@ public class PatternRenderer {
 		}
 
 		if ( filter != null && !caseWrapper ) {
-			translator.getCurrentClauseStack().push( Clause.WHERE );
-			sqlAppender.appendSql( " filter (where " );
-			filter.accept( translator );
-			sqlAppender.appendSql( ')' );
-			translator.getCurrentClauseStack().pop();
+			translator.withClause( Clause.WHERE, () -> {
+				sqlAppender.appendSql( " filter (where " );
+				filter.accept( translator );
+				sqlAppender.appendSql( ')' );
+			} );
 		}
 	}
 

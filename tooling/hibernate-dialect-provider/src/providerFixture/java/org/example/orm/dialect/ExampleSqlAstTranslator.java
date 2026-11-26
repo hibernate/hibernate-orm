@@ -35,7 +35,6 @@ import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.from.FromClause;
 import org.hibernate.sql.ast.spi.query.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.spi.query.insert.Values;
-import org.hibernate.sql.ast.spi.query.select.QueryPart;
 import org.hibernate.sql.ast.spi.query.select.SelectClause;
 import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.ast.spi.query.select.SortSpecification;
@@ -74,11 +73,6 @@ public class ExampleSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	@Override
-	public void visitOffsetFetchClause(QueryPart queryPart) {
-		super.visitOffsetFetchClause( queryPart );
-	}
-
-	@Override
 	protected void renderSelectStatement(SelectStatement statement) {
 		super.renderSelectStatement( statement );
 	}
@@ -110,8 +104,8 @@ public class ExampleSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	@Override
-	protected void visitOrderBy(List<SortSpecification> sortSpecifications) {
-		super.visitOrderBy( sortSpecifications );
+	protected void renderOrderBy(List<SortSpecification> sortSpecifications) {
+		super.renderOrderBy( sortSpecifications );
 	}
 
 	@Override
@@ -120,12 +114,12 @@ public class ExampleSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	@Override
-	protected void visitSortSpecification(
+	protected void renderSortSpecification(
 			Expression sortExpression,
 			SortDirection sortOrder,
 			Nulls nullPrecedence,
 			boolean ignoreCase) {
-		super.visitSortSpecification( sortExpression, sortOrder, nullPrecedence, ignoreCase );
+		super.renderSortSpecification( sortExpression, sortOrder, nullPrecedence, ignoreCase );
 	}
 
 	@Override

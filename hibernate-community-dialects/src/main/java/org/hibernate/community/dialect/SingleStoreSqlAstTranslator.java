@@ -31,7 +31,6 @@ import org.hibernate.dialect.sql.ast.spi.InsertConflictRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardInsertConflictRenderingSupport;
 import org.hibernate.sql.ast.spi.query.delete.DeleteStatement;
 import org.hibernate.sql.ast.spi.query.expression.Any;
-import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.spi.query.expression.CastTarget;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.query.expression.Every;
@@ -41,7 +40,6 @@ import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
 import org.hibernate.sql.ast.spi.query.expression.Summarization;
 import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
 import org.hibernate.sql.ast.spi.query.insert.InsertSelectStatement;
-import org.hibernate.sql.ast.spi.query.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.LikePredicate;
 import org.hibernate.sql.ast.spi.query.select.QueryGroup;
 import org.hibernate.sql.ast.spi.query.select.QueryPart;
@@ -67,20 +65,6 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 	@SPI({ SPI.Role.IMPLEMENT, SPI.Role.SUPPLY })
 	protected SelectItemReferenceStrategy getGroupBySelectItemReferenceStrategy() {
 		return SelectItemReferenceStrategy.POSITION;
-	}
-
-	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
-			appendSql( OPEN_PARENTHESIS );
-			visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
-			appendSql( " div " );
-			visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
-			appendSql( CLOSE_PARENTHESIS );
-		}
-		else {
-			super.visitBinaryArithmeticExpression( arithmeticExpression );
-		}
 	}
 
 	@Override
@@ -122,7 +106,7 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getCurrentClause() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}
@@ -135,12 +119,12 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 		// Since SingleStore does not support aliasing the insert target table,
 		// we must detect column reference that are used in the conflict clause
 		// and use the table expression as qualifier instead
-		if ( getClauseStack().getCurrent() != Clause.SET || !((currentDmlStatement = getCurrentDmlStatement()) instanceof InsertSelectStatement) || (dmlAlias = currentDmlStatement.getTargetTable()
+		if ( getCurrentClause() != Clause.SET || !((currentDmlStatement = getCurrentDmlStatement()) instanceof InsertSelectStatement) || (dmlAlias = currentDmlStatement.getTargetTable()
 				.getIdentificationVariable()) == null || !dmlAlias.equals( columnReference.getQualifier() ) ) {
 			return columnReference.getQualifier();
 		}
 		// Qualify the column reference with the table expression also when in subqueries
-		else if ( qualifierSupport != DmlTargetColumnQualifierSupport.NONE || !getQueryPartStack().isEmpty() ) {
+		else if ( qualifierSupport != DmlTargetColumnQualifierSupport.NONE || getCurrentQueryPart() != null ) {
 			return getCurrentDmlStatement().getTargetTable().getTableExpression();
 		}
 		else {
@@ -153,18 +137,6 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 		expression.accept( this );
 	}
 
-
-	@Override
-	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
-		final boolean isNegated = booleanExpressionPredicate.isNegated();
-		if ( isNegated ) {
-			appendSql( "not(" );
-		}
-		booleanExpressionPredicate.getExpression().accept( this );
-		if ( isNegated ) {
-			appendSql( CLOSE_PARENTHESIS );
-		}
-	}
 
 	@Override
 	protected PaginationRenderingSupport getPaginationRenderingSupport() {
@@ -183,12 +155,12 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	public void visitAny(Any any) {
+	protected void renderAny(Any any) {
 		throw new UnsupportedOperationException( "SingleStore doesn't support ANY clause" );
 	}
 
 	@Override
-	public void visitEvery(Every every) {
+	protected void renderEvery(Every every) {
 		throw new UnsupportedOperationException( "SingleStore doesn't support ALL clause" );
 	}
 
@@ -200,7 +172,7 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		if ( operator == ComparisonOperator.DISTINCT_FROM || operator == ComparisonOperator.NOT_DISTINCT_FROM ) {
-			renderDistinct( lhs, operator, rhs );
+			renderDistinctComparison( lhs, operator, rhs );
 		}
 		else {
 			lhs.accept( this );
@@ -209,7 +181,7 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 		}
 	}
 
-	private void renderDistinct(Expression lhs, ComparisonOperator operator, Expression rhs) {
+	private void renderDistinctComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		appendSql( OPEN_PARENTHESIS );
 		appendSql( "case when " );
 		rhs.accept( this );
@@ -248,7 +220,7 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 			String separator = OPEN_PARENTHESIS + "";
 			for ( int i = 0; i < size; i++ ) {
 				appendSql( separator );
-				renderDistinct( (Expression) lhsExpressions.get( i ), operator, (Expression) rhsExpressions.get( i ) );
+				renderDistinctComparison( (Expression) lhsExpressions.get( i ), operator, (Expression) rhsExpressions.get( i ) );
 				separator = ") and (";
 			}
 			appendSql( CLOSE_PARENTHESIS );
@@ -288,7 +260,7 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 
 	//SingleStore like is case insensitive
 	@Override
-	public void visitLikePredicate(LikePredicate likePredicate) {
+	protected void renderLikePredicateExpression(LikePredicate likePredicate) {
 		appendSql( "cast( " );
 		likePredicate.getMatchExpression().accept( this );
 		appendSql( " as char) " );
@@ -395,13 +367,13 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	public void visitCastTarget(CastTarget castTarget) {
+	protected void renderCastTarget(CastTarget castTarget) {
 		String sqlType = getSqlType( castTarget, getSessionFactory() );
 		if ( sqlType != null ) {
 			appendSql( sqlType );
 		}
 		else {
-			super.visitCastTarget( castTarget );
+			super.renderCastTarget( castTarget );
 		}
 	}
 }

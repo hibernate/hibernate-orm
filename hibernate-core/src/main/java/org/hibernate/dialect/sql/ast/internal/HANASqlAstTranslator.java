@@ -19,7 +19,6 @@ import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
 import org.hibernate.dialect.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.Statement;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
-import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.sql.ast.spi.query.expression.Summarization;
@@ -37,25 +36,6 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 
 	public HANASqlAstTranslator(SqlAstTranslationRequest<? extends Statement, T> request) {
 		super( request );
-	}
-
-	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
-			appendSql( "cast(" );
-			visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
-			appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-			visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
-			appendSql( " as int)" );
-		}
-		else {
-			super.visitBinaryArithmeticExpression( arithmeticExpression );
-		}
-	}
-
-	@Override
-	protected void visitArithmeticOperand(Expression expression) {
-		render( expression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 	}
 
 	private boolean isHanaCloud() {
@@ -103,7 +83,7 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getCurrentClause() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}

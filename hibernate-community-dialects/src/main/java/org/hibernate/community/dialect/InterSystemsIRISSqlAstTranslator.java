@@ -14,7 +14,6 @@ import org.hibernate.sql.ast.spi.query.MutationStatement;
 import org.hibernate.sql.ast.spi.Statement;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.ast.spi.query.delete.DeleteStatement;
-import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
@@ -110,30 +109,18 @@ public class InterSystemsIRISSqlAstTranslator<T extends JdbcOperation> extends A
 		final MutationStatement currentDmlStatement;
 		final String dmlAlias;
 
-		if ( getClauseStack().getCurrent() != Clause.SET
+		if ( getCurrentClause() != Clause.SET
 			|| !( ( currentDmlStatement = getCurrentDmlStatement() ) instanceof InsertSelectStatement )
 			|| ( dmlAlias = currentDmlStatement.getTargetTable().getIdentificationVariable() ) == null
 			|| !dmlAlias.equals( columnReference.getQualifier() ) ) {
 			return columnReference.getQualifier();
 		}
 		// Qualify the column reference with the table expression also when in subqueries
-		else if ( qualifierSupport != DmlTargetColumnQualifierSupport.NONE || !getQueryPartStack().isEmpty() ) {
+		else if ( qualifierSupport != DmlTargetColumnQualifierSupport.NONE || getCurrentQueryPart() != null ) {
 			return getCurrentDmlStatement().getTargetTable().getTableExpression();
 		}
 		else {
 			return null;
-		}
-	}
-
-	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
-			visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
-			appendSql( " \\ " );
-			visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
-		}
-		else {
-			super.visitBinaryArithmeticExpression( arithmeticExpression );
 		}
 	}
 

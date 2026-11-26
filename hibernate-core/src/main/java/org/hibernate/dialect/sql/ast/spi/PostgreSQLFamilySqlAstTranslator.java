@@ -75,26 +75,22 @@ public abstract class PostgreSQLFamilySqlAstTranslator<T extends JdbcOperation> 
 				separator = ',';
 			}
 
-			getCurrentClauseStack().push( Clause.VALUES );
-			try {
+			withClause( Clause.VALUES, () -> {
 				appendSql( ") values " );
-				separator = '(';
+				char valueSeparator = '(';
 				for ( ColumnValueBinding valueBinding : optionalTableUpdate.getValueBindings() ) {
 					if ( valueBinding.isAttributeInsertable() ) {
-						appendSql( separator );
+						appendSql( valueSeparator );
 						valueBinding.getValueExpression().accept( this );
-						separator = ',';
+						valueSeparator = ',';
 					}
 				}
 				for ( ColumnValueBinding keyBinding : optionalTableUpdate.getKeyBindings() ) {
-					appendSql( separator );
+					appendSql( valueSeparator );
 					keyBinding.getValueExpression().accept( this );
-					separator = ',';
+					valueSeparator = ',';
 				}
-			}
-			finally {
-				getCurrentClauseStack().pop();
-			}
+			} );
 
 			appendSql( ") on conflict " );
 			separator = '(';

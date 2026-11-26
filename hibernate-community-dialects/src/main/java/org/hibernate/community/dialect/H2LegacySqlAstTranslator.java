@@ -25,7 +25,6 @@ import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.dialect.sql.ast.spi.InsertConflictRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardInsertConflictRenderingSupport;
 import org.hibernate.sql.ast.spi.query.cte.CteTableGroup;
-import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
@@ -33,7 +32,6 @@ import org.hibernate.sql.ast.spi.query.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.spi.query.expression.Summarization;
 import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
 import org.hibernate.sql.ast.spi.query.from.TableGroup;
-import org.hibernate.sql.ast.spi.query.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.LikePredicate;
 import org.hibernate.sql.ast.spi.query.select.SelectClause;
@@ -95,7 +93,7 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getCurrentClause() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}
@@ -129,18 +127,6 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
-		final boolean isNegated = booleanExpressionPredicate.isNegated();
-		if ( isNegated ) {
-			appendSql( "not(" );
-		}
-		booleanExpressionPredicate.getExpression().accept( this );
-		if ( isNegated ) {
-			appendSql( CLOSE_PARENTHESIS );
-		}
-	}
-
-	@Override
 	protected PaginationRenderingSupport getPaginationRenderingSupport() {
 		return request -> {
 			if ( request.hasFetch() && request.fetchClauseType() != FetchClauseType.ROWS_ONLY ) {
@@ -165,7 +151,7 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	public void visitInSubQueryPredicate(InSubQueryPredicate inSubQueryPredicate) {
+	protected void renderInSubQueryPredicate(InSubQueryPredicate inSubQueryPredicate) {
 		final SqlTuple lhsTuple;
 		// As of 1.4.200 this is supported
 		if ( getDialect().getVersion().isBefore( 1, 4, 200 )
@@ -182,7 +168,7 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 			this.renderAsArray = renderAsArray;
 		}
 		else {
-			super.visitInSubQueryPredicate( inSubQueryPredicate );
+			super.renderInSubQueryPredicate( inSubQueryPredicate );
 		}
 	}
 
@@ -216,20 +202,6 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		appendSql( OPEN_PARENTHESIS );
-		visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
-		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-		visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
-		appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
-	protected void visitArithmeticOperand(Expression expression) {
-		render( expression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
-	}
-
-	@Override
 	protected void renderPrimaryTableReferencePrefix(PrimaryTableReferenceContext context) {
 		// The H2 parser can't handle a sub-query as first element in a nested join
 		// i.e. `join ( (select ...) alias join ... )`, so we have to introduce a dummy table reference
@@ -239,8 +211,8 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	public void visitLikePredicate(LikePredicate likePredicate) {
-		super.visitLikePredicate( likePredicate );
+	protected void renderLikePredicateExpression(LikePredicate likePredicate) {
+		super.renderLikePredicateExpression( likePredicate );
 		// Custom implementation because H2 uses backslash as the default escape character
 		// We can override this by specifying an empty escape character
 		// See http://www.h2database.com/html/grammar.html#like_predicate_right_hand_side
@@ -250,7 +222,7 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	protected boolean allowsNullPrecedence() {
-		return getClauseStack().getCurrent() != Clause.WITHIN_GROUP
+		return getCurrentClause() != Clause.WITHIN_GROUP
 				|| getDialect().getNullOrderingSupport()
 						.supports( NullOrderingSupport.Capability.NULLS_FIRST_LAST );
 	}

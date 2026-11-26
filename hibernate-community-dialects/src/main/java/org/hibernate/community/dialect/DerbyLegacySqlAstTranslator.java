@@ -1,27 +1,23 @@
 package org.hibernate.community.dialect;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingRequest;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.QueryMutationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardQueryMutationRenderingSupport;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.spi.translation.Clause;
-import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
 import org.hibernate.dialect.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.query.select.SqlSelection;
 import org.hibernate.sql.ast.spi.Statement;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
-import org.hibernate.sql.ast.spi.query.expression.CaseSearchedExpression;
-import org.hibernate.sql.ast.spi.query.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
 import org.hibernate.sql.ast.spi.query.expression.Summarization;
 import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
-import org.hibernate.sql.ast.spi.query.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.InListPredicate;
 import org.hibernate.sql.ast.spi.query.select.QueryPart;
 import org.hibernate.sql.ast.spi.query.update.Assignment;
@@ -46,7 +42,7 @@ public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 
 	@Override
 	protected void renderSetAssignment(Assignment assignment) {
-		final Statement currentStatement = getStatementStack().getCurrent();
+		final Statement currentStatement = getCurrentStatement();
 		final UpdateStatement statement;
 		if ( currentStatement instanceof UpdateStatement
 				&& hasNonTrivialFromClause( ( statement = (UpdateStatement) currentStatement ).getFromClause() ) ) {
@@ -60,7 +56,7 @@ public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getCurrentClause() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}
@@ -70,85 +66,28 @@ public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 		expression.accept( this );
 	}
 
-	@Override
-	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
-		final boolean isNegated = booleanExpressionPredicate.isNegated();
-		if ( isNegated ) {
-			appendSql( "not(" );
-		}
-		booleanExpressionPredicate.getExpression().accept( this );
-		if ( isNegated ) {
-			appendSql( CLOSE_PARENTHESIS );
-		}
-	}
-
 	// Derby does not allow CASE expressions where all result arms contain plain parameters.
 	// At least one result arm must provide some type context for inference,
 	// so we cast the first result arm if we encounter this condition
 
 	@Override
-	protected void visitAnsiCaseSearchedExpression(
-			CaseSearchedExpression caseSearchedExpression,
-			Consumer<Expression> resultRenderer) {
-		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSearchedExpression ) ) {
-			final List<CaseSearchedExpression.WhenFragment> whenFragments = caseSearchedExpression.getWhenFragments();
-			final Expression firstResult = whenFragments.get( 0 ).getResult();
-			super.visitAnsiCaseSearchedExpression(
-					caseSearchedExpression,
-					e -> {
-						if ( e == firstResult ) {
-							renderCasted( e );
-						}
-						else {
-							resultRenderer.accept( e );
-						}
-					}
-			);
-		}
-		else {
-			super.visitAnsiCaseSearchedExpression( caseSearchedExpression, resultRenderer );
-		}
-	}
-
-	@Override
-	protected void visitAnsiCaseSimpleExpression(
-			CaseSimpleExpression caseSimpleExpression,
-			Consumer<Expression> resultRenderer) {
-		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSimpleExpression ) ) {
-			final List<CaseSimpleExpression.WhenFragment> whenFragments = caseSimpleExpression.getWhenFragments();
-			final Expression firstResult = whenFragments.get( 0 ).getResult();
-			super.visitAnsiCaseSimpleExpression(
-					caseSimpleExpression,
-					e -> {
-						if ( e == firstResult ) {
-							renderCasted( e );
-						}
-						else {
-							resultRenderer.accept( e );
-						}
-					}
-			);
-		}
-		else {
-			super.visitAnsiCaseSimpleExpression( caseSimpleExpression, resultRenderer );
-		}
-	}
-
-	@Override
 	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		return PaginationRenderingSupport.withValidation( paginationPlanSelection(), this::validatePaginationRequest );
+	}
+
+	private PaginationRenderingSupport paginationPlanSelection() {
 		return request -> supportsOffsetFetchClause()
 				? new PaginationRenderingPlan.OffsetFetch( true )
 				: new PaginationRenderingPlan.None();
 	}
 
-	@Override
-	public void visitOffsetFetchClause(QueryPart queryPart) {
+	private void validatePaginationRequest(PaginationRenderingRequest request) {
+		final QueryPart queryPart = request.queryPart();
 		// Derby only supports the OFFSET and FETCH clause with ROWS
 		assertRowsOnlyFetchClauseType( queryPart );
-		if ( !supportsOffsetFetchClause() && !getClauseStack().isEmpty() ) {
+		if ( !supportsOffsetFetchClause() && getCurrentClause() != null ) {
 			throw new IllegalArgumentException( "Can't render offset and fetch clause for subquery" );
 		}
-		super.visitOffsetFetchClause( queryPart );
 	}
 
 	@Override
@@ -207,7 +146,7 @@ public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	public void visitInListPredicate(InListPredicate inListPredicate) {
+	protected void renderInListPredicate(InListPredicate inListPredicate) {
 		final List<Expression> listExpressions = inListPredicate.getListExpressions();
 		if ( listExpressions.isEmpty() ) {
 			appendSql( "1=" + ( inListPredicate.isNegated() ? "1" : "0" ) );
@@ -224,7 +163,7 @@ public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 			appendSql( CLOSE_PARENTHESIS );
 		}
 		else {
-			super.visitInListPredicate( inListPredicate );
+			super.renderInListPredicate( inListPredicate );
 		}
 	}
 
@@ -235,11 +174,6 @@ public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	private boolean supportsOffsetFetchClause() {
 		// Before version 10.5 Derby didn't support OFFSET and FETCH
 		return getDialect().getVersion().isSameOrAfter( 10, 5 );
-	}
-
-	@Override
-	protected void visitArithmeticOperand(Expression expression) {
-		render( expression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 	}
 
 }

@@ -1,7 +1,6 @@
 package org.hibernate.community.dialect;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.hibernate.Internal;
 import org.hibernate.dialect.sql.ast.spi.DerivedTableRenderingSupport;
@@ -22,8 +21,6 @@ import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.dialect.sql.ast.spi.InsertConflictRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardInsertConflictRenderingSupport;
 import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.spi.query.expression.CaseSearchedExpression;
-import org.hibernate.sql.ast.spi.query.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.FunctionExpression;
 import org.hibernate.sql.ast.spi.query.expression.JdbcLiteral;
@@ -34,7 +31,6 @@ import org.hibernate.sql.ast.spi.query.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
 import org.hibernate.sql.ast.spi.query.expression.Summarization;
 import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
-import org.hibernate.sql.ast.spi.query.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.InListPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.SelfRenderingPredicate;
@@ -75,74 +71,9 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		return StandardQueryMutationRenderingSupport.MERGE;
 	}
 
-	@Override
-	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
-		if ( getDialect().getVersion().isSameOrAfter( 3 ) ) {
-			final boolean isNegated = booleanExpressionPredicate.isNegated();
-			if ( isNegated ) {
-				appendSql( "not(" );
-			}
-			booleanExpressionPredicate.getExpression().accept( this );
-			if ( isNegated ) {
-				appendSql( CLOSE_PARENTHESIS );
-			}
-		}
-		else {
-			super.visitBooleanExpressionPredicate( booleanExpressionPredicate );
-		}
-	}
-
 	// Firebird does not allow CASE expressions where all result arms contain plain parameters.
 	// At least one result arm must provide some type context for inference,
 	// so we cast the first result arm if we encounter this condition
-
-	@Override
-	protected void visitAnsiCaseSearchedExpression(
-			CaseSearchedExpression caseSearchedExpression,
-			Consumer<Expression> resultRenderer) {
-		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSearchedExpression ) ) {
-			final List<CaseSearchedExpression.WhenFragment> whenFragments = caseSearchedExpression.getWhenFragments();
-			final Expression firstResult = whenFragments.get( 0 ).getResult();
-			super.visitAnsiCaseSearchedExpression(
-					caseSearchedExpression,
-					e -> {
-						if ( e == firstResult ) {
-							renderCasted( e );
-						}
-						else {
-							resultRenderer.accept( e );
-						}
-					}
-			);
-		}
-		else {
-			super.visitAnsiCaseSearchedExpression( caseSearchedExpression, resultRenderer );
-		}
-	}
-
-	@Override
-	protected void visitAnsiCaseSimpleExpression(
-			CaseSimpleExpression caseSimpleExpression,
-			Consumer<Expression> resultRenderer) {
-		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSimpleExpression ) ) {
-			final List<CaseSimpleExpression.WhenFragment> whenFragments = caseSimpleExpression.getWhenFragments();
-			final Expression firstResult = whenFragments.get( 0 ).getResult();
-			super.visitAnsiCaseSimpleExpression(
-					caseSimpleExpression,
-					e -> {
-						if ( e == firstResult ) {
-							renderCasted( e );
-						}
-						else {
-							resultRenderer.accept( e );
-						}
-					}
-			);
-		}
-		else {
-			super.visitAnsiCaseSimpleExpression( caseSimpleExpression, resultRenderer );
-		}
-	}
 
 	@Override
 	protected PaginationRenderingSupport getPaginationRenderingSupport() {
@@ -159,9 +90,9 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	@Override
 	protected void renderSelectClause(SelectClause selectClause) {
 		appendSql( "select " );
-		if ( determinePaginationRenderingPlan( getQueryPartStack().getCurrent() )
+		if ( determinePaginationRenderingPlan( getCurrentQueryPart() )
 				instanceof PaginationRenderingPlan.FirstSkip ) {
-			renderFirstSkipClause( (QuerySpec) getQueryPartStack().getCurrent() );
+			renderFirstSkipClause( (QuerySpec) getCurrentQueryPart() );
 		}
 		if ( selectClause.isDistinct() ) {
 			appendSql( "distinct " );
@@ -200,7 +131,7 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	public void visitInListPredicate(InListPredicate inListPredicate) {
+	protected void renderInListPredicate(InListPredicate inListPredicate) {
 		final List<Expression> listExpressions = inListPredicate.getListExpressions();
 		if ( listExpressions.isEmpty() ) {
 			appendSql( "1=" + ( inListPredicate.isNegated() ? "1" : "0" ) );
@@ -217,7 +148,7 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 			appendSql( CLOSE_PARENTHESIS );
 		}
 		else {
-			super.visitInListPredicate( inListPredicate );
+			super.renderInListPredicate( inListPredicate );
 		}
 	}
 
@@ -227,12 +158,12 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	public void visitSelfRenderingPredicate(SelfRenderingPredicate selfRenderingPredicate) {
+	protected void renderSelfRenderingPredicate(SelfRenderingPredicate selfRenderingPredicate) {
 		// see comments in visitParameter
 		boolean inFunction = this.inFunction;
 		this.inFunction = true;
 		try {
-			super.visitSelfRenderingPredicate( selfRenderingPredicate );
+			super.renderSelfRenderingPredicate( selfRenderingPredicate );
 		}
 		finally {
 			this.inFunction = inFunction;
@@ -240,12 +171,12 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	public void visitSelfRenderingExpression(SelfRenderingExpression expression) {
+	protected void renderSelfRenderingExpression(SelfRenderingExpression expression) {
 		// see comments in visitParameter
 		boolean inFunction = this.inFunction;
 		this.inFunction = isFunctionOrCastWithArithmeticExpression( expression );
 		try {
-			super.visitSelfRenderingExpression( expression );
+			super.renderSelfRenderingExpression( expression );
 		}
 		finally {
 			this.inFunction = inFunction;
@@ -261,7 +192,7 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	public void visitParameter(JdbcParameter jdbcParameter) {
+	protected void renderParameter(JdbcParameter jdbcParameter, SqlAstNodeRenderingMode requestedMode) {
 		if ( inFunction ) {
 			// Turn off 'inFunction' to prevent StackOverflowError while rendering the cast
 			inFunction = false;
@@ -269,25 +200,26 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 				// A lot of functions in Firebird are contextually typed and as a result,
 				// Firebird cannot determine the datatype of a parameter as passed to a function,
 				// resulting in a "Datatype unknown" error when the statement is compiled.
-				// This adds an explicit cast so Firebird can infer the type
-				renderCasted( jdbcParameter );
+				// This adds an explicit cast so Firebird can infer the type.
+				// The requested mode stays in effect while the cast is rendered.
+				withParameterRenderingMode( requestedMode, () -> renderCasted( jdbcParameter ) );
 			}
 			finally {
 				inFunction = true;
 			}
 		}
 		else {
-			super.visitParameter( jdbcParameter );
+			super.renderParameter( jdbcParameter, requestedMode );
 		}
 	}
 
 	@Override
-	public void visitJdbcLiteral(JdbcLiteral<?> jdbcLiteral) {
+	protected void renderJdbcLiteral(JdbcLiteral<?> jdbcLiteral) {
 		visitLiteral( jdbcLiteral );
 	}
 
 	@Override
-	public void visitQueryLiteral(QueryLiteral<?> queryLiteral) {
+	protected void renderQueryLiteral(QueryLiteral<?> queryLiteral) {
 		visitLiteral( queryLiteral );
 	}
 
@@ -302,18 +234,18 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	public void visitRelationalPredicate(ComparisonPredicate comparisonPredicate) {
+	protected void renderRelationalPredicate(ComparisonPredicate comparisonPredicate) {
 		if ( isParameterOrContainsParameter( comparisonPredicate.getLeftHandExpression() )
 			&& isParameterOrContainsParameter( comparisonPredicate.getRightHandExpression() ) ) {
 			// Firebird cannot compare two parameters with each other as they will be untyped, and in some cases
 			// comparisons involving arithmetic expression with parameters also fails to infer the type
 			withParameterRenderingMode(
 					SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER,
-					() -> super.visitRelationalPredicate( comparisonPredicate )
+					() -> super.renderRelationalPredicate( comparisonPredicate )
 			);
 		}
 		else {
-			super.visitRelationalPredicate( comparisonPredicate );
+			super.renderRelationalPredicate( comparisonPredicate );
 		}
 	}
 
@@ -329,7 +261,7 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getCurrentClause() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}

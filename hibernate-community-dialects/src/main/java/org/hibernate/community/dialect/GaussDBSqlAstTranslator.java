@@ -15,12 +15,10 @@ import org.hibernate.sql.ast.spi.Statement;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.ast.spi.query.cte.CteMaterialization;
 import org.hibernate.sql.ast.spi.query.cte.CteStatement;
-import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.sql.ast.spi.query.expression.Summarization;
 import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
-import org.hibernate.sql.ast.spi.query.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.InArrayPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.LikePredicate;
 import org.hibernate.sql.ast.spi.query.predicate.NullnessPredicate;
@@ -49,7 +47,7 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends PostgreSQL
 	}
 
 	@Override
-	public void visitInArrayPredicate(InArrayPredicate inArrayPredicate) {
+	protected void renderInArrayPredicate(InArrayPredicate inArrayPredicate) {
 		inArrayPredicate.getTestExpression().accept( this );
 		appendSql( " = any (" );
 		inArrayPredicate.getArrayParameter().accept( this );
@@ -76,7 +74,7 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends PostgreSQL
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		final Statement currentStatement = getStatementStack().getCurrent();
+		final Statement currentStatement = getCurrentStatement();
 		if ( !( currentStatement instanceof UpdateStatement updateStatement )
 			|| !hasNonTrivialFromClause( updateStatement.getFromClause() ) ) {
 			// For UPDATE statements we render a full FROM clause and a join condition to match target table rows,
@@ -123,19 +121,7 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends PostgreSQL
 	}
 
 	@Override
-	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
-		final boolean isNegated = booleanExpressionPredicate.isNegated();
-		if ( isNegated ) {
-			appendSql( "not(" );
-		}
-		booleanExpressionPredicate.getExpression().accept( this );
-		if ( isNegated ) {
-			appendSql( CLOSE_PARENTHESIS );
-		}
-	}
-
-	@Override
-	public void visitNullnessPredicate(NullnessPredicate nullnessPredicate) {
+	protected void renderNullnessPredicate(NullnessPredicate nullnessPredicate) {
 		final Expression expression = nullnessPredicate.getExpression();
 		final JdbcMappingContainer expressionType = expression.getExpressionType();
 		if ( isStruct( expressionType ) ) {
@@ -150,7 +136,7 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends PostgreSQL
 			}
 		}
 		else {
-			super.visitNullnessPredicate( nullnessPredicate );
+			super.renderNullnessPredicate( nullnessPredicate );
 		}
 	}
 
@@ -203,7 +189,7 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends PostgreSQL
 	}
 
 	@Override
-	public void visitLikePredicate(LikePredicate likePredicate) {
+	protected void renderLikePredicateExpression(LikePredicate likePredicate) {
 		// We need a custom implementation here because GaussDB
 		// uses the backslash character as default escape character
 		// According to the documentation, we can overcome this by specifying an empty escape character
@@ -230,15 +216,4 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends PostgreSQL
 		}
 	}
 
-	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
-			appendSql( "floor" );
-		}
-		appendSql( OPEN_PARENTHESIS );
-		visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
-		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-		visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
-		appendSql( CLOSE_PARENTHESIS );
-	}
 }

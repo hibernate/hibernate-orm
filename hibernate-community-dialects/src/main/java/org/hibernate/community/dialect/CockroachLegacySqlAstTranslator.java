@@ -11,7 +11,6 @@ import org.hibernate.dialect.sql.ast.spi.PostgreSQLFamilySqlAstTranslator;
 import org.hibernate.sql.ast.spi.Statement;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.ast.spi.query.cte.CteMaterialization;
-import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.sql.ast.spi.query.expression.Summarization;
@@ -42,14 +41,6 @@ public class CockroachLegacySqlAstTranslator<T extends JdbcOperation> extends Po
 	}
 
 	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
-			appendSql( "floor" );
-		}
-		super.visitBinaryArithmeticExpression(arithmeticExpression);
-	}
-
-	@Override
 	@Internal
 	protected InsertConflictRenderingSupport getInsertConflictRenderingSupport() {
 		return StandardInsertConflictRenderingSupport.STANDARD;
@@ -58,7 +49,7 @@ public class CockroachLegacySqlAstTranslator<T extends JdbcOperation> extends Po
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		final Statement currentStatement = getStatementStack().getCurrent();
+		final Statement currentStatement = getCurrentStatement();
 		if ( !( currentStatement instanceof UpdateStatement )
 				|| !hasNonTrivialFromClause( ( (UpdateStatement) currentStatement ).getFromClause() ) ) {
 			// For UPDATE statements we render a full FROM clause and a join condition to match target table rows,
@@ -78,9 +69,9 @@ public class CockroachLegacySqlAstTranslator<T extends JdbcOperation> extends Po
 	}
 
 	@Override
-	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
+	protected void renderBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
 		if ( booleanExpressionPredicate.isNegated() ) {
-			super.visitBooleanExpressionPredicate( booleanExpressionPredicate );
+			super.renderBooleanExpressionPredicate( booleanExpressionPredicate );
 		}
 		else {
 			final boolean isNegated = booleanExpressionPredicate.isNegated();
@@ -140,7 +131,7 @@ public class CockroachLegacySqlAstTranslator<T extends JdbcOperation> extends Po
 	}
 
 	@Override
-	public void visitLikePredicate(LikePredicate likePredicate) {
+	protected void renderLikePredicateExpression(LikePredicate likePredicate) {
 		// Custom implementation because CockroachDB uses backslash as default escape character
 		likePredicate.getMatchExpression().accept( this );
 		if ( likePredicate.isNegated() ) {
@@ -165,7 +156,7 @@ public class CockroachLegacySqlAstTranslator<T extends JdbcOperation> extends Po
 	}
 
 	@Override
-	public void visitInArrayPredicate(InArrayPredicate inArrayPredicate) {
+	protected void renderInArrayPredicate(InArrayPredicate inArrayPredicate) {
 		inArrayPredicate.getTestExpression().accept( this );
 		appendSql( " = any(" );
 		inArrayPredicate.getArrayParameter().accept( this );

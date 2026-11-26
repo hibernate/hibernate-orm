@@ -77,22 +77,22 @@ public class H2ArrayToStringFunction extends ArrayToStringFunction {
 			sqlAppender.appendSql( ')' );
 
 			if ( withinGroup != null && !withinGroup.isEmpty() ) {
-				walker.getCurrentClauseStack().push( Clause.WITHIN_GROUP );
-				sqlAppender.appendSql( " within group (order by " );
-				withinGroup.get( 0 ).accept( walker );
-				for ( int i = 1; i < withinGroup.size(); i++ ) {
-					sqlAppender.appendSql( ',' );
-					withinGroup.get( i ).accept( walker );
-				}
-				sqlAppender.appendSql( ')' );
-				walker.getCurrentClauseStack().pop();
+				walker.withClause( Clause.WITHIN_GROUP, () -> {
+					sqlAppender.appendSql( " within group (order by " );
+					withinGroup.get( 0 ).accept( walker );
+					for ( int i = 1; i < withinGroup.size(); i++ ) {
+						sqlAppender.appendSql( ',' );
+						withinGroup.get( i ).accept( walker );
+					}
+					sqlAppender.appendSql( ')' );
+				} );
 			}
 			if ( filter != null ) {
-				walker.getCurrentClauseStack().push( Clause.WHERE );
-				sqlAppender.appendSql( " filter (where " );
-				filter.accept( walker );
-				sqlAppender.appendSql( ')' );
-				walker.getCurrentClauseStack().pop();
+				walker.withClause( Clause.WHERE, () -> {
+					sqlAppender.appendSql( " filter (where " );
+					filter.accept( walker );
+					sqlAppender.appendSql( ')' );
+				} );
 			}
 		}
 		else {

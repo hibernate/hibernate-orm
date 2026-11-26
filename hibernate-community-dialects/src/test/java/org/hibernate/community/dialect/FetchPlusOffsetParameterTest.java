@@ -117,7 +117,7 @@ public class FetchPlusOffsetParameterTest {
 						}
 
 						@Override
-						public void visitOffsetFetchClause(QueryPart queryPart) {
+						protected void renderOffsetFetchClause(QueryPart queryPart, boolean renderOffsetRowsKeyword) {
 							final Expression offsetClauseExpression;
 							final Expression fetchClauseExpression;
 							if ( queryPart.isRoot() && hasLimit() ) {
@@ -131,17 +131,11 @@ public class FetchPlusOffsetParameterTest {
 							}
 							if ( offsetClauseExpression != null && fetchClauseExpression != null ) {
 								appendSql( " fetch first " );
-								getClauseStack().push( Clause.FETCH );
-								try {
-									renderFetchPlusOffsetExpressionAsSingleParameter(
-											fetchClauseExpression,
-											offsetClauseExpression,
-											-1
-									);
-								}
-								finally {
-									getClauseStack().pop();
-								}
+								withClause( Clause.FETCH, () -> renderFetchPlusOffsetExpressionAsSingleParameter(
+										fetchClauseExpression,
+										offsetClauseExpression,
+										-1
+								) );
 								appendSql( " rows only" );
 							}
 						}

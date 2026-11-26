@@ -82,26 +82,26 @@ public class ListaggGroupConcatEmulation extends AbstractSqmSelfRenderingFunctio
 			arg = (Expression) firstArg;
 		}
 		if ( caseWrapper ) {
-			translator.getCurrentClauseStack().push( Clause.WHERE );
-			sqlAppender.appendSql( "case when " );
-			filter.accept( translator );
-			sqlAppender.appendSql( " then " );
-			arg.accept( translator );
-			sqlAppender.appendSql( " else null end" );
-			translator.getCurrentClauseStack().pop();
+			translator.withClause( Clause.WHERE, () -> {
+				sqlAppender.appendSql( "case when " );
+				filter.accept( translator );
+				sqlAppender.appendSql( " then " );
+				arg.accept( translator );
+				sqlAppender.appendSql( " else null end" );
+			} );
 		}
 		else {
 			arg.accept( translator );
 		}
 		if ( withinGroup != null && !withinGroup.isEmpty() ) {
-			translator.getCurrentClauseStack().push( Clause.WITHIN_GROUP );
-			sqlAppender.appendSql( " order by " );
-			withinGroup.get( 0 ).accept( translator );
-			for ( int i = 1; i < withinGroup.size(); i++ ) {
-				sqlAppender.appendSql( ',' );
-				withinGroup.get( i ).accept( translator );
-			}
-			translator.getCurrentClauseStack().pop();
+			translator.withClause( Clause.WITHIN_GROUP, () -> {
+				sqlAppender.appendSql( " order by " );
+				withinGroup.get( 0 ).accept( translator );
+				for ( int i = 1; i < withinGroup.size(); i++ ) {
+					sqlAppender.appendSql( ',' );
+					withinGroup.get( i ).accept( translator );
+				}
+			} );
 		}
 		if ( sqlAstArguments.size() != 1 ) {
 			SqlAstNode separator = sqlAstArguments.get( 1 );
@@ -114,11 +114,11 @@ public class ListaggGroupConcatEmulation extends AbstractSqmSelfRenderingFunctio
 		}
 		sqlAppender.appendSql( ')' );
 		if ( !caseWrapper && filter != null ) {
-			translator.getCurrentClauseStack().push( Clause.WHERE );
-			sqlAppender.appendSql( " filter (where " );
-			filter.accept( translator );
-			sqlAppender.appendSql( ')' );
-			translator.getCurrentClauseStack().pop();
+			translator.withClause( Clause.WHERE, () -> {
+				sqlAppender.appendSql( " filter (where " );
+				filter.accept( translator );
+				sqlAppender.appendSql( ')' );
+			} );
 		}
 	}
 

@@ -69,25 +69,25 @@ public class HSQLArrayToStringFunction extends ArrayToStringFunction {
 			}
 
 			if ( withinGroup != null && !withinGroup.isEmpty() ) {
-				walker.getCurrentClauseStack().push( Clause.WITHIN_GROUP );
-				sqlAppender.appendSql( " order by " );
-				withinGroup.get( 0 ).accept( walker );
-				for ( int i = 1; i < withinGroup.size(); i++ ) {
-					sqlAppender.appendSql( ',' );
-					withinGroup.get( i ).accept( walker );
-				}
-				walker.getCurrentClauseStack().pop();
+				walker.withClause( Clause.WITHIN_GROUP, () -> {
+					sqlAppender.appendSql( " order by " );
+					withinGroup.get( 0 ).accept( walker );
+					for ( int i = 1; i < withinGroup.size(); i++ ) {
+						sqlAppender.appendSql( ',' );
+						withinGroup.get( i ).accept( walker );
+					}
+				} );
 			}
 			sqlAppender.append( " separator " );
 			// HSQLDB doesn't like non-literals as separator
 			walker.render( separatorExpression, SqlAstNodeRenderingMode.INLINE_PARAMETERS );
 			sqlAppender.appendSql( ')' );
 			if ( filter != null ) {
-				walker.getCurrentClauseStack().push( Clause.WHERE );
-				sqlAppender.appendSql( " filter (where " );
-				filter.accept( walker );
-				sqlAppender.appendSql( ')' );
-				walker.getCurrentClauseStack().pop();
+				walker.withClause( Clause.WHERE, () -> {
+					sqlAppender.appendSql( " filter (where " );
+					filter.accept( walker );
+					sqlAppender.appendSql( ')' );
+				} );
 			}
 		}
 		else {

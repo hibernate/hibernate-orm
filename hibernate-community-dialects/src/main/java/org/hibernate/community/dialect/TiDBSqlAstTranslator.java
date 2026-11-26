@@ -18,14 +18,12 @@ import org.hibernate.dialect.function.spi.WindowFunctionSupport;
 import org.hibernate.dialect.sql.ast.spi.InsertConflictRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardInsertConflictRenderingSupport;
 import org.hibernate.sql.ast.spi.query.delete.DeleteStatement;
-import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.sql.ast.spi.query.expression.Summarization;
 import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
 import org.hibernate.sql.ast.spi.query.insert.InsertSelectStatement;
-import org.hibernate.sql.ast.spi.query.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.LikePredicate;
 import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
@@ -53,20 +51,6 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 
 	private FullJoinEmulation currentFullJoinEmulationHelper() {
 		return fullJoinEmulations.getFirst();
-	}
-
-	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
-			appendSql( OPEN_PARENTHESIS );
-			visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
-			appendSql( " div " );
-			visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
-			appendSql( CLOSE_PARENTHESIS );
-		}
-		else {
-			super.visitBinaryArithmeticExpression(arithmeticExpression);
-		}
 	}
 
 	@Override
@@ -102,7 +86,7 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getCurrentClause() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}
@@ -115,14 +99,14 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 		// Since TiDB does not support aliasing the insert target table,
 		// we must detect column reference that are used in the conflict clause
 		// and use the table expression as qualifier instead
-		if ( getClauseStack().getCurrent() != Clause.SET
+		if ( getCurrentClause() != Clause.SET
 				|| !( ( currentDmlStatement = getCurrentDmlStatement() ) instanceof InsertSelectStatement )
 				|| ( dmlAlias = currentDmlStatement.getTargetTable().getIdentificationVariable() ) == null
 				|| !dmlAlias.equals( columnReference.getQualifier() ) ) {
 			return columnReference.getQualifier();
 		}
 		// Qualify the column reference with the table expression also when in subqueries
-		else if ( qualifierSupport != DmlTargetColumnQualifierSupport.NONE || !getQueryPartStack().isEmpty() ) {
+		else if ( qualifierSupport != DmlTargetColumnQualifierSupport.NONE || getCurrentQueryPart() != null ) {
 			return getCurrentDmlStatement().getTargetTable().getTableExpression();
 		}
 		else {
@@ -133,18 +117,6 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 	@Override
 	protected void renderExpressionAsClauseItem(Expression expression) {
 		expression.accept( this );
-	}
-
-	@Override
-	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
-		final boolean isNegated = booleanExpressionPredicate.isNegated();
-		if ( isNegated ) {
-			appendSql( "not(" );
-		}
-		booleanExpressionPredicate.getExpression().accept( this );
-		if ( isNegated ) {
-			appendSql( CLOSE_PARENTHESIS );
-		}
 	}
 
 	@Override
@@ -160,7 +132,7 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 	}
 
 	@Override
-	public void visitQuerySpec(QuerySpec querySpec) {
+	protected void renderQuerySpec(QuerySpec querySpec) {
 		final var helper = currentFullJoinEmulationHelper();
 		final boolean needsNestedHelper =
 				helper.hasActiveFullJoinEmulation()
@@ -170,9 +142,9 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 		}
 		try {
 			final var currentHelper = currentFullJoinEmulationHelper();
-			if ( !currentHelper.renderFullJoinEmulationBranchIfNeeded( querySpec, super::visitQuerySpec )
+			if ( !currentHelper.renderFullJoinEmulationBranchIfNeeded( querySpec, super::renderQuerySpec )
 					&& !currentHelper.emulateFullJoinWithUnionIfNeeded( querySpec ) ) {
-				super.visitQuerySpec( querySpec );
+				super.renderQuerySpec( querySpec );
 			}
 		}
 		finally {
@@ -208,7 +180,7 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 	}
 
 	@Override
-	public void visitLikePredicate(LikePredicate likePredicate) {
+	protected void renderLikePredicateExpression(LikePredicate likePredicate) {
 		if ( likePredicate.isCaseSensitive() ) {
 			likePredicate.getMatchExpression().accept( this );
 			if ( likePredicate.isNegated() ) {

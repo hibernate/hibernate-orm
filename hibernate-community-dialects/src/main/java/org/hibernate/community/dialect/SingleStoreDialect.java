@@ -2,6 +2,7 @@ package org.hibernate.community.dialect;
 
 import org.hibernate.dialect.identifier.spi.KeywordRegistration;
 
+import org.hibernate.dialect.sql.ast.spi.ArithmeticSupport;
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
@@ -1077,9 +1078,17 @@ public class SingleStoreDialect extends Dialect implements CurrentTemporalSuppor
 	}
 
 	@Override
+	public ArithmeticSupport getArithmeticSupport() {
+		return ArithmeticSupport.builder( super.getArithmeticSupport() )
+				.integerDivisionForm( ArithmeticSupport.IntegerDivisionForm.DIV_OPERATOR )
+				.build();
+	}
+
+	@Override
 	public PredicateSupport getPredicateSupport() {
 		return PredicateSupport.builder( super.getPredicateSupport() )
 				.capability( PredicateSupport.Capability.TRUTHNESS, true )
+				.capability( PredicateSupport.Capability.BOOLEAN_EXPRESSION, true )
 				.build();
 	}
 

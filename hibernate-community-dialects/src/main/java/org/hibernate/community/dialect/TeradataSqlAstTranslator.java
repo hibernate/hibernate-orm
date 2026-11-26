@@ -3,6 +3,7 @@ package org.hibernate.community.dialect;
 import java.util.List;
 
 import org.hibernate.Locking;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingRequest;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardPaginationRenderingSupport;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -33,10 +34,12 @@ public class TeradataSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	public void visitQuerySpec(QuerySpec querySpec) {
-		super.visitQuerySpec( querySpec );
+	protected void renderQuerySpec(QuerySpec querySpec) {
+		super.renderQuerySpec( querySpec );
 
-		if ( querySpec.isRoot() && supportsLocking && needsLocking( querySpec ) ) {
+		// the prefix is the locking clause: render it only when locking is applied in the SQL,
+		// not when follow-on locking was chosen or locking is skipped
+		if ( querySpec.isRoot() && supportsLocking && isLockingRendered() ) {
 			final LockingClauseStrategy lockingClauseStrategy = getLockingClauseStrategy();
 			if ( lockingClauseStrategy != null ) {
 				// NOTE: the dialect already adds a trailing space
@@ -61,8 +64,9 @@ public class TeradataSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	protected void visitForUpdateClause(QuerySpec querySpec) {
-		// do nothing here
+	protected boolean shouldRenderForUpdateClause(QuerySpec querySpec) {
+		// locking is rendered as a statement prefix instead
+		return false;
 	}
 
 	@Override
@@ -75,11 +79,15 @@ public class TeradataSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 
 	@Override
 	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		return PaginationRenderingSupport.withValidation( paginationPlanSelection(), this::validatePaginationRequest );
+	}
+
+	private PaginationRenderingSupport paginationPlanSelection() {
 		return StandardPaginationRenderingSupport.TOP_WITH_OFFSET;
 	}
 
-	@Override
-	public void visitOffsetFetchClause(QueryPart queryPart) {
+	private void validatePaginationRequest(PaginationRenderingRequest request) {
+		final QueryPart queryPart = request.queryPart();
 		// Teradata only supports the TOP clause
 		if ( !queryPart.isRoot() && queryPart.getOffsetClauseExpression() != null ) {
 			throw new IllegalArgumentException( "Can't emulate offset clause in subquery" );

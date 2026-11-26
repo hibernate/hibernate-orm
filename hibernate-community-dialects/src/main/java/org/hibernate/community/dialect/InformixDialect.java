@@ -1,5 +1,7 @@
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.function.spi.ExpressionCoercionSupport;
+import org.hibernate.dialect.sql.ast.spi.ArithmeticSupport;
 import org.hibernate.dialect.sql.ast.spi.OptionalTableUpdateOperationRequest;
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
 
@@ -509,6 +511,22 @@ public class InformixDialect extends Dialect implements CurrentTemporalSupport, 
 	@Override
 	public SyntheticTableGroupSupport getSyntheticTableGroupSupport() {
 		return SyntheticTableGroupSupport.SELECT_ONE_FOR_LITERALS;
+	}
+
+	@Override
+	public ExpressionCoercionSupport getExpressionCoercionSupport() {
+		return ExpressionCoercionSupport.builder( super.getExpressionCoercionSupport() )
+				.requirements(
+						ExpressionCoercionSupport.Requirement.TYPED_ARITHMETIC_OPERANDS
+				)
+				.build();
+	}
+
+	@Override
+	public ArithmeticSupport getArithmeticSupport() {
+		return ArithmeticSupport.builder( super.getArithmeticSupport() )
+				.integerDivisionForm( ArithmeticSupport.IntegerDivisionForm.FLOOR )
+				.build();
 	}
 
 	@Override

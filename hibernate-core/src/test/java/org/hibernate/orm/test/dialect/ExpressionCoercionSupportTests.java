@@ -8,6 +8,8 @@ import org.hibernate.dialect.DB2iDialect;
 import org.hibernate.dialect.DB2zDialect;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
@@ -45,6 +47,9 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.hibernate.dialect.function.spi.ExpressionCoercionSupport.Requirement.CAST_INTEGER_DIVISION_TO_FLOAT;
 import static org.hibernate.dialect.function.spi.ExpressionCoercionSupport.Requirement.CAST_NON_STRING_CONCATENATION_ARGUMENTS;
+import static org.hibernate.dialect.function.spi.ExpressionCoercionSupport.Requirement.TYPED_ARITHMETIC_PARAMETERS;
+import static org.hibernate.dialect.function.spi.ExpressionCoercionSupport.Requirement.TYPED_ARITHMETIC_OPERANDS;
+import static org.hibernate.dialect.function.spi.ExpressionCoercionSupport.Requirement.CAST_CASE_RESULT_PARAMETER;
 import static org.hibernate.query.sqm.CastType.INTEGER;
 import static org.hibernate.query.sqm.CastType.STRING;
 import static org.mockito.ArgumentMatchers.any;
@@ -107,16 +112,29 @@ public class ExpressionCoercionSupportTests {
 	void maintainedProfilesPreserveEveryFamilyValue() {
 		assertRequirements( new Dialect( DatabaseVersion.make( 1 ) ) {
 		}.getExpressionCoercionSupport() );
-		for ( Dialect dialect : List.of(
-				new DB2Dialect(),
-				new DB2iDialect(),
-				new DB2zDialect(),
-				new SQLServerDialect(),
-				new SybaseDialect(),
-				new SybaseASEDialect() ) ) {
-			assertRequirements( dialect.getExpressionCoercionSupport(), CAST_NON_STRING_CONCATENATION_ARGUMENTS );
+		for ( Dialect dialect : List.of( new DB2Dialect(), new DB2iDialect(), new DB2zDialect() ) ) {
+			assertRequirements(
+					dialect.getExpressionCoercionSupport(),
+					CAST_NON_STRING_CONCATENATION_ARGUMENTS,
+					TYPED_ARITHMETIC_PARAMETERS,
+					CAST_CASE_RESULT_PARAMETER
+			);
 		}
-		assertRequirements( new HSQLDialect().getExpressionCoercionSupport(), CAST_INTEGER_DIVISION_TO_FLOAT );
+		assertRequirements( new SQLServerDialect().getExpressionCoercionSupport(), CAST_NON_STRING_CONCATENATION_ARGUMENTS );
+		for ( Dialect dialect : List.of( new SybaseDialect(), new SybaseASEDialect() ) ) {
+			assertRequirements(
+					dialect.getExpressionCoercionSupport(),
+					CAST_NON_STRING_CONCATENATION_ARGUMENTS,
+					CAST_CASE_RESULT_PARAMETER
+			);
+		}
+		assertRequirements(
+				new HSQLDialect().getExpressionCoercionSupport(),
+				CAST_INTEGER_DIVISION_TO_FLOAT,
+				TYPED_ARITHMETIC_OPERANDS
+		);
+		assertRequirements( new H2Dialect().getExpressionCoercionSupport(), TYPED_ARITHMETIC_PARAMETERS );
+		assertRequirements( new HANADialect().getExpressionCoercionSupport(), TYPED_ARITHMETIC_PARAMETERS );
 	}
 
 	@Test

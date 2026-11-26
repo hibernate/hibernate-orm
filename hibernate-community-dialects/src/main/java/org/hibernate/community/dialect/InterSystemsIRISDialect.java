@@ -6,6 +6,7 @@ import org.hibernate.dialect.schema.spi.ConstraintDropMode;
 import org.hibernate.dialect.schema.spi.IndexNameQualification;
 import org.hibernate.dialect.schema.spi.SchemaDropSupport;
 
+import org.hibernate.dialect.sql.ast.spi.ArithmeticSupport;
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
 
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
@@ -782,6 +783,13 @@ public class InterSystemsIRISDialect extends Dialect implements CurrentTemporalS
 		}
 	}
 
+
+	@Override
+	public ArithmeticSupport getArithmeticSupport() {
+		return ArithmeticSupport.builder( super.getArithmeticSupport() )
+				.integerDivisionForm( ArithmeticSupport.IntegerDivisionForm.BACKSLASH )
+				.build();
+	}
 
 	@Override
 	public ExpressionCoercionSupport getExpressionCoercionSupport() {

@@ -10,6 +10,7 @@ import org.hibernate.SPI;
 import org.hibernate.dialect.sql.ast.spi.DerivedTableRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.InsertConflictRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingRequest;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.QueryMutationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorWithMerge;
@@ -37,7 +38,6 @@ import org.hibernate.sql.ast.spi.Statement;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.ast.spi.query.cte.CteMaterialization;
 import org.hibernate.sql.ast.spi.query.cte.CteStatement;
-import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.FunctionExpression;
@@ -108,13 +108,13 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getCurrentClause() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}
 
 	@Override
-	public void visitInArrayPredicate(InArrayPredicate inArrayPredicate) {
+	protected void renderInArrayPredicate(InArrayPredicate inArrayPredicate) {
 		// column in (select column_value from(?) )
 		inArrayPredicate.getTestExpression().accept( this );
 		appendSql( " in (select column_value from table(" );
@@ -139,20 +139,9 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 
 		LockStrategy strategy = super.determineLockingStrategy( querySpec, followOnStrategy );
 
-		// Oracle also doesn't support locks with set operators
+		// Oracle doesn't support locks with set operators either; the base handles a
+		// query spec within a query group, this handles a union table group in the FROM clause.
 		// See https://docs.oracle.com/cd/B19306_01/server.102/b14200/statements_10002.htm#i2066346
-		if ( strategy != LockStrategy.FOLLOW_ON && isPartOfQueryGroup() ) {
-			if ( followOnStrategy == Locking.FollowOn.DISALLOW ) {
-				throw new IllegalQueryOperationException( "Locking with set operators is not supported" );
-			}
-			else if ( followOnStrategy == Locking.FollowOn.IGNORE ) {
-				strategy = LockStrategy.NONE;
-			}
-			else {
-				strategy = LockStrategy.FOLLOW_ON;
-			}
-		}
-
 		if ( strategy != LockStrategy.FOLLOW_ON && hasSetOperations( querySpec ) ) {
 			if ( followOnStrategy == Locking.FollowOn.DISALLOW ) {
 				throw new IllegalQueryOperationException( "Locking with set operators is not supported" );
@@ -186,14 +175,6 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 		return querySpec.getFromClause().queryTableGroups( group -> group instanceof UnionTableGroup ? group : null ) != null;
 	}
 
-	private boolean isPartOfQueryGroup() {
-		return getQueryPartStack().findCurrentFirst( OracleSqlAstTranslator::partIsQueryGroup ) != null;
-	}
-
-	private static QueryPart partIsQueryGroup(final QueryPart part) {
-		return part instanceof QueryGroup ? part : null;
-	}
-
 	@Override
 	protected boolean shouldEmulateLateralWithIntersect(QueryPart queryPart) {
 		// On Oracle 11 where there is no lateral support,
@@ -203,14 +184,34 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 
 	@Override
 	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		return PaginationRenderingSupport.withValidation( paginationPlanSelection(), this::validatePaginationRequest );
+	}
+
+	private void validatePaginationRequest(PaginationRenderingRequest request) {
+		if ( !isRowNumberingCurrentQueryPart() && !supportsOffsetFetchClause() ) {
+			assertRowsOnlyFetchClauseType( request.queryPart() );
+		}
+	}
+
+	private PaginationRenderingSupport paginationPlanSelection() {
 		return request -> {
+			final QueryPart queryPart = request.queryPart();
+			if ( supportsOffsetFetchClause()
+					&& request.isNestedInQueryGroup()
+					&& queryPart.hasSortSpecifications()
+					&& ( queryPart.isRoot() && !request.usesQueryOptionsLimit()
+							|| !queryPart.hasOffsetOrFetchClause() ) ) {
+				// If the query part has a query group parent, no offset/fetch clause, but an order by clause,
+				// then we must render "offset 0 rows" as that is needed for the SQL to be valid
+				return new PaginationRenderingPlan.ZeroOffset();
+			}
 			if ( !request.hasOffset() && !request.hasFetch() ) {
 				return new PaginationRenderingPlan.OffsetFetch( true );
 			}
 			if ( !supportsOffsetFetchClause()
 					// Work around an Oracle segmentation fault for insert queries with a plain query group and fetch clause.
 					|| request.queryPart() instanceof QueryGroup
-							&& getClauseStack().isEmpty()
+							&& getCurrentClause() == null
 							&& getStatement() instanceof InsertSelectStatement ) {
 				return new PaginationRenderingPlan.Window( true );
 			}
@@ -229,7 +230,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	}
 
 	@Override
-	public void visitQuerySpec(QuerySpec querySpec) {
+	protected void renderQuerySpec(QuerySpec querySpec) {
 		final LockOptions lockOptions = getLockOptions();
 		final Locking.FollowOn followOnStrategy = lockOptions == null
 				? Locking.FollowOn.ALLOW
@@ -249,10 +250,10 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 			fetchClauseType = querySpec.getFetchClauseType();
 		}
 		if ( identifierMappingForLockingWrapper == null ) {
-			super.visitQuerySpec( querySpec );
+			super.renderQuerySpec( querySpec );
 		}
 		else {
-			super.visitQuerySpec(
+			super.renderQuerySpec(
 					createLockingWrapper(
 							querySpec,
 							offsetExpression,
@@ -261,8 +262,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 							identifierMappingForLockingWrapper
 					)
 			);
-			// Render the for update clause for the original query spec, because the locking wrapper is marked as non-root
-			visitForUpdateClause( querySpec );
+			// the locking wrapper is the locking target, so its rendering includes the locking clause
 		}
 	}
 
@@ -322,7 +322,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 		// We only need a locking wrapper for very simple queries
 		if ( canApplyLockingWrapper( querySpec )
 				// There must be the need for locking in this query
-				&& needsLocking( querySpec )
+				&& needsLocking()
 				// The query uses some sort of pagination which makes the wrapper necessary
 				&& needsLockingWrapper( querySpec, followOnStrategy )
 				// The query may not have a group by, having and distinct clause, or use aggregate functions,
@@ -357,27 +357,6 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	}
 
 	@Override
-	public void visitOffsetFetchClause(QueryPart queryPart) {
-		if ( !isRowNumberingCurrentQueryPart() ) {
-			if ( supportsOffsetFetchClause() ) {
-				if ( getQueryPartStack().depth() > 1 && queryPart.hasSortSpecifications()
-						&& getQueryPartStack().peek( 1 ) instanceof QueryGroup
-						&& ( queryPart.isRoot() && !hasLimit() || !queryPart.hasOffsetOrFetchClause() ) ) {
-					// If the current query part has a query group parent, no offset/fetch clause, but an order by clause,
-					// then we must render "offset 0 rows" as that is needed for the SQL to be valid
-					appendSql( " offset 0 rows" );
-				}
-				else {
-					renderOffsetFetchClause( queryPart, true );
-				}
-			}
-			else {
-				assertRowsOnlyFetchClauseType( queryPart );
-			}
-		}
-	}
-
-	@Override
 	protected void renderRowNumber(SelectClause selectClause, QueryPart queryPart) {
 		if ( !queryPart.hasSortSpecifications() ) {
 			// Oracle doesn't allow an empty over clause for the row_number() function
@@ -391,7 +370,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	}
 
 	@Override
-	public void visitOver(Over<?> over) {
+	protected void renderOver(Over<?> over) {
 		final Expression expression = over.getExpression();
 		if ( expression instanceof FunctionExpression functionExpression
 				&& "row_number".equals( functionExpression.getFunctionName() ) ) {
@@ -405,7 +384,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 				return;
 			}
 		}
-		super.visitOver( over );
+		super.renderOver( over );
 	}
 
 	@Override
@@ -495,17 +474,17 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 					case NOT_DISTINCT_FROM:
 						appendSql( arrayTypeName );
 						appendSql( "_distinct(" );
-						visitSqlSelectExpression( lhs );
+						renderSqlSelectExpression( lhs );
 						appendSql( ',' );
-						visitSqlSelectExpression( rhs );
+						renderSqlSelectExpression( rhs );
 						appendSql( ")" );
 						break;
 					default:
 						appendSql( arrayTypeName );
 						appendSql( "_cmp(" );
-						visitSqlSelectExpression( lhs );
+						renderSqlSelectExpression( lhs );
 						appendSql( ',' );
-						visitSqlSelectExpression( rhs );
+						renderSqlSelectExpression( rhs );
 						appendSql( ")" );
 						break;
 				}
@@ -569,14 +548,6 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 		else {
 			expression.accept( this );
 		}
-	}
-
-	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
-			appendSql( "floor" );
-		}
-		super.visitBinaryArithmeticExpression(arithmeticExpression);
 	}
 
 	private boolean supportsOffsetFetchClause() {

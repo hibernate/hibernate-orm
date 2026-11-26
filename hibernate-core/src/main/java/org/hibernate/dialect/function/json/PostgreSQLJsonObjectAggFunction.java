@@ -48,16 +48,16 @@ public class PostgreSQLJsonObjectAggFunction extends JsonObjectAggFunction {
 			sqlAppender.appendSql( ')' );
 
 			if ( filter != null ) {
-				translator.getCurrentClauseStack().push( Clause.WHERE );
-				sqlAppender.appendSql( " filter (where " );
-				filter.accept( translator );
-				if ( arguments.nullBehavior() != JsonNullBehavior.NULL ) {
-					sqlAppender.appendSql( " and " );
-					arguments.value().accept( translator );
-					sqlAppender.appendSql( " is not null" );
-				}
-				sqlAppender.appendSql( ')' );
-				translator.getCurrentClauseStack().pop();
+				translator.withClause( Clause.WHERE, () -> {
+					sqlAppender.appendSql( " filter (where " );
+					filter.accept( translator );
+					if ( arguments.nullBehavior() != JsonNullBehavior.NULL ) {
+						sqlAppender.appendSql( " and " );
+						arguments.value().accept( translator );
+						sqlAppender.appendSql( " is not null" );
+					}
+					sqlAppender.appendSql( ')' );
+				} );
 			}
 			else if ( arguments.nullBehavior() != JsonNullBehavior.NULL ) {
 				sqlAppender.appendSql( " filter (where " );

@@ -1,5 +1,7 @@
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.function.spi.ExpressionCoercionSupport;
+import org.hibernate.dialect.sql.ast.spi.ArithmeticSupport;
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
@@ -759,6 +761,22 @@ public class H2Dialect extends Dialect implements CurrentTemporalSupport, Tempor
 	}
 
 	@Override
+	public ExpressionCoercionSupport getExpressionCoercionSupport() {
+		return ExpressionCoercionSupport.builder( super.getExpressionCoercionSupport() )
+				.requirements(
+						ExpressionCoercionSupport.Requirement.TYPED_ARITHMETIC_PARAMETERS
+				)
+				.build();
+	}
+
+	@Override
+	public ArithmeticSupport getArithmeticSupport() {
+		return ArithmeticSupport.builder( super.getArithmeticSupport() )
+				.moduloForm( ArithmeticSupport.ModuloForm.OPERATOR )
+				.build();
+	}
+
+	@Override
 	public PredicateSupport getPredicateSupport() {
 		return PredicateSupport.builder( super.getPredicateSupport() )
 				.caseInsensitiveLikeOperator( "ilike" )
@@ -766,6 +784,7 @@ public class H2Dialect extends Dialect implements CurrentTemporalSupport, Tempor
 						PredicateSupport.Capability.DISTINCT_FROM,
 						PredicateSupport.Capability.TRUTHNESS
 				)
+				.capability( PredicateSupport.Capability.BOOLEAN_EXPRESSION, true )
 				.build();
 	}
 

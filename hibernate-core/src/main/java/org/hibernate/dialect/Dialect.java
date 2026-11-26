@@ -1,6 +1,7 @@
 package org.hibernate.dialect;
 
 
+import org.hibernate.dialect.sql.ast.spi.ArithmeticSupport;
 import org.hibernate.dialect.type.spi.DdlTypeBuilder;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
@@ -2267,6 +2268,21 @@ public abstract class Dialect implements ConversionContext, AlterTableSupport,
 	@SPI({ IMPLEMENT, SUPPLY })
 	public SubquerySupport getSubquerySupport() {
 		return SubquerySupport.STANDARD;
+	}
+
+	/// Supplies the arithmetic syntax of this database, for the cases where
+	/// databases differ in how a binary arithmetic expression is written.
+	///
+	/// Return one non-null, immutable profile whose values remain stable for this
+	/// Dialect's lifetime. When refining a family Dialect, start from
+	/// `ArithmeticSupport.builder(super.getArithmeticSupport())` and change only
+	/// the differing attribute.
+	///
+	/// @return this Dialect's stable arithmetic-syntax profile
+	/// @since 8.0
+	@SPI({ IMPLEMENT, SUPPLY })
+	public ArithmeticSupport getArithmeticSupport() {
+		return ArithmeticSupport.STANDARD;
 	}
 
 	/// Supplies the expression-coercion adaptations required by this database.

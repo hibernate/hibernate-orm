@@ -14,7 +14,6 @@ import org.hibernate.dialect.sql.ast.spi.StandardSetReturningFunctionRenderingSu
 import org.hibernate.dialect.sql.ast.spi.StandardTableJoinRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.TableJoinRenderingSupport;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.spi.translation.Clause;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorWithMerge;
@@ -22,23 +21,24 @@ import org.hibernate.sql.ast.spi.query.select.SqlSelection;
 import org.hibernate.sql.ast.spi.Statement;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.ast.spi.query.delete.DeleteStatement;
-import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
 import org.hibernate.sql.ast.spi.query.expression.Summarization;
 import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
 import org.hibernate.sql.ast.spi.query.select.QueryGroup;
-import org.hibernate.sql.ast.spi.query.select.QueryPart;
 import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.ast.spi.query.select.SelectClause;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.ast.spi.model.OptionalTableUpdate;
 import org.hibernate.sql.ast.spi.model.TableInsertStandard;
 import org.hibernate.type.SqlTypes;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -47,6 +47,10 @@ import java.util.List;
  * @author Christian Beikov
  */
 public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithMerge<T> {
+
+	/// The branches of a root set operation being rendered with locking, each of
+	/// which becomes the locking target while it is rendered.
+	private final Set<QuerySpec> lockingSetQueryBranches = new HashSet<>();
 
 	private static final PaginationRenderingSupport PAGINATION_RENDERING_SUPPORT =
 			SQLServerPaginationRenderingSupport.MODERN;
@@ -93,7 +97,7 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getCurrentClause() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}
@@ -133,15 +137,45 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 	}
 
 	@Override
+	protected void renderQueryGroup(QueryGroup queryGroup) {
+		if ( getSqlAst() instanceof SelectStatement select
+				&& select.getQueryPart() == queryGroup
+				&& needsLocking() ) {
+			// Locking is rendered as table hints, which belong to a table reference
+			// rather than to the statement, so every branch of the set operation
+			// carries its own. Without this only the first branch would be locked.
+			queryGroup.visitQuerySpecs( lockingSetQueryBranches::add );
+			try {
+				super.renderQueryGroup( queryGroup );
+			}
+			finally {
+				lockingSetQueryBranches.clear();
+				setLockingTarget( queryGroup.getFirstQuerySpec() );
+			}
+		}
+		else {
+			super.renderQueryGroup( queryGroup );
+		}
+	}
+
+	@Override
+	protected void renderQuerySpec(QuerySpec querySpec) {
+		if ( lockingSetQueryBranches.contains( querySpec ) ) {
+			setLockingTarget( querySpec );
+		}
+		super.renderQuerySpec( querySpec );
+	}
+
+	@Override
 	protected void renderSelectItems(SelectClause selectClause) {
-		final QuerySpec querySpec = (QuerySpec) getQueryPartStack().getCurrent();
+		final QuerySpec querySpec = (QuerySpec) getCurrentQueryPart();
 		final PaginationRenderingPlan paginationPlan = determinePaginationRenderingPlan( querySpec );
 		if ( paginationPlan instanceof PaginationRenderingPlan.Window window ) {
 			renderTopClause( querySpec, !window.emulateFetchClause(), true );
 		}
 		else if ( paginationPlan instanceof PaginationRenderingPlan.None
-				&& getQueryPartStack().depth() > 1 && querySpec.hasSortSpecifications()
-				&& getQueryPartStack().peek( 1 ) instanceof QueryGroup ) {
+				&& querySpec.hasSortSpecifications()
+				&& getParentQueryPart() instanceof QueryGroup ) {
 			// If the current query spec has a query group parent, no offset/fetch clause, but an order by clause,
 			// then we must render "top 100 percent" as that is needed for the SQL to be valid
 			appendSql( "top 100 percent " );
@@ -153,41 +187,6 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 	protected void renderEmptyOrderBy() {
 		// Always need an order by clause: https://blog.jooq.org/2014/05/13/sql-server-trick-circumvent-missing-order-by-clause/
 		appendSql( "order by (select 0)" );
-	}
-
-	@Override
-	public void visitOffsetFetchClause(QueryPart queryPart) {
-		if ( !isRowNumberingCurrentQueryPart() ) {
-			if ( determinePaginationRenderingPlan( queryPart ) instanceof PaginationRenderingPlan.OffsetFetch ) {
-				if ( !queryPart.hasSortSpecifications() ) {
-					appendSql( ' ' );
-					renderEmptyOrderBy();
-				}
-				final Expression offsetExpression;
-				final Expression fetchExpression;
-				final FetchClauseType fetchClauseType;
-				if ( queryPart.isRoot() && hasLimit() ) {
-					offsetExpression = getOffsetParameter();
-					fetchExpression = getLimitParameter();
-					fetchClauseType = FetchClauseType.ROWS_ONLY;
-				}
-				else {
-					offsetExpression = queryPart.getOffsetClauseExpression();
-					fetchExpression = queryPart.getFetchClauseExpression();
-					fetchClauseType = queryPart.getFetchClauseType();
-				}
-				if ( offsetExpression == null ) {
-					appendSql( " offset 0 rows" );
-				}
-				else {
-					renderOffset( offsetExpression, true );
-				}
-
-				if ( fetchExpression != null ) {
-					renderFetch( fetchExpression, null, fetchClauseType );
-				}
-			}
-		}
 	}
 
 	@Override
@@ -204,15 +203,15 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 				case NOT_DISTINCT_FROM: {
 					if ( !getDialect().getPredicateSupport().supports( Capability.DISTINCT_FROM ) ) {
 						appendSql( "exists (select cast(" );
-						getClauseStack().push( Clause.SELECT );
-						visitSqlSelectExpression( lhs );
-						appendSql( " as nvarchar(max))" );
-						appendSql( getSelectOnlyFromClause() );
-						appendSql( " intersect select cast(" );
-						visitSqlSelectExpression( rhs );
-						appendSql( " as nvarchar(max))" );
-						appendSql( getSelectOnlyFromClause() );
-						getClauseStack().pop();
+						withClause( Clause.SELECT, () -> {
+							renderSqlSelectExpression( lhs );
+							appendSql( " as nvarchar(max))" );
+							appendSql( getSelectOnlyFromClause() );
+							appendSql( " intersect select cast(" );
+							renderSqlSelectExpression( rhs );
+							appendSql( " as nvarchar(max))" );
+							appendSql( getSelectOnlyFromClause() );
+						} );
 						appendSql( CLOSE_PARENTHESIS );
 						return;
 					}
@@ -261,15 +260,6 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 		else {
 			expression.accept( this );
 		}
-	}
-
-	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		appendSql( OPEN_PARENTHESIS );
-		visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
-		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-		visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
-		appendSql( CLOSE_PARENTHESIS );
 	}
 
 	protected void renderMergeStatement(OptionalTableUpdate optionalTableUpdate) {

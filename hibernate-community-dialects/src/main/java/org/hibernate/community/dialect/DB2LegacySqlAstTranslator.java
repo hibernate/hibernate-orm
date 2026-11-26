@@ -1,7 +1,6 @@
 package org.hibernate.community.dialect;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 import org.hibernate.Internal;
 import org.hibernate.dialect.DatabaseVersion;
@@ -29,14 +28,11 @@ import org.hibernate.sql.ast.spi.Statement;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.dialect.sql.ast.spi.InsertConflictRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardInsertConflictRenderingSupport;
-import org.hibernate.sql.ast.spi.query.expression.CaseSearchedExpression;
-import org.hibernate.sql.ast.spi.query.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
 import org.hibernate.sql.ast.spi.query.expression.Summarization;
 import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
-import org.hibernate.sql.ast.spi.query.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 import org.hibernate.sql.ast.spi.query.select.QueryPart;
 import org.hibernate.sql.ast.spi.query.select.SelectStatement;
@@ -72,79 +68,9 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 		}
 	}
 
-	@Override
-	protected void visitArithmeticOperand(Expression expression) {
-		render( expression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
-	}
-
-	@Override
-	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
-		if ( getDB2Version().isSameOrAfter( 11 ) ) {
-			final boolean isNegated = booleanExpressionPredicate.isNegated();
-			if ( isNegated ) {
-				appendSql( "not(" );
-			}
-			booleanExpressionPredicate.getExpression().accept( this );
-			if ( isNegated ) {
-				appendSql( CLOSE_PARENTHESIS );
-			}
-		}
-		else {
-			super.visitBooleanExpressionPredicate( booleanExpressionPredicate );
-		}
-	}
-
 	// DB2 does not allow CASE expressions where all result arms contain plain parameters.
 	// At least one result arm must provide some type context for inference,
 	// so we cast the first result arm if we encounter this condition
-
-	@Override
-	protected void visitAnsiCaseSearchedExpression(
-			CaseSearchedExpression caseSearchedExpression,
-			Consumer<Expression> resultRenderer) {
-		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSearchedExpression ) ) {
-			final List<CaseSearchedExpression.WhenFragment> whenFragments = caseSearchedExpression.getWhenFragments();
-			final Expression firstResult = whenFragments.get( 0 ).getResult();
-			super.visitAnsiCaseSearchedExpression(
-					caseSearchedExpression,
-					e -> {
-						if ( e == firstResult ) {
-							renderCasted( e );
-						}
-						else {
-							resultRenderer.accept( e );
-						}
-					}
-			);
-		}
-		else {
-			super.visitAnsiCaseSearchedExpression( caseSearchedExpression, resultRenderer );
-		}
-	}
-
-	@Override
-	protected void visitAnsiCaseSimpleExpression(
-			CaseSimpleExpression caseSimpleExpression,
-			Consumer<Expression> resultRenderer) {
-		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSimpleExpression ) ) {
-			final List<CaseSimpleExpression.WhenFragment> whenFragments = caseSimpleExpression.getWhenFragments();
-			final Expression firstResult = whenFragments.get( 0 ).getResult();
-			super.visitAnsiCaseSimpleExpression(
-					caseSimpleExpression,
-					e -> {
-						if ( e == firstResult ) {
-							renderCasted( e );
-						}
-						else {
-							resultRenderer.accept( e );
-						}
-					}
-			);
-		}
-		else {
-			super.visitAnsiCaseSimpleExpression( caseSimpleExpression, resultRenderer );
-		}
-	}
 
 	@Override
 	protected PaginationRenderingSupport getPaginationRenderingSupport() {
@@ -244,7 +170,7 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getCurrentClause() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}

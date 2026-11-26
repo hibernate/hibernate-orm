@@ -28,7 +28,6 @@ import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
 import org.hibernate.sql.ast.spi.query.expression.Summarization;
 import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
-import org.hibernate.sql.ast.spi.query.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
@@ -58,7 +57,7 @@ public class HSQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getCurrentClause() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}
@@ -74,23 +73,11 @@ public class HSQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	}
 
 	@Override
-	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
-		final boolean isNegated = booleanExpressionPredicate.isNegated();
-		if ( isNegated ) {
-			appendSql( "not(" );
-		}
-		booleanExpressionPredicate.getExpression().accept( this );
-		if ( isNegated ) {
-			appendSql( CLOSE_PARENTHESIS );
-		}
-	}
-
-	@Override
-	protected void visitRecursivePath(Expression recursivePath, int sizeEstimate) {
+	protected void renderRecursivePath(Expression recursivePath, int sizeEstimate) {
 		// HSQL determines the type and size of a column in a recursive CTE based on the expression of the non-recursive part
 		// Due to that, we have to cast the path in the non-recursive path to a varchar of appropriate size to avoid data truncation errors
 		if ( sizeEstimate == -1 ) {
-			super.visitRecursivePath( recursivePath, sizeEstimate );
+			super.renderRecursivePath( recursivePath, sizeEstimate );
 		}
 		else {
 			appendSql( "cast(" );
@@ -106,13 +93,13 @@ public class HSQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	// so we cast the first result arm if we encounter this condition
 
 	@Override
-	protected void visitAnsiCaseSearchedExpression(
+	protected void renderAnsiCaseSearchedExpression(
 			CaseSearchedExpression expression,
 			Consumer<Expression> resultRenderer) {
 		if ( areAllResultsPlainParametersOrStringLiterals( expression ) ) {
 			final List<CaseSearchedExpression.WhenFragment> whenFragments = expression.getWhenFragments();
 			final Expression firstResult = whenFragments.get( 0 ).getResult();
-			super.visitAnsiCaseSearchedExpression(
+			super.renderAnsiCaseSearchedExpression(
 					expression,
 					e -> {
 						if ( e == firstResult ) {
@@ -125,18 +112,18 @@ public class HSQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 			);
 		}
 		else {
-			super.visitAnsiCaseSearchedExpression( expression, resultRenderer );
+			super.renderAnsiCaseSearchedExpression( expression, resultRenderer );
 		}
 	}
 
 	@Override
-	protected void visitAnsiCaseSimpleExpression(
+	protected void renderAnsiCaseSimpleExpression(
 			CaseSimpleExpression expression,
 			Consumer<Expression> resultRenderer) {
 		if ( areAllResultsPlainParametersOrStringLiterals( expression ) ) {
 			final List<CaseSimpleExpression.WhenFragment> whenFragments = expression.getWhenFragments();
 			final Expression firstResult = whenFragments.get( 0 ).getResult();
-			super.visitAnsiCaseSimpleExpression(
+			super.renderAnsiCaseSimpleExpression(
 					expression,
 					e -> {
 						if ( e == firstResult ) {
@@ -149,7 +136,7 @@ public class HSQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 			);
 		}
 		else {
-			super.visitAnsiCaseSimpleExpression( expression, resultRenderer );
+			super.renderAnsiCaseSimpleExpression( expression, resultRenderer );
 		}
 	}
 
@@ -284,8 +271,4 @@ public class HSQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 		return getDialect().getVersion().isSameOrAfter( 2, 5 );
 	}
 
-	@Override
-	protected void visitArithmeticOperand(Expression expression) {
-		render( expression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
-	}
 }

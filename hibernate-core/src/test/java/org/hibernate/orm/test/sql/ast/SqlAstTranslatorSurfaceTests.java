@@ -768,15 +768,16 @@ public class SqlAstTranslatorSurfaceTests {
 	void selectStatementLifecycleIsRestoredWhenRenderingFails() {
 		final TestingTranslator translator = createTranslator();
 		final SelectStatement statement = (SelectStatement) translator.getSqlAst();
-		translator.failWhileRenderingSelectWithPriorMode();
+		translator.failWhileRenderingSelect();
 
 		assertThatExceptionOfType( IllegalStateException.class )
-				.isThrownBy( () -> translator.visitSelectStatement( statement ) );
+				.isThrownBy( () -> translator.visitSelectStatementWithPriorMode(
+						statement, SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS ) );
 
 		assertThat( translator.selectStatementStackDepth() ).isEqualTo( 2 );
 		assertThat( translator.selectRenderingMode() ).isEqualTo( SqlAstNodeRenderingMode.DEFAULT );
 		assertThat( translator.statementStackDepth() ).isOne();
-		assertThat( translator.restoredRenderingMode() ).isEqualTo( SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS );
+		assertThat( translator.renderingModeAfterSelect() ).isEqualTo( SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS );
 	}
 
 	@Test
@@ -1026,7 +1027,7 @@ public class SqlAstTranslatorSurfaceTests {
 		when( request.fetchClauseType() ).thenReturn( FetchClauseType.ROWS_ONLY );
 
 		assertThat( support.determinePlan( request ) )
-				.isEqualTo( new PaginationRenderingPlan.OffsetFetch( true ) );
+				.isEqualTo( new PaginationRenderingPlan.OffsetFetch( true, true, true ) );
 
 		querySpec.getSelectClause().makeDistinct( true );
 		assertThat( support.determinePlan( request ) )
@@ -1735,7 +1736,7 @@ public class SqlAstTranslatorSurfaceTests {
 	}
 
 	private static class TestingTranslator extends StandardSqlAstTranslator<JdbcSelect> {
-		private boolean supplyPriorRenderingMode;
+		private SqlAstNodeRenderingMode renderingModeAfterSelect;
 		private boolean failWhileRenderingSelect;
 		private boolean failWhileRenderingDerivedTable;
 		private int selectStatementStackDepth;
@@ -1796,9 +1797,25 @@ public class SqlAstTranslatorSurfaceTests {
 			return primaryTableReferenceContext;
 		}
 
-		private void failWhileRenderingSelectWithPriorMode() {
-			supplyPriorRenderingMode = true;
+		private void failWhileRenderingSelect() {
 			failWhileRenderingSelect = true;
+		}
+
+		/// Visits the statement while the given parameter rendering mode is in
+		/// effect, recording the mode in effect once the visit has unwound.
+		private void visitSelectStatementWithPriorMode(SelectStatement statement, SqlAstNodeRenderingMode priorMode) {
+			withParameterRenderingMode( priorMode, () -> {
+				try {
+					visitSelectStatement( statement );
+				}
+				finally {
+					renderingModeAfterSelect = getParameterRenderingMode();
+				}
+			} );
+		}
+
+		private SqlAstNodeRenderingMode renderingModeAfterSelect() {
+			return renderingModeAfterSelect;
 		}
 
 		private void failWhileRenderingDerivedTable() {
@@ -2109,15 +2126,6 @@ public class SqlAstTranslatorSurfaceTests {
 		}
 
 		@Override
-		protected SqlAstNodeRenderingMode getParameterRenderingMode() {
-			if ( supplyPriorRenderingMode ) {
-				supplyPriorRenderingMode = false;
-				return SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS;
-			}
-			return super.getParameterRenderingMode();
-		}
-
-		@Override
 		protected void renderSelectStatement(SelectStatement statement) {
 			if ( failWhileRenderingDerivedTable ) {
 				lateralDerivedTableWhileRendering = isRenderingLateralDerivedTable();
@@ -2166,7 +2174,7 @@ public class SqlAstTranslatorSurfaceTests {
 		}
 
 		@Override
-		protected void visitSortSpecification(
+		protected void renderSortSpecification(
 				Expression sortExpression,
 				SortDirection sortOrder,
 				Nulls nullPrecedence,
@@ -2175,11 +2183,11 @@ public class SqlAstTranslatorSurfaceTests {
 		}
 
 		@Override
-		protected void visitOrderBy(List<SortSpecification> sortSpecifications) {
+		protected void renderOrderBy(List<SortSpecification> sortSpecifications) {
 			if ( sortSpecifications == omittedGroupSortSpecifications ) {
 				groupOrderByVisited = true;
 			}
-			super.visitOrderBy( sortSpecifications );
+			super.renderOrderBy( sortSpecifications );
 		}
 
 		@Override

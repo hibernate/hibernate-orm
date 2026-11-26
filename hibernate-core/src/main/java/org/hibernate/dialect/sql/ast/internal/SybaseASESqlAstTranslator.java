@@ -4,7 +4,6 @@ import java.util.ArrayDeque;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 
 import org.hibernate.Locking;
 import org.hibernate.Timeouts;
@@ -18,12 +17,12 @@ import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.sql.ast.spi.DerivedTableRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.InsertConflictRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingRequest;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.PredicateSupport.Capability;
 import org.hibernate.dialect.sql.ast.spi.StandardDerivedTableRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardInsertConflictRenderingSupport;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
 import org.hibernate.dialect.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.dialect.sql.ast.spi.FullJoinEmulation;
 import org.hibernate.sql.ast.spi.query.select.SqlSelection;
@@ -31,13 +30,10 @@ import org.hibernate.sql.ast.spi.query.MutationStatement;
 import org.hibernate.sql.ast.spi.Statement;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.ast.spi.query.delete.DeleteStatement;
-import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.spi.AbstractSqlAstWalker;
 import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.query.from.TableGroupJoin;
 import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
-import org.hibernate.sql.ast.spi.query.expression.CaseSearchedExpression;
-import org.hibernate.sql.ast.spi.query.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
@@ -110,54 +106,6 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	// so we cast the first result arm if we encounter this condition
 
 	@Override
-	protected void visitAnsiCaseSearchedExpression(
-			CaseSearchedExpression caseSearchedExpression,
-			Consumer<Expression> resultRenderer) {
-		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSearchedExpression ) ) {
-			final List<CaseSearchedExpression.WhenFragment> whenFragments = caseSearchedExpression.getWhenFragments();
-			final Expression firstResult = whenFragments.get( 0 ).getResult();
-			super.visitAnsiCaseSearchedExpression(
-					caseSearchedExpression,
-					e -> {
-						if ( e == firstResult ) {
-							renderCasted( e );
-						}
-						else {
-							resultRenderer.accept( e );
-						}
-					}
-			);
-		}
-		else {
-			super.visitAnsiCaseSearchedExpression( caseSearchedExpression, resultRenderer );
-		}
-	}
-
-	@Override
-	protected void visitAnsiCaseSimpleExpression(
-			CaseSimpleExpression caseSimpleExpression,
-			Consumer<Expression> resultRenderer) {
-		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSimpleExpression ) ) {
-			final List<CaseSimpleExpression.WhenFragment> whenFragments = caseSimpleExpression.getWhenFragments();
-			final Expression firstResult = whenFragments.get( 0 ).getResult();
-			super.visitAnsiCaseSimpleExpression(
-					caseSimpleExpression,
-					e -> {
-						if ( e == firstResult ) {
-							renderCasted( e );
-						}
-						else {
-							resultRenderer.accept( e );
-						}
-					}
-			);
-		}
-		else {
-			super.visitAnsiCaseSimpleExpression( caseSimpleExpression, resultRenderer );
-		}
-	}
-
-	@Override
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
 			Locking.FollowOn followOnStrategy) {
@@ -167,6 +115,10 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 
 	@Override
 	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		return PaginationRenderingSupport.withValidation( paginationPlanSelection(), this::validatePaginationRequest );
+	}
+
+	private PaginationRenderingSupport paginationPlanSelection() {
 		return request -> currentFullJoinEmulationHelper().isFullJoinEmulationQueryPart( request.queryPart() )
 				? new PaginationRenderingPlan.None()
 				: new PaginationRenderingPlan.Top( true, false );
@@ -181,9 +133,9 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
-	public void visitQuerySpec(QuerySpec querySpec) {
+	protected void renderQuerySpec(QuerySpec querySpec) {
 		if ( getSqlAst() instanceof SelectStatement select && select.getQueryPart() == querySpec
-				&& needsLocking( querySpec )
+				&& needsLocking()
 				&& getEffectiveLockTimeout( getLockOptions().getLockMode() ) == Timeouts.SKIP_LOCKED_MILLI
 				&& LockingSqlRewriterSupport.interpretLockKind( getLockOptions() ) == PessimisticLockKind.UPDATE ) {
 			validateExclusiveSkipLockedQuery( querySpec );
@@ -200,9 +152,9 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 		}
 		try {
 			final var currentHelper = currentFullJoinEmulationHelper();
-			if ( !currentHelper.renderFullJoinEmulationBranchIfNeeded( querySpec, super::visitQuerySpec )
+			if ( !currentHelper.renderFullJoinEmulationBranchIfNeeded( querySpec, super::renderQuerySpec )
 					&& !currentHelper.emulateFullJoinWithUnionIfNeeded( querySpec ) ) {
-				super.visitQuerySpec( querySpec );
+				super.renderQuerySpec( querySpec );
 			}
 		}
 		finally {
@@ -263,21 +215,27 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
-	public void visitQueryGroup(QueryGroup queryGroup) {
+	protected void renderQueryGroup(QueryGroup queryGroup) {
 		if ( getSqlAst() instanceof SelectStatement select
 				&& select.getQueryPart() == queryGroup
-				&& needsLocking( queryGroup.getFirstQuerySpec() )
-				&& getEffectiveLockTimeout( getLockOptions().getLockMode() ) == Timeouts.SKIP_LOCKED_MILLI ) {
+				&& needsLocking() ) {
+			final boolean skipLocked =
+					getEffectiveLockTimeout( getLockOptions().getLockMode() ) == Timeouts.SKIP_LOCKED_MILLI;
 			final var kind = LockingSqlRewriterSupport.interpretLockKind( getLockOptions() );
-			if ( kind == PessimisticLockKind.UPDATE ) {
+			if ( skipLocked && kind == PessimisticLockKind.UPDATE ) {
 				throw new IllegalQueryOperationException(
 						"Sybase ASE does not support exclusive skip-locked locking of set queries (UNION, INTERSECT, EXCEPT)" );
 			}
+			// Locking is rendered as table hints, which belong to a table reference
+			// rather than to the statement, so every arm of the set query carries
+			// its own. Without this only the first arm would be locked.
 			queryGroup.visitQuerySpecs( lockingSetQueryArms::add );
 			try {
 				renderQueryGroupWithPagination( queryGroup );
-				appendSql( getDialect().getLockingSupport().getLockingClauseRenderer().render(
-						new LockingClauseRequest( kind, Timeouts.SKIP_LOCKED, List.of() ) ) );
+				if ( skipLocked ) {
+					appendSql( getDialect().getLockingSupport().getLockingClauseRenderer().render(
+							new LockingClauseRequest( kind, Timeouts.SKIP_LOCKED, List.of() ) ) );
+				}
 			}
 			finally {
 				lockingSetQueryArms.clear();
@@ -290,10 +248,8 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
-	protected void visitForUpdateClause(QuerySpec querySpec) {
-		if ( !lockingSetQueryArms.contains( querySpec ) ) {
-			super.visitForUpdateClause( querySpec );
-		}
+	protected boolean shouldRenderForUpdateClause(QuerySpec querySpec) {
+		return !lockingSetQueryArms.contains( querySpec );
 	}
 
 	@Override
@@ -329,10 +285,10 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 				appendSql( i );
 			}
 			appendSql( ')' );
-			visitOrderBy( queryGroup.getSortSpecifications() );
+			renderOrderBy( queryGroup.getSortSpecifications() );
 		}
 		else {
-			super.visitQueryGroup( queryGroup );
+			super.renderQueryGroup( queryGroup );
 		}
 	}
 
@@ -362,8 +318,8 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 		return StandardDerivedTableRenderingSupport.VALUES_SELECT_UNION;
 	}
 
-	@Override
-	public void visitOffsetFetchClause(QueryPart queryPart) {
+	private void validatePaginationRequest(PaginationRenderingRequest request) {
+		final QueryPart queryPart = request.queryPart();
 		if ( !currentFullJoinEmulationHelper().isFullJoinEmulationQueryPart( queryPart ) ) {
 			assertRowsOnlyFetchClauseType( queryPart );
 			if ( !queryPart.isRoot() && queryPart.hasOffsetOrFetchClause() ) {
@@ -375,8 +331,8 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
-	protected void visitOrderBy(List<SortSpecification> sortSpecifications) {
-		currentFullJoinEmulationHelper().renderOrderByIfNeeded( getCurrentQueryPart(), sortSpecifications, super::visitOrderBy );
+	protected void renderOrderBy(List<SortSpecification> sortSpecifications) {
+		currentFullJoinEmulationHelper().renderOrderByIfNeeded( getCurrentQueryPart(), sortSpecifications, super::renderOrderBy );
 	}
 
 	@Override
@@ -549,15 +505,6 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		appendSql( OPEN_PARENTHESIS );
-		visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
-		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-		visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
-		appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
 	protected String determineColumnReferenceQualifier(ColumnReference columnReference) {
 		final DmlTargetColumnQualifierSupport qualifierSupport = getDialect().getDmlTargetColumnQualifierSupport();
 		final MutationStatement currentDmlStatement;
@@ -570,7 +517,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 		}
 		// Sybase needs a table name prefix
 		// but not if this is a restricted union table reference subquery
-		final QuerySpec currentQuerySpec = (QuerySpec) getQueryPartStack().getCurrent();
+		final QuerySpec currentQuerySpec = (QuerySpec) getCurrentQueryPart();
 		final List<TableGroup> roots;
 		if ( currentQuerySpec != null && !currentQuerySpec.isRoot()
 				&& (roots = currentQuerySpec.getFromClause().getRoots()).size() == 1

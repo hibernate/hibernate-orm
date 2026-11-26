@@ -40,27 +40,27 @@ public class ModeStatsModeEmulation extends InverseDistributionFunction {
 			throw new IllegalArgumentException( "MODE function requires a WITHIN GROUP clause with exactly one order by item" );
 		}
 		if ( caseWrapper ) {
-			translator.getCurrentClauseStack().push( Clause.WHERE );
-			sqlAppender.appendSql( "case when " );
-			filter.accept( translator );
-			translator.getCurrentClauseStack().pop();
+			translator.withClause( Clause.WHERE, () -> {
+				sqlAppender.appendSql( "case when " );
+				filter.accept( translator );
+			} );
 			sqlAppender.appendSql( " then " );
-			translator.getCurrentClauseStack().push( Clause.WITHIN_GROUP );
-			withinGroup.get( 0 ).accept( translator );
-			sqlAppender.appendSql( " else null end)" );
-			translator.getCurrentClauseStack().pop();
+			translator.withClause( Clause.WITHIN_GROUP, () -> {
+				withinGroup.get( 0 ).accept( translator );
+				sqlAppender.appendSql( " else null end)" );
+			} );
 		}
 		else {
-			translator.getCurrentClauseStack().push( Clause.WITHIN_GROUP );
-			withinGroup.get( 0 ).accept( translator );
-			translator.getCurrentClauseStack().pop();
+			translator.withClause( Clause.WITHIN_GROUP, () -> {
+				withinGroup.get( 0 ).accept( translator );
+			} );
 			sqlAppender.appendSql( ')' );
 			if ( filter != null ) {
-				translator.getCurrentClauseStack().push( Clause.WHERE );
-				sqlAppender.appendSql( " filter (where " );
-				filter.accept( translator );
-				sqlAppender.appendSql( ')' );
-				translator.getCurrentClauseStack().pop();
+				translator.withClause( Clause.WHERE, () -> {
+					sqlAppender.appendSql( " filter (where " );
+					filter.accept( translator );
+					sqlAppender.appendSql( ')' );
+				} );
 			}
 		}
 	}

@@ -511,6 +511,7 @@ public class HSQLLegacyDialect extends Dialect implements CurrentTemporalSupport
 	public PredicateSupport getPredicateSupport() {
 		return PredicateSupport.builder( super.getPredicateSupport() )
 				.capability( PredicateSupport.Capability.DISTINCT_FROM, true )
+				.capability( PredicateSupport.Capability.BOOLEAN_EXPRESSION, true )
 				.build();
 	}
 
@@ -794,6 +795,9 @@ public class HSQLLegacyDialect extends Dialect implements CurrentTemporalSupport
 	public ExpressionCoercionSupport getExpressionCoercionSupport() {
 		return ExpressionCoercionSupport.builder()
 				.requirements( ExpressionCoercionSupport.Requirement.CAST_INTEGER_DIVISION_TO_FLOAT )
+				.requirements(
+						ExpressionCoercionSupport.Requirement.TYPED_ARITHMETIC_PARAMETERS
+				)
 				.build();
 	}
 

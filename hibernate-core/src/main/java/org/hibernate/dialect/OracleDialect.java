@@ -1,5 +1,6 @@
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.sql.ast.spi.ArithmeticSupport;
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
 
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
@@ -564,6 +565,13 @@ public class OracleDialect extends Dialect implements CurrentTemporalSupport, Te
 	 */
 	protected int getMaximumSeriesSize() {
 		return 10000;
+	}
+
+	@Override
+	public ArithmeticSupport getArithmeticSupport() {
+		return ArithmeticSupport.builder( super.getArithmeticSupport() )
+				.integerDivisionForm( ArithmeticSupport.IntegerDivisionForm.FLOOR )
+				.build();
 	}
 
 	@Override

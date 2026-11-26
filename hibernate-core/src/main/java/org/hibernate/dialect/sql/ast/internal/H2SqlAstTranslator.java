@@ -24,14 +24,12 @@ import org.hibernate.sql.ast.spi.query.select.SqlSelection;
 import org.hibernate.sql.ast.spi.Statement;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.ast.spi.query.cte.CteTableGroup;
-import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
 import org.hibernate.sql.ast.spi.query.expression.Summarization;
 import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
 import org.hibernate.sql.ast.spi.query.from.TableGroup;
-import org.hibernate.sql.ast.spi.query.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.LikePredicate;
 import org.hibernate.sql.ast.spi.query.select.SelectClause;
 import org.hibernate.sql.ast.spi.query.select.SortSpecification;
@@ -65,7 +63,7 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 	}
 
 	@Override
-	public void visitQuerySpec(QuerySpec querySpec) {
+	protected void renderQuerySpec(QuerySpec querySpec) {
 		final var helper = currentFullJoinEmulationHelper();
 		final boolean needsNestedHelper =
 				helper.hasActiveFullJoinEmulation()
@@ -75,9 +73,9 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 		}
 		try {
 			final var currentHelper = currentFullJoinEmulationHelper();
-			if ( !currentHelper.renderFullJoinEmulationBranchIfNeeded( querySpec, super::visitQuerySpec )
+			if ( !currentHelper.renderFullJoinEmulationBranchIfNeeded( querySpec, super::renderQuerySpec )
 					&& !currentHelper.emulateFullJoinWithUnionIfNeeded( querySpec ) ) {
-				super.visitQuerySpec( querySpec );
+				super.renderQuerySpec( querySpec );
 			}
 		}
 		finally {
@@ -115,7 +113,7 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getCurrentClause() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}
@@ -149,20 +147,8 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 	}
 
 	@Override
-	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
-		final boolean isNegated = booleanExpressionPredicate.isNegated();
-		if ( isNegated ) {
-			appendSql( "not(" );
-		}
-		booleanExpressionPredicate.getExpression().accept( this );
-		if ( isNegated ) {
-			appendSql( CLOSE_PARENTHESIS );
-		}
-	}
-
-	@Override
-	protected void visitOrderBy(List<SortSpecification> sortSpecifications) {
-		currentFullJoinEmulationHelper().renderOrderByIfNeeded( getCurrentQueryPart(), sortSpecifications, super::visitOrderBy );
+	protected void renderOrderBy(List<SortSpecification> sortSpecifications) {
+		currentFullJoinEmulationHelper().renderOrderByIfNeeded( getCurrentQueryPart(), sortSpecifications, super::renderOrderBy );
 	}
 
 	@Override
@@ -210,20 +196,6 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 	}
 
 	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		appendSql( OPEN_PARENTHESIS );
-		visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
-		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
-		visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
-		appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
-	protected void visitArithmeticOperand(Expression expression) {
-		render( expression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
-	}
-
-	@Override
 	protected void renderPrimaryTableReferencePrefix(PrimaryTableReferenceContext context) {
 		// The H2 parser can't handle a sub-query as first element in a nested join
 		// i.e. `join ( (select ...) alias join ... )`, so we have to introduce a dummy table reference
@@ -233,8 +205,8 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 	}
 
 	@Override
-	public void visitLikePredicate(LikePredicate likePredicate) {
-		super.visitLikePredicate( likePredicate );
+	protected void renderLikePredicateExpression(LikePredicate likePredicate) {
+		super.renderLikePredicateExpression( likePredicate );
 		// Custom implementation because H2 uses backslash as the default escape character
 		// We can override this by specifying an empty escape character
 		// See http://www.h2database.com/html/grammar.html#like_predicate_right_hand_side

@@ -1,5 +1,6 @@
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.sql.ast.spi.ArithmeticSupport;
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
@@ -9,19 +10,11 @@ import org.hibernate.dialect.type.spi.StringValueSemantics;
 import org.hibernate.SPI;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.sql.ast.spi.PostgreSQLSqlAstTranslator;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupportFactory;
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupports;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.common.TemporalUnit;
-import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
-import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
-import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.Statement;
-import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
-import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.exec.spi.JdbcOperation;
 
 import jakarta.persistence.TemporalType;
 
@@ -152,21 +145,10 @@ public class PostgresPlusDialect extends PostgreSQLDialect implements CurrentTem
 
 	@Override
 	@SPI({ IMPLEMENT, SUPPLY })
-	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
-		return new StandardSqlAstTranslatorFactory() {
-			@Override
-			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
-					SqlAstTranslationRequest<S, T> request) {
-				return new PostgreSQLSqlAstTranslator<>( request ) {
-					@Override
-					public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-						if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
-							appendSql( "floor" );
-						}
-						super.visitBinaryArithmeticExpression(arithmeticExpression);
-					}
-				};
-			}
-		};
+	public ArithmeticSupport getArithmeticSupport() {
+		// portable integer division is emulated with floor
+		return ArithmeticSupport.builder( super.getArithmeticSupport() )
+				.integerDivisionForm( ArithmeticSupport.IntegerDivisionForm.FLOOR )
+				.build();
 	}
 }

@@ -26,7 +26,6 @@ import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.dialect.function.spi.WindowFunctionSupport;
 import org.hibernate.sql.ast.spi.SqlAstNode;
 import org.hibernate.sql.ast.spi.query.delete.DeleteStatement;
-import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.spi.query.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.spi.query.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.spi.query.expression.CastTarget;
@@ -205,7 +204,7 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	public void visitOver(Over<?> over) {
+	protected void renderOver(Over<?> over) {
 		final Expression expression = over.getExpression();
 		if ( expression instanceof FunctionExpression functionExpression
 				&& "row_number".equals( functionExpression.getFunctionName() ) ) {
@@ -218,7 +217,7 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 				return;
 			}
 		}
-		super.visitOver( over );
+		super.renderOver( over );
 	}
 
 	@Override
@@ -277,7 +276,7 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		// In INSERT SELECT/VALUES sources, inline simple values, version seeds and bound
 		// parameters that Hibernate would otherwise render as SELECT-list parameter markers.
 		final boolean renderingInsertSelectSource = !renderingSelectExpression
-				&& getStatementStack().getCurrent() instanceof InsertSelectStatement insertStatement
+				&& getCurrentStatement() instanceof InsertSelectStatement insertStatement
 				&& insertStatement.getSourceSelectStatement() != null;
 		final boolean renderingDerivedValuesSource = isRenderingDerivedTable( DerivedTableKind.VALUES )
 				&& !renderingSelectExpression;
@@ -305,11 +304,11 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 			// SELECT-list CASE expressions need the same Altibase-compatible parameter rendering,
 			// including nested CASE result expressions reached during recursive SQL AST rendering.
 			if ( expression instanceof CaseSearchedExpression caseSearchedExpression ) {
-				visitCaseSearchedExpression( caseSearchedExpression, true );
+				renderCaseSearchedExpression( caseSearchedExpression, true );
 				return;
 			}
 			if ( expression instanceof CaseSimpleExpression caseSimpleExpression ) {
-				visitCaseSimpleExpression( caseSimpleExpression, true );
+				renderCaseSimpleExpression( caseSimpleExpression, true );
 				return;
 			}
 			super.renderSelectExpression( expression );
@@ -322,9 +321,9 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	// Handles searched CASE: "case when <predicate> then <result> end".
 	// It inlines parameter markers in predicates and result expressions for Altibase.
 	@Override
-	protected void visitCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression, boolean inSelect) {
+	protected void renderCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression, boolean inSelect) {
 		if ( !inSelect && !renderingSelectExpression ) {
-			super.visitCaseSearchedExpression( caseSearchedExpression, false );
+			super.renderCaseSearchedExpression( caseSearchedExpression, false );
 			return;
 		}
 		if ( caseSearchedExpression.getWhenFragments().isEmpty() ) {
@@ -361,9 +360,9 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	// Handles simple CASE: "case <fixture> when <value> then <result> end".
 	// It inlines parameter markers in the fixture, check values and result expressions for Altibase.
 	@Override
-	protected void visitCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression, boolean inSelect) {
+	protected void renderCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression, boolean inSelect) {
 		if ( !inSelect && !renderingSelectExpression ) {
-			super.visitCaseSimpleExpression( caseSimpleExpression, false );
+			super.renderCaseSimpleExpression( caseSimpleExpression, false );
 			return;
 		}
 		if ( caseSimpleExpression.getWhenFragments().isEmpty() ) {
@@ -476,7 +475,7 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+		if ( getCurrentClause() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}
@@ -505,20 +504,12 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
-			appendSql( "floor" );
-		}
-		super.visitBinaryArithmeticExpression(arithmeticExpression);
-	}
-
-	@Override
-	public void visitParameter(JdbcParameter jdbcParameter) {
+	protected void renderParameter(JdbcParameter jdbcParameter, SqlAstNodeRenderingMode requestedMode) {
 		// Altibase rejects untyped parameter markers in the SELECT clause, including ones nested in
 		// function arguments, so give plain parameters there an explicit type.
 		if ( !renderingCastedSelectParameter
-				&& getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT
-				&& getCurrentClauseStack().getCurrent() == Clause.SELECT ) {
+				&& requestedMode == SqlAstNodeRenderingMode.DEFAULT
+				&& getCurrentClause() == Clause.SELECT ) {
 			renderingCastedSelectParameter = true;
 			try {
 				renderCasted( jdbcParameter );
@@ -528,18 +519,18 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 			}
 		}
 		else {
-			super.visitParameter( jdbcParameter );
+			super.renderParameter( jdbcParameter, requestedMode );
 		}
 	}
 
 	@Override
-	protected void visitArithmeticOperand(Expression expression) {
+	protected void renderArithmeticOperand(Expression expression) {
 		// Altibase requires an explicit type for null literals in arithmetic expressions.
 		if ( isNullLiteral( expression ) ) {
 			renderCasted( expression );
 		}
 		else {
-			super.visitArithmeticOperand( expression );
+			super.renderArithmeticOperand( expression );
 		}
 	}
 

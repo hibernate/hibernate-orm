@@ -23,14 +23,12 @@ import org.hibernate.sql.ast.spi.query.MutationStatement;
 import org.hibernate.sql.ast.spi.Statement;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.ast.spi.query.delete.DeleteStatement;
-import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.sql.ast.spi.query.expression.Summarization;
 import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
 import org.hibernate.sql.ast.spi.query.insert.InsertSelectStatement;
-import org.hibernate.sql.ast.spi.query.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.spi.query.predicate.LikePredicate;
 import org.hibernate.sql.ast.spi.query.select.QueryPart;
 import org.hibernate.sql.ast.spi.query.select.QuerySpec;
@@ -61,20 +59,6 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 
 	private FullJoinEmulation currentFullJoinEmulationHelper() {
 		return fullJoinEmulations.getFirst();
-	}
-
-	@Override
-	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		if ( isIntegerDivisionEmulationRequired( arithmeticExpression ) ) {
-			appendSql( OPEN_PARENTHESIS );
-			visitArithmeticOperand( arithmeticExpression.getLeftHandOperand() );
-			appendSql( " div " );
-			visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
-			appendSql( CLOSE_PARENTHESIS );
-		}
-		else {
-			super.visitBinaryArithmeticExpression(arithmeticExpression);
-		}
 	}
 
 	@Override
@@ -121,7 +105,7 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 	@Override
 	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
 		super.renderDmlTargetTableExpression( tableReference );
-		if ( getClauseStack().getCurrent() != Clause.INSERT && !usesSingleTableDml( getCurrentDmlStatement() ) ) {
+		if ( getCurrentClause() != Clause.INSERT && !usesSingleTableDml( getCurrentDmlStatement() ) ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
 	}
@@ -133,7 +117,7 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 		// Since MariaDB does not support aliasing the insert target table,
 		// we must detect column reference that are used in the conflict clause
 		// and use the table expression as qualifier instead
-		if ( getClauseStack().getCurrent() != Clause.SET
+		if ( getCurrentClause() != Clause.SET
 				|| !( getCurrentDmlStatement() instanceof InsertSelectStatement insertSelectStatement )
 				|| ( dmlAlias = insertSelectStatement.getTargetTable().getIdentificationVariable() ) == null
 				|| !dmlAlias.equals( columnReference.getQualifier() ) ) {
@@ -144,13 +128,13 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 				final String qualifier = columnReference.getQualifier();
 				final String targetAlias = targetTable.getIdentificationVariable();
 				if ( ( targetAlias != null && qualifier.equals( targetAlias ) ) || qualifier.equals( targetTableName ) ) {
-					return !getQueryPartStack().isEmpty() ? targetTableName : null;
+					return getCurrentQueryPart() != null ? targetTableName : null;
 				}
 			}
 			return columnReference.getQualifier();
 		}
 		// Qualify the column reference with the table expression also when in subqueries
-		else if ( qualifierSupport != DmlTargetColumnQualifierSupport.NONE || !getQueryPartStack().isEmpty() ) {
+		else if ( qualifierSupport != DmlTargetColumnQualifierSupport.NONE || getCurrentQueryPart() != null ) {
 			return getCurrentDmlStatement().getTargetTable().getTableExpression();
 		}
 		else {
@@ -164,11 +148,11 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 	}
 
 	@Override
-	protected void visitRecursivePath(Expression recursivePath, int sizeEstimate) {
+	protected void renderRecursivePath(Expression recursivePath, int sizeEstimate) {
 		// MariaDB determines the type and size of a column in a recursive CTE based on the expression of the non-recursive part
 		// Due to that, we have to cast the path in the non-recursive path to a varchar of appropriate size to avoid data truncation errors
 		if ( sizeEstimate == -1 ) {
-			super.visitRecursivePath( recursivePath, sizeEstimate );
+			super.renderRecursivePath( recursivePath, sizeEstimate );
 		}
 		else {
 			appendSql( "cast(" );
@@ -176,18 +160,6 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 			appendSql( " as char(" );
 			appendSql( sizeEstimate );
 			appendSql( "))" );
-		}
-	}
-
-	@Override
-	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
-		final boolean isNegated = booleanExpressionPredicate.isNegated();
-		if ( isNegated ) {
-			appendSql( "not(" );
-		}
-		booleanExpressionPredicate.getExpression().accept( this );
-		if ( isNegated ) {
-			appendSql( CLOSE_PARENTHESIS );
 		}
 	}
 
@@ -213,7 +185,7 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 	}
 
 	@Override
-	public void visitQuerySpec(QuerySpec querySpec) {
+	protected void renderQuerySpec(QuerySpec querySpec) {
 		final var helper = currentFullJoinEmulationHelper();
 		final boolean needsNestedHelper =
 				helper.hasActiveFullJoinEmulation()
@@ -223,9 +195,9 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 		}
 		try {
 			final var currentHelper = currentFullJoinEmulationHelper();
-			if ( !currentHelper.renderFullJoinEmulationBranchIfNeeded( querySpec, super::visitQuerySpec )
+			if ( !currentHelper.renderFullJoinEmulationBranchIfNeeded( querySpec, super::renderQuerySpec )
 					&& !currentHelper.emulateFullJoinWithUnionIfNeeded( querySpec ) ) {
-				super.visitQuerySpec( querySpec );
+				super.renderQuerySpec( querySpec );
 			}
 		}
 		finally {
@@ -248,8 +220,8 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 	}
 
 	@Override
-	protected void visitOrderBy(List<SortSpecification> sortSpecifications) {
-		currentFullJoinEmulationHelper().renderOrderByIfNeeded( getCurrentQueryPart(), sortSpecifications, super::visitOrderBy );
+	protected void renderOrderBy(List<SortSpecification> sortSpecifications) {
+		currentFullJoinEmulationHelper().renderOrderByIfNeeded( getCurrentQueryPart(), sortSpecifications, super::renderOrderBy );
 	}
 
 	@Override
@@ -321,7 +293,7 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 	}
 
 	@Override
-	public void visitLikePredicate(LikePredicate likePredicate) {
+	protected void renderLikePredicateExpression(LikePredicate likePredicate) {
 		if ( likePredicate.isCaseSensitive() ) {
 			likePredicate.getMatchExpression().accept( this );
 			if ( likePredicate.isNegated() ) {

@@ -84,6 +84,7 @@ public class UpdateCoordinatorTemporal extends AbstractTemporalUpdateCoordinator
 					id,
 					rowId,
 					oldVersion,
+					incomingOldValues == null ? values : incomingOldValues,
 					session,
 					temporalMapping,
 					endingUpdateGroup,

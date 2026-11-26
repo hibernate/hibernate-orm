@@ -131,6 +131,11 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 		return expression;
 	}
 
+	/// Keep an opaque expression for which this walker cannot rewrite child nodes.
+	protected final void keepExpression(SqlAstNode expression) {
+		returnedNode = expression;
+	}
+
 	private void doReplaceExpression(SqlAstNode expression) {
 		assert isLeafExpression( expression );
 		returnedNode = replaceExpression( expression );

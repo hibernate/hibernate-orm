@@ -30,6 +30,7 @@ import org.hibernate.sql.ast.spi.query.expression.SqlSelectionExpression;
 import org.hibernate.sql.ast.spi.query.from.LazyTableGroup;
 import org.hibernate.sql.ast.spi.query.from.VirtualTableGroup;
 import org.hibernate.sql.ast.spi.query.predicate.ExistsPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.FilterPredicate;
 import org.hibernate.sql.ast.spi.query.from.AbstractTableGroup;
 import org.hibernate.sql.ast.spi.query.from.CollectionTableGroup;
 import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
@@ -864,6 +865,17 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 
 		private Expression rewrite(Expression expression) {
 			return replaceExpressions( expression );
+		}
+
+		@Override
+		public void visitFilterPredicate(FilterPredicate predicate) {
+			// The fetched table group moves with its rendered aliases and filter bindings.
+			keepExpression( predicate );
+		}
+
+		@Override
+		public void visitFilterFragmentPredicate(FilterPredicate.FilterFragmentPredicate predicate) {
+			keepExpression( predicate );
 		}
 
 		@Override

@@ -9,7 +9,6 @@ import org.hibernate.SPI;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -141,11 +140,6 @@ public abstract class AbstractTableUpdateBuilder<O extends MutationOperation>
 		}
 	}
 
-	/// Whether every mapped state column of the table is assigned by the update.
-	protected boolean assignsEveryColumn(EntityMappingType entity, List<ColumnValueBinding> assignments) {
-		return unassignedColumns( entity, assignments ).isEmpty();
-	}
-
 	/// Physical state columns whose values a matched row keeps. The identifier
 	/// identifies the row even when the row has no state. A partition key mapped
 	/// as an attribute, on the other hand, also holds state.
@@ -178,7 +172,8 @@ public abstract class AbstractTableUpdateBuilder<O extends MutationOperation>
 	}
 
 	private static void forEachStateColumn(AttributeMapping attribute, SelectableConsumer consumer) {
-		if ( attribute instanceof EmbeddableValuedModelPart embedded ) {
+		final var embedded = attribute.asEmbeddedAttributeMapping();
+		if ( embedded != null ) {
 			final var type = embedded.getEmbeddableTypeDescriptor();
 			final var aggregate = type.getAggregateMapping();
 			if ( aggregate != null ) {

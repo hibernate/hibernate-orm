@@ -3,10 +3,14 @@ package org.hibernate.orm.test.secondarytable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.OptimisticLockType;
+import org.hibernate.annotations.OptimisticLocking;
 import org.hibernate.sql.spi.mutation.jdbc.MergeOperation;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -14,7 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * An optional secondary row is deleted when all its mapped state is null
@@ -69,9 +73,16 @@ public abstract class AbstractOptionalSecondaryRowTest {
 
 	@Test
 	void statelessUpdateUsesStoredNonUpdatableColumn(SessionFactoryScope scope) {
-		assumeTrue( usesOptionalTableMerge( scope ) );
 		scope.inStatelessTransaction( session -> session.update( new Shipment( 1, null, null ) ) );
-		assertSingleDetailMerge( scope );
+		if ( usesOptionalTableMerge( scope ) ) {
+			assertSingleDetailMerge( scope );
+		}
+		else {
+			assertThat( scope.getCollectingStatementObserver().getSqlQueries() )
+					.filteredOn( sql -> sql.contains( "optional_shipment_detail" ) )
+					.singleElement().asString().startsWith( "update optional_shipment_detail " )
+					.contains( "code is not null" );
+		}
 		scope.inTransaction( session -> {
 			final var shipment = session.find( Shipment.class, 1 );
 			assertThat( shipment.code ).isEqualTo( "code" );
@@ -104,11 +115,29 @@ public abstract class AbstractOptionalSecondaryRowTest {
 		scope.inTransaction( session -> session.persist( new Shipment( 2, null, null ) ) );
 		scope.inStatelessTransaction( session -> session.update( new Shipment( 2, null, null ) ) );
 		assertNoDetailRow( scope, 2 );
+		scope.inStatelessTransaction( session -> session.update( new Shipment( 2, "ignored", null ) ) );
+		assertNoDetailRow( scope, 2 );
+	}
+
+	@Test
+	void statelessUpdateLeavesMissingMemoDetailAbsent(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.persist( new Memo( 2, null ) ) );
+		scope.inStatelessTransaction( session -> session.update( new Memo( 2, null ) ) );
+		scope.inTransaction( session -> assertThat( session
+				.createNativeQuery( "select count(*) from optional_memo_detail where id = 2", Long.class )
+				.getSingleResult() ).isZero() );
+	}
+
+	@Test
+	void staleUpdateWithMissingDetailIsRejected(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.persist( new Memo( 2, null ) ) );
+		scope.inStatelessTransaction( session -> session.update( new Memo( 2, null ) ) );
+		assertThatThrownBy( () -> scope.inStatelessTransaction( session -> session.update( new Memo( 2, null ) ) ) )
+				.isInstanceOf( OptimisticLockException.class );
 	}
 
 	@Test
 	void statelessUpsertUsesStoredCodeForMatchedRows(SessionFactoryScope scope) {
-		assumeTrue( usesOptionalTableMerge( scope ) );
 		scope.inTransaction( session -> session.persist( new Shipment( 2, null, "label" ) ) );
 		scope.inStatelessTransaction( session -> {
 			session.upsert( new Shipment( 1, null, null ) );
@@ -157,6 +186,15 @@ public abstract class AbstractOptionalSecondaryRowTest {
 			assertThat( shipment.label ).isNull();
 			assertThat( shipment.code ).isEqualTo( "code" );
 		} );
+	}
+
+	@Test
+	void deleteLastDirtyColumnWithOptimisticLock(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.persist( new DynamicShipment( 2, null, "label" ) ) );
+		scope.inTransaction( session -> session.find( DynamicShipment.class, 2 ).label = null );
+		scope.inTransaction( session -> assertThat( session
+				.createNativeQuery( "select count(*) from optional_dynamic_shipment_detail where id = 2", Long.class )
+				.getSingleResult() ).isZero() );
 	}
 
 	@Test
@@ -210,6 +248,7 @@ public abstract class AbstractOptionalSecondaryRowTest {
 	@Table(name = "optional_dynamic_shipment")
 	@SecondaryTable(name = "optional_dynamic_shipment_detail")
 	@DynamicUpdate
+	@OptimisticLocking(type = OptimisticLockType.DIRTY)
 	public static class DynamicShipment {
 		@Id
 		Integer id;
@@ -234,6 +273,8 @@ public abstract class AbstractOptionalSecondaryRowTest {
 	public static class Memo {
 		@Id
 		Integer id;
+		@Version
+		int version;
 		@Column(table = "optional_memo_detail")
 		String text;
 

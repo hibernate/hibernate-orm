@@ -6,6 +6,7 @@ import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Locale;
+import java.util.function.Supplier;
 
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
@@ -16,6 +17,7 @@ import org.hibernate.engine.jdbc.mutation.spi.Binding;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.persister.entity.mutation.UpdateValuesAnalysis;
+import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.spi.mutation.MutationTarget;
 import org.hibernate.sql.spi.mutation.MutationType;
 import org.hibernate.sql.spi.mutation.SelfExecutingUpdateOperation;
@@ -37,6 +39,14 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 	private final UpsertOperation upsertOperation;
 
 	private final OptionalTableUpdate optionalTableUpdate;
+
+	/// A native upsert can choose between deleting and writing from the source
+	/// alone only when the update assigns every state column.
+	public static MutationOperation create(OptionalTableUpdate update, Supplier<UpsertOperation> nativeUpsert) {
+		return update.getUnassignedColumns().isEmpty()
+				? new DeleteOrUpsertOperation( nativeUpsert.get(), update )
+				: new OptionalTableUpdateOperation( update.getMutationTarget(), update );
+	}
 
 	@SPI(IMPLEMENT)
 	public DeleteOrUpsertOperation(
@@ -97,7 +107,9 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 							.executeUpdate( upsertDeleteStatement, sql );
 			MODEL_MUTATION_LOGGER.upsertDeletedRowCount( rowCount, tableMapping.getTableName() );
 			try {
-				getExpectation().verifyOutcome( rowCount, upsertDeleteStatement, -1, sql );
+				if ( rowCount != 0 || !tableMapping.isOptional() ) {
+					getExpectation().verifyOutcome( rowCount, upsertDeleteStatement, -1, sql );
+				}
 			}
 			catch (SQLException e) {
 				throw jdbcServices.getSqlExceptionHelper().convert(

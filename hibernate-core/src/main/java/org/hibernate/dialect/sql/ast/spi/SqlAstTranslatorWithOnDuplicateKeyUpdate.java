@@ -52,17 +52,16 @@ public abstract class SqlAstTranslatorWithOnDuplicateKeyUpdate<T extends JdbcOpe
 	public MutationOperation createMergeOperation(OptionalTableUpdate optionalTableUpdate) {
 		assert optionalTableUpdate.getNumberOfOptimisticLockBindings() == 0;
 
-		renderUpsertStatement( optionalTableUpdate );
-
-		final UpsertOperation upsertOperation = new UpsertOperation(
-				optionalTableUpdate.getMutatingTable().getTableMapping(),
-				optionalTableUpdate.getMutationTarget(),
-				getSql(),
-				new MySQLRowCountExpectation(),
-				getParameterBinders()
-		);
-
-		return new DeleteOrUpsertOperation( upsertOperation, optionalTableUpdate );
+		return DeleteOrUpsertOperation.create( optionalTableUpdate, () -> {
+			renderUpsertStatement( optionalTableUpdate );
+			return new UpsertOperation(
+					optionalTableUpdate.getMutatingTable().getTableMapping(),
+					optionalTableUpdate.getMutationTarget(),
+					getSql(),
+					new MySQLRowCountExpectation(),
+					getParameterBinders()
+			);
+		} );
 	}
 
 	private static class MySQLRowCountExpectation implements Expectation {

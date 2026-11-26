@@ -13,7 +13,11 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 		AbstractPartitionKeyMutationTest.CustomDeleteBox.class,
 		AbstractPartitionKeyMutationTest.Vehicle.class,
 		AbstractPartitionKeyMutationTest.Truck.class,
-		AbstractPartitionKeyMutationTest.SealedCarton.class
+		AbstractPartitionKeyMutationTest.Carton.class,
+		AbstractPartitionKeyMutationTest.SealedCarton.class,
+		AbstractPartitionKeyMutationTest.Tag.class,
+		AbstractPartitionKeyMutationTest.Pet.class,
+		AbstractPartitionKeyMutationTest.Parrot.class
 })
 @SessionFactory(useCollectingStatementObserver = true)
 @JiraKey("HHH-21272")

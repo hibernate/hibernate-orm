@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import org.hibernate.Internal;
 import org.hibernate.StaleObjectStateException;
@@ -26,15 +27,25 @@ import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCH
 /// statements which update or delete its row.
 @Internal
 public record PartitionKeyValue(String table, SelectableMapping selectable, Object value) {
+	private static final Predicate<AttributeMapping> EVERY_ATTRIBUTE = attribute -> true;
+
 	/// Whether a statement with a parameter for each partition key column cannot be
 	/// used, because the value of a column is null, or is unknown.
 	public static boolean needsDynamicRestriction(EntityPersister persister, List<PartitionKeyValue> values) {
+		return needsDynamicRestriction( persister, values, EVERY_ATTRIBUTE );
+	}
+
+	/// @param restricting the partition key attributes by which the row is restricted
+	public static boolean needsDynamicRestriction(
+			EntityPersister persister,
+			List<PartitionKeyValue> values,
+			Predicate<AttributeMapping> restricting) {
 		for ( var key : values ) {
 			if ( key.value == null ) {
 				return true;
 			}
 		}
-		return values.size() < columnCount( persister );
+		return values.size() < columnCount( persister, restricting );
 	}
 
 	/// The values of the partition key columns in the given state of an entity, which
@@ -44,6 +55,15 @@ public record PartitionKeyValue(String table, SelectableMapping selectable, Obje
 			EntityPersister persister,
 			Object[] state,
 			SharedSessionContractImplementor session) {
+		return fromState( persister, state, EVERY_ATTRIBUTE, session );
+	}
+
+	/// @param restricting the partition key attributes by which the row is restricted
+	public static List<PartitionKeyValue> fromState(
+			EntityPersister persister,
+			Object[] state,
+			Predicate<AttributeMapping> restricting,
+			SharedSessionContractImplementor session) {
 		if ( state == null || !persister.hasPartitionedSelectionMapping() ) {
 			return List.of();
 		}
@@ -52,7 +72,7 @@ public record PartitionKeyValue(String table, SelectableMapping selectable, Obje
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			final var attribute = attributes.get( i );
 			final Object attributeValue = state[attribute.getStateArrayPosition()];
-			if ( attributeValue == UNFETCHED_PROPERTY ) {
+			if ( attributeValue == UNFETCHED_PROPERTY || !restricting.test( attribute ) ) {
 				continue;
 			}
 			for ( int j = 0; j < attribute.getJdbcTypeCount(); j++ ) {
@@ -127,10 +147,23 @@ public record PartitionKeyValue(String table, SelectableMapping selectable, Obje
 			Function<String, ? extends RestrictedTableMutationBuilder<?, ?>> builders,
 			List<PartitionKeyValue> values,
 			Function<TableMapping, MutationDetails> mutationDetails) {
+		addRestrictions( persister, builders, values, mutationDetails, EVERY_ATTRIBUTE );
+	}
+
+	/// @param restricting the partition key attributes by which the row is restricted
+	public static void addRestrictions(
+			EntityPersister persister,
+			Function<String, ? extends RestrictedTableMutationBuilder<?, ?>> builders,
+			List<PartitionKeyValue> values,
+			Function<TableMapping, MutationDetails> mutationDetails,
+			Predicate<AttributeMapping> restricting) {
 		if ( values == null ) {
 			// The static statement has a parameter for each partition key column.
 			final var attributes = persister.getAttributeMappings();
 			for ( int i = 0; i < attributes.size(); i++ ) {
+				if ( !restricting.test( attributes.get( i ) ) ) {
+					continue;
+				}
 				attributes.get( i ).forEachSelectable( (index, selectable) -> {
 					if ( isPartitionKey( selectable ) ) {
 						final var builder = builders.apply( persister.physicalTableNameForMutation( selectable ) );
@@ -213,7 +246,7 @@ public record PartitionKeyValue(String table, SelectableMapping selectable, Obje
 		}
 	}
 
-	private static int columnCount(EntityPersister persister) {
+	private static int columnCount(EntityPersister persister, Predicate<AttributeMapping> restricting) {
 		if ( !persister.hasPartitionedSelectionMapping() ) {
 			return 0;
 		}
@@ -221,9 +254,11 @@ public record PartitionKeyValue(String table, SelectableMapping selectable, Obje
 		final var attributes = persister.getAttributeMappings();
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			final var attribute = attributes.get( i );
-			for ( int j = 0; j < attribute.getJdbcTypeCount(); j++ ) {
-				if ( isPartitionKey( attribute.getSelectable( j ) ) ) {
-					count++;
+			if ( restricting.test( attribute ) ) {
+				for ( int j = 0; j < attribute.getJdbcTypeCount(); j++ ) {
+					if ( isPartitionKey( attribute.getSelectable( j ) ) ) {
+						count++;
+					}
 				}
 			}
 		}

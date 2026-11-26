@@ -367,6 +367,8 @@ public abstract class AbstractEntityPersister
 	protected final int batchSize;
 	private final boolean hasSubselectLoadableCollections;
 	private final boolean hasPartitionedSelectionMapping;
+	// the attributes whose partition key columns belong to the primary key of their table
+	private final Set<String> primaryKeyPartitionAttributes;
 	private final boolean hasCollectionNotReferencingPK;
 	@Nullable
 	protected final String rowIdName;
@@ -624,6 +626,7 @@ public abstract class AbstractEntityPersister
 						: persistentClass.getBatchSize();
 		hasSubselectLoadableCollections = persistentClass.hasSubselectLoadableCollections();
 		hasPartitionedSelectionMapping = persistentClass.hasPartitionedSelectionMapping();
+		primaryKeyPartitionAttributes = primaryKeyPartitionAttributes( persistentClass );
 		hasCollectionNotReferencingPK = persistentClass.hasCollectionNotReferencingPK();
 
 		// IDENTIFIER
@@ -7356,6 +7359,30 @@ public abstract class AbstractEntityPersister
 	@Override
 	public boolean hasPartitionedSelectionMapping() {
 		return hasPartitionedSelectionMapping;
+	}
+
+	@Override
+	public boolean isPartitionKeyInPrimaryKey(@Nonnull AttributeMapping attribute) {
+		return primaryKeyPartitionAttributes.contains( attribute.getAttributeName() );
+	}
+
+	private static Set<String> primaryKeyPartitionAttributes(PersistentClass persistentClass) {
+		Set<String> attributes = Set.of();
+		if ( persistentClass.hasPartitionedSelectionMapping() ) {
+			for ( var property : persistentClass.getPropertyClosure() ) {
+				final var value = property.getValue();
+				if ( value.isPartitionKey() ) {
+					final var primaryKey = value.getTable().getPrimaryKey();
+					if ( primaryKey != null && primaryKey.getColumns().containsAll( value.getColumns() ) ) {
+						if ( attributes.isEmpty() ) {
+							attributes = new HashSet<>();
+						}
+						attributes.add( property.getName() );
+					}
+				}
+			}
+		}
+		return attributes;
 	}
 
 	public abstract boolean isTableCascadeDeleteEnabled(int j);

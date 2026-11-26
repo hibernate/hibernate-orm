@@ -7,6 +7,7 @@ import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -72,6 +73,16 @@ public interface LegacyEntityMutationTarget extends LegacyMutationTarget<EntityT
 	 */
 	@Nonnull
 	String getAttributeMutationTableName(int i);
+
+	/**
+	 * Whether the columns of the given attribute are partition key columns
+	 * which belong to the primary key of their table. An upsert matches a
+	 * row by the primary key of its table.
+	 */
+	@Internal
+	default boolean isPartitionKeyInPrimaryKey(@Nonnull AttributeMapping attribute) {
+		return false;
+	}
 
 	/**
 	 * The delegate for executing inserts against the root table for

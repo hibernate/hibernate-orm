@@ -296,7 +296,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		incomingOldValues = filteredAssociations.physicalState( incomingOldValues );
 		// a null or unknown partition key cannot be bound to the static statement
 		final boolean dynamicPartitionKey = PartitionKeyValue.needsDynamicRestriction( entityPersister(),
-				partitionKeys( values, incomingOldValues, session ) );
+				partitionKeys( values, incomingOldValues, session ), this::isRestrictedByPartitionKey );
 
 		return performUpdate(
 				entity,
@@ -319,6 +319,14 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	/**
+	 * Whether the row which is updated is restricted by the partition key
+	 * columns of the given attribute.
+	 */
+	protected boolean isRestrictedByPartitionKey(@Nonnull AttributeMapping attribute) {
+		return true;
+	}
+
+	/**
 	 * The partition key of the row which is updated. There is no snapshot
 	 * when called from {@code StatelessSession.update()}.
 	 */
@@ -327,7 +335,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			@Nullable Object[] values,
 			@Nullable Object[] oldValues,
 			@Nonnull SharedSessionContractImplementor session) {
-		return PartitionKeyValue.fromState( entityPersister(), oldValues == null ? values : oldValues, session );
+		return PartitionKeyValue.fromState( entityPersister(), oldValues == null ? values : oldValues,
+				this::isRestrictedByPartitionKey, session );
 	}
 
 	@Nullable
@@ -1025,6 +1034,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 							dirtinessChecker,
 							session,
 							jdbcValueBindings,
+							operation,
 							tableMapping,
 							attributeIndex
 					);
@@ -1086,6 +1096,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			@Nonnull DirtinessChecker dirtinessChecker,
 			@Nonnull SharedSessionContractImplementor session,
 			@Nonnull JdbcValueBindings jdbcValueBindings,
+			@Nonnull MutationOperation operation,
 			@Nonnull EntityTableMapping tableMapping,
 			int attributeIndex) {
 		final var attributeMapping = entityPersister().getAttributeMappings().get( attributeIndex );
@@ -1100,6 +1111,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 						decomposeAttributeMapping(
 								session,
 								jdbcValueBindings,
+								operation,
 								tableMapping,
 								attributeMapping,
 								values[attributeIndex],
@@ -1137,6 +1149,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	private void decomposeAttributeMapping(
 			@Nonnull SharedSessionContractImplementor session,
 			@Nonnull JdbcValueBindings jdbcValueBindings,
+			@Nonnull MutationOperation operation,
 			@Nonnull EntityTableMapping tableMapping,
 			@Nonnull AttributeMapping attributeMapping,
 			@Nonnull Object values,
@@ -1171,7 +1184,10 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					if ( !jdbcMapping.isFormula()
 							&& isColumnIncludedInSet( jdbcMapping )
 							&& filteredAssociations.includesColumn( jdbcMapping )
-							&& shouldBindValue( onExecutionGenerator, columnValues, columnInclusions, bindAllValues, valueIndex ) ) {
+							&& shouldBindValue( onExecutionGenerator, columnValues, columnInclusions, bindAllValues, valueIndex )
+							// a merge which matches the row by its partition key does not assign it
+							&& ( !jdbcMapping.isPartitioned() || operation.findValueDescriptor(
+									jdbcMapping.getSelectionExpression(), ParameterUsage.SET ) != null ) ) {
 						bindings.bindValue(
 								jdbcValue,
 								table.getTableName(),
@@ -1500,8 +1516,12 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			final var tableMapping = (EntityTableMapping) builder.getMutatingTable().getTableMapping();
 			final var tableUpdateBuilder = (TableUpdateBuilder<?>) builder;
 			applyKeyRestriction( rowId, persister, tableUpdateBuilder, tableMapping );
-			applyPartitionKeyRestriction( tableUpdateBuilder, tableMapping.getTableName(), partitionKeys,
-					TableMapping::getUpdateDetails );
+			if ( persister.hasPartitionedSelectionMapping() ) {
+				final String tableName = tableMapping.getTableName();
+				PartitionKeyValue.addRestrictions( persister,
+						name -> tableName.equals( name ) ? tableUpdateBuilder : null,
+						partitionKeys, TableMapping::getUpdateDetails, this::isRestrictedByPartitionKey );
+			}
 			applyTenantRestriction( tableUpdateBuilder );
 		} );
 	}

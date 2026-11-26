@@ -54,6 +54,18 @@ public class MergeCoordinatorStandard extends UpdateCoordinatorStandard {
 		}
 	}
 
+	/**
+	 * An upsert matches the row by the primary key of its table, since it does
+	 * not know whether the row exists. A partition key belongs to the primary
+	 * key on some databases, unless it is declared by a subclass which shares
+	 * the table. Otherwise, it is a column like any other, which the upsert
+	 * assigns.
+	 */
+	@Override
+	protected boolean isRestrictedByPartitionKey(@Nonnull AttributeMapping attribute) {
+		return entityPersister().isPartitionKeyInPrimaryKey( attribute );
+	}
+
 	@Override
 	protected boolean isColumnIncludedInSet(@Nonnull SelectableMapping selectable) {
 		return selectable.isUpdateable() || selectable.isInsertable();

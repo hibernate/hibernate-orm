@@ -19,6 +19,7 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
+import static org.hibernate.cfg.FlushSettings.FLUSH_QUEUE_TYPE;
 import static org.hibernate.cfg.StateManagementSettings.CHANGESET_ID_SUPPLIER;
 import static org.hibernate.cfg.StateManagementSettings.TEMPORAL_TABLE_STRATEGY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -35,6 +36,22 @@ class TemporalInsertUpdateOrderingTest {
 			@Setting(name = CHANGESET_ID_SUPPLIER, value = SUPPLIER)
 	})
 	void excludedUpdatePreservesClosedRow(SessionFactoryScope scope) {
+		checkExcludedUpdate( scope );
+	}
+
+	@Test
+	@SessionFactory
+	@DomainModel(annotatedClasses = Item.class)
+	@ServiceRegistry(settings = {
+			@Setting(name = TEMPORAL_TABLE_STRATEGY, value = "SINGLE_TABLE"),
+			@Setting(name = FLUSH_QUEUE_TYPE, value = "legacy"),
+			@Setting(name = CHANGESET_ID_SUPPLIER, value = SUPPLIER)
+	})
+	void excludedUpdatePreservesClosedRowWithLegacyQueue(SessionFactoryScope scope) {
+		checkExcludedUpdate( scope );
+	}
+
+	private void checkExcludedUpdate(SessionFactoryScope scope) {
 		final var before = scope.fromTransaction( session -> {
 			final var item = new Item( 1, "first" );
 			item.note = "original";

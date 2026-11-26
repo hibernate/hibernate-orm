@@ -1522,8 +1522,12 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 						name -> tableName.equals( name ) ? tableUpdateBuilder : null,
 						partitionKeys, TableMapping::getUpdateDetails, this::isRestrictedByPartitionKey );
 			}
-			applyTenantRestriction( tableUpdateBuilder );
+			applyTableUpdateRestrictions( tableUpdateBuilder );
 		} );
+	}
+
+	void applyTableUpdateRestrictions(@Nonnull TableUpdateBuilder<?> builder) {
+		applyTenantRestriction( builder );
 	}
 
 	private static void applyAttributeLockingDetails(
@@ -2134,7 +2138,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			applyVersionOptimisticLocking( updateBuilder );
 			applyPartitionKeyRestriction( updateBuilder, identifierTableMapping.getTableName(), partitionKeys,
 					tableMapping -> updateDetails );
-			applyTenantRestriction( updateBuilder );
+			applyTableUpdateRestrictions( updateBuilder );
 
 			//noinspection resource
 			final var jdbcMutation = factory()

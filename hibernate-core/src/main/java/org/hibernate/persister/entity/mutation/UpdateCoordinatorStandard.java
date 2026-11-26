@@ -1682,6 +1682,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		private final TableSet tablesNeedingDynamicUpdate = new TableSet();
 		private final TableSet tablesWithNonNullValues = new TableSet();
 		private final TableSet tablesWithPreviousNonNullValues = new TableSet();
+		private @Nullable TableSet tablesRequiredForOptimisticLock;
 
 		private final List<AttributeAnalysis> attributeAnalyses = new ArrayList<>();
 		private FilteredAssociationMutation filteredAssociations = FilteredAssociationMutation.NONE;
@@ -1777,6 +1778,11 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			return tablesWithPreviousNonNullValues;
 		}
 
+		@Override
+		public boolean requiresExistingRowForOptimisticLock(TableMapping table) {
+			return tablesRequiredForOptimisticLock != null && tablesRequiredForOptimisticLock.contains( table );
+		}
+
 		@Nonnull
 		@Override
 		public List<AttributeAnalysis> getAttributeAnalyses() {
@@ -1850,6 +1856,13 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		public void registerColumnOptLock(@Nonnull EntityTableMapping table, @Nonnull String readExpression, @Nullable Object lockValue) {
 			final var attributeAnalysis = (IncludedAttributeAnalysis) castNonNull( currentAttributeAnalysis );
 			attributeAnalysis.columnLockingAnalyses.add( new ColumnLockingAnalysis( readExpression, lockValue ) );
+
+			if ( lockValue != null && table.isOptional() && entityPersister().optimisticLockStyle().isAllOrDirty() ) {
+				if ( tablesRequiredForOptimisticLock == null ) {
+					tablesRequiredForOptimisticLock = new TableSet();
+				}
+				tablesRequiredForOptimisticLock.add( table );
+			}
 
 			if ( dirtyAttributeIndexes != null && lockValue == null ) {
 				// we need to use `IS NULL` as opposed to `= ?` w/ NULL

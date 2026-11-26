@@ -1126,6 +1126,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 									}
 									else {
 										tableUpdateBuilder.addOptimisticLockRestriction( jdbcValueMapping );
+										valuesAnalysis.requireExistingRowForOptimisticLock( tableDescriptor );
 									}
 								}
 							},

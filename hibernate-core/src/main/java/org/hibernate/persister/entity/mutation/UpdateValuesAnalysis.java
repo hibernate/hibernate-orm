@@ -42,6 +42,12 @@ public interface UpdateValuesAnalysis extends ValuesAnalysis {
 	@Nonnull
 	TableSet getTablesWithPreviousNonNullValues();
 
+	/// Whether the optimistic lock compares a non-null value previously read from
+	/// this optional table. A missing row represents null for every mapped attribute.
+	default boolean requiresExistingRowForOptimisticLock(TableMapping table) {
+		return false;
+	}
+
 	@Nonnull
 	TableSet getTablesNeedingDynamicUpdate();
 

@@ -1,7 +1,5 @@
 package org.hibernate.action.queue.spi.decompose.entity;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -12,10 +10,8 @@ import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.queue.spi.decompose.DecompositionContext;
 import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
-import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.spi.model.TableMutation;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilder;
@@ -160,48 +156,6 @@ public interface EntityMutationPlanContributor {
 			return updatesInitialVersion()
 					|| session.getPersistenceContextInternal()
 							.wasTemporalRevisionUpdated( session.generateEntityKey( identifier, entityPersister ) );
-		}
-
-		/// A revision insert must bind update-only and conditionally generated Java values.
-		public boolean[] revisionInsertability(boolean[] insertability) {
-			if ( entityPersister.hasPreUpdateGeneratedProperties() || entityPersister.hasPreInsertGeneratedProperties() ) {
-				final var generators = entityPersister.getGenerators();
-				for ( int i = 0; i < generators.length; i++ ) {
-					final var generator = generators[i];
-					if ( generator != null
-							&& ( generator.generatesOnUpdate() && !insertability[i]
-								|| generator.generatesOnInsert() && generator.generatedOnExecution() )
-							&& generator.generatedBeforeExecution( entity, session ) ) {
-						if ( insertability == entityPersister.getPropertyInsertability() ) {
-							insertability = insertability.clone();
-						}
-						insertability[i] = true;
-					}
-				}
-			}
-			return insertability;
-		}
-
-		/// A replacement row must also contain the insertable values omitted from this update's state.
-		public void initializeStateForRevisionInsert(EntityTableDescriptor table) {
-			final var insertable = entityPersister.getPropertyInsertability();
-			List<AttributeMapping> missing = null;
-			for ( var attribute : table.attributes() ) {
-				final int index = attribute.getStateArrayPosition();
-				if ( insertable[index] && state[index] == LazyPropertyInitializer.UNFETCHED_PROPERTY
-						&& !attribute.isPluralAttributeMapping() ) {
-					if ( missing == null ) {
-						missing = new ArrayList<>();
-					}
-					missing.add( attribute );
-				}
-			}
-			if ( missing != null ) {
-				entityPersister.initializeLazyProperties( entity, missing, session );
-				for ( var attribute : missing ) {
-					state[attribute.getStateArrayPosition()] = attribute.getValue( entity );
-				}
-			}
 		}
 
 		public boolean updatesInitialVersion() {

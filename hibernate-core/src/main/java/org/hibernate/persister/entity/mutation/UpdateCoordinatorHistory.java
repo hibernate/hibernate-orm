@@ -18,7 +18,6 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
-import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.spi.mutation.TableMapping;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.spi.mutation.MutationType;
@@ -249,7 +248,7 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 
 		if ( hasValues ) {
 			applyKeyRestriction( null, entityPersister(), tableUpdateBuilder, historyTableMapping );
-			applyCurrentRowRestriction( tableUpdateBuilder );
+			tableUpdateBuilder.addNullRestriction( temporalMapping.getEndingColumnMapping() );
 			applyPartitionKeyRestriction( tableUpdateBuilder, identifierTableMapping.getTableName(),
 					partitionKeys, TableMapping::getUpdateDetails );
 			applyOptimisticLocking( tableUpdateBuilder );
@@ -302,12 +301,6 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 				);
 			}
 		}
-	}
-
-	private void applyCurrentRowRestriction(@Nonnull TableUpdateBuilderStandard<MutationOperation> tableUpdateBuilder) {
-		final var endingColumnReference =
-				new ColumnReference( tableUpdateBuilder.getMutatingTable(), temporalMapping.getEndingColumnMapping() );
-		tableUpdateBuilder.addNonKeyRestriction( temporalMapping.createNullEndingValueBinding( endingColumnReference ) );
 	}
 
 	@Override

@@ -89,6 +89,8 @@ import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
+import org.hibernate.resource.transaction.spi.TransactionObserver;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.TypeHelper;
 
@@ -128,6 +130,7 @@ import static org.hibernate.loader.internal.CacheLoadHelper.initializeCollection
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
+import static org.hibernate.temporal.TemporalTableStrategy.NATIVE;
 
 /**
  * Concrete implementation of the {@link StatelessSession} API.
@@ -164,6 +167,7 @@ public class StatelessSessionImpl
 	@Nonnull
 	private final PersistenceContext temporaryPersistenceContext;
 	private final boolean connectionProvided;
+	private transient TransactionObserver sharedTransactionObserver;
 
 	@Nonnull
 	private final TransactionCompletionCallbacksImplementor transactionCompletionCallbacks;
@@ -502,6 +506,10 @@ public class StatelessSessionImpl
 					eventMonitor.completeEntityInsertEvent( event, id, persister.getEntityName(), success, this );
 				}
 			}
+		}
+		if ( persister.getTemporalMapping() != null && getSessionFactoryOptions().getTemporalTableStrategy() != NATIVE
+				&& getTransactionCoordinator().isTransactionActive() ) {
+			temporaryPersistenceContext.registerInsertedKey( persister, id );
 		}
 		recreateCollections( entity, id, persister );
 		firePostInsert( entity, id, state, persister );
@@ -1887,11 +1895,48 @@ public class StatelessSessionImpl
 
 	@Override
 	public void afterTransactionCompletion(boolean successful, boolean delayed) {
-		transactionCompletionCallbacks.afterTransactionCompletion( successful );
-		afterTransactionCompletionEvents( successful );
-		clearTransactionStartInstant();
+		try {
+			transactionCompletionCallbacks.afterTransactionCompletion( successful );
+			afterTransactionCompletionEvents( successful );
+		}
+		finally {
+			clearTemporalTransactionState();
+		}
 		if ( shouldAutoClose() && !isClosed() ) {
 			managedClose();
+		}
+	}
+
+	private void clearTemporalTransactionState() {
+		temporaryPersistenceContext.afterTransactionCompletion();
+		clearTransactionStartInstant();
+	}
+
+	@Override
+	protected void addSharedSessionTransactionObserver(@Nonnull TransactionCoordinator coordinator) {
+		// The owner runs the shared completion callbacks. This session still owns its revision keys and changeset.
+		sharedTransactionObserver = new TransactionObserver() {
+			@Override
+			public void afterBegin() {
+			}
+
+			@Override
+			public void beforeCompletion() {
+			}
+
+			@Override
+			public void afterCompletion(boolean successful, boolean delayed) {
+				clearTemporalTransactionState();
+			}
+		};
+		coordinator.addObserver( sharedTransactionObserver );
+	}
+
+	@Override
+	protected void removeSharedSessionTransactionObserver(@Nonnull TransactionCoordinator coordinator) {
+		super.removeSharedSessionTransactionObserver( coordinator );
+		if ( sharedTransactionObserver != null ) {
+			coordinator.removeObserver( sharedTransactionObserver );
 		}
 	}
 

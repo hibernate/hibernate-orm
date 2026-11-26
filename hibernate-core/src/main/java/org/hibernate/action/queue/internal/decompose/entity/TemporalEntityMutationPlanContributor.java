@@ -29,8 +29,8 @@ import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilder;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 
 import static org.hibernate.action.queue.internal.decompose.entity.DecompositionHelper.initializeStateForRevisionInsert;
+import static org.hibernate.action.queue.internal.decompose.entity.DecompositionHelper.isIncludedInOptimisticLock;
 import static org.hibernate.action.queue.internal.decompose.entity.DecompositionHelper.revisionInsertability;
-import static org.hibernate.action.queue.internal.decompose.entity.EntityTemporalEndBindPlan.isIncludedInOptimisticLock;
 import static org.hibernate.generator.EventType.UPDATE;
 
 /// Graph mutation plan contributor for single-table temporal entity mutations.

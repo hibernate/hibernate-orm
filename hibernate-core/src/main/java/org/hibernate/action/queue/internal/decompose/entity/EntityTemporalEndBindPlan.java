@@ -15,13 +15,12 @@ import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.PartitionKeyValue;
 import org.hibernate.persister.entity.mutation.TemporalMutationHelper;
 
-import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
+import static org.hibernate.action.queue.internal.decompose.entity.DecompositionHelper.isIncludedInOptimisticLock;
 
 /// Bind plan for temporal operations which end the current row version.
 ///
@@ -175,12 +174,6 @@ public class EntityTemporalEndBindPlan implements BindPlan, OperationResultCheck
 					session
 			);
 		}
-	}
-
-	static boolean isIncludedInOptimisticLock(AttributeMapping attribute, boolean[] versionability, Object[] loadedState) {
-		final int index = attribute.getStateArrayPosition();
-		// Versionless locking compares the values that were actually observed.
-		return !attribute.isPluralAttributeMapping() && versionability[index] && loadedState[index] != UNFETCHED_PROPERTY;
 	}
 
 	@Override

@@ -190,12 +190,17 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 				&& valueBindings.stream().filter( ColumnValueBinding::isAttributeUpdatable )
 						.noneMatch( binding -> hasValue( binding, bindings ) );
 		if ( needsUpdate ) {
+			// If the managed state is empty, try the guarded DELETE first. An
+			// omitted column may have changed since the entity was loaded.
+			final boolean deleteFirst = needsStoredValues && !session.isStateless()
+					&& !valuesAnalysis.getTablesWithNonNullValues().contains( tableMapping );
+			if ( deleteFirst && performDelete( jdbcValueBindings, session ) ) {
+				return;
+			}
 			if ( performUpdate( jdbcValueBindings, session, needsStoredValues ) ) {
 				return;
 			}
-			// With no assigned data, the UPDATE matches only a row with stored
-			// data. Delete a row with no stored data before considering an INSERT.
-			if ( needsStoredValues && performDelete( jdbcValueBindings, session ) ) {
+			if ( needsStoredValues && !deleteFirst && performDelete( jdbcValueBindings, session ) ) {
 				return;
 			}
 		}

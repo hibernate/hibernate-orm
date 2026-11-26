@@ -97,7 +97,8 @@ public class MergeCoordinatorTemporal extends AbstractTemporalUpdateCoordinator 
 			);
 		}
 		else {
-			final boolean rowEnded = performRowEndUpdate( entity, id, rowId, oldVersion, session );
+			final boolean rowEnded = performRowEndUpdate( entity, id, rowId, oldVersion,
+					incomingOldValues == null ? values : incomingOldValues, session );
 			if ( !rowEnded && currentRowExists( id, session ) ) {
 				throw new StaleObjectStateException( entityPersister().getEntityName(), id );
 			}
@@ -110,6 +111,7 @@ public class MergeCoordinatorTemporal extends AbstractTemporalUpdateCoordinator 
 			@Nonnull Object id,
 			@Nullable Object rowId,
 			@Nullable Object oldVersion,
+			@Nullable Object[] state,
 			@Nonnull SharedSessionContractImplementor session) {
 		class Result implements OperationResultChecker {
 			private boolean updated;
@@ -126,6 +128,7 @@ public class MergeCoordinatorTemporal extends AbstractTemporalUpdateCoordinator 
 				id,
 				rowId,
 				oldVersion,
+				state,
 				session,
 				temporalMapping,
 				endingUpdateGroup,

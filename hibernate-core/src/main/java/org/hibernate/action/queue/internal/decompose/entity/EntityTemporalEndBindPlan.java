@@ -18,6 +18,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.mutation.PartitionKeyValue;
 import org.hibernate.persister.entity.mutation.TemporalMutationHelper;
 
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
@@ -84,9 +85,10 @@ public class EntityTemporalEndBindPlan implements BindPlan, OperationResultCheck
 			bindNonVersionOptimisticLockRestrictions( valueBindings, session );
 		}
 
-		if ( entityPersister.hasPartitionedSelectionMapping() && loadedState != null ) {
-			bindPartitionedSelectionRestrictions( valueBindings, session );
-		}
+		PartitionKeyValue.bindRestrictions(
+				PartitionKeyValue.fromState( entityPersister, loadedState, session ),
+				tableDescriptor.name(), valueBindings, flushOperation.getJdbcOperation()
+		);
 	}
 
 	private void bindTemporalEndingValue(
@@ -143,37 +145,6 @@ public class EntityTemporalEndBindPlan implements BindPlan, OperationResultCheck
 							),
 					session
 			);
-		}
-	}
-
-	private void bindPartitionedSelectionRestrictions(
-			JdbcValueBindings valueBindings,
-			SharedSessionContractImplementor session) {
-		for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
-			final var attribute = tableDescriptor.attributes().get( i );
-			attribute.forEachSelectable( (selectionIndex, selectableMapping) -> {
-				if ( selectableMapping.isPartitioned() ) {
-					final Object value = loadedState[attribute.getStateArrayPosition()];
-					if ( value != null ) {
-						attribute.decompose(
-								value,
-								0,
-								valueBindings,
-								null,
-								(valueIndex, bindings, noop, jdbcValue, selectable) -> {
-									if ( selectable.isPartitioned() ) {
-										bindings.bindValue(
-												jdbcValue,
-												selectable.getSelectionExpression(),
-												ParameterUsage.RESTRICT
-										);
-									}
-								},
-								session
-						);
-					}
-				}
-			} );
 		}
 	}
 

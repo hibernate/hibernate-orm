@@ -268,42 +268,6 @@ public abstract class AbstractMutationCoordinator {
 		} );
 	}
 
-	protected void bindPartitionColumnValueBindings(
-			@Nullable Object[] loadedState,
-			@Nonnull SharedSessionContractImplementor session,
-			@Nonnull JdbcValueBindings jdbcValueBindings) {
-		final var persister = entityPersister();
-		if ( persister.hasPartitionedSelectionMapping() ) {
-			if ( loadedState == null ) {
-				throw new AssertionFailure( "No loaded state for partitioned entity '"
-						+ persister.getEntityName() + "'" );
-			}
-			final var attributeMappings = persister.getAttributeMappings();
-			final int size = attributeMappings.size();
-			for ( int i = 0; i < size; i++ ) {
-				final var attributeMapping = attributeMappings.get( i );
-				if ( attributeMapping.hasPartitionedSelectionMapping() ) {
-					attributeMapping.decompose(
-							loadedState[i],
-							0,
-							jdbcValueBindings,
-							null,
-							(valueIndex, bindings, noop, value, jdbcValueMapping) -> {
-								if ( jdbcValueMapping.isPartitioned() ) {
-									bindings.bindValue(
-											value,
-											jdbcValueMapping,
-											ParameterUsage.RESTRICT
-									);
-								}
-							},
-							session
-					);
-				}
-			}
-		}
-	}
-
 	protected static boolean needsRowId(@Nonnull EntityPersister entityPersister, @Nonnull EntityTableMapping tableMapping) {
 		return entityPersister.getRowIdMapping() != null
 			&& tableMapping.isIdentifierTable();

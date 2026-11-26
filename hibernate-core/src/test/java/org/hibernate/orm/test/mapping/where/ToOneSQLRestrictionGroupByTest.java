@@ -155,6 +155,16 @@ class ToOneSQLRestrictionGroupByTest {
 	}
 
 	@Test
+	void groupByCorrelatedAssociationWithEmptyInput(SessionFactoryScope scope) {
+		assertThat( longs( scope, """
+				select c.id from Child c where exists (
+					select count(*) from Child x where x.id < c.id
+					group by c.parent having count(*) = 0
+				)
+				""" ) ).isEmpty();
+	}
+
+	@Test
 	void groupByIdentifierAndAssociation(SessionFactoryScope scope) {
 		final List<Long> ids = scope.fromTransaction( session -> session.createSelectionQuery(
 				"select c.id from Child c group by c.id, c.parent order by c.id", Long.class ).getResultList() );

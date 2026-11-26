@@ -329,7 +329,15 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 							ordinalBase * 1_000 + operations.size(),
 							origin + " [joined self-reference cleanup]"
 					);
-					cleanup.setPreExecutionCallback( preDeleteHandling );
+					cleanup.setPreExecutionCallback( preDeleteHandling.and(
+							session -> JoinedSelfReferenceDeleteCleanup.hasPhysicalSelfReference(
+									joined,
+									action.getId(),
+									key.name(),
+									selectable.getSelectionExpression(),
+									session
+							)
+					) );
 					operations.add( cleanup );
 				}
 				return operations;

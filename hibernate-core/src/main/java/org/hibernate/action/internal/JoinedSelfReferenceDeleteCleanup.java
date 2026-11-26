@@ -2,6 +2,7 @@ package org.hibernate.action.internal;
 
 import java.sql.SQLException;
 
+import org.hibernate.LockMode;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -10,9 +11,11 @@ import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
+import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Update;
 
 import static org.hibernate.annotations.OnDeleteAction.CASCADE;
+import static org.hibernate.sql.ComparisonRestriction.Operator.EQ;
 
 /// A delete prerequisite for a nullable self-reference from the root to a joined table.
 public final class JoinedSelfReferenceDeleteCleanup {
@@ -62,6 +65,44 @@ public final class JoinedSelfReferenceDeleteCleanup {
 		return null;
 	}
 
+	/// Read the physical FK after pre-delete callbacks. Even a zero-row H2 UPDATE
+	/// would require UPDATE permission and fire statement-level triggers.
+	/// Lock only an existing self-edge to keep its state stable until the UPDATE.
+	public static boolean hasPhysicalSelfReference(
+			JoinedSubclassEntityPersister joined,
+			Object id,
+			String keyColumn,
+			String fkColumn,
+			SharedSessionContractImplementor session) {
+		final String sql = new SimpleSelect( session.getFactory() )
+				.setTableName( joined.getRootTableName() )
+				.addColumn( keyColumn )
+				.addRestriction( keyColumn )
+				.addRestriction( fkColumn, EQ, keyColumn )
+				.setLockMode( LockMode.PESSIMISTIC_WRITE )
+				.toStatementString();
+		final var jdbc = session.getJdbcCoordinator();
+		final var statement = jdbc.getStatementPreparer().prepareStatement( sql );
+		try {
+			joined.getIdentifierType().nullSafeSet( statement, id, 1, session );
+			final var result = jdbc.getResultSetReturn().extract( statement, sql );
+			try {
+				return result.next();
+			}
+			finally {
+				jdbc.getLogicalConnection().getResourceRegistry().release( result, statement );
+			}
+		}
+		catch (SQLException e) {
+			throw session.getJdbcServices().getSqlExceptionHelper()
+					.convert( e, "Could not read the joined self-reference before deletion", sql );
+		}
+		finally {
+			jdbc.getLogicalConnection().getResourceRegistry().release( statement );
+			jdbc.afterStatementExecution();
+		}
+	}
+
 	public static void execute(
 			EntityPersister persister,
 			Object id,
@@ -75,6 +116,9 @@ public final class JoinedSelfReferenceDeleteCleanup {
 			if ( selectable != null ) {
 				// Only clear the edge if the stored FK points back to this same entity.
 				final String fkColumn = selectable.getSelectionExpression();
+				if ( !hasPhysicalSelfReference( joined, id, keyColumns[0], fkColumn, session ) ) {
+					continue;
+				}
 				final String sql = new Update( session.getFactory() )
 						.setTableName( joined.getRootTableName() )
 						.addAssignment( fkColumn, "null" )
@@ -82,7 +126,6 @@ public final class JoinedSelfReferenceDeleteCleanup {
 						.addRestriction( fkColumn, keyColumns[0] )
 						.toStatementString();
 				final var jdbcCoordinator = session.getJdbcCoordinator();
-				jdbcCoordinator.executeBatch();
 				final var statement = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
 				try {
 					joined.getIdentifierType().nullSafeSet( statement, id, 1, session );

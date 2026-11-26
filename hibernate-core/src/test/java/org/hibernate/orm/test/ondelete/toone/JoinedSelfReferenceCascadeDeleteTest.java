@@ -1,5 +1,8 @@
 package org.hibernate.orm.test.ondelete.toone;
 
+import java.util.List;
+import java.util.Locale;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
@@ -28,13 +31,14 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DomainModel(annotatedClasses = {
 		JoinedSelfReferenceCascadeDeleteTest.Base.class,
 		JoinedSelfReferenceCascadeDeleteTest.Child.class,
 		JoinedSelfReferenceCascadeDeleteTest.Owner.class
 })
-@SessionFactory
+@SessionFactory(useCollectingStatementObserver = true)
 @ServiceRegistry(settings = {
 		@Setting(name = "hibernate.flush.queue.type", value = "graph"),
 		@Setting(name = "hibernate.jdbc.batch_size", value = "5")
@@ -52,7 +56,13 @@ public class JoinedSelfReferenceCascadeDeleteTest {
 	@Test
 	void removeEntityReferencingItself(SessionFactoryScope scope) {
 		persistSelfReference( scope, false );
+		final var observer = scope.getCollectingStatementObserver();
+		observer.clear();
 		scope.inTransaction( s -> s.remove( s.find( Child.class, 1 ) ) );
+		assertTrue( observer.getSqlQueries().stream().anyMatch( sql -> {
+			final String lower = sql.toLowerCase( Locale.ROOT );
+			return lower.contains( " for update" ) && lower.contains( "joinedselfbase" );
+		} ), "expected the matching root self-reference check to acquire a lock" );
 		assertBothRowsDeleted( scope );
 	}
 
@@ -76,6 +86,17 @@ public class JoinedSelfReferenceCascadeDeleteTest {
 	}
 
 	@Test
+	void removeWithNullReferenceWithoutAnUpdate(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			final var child = new Child();
+			child.id = 1;
+			s.persist( child );
+		} );
+		removeChildWithoutUpdate( scope, 1 );
+		assertBothRowsDeleted( scope );
+	}
+
+	@Test
 	void removeReferrerWithoutChangingItsDistinctTarget(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
 			final var referrer = new Child();
@@ -88,7 +109,7 @@ public class JoinedSelfReferenceCascadeDeleteTest {
 			referrer.self = target;
 			target.self = target;
 		} );
-		scope.inTransaction( s -> s.remove( s.find( Child.class, 1 ) ) );
+		removeChildWithoutUpdate( scope, 1 );
 		scope.inTransaction( s -> {
 			assertEquals( 1L, s.createNativeQuery( "select count(*) from JoinedSelfBase", Long.class ).getSingleResult() );
 			assertEquals( 1L, s.createNativeQuery( "select count(*) from JoinedSelfChild", Long.class ).getSingleResult() );
@@ -117,6 +138,15 @@ public class JoinedSelfReferenceCascadeDeleteTest {
 			s.remove( second );
 		} );
 		assertBothRowsDeleted( scope );
+	}
+
+	private static void removeChildWithoutUpdate(SessionFactoryScope scope, int id) {
+		final var observer = scope.getCollectingStatementObserver();
+		observer.clear();
+		scope.inTransaction( s -> s.remove( s.find( Child.class, id ) ) );
+		assertEquals( List.of(), observer.getSqlQueries().stream()
+				.filter( sql -> sql.stripLeading().toLowerCase( Locale.ROOT ).startsWith( "update " ) )
+				.toList() );
 	}
 
 	private static void persistSelfReference(SessionFactoryScope scope, boolean withOwner) {

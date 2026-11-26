@@ -4406,12 +4406,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected void visitQueryClauses(QuerySpec querySpec) {
 		visitSelectClause( querySpec.getSelectClause() );
-		visitFromClause( querySpec.getFromClause() );
-		visitWhereClause( querySpec.getWhereClauseRestrictions() );
-		visitGroupByClause( querySpec, getGroupBySelectItemReferenceStrategy() );
+		visitFromWhereGroupBy( querySpec, getGroupBySelectItemReferenceStrategy() );
 		visitHavingClause( querySpec );
 		visitOrderBy( querySpec.getSortSpecifications() );
 		visitOffsetFetchClause( querySpec );
+	}
+
+	protected void visitFromWhereGroupBy(QuerySpec querySpec, SelectItemReferenceStrategy referenceStrategy) {
+		visitFromClause( querySpec.getFromClause() );
+		visitWhereClause( querySpec.getWhereClauseRestrictions() );
+		visitGroupByClause( querySpec, referenceStrategy );
 	}
 
 	/// Select how this translator refers to select items in a `group by` clause.
@@ -4521,7 +4525,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected final void visitGroupByClause(QuerySpec querySpec, SelectItemReferenceStrategy referenceStrategy) {
-		final List<Expression> partitionExpressions = querySpec.getGroupByClauseExpressions();
+		visitGroupByClause( querySpec.getGroupByClauseExpressions(), referenceStrategy );
+	}
+
+	protected final void visitGroupByClause(List<Expression> partitionExpressions, SelectItemReferenceStrategy referenceStrategy) {
 		if ( !partitionExpressions.isEmpty() ) {
 			try {
 				clauseStack.push( Clause.GROUP );
@@ -9755,9 +9762,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				// If we have a group by or having clause, we have to move the tuple comparison emulation to the HAVING clause.
 				// Also, we need to explicitly include the selections to avoid 'invalid HAVING clause' errors
 				visitSelectClause( subQuery.getSelectClause() );
-				visitFromClause( subQuery.getFromClause() );
-				visitWhereClause( subQuery.getWhereClauseRestrictions() );
-				visitGroupByClause( subQuery, SelectItemReferenceStrategy.EXPRESSION );
+				visitFromWhereGroupBy( subQuery, SelectItemReferenceStrategy.EXPRESSION );
 
 				appendSql( " having " );
 				clauseStack.push( Clause.HAVING );
@@ -9857,9 +9862,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			queryPartStack.push( subQuery );
 			appendSql( OPEN_PARENTHESIS );
 			visitSelectClause( subQuery.getSelectClause() );
-			visitFromClause( subQuery.getFromClause() );
-			visitWhereClause( subQuery.getWhereClauseRestrictions() );
-			visitGroupByClause( subQuery, getGroupBySelectItemReferenceStrategy() );
+			visitFromWhereGroupBy( subQuery, getGroupBySelectItemReferenceStrategy() );
 			visitHavingClause( subQuery );
 
 			appendSql( " order by " );

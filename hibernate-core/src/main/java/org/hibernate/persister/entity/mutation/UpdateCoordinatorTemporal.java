@@ -94,7 +94,9 @@ public class UpdateCoordinatorTemporal extends AbstractTemporalUpdateCoordinator
 							resultCheck( id, statementDetails, affectedRowCount, batchPosition )
 
 			);
-			return entityPersister().getInsertCoordinator().insert( entity, id, values, session );
+			final var generatedValues = entityPersister().getInsertCoordinator().insert( entity, id, values, session );
+			registerUpdatedRevision( id, session );
+			return generatedValues;
 		}
 	}
 

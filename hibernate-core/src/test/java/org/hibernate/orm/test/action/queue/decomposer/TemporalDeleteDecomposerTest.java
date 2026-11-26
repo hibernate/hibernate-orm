@@ -47,12 +47,14 @@ public class TemporalDeleteDecomposerTest {
 		}
 
 		scope.inTransaction( entityManager -> {
-			final SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			final TemporalEntity entity = new TemporalEntity();
 			entity.id = 1L;
 			entity.name = "test";
 			entityManager.persist( entity );
-			entityManager.flush();
+		} );
+		scope.inTransaction( entityManager -> {
+			final SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
+			final var entity = entityManager.find( TemporalEntity.class, 1L );
 
 			final EntityPersister persister = sfi.getMappingMetamodel().getEntityDescriptor( TemporalEntity.class );
 

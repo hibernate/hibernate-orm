@@ -31,12 +31,15 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.PartitionKeyValue;
 import org.hibernate.persister.entity.mutation.TemporalMutationHelper;
 import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.spi.mutation.MutationType;
 import org.hibernate.sql.spi.mutation.TableMapping;
+import org.hibernate.sql.spi.mutation.TableMapping.MutationDetails;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.model.LogicalTableUpdate;
 import org.hibernate.sql.ast.spi.model.MutatingTableReference;
 import org.hibernate.sql.ast.spi.model.TableInsert;
 import org.hibernate.sql.ast.spi.model.builder.AssigningTableMutationBuilder;
+import org.hibernate.sql.ast.spi.model.builder.RestrictedTableMutationBuilder;
 import org.hibernate.sql.ast.spi.model.builder.TableInsertBuilderStandard;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 
@@ -45,6 +48,7 @@ import static org.hibernate.action.queue.internal.decompose.entity.Decomposition
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.generator.EventType.UPDATE;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_INT_ARRAY;
+import static org.hibernate.persister.entity.mutation.TemporalMutationHelper.createRevisionEndBuilder;
 
 /// Graph mutation plan contributor for temporal history-table entity mutations.
 ///
@@ -82,9 +86,9 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 		this.staticHistoryInsert = buildHistoryInsert( entityPersister.getPropertyInsertability(), null, null );
 		this.versioned = entityPersister.optimisticLockStyle() == OptimisticLockStyle.VERSION
 				&& entityPersister.getVersionMapping() != null;
-		this.staticHistoryEndOperation = buildHistoryEndOperation( versioned, null );
+		this.staticHistoryEndOperation = buildHistoryEndOperation( MutationType.UPDATE, versioned, null );
 		this.unversionedHistoryEndOperation =
-				versioned ? buildHistoryEndOperation( false, null ) : staticHistoryEndOperation;
+				versioned ? buildHistoryEndOperation( MutationType.UPDATE, false, null ) : staticHistoryEndOperation;
 	}
 
 	@Override
@@ -126,6 +130,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 		}
 		else {
 			final var end = createHistoryEndOperation(
+					MutationType.UPDATE,
 					context.ordinalBase(),
 					"EntityUpdateAction(" + entityPersister.getEntityName() + "#history-end)",
 					context.identifier(),
@@ -150,6 +155,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 		final Object[] loadedState = entityEntry == null ? context.state() : entityEntry.getLoadedState();
 
 		operationConsumer.accept( createHistoryEndOperation(
+				context.removesRevisionFromCurrentTransaction() ? MutationType.DELETE : MutationType.UPDATE,
 				context.ordinalBase(),
 				"EntityDeleteAction(" + entityPersister.getEntityName() + "#history)",
 				context.identifier(),
@@ -198,6 +204,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 	}
 
 	private FlushOperation createHistoryEndOperation(
+			MutationType type,
 			int ordinalBase,
 			String description,
 			Object identifier,
@@ -207,17 +214,18 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 		// the partition key is unknown when there is no loaded state, as for a read-only entity
 		final var partitionKeys = PartitionKeyValue.fromState( entityPersister, loadedState, session );
 		final MutationOperation operation;
-		if ( PartitionKeyValue.needsDynamicRestriction( entityPersister, partitionKeys ) ) {
-			operation = buildHistoryEndOperation( versioned && version != null, partitionKeys );
+		if ( type == MutationType.DELETE || PartitionKeyValue.needsDynamicRestriction( entityPersister, partitionKeys ) ) {
+			operation = buildHistoryEndOperation( type, versioned && version != null, partitionKeys );
 		}
 		else {
 			operation = version == null ? unversionedHistoryEndOperation : staticHistoryEndOperation;
 		}
 		return new FlushOperation(
 				historyTableDescriptor,
-				MutationKind.UPDATE,
+				type == MutationType.DELETE ? MutationKind.DELETE : MutationKind.UPDATE,
 				operation,
 				new HistoryEndBindPlan(
+						type,
 						identifier,
 						version,
 						loadedState,
@@ -315,22 +323,17 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 	}
 
 	private MutationOperation buildHistoryEndOperation(
+			MutationType type,
 			boolean applyVersionRestriction,
 			List<PartitionKeyValue> partitionKeys) {
-		final var updateBuilder = new TableUpdateBuilderStandard<>(
-				entityPersister,
-				new MutatingTableReference( historyTableMapping ),
-				sessionFactory
-		);
-
-		historyTableDescriptor.keyDescriptor().columns().forEach( updateBuilder::addKeyRestriction );
-		addTemporalEnding( updateBuilder );
-		applyPartitionKeyRestriction( updateBuilder, partitionKeys );
+		final var builder = createRevisionEndBuilder( entityPersister, historyTableMapping, type );
+		historyTableDescriptor.keyDescriptor().columns().forEach( builder::addKeyRestriction );
+		applyPartitionKeyRestriction( builder, partitionKeys );
 		if ( applyVersionRestriction ) {
-			updateBuilder.addOptimisticLockRestriction( entityPersister.getVersionMapping() );
+			builder.addOptimisticLockRestriction( entityPersister.getVersionMapping() );
 		}
 
-		return updateBuilder.buildMutation().createMutationOperation( null, sessionFactory );
+		return builder.buildMutation().createMutationOperation( null, sessionFactory );
 	}
 
 	private HistoryInPlaceUpdateDetails buildHistoryInPlaceUpdate(
@@ -410,15 +413,6 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 		);
 	}
 
-	private void addTemporalEnding(TableUpdateBuilderStandard<MutationOperation> updateBuilder) {
-		final var endingColumn = new ColumnReference(
-				updateBuilder.getMutatingTable(),
-				temporalMapping.getEndingColumnMapping()
-		);
-		updateBuilder.addColumnAssignment( temporalMapping.createEndingValueBinding( endingColumn ) );
-		updateBuilder.addNonKeyRestriction( temporalMapping.createNullEndingValueBinding( endingColumn ) );
-	}
-
 	private void addCurrentRowRestriction(TableUpdateBuilderStandard<MutationOperation> updateBuilder) {
 		final var endingColumn = new ColumnReference(
 				updateBuilder.getMutatingTable(),
@@ -430,13 +424,13 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 	/// @param partitionKeys the partition key of the row, or `null` for a
 	///                      statement with a parameter for each column
 	private void applyPartitionKeyRestriction(
-			TableUpdateBuilderStandard<MutationOperation> updateBuilder,
+			RestrictedTableMutationBuilder<?, ?> builder,
 			List<PartitionKeyValue> partitionKeys) {
 		if ( entityPersister.hasPartitionedSelectionMapping() ) {
 			// the history table has the partition key columns of the identifier table
 			final String identifierTable = entityPersister.getIdentifierTableDescriptor().name();
 			PartitionKeyValue.addRestrictions( entityPersister,
-					table -> identifierTable.equals( table ) ? updateBuilder : null,
+					table -> identifierTable.equals( table ) ? builder : null,
 					partitionKeys, TableMapping::getUpdateDetails );
 		}
 	}
@@ -608,16 +602,21 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 	}
 
 	private final class HistoryEndBindPlan implements BindPlan, OperationResultChecker {
+		private final MutationDetails mutationDetails;
 		private final Object identifier;
 		private final Object version;
 		private final Object[] loadedState;
 		private final List<PartitionKeyValue> partitionKeys;
 
 		private HistoryEndBindPlan(
+				MutationType mutationType,
 				Object identifier,
 				Object version,
 				Object[] loadedState,
 				List<PartitionKeyValue> partitionKeys) {
+			this.mutationDetails = mutationType == MutationType.DELETE
+					? historyTableDescriptor.deleteDetails()
+					: historyTableDescriptor.updateDetails();
 			this.identifier = identifier;
 			this.version = version;
 			this.loadedState = loadedState;
@@ -639,7 +638,9 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 				JdbcValueBindings valueBindings,
 				FlushOperation flushOperation,
 				SharedSessionContractImplementor session) {
-			bindTemporalEndingValue( valueBindings, session );
+			if ( mutationDetails.getMutationType() == MutationType.UPDATE ) {
+				bindTemporalEndingValue( valueBindings, session );
+			}
 			bindKey( identifier, valueBindings, session, ParameterUsage.RESTRICT );
 			if ( version != null ) {
 				bindVersionRestriction( version, valueBindings, session );
@@ -660,7 +661,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 				String sqlString,
 				SessionFactoryImplementor sessionFactory) throws SQLException {
 			return Checkers.identifiedResultsCheck(
-					historyTableDescriptor.updateDetails().getExpectation(),
+					mutationDetails.getExpectation(),
 					affectedRowCount,
 					statement,
 					batchPosition,

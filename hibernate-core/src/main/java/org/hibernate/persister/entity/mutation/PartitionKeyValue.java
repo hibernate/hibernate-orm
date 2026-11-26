@@ -1,11 +1,11 @@
-package org.hibernate.action.queue.internal.decompose.entity;
+package org.hibernate.persister.entity.mutation;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
+import org.hibernate.Internal;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
@@ -22,10 +22,13 @@ import org.hibernate.sql.spi.mutation.TableMapping.MutationDetails;
 import static java.util.Arrays.fill;
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 
-record PartitionKeyValue(String table, SelectableMapping selectable, Object value) {
+/// The value of a partition key column of an entity, used to restrict the
+/// statements which update or delete its row.
+@Internal
+public record PartitionKeyValue(String table, SelectableMapping selectable, Object value) {
 	/// Whether a statement with a parameter for each partition key column cannot be
 	/// used, because the value of a column is null, or is unknown.
-	static boolean needsDynamicRestriction(EntityPersister persister, List<PartitionKeyValue> values) {
+	public static boolean needsDynamicRestriction(EntityPersister persister, List<PartitionKeyValue> values) {
 		for ( var key : values ) {
 			if ( key.value == null ) {
 				return true;
@@ -37,7 +40,7 @@ record PartitionKeyValue(String table, SelectableMapping selectable, Object valu
 	/// The values of the partition key columns in the given state of an entity, which
 	/// is its state when it was loaded. The value of a column is unknown, and so left
 	/// out, when there is no such state, or the attribute was never fetched.
-	static List<PartitionKeyValue> fromState(
+	public static List<PartitionKeyValue> fromState(
 			EntityPersister persister,
 			Object[] state,
 			SharedSessionContractImplementor session) {
@@ -72,7 +75,7 @@ record PartitionKeyValue(String table, SelectableMapping selectable, Object valu
 		return values;
 	}
 
-	static List<PartitionKeyValue> forDelete(
+	public static List<PartitionKeyValue> forDelete(
 			EntityPersister persister,
 			Object identifier,
 			Object[] loadedState,
@@ -119,9 +122,9 @@ record PartitionKeyValue(String table, SelectableMapping selectable, Object valu
 		return fromState( persister, partitionState, session );
 	}
 
-	static void addRestrictions(
+	public static void addRestrictions(
 			EntityPersister persister,
-			Map<String, ? extends RestrictedTableMutationBuilder<?, ?>> builders,
+			Function<String, ? extends RestrictedTableMutationBuilder<?, ?>> builders,
 			List<PartitionKeyValue> values,
 			Function<TableMapping, MutationDetails> mutationDetails) {
 		if ( values == null ) {
@@ -130,7 +133,7 @@ record PartitionKeyValue(String table, SelectableMapping selectable, Object valu
 			for ( int i = 0; i < attributes.size(); i++ ) {
 				attributes.get( i ).forEachSelectable( (index, selectable) -> {
 					if ( isPartitionKey( selectable ) ) {
-						final var builder = builders.get( persister.physicalTableNameForMutation( selectable ) );
+						final var builder = builders.apply( persister.physicalTableNameForMutation( selectable ) );
 						if ( builder != null ) {
 							builder.addKeyRestrictionLeniently( selectable );
 						}
@@ -140,7 +143,7 @@ record PartitionKeyValue(String table, SelectableMapping selectable, Object valu
 		}
 		else {
 			for ( var key : values ) {
-				final var builder = builders.get( key.table );
+				final var builder = builders.apply( key.table );
 				if ( builder != null ) {
 					final var details = mutationDetails.apply( builder.getMutatingTable().getTableMapping() );
 					if ( key.value == null && details.getCustomSql() == null ) {
@@ -154,7 +157,7 @@ record PartitionKeyValue(String table, SelectableMapping selectable, Object valu
 		}
 	}
 
-	static void bindRestrictions(
+	public static void bindRestrictions(
 			List<PartitionKeyValue> values,
 			String table,
 			JdbcValueBindings bindings,
@@ -165,6 +168,26 @@ record PartitionKeyValue(String table, SelectableMapping selectable, Object valu
 				// IS NULL has no parameter. Custom SQL can still have one for a null value.
 				if ( key.value != null || operation.findValueDescriptor( column, ParameterUsage.RESTRICT ) != null ) {
 					bindings.bindValue( key.value, column, ParameterUsage.RESTRICT );
+				}
+			}
+		}
+	}
+
+	/// Bind the restrictions of the operations executed by a
+	/// [org.hibernate.engine.jdbc.mutation.MutationExecutor].
+	///
+	/// @param operations the operation which mutates the table with a given name, if any
+	public static void bindRestrictions(
+			List<PartitionKeyValue> values,
+			org.hibernate.engine.jdbc.mutation.JdbcValueBindings bindings,
+			Function<String, ? extends MutationOperation> operations) {
+		for ( var key : values ) {
+			final var operation = operations.apply( key.table );
+			if ( operation != null ) {
+				final var column = key.selectable.getSelectionExpression();
+				// IS NULL has no parameter. Custom SQL can still have one for a null value.
+				if ( key.value != null || operation.findValueDescriptor( column, ParameterUsage.RESTRICT ) != null ) {
+					bindings.bindValue( key.value, key.table, column, ParameterUsage.RESTRICT );
 				}
 			}
 		}

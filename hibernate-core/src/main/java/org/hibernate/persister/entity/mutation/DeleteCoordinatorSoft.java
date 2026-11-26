@@ -11,6 +11,9 @@ import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
+import org.hibernate.sql.spi.mutation.TableMapping;
+
+import java.util.List;
 
 /**
  * DeleteCoordinator for soft-deletes
@@ -28,6 +31,7 @@ public class DeleteCoordinatorSoft extends AbstractDeleteCoordinator {
 	protected MutationOperationGroup generateOperationGroup(
 			@Nullable Object rowId,
 			@Nullable Object[] loadedState,
+			@Nullable List<PartitionKeyValue> partitionKeys,
 			boolean applyVersion,
 			@Nullable SharedSessionContractImplementor session) {
 		final var rootTableMapping = entityPersister().getIdentifierTableMapping();
@@ -35,7 +39,9 @@ public class DeleteCoordinatorSoft extends AbstractDeleteCoordinator {
 
 		applyKeyRestriction( rowId, entityPersister(), tableUpdateBuilder, rootTableMapping );
 		applySoftDelete( entityPersister().getSoftDeleteMapping(), tableUpdateBuilder );
-		applyPartitionKeyRestriction( tableName -> tableUpdateBuilder );
+		// only the partition key columns of the root table restrict the update
+		applyPartitionKeyRestriction( tableMutationBuilderResolver( tableUpdateBuilder ), partitionKeys,
+				TableMapping::getUpdateDetails );
 		if ( applyVersion ) {
 			applyOptimisticLocking(
 					entityPersister().optimisticLockStyle(),

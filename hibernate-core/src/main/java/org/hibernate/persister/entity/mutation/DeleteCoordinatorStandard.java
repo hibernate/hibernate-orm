@@ -8,10 +8,15 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.spi.mutation.MutationType;
+import org.hibernate.sql.spi.mutation.TableMapping;
 import org.hibernate.sql.ast.spi.model.builder.MutationGroupBuilder;
 import org.hibernate.sql.ast.spi.model.builder.TableDeleteBuilder;
 import org.hibernate.sql.ast.internal.model.builder.TableDeleteBuilderSkipped;
 import org.hibernate.sql.ast.spi.model.builder.TableDeleteBuilderStandard;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Coordinates standard deleting of an entity.
@@ -20,9 +25,27 @@ import org.hibernate.sql.ast.spi.model.builder.TableDeleteBuilderStandard;
  */
 @org.hibernate.Internal
 public class DeleteCoordinatorStandard extends AbstractDeleteCoordinator {
+	private final Set<String> customDeleteTables;
 
 	public DeleteCoordinatorStandard(@Nonnull EntityPersister entityPersister, @Nonnull SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
+		customDeleteTables = new HashSet<>();
+		if ( entityPersister.hasPartitionedSelectionMapping() ) {
+			entityPersister.forEachMutableTable( tableMapping -> {
+				if ( !tableMapping.isCascadeDeleteEnabled() && tableMapping.getDeleteDetails().getCustomSql() != null ) {
+					customDeleteTables.add( tableMapping.getTableName() );
+				}
+			} );
+		}
+	}
+
+	@Nonnull
+	@Override
+	protected List<PartitionKeyValue> resolvePartitionKeys(
+			@Nonnull Object id,
+			@Nullable Object[] state,
+			@Nonnull SharedSessionContractImplementor session) {
+		return PartitionKeyValue.forDelete( entityPersister(), id, state, customDeleteTables, session );
 	}
 
 	@Nonnull
@@ -30,6 +53,7 @@ public class DeleteCoordinatorStandard extends AbstractDeleteCoordinator {
 	protected MutationOperationGroup generateOperationGroup(
 			@Nullable Object rowId,
 			@Nullable Object[] loadedState,
+			@Nullable List<PartitionKeyValue> partitionKeys,
 			boolean applyVersion,
 			@Nullable SharedSessionContractImplementor session) {
 		final var deleteGroupBuilder = new MutationGroupBuilder( MutationType.DELETE, entityPersister() );
@@ -39,7 +63,7 @@ public class DeleteCoordinatorStandard extends AbstractDeleteCoordinator {
 						? new TableDeleteBuilderSkipped( tableMapping )
 						: new TableDeleteBuilderStandard( entityPersister(), tableMapping, factory() ) ) );
 
-		applyTableDeleteDetails( deleteGroupBuilder, rowId, loadedState, applyVersion, session );
+		applyTableDeleteDetails( deleteGroupBuilder, rowId, loadedState, partitionKeys, applyVersion, session );
 
 		return createOperationGroup( null, deleteGroupBuilder.buildMutationGroup() );
 	}
@@ -48,6 +72,7 @@ public class DeleteCoordinatorStandard extends AbstractDeleteCoordinator {
 			@Nonnull MutationGroupBuilder deleteGroupBuilder,
 			@Nullable Object rowId,
 			@Nullable Object[] loadedState,
+			@Nullable List<PartitionKeyValue> partitionKeys,
 			boolean applyVersion,
 			@Nullable SharedSessionContractImplementor session) {
 		// first, the table key column(s)
@@ -63,7 +88,8 @@ public class DeleteCoordinatorStandard extends AbstractDeleteCoordinator {
 					loadedState,
 					session
 			);
-			applyPartitionKeyRestriction( deleteGroupBuilder::findTableDetailsBuilder );
+			applyPartitionKeyRestriction( deleteGroupBuilder::findTableDetailsBuilder, partitionKeys,
+					TableMapping::getDeleteDetails );
 		}
 		deleteGroupBuilder.forEachTableMutationBuilder( builder ->
 				applyTenantRestriction( (TableDeleteBuilder) builder ) );

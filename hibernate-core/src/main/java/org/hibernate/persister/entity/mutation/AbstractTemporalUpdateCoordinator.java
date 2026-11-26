@@ -13,6 +13,7 @@ import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.spi.mutation.TableMapping;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.spi.mutation.MutationType;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilder;
@@ -44,7 +45,9 @@ abstract class AbstractTemporalUpdateCoordinator extends AbstractMutationCoordin
 
 		applyKeyRestriction( null, entityPersister(), tableUpdateBuilder, tableMapping );
 		applyTemporalEnding( tableUpdateBuilder, temporalMapping );
-		applyPartitionKeyRestriction( tableUpdateBuilder );
+		// the table has the partition key columns of the identifier table
+		applyPartitionKeyRestriction( tableUpdateBuilder, entityPersister().getIdentifierTableMapping().getTableName(),
+				null, TableMapping::getUpdateDetails );
 		applyOptimisticLocking( tableUpdateBuilder );
 		applyTenantRestriction( tableUpdateBuilder );
 

@@ -126,7 +126,7 @@ import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.dialect.sql.ast.spi.OptionalTableUpdateOperationRequest;
-import org.hibernate.sql.spi.mutation.jdbc.OptionalTableUpdateWithUpsertOperation;
+import org.hibernate.sql.spi.mutation.jdbc.OptionalTableUpdateOperation;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.InformationExtractor;
@@ -1332,6 +1332,32 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 
 	@Override
 	@SPI({ IMPLEMENT, SUPPLY })
+	public GeneratedValuesSupport getGeneratedValuesSupport() {
+		if ( isMMode() ) {
+			// M mode rejects `insert/update/delete ... returning` at the kernel level
+			// ("INSERT/UPDATE/DELETE/REPLACE ... RETURNING is not supported"), so report
+			// no immediate generated-value retrieval. Note IdentityGenerator's delegate
+			// chain tries InsertReturningDelegate before falling back to
+			// BasicSelectingDelegate whenever the dialect claims INSERT_RETURNING -
+			// regardless of the `hibernate.jdbc.use_get_generated_keys` setting - so
+			// claiming it here would break every identity insert and returning-based
+			// mutation. With this profile and getGeneratedKeys disabled (see
+			// contributeDefaultProperties), identity falls back to BasicSelectingDelegate
+			// (plain insert then `select last_insert_id()`), matching MySQLDialect.
+			return GeneratedValuesSupport.STANDARD;
+		}
+		// A mode (openGauss PG kernel) supports native mutation returning
+		return GeneratedValuesSupport.builder( super.getGeneratedValuesSupport() )
+				.enable(
+						GeneratedValuesSupport.Capability.INSERT_RETURNING,
+						GeneratedValuesSupport.Capability.UPDATE_RETURNING,
+						GeneratedValuesSupport.Capability.INSERT_RETURNING_ROW_ID
+				)
+				.build();
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public NationalizationSupport getNationalizationSupport() {
 		return NationalizationSupport.IMPLICIT;
 	}
@@ -1570,17 +1596,6 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 
 
 	@Override
-	public GeneratedValuesSupport getGeneratedValuesSupport() {
-		return GeneratedValuesSupport.builder( super.getGeneratedValuesSupport() )
-				.enable(
-						GeneratedValuesSupport.Capability.INSERT_RETURNING,
-						GeneratedValuesSupport.Capability.UPDATE_RETURNING,
-						GeneratedValuesSupport.Capability.INSERT_RETURNING_ROW_ID
-				)
-				.build();
-	}
-
-	@Override
 	public SubquerySupport getSubquerySupport() {
 		return SubquerySupport.builder()
 				.feature( SubquerySupport.Feature.OFFSET, true )
@@ -1761,16 +1776,16 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 			OptionalTableUpdateOperationRequest request) {
 		if ( isMMode() ) {
 			// M mode (MySQL-compatible): GaussDB MERGE does not support `WHEN MATCHED AND <condition>`,
-			// which the merge-based path emits for the optional-table delete branch. Follow an
-			// upsert-based path instead: an operation whose insert ignores primary key collisions
-			// through GaussDBSqlAstTranslator#renderStandardTableInsert (ON DUPLICATE KEY UPDATE col=col),
-			// without relying on MERGE.
-			return new OptionalTableUpdateWithUpsertOperation( request.update(), request.versionedTarget() );
+			// which the merge-based path emits for the optional-table delete branch, and
+			// OptionalTableUpdateWithUpsertOperation's conflict-ignoring insert
+			// (`on duplicate key update col = col`) masks duplicate-key violations, so a
+			// tenant-filtered upsert of another tenant's row succeeds silently instead of
+			// failing (TenantIdMutationTest). Use the base update -> insert + unique-violation
+			// fallback operation instead (7.4-proven on M mode 505.2).
+			return new OptionalTableUpdateOperation( request.mutationTarget(), request.update() );
 		}
-		// A mode (openGauss Oracle-compatible): the base OptionalTableUpdateOperation does a plain
-		// insert and catches the unique-violation to fall back to update. A mode does not support
-		// ON CONFLICT, and the M-mode upsert operation relies on ON DUPLICATE KEY UPDATE, which A
-		// mode rejects when it touches primary/unique key columns.
+		// A mode (openGauss Oracle-compatible): the merge-based path (PostgreSQLDialect#supportsMerge)
+		// is verified to work; keep it.
 		return super.createOptionalTableUpdateOperation( request );
 	}
 

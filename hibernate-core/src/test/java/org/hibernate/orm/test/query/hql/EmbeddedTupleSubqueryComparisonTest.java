@@ -1,10 +1,12 @@
 package org.hibernate.orm.test.query.hql;
 
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.testing.orm.domain.gambit.EmbeddedIdEntity;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -34,6 +36,7 @@ public class EmbeddedTupleSubqueryComparisonTest {
 
 	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-14015" )
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "GaussDB M mode rejects multi-column subquery comparisons (The subquery must return only one column of result)" )
 	public void testIdEqualitySubquery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			assertThat( session.createQuery(
@@ -45,6 +48,7 @@ public class EmbeddedTupleSubqueryComparisonTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "GaussDB M mode rejects multi-column subquery comparisons (The subquery must return only one column of result)" )
 	public void testIdSubquery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final EmbeddedIdEntity result = session.createQuery(
@@ -57,6 +61,7 @@ public class EmbeddedTupleSubqueryComparisonTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "GaussDB M mode rejects multi-column subquery comparisons (The subquery must return only one column of result)" )
 	public void testJoinSubquery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final EmbeddedIdEntity result = session.createQuery(

@@ -578,7 +578,9 @@ public class PersistenceXmlParser {
 	}
 
 	private static DocumentBuilderFactory buildDocumentBuilderFactory(boolean allowDtdAndExternalEntities) {
-		final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+		// Always use the parser bundled with the JDK, rather than one found on the classpath or configured through
+		// JAXP, since it is known to support the features used to disable DTDs and external entities
+		final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newDefaultInstance();
 		documentBuilderFactory.setNamespaceAware( true );
 		if ( !allowDtdAndExternalEntities ) {
 			setFeature( documentBuilderFactory, "http://apache.org/xml/features/disallow-doctype-decl", true );

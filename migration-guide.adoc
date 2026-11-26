@@ -148,6 +148,10 @@ parse if it uses internal entities, external entities, or entities declared in a
 is `persistence.xml` when read at runtime, which is rejected as soon as it declares a `DOCTYPE`, even one
 without any entity.
 
+To guarantee that these restrictions are enforced, `persistence.xml` is now always read at runtime with the XML
+parser bundled with the JDK: a different JAXP `DocumentBuilderFactory` implementation found on the classpath, or
+configured through the `javax.xml.parsers.DocumentBuilderFactory` system property, is no longer used for it.
+
 For example, the following document is rejected:
 
 [source,xml]

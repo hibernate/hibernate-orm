@@ -9,6 +9,8 @@ package org.hibernate.orm.test.jpa.persistenceunit;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Map;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
 import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
@@ -26,6 +28,7 @@ import static org.hibernate.cfg.MappingSettings.XML_ALLOW_DTD_AND_EXTERNAL_ENTIT
 @JiraKey("HHH-21047")
 public class PersistenceXmlParserDtdTest {
 	private static final String DTD_ENTITY_PU = "dtd-entity";
+	private static final String DOCTYPE_ONLY_PU = "doctype-only";
 
 	@Test
 	public void parse_rejectsDtdAndExternalEntitiesByDefault() {
@@ -39,10 +42,84 @@ public class PersistenceXmlParserDtdTest {
 				.isInstanceOf( PersistenceException.class );
 	}
 
+	@Test
+	public void parse_rejectsDoctypeWithoutEntitiesByDefault() {
+		assertThatThrownBy( () -> parse( DOCTYPE_ONLY_PU, Collections.emptyMap() ) )
+				.isInstanceOf( PersistenceException.class )
+				.hasMessageContaining( XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES );
+	}
+
+	@Test
+	public void parse_integrationSettingAllowsDoctype() {
+		assertThat( parse( DOCTYPE_ONLY_PU, Map.of( XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES, true ) ) )
+				.containsKey( DOCTYPE_ONLY_PU );
+	}
+
+	@Test
+	public void parse_ignoresXmlParserConfiguredThroughJaxp() {
+		final String property = DocumentBuilderFactory.class.getName();
+		final String previous = System.getProperty( property );
+		System.setProperty( property, UnusableDocumentBuilderFactory.class.getName() );
+		try {
+			// the parser bundled with the JDK is used, whatever the setting
+			assertThatThrownBy( () -> parse( DOCTYPE_ONLY_PU, Collections.emptyMap() ) )
+					.isInstanceOf( PersistenceException.class )
+					.hasMessageContaining( XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES );
+			assertThat( parse( DOCTYPE_ONLY_PU, Map.of( XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES, true ) ) )
+					.containsKey( DOCTYPE_ONLY_PU );
+		}
+		finally {
+			if ( previous == null ) {
+				System.clearProperty( property );
+			}
+			else {
+				System.setProperty( property, previous );
+			}
+		}
+	}
+
 	private Map<String, ParsedPersistenceXmlDescriptor> parse(Map<String, Object> integration) {
+		return parse( DTD_ENTITY_PU, integration );
+	}
+
+	private Map<String, ParsedPersistenceXmlDescriptor> parse(String resource, Map<String, Object> integration) {
 		final URL url = getClass().getClassLoader()
-				.getResource( "org/hibernate/jpa/test/persistenceunit/META-INF/" + DTD_ENTITY_PU + ".xml" );
+				.getResource( "org/hibernate/jpa/test/persistenceunit/META-INF/" + resource + ".xml" );
 		assertThat( url ).isNotNull();
 		return PersistenceXmlParser.parse( url, PersistenceUnitTransactionType.RESOURCE_LOCAL, integration );
+	}
+
+	/**
+	 * A parser which fails as soon as it is used.
+	 */
+	public static class UnusableDocumentBuilderFactory extends DocumentBuilderFactory {
+		public UnusableDocumentBuilderFactory() {
+			throw new UnsupportedOperationException( "This XML parser must not be used" );
+		}
+
+		@Override
+		public DocumentBuilder newDocumentBuilder() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void setAttribute(String name, Object value) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Object getAttribute(String name) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void setFeature(String name, boolean value) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public boolean getFeature(String name) {
+			throw new UnsupportedOperationException();
+		}
 	}
 }

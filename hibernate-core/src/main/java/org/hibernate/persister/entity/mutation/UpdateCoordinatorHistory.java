@@ -31,7 +31,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+import static org.hibernate.persister.entity.mutation.TemporalMutationHelper.isRevisionFromCurrentTransaction;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /**
@@ -105,16 +107,16 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 				hasDirtyCollection,
 				session
 		);
-		if ( entityPersister()
-				.excludedFromTemporalVersioning( dirtyAttributeIndexes, hasDirtyCollection ) ) {
-			performHistoryExcludedUpdate(
+		final boolean currentRevision = isRevisionFromCurrentTransaction( entityPersister(), id, session );
+		if ( currentRevision || entityPersister().excludedFromTemporalVersioning( dirtyAttributeIndexes, hasDirtyCollection ) ) {
+			performHistoryUpdate(
 					entity,
 					id,
-					rowId,
 					values,
 					oldVersion,
 					incomingOldValues,
 					dirtyAttributeIndexes,
+					currentRevision,
 					session
 			);
 		}
@@ -122,7 +124,7 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 			performRowEndUpdate(
 					entity,
 					id,
-					rowId,
+					null, // the live row and the history row have different row ids
 					oldVersion,
 					incomingOldValues == null ? values : incomingOldValues,
 					session,
@@ -139,26 +141,26 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 		return generatedValues;
 	}
 
-	private void performHistoryExcludedUpdate(
+	private void performHistoryUpdate(
 			@Nonnull Object entity,
 			@Nonnull Object id,
-			@Nullable Object rowId,
 			@Nonnull Object[] values,
 			@Nullable Object oldVersion,
 			@Nullable Object[] incomingOldValues,
 			@Nullable int[] dirtyAttributeIndexes,
+			boolean currentRevision,
 			@Nonnull SharedSessionContractImplementor session) {
 		final var partitionKeys = PartitionKeyValue.fromState( entityPersister(),
 				incomingOldValues == null ? values : incomingOldValues, session );
-		final var updateDetails =
-				buildHistoryExcludedUpdateDetails( entity, rowId, dirtyAttributeIndexes, partitionKeys, session );
+		final var updateDetails = buildHistoryUpdateDetails(
+				entity, values, dirtyAttributeIndexes, currentRevision, partitionKeys, session );
 		if ( updateDetails != null ) {
 			final var mutationExecutor =
 					mutationExecutorService.createExecutor( resolveBatchKeyAccess( true, session ),
 							updateDetails.operationGroup, session );
 			try {
 				final var jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
-				breakDownKeyJdbcValues( id, rowId, session, jdbcValueBindings, historyTableMapping );
+				breakDownKeyJdbcValues( id, null, session, jdbcValueBindings, historyTableMapping );
 
 				if ( updateDetails.applyVersionRestriction ) {
 					final var versionMapping = entityPersister().getVersionMapping();
@@ -172,7 +174,7 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 
 				PartitionKeyValue.bindRestrictions( partitionKeys, identifierTableMapping.getTableName(),
 						jdbcValueBindings, updateDetails.operationGroup.getSingleOperation() );
-				bindHistoryExcludedUpdateValues( values, updateDetails, session, jdbcValueBindings );
+				bindHistoryUpdateValues( values, updateDetails, session, jdbcValueBindings );
 
 				mutationExecutor.execute(
 						entity,
@@ -191,28 +193,30 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 	}
 
 	@Nullable
-	private HistoryExcludedUpdateDetails buildHistoryExcludedUpdateDetails(
+	private HistoryUpdateDetails buildHistoryUpdateDetails(
 			@Nonnull Object entity,
-			@Nullable Object rowId,
+			@Nonnull Object[] values,
 			@Nullable int[] dirtyAttributeIndexes,
+			boolean currentRevision,
 			@Nonnull List<PartitionKeyValue> partitionKeys,
 			@Nonnull SharedSessionContractImplementor session) {
-		if ( dirtyAttributeIndexes == null || dirtyAttributeIndexes.length == 0 ) {
+		if ( !currentRevision && ( dirtyAttributeIndexes == null || dirtyAttributeIndexes.length == 0 ) ) {
 			return null;
 		}
 
 		final var attributeMappings = entityPersister().getAttributeMappings();
-		final int attributeCount = attributeMappings.size();
-		final boolean[] dirtyFlags = new boolean[attributeCount];
-		for ( int dirtyAttributeIndex : dirtyAttributeIndexes ) {
-			dirtyFlags[dirtyAttributeIndex] = true;
+		final boolean[] dirtyFlags = new boolean[attributeMappings.size()];
+		if ( dirtyAttributeIndexes != null ) {
+			for ( int dirtyAttributeIndex : dirtyAttributeIndexes ) {
+				dirtyFlags[dirtyAttributeIndex] = true;
+			}
 		}
 
 		final var versionMapping = entityPersister().getVersionMapping();
-		final var updateability =
-				entityPersister().hasUninitializedLazyProperties( entity )
-						? entityPersister().getNonLazyPropertyUpdateability()
-						: entityPersister().getPropertyUpdateability();
+		if ( currentRevision && versionMapping != null ) {
+			dirtyFlags[versionMapping.getVersionAttribute().getStateArrayPosition()] = true;
+		}
+		final var updateability = entityPersister().getPropertyUpdateability();
 
 		final var tableUpdateBuilder =
 				new TableUpdateBuilderStandard<>( entityPersister(), historyTableMapping, factory() );
@@ -221,42 +225,36 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 
 		for ( final int attributeIndex : identifierTableMapping.getAttributeIndexes() ) {
 			final var attributeMapping = attributeMappings.get( attributeIndex );
-			if ( !(attributeMapping instanceof PluralAttributeMapping) ) {
-				if ( entityPersister().isPropertyTemporalExcluded( attributeIndex ) ) {
-					final var generator = attributeMapping.getGenerator();
-					final boolean generatedInSql = needsUpdateValueGeneration( entity, session, generator );
-					final boolean include =
-							generatedInSql
-								|| isGeneratedBeforeExecution( entity, session, generator )
-								|| dirtyFlags[attributeIndex] && updateability[attributeIndex];
-
-					if ( include ) {
-						if ( generatedInSql ) {
-							final var onExecutionGenerator = (OnExecutionGenerator) generator;
-							addSqlGeneratedValue( tableUpdateBuilder, attributeMapping, onExecutionGenerator );
-							hasValues = true;
-							if ( onExecutionGenerator.writePropertyValue() ) {
-								bindableAttributeIndexes.add( attributeIndex );
-							}
-						}
-						else {
-							attributeMapping.forEachUpdatable( tableUpdateBuilder );
-							hasValues = true;
-							bindableAttributeIndexes.add( attributeIndex );
-						}
-					}
+			if ( attributeMapping instanceof PluralAttributeMapping
+					|| !currentRevision && !entityPersister().isPropertyTemporalExcluded( attributeIndex ) ) {
+				continue;
+			}
+			final var generator = attributeMapping.getGenerator();
+			if ( needsUpdateValueGeneration( entity, session, generator ) ) {
+				final var onExecutionGenerator = (OnExecutionGenerator) generator;
+				addSqlGeneratedValue( tableUpdateBuilder, attributeMapping, onExecutionGenerator );
+				hasValues = true;
+				if ( onExecutionGenerator.writePropertyValue() ) {
+					bindableAttributeIndexes.add( attributeIndex );
 				}
+			}
+			else if ( isGeneratedBeforeExecution( entity, session, generator )
+					|| updateability[attributeIndex] && values[attributeIndex] != UNFETCHED_PROPERTY
+						&& ( dirtyAttributeIndexes == null || dirtyFlags[attributeIndex] ) ) {
+				attributeMapping.forEachUpdatable( tableUpdateBuilder );
+				hasValues = true;
+				bindableAttributeIndexes.add( attributeIndex );
 			}
 		}
 
 		if ( hasValues ) {
-			applyKeyRestriction( rowId, entityPersister(), tableUpdateBuilder, historyTableMapping );
+			applyKeyRestriction( null, entityPersister(), tableUpdateBuilder, historyTableMapping );
 			applyCurrentRowRestriction( tableUpdateBuilder );
 			applyPartitionKeyRestriction( tableUpdateBuilder, identifierTableMapping.getTableName(),
 					partitionKeys, TableMapping::getUpdateDetails );
 			applyOptimisticLocking( tableUpdateBuilder );
 
-			return new HistoryExcludedUpdateDetails(
+			return new HistoryUpdateDetails(
 					createMutationOperationGroup( tableUpdateBuilder ),
 					toIntArray( bindableAttributeIndexes ),
 					entityPersister().optimisticLockStyle().isVersion()
@@ -276,9 +274,9 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 			&& generator.generatedBeforeExecution( entity, session );
 	}
 
-	private void bindHistoryExcludedUpdateValues(
+	private void bindHistoryUpdateValues(
 			@Nonnull Object[] values,
-			@Nonnull HistoryExcludedUpdateDetails updateDetails,
+			@Nonnull HistoryUpdateDetails updateDetails,
 			@Nonnull SharedSessionContractImplementor session,
 			@Nonnull JdbcValueBindings jdbcValueBindings) {
 		final var attributeMappings = entityPersister().getAttributeMappings();
@@ -494,12 +492,12 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 		return result;
 	}
 
-	private static final class HistoryExcludedUpdateDetails {
+	private static final class HistoryUpdateDetails {
 		private final MutationOperationGroup operationGroup;
 		private final int[] attributeIndexes;
 		private final boolean applyVersionRestriction;
 
-		private HistoryExcludedUpdateDetails(
+		private HistoryUpdateDetails(
 				@Nonnull MutationOperationGroup operationGroup,
 				@Nonnull int[] attributeIndexes,
 				boolean applyVersionRestriction) {

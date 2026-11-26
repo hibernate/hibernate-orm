@@ -259,7 +259,7 @@ public final class Hibernate {
 			if ( !persistentCollection.wasInitialized() ) {
 				return (T) persistentCollection.elementByIndex( key );
 			}
-			if ( key < 0 || key >= list.size() ) {
+			else if ( key < 0 || key >= list.size() ) {
 				return null;
 			}
 		}

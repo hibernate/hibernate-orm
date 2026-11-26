@@ -6,7 +6,6 @@ import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
 import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPlanContributor;
 import org.hibernate.action.queue.internal.decompose.collection.HistoryCollectionMutationPlanContributor;
@@ -233,24 +232,8 @@ public final class HistoryStateManagement implements StateManagement, StateManag
 		final var dialect = creationProcess.getCreationContext().getDialect();
 		final var temporalColumns = List.of( rootClass.getAuxiliaryColumn( ROW_START ).getQuotedName( dialect ),
 				rootClass.getAuxiliaryColumn( ROW_END ).getQuotedName( dialect ) );
-		final var resolver = entityPersister.createAuxiliaryTableResolver( rootClass, tableName, temporalColumns, creationProcess );
-		return new TemporalMappingImpl( rootClass, tableName, resolver, creationProcess );
-	}
-
-	@Nullable
-	@Override
-	public AuxiliaryMapping createAuxiliaryMapping(
-			@Nonnull EntityPersister persister,
-			@Nonnull PersistentClass bootDescriptor,
-			@Nullable AuxiliaryMapping supertypeMapping,
-			@Nonnull MappingModelCreationProcess creationProcess) {
-		if ( bootDescriptor.getAuxiliaryTable() == null ) {
-			return supertypeMapping;
-		}
-		final var rootMapping = persister.getRootEntityDescriptor().getAuxiliaryMapping();
-		final var tableName = rootMapping.resolveTableName( persister.getIdentifierTableName() );
-		return new TemporalMappingImpl( bootDescriptor.getRootClass(), tableName,
-				rootMapping::resolveTableName, creationProcess );
+		return new TemporalMappingImpl( rootClass, tableName,
+				entityPersister.auxiliaryTableExpressions( rootClass, temporalColumns, creationProcess ), creationProcess );
 	}
 
 	@Nullable

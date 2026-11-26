@@ -8,8 +8,12 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.Incubating;
+import org.hibernate.Internal;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.creation.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
@@ -37,13 +41,26 @@ import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 ///
 /// @author Gavin King
 /// @since 7.4
-@Incubating(since = "5.4")
+@Incubating(since = "7.4")
 public interface AuxiliaryMapping {
 	/// Called during mapping initialization for the inverse side of a shared collection table.
 	/// Returns the auxiliary mapping to use for reads of that property, or null if none applies.
+	/// @since 8.0
 	@Nullable
 	default AuxiliaryMapping forInverseCollection(@Nonnull Property inverseProperty) {
 		return null;
+	}
+
+	/// Called during mapping initialization for a subclass. Returns the auxiliary mapping
+	/// of the subclass, which by default is the mapping it inherits from its supertype.
+	/// @since 8.0
+	@Nonnull
+	@Internal
+	default AuxiliaryMapping forSubclass(
+			@Nonnull EntityPersister subclassPersister,
+			@Nonnull PersistentClass subclass,
+			@Nonnull MappingModelCreationProcess creationProcess) {
+		return this;
 	}
 
 	/// The primary auxiliary table name.

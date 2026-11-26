@@ -5777,13 +5777,12 @@ public abstract class AbstractEntityPersister
 		);
 	}
 
-	/// Resolves table names and polymorphic query expressions for hierarchies with per-class auxiliary tables.
+	/// The auxiliary table expression for each table expression of a hierarchy with per-class auxiliary tables.
 	@Internal
-	@Nullable
-	public Function<String, String> createAuxiliaryTableResolver(
-			@Nonnull RootClass rootClass, @Nonnull String rootAuxiliaryTableName, @Nonnull List<String> extraColumns,
+	public Map<String, String> auxiliaryTableExpressions(
+			@Nonnull RootClass rootClass, @Nonnull List<String> extraColumns,
 			@Nonnull MappingModelCreationProcess creationProcess) {
-		return null;
+		return Map.of();
 	}
 
 	/**
@@ -6122,8 +6121,9 @@ public abstract class AbstractEntityPersister
 			auxiliaryMapping = stateManagement.createAuxiliaryMapping( this, rootClass, creationProcess );
 		}
 		else {
-			auxiliaryMapping = stateManagement.createAuxiliaryMapping( this, bootEntityDescriptor,
-					castNonNull( superMappingType ).getAuxiliaryMapping(), creationProcess );
+			final var inherited = castNonNull( superMappingType ).getAuxiliaryMapping();
+			auxiliaryMapping = inherited == null ? null
+					: inherited.forSubclass( this, bootEntityDescriptor, creationProcess );
 		}
 		if ( auxiliaryMapping instanceof SoftDeleteMapping && rootClass.getCustomSQLDelete() != null ) {
 			throw new UnsupportedMappingException( "Entity may not define both @SoftDelete and @SQLDelete" );

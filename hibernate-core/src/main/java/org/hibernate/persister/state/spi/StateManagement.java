@@ -5,7 +5,6 @@ import jakarta.annotation.Nullable;
 
 import org.hibernate.Incubating;
 import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.mapping.AuxiliaryMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -64,17 +63,6 @@ public interface StateManagement {
 			@Nonnull EntityPersister persister,
 			@Nonnull RootClass bootDescriptor,
 			@Nonnull MappingModelCreationProcess creationProcess);
-
-	/// Creates the auxiliary mapping for a subclass. By default it inherits its supertype's mapping.
-	@Nullable
-	@org.hibernate.Internal
-	default AuxiliaryMapping createAuxiliaryMapping(
-			@Nonnull EntityPersister persister,
-			@Nonnull PersistentClass bootDescriptor,
-			@Nullable AuxiliaryMapping supertypeMapping,
-			@Nonnull MappingModelCreationProcess creationProcess) {
-		return supertypeMapping;
-	}
 
 	/// Creates the auxiliary collection mapping required by this
 	/// state-management strategy, or `null` when the collection does not need

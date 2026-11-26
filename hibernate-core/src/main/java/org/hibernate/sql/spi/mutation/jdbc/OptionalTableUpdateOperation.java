@@ -64,6 +64,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	private final List<ColumnValueBinding> valueBindings;
 	private final List<ColumnValueBinding> keyBindings;
 	private final List<ColumnValueBinding> optimisticLockBindings;
+	private final boolean requiresExistingRowForOptimisticLock;
 	private final List<ColumnValueParameter> parameters;
 	private final List<ColumnValueParameter> deleteParameters;
 	private final List<String> unassignedColumns;
@@ -95,6 +96,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		this.valueBindings = upsert.getValueBindings();
 		this.keyBindings = upsert.getKeyBindings();
 		this.optimisticLockBindings = upsert.getOptimisticLockBindings();
+		this.requiresExistingRowForOptimisticLock = upsert.requiresExistingRowForOptimisticLock();
 		this.parameters = upsert.getParameters();
 		final var deleteDetails = tableMapping.getDeleteDetails();
 		final boolean customDelete = deleteDetails != null && deleteDetails.getCustomSql() != null;
@@ -174,7 +176,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 				// all the new values for this table were null - possibly delete the row
 				else if ( valuesAnalysis.getTablesWithPreviousNonNullValues().contains( tableMapping )
 						&& !performDelete( jdbcValueBindings, session ) ) {
-					checkOptimisticLock( valuesAnalysis );
+					checkOptimisticLock();
 				}
 			}
 			finally {
@@ -206,7 +208,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 			if ( needsStoredValues && !deleteFirst && performDelete( jdbcValueBindings, session ) ) {
 				return;
 			}
-			checkOptimisticLock( valuesAnalysis );
+			checkOptimisticLock();
 		}
 
 		if ( !unassignedColumns.isEmpty()
@@ -216,8 +218,8 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		performInsertWithRetry( jdbcValueBindings, session, needsUpdate, needsStoredValues );
 	}
 
-	private void checkOptimisticLock(UpdateValuesAnalysis valuesAnalysis) {
-		if ( valuesAnalysis.requiresExistingRowForOptimisticLock( tableMapping ) ) {
+	private void checkOptimisticLock() {
+		if ( requiresExistingRowForOptimisticLock ) {
 			throw new StaleStateException( mutationTarget.getRolePath() );
 		}
 	}

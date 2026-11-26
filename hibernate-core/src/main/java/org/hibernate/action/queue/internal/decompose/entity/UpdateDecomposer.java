@@ -33,6 +33,7 @@ import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.mutation.PartitionKeyValue;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.sql.ast.internal.model.builder.VersionUpdateBuilder;
 import org.hibernate.sql.ast.spi.model.LogicalTableUpdate;
@@ -919,7 +920,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 
 		// Apply partitioned selection restrictions if needed
 		if ( entityPersister.hasPartitionedSelectionMapping() ) {
-			PartitionKeyValue.addRestrictions( entityPersister, builders, partitionKeys,
+			PartitionKeyValue.addRestrictions( entityPersister, builders::get, partitionKeys,
 					TableMapping::getUpdateDetails );
 		}
 		for ( var builder : builders.values() ) {
@@ -1018,7 +1019,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 
 		// Apply partitioned selection restrictions if needed
 		if ( entityPersister.hasPartitionedSelectionMapping() ) {
-			PartitionKeyValue.addRestrictions( entityPersister, builders, partitionKeys,
+			PartitionKeyValue.addRestrictions( entityPersister, builders::get, partitionKeys,
 					TableMapping::getUpdateDetails );
 		}
 		for ( var builder : builders.values() ) {

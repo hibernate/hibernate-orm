@@ -17,10 +17,13 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.spi.mutation.MutationType;
+import org.hibernate.sql.spi.mutation.TableMapping;
+import org.hibernate.sql.spi.mutation.TableMapping.MutationDetails;
 import org.hibernate.sql.ast.spi.model.builder.RestrictedTableMutationBuilder;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.internal.MutationGroupSingle;
 
+import java.util.List;
 import java.util.function.Function;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
@@ -49,7 +52,7 @@ public abstract class AbstractDeleteCoordinator
 		super( entityPersister, factory );
 
 		batchKey = new BasicBatchKey( entityPersister.getEntityName() + "#DELETE" );
-		staticOperationGroup = generateOperationGroup( "", null, true, null );
+		staticOperationGroup = generateOperationGroup( "", null, null, true, null );
 		if ( !entityPersister.isVersioned() && !entityPersister.hasRowId() ) {
 			noVersionDeleteGroup = staticOperationGroup;
 		}
@@ -67,12 +70,28 @@ public abstract class AbstractDeleteCoordinator
 		return batchKey;
 	}
 
+	/**
+	 * @param partitionKeys the partition key of the row, or {@code null} for
+	 *                      a statement with a parameter for each of its columns
+	 */
 	@Nonnull
 	protected abstract MutationOperationGroup generateOperationGroup(
 			@Nullable Object rowId,
 			@Nullable Object[] loadedState,
+			@Nullable List<PartitionKeyValue> partitionKeys,
 			boolean applyVersion,
 			@Nullable SharedSessionContractImplementor session);
+
+	/**
+	 * The partition key of the row, as far as it is known from the given state.
+	 */
+	@Nonnull
+	protected List<PartitionKeyValue> resolvePartitionKeys(
+			@Nonnull Object id,
+			@Nullable Object[] state,
+			@Nonnull SharedSessionContractImplementor session) {
+		return PartitionKeyValue.fromState( entityPersister(), state, session );
+	}
 
 	@Override
 	public void delete(
@@ -89,13 +108,22 @@ public abstract class AbstractDeleteCoordinator
 		final Object[] loadedState = filteredState == null ? originalLoadedState
 				: filteredState.physicalState( originalLoadedState, entityPersister() );
 		final Object rowId = entry != null ? entry.getRowId() : null;
+		// An instance which does not belong to a persistence context has no loaded
+		// state, so its current state is all that is known of its row. A read-only
+		// instance has no loaded state either, but its current state might differ
+		// from its row. An unloaded reference to an entity with a partition key is
+		// always loaded before it is deleted.
+		final List<PartitionKeyValue> partitionKeys = entity != null && entityPersister().hasPartitionedSelectionMapping()
+				? resolvePartitionKeys( id, entry == null ? entityPersister().getValues( entity ) : loadedState, session )
+				: List.of();
 
 		if ( entity != null && ( isImpliedOptimisticLocking && loadedState != null
-				|| rowId == null && entityPersister().hasRowId() ) ) {
-			doDynamicDelete( entity, id, rowId, loadedState, session );
+				|| rowId == null && entityPersister().hasRowId()
+				|| PartitionKeyValue.needsDynamicRestriction( entityPersister(), partitionKeys ) ) ) {
+			doDynamicDelete( entity, id, rowId, loadedState, partitionKeys, version, session );
 		}
 		else {
-			doStaticDelete( entity, id, rowId, loadedState, version, session );
+			doStaticDelete( entity, id, rowId, partitionKeys, version, session );
 		}
 	}
 
@@ -104,9 +132,11 @@ public abstract class AbstractDeleteCoordinator
 			@Nonnull Object id,
 			@Nullable Object rowId,
 			@Nullable Object[] loadedState,
+			@Nonnull List<PartitionKeyValue> partitionKeys,
+			@Nullable Object version,
 			@Nonnull SharedSessionContractImplementor session) {
 		final var operationGroup =
-				generateOperationGroup( null, loadedState, true, session );
+				generateOperationGroup( null, loadedState, partitionKeys, true, session );
 		final var mutationExecutor = executor( session, operationGroup );
 
 		for ( int i = 0; i < operationGroup.getNumberOfOperations(); i++ ) {
@@ -121,6 +151,8 @@ public abstract class AbstractDeleteCoordinator
 				id,
 				rowId,
 				loadedState,
+				partitionKeys,
+				version,
 				mutationExecutor,
 				operationGroup,
 				session
@@ -146,10 +178,14 @@ public abstract class AbstractDeleteCoordinator
 			@Nonnull Object id,
 			@Nullable Object rowId,
 			@Nullable Object[] loadedState,
+			@Nonnull List<PartitionKeyValue> partitionKeys,
+			@Nullable Object version,
 			@Nonnull MutationExecutor mutationExecutor,
 			@Nonnull MutationOperationGroup operationGroup,
 			@Nonnull SharedSessionContractImplementor session) {
-		applyLocking( null, loadedState, mutationExecutor, session );
+		applyLocking( version, loadedState, mutationExecutor, session );
+		PartitionKeyValue.bindRestrictions( partitionKeys, mutationExecutor.getJdbcValueBindings(),
+				operationGroup::getOperation );
 		bindTenantRestriction( session, mutationExecutor.getJdbcValueBindings(), operationGroup );
 		applyId( id, null, mutationExecutor, operationGroup, session );
 	}
@@ -252,7 +288,7 @@ public abstract class AbstractDeleteCoordinator
 			@Nullable Object entity,
 			@Nonnull Object id,
 			@Nullable Object rowId,
-			@Nullable Object[] loadedState,
+			@Nonnull List<PartitionKeyValue> partitionKeys,
 			@Nullable Object version,
 			@Nonnull SharedSessionContractImplementor session) {
 		final boolean applyVersion;
@@ -277,7 +313,7 @@ public abstract class AbstractDeleteCoordinator
 		applyStaticDeleteTableDetails(
 				id,
 				rowId,
-				loadedState,
+				partitionKeys,
 				version,
 				applyVersion,
 				mutationExecutor,
@@ -303,7 +339,7 @@ public abstract class AbstractDeleteCoordinator
 	protected void applyStaticDeleteTableDetails(
 			@Nonnull Object id,
 			@Nullable Object rowId,
-			@Nullable Object[] loadedState,
+			@Nonnull List<PartitionKeyValue> partitionKeys,
 			@Nullable Object version,
 			boolean applyVersion,
 			@Nonnull MutationExecutor mutationExecutor,
@@ -312,11 +348,10 @@ public abstract class AbstractDeleteCoordinator
 			applyLocking( version, null, mutationExecutor, session );
 		}
 
-		bindPartitionColumnValueBindings( loadedState, session,
-				mutationExecutor.getJdbcValueBindings() );
-
-		bindTenantRestriction( session, mutationExecutor.getJdbcValueBindings(),
-				applyVersion ? staticOperationGroup : resolveNoVersionDeleteGroup( session ) );
+		final var operationGroup = applyVersion ? staticOperationGroup : resolveNoVersionDeleteGroup( session );
+		PartitionKeyValue.bindRestrictions( partitionKeys, mutationExecutor.getJdbcValueBindings(),
+				operationGroup::getOperation );
+		bindTenantRestriction( session, mutationExecutor.getJdbcValueBindings(), operationGroup );
 		applyId( id, rowId, mutationExecutor, staticOperationGroup, session );
 	}
 
@@ -329,7 +364,7 @@ public abstract class AbstractDeleteCoordinator
 	@Nonnull
 	protected MutationOperationGroup resolveNoVersionDeleteGroup(@Nonnull SharedSessionContractImplementor session) {
 		if ( noVersionDeleteGroup == null ) {
-			noVersionDeleteGroup = generateOperationGroup( null, null, false, session );
+			noVersionDeleteGroup = generateOperationGroup( null, null, null, false, session );
 		}
 		return noVersionDeleteGroup;
 	}
@@ -416,25 +451,17 @@ public abstract class AbstractDeleteCoordinator
 		return name -> tableName.equals( name ) ? tableMutationBuilder : null;
 	}
 
-	protected void applyPartitionKeyRestriction(@Nonnull Function<String,RestrictedTableMutationBuilder<?, ?>> resolver) {
+	/**
+	 * @param partitionKeys the partition key of the row, or {@code null} for
+	 *                      a parameter for each of its columns
+	 */
+	protected void applyPartitionKeyRestriction(
+			@Nonnull Function<String,RestrictedTableMutationBuilder<?, ?>> resolver,
+			@Nullable List<PartitionKeyValue> partitionKeys,
+			@Nonnull Function<TableMapping, MutationDetails> mutationDetails) {
 		final var persister = entityPersister();
 		if ( persister.hasPartitionedSelectionMapping() ) {
-			final var attributeMappings = persister.getAttributeMappings();
-			for ( int m = 0; m < attributeMappings.size(); m++ ) {
-				final var attributeMapping = attributeMappings.get( m );
-				final int jdbcTypeCount = attributeMapping.getJdbcTypeCount();
-				for ( int i = 0; i < jdbcTypeCount; i++ ) {
-					final var selectableMapping = attributeMapping.getSelectable( i );
-					if ( selectableMapping.isPartitioned() ) {
-						final String tableNameForMutation =
-								persister.physicalTableNameForMutation( selectableMapping );
-						final var tableMutationBuilder = resolver.apply( tableNameForMutation );
-						if ( tableMutationBuilder != null ) {
-							tableMutationBuilder.addKeyRestrictionLeniently( selectableMapping );
-						}
-					}
-				}
-			}
+			PartitionKeyValue.addRestrictions( persister, resolver, partitionKeys, mutationDetails );
 		}
 	}
 

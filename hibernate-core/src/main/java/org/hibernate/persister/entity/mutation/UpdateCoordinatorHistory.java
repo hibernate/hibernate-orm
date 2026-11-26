@@ -19,6 +19,7 @@ import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.spi.mutation.TableMapping;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.spi.mutation.MutationType;
 import org.hibernate.sql.ast.spi.model.builder.AssigningTableMutationBuilder;
@@ -246,7 +247,8 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 		if ( hasValues ) {
 			applyKeyRestriction( rowId, entityPersister(), tableUpdateBuilder, historyTableMapping );
 			applyCurrentRowRestriction( tableUpdateBuilder );
-			applyPartitionKeyRestriction( tableUpdateBuilder );
+			applyPartitionKeyRestriction( tableUpdateBuilder, identifierTableMapping.getTableName(),
+					null, TableMapping::getUpdateDetails );
 			applyOptimisticLocking( tableUpdateBuilder );
 
 			return new HistoryExcludedUpdateDetails(

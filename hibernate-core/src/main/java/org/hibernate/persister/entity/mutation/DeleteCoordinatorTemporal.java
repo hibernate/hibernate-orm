@@ -12,6 +12,9 @@ import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
+import org.hibernate.sql.spi.mutation.TableMapping;
+
+import java.util.List;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.persister.entity.mutation.AbstractTemporalUpdateCoordinator.applyTemporalEnding;
@@ -36,12 +39,12 @@ public class DeleteCoordinatorTemporal extends AbstractDeleteCoordinator {
 	protected void applyStaticDeleteTableDetails(
 			@Nonnull Object id,
 			@Nullable Object rowId,
-			@Nullable Object[] loadedState,
+			@Nonnull List<PartitionKeyValue> partitionKeys,
 			@Nullable Object version,
 			boolean applyVersion,
 			@Nonnull MutationExecutor mutationExecutor,
 			@Nonnull SharedSessionContractImplementor session) {
-		super.applyStaticDeleteTableDetails( id, rowId, loadedState, version, applyVersion, mutationExecutor, session );
+		super.applyStaticDeleteTableDetails( id, rowId, partitionKeys, version, applyVersion, mutationExecutor, session );
 		bindTemporalEndingValue( session, mutationExecutor.getJdbcValueBindings() );
 	}
 
@@ -50,10 +53,13 @@ public class DeleteCoordinatorTemporal extends AbstractDeleteCoordinator {
 			@Nonnull Object id,
 			@Nullable Object rowId,
 			@Nullable Object[] loadedState,
+			@Nonnull List<PartitionKeyValue> partitionKeys,
+			@Nullable Object version,
 			@Nonnull MutationExecutor mutationExecutor,
 			@Nonnull MutationOperationGroup operationGroup,
 			@Nonnull SharedSessionContractImplementor session) {
-		super.applyDynamicDeleteTableDetails( id, rowId, loadedState, mutationExecutor, operationGroup, session );
+		super.applyDynamicDeleteTableDetails(
+				id, rowId, loadedState, partitionKeys, version, mutationExecutor, operationGroup, session );
 		bindTemporalEndingValue( session, mutationExecutor.getJdbcValueBindings() );
 	}
 
@@ -75,6 +81,7 @@ public class DeleteCoordinatorTemporal extends AbstractDeleteCoordinator {
 	protected MutationOperationGroup generateOperationGroup(
 			@Nullable Object rowId,
 			@Nullable Object[] loadedState,
+			@Nullable List<PartitionKeyValue> partitionKeys,
 			boolean applyVersion,
 			@Nullable SharedSessionContractImplementor session) {
 		final var rootTableMapping = entityPersister().getIdentifierTableMapping();
@@ -82,7 +89,9 @@ public class DeleteCoordinatorTemporal extends AbstractDeleteCoordinator {
 
 		applyKeyRestriction( rowId, entityPersister(), tableUpdateBuilder, rootTableMapping );
 		applyTemporalEnding( tableUpdateBuilder, entityPersister().getTemporalMapping() );
-		applyPartitionKeyRestriction( tableName -> tableUpdateBuilder );
+		// only the partition key columns of the root table restrict the update
+		applyPartitionKeyRestriction( tableMutationBuilderResolver( tableUpdateBuilder ), partitionKeys,
+				TableMapping::getUpdateDetails );
 		if ( applyVersion ) {
 			applyOptimisticLocking(
 					entityPersister().optimisticLockStyle(),

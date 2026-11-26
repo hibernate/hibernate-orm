@@ -3,8 +3,10 @@ package org.hibernate.orm.test.mapping.identifier;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.LockModeType;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.PartitionKey;
@@ -21,7 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DomainModel(annotatedClasses = {
 		NullablePartitionKeyMutationTest.Crate.class,
 		NullablePartitionKeyMutationTest.DynamicCrate.class,
-		NullablePartitionKeyMutationTest.SecondaryCrate.class
+		NullablePartitionKeyMutationTest.SecondaryCrate.class,
+		NullablePartitionKeyMutationTest.VersionedCrate.class
 })
 @SessionFactory(useCollectingStatementObserver = true)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNullablePartitionKey.class)
@@ -77,6 +80,69 @@ public class NullablePartitionKeyMutationTest {
 		} );
 	}
 
+	/**
+	 * A delete with a null partition key is not added to the batch of a delete with a non-null key.
+	 */
+	@Test
+	@JiraKey("HHH-21279")
+	void removeBatchWithNullAndNonNullPartitionKey(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var crate = new Crate( 1 );
+			crate.region = "eu";
+			session.persist( crate );
+			session.persist( new Crate( 2 ) );
+		} );
+		scope.inTransaction( session -> {
+			session.setJdbcBatchSize( 5 );
+			session.remove( session.find( Crate.class, 1 ) );
+			session.remove( session.find( Crate.class, 2 ) );
+		} );
+		scope.inTransaction( session -> {
+			assertThat( session.find( Crate.class, 1 ) ).isNull();
+			assertThat( session.find( Crate.class, 2 ) ).isNull();
+		} );
+	}
+
+	@Test
+	@JiraKey("HHH-21279")
+	void forceVersionIncrementWithNullPartitionKey(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.persist( new VersionedCrate( 1 ) ) );
+		final var statements = scope.getCollectingStatementObserver();
+		statements.clear();
+		scope.inTransaction( session ->
+				session.find( VersionedCrate.class, 1, LockModeType.OPTIMISTIC_FORCE_INCREMENT ) );
+		assertThat( statements.getSqlQueries() ).last().asString()
+				.startsWith( "update partition_versioned_crate " ).contains( "region is null" );
+		scope.inTransaction( session -> {
+			final var crate = session.find( VersionedCrate.class, 1 );
+			assertThat( crate.version ).isEqualTo( 1 );
+			session.remove( crate );
+		} );
+	}
+
+	@Test
+	@JiraKey("HHH-21279")
+	void updateAndDeleteWithNullPartitionKeyInStatelessSession(SessionFactoryScope scope) {
+		scope.inStatelessTransaction( session -> session.insert( new Crate( 1 ) ) );
+		final var statements = scope.getCollectingStatementObserver();
+		statements.clear();
+		scope.inStatelessTransaction( session -> {
+			final var crate = session.get( Crate.class, 1 );
+			crate.label = "updated";
+			session.update( crate );
+		} );
+		assertThat( statements.getSqlQueries() ).last().asString()
+				.startsWith( "update partition_crate " ).contains( "region is null" );
+		scope.inStatelessTransaction( session -> {
+			final var crate = session.get( Crate.class, 1 );
+			assertThat( crate.label ).isEqualTo( "updated" );
+			session.delete( crate );
+		} );
+		assertThat( statements.getSqlQueries() ).last().asString()
+				.startsWith( "delete from partition_crate " ).contains( "region is null" );
+		scope.inTransaction( session -> assertThat( session.find( Crate.class, 1 ) ).isNull() );
+	}
+
 	@Entity(name = "Crate")
 	@Table(name = "partition_crate")
 	public static class Crate {
@@ -130,6 +196,24 @@ public class NullablePartitionKeyMutationTest {
 		SecondaryCrate(Integer id) {
 			this.id = id;
 			this.label = "original";
+		}
+	}
+
+	@Entity(name = "VersionedCrate")
+	@Table(name = "partition_versioned_crate")
+	public static class VersionedCrate {
+		@Id
+		Integer id;
+		@PartitionKey
+		String region;
+		@Version
+		Integer version;
+
+		VersionedCrate() {
+		}
+
+		VersionedCrate(Integer id) {
+			this.id = id;
 		}
 	}
 }

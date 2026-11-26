@@ -27,6 +27,7 @@ import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.spi.mutation.TableMapping;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.spi.mutation.ValuesAnalysis;
 import org.hibernate.sql.ast.spi.model.MutationGroup;
@@ -34,6 +35,9 @@ import org.hibernate.sql.ast.spi.model.TableMutation;
 import org.hibernate.sql.ast.spi.model.builder.AssigningTableMutationBuilder;
 import org.hibernate.sql.ast.spi.model.builder.MutationGroupBuilder;
 import org.hibernate.sql.ast.spi.model.builder.RestrictedTableMutationBuilder;
+
+import java.util.List;
+import java.util.function.Function;
 
 import static java.lang.System.arraycopy;
 import static org.hibernate.action.internal.EntityIdentityInsertAction.compositeGeneratedId;
@@ -381,20 +385,22 @@ public abstract class AbstractMutationCoordinator {
 		return new StaleObjectStateException( entityPersister().getEntityName(), id, cause );
 	}
 
-	void applyPartitionKeyRestriction(@Nonnull RestrictedTableMutationBuilder<?, ?> tableMutationBuilder) {
+	/**
+	 * Restrict the given mutation by the partition key columns of the table with the given name.
+	 *
+	 * @param partitionKeys the partition key of the row, or {@code null} for
+	 *                      a parameter for each of its columns
+	 */
+	void applyPartitionKeyRestriction(
+			@Nonnull RestrictedTableMutationBuilder<?, ?> tableMutationBuilder,
+			@Nonnull String tableName,
+			@Nullable List<PartitionKeyValue> partitionKeys,
+			@Nonnull Function<TableMapping, TableMapping.MutationDetails> mutationDetails) {
 		final var persister = entityPersister();
 		if ( persister.hasPartitionedSelectionMapping() ) {
-			final var attributeMappings = persister.getAttributeMappings();
-			for ( int m = 0; m < attributeMappings.size(); m++ ) {
-				final var attributeMapping = attributeMappings.get( m );
-				final int jdbcTypeCount = attributeMapping.getJdbcTypeCount();
-				for ( int i = 0; i < jdbcTypeCount; i++ ) {
-					final var selectableMapping = attributeMapping.getSelectable( i );
-					if ( selectableMapping.isPartitioned() ) {
-						tableMutationBuilder.addKeyRestrictionLeniently( selectableMapping );
-					}
-				}
-			}
+			PartitionKeyValue.addRestrictions( persister,
+					name -> tableName.equals( name ) ? tableMutationBuilder : null,
+					partitionKeys, mutationDetails );
 		}
 	}
 

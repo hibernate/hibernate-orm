@@ -15,6 +15,7 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.mutation.PartitionKeyValue;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.ast.spi.model.MutatingTableReference;
@@ -134,7 +135,7 @@ public class SoftDeleteEntityMutationPlanContributor implements EntityMutationPl
 		if ( entityPersister.hasPartitionedSelectionMapping() ) {
 			// only the partition key columns of the root table restrict the soft delete
 			PartitionKeyValue.addRestrictions( entityPersister,
-					Map.of( rootTableDescriptor.name(), tableUpdateBuilder ), partitionKeys,
+					Map.of( rootTableDescriptor.name(), tableUpdateBuilder )::get, partitionKeys,
 					TableMapping::getUpdateDetails );
 		}
 		if ( applyVersion ) {

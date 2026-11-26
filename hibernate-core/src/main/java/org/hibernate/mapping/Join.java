@@ -155,6 +155,13 @@ public class Join implements AttributeContainer, AuxiliaryTableHolder, Serializa
 		primaryKey.setName( PK_ALIAS.toAliasString( table.getName() ) );
 		table.setPrimaryKey(primaryKey);
 		primaryKey.addColumns( getKey() );
+		if ( persistentClass.addPartitionKeyToPrimaryKey() ) {
+			for ( var property : properties ) {
+				if ( property.getValue().isPartitionKey() ) {
+					primaryKey.addColumns( property.getValue() );
+				}
+			}
+		}
 	}
 
 	public int getPropertySpan() {

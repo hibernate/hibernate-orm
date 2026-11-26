@@ -7,17 +7,18 @@ import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
 
 import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.sql.spi.mutation.jdbc.MergeOperation;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
- * The row of an optional secondary table is deleted when it has no data. An
- * update which does not assign every column of the table cannot tell whether
- * the row has data, and so must not delete it.
+ * An optional secondary row is deleted when all its mapped state is null
+ * after the update, including the values of columns left untouched.
  */
 public abstract class AbstractOptionalSecondaryRowTest {
 	@BeforeEach
@@ -27,6 +28,7 @@ public abstract class AbstractOptionalSecondaryRowTest {
 			session.persist( new DynamicShipment( 1, "code", "label" ) );
 			session.persist( new Memo( 1, "text" ) );
 		} );
+		scope.getCollectingStatementObserver().clear();
 	}
 
 	@AfterEach
@@ -59,8 +61,97 @@ public abstract class AbstractOptionalSecondaryRowTest {
 	}
 
 	@Test
+	void clearLastValueWhenNonUpdatableColumnIsNull(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.persist( new Shipment( 2, null, "label" ) ) );
+		scope.inTransaction( session -> session.find( Shipment.class, 2 ).label = null );
+		assertNoDetailRow( scope, 2 );
+	}
+
+	@Test
+	void statelessUpdateUsesStoredNonUpdatableColumn(SessionFactoryScope scope) {
+		assumeTrue( usesOptionalTableMerge( scope ) );
+		scope.inStatelessTransaction( session -> session.update( new Shipment( 1, null, null ) ) );
+		assertSingleDetailMerge( scope );
+		scope.inTransaction( session -> {
+			final var shipment = session.find( Shipment.class, 1 );
+			assertThat( shipment.code ).isEqualTo( "code" );
+			assertThat( shipment.label ).isNull();
+		} );
+	}
+
+	@Test
+	void statelessUpdateInsertsMissingDetailRow(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.persist( new Shipment( 2, null, null ) ) );
+		assertNoDetailRow( scope, 2 );
+		scope.getCollectingStatementObserver().clear();
+		scope.inStatelessTransaction( session -> session.update( new Shipment( 2, null, "new" ) ) );
+		if ( usesOptionalTableMerge( scope ) ) {
+			assertSingleDetailMerge( scope );
+		}
+		else {
+			assertThat( scope.getCollectingStatementObserver().getSqlQueries() )
+					.filteredOn( sql -> sql.contains( "optional_shipment_detail" ) )
+					.satisfiesExactly(
+							sql -> assertThat( sql ).startsWith( "update optional_shipment_detail " ),
+							sql -> assertThat( sql ).startsWith( "insert into optional_shipment_detail " )
+					);
+		}
+		scope.inTransaction( session -> assertThat( session.find( Shipment.class, 2 ).label ).isEqualTo( "new" ) );
+	}
+
+	@Test
+	void statelessUpdateLeavesEmptyDetailRowAbsent(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.persist( new Shipment( 2, null, null ) ) );
+		scope.inStatelessTransaction( session -> session.update( new Shipment( 2, null, null ) ) );
+		assertNoDetailRow( scope, 2 );
+	}
+
+	@Test
+	void statelessUpsertUsesStoredCodeForMatchedRows(SessionFactoryScope scope) {
+		assumeTrue( usesOptionalTableMerge( scope ) );
+		scope.inTransaction( session -> session.persist( new Shipment( 2, null, "label" ) ) );
+		scope.inStatelessTransaction( session -> {
+			session.upsert( new Shipment( 1, null, null ) );
+			session.upsert( new Shipment( 2, "ignored", null ) );
+			session.upsert( new Shipment( 3, "new", null ) );
+		} );
+		scope.inTransaction( session -> {
+			final var existing = session.find( Shipment.class, 1 );
+			assertThat( existing.code ).isEqualTo( "code" );
+			assertThat( existing.label ).isNull();
+			assertThat( session.find( Shipment.class, 3 ).code ).isEqualTo( "new" );
+		} );
+		assertNoDetailRow( scope, 2 );
+	}
+
+	private static void assertNoDetailRow(SessionFactoryScope scope, int id) {
+		scope.inTransaction( session -> assertThat( session
+				.createNativeQuery( "select count(*) from optional_shipment_detail where id = :id", Long.class )
+				.setParameter( "id", id ).getSingleResult() ).isZero() );
+	}
+
+	private static void assertSingleDetailMerge(SessionFactoryScope scope) {
+		assertThat( scope.getCollectingStatementObserver().getSqlQueries() )
+				.filteredOn( sql -> sql.contains( "optional_shipment_detail" ) )
+				.singleElement().asString().startsWith( "merge into optional_shipment_detail " );
+	}
+
+	// Memo has no omitted columns, so its mutation identifies the dialect's usual strategy.
+	private static boolean usesOptionalTableMerge(SessionFactoryScope scope) {
+		return scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( Memo.class )
+				.getUpdateCoordinator().getStaticMutationOperationGroup()
+				.getOperation( "optional_memo_detail" ) instanceof MergeOperation;
+	}
+
+	@Test
 	void clearDirtyColumnInDynamicUpdate(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.find( DynamicShipment.class, 1 ).label = null );
+		scope.inTransaction( session -> {
+			session.find( DynamicShipment.class, 1 ).label = null;
+			scope.getCollectingStatementObserver().clear();
+		} );
+		assertThat( scope.getCollectingStatementObserver().getSqlQueries() )
+				.filteredOn( sql -> sql.contains( "optional_dynamic_shipment_detail" ) )
+				.singleElement().asString().startsWith( "update optional_dynamic_shipment_detail " );
 		scope.inTransaction( session -> {
 			final var shipment = session.find( DynamicShipment.class, 1 );
 			assertThat( shipment.label ).isNull();

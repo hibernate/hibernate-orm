@@ -36,6 +36,9 @@ public abstract class PostgreSQLFamilySqlAstTranslator<T extends JdbcOperation> 
 
 	@Override
 	protected Expectation expectation(OptionalTableUpdate optionalTableUpdate) {
+		if ( optionalTableUpdate.getMutatingTable().isOptional() ) {
+			return super.expectation( optionalTableUpdate );
+		}
 		return optionalTableUpdate.getValueBindings().stream()
 					.anyMatch( ColumnValueBinding::isAttributeUpdatable )
 				// Never need to retry the statement, since the on conflict clause can never fail due to concurrency

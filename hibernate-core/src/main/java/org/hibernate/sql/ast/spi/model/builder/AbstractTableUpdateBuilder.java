@@ -1,13 +1,17 @@
 package org.hibernate.sql.ast.spi.model.builder;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.function.Predicate;
 
 import org.hibernate.SPI;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.spi.mutation.MutationTarget;
@@ -137,38 +141,60 @@ public abstract class AbstractTableUpdateBuilder<O extends MutationOperation>
 		}
 	}
 
-	/// Whether the given assignments include every column of the table which holds
-	/// state of the given entity. When they do not, a row of an optional table might
-	/// have data even though every assigned value is null. A column which is left out
-	/// by the [column inclusion][#setColumnInclusion] is accounted for by whoever set
-	/// it, which says whether the [row is known to exist][#setRowKnownToExist].
+	/// Whether every mapped state column of the table is assigned by the update.
 	protected boolean assignsEveryColumn(EntityMappingType entity, List<ColumnValueBinding> assignments) {
+		return unassignedColumns( entity, assignments ).isEmpty();
+	}
+
+	/// Physical state columns whose values a matched row keeps. The identifier
+	/// identifies the row even when the row has no state. A partition key mapped
+	/// as an attribute, on the other hand, also holds state.
+	protected List<String> unassignedColumns(EntityMappingType entity, List<ColumnValueBinding> assignments) {
+		final var seenColumns = new HashSet<String>();
+		final var keyDetails = getMutatingTable().getTableMapping().getKeyDetails();
+		if ( keyDetails != null ) {
+			for ( var key : keyDetails.getKeyColumns() ) {
+				seenColumns.add( key.getColumnName() );
+			}
+		}
+		for ( var assignment : assignments ) {
+			if ( assignment.isAttributeUpdatable() ) {
+				seenColumns.add( assignment.getColumnReference().getColumnExpression() );
+			}
+		}
+		final var unassigned = new ArrayList<String>();
 		final String tableName = getMutatingTable().getTableName();
 		final var persister = entity.getEntityPersister();
-		final var attributes = entity.getAttributeMappings();
-		for ( int i = 0; i < attributes.size(); i++ ) {
-			final var attribute = attributes.get( i );
-			for ( int j = 0; j < attribute.getJdbcTypeCount(); j++ ) {
-				final var selectable = attribute.getSelectable( j );
-				if ( !selectable.isFormula()
-						&& tableName.equals( persister.physicalTableNameForMutation( selectable ) )
-						&& ( columnInclusion == null || columnInclusion.test( selectable ) )
-						&& !isAssigned( selectable, assignments ) ) {
-					return false;
+		final SelectableConsumer collect = (index, selectable) -> {
+			if ( !selectable.isFormula()
+					&& tableName.equals( persister.physicalTableNameForMutation( selectable ) )
+					&& ( columnInclusion == null || columnInclusion.test( selectable ) )
+					&& seenColumns.add( selectable.getSelectionExpression() ) ) {
+				unassigned.add( selectable.getSelectionExpression() );
+			}
+		};
+		entity.forEachAttributeMapping( attribute -> forEachStateColumn( attribute, collect ) );
+		return unassigned;
+	}
+
+	private static void forEachStateColumn(AttributeMapping attribute, SelectableConsumer consumer) {
+		if ( attribute instanceof EmbeddableValuedModelPart embedded ) {
+			final var type = embedded.getEmbeddableTypeDescriptor();
+			final var aggregate = type.getAggregateMapping();
+			if ( aggregate != null ) {
+				// The fields inside an aggregate share a single physical column.
+				consumer.accept( 0, aggregate );
+			}
+			else {
+				type.forEachAttributeMapping( part -> forEachStateColumn( part, consumer ) );
+				if ( type.getDiscriminatorMapping() != null ) {
+					type.getDiscriminatorMapping().forEachSelectable( consumer );
 				}
 			}
 		}
-		return true;
-	}
-
-	private static boolean isAssigned(SelectableMapping selectable, List<ColumnValueBinding> assignments) {
-		final String column = selectable.getSelectionExpression();
-		for ( int i = 0; i < assignments.size(); i++ ) {
-			if ( assignments.get( i ).getColumnReference().getColumnExpression().equals( column ) ) {
-				return true;
-			}
+		else {
+			attribute.forEachSelectable( consumer );
 		}
-		return false;
 	}
 
 	/// Whether the given assignment is to a column by which the key of the row is

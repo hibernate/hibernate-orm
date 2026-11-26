@@ -4,17 +4,19 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import jakarta.annotation.Nullable;
+import org.hibernate.dialect.sql.ast.spi.OptionalTableUpdateOperationRequest;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.persister.entity.mutation.InsertCoordinatorStandard;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.spi.mutation.MutationOperation;
-import org.hibernate.dialect.sql.ast.spi.OptionalTableUpdateOperationRequest;
 import org.hibernate.sql.spi.mutation.MutationTarget;
 import org.hibernate.sql.spi.mutation.TableMapping;
 import org.hibernate.sql.spi.mutation.ValuesAnalysis;
 import org.hibernate.sql.spi.mutation.jdbc.JdbcUpdateMutation;
+import org.hibernate.sql.spi.mutation.jdbc.MergeOperation;
 import org.hibernate.sql.spi.mutation.jdbc.OptionalTableUpdateOperation;
 
 import static org.hibernate.sql.ast.spi.model.AbstractTableUpdate.collectParameters;
@@ -27,7 +29,7 @@ public class OptionalTableUpdate
 		implements LogicalTableUpdate<MutationOperation> {
 	private final List<ColumnValueBinding> valueBindings;
 	private final boolean versionedTarget;
-	private final boolean assignsEveryColumn;
+	private final @Nullable List<String> unassignedColumns;
 
 	public OptionalTableUpdate(
 			MutatingTableReference mutatingTable,
@@ -59,12 +61,27 @@ public class OptionalTableUpdate
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings) {
+		this( mutatingTable, mutationTarget, versionedTarget,
+				assignsEveryColumn ? insertOnlyColumns( valueBindings ) : null,
+				valueBindings, keyRestrictionBindings, optLockRestrictionBindings );
+	}
+
+	/// @param unassignedColumns mapped state columns left untouched by the update,
+	/// or null when the caller knows only that some columns are unassigned
+	public OptionalTableUpdate(
+			MutatingTableReference mutatingTable,
+			MutationTarget mutationTarget,
+			boolean versionedTarget,
+			@Nullable List<String> unassignedColumns,
+			List<ColumnValueBinding> valueBindings,
+			List<ColumnValueBinding> keyRestrictionBindings,
+			List<ColumnValueBinding> optLockRestrictionBindings) {
 		this(
 				mutatingTable,
 				mutationTarget,
 				"upsert for " + mutationTarget.getRolePath(),
 				versionedTarget,
-				assignsEveryColumn,
+				unassignedColumns,
 				valueBindings,
 				keyRestrictionBindings,
 				optLockRestrictionBindings
@@ -84,7 +101,7 @@ public class OptionalTableUpdate
 				mutationTarget,
 				comment,
 				versionedTarget,
-				true,
+				insertOnlyColumns( valueBindings ),
 				valueBindings,
 				keyRestrictionBindings,
 				optLockRestrictionBindings
@@ -96,7 +113,7 @@ public class OptionalTableUpdate
 			MutationTarget mutationTarget,
 			String comment,
 			boolean versionedTarget,
-			boolean assignsEveryColumn,
+			@Nullable List<String> unassignedColumns,
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings) {
@@ -110,7 +127,17 @@ public class OptionalTableUpdate
 		);
 		this.valueBindings = valueBindings;
 		this.versionedTarget = versionedTarget;
-		this.assignsEveryColumn = assignsEveryColumn;
+		if ( mutatingTable.isOptional() ) {
+			this.unassignedColumns = unassignedColumns == null ? null : List.copyOf( unassignedColumns );
+		}
+		else {
+			this.unassignedColumns = List.of();
+		}
+	}
+
+	private static List<String> insertOnlyColumns(List<ColumnValueBinding> valueBindings) {
+		return valueBindings.stream().filter( binding -> !binding.isAttributeUpdatable() )
+				.map( binding -> binding.getColumnReference().getColumnExpression() ).toList();
 	}
 
 	@Override
@@ -150,6 +177,14 @@ public class OptionalTableUpdate
 		return valueBindings;
 	}
 
+	/// The target columns to test in the matched delete condition of a full MERGE.
+	public List<String> getUnassignedColumns() {
+		if ( unassignedColumns == null ) {
+			throw new IllegalStateException( "Unassigned columns are unknown for " + getMutatingTable().getTableName() );
+		}
+		return unassignedColumns;
+	}
+
 	@Override
 	public void forEachValueBinding(BiConsumer<Integer, ColumnValueBinding> consumer) {
 		forEachThing( valueBindings, consumer );
@@ -169,17 +204,18 @@ public class OptionalTableUpdate
 				|| tableMapping.getDeleteDetails().getCustomSql() != null
 				|| tableMapping.getUpdateDetails().getCustomSql() != null
 				|| tableMapping.getUpdateDetails().isDynamicMutation()
-				|| tableMapping.isOptional() && !assignsEveryColumn ) {
-			// Fallback to the optional table mutation operation because we have to execute user specified SQL
-			// and with dynamic update insert we have to avoid using merge for optional table because
-			// it can cause the deletion of the row when an attribute is set to null.
-			// Likewise, when a column of an optional table is not assigned, a merge cannot tell
-			// whether the row has data, and would delete it when every assigned value is null.
+				|| unassignedColumns == null ) {
+			// Custom SQL and dynamic mutations need separate statements. A full MERGE
+			// also needs the names of the columns whose stored values it must check.
 			return new OptionalTableUpdateOperation( getMutationTarget(), this );
 		}
-		return factory.getJdbcServices().getDialect().createOptionalTableUpdateOperation(
+		final var operation = factory.getJdbcServices().getDialect().createOptionalTableUpdateOperation(
 				new OptionalTableUpdateOperationRequest( this, factory, versionedTarget )
 		);
+		// Only a full MERGE can refer to the existing row when deciding to delete it.
+		return !unassignedColumns.isEmpty() && !(operation instanceof MergeOperation)
+				? new OptionalTableUpdateOperation( getMutationTarget(), this )
+				: operation;
 	}
 
 	@Override

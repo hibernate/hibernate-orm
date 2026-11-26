@@ -12,7 +12,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 		AbstractOptionalSecondaryRowTest.DynamicShipment.class,
 		AbstractOptionalSecondaryRowTest.Memo.class
 })
-@SessionFactory
+@SessionFactory(useCollectingStatementObserver = true)
 @JiraKey("HHH-21283")
 public class OptionalSecondaryRowTest extends AbstractOptionalSecondaryRowTest {
 }

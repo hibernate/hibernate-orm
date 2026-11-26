@@ -106,6 +106,7 @@ public class TableUpdateBuilderStandard<O extends MutationOperation>
 					getMutatingTable(),
 					getMutationTarget(),
 					entityMutationTarget.getTargetPart().getVersionMapping() != null,
+					assignsEveryColumn( entityMutationTarget.getTargetPart(), valueBindings ),
 					valueBindings,
 					getKeyRestrictionBindings(),
 					getOptimisticLockBindings()

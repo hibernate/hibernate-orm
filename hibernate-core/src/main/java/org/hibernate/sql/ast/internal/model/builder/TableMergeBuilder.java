@@ -58,10 +58,12 @@ public class TableMergeBuilder<O extends MutationOperation> extends AbstractTabl
 					getMutatingTable().getTableMapping().getUpdateDetails().getExpectation(), emptyList() );
 		}
 
+		final var entity = getMutationTarget().getTargetPart();
 		return (LogicalTableUpdate<O>) new OptionalTableUpdate(
 				getMutatingTable(),
 				getMutationTarget(),
-				getMutationTarget().getTargetPart().getVersionMapping() != null,
+				entity.getVersionMapping() != null,
+				!getMutatingTable().isOptional() || assignsEveryColumn( entity, valueBindings ),
 				valueBindings,
 				getKeyRestrictionBindings(),
 				getOptimisticLockBindings()

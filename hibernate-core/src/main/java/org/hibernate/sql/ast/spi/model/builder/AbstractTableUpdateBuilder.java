@@ -170,4 +170,19 @@ public abstract class AbstractTableUpdateBuilder<O extends MutationOperation>
 		}
 		return false;
 	}
+
+	/// Whether the given assignment is to a column by which the key of the row is
+	/// restricted, as a partition key column is. Such a column is not null, so its
+	/// row has data, and a statement which matches the row by its key, and inserts
+	/// it if there is no such row, cannot name the column a second time.
+	protected boolean isKeyRestrictionColumn(ColumnValueBinding valueBinding) {
+		final String column = valueBinding.getColumnReference().getColumnExpression();
+		final var keyRestrictions = getKeyRestrictionBindings();
+		for ( int i = 0; i < keyRestrictions.size(); i++ ) {
+			if ( keyRestrictions.get( i ).getColumnReference().getColumnExpression().equals( column ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
 }

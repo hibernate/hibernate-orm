@@ -544,7 +544,8 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	}
 
 	private List<ColumnValueBinding> getUpdatableValueBindings() {
-		if ( !hasNonUpdatableBinding() ) {
+		// when there is nothing to assign, the update still tells us whether the row exists
+		if ( !valueBindings.isEmpty() && !hasNonUpdatableBinding() ) {
 			return valueBindings;
 		}
 		else {

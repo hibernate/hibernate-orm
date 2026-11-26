@@ -69,6 +69,12 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 
 	private final List<JdbcValueDescriptor> jdbcValueDescriptors;
 
+	// Each statement depends only on the bindings, so it is translated once,
+	// however many times the operation is performed.
+	private volatile JdbcMutationOperation translatedUpdate;
+	private volatile JdbcMutationOperation translatedInsert;
+	private volatile JdbcDeleteMutation translatedDelete;
+
 	public OptionalTableUpdateOperation(
 			MutationTarget mutationTarget,
 			OptionalTableUpdate upsert) {
@@ -226,7 +232,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	}
 
 	private void performDelete(JdbcValueBindings jdbcValueBindings, SharedSessionContractImplementor session) {
-		final var jdbcDelete = createJdbcDelete( session );
+		final var jdbcDelete = translatedDelete( session );
 		final var jdbcCoordinator = session.getJdbcCoordinator();
 		final var deleteStatement = createStatementDetails( jdbcDelete, jdbcCoordinator );
 		session.getJdbcServices().getSqlStatementLogger().logStatement( jdbcDelete.getSqlString() );
@@ -346,7 +352,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		final var updateParameters = collectUpdateParameters( updateValueBindings );
 		final var statementDetails =
 				new PreparedStatementGroupSingleTable(
-						createJdbcUpdate( session, updateValueBindings, updateParameters ),
+						translatedUpdate( session, updateValueBindings, updateParameters ),
 						session
 				)
 						.resolvePreparedStatementDetails( tableMapping.getTableName() );
@@ -384,6 +390,33 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		}
 	}
 
+	private JdbcMutationOperation translatedUpdate(
+			SharedSessionContractImplementor session,
+			List<ColumnValueBinding> updateValueBindings,
+			List<ColumnValueParameter> updateParameters) {
+		var update = translatedUpdate;
+		if ( update == null ) {
+			translatedUpdate = update = createJdbcUpdate( session, updateValueBindings, updateParameters );
+		}
+		return update;
+	}
+
+	private JdbcMutationOperation translatedInsert(SharedSessionContractImplementor session) {
+		var insert = translatedInsert;
+		if ( insert == null ) {
+			translatedInsert = insert = createJdbcOptionalInsert( session );
+		}
+		return insert;
+	}
+
+	private JdbcDeleteMutation translatedDelete(SharedSessionContractImplementor session) {
+		var delete = translatedDelete;
+		if ( delete == null ) {
+			translatedDelete = delete = createJdbcDelete( session );
+		}
+		return delete;
+	}
+
 	@SPI(USE) // by Hibernate Reactive
 	protected JdbcMutationOperation createJdbcUpdate(SharedSessionContractImplementor session) {
 		final var updateValueBindings = getUpdatableValueBindings();
@@ -412,7 +445,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	}
 
 	private boolean performInsert(JdbcValueBindings jdbcValueBindings, SharedSessionContractImplementor session) {
-		final var jdbcInsert = createJdbcOptionalInsert( session );
+		final var jdbcInsert = translatedInsert( session );
 		final var jdbcServices = session.getJdbcServices();
 		final var jdbcCoordinator = session.getJdbcCoordinator();
 		final var insertStatement = createStatementDetails( jdbcInsert, jdbcCoordinator );

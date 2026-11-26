@@ -27,6 +27,7 @@ public class OptionalTableUpdate
 		implements LogicalTableUpdate<MutationOperation> {
 	private final List<ColumnValueBinding> valueBindings;
 	private final boolean versionedTarget;
+	private final boolean assignsEveryColumn;
 
 	public OptionalTableUpdate(
 			MutatingTableReference mutatingTable,
@@ -38,8 +39,32 @@ public class OptionalTableUpdate
 		this(
 				mutatingTable,
 				mutationTarget,
+				versionedTarget,
+				true,
+				valueBindings,
+				keyRestrictionBindings,
+				optLockRestrictionBindings
+		);
+	}
+
+	/// @param assignsEveryColumn whether the assignments include every column of
+	///                           the table, so that the row of an optional table
+	///                           has no data exactly when every assigned value
+	///                           is null
+	public OptionalTableUpdate(
+			MutatingTableReference mutatingTable,
+			MutationTarget mutationTarget,
+			boolean versionedTarget,
+			boolean assignsEveryColumn,
+			List<ColumnValueBinding> valueBindings,
+			List<ColumnValueBinding> keyRestrictionBindings,
+			List<ColumnValueBinding> optLockRestrictionBindings) {
+		this(
+				mutatingTable,
+				mutationTarget,
 				"upsert for " + mutationTarget.getRolePath(),
 				versionedTarget,
+				assignsEveryColumn,
 				valueBindings,
 				keyRestrictionBindings,
 				optLockRestrictionBindings
@@ -54,6 +79,27 @@ public class OptionalTableUpdate
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings) {
+		this(
+				mutatingTable,
+				mutationTarget,
+				comment,
+				versionedTarget,
+				true,
+				valueBindings,
+				keyRestrictionBindings,
+				optLockRestrictionBindings
+		);
+	}
+
+	private OptionalTableUpdate(
+			MutatingTableReference mutatingTable,
+			MutationTarget mutationTarget,
+			String comment,
+			boolean versionedTarget,
+			boolean assignsEveryColumn,
+			List<ColumnValueBinding> valueBindings,
+			List<ColumnValueBinding> keyRestrictionBindings,
+			List<ColumnValueBinding> optLockRestrictionBindings) {
 		super(
 				mutatingTable,
 				mutationTarget,
@@ -64,6 +110,7 @@ public class OptionalTableUpdate
 		);
 		this.valueBindings = valueBindings;
 		this.versionedTarget = versionedTarget;
+		this.assignsEveryColumn = assignsEveryColumn;
 	}
 
 	@Override
@@ -121,10 +168,13 @@ public class OptionalTableUpdate
 				|| tableMapping.getInsertDetails().isDynamicMutation()
 				|| tableMapping.getDeleteDetails().getCustomSql() != null
 				|| tableMapping.getUpdateDetails().getCustomSql() != null
-				|| tableMapping.getUpdateDetails().isDynamicMutation() ) {
+				|| tableMapping.getUpdateDetails().isDynamicMutation()
+				|| tableMapping.isOptional() && !assignsEveryColumn ) {
 			// Fallback to the optional table mutation operation because we have to execute user specified SQL
 			// and with dynamic update insert we have to avoid using merge for optional table because
-			// it can cause the deletion of the row when an attribute is set to null
+			// it can cause the deletion of the row when an attribute is set to null.
+			// Likewise, when a column of an optional table is not assigned, a merge cannot tell
+			// whether the row has data, and would delete it when every assigned value is null.
 			return new OptionalTableUpdateOperation( getMutationTarget(), this );
 		}
 		return factory.getJdbcServices().getDialect().createOptionalTableUpdateOperation(

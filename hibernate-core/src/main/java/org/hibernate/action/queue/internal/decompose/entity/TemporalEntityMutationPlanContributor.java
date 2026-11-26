@@ -23,6 +23,8 @@ import org.hibernate.sql.ast.spi.model.MutatingTableReference;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilder;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 
+import static org.hibernate.action.queue.internal.decompose.entity.DecompositionHelper.initializeStateForRevisionInsert;
+import static org.hibernate.action.queue.internal.decompose.entity.DecompositionHelper.revisionInsertability;
 import static org.hibernate.action.queue.internal.decompose.entity.EntityTemporalEndBindPlan.isIncludedInOptimisticLock;
 import static org.hibernate.generator.EventType.UPDATE;
 
@@ -82,7 +84,7 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 			return false;
 		}
 
-		context.initializeStateForRevisionInsert( entityPersister.getIdentifierTableDescriptor() );
+		initializeStateForRevisionInsert( context, entityPersister.getIdentifierTableDescriptor() );
 
 		final OptimisticLockStyle effectiveOptLockStyle = effectiveOptimisticLockStyle(
 				context.previousVersion(),
@@ -178,8 +180,8 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 			UpdateContext context,
 			Consumer<FlushOperation> operationConsumer) {
 		generateReplacementValues( context );
-		final boolean[] effectiveInsertability = context.revisionInsertability(
-				insertMutationPlanner.resolveInsertability( context.state() ) );
+		final boolean[] effectiveInsertability = revisionInsertability(
+				context, insertMutationPlanner.resolveInsertability( context.state() ) );
 		final boolean reusingGeneratedIdentifier = entityPersister.isIdentifierAssignedByInsert();
 		final var generatedValuesCollector = reusingGeneratedIdentifier
 				? GeneratedValuesCollector.forReplacementInsert( entityPersister, sessionFactory )

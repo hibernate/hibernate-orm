@@ -4,11 +4,13 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.Setting;
 
 import static org.hibernate.cfg.FlushSettings.FLUSH_QUEUE_TYPE;
+import static org.hibernate.cfg.StateManagementSettings.CHANGESET_ID_SUPPLIER;
 import static org.hibernate.cfg.StateManagementSettings.TEMPORAL_TABLE_STRATEGY;
 
 @ServiceRegistry(settings = {
 		@Setting(name = TEMPORAL_TABLE_STRATEGY, value = "SINGLE_TABLE"),
-		@Setting(name = FLUSH_QUEUE_TYPE, value = "legacy")
+		@Setting(name = FLUSH_QUEUE_TYPE, value = "legacy"),
+		@Setting(name = CHANGESET_ID_SUPPLIER, value = TemporalRemoveInSameChangesetTest.INSTANT_SUPPLIER)
 })
 class TemporalRemoveInSameChangesetLegacyTest extends TemporalRemoveInSameChangesetTest {
 }

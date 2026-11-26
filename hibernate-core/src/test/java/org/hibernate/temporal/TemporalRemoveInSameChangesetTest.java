@@ -1,17 +1,24 @@
 package org.hibernate.temporal;
 
+import java.time.Instant;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
 
+import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Temporal;
+import org.hibernate.dialect.SpannerDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -20,7 +27,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 import static org.hibernate.cfg.FlushSettings.FLUSH_QUEUE_TYPE;
 import static org.hibernate.cfg.StateManagementSettings.CHANGESET_ID_SUPPLIER;
 import static org.hibernate.cfg.StateManagementSettings.TEMPORAL_TABLE_STRATEGY;
-import static org.hibernate.testing.orm.junit.DialectContext.awaitTimestampTick;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -38,6 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 })
 class TemporalRemoveInSameChangesetTest {
 	static final String SUPPLIER = "org.hibernate.temporal.TemporalInsertUpdateOrderingTest$Changesets";
+	static final String INSTANT_SUPPLIER = "org.hibernate.temporal.TemporalRemoveInSameChangesetTest$InstantChangesets";
 
 	@AfterEach
 	void cleanup(SessionFactoryScope scope) {
@@ -52,7 +59,6 @@ class TemporalRemoveInSameChangesetTest {
 			session.persist( item );
 			return session.getCurrentChangesetIdentifier();
 		} );
-		awaitTimestampTick();
 		final var after = scope.fromTransaction( session -> {
 			final var item = session.find( Item.class, 1 );
 			item.name = "updated";
@@ -98,7 +104,6 @@ class TemporalRemoveInSameChangesetTest {
 			session.persist( new VersionedItem( 2 ) );
 			return session.getCurrentChangesetIdentifier();
 		} );
-		awaitTimestampTick();
 		scope.inTransaction( session -> {
 			session.setJdbcBatchSize( 5 );
 			final var oldItem = session.find( VersionedItem.class, 1 );
@@ -139,7 +144,6 @@ class TemporalRemoveInSameChangesetTest {
 			session.persist( item );
 			return session.getCurrentChangesetIdentifier();
 		} );
-		awaitTimestampTick();
 		scope.inStatelessTransaction( session -> {
 			final var item = session.get( Item.class, 1 );
 			item.name = "updated";
@@ -155,13 +159,14 @@ class TemporalRemoveInSameChangesetTest {
 
 	@ParameterizedTest
 	@ValueSource(booleans = { true, false })
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner does not allow updating primary key columns")
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner does not allow updating primary key columns")
 	void reuseStatelessSessionAfterUpdate(boolean commit, SessionFactoryScope scope) {
 		scope.inStatelessSession( session -> {
 			final var inserted = session.fromTransaction( tx -> {
 				session.insert( new VersionedItem( 1 ) );
 				return session.getCurrentChangesetIdentifier();
 			} );
-			awaitTimestampTick();
 			final var transaction = session.beginTransaction();
 			final var item = session.get( VersionedItem.class, 1 );
 			item.name = "first update";
@@ -175,7 +180,6 @@ class TemporalRemoveInSameChangesetTest {
 			else {
 				transaction.rollback();
 			}
-			awaitTimestampTick();
 			session.inTransaction( tx -> session.delete( session.get( VersionedItem.class, 1 ) ) );
 
 			try (var history = scope.getSessionFactory().withOptions().atChangeset( inserted ).openSession()) {
@@ -198,12 +202,22 @@ class TemporalRemoveInSameChangesetTest {
 		scope.inSession( owner -> {
 			try (var session = owner.statelessWithOptions().connection().open()) {
 				owner.inTransaction( tx -> session.insert( new VersionedItem( 1 ) ) );
-				awaitTimestampTick();
 				owner.inTransaction( tx -> session.delete( session.get( VersionedItem.class, 1 ) ) );
 			}
 		} );
 		assertEquals( 1L, countRevisions( scope, VersionedItem.class ) );
 		scope.inSession( session -> assertNull( session.find( VersionedItem.class, 1 ) ) );
+	}
+
+	public static class InstantChangesets implements ChangesetIdentifierSupplier<Instant> {
+		private static final Instant FIRST = Instant.parse( "2026-01-01T00:00:00Z" );
+		private long next;
+
+		@Override
+		public Instant generateIdentifier(SharedSessionContract session) {
+			// A whole second survives storage at the database's timestamp precision.
+			return FIRST.plusSeconds( next++ );
+		}
 	}
 
 	private static long countRevisions(SessionFactoryScope scope, Class<?> entityType) {

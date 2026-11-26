@@ -13,15 +13,14 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.spi.mutation.TableMapping;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.spi.mutation.MutationType;
-import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilder;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.internal.MutationGroupSingle;
 
+import static org.hibernate.persister.entity.mutation.TemporalMutationHelper.applyTemporalEnding;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /**
@@ -31,13 +30,6 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.sin
 abstract class AbstractTemporalUpdateCoordinator extends AbstractMutationCoordinator implements UpdateCoordinator {
 	AbstractTemporalUpdateCoordinator(@Nonnull EntityPersister entityPersister, @Nonnull SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
-	}
-
-	static void applyTemporalEnding(@Nonnull TableUpdateBuilder<?> tableUpdateBuilder, @Nonnull TemporalMapping temporalMapping) {
-		final var endingColumnReference =
-				new ColumnReference( tableUpdateBuilder.getMutatingTable(), temporalMapping.getEndingColumnMapping() );
-		tableUpdateBuilder.addValueColumn( temporalMapping.createEndingValueBinding( endingColumnReference ) );
-		tableUpdateBuilder.addNonKeyRestriction( temporalMapping.createNullEndingValueBinding( endingColumnReference ) );
 	}
 
 	@Nonnull
@@ -78,6 +70,13 @@ abstract class AbstractTemporalUpdateCoordinator extends AbstractMutationCoordin
 	}
 
 	abstract void bindVersionRestriction(@Nullable Object oldVersion, @Nonnull JdbcValueBindings jdbcValueBindings, @Nonnull String temporalTableName);
+
+	void registerUpdatedRevision(@Nonnull Object id, @Nonnull SharedSessionContractImplementor session) {
+		if ( !session.isStateless() ) {
+			session.getPersistenceContextInternal()
+					.registerUpdatedTemporalRevision( session.generateEntityKey( id, entityPersister() ) );
+		}
+	}
 
 	/**
 	 * @param state the state of the row which is ended, from which its partition key

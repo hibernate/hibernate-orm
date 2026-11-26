@@ -68,7 +68,7 @@ public class TableMergeBuilder<O extends MutationOperation> extends AbstractTabl
 				getMutatingTable(),
 				getMutationTarget(),
 				entity.getVersionMapping() != null,
-				!getMutatingTable().isOptional() || assignsEveryColumn( entity, assignments ),
+				getMutatingTable().isOptional() ? unassignedColumns( entity, assignments ) : emptyList(),
 				assignments,
 				getKeyRestrictionBindings(),
 				getOptimisticLockBindings()

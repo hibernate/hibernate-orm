@@ -52,6 +52,10 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 	}
 
 	private static Expectation mergeExpectation(OptionalTableUpdate optionalTableUpdate) {
+		if ( !optionalTableUpdate.getUnassignedColumns().isEmpty() ) {
+			// The conditional insert leaves an absent row alone when there is no data.
+			return new Expectation.OptionalRowCount();
+		}
 		return optionalTableUpdate.getValueBindings().stream()
 					.anyMatch( ColumnValueBinding::isAttributeUpdatable )
 				? optionalTableUpdate.getMutatingTable().isOptional()
@@ -101,6 +105,11 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 		renderMergeInsert( optionalTableUpdate );
 		appendSql( ' ' );
 
+		renderMergeMatched( optionalTableUpdate );
+	}
+
+	/// Renders the actions for a matching target row.
+	protected void renderMergeMatched(OptionalTableUpdate optionalTableUpdate) {
 		if ( optionalTableUpdate.getMutatingTable().isOptional() ) {
 			// when matched
 			//      and s.col_1 is null
@@ -203,10 +212,46 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 	/// Renders the `when not matched` insert arm.
 	@SPI(IMPLEMENT)
 	protected void renderMergeInsert(OptionalTableUpdate optionalTableUpdate) {
+		appendSql( "when not matched" );
+		if ( !optionalTableUpdate.getUnassignedColumns().isEmpty() ) {
+			appendSql( " and (" );
+			renderMergeInsertCondition( optionalTableUpdate );
+			appendSql( ')' );
+		}
+		appendSql( " then " );
+		renderMergeInsertValues( optionalTableUpdate );
+	}
+
+	/// A missing optional row needs inserting only if the insert supplies state.
+	protected void renderMergeInsertCondition(OptionalTableUpdate optionalTableUpdate) {
+		String separator = "";
+		for ( var binding : optionalTableUpdate.getValueBindings() ) {
+			if ( binding.isAttributeInsertable() ) {
+				appendSql( separator );
+				binding.getColumnReference().appendColumnForWrite( this, "s" );
+				appendSql( " is not null" );
+				separator = " or ";
+			}
+		}
+		// A partition key can be inserted by the key binding instead of a value binding.
+		for ( var binding : optionalTableUpdate.getKeyBindings() ) {
+			if ( optionalTableUpdate.getUnassignedColumns().contains( binding.getColumnReference().getColumnExpression() ) ) {
+				appendSql( separator );
+				binding.getColumnReference().appendColumnForWrite( this, "s" );
+				appendSql( " is not null" );
+				separator = " or ";
+			}
+		}
+		if ( separator.isEmpty() ) {
+			appendSql( "1=0" );
+		}
+	}
+
+	protected void renderMergeInsertValues(OptionalTableUpdate optionalTableUpdate) {
 		final List<ColumnValueBinding> valueBindings = optionalTableUpdate.getValueBindings();
 		final List<ColumnValueBinding> keyBindings = optionalTableUpdate.getKeyBindings();
 
-		appendSql( "when not matched then insert " );
+		appendSql( "insert " );
 		char separator = '(';
 		for ( ColumnValueBinding keyBinding : keyBindings ) {
 			appendSql( separator );
@@ -244,11 +289,22 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 
 		renderWhenMatched( optimisticLockBindings );
 		for ( ColumnValueBinding binding : valueBindings ) {
-			appendSql( " and " );
-			binding.getColumnReference().appendReadExpression( this, "s" );
-			appendSql( " is null" );
+			if ( binding.isAttributeUpdatable() ) {
+				appendSql( " and " );
+				binding.getColumnReference().appendColumnForWrite( this, "s" );
+				appendSql( " is null" );
+			}
 		}
+		renderUnassignedColumnChecks( optionalTableUpdate, true );
 		appendSql( " then delete" );
+	}
+
+	protected void renderUnassignedColumnChecks(OptionalTableUpdate optionalTableUpdate, boolean allNull) {
+		for ( String column : optionalTableUpdate.getUnassignedColumns() ) {
+			appendSql( allNull ? " and t." : " or t." );
+			appendSql( column );
+			appendSql( allNull ? " is null" : " is not null" );
+		}
 	}
 
 	/// Renders the `when matched` update arm when updatable bindings exist.

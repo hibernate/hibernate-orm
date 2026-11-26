@@ -651,49 +651,9 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	}
 
 	@Override
-	protected void renderMergeStatement(OptionalTableUpdate optionalTableUpdate) {
-		//
-		// merge into <target-table> as t
-		// using (select col_1, col_2, ... from dual) as s
-		// on (t.key = s.key)
-		// when not matched
-		//	 then insert ...
-		// when matched
-		//      and s.col_1 is null
-		//	    and s.col_2 is null
-		//		and ...
-		//   then delete
-		// when matched
-		//   then update ...
-
-		// `merge into <target-table> [as] t`
-		renderMergeInto( optionalTableUpdate );
-		appendSql( ' ' );
-
-		// using (select col_1, col_2, ... from dual) as s
-		renderMergeUsing( optionalTableUpdate );
-		appendSql( ' ' );
-
-		// on (t.key = s.key)
-		renderMergeOn( optionalTableUpdate );
-		appendSql( ' ' );
-
-		// when not matched
-		//	 then insert ...
-		renderMergeInsert( optionalTableUpdate );
-		appendSql( ' ' );
-
-		// when matched
-		//   then update ... where ...
+	protected void renderMergeMatched(OptionalTableUpdate optionalTableUpdate) {
+		// Oracle's DELETE WHERE belongs to the update arm.
 		renderMergeUpdate( optionalTableUpdate );
-
-		if ( optionalTableUpdate.getMutatingTable().isOptional() ) {
-			// delete
-			//      where s.col_1 is null
-			//	      and s.col_2 is null
-			//		  and ...
-			renderMergeDelete( optionalTableUpdate );
-		}
 	}
 
 	@Override
@@ -709,16 +669,28 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	private static final String MERGE_ACTION = "hib_merge_action";
 
 	@Override
+	protected void renderMergeInsert(OptionalTableUpdate optionalTableUpdate) {
+		appendSql( "when not matched then " );
+		renderMergeInsertValues( optionalTableUpdate );
+		if ( !optionalTableUpdate.getUnassignedColumns().isEmpty() ) {
+			appendSql( " where " );
+			renderMergeInsertCondition( optionalTableUpdate );
+		}
+	}
+
+	@Override
 	protected void renderMergeUsingQuery(OptionalTableUpdate optionalTableUpdate) {
-		if ( optionalTableUpdate.getMutatingTable().isOptional() ) {
+		if ( optionalTableUpdate.getMutatingTable().isOptional()
+				&& optionalTableUpdate.getValueBindings().stream().anyMatch( ColumnValueBinding::isAttributeUpdatable ) ) {
 			appendSql( "select s.*,case when" );
 			String separator = " ";
 			for ( ColumnValueBinding valueBinding : optionalTableUpdate.getValueBindings() ) {
-				appendSql( separator );
-				appendSql( "s." );
-				appendSql( valueBinding.getColumnReference().getColumnExpression() );
-				appendSql( " is not null" );
-				separator = " or ";
+				if ( valueBinding.isAttributeUpdatable() ) {
+					appendSql( separator );
+					valueBinding.getColumnReference().appendColumnForWrite( this, "s" );
+					appendSql( " is not null" );
+					separator = " or ";
+				}
 			}
 			appendSql( " then 1 else 0 end " );
 			appendSql( MERGE_ACTION );
@@ -747,10 +719,12 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 					if ( optionalTableUpdate.getMutatingTable().isOptional() ) {
 						appendSql( "case when s." );
 						appendSql( MERGE_ACTION );
-						appendSql( "=1 then " );
+						appendSql( "=1" );
+						renderUnassignedColumnChecks( optionalTableUpdate, false );
+						appendSql( " then " );
 						binding.getColumnReference().appendColumnForWrite( this, "s" );
 						appendSql( " else " );
-						binding.getColumnReference().appendColumnForWrite( this, null );
+						binding.getColumnReference().appendColumnForWrite( this, "t" );
 						appendSql( " end" );
 					}
 					else {
@@ -765,6 +739,10 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 				renderMergeRestriction( optimisticLockBinding );
 				separator = " and ";
 			}
+			if ( optionalTableUpdate.getMutatingTable().isOptional() ) {
+				// Oracle evaluates DELETE WHERE on the row after this update.
+				renderMergeDelete( optionalTableUpdate );
+			}
 		}
 	}
 
@@ -773,13 +751,6 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 		appendSql( " delete where s." );
 		appendSql( MERGE_ACTION );
 		appendSql( "=0" );
-		// On Oracle, a delete is considered only after matching the update condition, so no need to check version again
-//		for ( ColumnValueBinding optimisticLockBinding : optionalTableUpdate.getOptimisticLockBindings() ) {
-//			appendSql( separator );
-//			optimisticLockBinding.getColumnReference().appendReadExpression( this, "t" );
-//			appendSql('=');
-//			optimisticLockBinding.getValueExpression().accept( this );
-//			separator = " and ";
-//		}
+		renderUnassignedColumnChecks( optionalTableUpdate, true );
 	}
 }

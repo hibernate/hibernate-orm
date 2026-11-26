@@ -266,7 +266,14 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 		if ( !querySpec.isRoot() && !querySpec.getGroupByClauseExpressions().isEmpty() ) {
 			final var from = querySpec.getFromClause();
 			final Set<String> localAliases = new HashSet<>();
-			from.visitTableReferences( ref -> localAliases.add( ref.getIdentificationVariable() ) );
+			from.visitTableGroups( group -> {
+				// A virtual group for an embeddable can expose the table of the outer query.
+				if ( group.isInitialized() && !group.isVirtual() ) {
+					localAliases.add( group.getPrimaryTableReference().getIdentificationVariable() );
+					group.getTableReferenceJoins().forEach( join ->
+							localAliases.add( join.getJoinedTableReference().getIdentificationVariable() ) );
+				}
+			} );
 			final List<Expression> values = new ArrayList<>();
 			final List<String> names = new ArrayList<>();
 			final List<Expression> grouping = new ArrayList<>();

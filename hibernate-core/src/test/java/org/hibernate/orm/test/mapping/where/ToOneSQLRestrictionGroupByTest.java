@@ -158,8 +158,8 @@ class ToOneSQLRestrictionGroupByTest {
 	void groupByCorrelatedAssociationWithEmptyInput(SessionFactoryScope scope) {
 		assertThat( longs( scope, """
 				select c.id from Child c where exists (
-				    select count(*) from Child x where x.id < c.id
-				    group by c.parent having count(*) = 0
+					select count(*) from Child x where x.id < c.id
+					group by c.parent having count(*) = 0
 				)
 				""" ) ).isEmpty();
 	}

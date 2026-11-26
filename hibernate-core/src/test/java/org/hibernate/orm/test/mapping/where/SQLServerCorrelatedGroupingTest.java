@@ -24,7 +24,7 @@ class SQLServerCorrelatedGroupingTest {
 	void restrictedAssociation(SessionFactoryScope scope) {
 		final var sql = translateHql( """
 				select c.id from Child c where exists (
-				    select count(*) from Child x group by c.parent having count(*) > 0
+					select count(*) from Child x group by c.parent having count(*) > 0
 				)
 				""", Long.class, scope.getSessionFactory() ).sql();
 		assertThat( sql ).containsPattern( "values *\\(\\w+\\.parent_id\\)" )
@@ -36,7 +36,7 @@ class SQLServerCorrelatedGroupingTest {
 	void groupingExpressionsWithOuterAndLocalColumns(SessionFactoryScope scope) {
 		final var sql = translateHql( """
 				select c.id from Child c where exists (
-				    select count(*) from Child x group by upper(c.name), c.id + x.id
+					select count(*) from Child x group by upper(c.name), c.id + x.id
 				)
 				""", Long.class, scope.getSessionFactory() ).sql();
 		assertThat( sql ).containsPattern( "values *\\(upper\\(\\w+\\.name\\)\\)" )
@@ -47,7 +47,7 @@ class SQLServerCorrelatedGroupingTest {
 	void compositeOuterKeyAndLocalKey(SessionFactoryScope scope) {
 		final var sql = translateHql( """
 				select e.data from EmbeddedIdEntity e where exists (
-				    select count(*) from EmbeddedIdEntity x group by e.id, x.data
+					select count(*) from EmbeddedIdEntity x group by e.id, x.data
 				)
 				""", String.class, scope.getSessionFactory() ).sql();
 		assertThat( sql ).containsPattern( "values *\\(\\w+\\.value1,\\w+\\.value2\\)" )

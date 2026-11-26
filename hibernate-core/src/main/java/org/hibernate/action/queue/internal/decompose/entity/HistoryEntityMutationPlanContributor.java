@@ -38,6 +38,8 @@ import org.hibernate.sql.ast.spi.model.builder.AssigningTableMutationBuilder;
 import org.hibernate.sql.ast.spi.model.builder.TableInsertBuilderStandard;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 
+import static org.hibernate.action.queue.internal.decompose.entity.DecompositionHelper.initializeStateForRevisionInsert;
+import static org.hibernate.action.queue.internal.decompose.entity.DecompositionHelper.revisionInsertability;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.generator.EventType.UPDATE;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_INT_ARRAY;
@@ -126,7 +128,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 					context.previousVersion(),
 					context.previousState()
 			);
-			context.initializeStateForRevisionInsert( historyTableDescriptor );
+			initializeStateForRevisionInsert( context, historyTableDescriptor );
 			final var insert = createHistoryInsertOperation( context );
 			context.recordRevisionAfterInsert( insert );
 			insert.addExecutionPrerequisite( end );
@@ -207,7 +209,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 
 	private FlushOperation createHistoryInsertOperation(UpdateContext context) {
 		final var insertability = entityPersister.getPropertyInsertability();
-		final var inclusions = context.revisionInsertability( insertability );
+		final var inclusions = revisionInsertability( context, insertability );
 		final var insert = inclusions == insertability ? staticHistoryInsert
 				: buildHistoryInsert( inclusions, context.entity(), context.session() );
 		return new FlushOperation(

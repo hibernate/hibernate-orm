@@ -17,6 +17,8 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Temporal;
+import org.hibernate.dialect.SpannerDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -24,6 +26,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static jakarta.persistence.InheritanceType.TABLE_PER_CLASS;
@@ -69,6 +72,45 @@ class TablePerClassHistoryTest {
 		testHistory( scope );
 	}
 
+	@Test
+	@SessionFactory
+	@ServiceRegistry(settings = {
+		@Setting(name = CHANGESET_ID_SUPPLIER, value = CHANGESETS),
+		@Setting(name = TEMPORAL_TABLE_STRATEGY, value = "HISTORY_TABLE"),
+		@Setting(name = FLUSH_QUEUE_TYPE, value = "graph")
+	})
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner does not allow updating primary key columns")
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner does not allow updating primary key columns")
+	void rejectStaleHistoryRevisionInGraphQueue(SessionFactoryScope scope) {
+		testStaleHistoryRevision( scope );
+	}
+
+	@Test
+	@SessionFactory
+	@ServiceRegistry(settings = {
+		@Setting(name = CHANGESET_ID_SUPPLIER, value = CHANGESETS),
+		@Setting(name = TEMPORAL_TABLE_STRATEGY, value = "HISTORY_TABLE"),
+		@Setting(name = FLUSH_QUEUE_TYPE, value = "legacy")
+	})
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner does not allow updating primary key columns")
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner does not allow updating primary key columns")
+	void rejectStaleHistoryRevisionInLegacyQueue(SessionFactoryScope scope) {
+		testStaleHistoryRevision( scope );
+	}
+
+	private void testStaleHistoryRevision(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.persist( new Car( 2, 4 ) ) );
+		scope.inTransaction( session -> session.find( Car.class, 2 ).doors = 5 );
+		assertThatThrownBy( () -> scope.inTransaction( session -> {
+			final var stale = session.find( Car.class, 2 );
+			assertThat( session.createNativeMutationQuery(
+					"update tch_car_versions set version = version + 1 where id = 2 and superseded is null"
+			).executeUpdate() ).isEqualTo( 1 );
+			session.remove( stale );
+			session.flush();
+		} ) ).isInstanceOf( OptimisticLockException.class );
+	}
+
 	private void testHistory(SessionFactoryScope scope) {
 		final var insertedAt = scope.fromTransaction( session -> {
 			session.persist( new Vehicle( 1 ) );
@@ -85,15 +127,6 @@ class TablePerClassHistoryTest {
 			session.find( Report.class, 5 ).title = "published";
 			return session.getCurrentChangesetIdentifier();
 		} );
-		assertThatThrownBy( () -> scope.inTransaction( session -> {
-			final var stale = session.find( Car.class, 2 );
-			assertThat( session.createNativeMutationQuery(
-					"update tch_car_versions set version = version + 1 where id = 2 and superseded is null"
-			).executeUpdate() ).isEqualTo( 1 );
-			session.remove( stale );
-			session.flush();
-		} ) ).isInstanceOf( OptimisticLockException.class );
-
 		final var deletedAt = scope.fromTransaction( session -> {
 			session.remove( session.find( Vehicle.class, 2 ) );
 			session.remove( session.find( ElectricCar.class, 3 ) );

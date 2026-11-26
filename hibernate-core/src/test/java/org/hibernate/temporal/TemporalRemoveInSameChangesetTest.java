@@ -1,6 +1,7 @@
 package org.hibernate.temporal;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
 
@@ -26,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @JiraKey("HHH-21276")
 @DomainModel(annotatedClasses = {
 		TemporalRemoveInSameChangesetTest.Item.class,
+		TemporalRemoveInSameChangesetTest.GeneratedItem.class,
 		TemporalRemoveInSameChangesetTest.VersionedItem.class
 })
 @SessionFactory
@@ -118,6 +120,92 @@ class TemporalRemoveInSameChangesetTest {
 		assertEquals( 2L, countRevisions( scope, VersionedItem.class ) );
 	}
 
+	@Test
+	void statelessInsertThenDelete(SessionFactoryScope scope) {
+		scope.inStatelessTransaction( session -> {
+			final var item = new GeneratedItem();
+			session.insert( item );
+			session.delete( session.get( GeneratedItem.class, item.id ) );
+			assertNull( session.find( GeneratedItem.class, item.id ) );
+		} );
+		assertEquals( 0L, countRevisions( scope, GeneratedItem.class ) );
+	}
+
+	@Test
+	void statelessUpdateThenDelete(SessionFactoryScope scope) {
+		final var before = scope.fromTransaction( session -> {
+			final var item = new Item();
+			item.name = "original";
+			session.persist( item );
+			return session.getCurrentChangesetIdentifier();
+		} );
+		awaitTimestampTick();
+		scope.inStatelessTransaction( session -> {
+			final var item = session.get( Item.class, 1 );
+			item.name = "updated";
+			session.update( item );
+			session.delete( item );
+		} );
+		try (var session = scope.getSessionFactory().withOptions().atChangeset( before ).openSession()) {
+			assertEquals( "original", session.find( Item.class, 1 ).name );
+		}
+		scope.inSession( session -> assertNull( session.find( Item.class, 1 ) ) );
+		assertEquals( 1L, countRevisions( scope, Item.class ) );
+	}
+
+	@ParameterizedTest
+	@ValueSource(booleans = { true, false })
+	void reuseStatelessSessionAfterUpdate(boolean commit, SessionFactoryScope scope) {
+		scope.inStatelessSession( session -> {
+			final var inserted = session.fromTransaction( tx -> {
+				session.insert( new VersionedItem( 1 ) );
+				return session.getCurrentChangesetIdentifier();
+			} );
+			awaitTimestampTick();
+			final var transaction = session.beginTransaction();
+			final var item = session.get( VersionedItem.class, 1 );
+			item.name = "first update";
+			session.update( item );
+			item.name = "second update";
+			session.update( item );
+			final var updated = session.getCurrentChangesetIdentifier();
+			if ( commit ) {
+				transaction.commit();
+			}
+			else {
+				transaction.rollback();
+			}
+			awaitTimestampTick();
+			session.inTransaction( tx -> session.delete( session.get( VersionedItem.class, 1 ) ) );
+
+			try (var history = scope.getSessionFactory().withOptions().atChangeset( inserted ).openSession()) {
+				final var original = history.find( VersionedItem.class, 1 );
+				assertEquals( "original", original.name );
+				assertEquals( 0, original.version );
+			}
+			try (var history = scope.getSessionFactory().withOptions().atChangeset( updated ).openSession()) {
+				final var revision = history.find( VersionedItem.class, 1 );
+				assertEquals( commit ? "second update" : "original", revision.name );
+				assertEquals( commit ? 2 : 0, revision.version );
+			}
+			assertNull( session.find( VersionedItem.class, 1 ) );
+		} );
+		assertEquals( commit ? 2L : 1L, countRevisions( scope, VersionedItem.class ) );
+	}
+
+	@Test
+	void reuseStatelessSessionSharingTransaction(SessionFactoryScope scope) {
+		scope.inSession( owner -> {
+			try (var session = owner.statelessWithOptions().connection().open()) {
+				owner.inTransaction( tx -> session.insert( new VersionedItem( 1 ) ) );
+				awaitTimestampTick();
+				owner.inTransaction( tx -> session.delete( session.get( VersionedItem.class, 1 ) ) );
+			}
+		} );
+		assertEquals( 1L, countRevisions( scope, VersionedItem.class ) );
+		scope.inSession( session -> assertNull( session.find( VersionedItem.class, 1 ) ) );
+	}
+
 	private static long countRevisions(SessionFactoryScope scope, Class<?> entityType) {
 		final var persister = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( entityType );
 		return scope.fromSession( session -> session.createNativeQuery(
@@ -129,6 +217,12 @@ class TemporalRemoveInSameChangesetTest {
 	static class Item {
 		@Id int id = 1;
 		String name;
+	}
+
+	@Entity(name = "GeneratedItem")
+	@Temporal
+	static class GeneratedItem {
+		@Id @GeneratedValue Long id;
 	}
 
 	@Entity(name = "VersionedItem")

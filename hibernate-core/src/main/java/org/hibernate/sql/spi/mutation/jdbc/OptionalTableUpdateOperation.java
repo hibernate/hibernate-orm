@@ -170,8 +170,9 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 					performUpdateOrInsert( jdbcValueBindings, session, valuesAnalysis );
 				}
 				// all the new values for this table were null - possibly delete the row
-				else if ( valuesAnalysis.getTablesWithPreviousNonNullValues().contains( tableMapping ) ) {
-					performDelete( jdbcValueBindings, session );
+				else if ( valuesAnalysis.getTablesWithPreviousNonNullValues().contains( tableMapping )
+						&& !performDelete( jdbcValueBindings, session ) ) {
+					checkOptimisticLock( valuesAnalysis );
 				}
 			}
 			finally {
@@ -203,6 +204,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 			if ( needsStoredValues && !deleteFirst && performDelete( jdbcValueBindings, session ) ) {
 				return;
 			}
+			checkOptimisticLock( valuesAnalysis );
 		}
 
 		if ( !unassignedColumns.isEmpty()
@@ -210,6 +212,12 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 			return;
 		}
 		performInsertWithRetry( jdbcValueBindings, session, needsUpdate, needsStoredValues );
+	}
+
+	private void checkOptimisticLock(UpdateValuesAnalysis valuesAnalysis) {
+		if ( valuesAnalysis.requiresExistingRowForOptimisticLock( tableMapping ) ) {
+			throw new StaleStateException( mutationTarget.getRolePath() );
+		}
 	}
 
 	private void performInsertWithRetry(

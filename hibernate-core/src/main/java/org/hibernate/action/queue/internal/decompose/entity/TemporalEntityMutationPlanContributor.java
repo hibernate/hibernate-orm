@@ -18,7 +18,6 @@ import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.PartitionKeyValue;
-import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.spi.mutation.MutationType;
 import org.hibernate.sql.spi.mutation.TableMapping;
@@ -66,8 +65,7 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 	public void applyUpdateRestriction(EntityTableDescriptor table, TableUpdateBuilder<?> builder) {
 		final var ending = temporalMapping.getEndingColumnMapping();
 		if ( table.name().equals( entityPersister.physicalTableNameForMutation( ending ) ) ) {
-			final var endingColumn = new ColumnReference( builder.getMutatingTable(), ending );
-			builder.addNonKeyRestriction( temporalMapping.createNullEndingValueBinding( endingColumn ) );
+			builder.addNullRestriction( ending );
 		}
 	}
 

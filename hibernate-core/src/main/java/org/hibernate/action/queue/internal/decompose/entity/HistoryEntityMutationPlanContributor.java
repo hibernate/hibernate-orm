@@ -398,7 +398,7 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 		}
 
 		historyTableDescriptor.keyDescriptor().columns().forEach( updateBuilder::addKeyRestriction );
-		addCurrentRowRestriction( updateBuilder );
+		updateBuilder.addNullRestriction( temporalMapping.getEndingColumnMapping() );
 		applyPartitionKeyRestriction( updateBuilder, partitionKeys );
 		if ( entityPersister.optimisticLockStyle() == OptimisticLockStyle.VERSION
 				&& entityPersister.getVersionMapping() != null ) {
@@ -411,14 +411,6 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 				entityPersister.optimisticLockStyle() == OptimisticLockStyle.VERSION
 						&& entityPersister.getVersionMapping() != null
 		);
-	}
-
-	private void addCurrentRowRestriction(TableUpdateBuilderStandard<MutationOperation> updateBuilder) {
-		final var endingColumn = new ColumnReference(
-				updateBuilder.getMutatingTable(),
-				temporalMapping.getEndingColumnMapping()
-		);
-		updateBuilder.addNonKeyRestriction( temporalMapping.createNullEndingValueBinding( endingColumn ) );
 	}
 
 	/// @param partitionKeys the partition key of the row, or `null` for a

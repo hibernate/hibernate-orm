@@ -13,13 +13,13 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.spi.mutation.MutationType;
 import org.hibernate.sql.spi.mutation.TableMapping;
-import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.internal.MutationGroupSingle;
 
 import java.util.List;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
-import static org.hibernate.persister.entity.mutation.AbstractTemporalUpdateCoordinator.applyTemporalEnding;
+import static org.hibernate.persister.entity.mutation.TemporalMutationHelper.createRevisionEndBuilder;
+import static org.hibernate.persister.entity.mutation.TemporalMutationHelper.isRevisionFromCurrentTransaction;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /**
@@ -54,9 +54,9 @@ public class DeleteCoordinatorHistory
 		this.historyBatchKey = new BasicBatchKey( entityPersister.getEntityName() + "#HISTORY_DELETE" );
 		final boolean versioned = entityPersister.optimisticLockStyle().isVersion()
 				&& entityPersister.getVersionMapping() != null;
-		this.historyEndUpdateGroup = buildHistoryEndUpdateGroup( versioned, null );
+		this.historyEndUpdateGroup = buildHistoryEndGroup( MutationType.UPDATE, versioned, null );
 		this.unversionedHistoryEndUpdateGroup =
-				versioned ? buildHistoryEndUpdateGroup( false, null ) : historyEndUpdateGroup;
+				versioned ? buildHistoryEndGroup( MutationType.UPDATE, false, null ) : historyEndUpdateGroup;
 	}
 
 	@Nullable
@@ -78,10 +78,10 @@ public class DeleteCoordinatorHistory
 			@Nullable Object version,
 			@Nonnull SharedSessionContractImplementor session) {
 		currentDeleteCoordinator.delete( entity, id, version, session );
-		performHistoryEndingUpdate( entity, id, version, session );
+		endHistoryRevision( entity, id, version, session );
 	}
 
-	private void performHistoryEndingUpdate(
+	private void endHistoryRevision(
 			@Nullable Object entity,
 			@Nonnull Object id,
 			@Nullable Object oldVersion,
@@ -91,10 +91,10 @@ public class DeleteCoordinatorHistory
 		final boolean applyVersion =
 				entity != null && versionMapping != null && persister.optimisticLockStyle().isVersion();
 		final var partitionKeys = partitionKeys( entity, session );
+		final var type = isRevisionFromCurrentTransaction( persister, id, session ) ? MutationType.DELETE : MutationType.UPDATE;
 		final MutationOperationGroup operationGroup;
-		if ( PartitionKeyValue.needsDynamicRestriction( persister, partitionKeys ) ) {
-			// a null or unknown partition key cannot be bound to the static statement
-			operationGroup = buildHistoryEndUpdateGroup( applyVersion, partitionKeys );
+		if ( type == MutationType.DELETE || PartitionKeyValue.needsDynamicRestriction( persister, partitionKeys ) ) {
+			operationGroup = buildHistoryEndGroup( type, applyVersion, partitionKeys );
 		}
 		else {
 			operationGroup = entity == null ? unversionedHistoryEndUpdateGroup : historyEndUpdateGroup;
@@ -122,7 +122,7 @@ public class DeleteCoordinatorHistory
 				);
 			}
 
-			if ( TemporalMutationHelper.isUsingParameters( session ) ) {
+			if ( type == MutationType.UPDATE && TemporalMutationHelper.isUsingParameters( session ) ) {
 				jdbcValueBindings.bindValue(
 						session.getCurrentChangesetIdentifier(),
 						historyTableMapping.getTableName(),
@@ -170,23 +170,21 @@ public class DeleteCoordinatorHistory
 	 *                      a parameter for each of its columns
 	 */
 	@Nonnull
-	private MutationOperationGroup buildHistoryEndUpdateGroup(
+	private MutationOperationGroup buildHistoryEndGroup(
+			@Nonnull MutationType type,
 			boolean applyVersion,
 			@Nullable List<PartitionKeyValue> partitionKeys) {
-		final var tableUpdateBuilder =
-				new TableUpdateBuilderStandard<>( entityPersister(), historyTableMapping, factory() );
-
-		applyKeyRestriction( null, entityPersister(), tableUpdateBuilder, historyTableMapping );
-		applyTemporalEnding( tableUpdateBuilder, temporalMapping );
+		final var builder = createRevisionEndBuilder( entityPersister(), historyTableMapping, type );
+		applyKeyRestriction( null, entityPersister(), builder, historyTableMapping );
 		// the history table has the partition key columns of the identifier table
-		applyPartitionKeyRestriction( tableUpdateBuilder,
+		applyPartitionKeyRestriction( builder,
 				entityPersister().getIdentifierTableMapping().getTableName(),
 				partitionKeys, TableMapping::getUpdateDetails );
 		if ( applyVersion ) {
-			applyVersionOptimisticLocking( tableUpdateBuilder );
+			applyVersionOptimisticLocking( builder );
 		}
 
-		final var tableMutation = tableUpdateBuilder.buildMutation();
+		final var tableMutation = builder.buildMutation();
 		return singleOperation(
 				new MutationGroupSingle( MutationType.DELETE, entityPersister(), tableMutation ),
 				tableMutation.createMutationOperation( null, factory() )

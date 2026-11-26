@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
+import org.hibernate.Internal;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.EntityUpdateAction;
@@ -15,6 +16,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.spi.model.TableMutation;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilder;
+
+import static org.hibernate.persister.entity.mutation.TemporalMutationHelper.isRevisionFromCurrentTransaction;
 
 /// Contributes state-management-specific graph mutation plans for entity actions.
 ///
@@ -153,9 +156,7 @@ public interface EntityMutationPlanContributor {
 		}
 
 		public boolean updatesRevisionFromCurrentTransaction() {
-			return updatesInitialVersion()
-					|| session.getPersistenceContextInternal()
-							.wasTemporalRevisionUpdated( session.generateEntityKey( identifier, entityPersister ) );
+			return isBeingInserted() || isRevisionFromCurrentTransaction( entityPersister, identifier, session );
 		}
 
 		public boolean updatesInitialVersion() {
@@ -183,5 +184,9 @@ public interface EntityMutationPlanContributor {
 			Object version,
 			Object[] state,
 			PostDeleteHandling postDeleteHandling) {
+		@Internal
+		public boolean removesRevisionFromCurrentTransaction() {
+			return isRevisionFromCurrentTransaction( entityPersister, identifier, session );
+		}
 	}
 }

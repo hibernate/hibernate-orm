@@ -20,13 +20,13 @@ import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.PartitionKeyValue;
 import org.hibernate.persister.entity.mutation.TemporalMutationHelper;
+import org.hibernate.sql.spi.mutation.MutationType;
+import org.hibernate.sql.spi.mutation.TableMapping.MutationDetails;
 
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 
-/// Bind plan for temporal operations which end the current row version.
-///
-/// Used by both temporal deletes and temporal updates which close the current
-/// row before inserting a replacement row version.
+/// Binds a mutation which ends a temporal revision. A revision written by the
+/// current transaction may be physically deleted.
 ///
 /// @author Steve Ebersole
 public class EntityTemporalEndBindPlan implements BindPlan, OperationResultChecker {
@@ -38,6 +38,7 @@ public class EntityTemporalEndBindPlan implements BindPlan, OperationResultCheck
 	private final Object version;
 	private final Object[] loadedState;
 	private final OptimisticLockStyle effectiveOptLockStyle;
+	private final MutationDetails mutationDetails;
 
 	public EntityTemporalEndBindPlan(
 			EntityTableDescriptor tableDescriptor,
@@ -47,7 +48,8 @@ public class EntityTemporalEndBindPlan implements BindPlan, OperationResultCheck
 			Object rowId,
 			Object version,
 			Object[] loadedState,
-			OptimisticLockStyle effectiveOptLockStyle) {
+			OptimisticLockStyle effectiveOptLockStyle,
+			MutationType mutationType) {
 		this.tableDescriptor = tableDescriptor;
 		this.entityPersister = entityPersister;
 		this.temporalMapping = temporalMapping;
@@ -56,6 +58,7 @@ public class EntityTemporalEndBindPlan implements BindPlan, OperationResultCheck
 		this.version = version;
 		this.loadedState = loadedState;
 		this.effectiveOptLockStyle = effectiveOptLockStyle;
+		this.mutationDetails = mutationType == MutationType.DELETE ? tableDescriptor.deleteDetails() : tableDescriptor.updateDetails();
 	}
 
 	@Override
@@ -75,7 +78,9 @@ public class EntityTemporalEndBindPlan implements BindPlan, OperationResultCheck
 			SharedSessionContractImplementor session) {
 		TenantIdHelper.validateIdentifierTenant( identifier, entityPersister, session );
 		TenantIdHelper.bindTenantRestriction( entityPersister, flushOperation.getJdbcOperation(), valueBindings, session );
-		bindTemporalEndingValue( valueBindings, session );
+		if ( mutationDetails.getMutationType() == MutationType.UPDATE ) {
+			bindTemporalEndingValue( valueBindings, session );
+		}
 		bindKey( valueBindings, session );
 
 		if ( effectiveOptLockStyle == OptimisticLockStyle.VERSION ) {
@@ -196,7 +201,7 @@ public class EntityTemporalEndBindPlan implements BindPlan, OperationResultCheck
 			String sqlString,
 			SessionFactoryImplementor sessionFactory) throws SQLException {
 		return Checkers.identifiedResultsCheck(
-				tableDescriptor.updateDetails().getExpectation(),
+				mutationDetails.getExpectation(),
 				affectedRowCount,
 				statement,
 				batchPosition,

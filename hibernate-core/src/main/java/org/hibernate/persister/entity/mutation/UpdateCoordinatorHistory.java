@@ -134,6 +134,7 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 
 			);
 			insertHistoryRow( id, values, session );
+			registerUpdatedRevision( id, session );
 		}
 		return generatedValues;
 	}

@@ -3,6 +3,7 @@ package org.hibernate.persister.entity.mutation;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
+import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
@@ -11,13 +12,16 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperationGroup;
+import org.hibernate.sql.ast.spi.model.builder.TableDeleteBuilder;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.spi.mutation.TableMapping;
 
 import java.util.List;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
-import static org.hibernate.persister.entity.mutation.AbstractTemporalUpdateCoordinator.applyTemporalEnding;
+import static org.hibernate.persister.entity.mutation.TemporalMutationHelper.applyTemporalEnding;
+import static org.hibernate.persister.entity.mutation.TemporalMutationHelper.createCurrentRevisionDeleteBuilder;
+import static org.hibernate.persister.entity.mutation.TemporalMutationHelper.isRevisionFromCurrentTransaction;
 
 /**
  * Delete coordinator for
@@ -29,10 +33,41 @@ import static org.hibernate.persister.entity.mutation.AbstractTemporalUpdateCoor
 @org.hibernate.Internal
 public class DeleteCoordinatorTemporal extends AbstractDeleteCoordinator {
 	private final TemporalMapping temporalMapping;
+	private final DeleteCoordinator currentRevisionDelete;
 
 	public DeleteCoordinatorTemporal(@Nonnull EntityPersister entityPersister, @Nonnull SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
 		this.temporalMapping = castNonNull( entityPersister.getTemporalMapping() );
+		this.currentRevisionDelete = new DeleteCoordinatorStandard( entityPersister, factory ) {
+			private final BasicBatchKey deleteKey = new BasicBatchKey( entityPersister.getEntityName() + "#TEMPORAL_DELETE" );
+
+			@Override
+			@Nonnull
+			TableDeleteBuilder createTableDeleteBuilder(@Nonnull EntityTableMapping tableMapping) {
+				return tableMapping.isIdentifierTable()
+						? createCurrentRevisionDeleteBuilder( entityPersister(), tableMapping )
+						: super.createTableDeleteBuilder( tableMapping );
+			}
+
+			@Override
+			public BasicBatchKey getBatchKey() {
+				return deleteKey;
+			}
+		};
+	}
+
+	@Override
+	public void delete(
+			@Nullable Object entity,
+			@Nonnull Object id,
+			@Nullable Object version,
+			@Nonnull SharedSessionContractImplementor session) {
+		if ( isRevisionFromCurrentTransaction( entityPersister(), id, session ) ) {
+			currentRevisionDelete.delete( entity, id, version, session );
+		}
+		else {
+			super.delete( entity, id, version, session );
+		}
 	}
 
 	@Override

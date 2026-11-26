@@ -134,12 +134,14 @@ public class HistoryTableDecomposerTest {
 		}
 
 		scope.inTransaction( entityManager -> {
-			final SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			final HistoryEntity entity = new HistoryEntity();
 			entity.id = 3L;
 			entity.name = "deleted";
 			entityManager.persist( entity );
-			entityManager.flush();
+		} );
+		scope.inTransaction( entityManager -> {
+			final SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
+			final var entity = entityManager.find( HistoryEntity.class, 3L );
 
 			final EntityPersister persister = sfi.getMappingMetamodel().getEntityDescriptor( HistoryEntity.class );
 			final EntityDeleteAction action = new EntityDeleteAction(
@@ -251,13 +253,15 @@ public class HistoryTableDecomposerTest {
 		}
 
 		scope.inTransaction( entityManager -> {
-			final SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			final HistorySecondaryEntity entity = new HistorySecondaryEntity();
 			entity.id = 6L;
 			entity.primaryName = "primary";
 			entity.secondaryName = "secondary";
 			entityManager.persist( entity );
-			entityManager.flush();
+		} );
+		scope.inTransaction( entityManager -> {
+			final SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
+			final var entity = entityManager.find( HistorySecondaryEntity.class, 6L );
 
 			final EntityPersister persister = sfi.getMappingMetamodel().getEntityDescriptor( HistorySecondaryEntity.class );
 			final EntityDeleteAction action = new EntityDeleteAction(
@@ -370,13 +374,15 @@ public class HistoryTableDecomposerTest {
 		}
 
 		scope.inTransaction( entityManager -> {
-			final SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			final HistoryJoinedChild entity = new HistoryJoinedChild();
 			entity.id = 9L;
 			entity.parentName = "parent";
 			entity.childName = "child";
 			entityManager.persist( entity );
-			entityManager.flush();
+		} );
+		scope.inTransaction( entityManager -> {
+			final SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
+			final var entity = entityManager.find( HistoryJoinedChild.class, 9L );
 
 			final EntityPersister persister = sfi.getMappingMetamodel().getEntityDescriptor( HistoryJoinedChild.class );
 			final EntityDeleteAction action = new EntityDeleteAction(

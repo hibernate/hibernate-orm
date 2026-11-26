@@ -9,11 +9,10 @@ package org.hibernate.boot.xsd;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import javax.xml.XMLConstants;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
 
+import org.hibernate.boot.cfgxml.internal.XmlFactoryUtil;
 import org.hibernate.internal.util.xml.XsdException;
 
 import org.jboss.logging.Logger;
@@ -90,11 +89,10 @@ public class LocalXsdResolver {
 		try {
 			InputStream schemaStream = url.openStream();
 			try {
-				StreamSource source = new StreamSource( url.openStream() );
-				SchemaFactory schemaFactory = SchemaFactory.newInstance( XMLConstants.W3C_XML_SCHEMA_NS_URI );
-				return schemaFactory.newSchema( source );
+				return XmlFactoryUtil.newSchemaFactory()
+						.newSchema( new StreamSource( schemaStream ) );
 			}
-			catch ( SAXException | IOException e ) {
+			catch ( SAXException e ) {
 				throw new XsdException( "Unable to load schema [" + schemaResourceName + "]", e, schemaResourceName );
 			}
 			finally {

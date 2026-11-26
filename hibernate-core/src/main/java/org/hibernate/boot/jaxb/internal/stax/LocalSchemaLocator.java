@@ -9,10 +9,10 @@ package org.hibernate.boot.jaxb.internal.stax;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import javax.xml.XMLConstants;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
+
+import org.hibernate.boot.cfgxml.internal.XmlFactoryUtil;
 
 import org.jboss.logging.Logger;
 
@@ -52,9 +52,8 @@ public class LocalSchemaLocator {
 		try {
 			InputStream schemaStream = schemaUrl.openStream();
 			try {
-				StreamSource source = new StreamSource(schemaUrl.openStream());
-				SchemaFactory schemaFactory = SchemaFactory.newInstance( XMLConstants.W3C_XML_SCHEMA_NS_URI );
-				return schemaFactory.newSchema(source);
+				return XmlFactoryUtil.newSchemaFactory()
+						.newSchema( new StreamSource( schemaStream ) );
 			}
 			catch ( Exception e ) {
 				throw new XmlInfrastructureException( "Unable to load schema [" + schemaUrl.toExternalForm() + "]", e );

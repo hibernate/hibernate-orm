@@ -53,6 +53,7 @@ import static org.hibernate.processor.HibernateProcessor.EXCLUDE;
 import static org.hibernate.processor.HibernateProcessor.FULLY_ANNOTATION_CONFIGURED_OPTION;
 import static org.hibernate.processor.HibernateProcessor.INCLUDE;
 import static org.hibernate.processor.HibernateProcessor.LAZY_XML_PARSING;
+import static org.hibernate.processor.HibernateProcessor.ALLOW_DTD_AND_EXTERNAL_ENTITIES;
 import static org.hibernate.processor.HibernateProcessor.ORM_XML_OPTION;
 import static org.hibernate.processor.HibernateProcessor.PERSISTENCE_XML_OPTION;
 import static org.hibernate.processor.HibernateProcessor.SUPPRESS_JAKARTA_DATA_METAMODEL;
@@ -117,7 +118,8 @@ import static org.hibernate.processor.util.TypeUtils.isClassOrRecordType;
 		ADD_GENERATED_ANNOTATION,
 		ADD_SUPPRESS_WARNINGS_ANNOTATION,
 		SUPPRESS_JAKARTA_DATA_METAMODEL,
-		INCLUDE, EXCLUDE
+		INCLUDE, EXCLUDE,
+		ALLOW_DTD_AND_EXTERNAL_ENTITIES
 })
 public class HibernateProcessor extends AbstractProcessor {
 
@@ -145,6 +147,14 @@ public class HibernateProcessor extends AbstractProcessor {
 	 * Controls whether the processor should only load XML files when there have been changes
 	 */
 	public static final String LAZY_XML_PARSING = "lazyXmlParsing";
+
+	/**
+	 * Whether {@code orm.xml}/{@code persistence.xml} mapping documents may declare and use
+	 * a DTD and reference external entities.
+	 * <p>
+	 * Disabled by default to avoid XXE (XML External Entity) attacks.
+	 */
+	public static final String ALLOW_DTD_AND_EXTERNAL_ENTITIES = "allowDtdAndExternalEntities";
 
 	/**
 	 * Whether the {@code jakarta.annotation.Generated} annotation should be added to

@@ -129,6 +129,7 @@ import static org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME;
 import static org.hibernate.cfg.AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.URL;
 import static org.hibernate.cfg.AvailableSettings.USER;
+import static org.hibernate.cfg.MappingSettings.XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES;
 import static org.hibernate.cfg.BytecodeSettings.BYTECODE_PROVIDER_INSTANCE;
 import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT;
 import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_DIRTY_TRACKING;
@@ -616,7 +617,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 
 		if ( StringHelper.isNotEmpty( cfgXmlResourceName ) ) {
-			processHibernateConfigXmlResources( ssrBuilder, mergedSettings, cfgXmlResourceName );
+			processHibernateConfigXmlResources( ssrBuilder, integrationSettings, mergedSettings, cfgXmlResourceName );
 		}
 
 		normalizeSettings( persistenceUnit, integrationSettings, mergedSettings );
@@ -1239,13 +1240,31 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	private void processHibernateConfigXmlResources(
 			StandardServiceRegistryBuilder ssrBuilder,
+			Map<String, Object> integrationSettings,
 			MergedSettings mergedSettings,
 			String cfgXmlResourceName) {
+		applyXmlParsingSettings( ssrBuilder, integrationSettings, mergedSettings );
 		final LoadedConfig loadedConfig = ssrBuilder.getConfigLoader().loadConfigXmlResource( cfgXmlResourceName );
 
 		mergedSettings.processHibernateConfigXmlResources( loadedConfig );
 
 		ssrBuilder.getAggregatedCfgXml().merge( loadedConfig );
+	}
+
+	// The cfg.xml file is parsed before the merged settings are applied to the registry builder,
+	// so its parser would otherwise never see hibernate.xml.allow_dtd_and_external_entities.
+	// Integration settings take precedence, consistent with normalizeSettings.
+	private static void applyXmlParsingSettings(
+			StandardServiceRegistryBuilder serviceRegistryBuilder,
+			Map<String, Object> integrationSettings,
+			MergedSettings mergedSettings) {
+		final Object allowDtdAndExternalEntities =
+				integrationSettings != null && integrationSettings.containsKey( XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES )
+						? integrationSettings.get( XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES )
+						: mergedSettings.getConfigurationValues().get( XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES );
+		if ( allowDtdAndExternalEntities != null ) {
+			serviceRegistryBuilder.applySetting( XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES, allowDtdAndExternalEntities );
+		}
 	}
 
 	private CacheRegionDefinition parseCacheRegionDefinitionEntry(String role, String value, CacheRegionDefinition.CacheRegionType cacheType) {

@@ -15,7 +15,8 @@ import org.hibernate.testing.orm.junit.Setting;
 		AbstractPartitionKeyMutationTest.VersionedBox.class,
 		AbstractPartitionKeyMutationTest.CustomDeleteBox.class,
 		AbstractPartitionKeyMutationTest.Vehicle.class,
-		AbstractPartitionKeyMutationTest.Truck.class
+		AbstractPartitionKeyMutationTest.Truck.class,
+		AbstractPartitionKeyMutationTest.SealedCarton.class
 })
 @SessionFactory(useCollectingStatementObserver = true)
 @ServiceRegistry(settings = @Setting(name = FlushSettings.FLUSH_QUEUE_TYPE, value = "legacy"))

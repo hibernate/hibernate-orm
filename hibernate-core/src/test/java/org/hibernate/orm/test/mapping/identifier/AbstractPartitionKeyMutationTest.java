@@ -6,6 +6,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.LockModeType;
+import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
@@ -31,6 +32,7 @@ public abstract class AbstractPartitionKeyMutationTest {
 			session.persist( new VersionedBox( 1, "eu" ) );
 			session.persist( new CustomDeleteBox( 1, "eu" ) );
 			session.persist( new Truck( 1, "eu" ) );
+			session.persist( new SealedCarton( 1, "eu" ) );
 		} );
 		scope.getCollectingStatementObserver().clear();
 	}
@@ -151,6 +153,33 @@ public abstract class AbstractPartitionKeyMutationTest {
 	}
 
 	/**
+	 * The row of an optional table is not deleted when its other columns are
+	 * null, since it has a value in its partition key column.
+	 */
+	@Test
+	@JiraKey("HHH-21283")
+	void clearOptionalTableWithNonUpdatablePartitionKey(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.find( SealedCarton.class, 1 ).label = null );
+		scope.inTransaction( session -> {
+			final var carton = session.find( SealedCarton.class, 1 );
+			assertThat( carton.label ).isNull();
+			assertThat( carton.region ).isEqualTo( "eu" );
+			carton.label = "restored";
+		} );
+		scope.inStatelessTransaction( session -> {
+			final var carton = session.get( SealedCarton.class, 1 );
+			assertThat( carton.label ).isEqualTo( "restored" );
+			carton.label = null;
+			session.update( carton );
+		} );
+		scope.inTransaction( session -> {
+			final var carton = session.find( SealedCarton.class, 1 );
+			assertThat( carton.label ).isNull();
+			assertThat( carton.region ).isEqualTo( "eu" );
+		} );
+	}
+
+	/**
 	 * Only the statements for the table with the partition key column are restricted by it.
 	 */
 	static void assertRestrictedByPartitionKey(SessionFactoryScope scope, String partitionedTable, String otherTable) {
@@ -259,6 +288,28 @@ public abstract class AbstractPartitionKeyMutationTest {
 		Truck(Integer id, String region) {
 			super( id );
 			this.region = region;
+		}
+	}
+
+	@Entity(name = "SealedCarton")
+	@Table(name = "partition_sealed_carton")
+	@SecondaryTable(name = "partition_sealed_carton_detail")
+	public static class SealedCarton {
+		@Id
+		Integer id;
+		@PartitionKey
+		@Column(table = "partition_sealed_carton_detail", nullable = false, updatable = false)
+		String region;
+		@Column(table = "partition_sealed_carton_detail")
+		String label;
+
+		SealedCarton() {
+		}
+
+		SealedCarton(Integer id, String region) {
+			this.id = id;
+			this.region = region;
+			this.label = "label";
 		}
 	}
 }

@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 import org.hibernate.action.queue.internal.decompose.collection.AuditCollectionMutationPlanContributor;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPlanContributor;
@@ -219,11 +218,8 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 		);
 
 		// For TABLE_PER_CLASS, prepare audit subquery generation context
-		// (the tableNameResolver lambda captures the map, so it resolves lazily)
-		final Function<String, String> tableNameResolver;
 		final List<String> extraColumns;
 		if ( persister instanceof UnionSubclassEntityPersister ) {
-			tableNameResolver = originalName -> map.get( originalName ).auditTableName();
 			final var rootInfo = map.values().iterator().next();
 			final var extras = new ArrayList<>( List.of(
 					rootInfo.changesetIdMapping().getSelectionExpression(),
@@ -235,7 +231,6 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 			extraColumns = extras;
 		}
 		else {
-			tableNameResolver = null;
 			extraColumns = null;
 		}
 
@@ -270,15 +265,14 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 				);
 			}
 			// For TABLE_PER_CLASS intermediate classes, build audit subquery inline
-			// (getSubclasses() is depth-first, so subtypes' entries are already in the map)
-			if ( tableNameResolver != null && subclass.hasSubclasses() ) {
-				addAuditSubquery( map, subclass, tableNameResolver, extraColumns, creationProcess );
+			if ( extraColumns != null && subclass.hasSubclasses() ) {
+				addAuditSubquery( map, subclass, extraColumns, creationProcess );
 			}
 		}
 
-		// Root's audit subquery (needs all subclass entries, so must come last)
-		if ( tableNameResolver != null && rootClass.hasSubclasses() ) {
-			addAuditSubquery( map, rootClass, tableNameResolver, extraColumns, creationProcess );
+		// Root's audit subquery
+		if ( extraColumns != null && rootClass.hasSubclasses() ) {
+			addAuditSubquery( map, rootClass, extraColumns, creationProcess );
 		}
 
 		return map;
@@ -287,17 +281,15 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 	private static void addAuditSubquery(
 			@Nonnull Map<String, AuditMappingImpl.TableAuditInfo> map,
 			@Nonnull PersistentClass bootClass,
-			@Nonnull Function<String, String> tableNameResolver,
-			@Nullable List<String> extraColumns,
+			@Nonnull List<String> extraColumns,
 			@Nonnull MappingModelCreationProcess creationProcess) {
 		assert !bootClass.getSubclasses().isEmpty();
 		final var unionPersister = (UnionSubclassEntityPersister)
 				creationProcess.getEntityPersister( bootClass.getEntityName() );
 		final var rootInfo = map.values().iterator().next();
 		final String originalSubquery = unionPersister.getTableName();
-		final String auditSubquery = unionPersister.generateSubquery(
+		final String auditSubquery = unionPersister.generateAuxiliarySubquery(
 				bootClass,
-				tableNameResolver,
 				extraColumns,
 				creationProcess.getCreationContext().getMetadata()
 		);

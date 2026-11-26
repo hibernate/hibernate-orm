@@ -233,8 +233,9 @@ public final class HistoryStateManagement implements StateManagement, StateManag
 		final var dialect = creationProcess.getCreationContext().getDialect();
 		final var temporalColumns = List.of( rootClass.getAuxiliaryColumn( ROW_START ).getQuotedName( dialect ),
 				rootClass.getAuxiliaryColumn( ROW_END ).getQuotedName( dialect ) );
-		final var resolver = entityPersister.createAuxiliaryTableResolver( rootClass, tableName, temporalColumns, creationProcess );
-		return new TemporalMappingImpl( rootClass, tableName, resolver, creationProcess );
+		final var tableExpressions = entityPersister.getAuxiliaryTableExpressions(
+				rootClass, tableName, temporalColumns, creationProcess );
+		return new TemporalMappingImpl( rootClass, tableName, tableExpressions, creationProcess );
 	}
 
 	@Nullable
@@ -247,10 +248,8 @@ public final class HistoryStateManagement implements StateManagement, StateManag
 		if ( bootDescriptor.getAuxiliaryTable() == null ) {
 			return supertypeMapping;
 		}
-		final var rootMapping = persister.getRootEntityDescriptor().getAuxiliaryMapping();
-		final var tableName = rootMapping.resolveTableName( persister.getIdentifierTableName() );
-		return new TemporalMappingImpl( bootDescriptor.getRootClass(), tableName,
-				rootMapping::resolveTableName, creationProcess );
+		final var rootMapping = (TemporalMappingImpl) persister.getRootEntityDescriptor().getAuxiliaryMapping();
+		return rootMapping.forSubclass( bootDescriptor.getRootClass(), persister.getIdentifierTableName(), creationProcess );
 	}
 
 	@Nullable

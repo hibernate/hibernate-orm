@@ -5795,11 +5795,11 @@ public abstract class AbstractEntityPersister
 
 	/// Resolves table names and polymorphic query expressions for hierarchies with per-class auxiliary tables.
 	@Internal
-	@Nullable
-	public Function<String, String> createAuxiliaryTableResolver(
+	@Nonnull
+	public Map<String, String> getAuxiliaryTableExpressions(
 			@Nonnull RootClass rootClass, @Nonnull String rootAuxiliaryTableName, @Nonnull List<String> extraColumns,
 			@Nonnull MappingModelCreationProcess creationProcess) {
-		return null;
+		return Map.of();
 	}
 
 	/**

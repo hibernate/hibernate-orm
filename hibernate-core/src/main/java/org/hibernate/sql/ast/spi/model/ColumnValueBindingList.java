@@ -20,6 +20,7 @@ public class ColumnValueBindingList extends ArrayList<ColumnValueBinding> implem
 	private final MutatingTableReference mutatingTable;
 	private final ColumnValueParameterList parameters;
 	private final ParameterUsage parameterUsage;
+	private boolean hasNonNullOldValue;
 
 	public ColumnValueBindingList(
 			MutatingTableReference mutatingTable,
@@ -42,7 +43,13 @@ public class ColumnValueBindingList extends ArrayList<ColumnValueBinding> implem
 		}
 		else {
 			addRestriction( jdbcValueMapping );
+			hasNonNullOldValue |= !jdbcValueMapping.isFormula();
 		}
+	}
+
+	/// Whether a restriction compares a non-null old value of a physical column.
+	boolean hasNonNullOldValue() {
+		return hasNonNullOldValue;
 	}
 
 	@Internal

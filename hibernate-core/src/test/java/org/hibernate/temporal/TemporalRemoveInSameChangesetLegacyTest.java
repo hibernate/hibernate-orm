@@ -10,7 +10,7 @@ import static org.hibernate.cfg.StateManagementSettings.TEMPORAL_TABLE_STRATEGY;
 @ServiceRegistry(settings = {
 		@Setting(name = TEMPORAL_TABLE_STRATEGY, value = "SINGLE_TABLE"),
 		@Setting(name = FLUSH_QUEUE_TYPE, value = "legacy"),
-		@Setting(name = CHANGESET_ID_SUPPLIER, value = TemporalRemoveInSameChangesetTest.INSTANT_SUPPLIER)
+		@Setting(name = CHANGESET_ID_SUPPLIER, value = InstantChangesets.NAME)
 })
 class TemporalRemoveInSameChangesetLegacyTest extends TemporalRemoveInSameChangesetTest {
 }

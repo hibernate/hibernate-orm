@@ -1,17 +1,13 @@
 package org.hibernate.temporal;
 
-import java.time.Instant;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
 
-import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
-import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -44,7 +40,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 })
 class TemporalRemoveInSameChangesetTest {
 	static final String SUPPLIER = "org.hibernate.temporal.TemporalInsertUpdateOrderingTest$Changesets";
-	static final String INSTANT_SUPPLIER = "org.hibernate.temporal.TemporalRemoveInSameChangesetTest$InstantChangesets";
 
 	@AfterEach
 	void cleanup(SessionFactoryScope scope) {
@@ -207,17 +202,6 @@ class TemporalRemoveInSameChangesetTest {
 		} );
 		assertEquals( 1L, countRevisions( scope, VersionedItem.class ) );
 		scope.inSession( session -> assertNull( session.find( VersionedItem.class, 1 ) ) );
-	}
-
-	public static class InstantChangesets implements ChangesetIdentifierSupplier<Instant> {
-		private static final Instant FIRST = Instant.parse( "2026-01-01T00:00:00Z" );
-		private long next;
-
-		@Override
-		public Instant generateIdentifier(SharedSessionContract session) {
-			// A whole second survives storage at the database's timestamp precision.
-			return FIRST.plusSeconds( next++ );
-		}
 	}
 
 	static long countRevisions(SessionFactoryScope scope, Class<?> entityType) {

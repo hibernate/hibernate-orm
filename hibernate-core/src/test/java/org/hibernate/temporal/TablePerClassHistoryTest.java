@@ -1,6 +1,5 @@
 package org.hibernate.temporal;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -13,13 +12,11 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
 import org.hibernate.Session;
-import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
-import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -48,12 +45,10 @@ import static org.hibernate.cfg.StateManagementSettings.TEMPORAL_TABLE_STRATEGY;
 })
 @JiraKey("HHH-21277")
 class TablePerClassHistoryTest {
-	private static final String CHANGESETS = "org.hibernate.temporal.TablePerClassHistoryTest$Changesets";
-
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
-		@Setting(name = CHANGESET_ID_SUPPLIER, value = CHANGESETS),
+		@Setting(name = CHANGESET_ID_SUPPLIER, value = InstantChangesets.NAME),
 		@Setting(name = TEMPORAL_TABLE_STRATEGY, value = "HISTORY_TABLE"),
 		@Setting(name = FLUSH_QUEUE_TYPE, value = "graph")
 	})
@@ -64,7 +59,7 @@ class TablePerClassHistoryTest {
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
-		@Setting(name = CHANGESET_ID_SUPPLIER, value = CHANGESETS),
+		@Setting(name = CHANGESET_ID_SUPPLIER, value = InstantChangesets.NAME),
 		@Setting(name = TEMPORAL_TABLE_STRATEGY, value = "HISTORY_TABLE"),
 		@Setting(name = FLUSH_QUEUE_TYPE, value = "legacy")
 	})
@@ -75,7 +70,7 @@ class TablePerClassHistoryTest {
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
-		@Setting(name = CHANGESET_ID_SUPPLIER, value = CHANGESETS),
+		@Setting(name = CHANGESET_ID_SUPPLIER, value = InstantChangesets.NAME),
 		@Setting(name = TEMPORAL_TABLE_STRATEGY, value = "HISTORY_TABLE"),
 		@Setting(name = FLUSH_QUEUE_TYPE, value = "graph")
 	})
@@ -88,7 +83,7 @@ class TablePerClassHistoryTest {
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
-		@Setting(name = CHANGESET_ID_SUPPLIER, value = CHANGESETS),
+		@Setting(name = CHANGESET_ID_SUPPLIER, value = InstantChangesets.NAME),
 		@Setting(name = TEMPORAL_TABLE_STRATEGY, value = "HISTORY_TABLE"),
 		@Setting(name = FLUSH_QUEUE_TYPE, value = "legacy")
 	})
@@ -182,17 +177,6 @@ class TablePerClassHistoryTest {
 	private void withHistoryAt(SessionFactoryScope scope, Object changeset, Consumer<Session> work) {
 		try (var session = scope.getSessionFactory().withOptions().atChangeset( changeset ).openSession()) {
 			session.inTransaction( transaction -> work.accept( session ) );
-		}
-	}
-
-	public static class Changesets implements ChangesetIdentifierSupplier<Instant> {
-		private static final Instant FIRST = Instant.parse( "2026-01-01T00:00:00Z" );
-		private long next;
-
-		@Override
-		public Instant generateIdentifier(SharedSessionContract session) {
-			// A whole second survives storage at the database's timestamp precision.
-			return FIRST.plusSeconds( next++ );
 		}
 	}
 

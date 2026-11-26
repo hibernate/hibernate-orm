@@ -9,7 +9,6 @@ import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
 import org.hibernate.action.queue.spi.bind.OperationResultChecker;
 import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
-import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -19,6 +18,7 @@ import org.hibernate.persister.entity.mutation.PartitionKeyValue;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 
 /// Specialized BindPlan for soft delete operations.
 ///
@@ -30,26 +30,26 @@ public class EntitySoftDeleteBindPlan implements BindPlan, OperationResultChecke
 	private final EntityTableDescriptor tableDescriptor;
 	private final EntityPersister entityPersister;
 	private final Object identifier;
+	private final boolean applyVersion;
 	private final Object version;
-	private final Object[] loadedState;
+	private final Map<String, Object> optimisticLockBindings;
 	private final List<PartitionKeyValue> partitionKeys;
-	private final OptimisticLockStyle effectiveOptLockStyle;
 
 	public EntitySoftDeleteBindPlan(
 			EntityTableDescriptor tableDescriptor,
 			EntityPersister entityPersister,
 			Object identifier,
+			boolean applyVersion,
 			Object version,
-			Object[] loadedState,
-			List<PartitionKeyValue> partitionKeys,
-			OptimisticLockStyle effectiveOptLockStyle) {
+			Map<String, Object> optimisticLockBindings,
+			List<PartitionKeyValue> partitionKeys) {
 		this.tableDescriptor = tableDescriptor;
 		this.entityPersister = entityPersister;
 		this.identifier = identifier;
+		this.applyVersion = applyVersion;
 		this.version = version;
-		this.loadedState = loadedState;
+		this.optimisticLockBindings = optimisticLockBindings;
 		this.partitionKeys = partitionKeys;
-		this.effectiveOptLockStyle = effectiveOptLockStyle;
 	}
 
 	@Override
@@ -73,11 +73,12 @@ public class EntitySoftDeleteBindPlan implements BindPlan, OperationResultChecke
 		breakDownKeyJdbcValue( valueBindings, session );
 
 		// Apply optimistic locking if needed
-		if ( effectiveOptLockStyle == OptimisticLockStyle.VERSION ) {
+		if ( applyVersion ) {
 			applyVersionBasedOptLocking( valueBindings, session );
 		}
-		else if ( effectiveOptLockStyle.isAllOrDirty() ) {
-			applyNonVersionOptLocking( valueBindings, session );
+		else {
+			optimisticLockBindings.forEach( (column, value) ->
+					valueBindings.bindValue( value, column, ParameterUsage.RESTRICT ) );
 		}
 
 		PartitionKeyValue.bindRestrictions(
@@ -120,36 +121,6 @@ public class EntitySoftDeleteBindPlan implements BindPlan, OperationResultChecke
 								selectableMapping.getSelectionExpression(),
 								ParameterUsage.RESTRICT
 						);
-					},
-					session
-			);
-		}
-	}
-
-	protected void applyNonVersionOptLocking(
-			JdbcValueBindings jdbcValueBindings,
-			SharedSessionContractImplementor session) {
-		if ( loadedState == null ) {
-			throw new IllegalStateException( "This should never happen based on previous handling" );
-		}
-
-		final boolean[] versionability = entityPersister.getPropertyVersionability();
-		for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
-			var attribute = tableDescriptor.attributes().get( i );
-			if ( !versionability[attribute.getStateArrayPosition()] ) {
-				continue;
-			}
-			var loadedValue = loadedState[attribute.getStateArrayPosition()];
-			attribute.decompose(
-					loadedValue,
-					(valueIndex, jdbcValue, selectableMapping) -> {
-						if ( !selectableMapping.isFormula() && jdbcValue != null ) {
-							jdbcValueBindings.bindValue(
-									jdbcValue,
-									selectableMapping.getSelectionExpression(),
-									ParameterUsage.RESTRICT
-							);
-						}
 					},
 					session
 			);

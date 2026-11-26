@@ -26,6 +26,7 @@ public class UpdateValuesAnalysis implements org.hibernate.persister.entity.muta
 	private final Function<EntityTableDescriptor, TableMapping> legacyTableMappingAccess;
 	private BitSet tablesWithNonNullValues;
 	private BitSet tablesWithPreviousNonNullValues;
+	private BitSet tablesRequiredForOptimisticLock;
 	private BitSet tablesNeedingUpdate;
 	private BitSet tablesNeedingDynamicUpdate;
 	private TableSet legacyTablesWithNonNullValues;
@@ -122,6 +123,17 @@ public class UpdateValuesAnalysis implements org.hibernate.persister.entity.muta
 
 	private void addTableWithPreviousNonNullValues(EntityTableDescriptor table) {
 		tablesWithPreviousNonNullValues = addTable( table, tablesWithPreviousNonNullValues );
+	}
+
+	void requireExistingRowForOptimisticLock(EntityTableDescriptor table) {
+		if ( table.isOptional() ) {
+			tablesRequiredForOptimisticLock = addTable( table, tablesRequiredForOptimisticLock );
+		}
+	}
+
+	@Override
+	public boolean requiresExistingRowForOptimisticLock(TableMapping table) {
+		return tablesRequiredForOptimisticLock != null && tablesRequiredForOptimisticLock.get( table.relativePosition() );
 	}
 
 	private void addTableNeedingUpdate(EntityTableDescriptor table) {

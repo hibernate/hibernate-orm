@@ -16,6 +16,8 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -215,6 +217,59 @@ public abstract class AbstractOptionalSecondaryRowTest {
 			final var shipment = session.find( DynamicShipment.class, 2 );
 			assertThat( shipment.code ).isEqualTo( "added" );
 			assertThat( shipment.label ).isNull();
+		} );
+	}
+
+	@ParameterizedTest
+	@CsvSource({ ", false", "code, false", "code, true" })
+	void staleLabelClearIsRejected(String code, boolean clearCode, SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.persist( new DynamicShipment( 2, code, "label" ) ) );
+		scope.inSession( firstSession -> {
+			final var shipment = scope.fromTransaction( firstSession, session -> session.find( DynamicShipment.class, 2 ) );
+			scope.inTransaction( session -> session.find( DynamicShipment.class, 2 ).label = "other" );
+			assertThatThrownBy( () -> scope.inTransaction( firstSession, session -> {
+				shipment.label = null;
+				if ( clearCode ) {
+					shipment.code = null;
+				}
+				session.flush();
+			} ) ).isInstanceOf( OptimisticLockException.class );
+		} );
+		scope.inTransaction( session -> {
+			final var shipment = session.find( DynamicShipment.class, 2 );
+			assertThat( shipment.label ).isEqualTo( "other" );
+			assertThat( shipment.code ).isEqualTo( code );
+		} );
+	}
+
+	@Test
+	void staleLabelUpdateDoesNotRecreateDeletedDetailRow(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.persist( new DynamicShipment( 2, null, "label" ) ) );
+		scope.inSession( firstSession -> {
+			final var shipment = scope.fromTransaction( firstSession, session -> session.find( DynamicShipment.class, 2 ) );
+			scope.inTransaction( session -> session.find( DynamicShipment.class, 2 ).label = null );
+			assertThatThrownBy( () -> scope.inTransaction( firstSession, session -> {
+				shipment.label = "mine";
+				session.flush();
+			} ) ).isInstanceOf( OptimisticLockException.class );
+		} );
+		scope.inTransaction( session -> assertThat( session
+				.createNativeQuery( "select count(*) from optional_dynamic_shipment_detail where id = 2", Long.class )
+				.getSingleResult() ).isZero() );
+	}
+
+	@Test
+	void setLabelAfterAnotherSessionClearsLastCode(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.persist( new DynamicShipment( 2, "code", null ) ) );
+		scope.inSession( firstSession -> {
+			final var shipment = scope.fromTransaction( firstSession, session -> session.find( DynamicShipment.class, 2 ) );
+			scope.inTransaction( session -> session.find( DynamicShipment.class, 2 ).code = null );
+			scope.inTransaction( firstSession, session -> shipment.label = "mine" );
+		} );
+		scope.inTransaction( session -> {
+			final var shipment = session.find( DynamicShipment.class, 2 );
+			assertThat( shipment.label ).isEqualTo( "mine" );
+			assertThat( shipment.code ).isNull();
 		} );
 	}
 

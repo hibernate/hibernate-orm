@@ -3,10 +3,12 @@ package org.hibernate.community.dialect;
 import org.hibernate.Internal;
 import org.hibernate.SPI;
 import org.hibernate.dialect.sql.ast.spi.DoNothingSyntax;
+import org.hibernate.dialect.sql.ast.spi.DerivedTableRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.InsertConflictRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.InsertConflictRenderingPlan;
+import org.hibernate.dialect.sql.ast.spi.StandardDerivedTableRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.StandardInsertConflictRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.SelectItemReferenceStrategy;
 import org.hibernate.dialect.sql.ast.spi.TableReferenceAliasContext;
@@ -144,6 +146,19 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends PostgreSQL
 					DoNothingSyntax.SELF_ASSIGNMENT,
 					ValuesRowReferenceStyle.IMPLICIT_EXCLUDED );
 		};
+	}
+
+	@Override
+	protected DerivedTableRenderingSupport getDerivedTableRenderingSupport() {
+		if ( getDialect() instanceof GaussDBDialect g && g.isMMode() ) {
+			// M mode (MySQL-compatible) rejects a bare `values` derived table
+			// (`from (values (0)) d_` - syntax error at or near "(", probe-verified),
+			// like MySQL; render values tables as select-union chains instead
+			// (probe-verified: `from (select 0 as x union all select 1 as x) as d_` works).
+			// A mode (openGauss PG kernel) accepts the standard values table syntax.
+			return StandardDerivedTableRenderingSupport.VALUES_SELECT_LIST;
+		}
+		return super.getDerivedTableRenderingSupport();
 	}
 
 	@Override

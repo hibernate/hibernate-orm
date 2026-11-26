@@ -38,6 +38,7 @@ import org.hibernate.dialect.sql.ast.spi.CteSupport;
 import org.hibernate.dialect.sql.ast.spi.MutationKind;
 import org.hibernate.dialect.sql.ast.spi.MutationSyntaxCapability;
 import org.hibernate.dialect.sql.ast.spi.MutationSyntaxSupport;
+import org.hibernate.dialect.sql.ast.spi.SingleRowTableSupport;
 import org.hibernate.dialect.sql.ast.spi.PredicateSupport;
 import org.hibernate.dialect.sql.ast.spi.ValuesListSupport;
 import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
@@ -126,7 +127,9 @@ import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.dialect.sql.ast.spi.OptionalTableUpdateOperationRequest;
+import org.hibernate.sql.ast.spi.model.OptionalTableUpdate;
 import org.hibernate.sql.spi.mutation.jdbc.OptionalTableUpdateOperation;
+import org.hibernate.sql.spi.mutation.jdbc.OptionalTableUpdateWithUpsertOperation;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.InformationExtractor;
@@ -1357,6 +1360,23 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public SingleRowTableSupport getSingleRowTableSupport() {
+		if ( isMMode() ) {
+			// M mode (MySQL-compatible) rejects the standard `(values(0))` single-row anchor
+			// (`syntax error at or near "("`, probe-verified), and `dual` can take neither an
+			// alias nor joins (`from dual d_` / `from dual join ...` are syntax errors), so the
+			// mutation join-emulation anchor must be a plain derived table: `(select 0)`
+			// (probe-verified to work with aliases and joins). A mode (openGauss PG kernel)
+			// accepts the standard values-table expression.
+			return SingleRowTableSupport.builder( super.getSingleRowTableSupport() )
+					.tableExpression( "(select 0)" )
+					.build();
+		}
+		return super.getSingleRowTableSupport();
+	}
+
+	@Override
 	@SPI({ IMPLEMENT, SUPPLY })
 	public NationalizationSupport getNationalizationSupport() {
 		return NationalizationSupport.IMPLICIT;
@@ -1776,17 +1796,34 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 			OptionalTableUpdateOperationRequest request) {
 		if ( isMMode() ) {
 			// M mode (MySQL-compatible): GaussDB MERGE does not support `WHEN MATCHED AND <condition>`,
-			// which the merge-based path emits for the optional-table delete branch, and
-			// OptionalTableUpdateWithUpsertOperation's conflict-ignoring insert
-			// (`on duplicate key update col = col`) masks duplicate-key violations, so a
+			// which the merge-based path emits for the optional-table delete branch.
+			// For tables with updatable value columns use the base update -> insert +
+			// unique-violation-fallback operation: the upsert operation's conflict-ignoring
+			// insert (`on duplicate key update col = col`) masks duplicate-key violations, so a
 			// tenant-filtered upsert of another tenant's row succeeds silently instead of
-			// failing (TenantIdMutationTest). Use the base update -> insert + unique-violation
-			// fallback operation instead (7.4-proven on M mode 505.2).
-			return new OptionalTableUpdateOperation( request.mutationTarget(), request.update() );
+			// failing (TenantIdMutationTest); the base operation is 7.4-proven on M mode 505.2.
+			// For id-only tables the base operation's plain INSERT fallback aborts the
+			// transaction on duplicate key (PG error semantics: the swallowed violation still
+			// poisons the transaction), so keep the upsert operation there - its insert
+			// ignores primary-key collisions via `on duplicate key update col = col`
+			// (UpsertTest#testIdOnlySubtype, UpsertWithDiscriminatorTest).
+			if ( hasUpdatableValueBindings( request.update() ) ) {
+				return new OptionalTableUpdateOperation( request.mutationTarget(), request.update() );
+			}
+			return new OptionalTableUpdateWithUpsertOperation( request.update(), request.versionedTarget() );
 		}
 		// A mode (openGauss Oracle-compatible): the merge-based path (PostgreSQLDialect#supportsMerge)
 		// is verified to work; keep it.
 		return super.createOptionalTableUpdateOperation( request );
+	}
+
+	private static boolean hasUpdatableValueBindings( OptionalTableUpdate upsert ) {
+		for ( var binding : upsert.getValueBindings() ) {
+			if ( binding.isAttributeUpdatable() ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private static class NativeParameterMarkers implements ParameterMarkerStrategy {

@@ -107,7 +107,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 
 		lobCreatorBuilder = makeLobCreatorBuilder( dialect );
 
-		logJdbcFetchSize( extractedMetaDataSupport.getDefaultFetchSize(), cfgService );
+		logJdbcFetchSize( extractedMetaDataSupport, cfgService );
 	}
 
 	@Nonnull
@@ -308,7 +308,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 
 		lobCreatorBuilder = makeLobCreatorBuilder( dialect, cfgService.getSettings(), databaseMetaData.getConnection() );
 
-		logJdbcFetchSize( extractedMetaDataSupport.getDefaultFetchSize(), cfgService );
+		logJdbcFetchSize( extractedMetaDataSupport, cfgService );
 	}
 
 	@Nonnull
@@ -396,9 +396,13 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		return lobCreatorBuilder;
 	}
 
-	private static void logJdbcFetchSize(int defaultFetchSize, @Nonnull ConfigurationService cfgService) {
+	private static void logJdbcFetchSize(
+			@Nonnull ExtractedDatabaseMetaDataImpl extractedMetaData,
+			@Nonnull ConfigurationService cfgService) {
 		if ( !cfgService.getSettings().containsKey( JdbcSettings.STATEMENT_FETCH_SIZE ) ) {
-			if ( defaultFetchSize > 0 && defaultFetchSize < 100 ) {
+			final int defaultFetchSize = extractedMetaData.getDefaultFetchSize();
+			if ( defaultFetchSize > 0 && defaultFetchSize < 100
+					&& !hasAdaptiveFetchSize( extractedMetaData ) ) {
 				JDBC_LOGGER.warnLowFetchSize( defaultFetchSize );
 			}
 			else {
@@ -406,6 +410,16 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 			}
 		}
 	}
+
+	/// The Oracle JDBC driver 23ai and later starts with a fetch size of 10 and grows it adaptively
+	/// (up to 250 rows by the fourth fetch, depending on the row size), unless a fetch size is set
+	/// explicitly. Setting `hibernate.jdbc.fetch_size` would disable this tuning, so the low default
+	/// is not worth a warning.
+	private static boolean hasAdaptiveFetchSize(@Nonnull ExtractedDatabaseMetaDataImpl extractedMetaData) {
+		return "Oracle JDBC driver".equals( extractedMetaData.getDriver() )
+			&& extractedMetaData.getDriverMajorVersion() >= 23;
+	}
+
 	@Nonnull
 	private static TransactionConcurrency resolveTransactionConcurrency(
 			@Nonnull Dialect dialect, @Nonnull JdbcMetadata metadata, @Nullable Connection connection,

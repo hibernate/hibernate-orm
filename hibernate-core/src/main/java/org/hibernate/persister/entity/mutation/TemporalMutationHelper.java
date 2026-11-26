@@ -47,9 +47,10 @@ public class TemporalMutationHelper {
 	}
 
 	static void applyTemporalEnding(@Nonnull TableUpdateBuilder<?> builder, @Nonnull TemporalMapping temporalMapping) {
-		final var endingColumn = new ColumnReference( builder.getMutatingTable(), temporalMapping.getEndingColumnMapping() );
-		builder.addValueColumn( temporalMapping.createEndingValueBinding( endingColumn ) );
-		builder.addNonKeyRestriction( temporalMapping.createNullEndingValueBinding( endingColumn ) );
+		final var endingColumn = temporalMapping.getEndingColumnMapping();
+		final var columnReference = new ColumnReference( builder.getMutatingTable(), endingColumn );
+		builder.addValueColumn( temporalMapping.createEndingValueBinding( columnReference ) );
+		builder.addNullRestriction( endingColumn );
 	}
 
 	public static boolean isUsingParameters(@Nonnull SharedSessionContractImplementor session) {

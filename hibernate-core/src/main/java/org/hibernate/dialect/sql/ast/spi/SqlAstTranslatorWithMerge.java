@@ -52,17 +52,13 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 	}
 
 	private static Expectation mergeExpectation(OptionalTableUpdate optionalTableUpdate) {
-		if ( !optionalTableUpdate.getUnassignedColumns().isEmpty() ) {
+		if ( optionalTableUpdate.getMutatingTable().isOptional() ) {
 			// The conditional insert leaves an absent row alone when there is no data.
 			return new Expectation.OptionalRowCount();
 		}
 		return optionalTableUpdate.getValueBindings().stream()
 					.anyMatch( ColumnValueBinding::isAttributeUpdatable )
-				? optionalTableUpdate.getMutatingTable().isOptional()
-					// When the mutating table is optional, we would generate a delete part for the merge statement
-					// which makes the statement non-idempotent and hence not retryable
-					? new Expectation.RowCount()
-					: new Expectation.RetryableRowCount()
+				? new Expectation.RetryableRowCount()
 				// Without updatable bindings, the merge affects 0 rows when matched
 				: new Expectation.OptionalRowCount();
 	}
@@ -213,7 +209,7 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 	@SPI(IMPLEMENT)
 	protected void renderMergeInsert(OptionalTableUpdate optionalTableUpdate) {
 		appendSql( "when not matched" );
-		if ( !optionalTableUpdate.getUnassignedColumns().isEmpty() ) {
+		if ( optionalTableUpdate.getMutatingTable().isOptional() ) {
 			appendSql( " and (" );
 			renderMergeInsertCondition( optionalTableUpdate );
 			appendSql( ')' );
@@ -225,22 +221,11 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 	/// A missing optional row needs inserting only if the insert supplies state.
 	protected void renderMergeInsertCondition(OptionalTableUpdate optionalTableUpdate) {
 		String separator = "";
-		for ( var binding : optionalTableUpdate.getValueBindings() ) {
-			if ( binding.isAttributeInsertable() ) {
-				appendSql( separator );
-				binding.getColumnReference().appendColumnForWrite( this, "s" );
-				appendSql( " is not null" );
-				separator = " or ";
-			}
-		}
-		// A partition key can be inserted by the key binding instead of a value binding.
-		for ( var binding : optionalTableUpdate.getKeyBindings() ) {
-			if ( optionalTableUpdate.getUnassignedColumns().contains( binding.getColumnReference().getColumnExpression() ) ) {
-				appendSql( separator );
-				binding.getColumnReference().appendColumnForWrite( this, "s" );
-				appendSql( " is not null" );
-				separator = " or ";
-			}
+		for ( var binding : optionalTableUpdate.getInsertableStateBindings() ) {
+			appendSql( separator );
+			binding.getColumnReference().appendColumnForWrite( this, "s" );
+			appendSql( " is not null" );
+			separator = " or ";
 		}
 		if ( separator.isEmpty() ) {
 			appendSql( "1=0" );

@@ -3292,6 +3292,9 @@ public abstract class Dialect implements ConversionContext, AlterTableSupport,
 	/// update and bootstrap services; implementations must return an operation
 	/// for the same [OptionalTableUpdateOperationRequest#mutationTarget] and must
 	/// not retain the request.
+	/// An optional row may be deleted only if the assignments and the stored
+	/// values of all unassigned state columns leave it empty. A missing optional
+	/// row needs inserting only if the insert supplies state.
 	///
 	/// @return a non-null operation for the supplied optional-table update
 	/// @see OptionalTableUpdateOperationRequest

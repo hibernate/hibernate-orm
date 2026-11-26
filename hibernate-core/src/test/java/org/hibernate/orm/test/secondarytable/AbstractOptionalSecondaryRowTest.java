@@ -191,10 +191,31 @@ public abstract class AbstractOptionalSecondaryRowTest {
 	@Test
 	void deleteLastDirtyColumnWithOptimisticLock(SessionFactoryScope scope) {
 		scope.inTransaction( session -> session.persist( new DynamicShipment( 2, null, "label" ) ) );
-		scope.inTransaction( session -> session.find( DynamicShipment.class, 2 ).label = null );
+		scope.inTransaction( session -> {
+			session.find( DynamicShipment.class, 2 ).label = null;
+			scope.getCollectingStatementObserver().clear();
+		} );
+		assertThat( scope.getCollectingStatementObserver().getSqlQueries() )
+				.filteredOn( sql -> sql.contains( "optional_dynamic_shipment_detail" ) )
+				.singleElement().asString().startsWith( "delete from optional_dynamic_shipment_detail " );
 		scope.inTransaction( session -> assertThat( session
 				.createNativeQuery( "select count(*) from optional_dynamic_shipment_detail where id = 2", Long.class )
 				.getSingleResult() ).isZero() );
+	}
+
+	@Test
+	void clearLastDirtyColumnAfterAnotherSessionSetsCode(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.persist( new DynamicShipment( 2, null, "label" ) ) );
+		scope.inSession( firstSession -> {
+			final var shipment = scope.fromTransaction( firstSession, session -> session.find( DynamicShipment.class, 2 ) );
+			scope.inTransaction( session -> session.find( DynamicShipment.class, 2 ).code = "added" );
+			scope.inTransaction( firstSession, session -> shipment.label = null );
+		} );
+		scope.inTransaction( session -> {
+			final var shipment = session.find( DynamicShipment.class, 2 );
+			assertThat( shipment.code ).isEqualTo( "added" );
+			assertThat( shipment.label ).isNull();
+		} );
 	}
 
 	@Test

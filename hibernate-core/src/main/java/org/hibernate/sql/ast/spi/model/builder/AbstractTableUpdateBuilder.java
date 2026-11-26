@@ -7,6 +7,7 @@ import java.util.function.Predicate;
 import org.hibernate.SPI;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.spi.mutation.MutationTarget;
@@ -134,5 +135,39 @@ public abstract class AbstractTableUpdateBuilder<O extends MutationOperation>
 		if ( columnInclusion == null || columnInclusion.test( columnMapping ) ) {
 			addColumnAssignment( createValueBinding( assignment, columnMapping ) );
 		}
+	}
+
+	/// Whether the given assignments include every column of the table which holds
+	/// state of the given entity. When they do not, a row of an optional table might
+	/// have data even though every assigned value is null. A column which is left out
+	/// by the [column inclusion][#setColumnInclusion] is accounted for by whoever set
+	/// it, which says whether the [row is known to exist][#setRowKnownToExist].
+	protected boolean assignsEveryColumn(EntityMappingType entity, List<ColumnValueBinding> assignments) {
+		final String tableName = getMutatingTable().getTableName();
+		final var persister = entity.getEntityPersister();
+		final var attributes = entity.getAttributeMappings();
+		for ( int i = 0; i < attributes.size(); i++ ) {
+			final var attribute = attributes.get( i );
+			for ( int j = 0; j < attribute.getJdbcTypeCount(); j++ ) {
+				final var selectable = attribute.getSelectable( j );
+				if ( !selectable.isFormula()
+						&& tableName.equals( persister.physicalTableNameForMutation( selectable ) )
+						&& ( columnInclusion == null || columnInclusion.test( selectable ) )
+						&& !isAssigned( selectable, assignments ) ) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	private static boolean isAssigned(SelectableMapping selectable, List<ColumnValueBinding> assignments) {
+		final String column = selectable.getSelectionExpression();
+		for ( int i = 0; i < assignments.size(); i++ ) {
+			if ( assignments.get( i ).getColumnReference().getColumnExpression().equals( column ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

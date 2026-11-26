@@ -1128,6 +1128,8 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 
 		final boolean[] versionability = entityPersister.getPropertyVersionability();
 
+		final var optionalRowRestrictions =
+				tableDescriptor.isOptional() ? tableUpdateBuilder.getOptimisticLockBindings() : null;
 		for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
 			var attribute = tableDescriptor.attributes().get( i );
 			if ( !versionability[attribute.getStateArrayPosition()] ) {
@@ -1150,12 +1152,14 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 							// skip formulas
 						}
 						else {
-							if ( value == null ) {
+							if ( optionalRowRestrictions != null ) {
+								optionalRowRestrictions.consume( valueIndex, value, jdbcValueMapping );
+							}
+							else if ( value == null ) {
 								tableUpdateBuilder.addNullOptimisticLockRestriction( jdbcValueMapping );
 							}
 							else {
 								tableUpdateBuilder.addOptimisticLockRestriction( jdbcValueMapping );
-								valuesAnalysis.requireExistingRowForOptimisticLock( tableDescriptor );
 							}
 						}
 					},

@@ -220,7 +220,7 @@ class TemporalRemoveInSameChangesetTest {
 		}
 	}
 
-	private static long countRevisions(SessionFactoryScope scope, Class<?> entityType) {
+	static long countRevisions(SessionFactoryScope scope, Class<?> entityType) {
 		final var persister = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( entityType );
 		return scope.fromSession( session -> session.createNativeQuery(
 				"select count(*) from " + persister.getTemporalMapping().getTableName(), Long.class ).getSingleResult() );

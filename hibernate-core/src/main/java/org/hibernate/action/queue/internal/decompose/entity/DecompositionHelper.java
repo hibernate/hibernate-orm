@@ -15,6 +15,13 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 
 /// @author Steve Ebersole
 public class DecompositionHelper {
+	static boolean isIncludedInOptimisticLock(AttributeMapping attribute, boolean[] versionability, Object[] loadedState) {
+		final int index = attribute.getStateArrayPosition();
+		// Versionless locking compares the values that were actually observed.
+		return !attribute.isPluralAttributeMapping() && versionability[index]
+				&& loadedState[index] != LazyPropertyInitializer.UNFETCHED_PROPERTY;
+	}
+
 	static boolean hasSqlGeneratedUpdate(Generator generator, Object entity, SharedSessionContractImplementor session) {
 		return generator instanceof OnExecutionGenerator onExecution
 				&& generator.generatesOnUpdate()

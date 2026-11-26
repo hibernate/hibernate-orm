@@ -1,29 +1,34 @@
 package org.hibernate.action.queue.internal.decompose.entity;
 
-import org.hibernate.engine.internal.TenantIdHelper;
-import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor;
-
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
 import org.hibernate.action.queue.spi.MutationKind;
+import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor;
 import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.spi.meta.TableDescriptorAsTableMapping;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
-import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.engine.internal.FilteredAssociationState;
+import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.ModelPart.JdbcValueConsumer;
 import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.mutation.PartitionKeyValue;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
-import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.persister.entity.mutation.PartitionKeyValue;
 import org.hibernate.sql.ast.spi.model.MutatingTableReference;
 import org.hibernate.sql.ast.spi.model.TableMutation;
 import org.hibernate.sql.ast.spi.model.TableUpdate;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilder;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.spi.mutation.TableMapping;
+
+import static org.hibernate.action.queue.internal.decompose.entity.DecompositionHelper.isIncludedInOptimisticLock;
+import static org.hibernate.internal.util.collections.ArrayHelper.contains;
 
 /// Graph mutation plan contributor for soft-delete entity deletes.
 ///
@@ -44,9 +49,9 @@ public class SoftDeleteEntityMutationPlanContributor implements EntityMutationPl
 		this.sessionFactory = sessionFactory;
 		this.versioned = this.entityPersister.optimisticLockStyle().isVersion()
 				&& this.entityPersister.getVersionMapping() != null;
-		this.softDeleteOperation = generateSoftDeleteOperation( versioned, null );
+		this.softDeleteOperation = buildSoftDelete( softDeleteBuilder( versioned, null ) );
 		this.unversionedSoftDeleteOperation = versioned
-				? generateSoftDeleteOperation( false, null )
+				? buildSoftDelete( softDeleteBuilder( false, null ) )
 				: softDeleteOperation;
 	}
 
@@ -65,11 +70,19 @@ public class SoftDeleteEntityMutationPlanContributor implements EntityMutationPl
 		final boolean applyVersion = versioned && context.action().getInstance() != null;
 		final var loadedState = loadedState( context );
 		final var partitionKeys = PartitionKeyValue.fromState( entityPersister, loadedState, context.session() );
+		final boolean lockLoadedState = loadedState != null
+				&& context.entityPersister().optimisticLockStyle().isAllOrDirty();
+		final Map<String, Object> optimisticLockBindings;
 		final TableUpdate<?> update;
-		if ( PartitionKeyValue.needsDynamicRestriction( entityPersister, partitionKeys ) ) {
-			update = generateSoftDeleteOperation( applyVersion, partitionKeys );
+		if ( lockLoadedState || PartitionKeyValue.needsDynamicRestriction( entityPersister, partitionKeys ) ) {
+			final var builder = softDeleteBuilder( applyVersion, partitionKeys );
+			optimisticLockBindings = lockLoadedState
+					? addOptimisticLockRestrictions( builder, context, loadedState )
+					: Map.of();
+			update = buildSoftDelete( builder );
 		}
 		else {
+			optimisticLockBindings = Map.of();
 			update = applyVersion ? softDeleteOperation : unversionedSoftDeleteOperation;
 		}
 		final var mutation = update.createMutationOperation( null, sessionFactory );
@@ -83,10 +96,10 @@ public class SoftDeleteEntityMutationPlanContributor implements EntityMutationPl
 						tableDescriptor,
 						entityPersister,
 						identifier,
-						applyVersion ? context.version() : null,
-						loadedState,
-						partitionKeys,
-						applyVersion ? OptimisticLockStyle.VERSION : OptimisticLockStyle.NONE
+						applyVersion,
+						context.version(),
+						optimisticLockBindings,
+						partitionKeys
 				),
 				context.ordinalBase() * 1_000,
 				"EntityDeleteAction(" + entityPersister.getEntityName() + ")"
@@ -104,12 +117,53 @@ public class SoftDeleteEntityMutationPlanContributor implements EntityMutationPl
 		final Object instance = context.action().getInstance();
 		final var entityEntry = instance == null ? null
 				: context.session().getPersistenceContextInternal().getEntry( instance );
-		return entityEntry == null ? null : entityEntry.getLoadedState();
+		if ( entityEntry == null ) {
+			return null;
+		}
+		final var filteredState = entityEntry.getExtraState( FilteredAssociationState.class );
+		return filteredState == null ? entityEntry.getLoadedState()
+				: filteredState.physicalState( entityEntry.getLoadedState(), context.entityPersister() );
+	}
+
+	/// Add the predicates and collect their JDBC parameter values from the same snapshot.
+	private static Map<String, Object> addOptimisticLockRestrictions(
+			TableUpdateBuilder<?> builder, DeleteContext context, Object[] loadedState) {
+		final var persister = context.entityPersister();
+		final var table = builder.getMutatingTable().getTableName();
+		final var lockRestrictions = builder.getOptimisticLockBindings();
+		// The identifier, partition key and soft-delete indicator already restrict this row.
+		final var restrictedColumns = new HashSet<String>();
+		builder.getKeyRestrictionBindings().forEach( binding ->
+				restrictedColumns.add( binding.getColumnReference().getColumnExpression() ) );
+		lockRestrictions.forEach( binding ->
+				restrictedColumns.add( binding.getColumnReference().getColumnExpression() ) );
+		final Map<String, Object> bindings = new HashMap<>();
+		final JdbcValueConsumer addRestriction = (index, value, selectable) -> {
+			final var column = selectable.getSelectionExpression();
+			if ( !selectable.isFormula() && table.equals( persister.physicalTableNameForMutation( selectable ) )
+					&& restrictedColumns.add( column ) ) {
+				lockRestrictions.consume( index, value, selectable );
+				if ( value != null ) {
+					bindings.put( column, value );
+				}
+			}
+		};
+		final var updatedAttributes = context.decompositionContext() == null ? null
+				: context.decompositionContext().getUpdatedAttributeIndexesForDeletedEntity( context.action().getInstance() );
+		final var versionability = persister.getPropertyVersionability();
+		for ( int i = 0; i < versionability.length; i++ ) {
+			final var attribute = persister.getAttributeMapping( i );
+			if ( isIncludedInOptimisticLock( attribute, versionability, loadedState )
+					&& ( updatedAttributes == null || !contains( updatedAttributes, i ) ) ) {
+				attribute.breakDownJdbcValues( loadedState[i], addRestriction, context.session() );
+			}
+		}
+		return bindings;
 	}
 
 	/// @param partitionKeys the partition key of the instance, or `null` for a
 	///                      statement with a parameter for each column
-	private TableUpdate<?> generateSoftDeleteOperation(boolean applyVersion, List<PartitionKeyValue> partitionKeys) {
+	private TableUpdateBuilder<?> softDeleteBuilder(boolean applyVersion, List<PartitionKeyValue> partitionKeys) {
 		final var softDeleteMapping = entityPersister.getSoftDeleteMapping();
 		assert softDeleteMapping != null;
 
@@ -138,9 +192,12 @@ public class SoftDeleteEntityMutationPlanContributor implements EntityMutationPl
 		if ( applyVersion ) {
 			tableUpdateBuilder.addOptimisticLockRestriction( entityPersister.getVersionMapping() );
 		}
-		TenantIdHelper.applyTenantRestriction( entityPersister, tableUpdateBuilder );
+		return tableUpdateBuilder;
+	}
 
-		return (TableUpdate<?>) tableUpdateBuilder.buildMutation();
+	private TableUpdate<?> buildSoftDelete(TableUpdateBuilder<?> builder) {
+		TenantIdHelper.applyTenantRestriction( entityPersister, builder );
+		return (TableUpdate<?>) builder.buildMutation();
 	}
 
 	private void applySoftDelete(

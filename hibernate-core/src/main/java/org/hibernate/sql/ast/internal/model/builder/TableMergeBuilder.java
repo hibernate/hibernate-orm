@@ -12,6 +12,7 @@ import org.hibernate.sql.ast.spi.model.TableUpdateStandard;
 import org.hibernate.sql.model.internal.TableUpdateNoSet;
 import static java.util.Collections.emptyList;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -58,13 +59,17 @@ public class TableMergeBuilder<O extends MutationOperation> extends AbstractTabl
 					getMutatingTable().getTableMapping().getUpdateDetails().getExpectation(), emptyList() );
 		}
 
+		// A row is matched by its partition key, which is written as part of the
+		// key when the row is inserted, and is left alone when the row is updated.
+		final var assignments = new ArrayList<>( valueBindings );
+		assignments.removeIf( this::isKeyRestrictionColumn );
 		final var entity = getMutationTarget().getTargetPart();
 		return (LogicalTableUpdate<O>) new OptionalTableUpdate(
 				getMutatingTable(),
 				getMutationTarget(),
 				entity.getVersionMapping() != null,
-				!getMutatingTable().isOptional() || assignsEveryColumn( entity, valueBindings ),
-				valueBindings,
+				!getMutatingTable().isOptional() || assignsEveryColumn( entity, assignments ),
+				assignments,
 				getKeyRestrictionBindings(),
 				getOptimisticLockBindings()
 		);

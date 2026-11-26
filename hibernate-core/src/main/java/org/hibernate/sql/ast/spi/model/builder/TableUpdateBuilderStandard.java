@@ -100,7 +100,10 @@ public class TableUpdateBuilderStandard<O extends MutationOperation>
 			);
 		}
 
-		if ( !isRowKnownToExist() && getMutatingTable().getTableMapping().isOptional() ) {
+		// a row which is matched by a column which is also assigned, as a row
+		// is matched by its partition key, has a value in that column, and so exists
+		if ( !isRowKnownToExist() && getMutatingTable().getTableMapping().isOptional()
+				&& valueBindings.stream().noneMatch( this::isKeyRestrictionColumn ) ) {
 			final var entityMutationTarget = (EntityMutationTarget) getMutationTarget();
 			return (LogicalTableUpdate<O>)	new OptionalTableUpdate(
 					getMutatingTable(),

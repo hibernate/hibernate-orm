@@ -27,6 +27,7 @@ import org.hibernate.engine.internal.CacheHelper.CacheLock;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.mutation.PartitionKeyValue;
 import org.hibernate.sql.spi.mutation.MutationOperation;
 
 import java.util.ArrayList;
@@ -575,7 +576,7 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 					session
 			);
 			if ( entityPersister.hasPartitionedSelectionMapping() ) {
-				PartitionKeyValue.addRestrictions( entityPersister, tableDeleteBuilders, partitionKeys,
+				PartitionKeyValue.addRestrictions( entityPersister, tableDeleteBuilders::get, partitionKeys,
 						TableMapping::getDeleteDetails );
 			}
 		}

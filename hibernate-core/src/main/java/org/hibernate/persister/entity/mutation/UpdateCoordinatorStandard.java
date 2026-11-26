@@ -107,7 +107,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		// NOTE: even given dynamic-update and/or dirty optimistic locking
 		// there are cases where we need the full static updates.
 		staticUpdateGroup = buildStaticUpdateGroup();
-		versionUpdateGroup = buildVersionUpdateGroup();
+		versionUpdateGroup = buildVersionUpdateGroup( null );
 		hasCustomVersionUpdateSql = hasCustomVersionUpdateSql( versionUpdateGroup );
 		if ( entityPersister.getUpdateDelegate() != null ) {
 			// generated-values delegates execute the mutation themselves and cannot be batched
@@ -294,6 +294,9 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		forceDynamicUpdate |= filteredAssociations.isActive();
 		values = filteredAssociations.physicalState( values );
 		incomingOldValues = filteredAssociations.physicalState( incomingOldValues );
+		// a null or unknown partition key cannot be bound to the static statement
+		final boolean dynamicPartitionKey = PartitionKeyValue.needsDynamicRestriction( entityPersister(),
+				partitionKeys( values, incomingOldValues, session ) );
 
 		return performUpdate(
 				entity,
@@ -307,12 +310,24 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				versionMapping,
 				dirtyAttributeIndexes,
 				attributeUpdateability,
-				forceDynamicUpdate || databaseDirtinessCheck,
+				forceDynamicUpdate || databaseDirtinessCheck || dynamicPartitionKey,
 				databaseDirtinessCheck,
 				temporalExcludedUpdate,
 				filteredAssociations,
-				cacheFilteredUpdate
+				cacheFilteredUpdate && !dynamicPartitionKey
 		);
+	}
+
+	/**
+	 * The partition key of the row which is updated. There is no snapshot
+	 * when called from {@code StatelessSession.update()}.
+	 */
+	@Nonnull
+	private List<PartitionKeyValue> partitionKeys(
+			@Nullable Object[] values,
+			@Nullable Object[] oldValues,
+			@Nonnull SharedSessionContractImplementor session) {
+		return PartitionKeyValue.fromState( entityPersister(), oldValues == null ? values : oldValues, session );
 	}
 
 	@Nullable
@@ -604,13 +619,19 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			boolean batching,
 			@Nullable Object[] loadedState,
 			@Nonnull SharedSessionContractImplementor session) {
-		final var versionUpdateGroup = castNonNull( this.versionUpdateGroup );
+		// a read-only entity has no loaded state, so its partition key is unknown
+		final var partitionKeys = PartitionKeyValue.fromState( entityPersister(), loadedState, session );
+		final boolean dynamicPartitionKey =
+				PartitionKeyValue.needsDynamicRestriction( entityPersister(), partitionKeys );
+		final var versionUpdateGroup = castNonNull( dynamicPartitionKey
+				? buildVersionUpdateGroup( partitionKeys )
+				: this.versionUpdateGroup );
 
 		final var mutatingTableDetails =
 				(EntityTableMapping) versionUpdateGroup.getSingleOperation().getTableDetails();
 
 		final var mutationExecutor =
-				updateVersionExecutor( session, versionUpdateGroup, false, batching );
+				updateVersionExecutor( session, versionUpdateGroup, dynamicPartitionKey, batching );
 
 		final var versionMapping = entityPersister().getVersionMapping();
 
@@ -622,7 +643,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				ParameterUsage.SET
 		);
 
-		bindPartitionColumnValueBindings( loadedState, session, mutationExecutor.getJdbcValueBindings() );
+		PartitionKeyValue.bindRestrictions( partitionKeys, mutationExecutor.getJdbcValueBindings(),
+				versionUpdateGroup::getOperation );
 		bindTenantRestriction( session, mutationExecutor.getJdbcValueBindings(), versionUpdateGroup );
 
 		// restrict the key
@@ -958,9 +980,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				(position, attribute) -> AttributeAnalysis.DirtynessStatus.CONSIDER_LIKE_DIRTY,
 				session
 		);
-		// no snapshot when called from StatelessSession.update()
-		bindPartitionColumnValueBindings( oldValues == null ? values : oldValues,
-				session, mutationExecutor.getJdbcValueBindings() );
+		PartitionKeyValue.bindRestrictions( partitionKeys( values, oldValues, session ),
+				mutationExecutor.getJdbcValueBindings(), staticUpdateGroup::getOperation );
 		bindTenantRestriction( session, mutationExecutor.getJdbcValueBindings(), staticUpdateGroup );
 
 		try {
@@ -1242,9 +1263,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 								: AttributeAnalysis.DirtynessStatus.NOT_DIRTY,
 				session
 		);
-		// no snapshot when called from StatelessSession.update()
-		bindPartitionColumnValueBindings( oldValues == null ? values : oldValues,
-				session, mutationExecutor.getJdbcValueBindings() );
+		PartitionKeyValue.bindRestrictions( partitionKeys( values, oldValues, session ),
+				mutationExecutor.getJdbcValueBindings(), dynamicUpdateGroup::getOperation );
 		bindTenantRestriction( session, mutationExecutor.getJdbcValueBindings(), dynamicUpdateGroup );
 
 		try {
@@ -1375,6 +1395,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				rowId,
 				updateGroupBuilder,
 				oldValues,
+				partitionKeys( valuesAnalysis.getValues(), oldValues, session ),
 				valuesAnalysis,
 				(position, attribute) -> valuesAnalysis.getAttributeAnalyses().get( position ).getDirtynessStatus(),
 				session
@@ -1404,6 +1425,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			@Nullable Object rowId,
 			@Nonnull MutationGroupBuilder updateGroupBuilder,
 			@Nullable Object[] oldValues,
+			@Nullable List<PartitionKeyValue> partitionKeys,
 			@Nonnull UpdateValuesAnalysisImpl updateValuesAnalysis,
 			@Nonnull DirtinessChecker dirtinessChecker,
 			@Nullable SharedSessionContractImplementor session) {
@@ -1478,7 +1500,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			final var tableMapping = (EntityTableMapping) builder.getMutatingTable().getTableMapping();
 			final var tableUpdateBuilder = (TableUpdateBuilder<?>) builder;
 			applyKeyRestriction( rowId, persister, tableUpdateBuilder, tableMapping );
-			applyPartitionKeyRestriction( tableUpdateBuilder );
+			applyPartitionKeyRestriction( tableUpdateBuilder, tableMapping.getTableName(), partitionKeys,
+					TableMapping::getUpdateDetails );
 			applyTenantRestriction( tableUpdateBuilder );
 		} );
 	}
@@ -2040,6 +2063,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				updateGroupBuilder,
 				// oldValues
 				null,
+				// a parameter for each partition key column
+				null,
 				valuesAnalysis,
 				(position, attribute) -> valuesAnalysis.getAttributeAnalyses().get( position ).getDirtynessStatus(),
 				// session
@@ -2058,23 +2083,27 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			|| propertyUpdateability[index];
 	}
 
+	/**
+	 * @param partitionKeys the partition key of the row, or {@code null} for
+	 *                      a parameter for each of its columns
+	 */
 	@Nullable
-	private MutationOperationGroup buildVersionUpdateGroup() {
+	private MutationOperationGroup buildVersionUpdateGroup(@Nullable List<PartitionKeyValue> partitionKeys) {
 		final var versionMapping = entityPersister().getVersionMapping();
 		if ( versionMapping == null ) {
 			return null;
 		}
 		else {
 			final var identifierTableMapping = entityPersister().getIdentifierTableMapping();
-			final AbstractTableUpdateBuilder<JdbcMutationOperation> updateBuilder =
-					identifierTableMapping.getUpdateDetails().getCustomSql() == null
-							? newTableUpdateBuilder( identifierTableMapping )
-							// A custom update expects all mapped values, not just the version.
-							: new TableUpdateBuilderStandard<>( entityPersister(),
-									new MutatingTableReference( identifierTableMapping ),
-									new TableMapping.MutationDetails(
-											MutationType.UPDATE, new Expectation.RowCount(), null, false ),
-									null, factory() );
+			// A custom update expects all mapped values, not just the version.
+			final boolean customUpdate = identifierTableMapping.getUpdateDetails().getCustomSql() != null;
+			final var updateDetails = customUpdate
+					? new TableMapping.MutationDetails( MutationType.UPDATE, new Expectation.RowCount(), null, false )
+					: identifierTableMapping.getUpdateDetails();
+			final AbstractTableUpdateBuilder<JdbcMutationOperation> updateBuilder = customUpdate
+					? new TableUpdateBuilderStandard<>( entityPersister(),
+							new MutatingTableReference( identifierTableMapping ), updateDetails, null, factory() )
+					: newTableUpdateBuilder( identifierTableMapping );
 
 			updateBuilder.setSqlComment( "forced version increment for " + entityPersister().getRolePath() );
 
@@ -2083,7 +2112,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			updateBuilder.addKeyRestrictionsLeniently( identifierTableMapping.getKeyMapping() );
 
 			applyVersionOptimisticLocking( updateBuilder );
-			applyPartitionKeyRestriction( updateBuilder );
+			applyPartitionKeyRestriction( updateBuilder, identifierTableMapping.getTableName(), partitionKeys,
+					tableMapping -> updateDetails );
 			applyTenantRestriction( updateBuilder );
 
 			//noinspection resource

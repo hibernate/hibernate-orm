@@ -21,16 +21,17 @@ import static javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI;
 public class XmlFactoryUtil {
 
 	/**
-	 * Enables or disables DTD processing and external entity resolution on the given factory.
-	 * <p>
+	 * Creates and configures a StAX {@link XMLInputFactory} with the given DTD and external entity settings.
 	 *
-	 * @param xmlFactory the factory to configure
 	 * @param allowDtdAndExternalEntities whether to set {@link XMLInputFactory#SUPPORT_DTD} and
 	 * {@link XMLInputFactory#IS_SUPPORTING_EXTERNAL_ENTITIES} to {@code true}
+	 * @return a configured {@link XMLInputFactory} instance
 	 */
-	public static void configureXmlFactory(XMLInputFactory xmlFactory, boolean allowDtdAndExternalEntities) {
+	public static XMLInputFactory newXmlInputFactory(boolean allowDtdAndExternalEntities) {
+		final var xmlFactory = XMLInputFactory.newInstance();
 		xmlFactory.setProperty( XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, allowDtdAndExternalEntities );
 		xmlFactory.setProperty( XMLInputFactory.SUPPORT_DTD, allowDtdAndExternalEntities );
+		return xmlFactory;
 	}
 
 	/**

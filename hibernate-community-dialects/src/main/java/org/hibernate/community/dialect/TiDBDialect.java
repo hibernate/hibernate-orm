@@ -111,6 +111,12 @@ public class TiDBDialect extends MySQLDialect implements TemporalOperationSuppor
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public boolean supportsNestedCollectionFetch() {
+		return false;
+	}
+
+	@Override
 	@SPI({ USE, IMPLEMENT })
 	public boolean supportsOnDeleteAction(org.hibernate.annotations.OnDeleteAction action) {
 		return action == org.hibernate.annotations.OnDeleteAction.NO_ACTION;

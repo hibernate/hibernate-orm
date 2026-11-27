@@ -70,6 +70,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.collection.internal.CollectionDomainResult;
+import org.hibernate.sql.results.graph.collection.internal.NestedCollectionFetch;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
@@ -1000,6 +1001,11 @@ public class LoaderSelectBuilder {
 							joined = false;
 						}
 					}
+				}
+
+				// the values of the element of a nested collection are read from the aggregated value, not from joins
+				if ( joined && NestedCollectionFetch.isNested( fetchParent ) ) {
+					joined = false;
 				}
 
 				if ( joined && isFetchablePluralAttributeMapping ) {

@@ -452,6 +452,7 @@ There's one interesting case where join fetching becomes inefficient: when we fe
 Imagine we wanted to fetch both `Author.books` and `Author.royaltyStatements` in some unit of work.
 Joining both collections in a single query would result in a cartesian product of tables, and a large SQL result set.
 Subselect fetching comes to the rescue here, allowing us to fetch `books` using a join, and `royaltyStatements` using a single subsequent `select`.
+Alternatively, on databases which support it, an entity graph with link:{doc-javadoc-url}/org/hibernate/FetchMethod.html#NESTED[`FetchMethod.NESTED`] fetches both collections in the same `select`, each as a single aggregated value per author, without a cartesian product.
 ====
 
 Of course, an alternative way to avoid many round trips to the database is to cache the data we need in the Java client.

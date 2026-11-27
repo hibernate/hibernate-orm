@@ -33,7 +33,9 @@ import java.lang.reflect.ParameterizedType;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 
 import static java.lang.reflect.Array.get;
 import static java.lang.reflect.Array.getLength;
@@ -203,13 +205,9 @@ public class BasicCollectionJavaType<C extends Collection<E>, E>
 			case LIST:
 			case ORDERED_SET:
 			case SORTED_SET:
-				final var iterator1 = one.iterator();
-				final var iterator2 = another.iterator();
-				while ( iterator1.hasNext() ) {
-					if ( !componentJavaType.areEqual( iterator1.next(), iterator2.next() ) ) {
-						return false;
-					}
-				}
+				return areEqualInIterationOrder( one, another );
+			case BAG:
+				return areEqualInIterationOrder( one, another ) || haveSameOccurrences( one, another );
 			default: {
 				OUTER: for ( E e1 : one ) {
 					for ( E e2 : another ) {
@@ -220,6 +218,53 @@ public class BasicCollectionJavaType<C extends Collection<E>, E>
 					return false;
 				}
 			}
+		}
+		return true;
+	}
+
+	// The size has already been checked.
+	private boolean areEqualInIterationOrder(C one, C another) {
+		final var iterator1 = one.iterator();
+		final var iterator2 = another.iterator();
+		while ( iterator1.hasNext() ) {
+			if ( !componentJavaType.areEqual( iterator1.next(), iterator2.next() ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private boolean haveSameOccurrences(C one, C another) {
+		return componentJavaType.useObjectEqualsHashCode()
+				? haveSameObjectOccurrences( one, another )
+				: haveSameSemanticOccurrences( one, another );
+	}
+
+	private boolean haveSameObjectOccurrences(C one, C another) {
+		final var occurrences = new HashMap<E, Integer>();
+		for ( E element : another ) {
+			occurrences.merge( element, 1, Integer::sum );
+		}
+		for ( E element : one ) {
+			if ( occurrences.merge( element, -1, Integer::sum ) < 0 ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private boolean haveSameSemanticOccurrences(C one, C another) {
+		// Preserve first-match order for descriptor-specific equality without shifting the remainder.
+		final var remaining = new LinkedList<>( another );
+		OUTER: for ( E element : one ) {
+			final var iterator = remaining.iterator();
+			while ( iterator.hasNext() ) {
+				if ( componentJavaType.areEqual( element, iterator.next() ) ) {
+					iterator.remove();
+					continue OUTER;
+				}
+			}
+			return false;
 		}
 		return true;
 	}

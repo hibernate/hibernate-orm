@@ -510,7 +510,7 @@ public class EntityInitializerImpl
 				: new NullValueAssembler<>( javaType );
 	}
 
-	private static boolean hasCascadeRefresh(EntityValuedModelPart referencedModelPart) {
+	static boolean hasCascadeRefresh(EntityValuedModelPart referencedModelPart) {
 		final AttributeMetadata cascadeStyle;
 		if ( referencedModelPart instanceof ToOneAttributeMapping toOneAttributeMapping ) {
 			cascadeStyle = toOneAttributeMapping.getAttributeMetadata();
@@ -524,7 +524,7 @@ public class EntityInitializerImpl
 		return cascadeStyle.getCascadeStyle().doCascade( CascadingActions.REFRESH );
 	}
 
-	private static boolean hasCascadeRefreshParents(@Nullable InitializerParent<?> parent) {
+	static boolean hasCascadeRefreshParents(@Nullable InitializerParent<?> parent) {
 		// A cascading association cannot restart refresh after a non-cascading ancestor.
 		while ( parent != null && !parent.isResultInitializer() ) {
 			final var modelPart = parent.getInitializedPart();

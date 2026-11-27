@@ -11,6 +11,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -29,6 +30,8 @@ import jakarta.annotation.Nullable;
 
 import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
+import static org.hibernate.sql.results.graph.entity.internal.EntityInitializerImpl.hasCascadeRefresh;
+import static org.hibernate.sql.results.graph.entity.internal.EntityInitializerImpl.hasCascadeRefreshParents;
 import static org.hibernate.sql.results.graph.entity.internal.OwnerChangeset.resolveAtOwnerChangeset;
 
 /**
@@ -45,6 +48,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 	protected final DomainResultAssembler<?> keyAssembler;
 	protected final ToOneAttributeMapping toOneMapping;
 	protected final boolean affectedByFilter;
+	private final boolean affectedByRefreshCascade;
 	protected final boolean keyIsEager;
 	protected final boolean hasLazySubInitializer;
 	protected final FetchOptions fetchOptions;
@@ -84,6 +88,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 		this.concreteDescriptor = concreteDescriptor;
 		this.affectedByFilter = affectedByFilter;
 		this.fetchOptions = fetchOptions;
+		affectedByRefreshCascade = hasCascadeRefresh( toOneMapping ) && hasCascadeRefreshParents( parent );
 
 		isPartOfKey = Initializer.isPartOfKey( fetchedNavigable, parent );
 		keyAssembler = keyResult.createResultAssembler( this, creationState );
@@ -419,8 +424,20 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 	}
 
 	protected <T> T withFetchOptions(SharedSessionContractImplementor session, Supplier<T> action) {
-		return session.getLoadQueryInfluencers()
-				.withFetchOptions( session, fetchOptions, action);
+		final var influencers = session.getLoadQueryInfluencers();
+		final var cascadingFetchProfile = influencers.getEnabledCascadingFetchProfile();
+		if ( affectedByRefreshCascade || cascadingFetchProfile != CascadingFetchProfile.REFRESH ) {
+			return influencers.withFetchOptions( session, fetchOptions, action );
+		}
+		// The secondary load starts a new initializer tree, which cannot see
+		// that the refresh does not cascade to this association
+		influencers.setEnabledCascadingFetchProfile( null );
+		try {
+			return influencers.withFetchOptions( session, fetchOptions, action );
+		}
+		finally {
+			influencers.setEnabledCascadingFetchProfile( cascadingFetchProfile );
+		}
 	}
 
 }

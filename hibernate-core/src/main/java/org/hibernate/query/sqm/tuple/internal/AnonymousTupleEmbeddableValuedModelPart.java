@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
@@ -88,7 +89,8 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 			String componentName,
 			EmbeddableValuedModelPart existingModelPartContainer,
 			int fetchableIndex,
-			boolean generateColumnNames) {
+			boolean generateColumnNames,
+			UnaryOperator<String> columnNameRenderer) {
 		this.modelPartMap = createModelParts(
 				sqmExpressible,
 				sqlTypedMappings,
@@ -97,7 +99,8 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 				compatibleTableExpressions,
 				attributes,
 				existingModelPartContainer,
-				generateColumnNames
+				generateColumnNames,
+				columnNameRenderer
 		);
 		this.modelParts = modelPartMap.values().toArray( new ModelPart[0] );
 		this.domainType = domainType;
@@ -114,7 +117,8 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 			Set<String> compatibleTableExpressions,
 			Set<? extends Attribute<?, ?>> attributes,
 			EmbeddableValuedModelPart modelPartContainer,
-			boolean generateColumnNames) {
+			boolean generateColumnNames,
+			UnaryOperator<String> columnNameRenderer) {
 		final Map<String, ModelPart> modelParts = CollectionHelper.linkedMapOfSize( attributes.size() );
 		int index = 0;
 		for ( Attribute<?, ?> attribute : attributes ) {
@@ -133,7 +137,8 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 					modelPartContainer.findSubPart( attribute.getName(), null ),
 					compatibleTableExpressions,
 					modelParts.size(),
-					generateColumnNames
+					generateColumnNames,
+					columnNameRenderer
 			);
 			modelParts.put( modelPart.getPartName(), modelPart );
 			index += modelPart.getJdbcTypeCount();

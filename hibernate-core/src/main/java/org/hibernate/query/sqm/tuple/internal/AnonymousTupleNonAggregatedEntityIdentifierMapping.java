@@ -3,6 +3,7 @@ package org.hibernate.query.sqm.tuple.internal;
 import jakarta.annotation.Nonnull;
 
 import java.util.Set;
+import java.util.function.UnaryOperator;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -38,7 +39,8 @@ public class AnonymousTupleNonAggregatedEntityIdentifierMapping extends Anonymou
 			DomainType<?> domainType,
 			String componentName,
 			NonAggregatedIdentifierMapping delegate,
-			boolean generateColumnNames) {
+			boolean generateColumnNames,
+			UnaryOperator<String> columnNameRenderer) {
 		super(
 				sqmExpressible,
 				sqlTypedMappings,
@@ -50,7 +52,8 @@ public class AnonymousTupleNonAggregatedEntityIdentifierMapping extends Anonymou
 				componentName,
 				delegate,
 				-1,
-				generateColumnNames
+				generateColumnNames,
+				columnNameRenderer
 		);
 		this.delegate = delegate;
 	}

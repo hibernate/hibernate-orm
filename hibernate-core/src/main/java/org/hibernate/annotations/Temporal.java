@@ -209,6 +209,11 @@ public @interface Temporal {
 	 * versioning. Updates to an excluded attribute
 	 * modify the current row directly without creating
 	 * a new revision of the entity instance.
+	 * <p>On a versioned entity using the
+	 * {@linkplain TemporalTableStrategy#HISTORY_TABLE history table strategy},
+	 * an attribute annotated {@link jakarta.persistence.ExcludedFromVersioning}
+	 * or {@link OptimisticLock @OptimisticLock(excluded = true)} must also be
+	 * annotated {@code @Temporal.Excluded}.
 	 * <p>For {@linkplain TemporalTableStrategy#NATIVE
 	 * native temporal tables}, this is only supported
 	 * if the database itself provides a way to exclude

@@ -1,8 +1,11 @@
 package org.hibernate.boot.models.xml.internal;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
@@ -70,9 +73,23 @@ public class XmlPreProcessingResultImpl implements XmlPreProcessingResult {
 		jaxbRoot.getMappedSuperclasses().forEach( (jaxbMappedSuperclass) -> {
 			managedClasses.add( XmlProcessingHelper.determineClassName( jaxbRoot, jaxbMappedSuperclass ) );
 		} );
+		final Map<String, String> entityNamesByClass = new HashMap<>();
 		jaxbRoot.getEntities().forEach( (jaxbEntity) -> {
 			if ( StringHelper.isNotEmpty( jaxbEntity.getClazz() ) ) {
-				managedClasses.add( XmlProcessingHelper.determineClassName( jaxbRoot, jaxbEntity ) );
+				final String className = XmlProcessingHelper.determineClassName( jaxbRoot, jaxbEntity );
+				final String entityName = jaxbEntity.getName();
+				if ( entityName != null && !entityName.isBlank() ) {
+					final String previousName = entityNamesByClass.putIfAbsent( className, entityName );
+					if ( previousName != null && !previousName.equals( entityName ) ) {
+						throw new MappingException(
+								"Entity class '" + className + "' is mapped in the same document"
+										+ " with different entity names '" + previousName + "' and '"
+										+ entityName + "'",
+								binding.getOrigin()
+						);
+					}
+				}
+				managedClasses.add( className );
 			}
 			else if ( StringHelper.isNotEmpty( jaxbEntity.getName() ) ) {
 				managedNames.add( jaxbEntity.getName() );

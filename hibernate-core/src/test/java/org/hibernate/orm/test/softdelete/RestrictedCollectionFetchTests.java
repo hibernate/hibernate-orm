@@ -22,8 +22,10 @@ import org.hibernate.annotations.SQLJoinTableRestriction;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SoftDelete;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -97,6 +99,7 @@ public class RestrictedCollectionFetchTests {
 			"labels, join",
 			"children, join"
 	})
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void fetchGraphDoesNotDuplicateElements(String collection, String join, SessionFactoryScope scope) {
 		scope.inSession( session -> {
 			final var graph = session.createEntityGraph( Owner.class );
@@ -120,6 +123,7 @@ public class RestrictedCollectionFetchTests {
 
 	@ParameterizedTest
 	@ValueSource(strings = {"labels", "children", "names", "softChildren"})
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void laterJoinDoesNotTruncateFetchedCollection(String collection, SessionFactoryScope scope) {
 		scope.inSession( session -> {
 			final var graph = session.createEntityGraph( Owner.class );
@@ -143,6 +147,7 @@ public class RestrictedCollectionFetchTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void leftJoinHidesKeyOfHiddenEntry(SessionFactoryScope scope) {
 		scope.inSession( session -> {
 			// the key is read from the table of the key

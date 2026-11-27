@@ -16,8 +16,10 @@ import jakarta.persistence.OneToMany;
 
 import org.hibernate.annotations.SoftDelete;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -89,6 +91,7 @@ public class SoftDeleteManyToManyJoinTests {
 	// left join of a collection of soft-deleted entities
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void leftJoinHidesDeletedElement(SessionFactoryScope scope) {
 		assertEquals( Set.of( "1:null", "2:21", "3:null" ),
 				rows( scope, "select o.id, e.id from Owner o left join o.plain e" ) );
@@ -99,6 +102,7 @@ public class SoftDeleteManyToManyJoinTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void leftJoinWithRestriction(SessionFactoryScope scope) {
 		assertEquals( List.of( 1, 3 ),
 				ids( scope, "select o.id from Owner o left join o.plain e where e.id is null order by o.id" ) );
@@ -109,6 +113,7 @@ public class SoftDeleteManyToManyJoinTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void leftJoinOfMapHidesDeletedElement(SessionFactoryScope scope) {
 		assertEquals( Set.of( "1:null", "2:21", "3:null" ),
 				rows( scope, "select o.id, e.id from Owner o left join o.byTag e" ) );
@@ -119,6 +124,7 @@ public class SoftDeleteManyToManyJoinTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void leftJoinFetchHidesDeletedElement(SessionFactoryScope scope) {
 		scope.inSession( session -> {
 			final List<Owner> owners = session
@@ -143,6 +149,7 @@ public class SoftDeleteManyToManyJoinTests {
 	// one-to-many map of soft-deleted entities, keyed by an entity
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void leftJoinOfOneToManyMapHidesDeletedElement(SessionFactoryScope scope) {
 		assertEquals( Set.of( "1:null", "2:21", "3:null" ),
 				rows( scope, "select o.id, e.id from Owner o left join o.owned e" ) );
@@ -172,6 +179,7 @@ public class SoftDeleteManyToManyJoinTests {
 	// left join of a collection with a soft-deleted join table
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void leftJoinHidesDeletedJoinTableRow(SessionFactoryScope scope) {
 		assertEquals( Set.of( "1:null", "2:21", "3:null" ),
 				rows( scope, "select o.id, e.id from Owner o left join o.tags e" ) );

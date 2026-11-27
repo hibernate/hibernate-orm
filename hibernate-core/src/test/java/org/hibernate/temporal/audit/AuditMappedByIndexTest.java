@@ -17,8 +17,10 @@ import org.hibernate.annotations.Audited;
 import org.hibernate.annotations.ListIndexBase;
 import org.hibernate.audit.AuditLogFactory;
 import org.hibernate.testing.orm.junit.AuditedTest;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -41,6 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 		value = "org.hibernate.temporal.audit.AuditOneToManyIndexTest$ChangesetIds"))
 class AuditMappedByIndexTest {
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void readIndicesAtChangeset(SessionFactoryScope scope) {
 		final var first = createQueue( scope, 1, 2 );
 		final var second = scope.fromTransaction( session -> {
@@ -142,6 +145,7 @@ class AuditMappedByIndexTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	void deletingIndexedElementRecordsDeletion(SessionFactoryScope scope) {
 		final var first = createQueue( scope, 31, 1 );
 		final var deleted = scope.fromTransaction( session -> {

@@ -27,8 +27,10 @@ import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSubQuery;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -141,6 +143,7 @@ public class SoftDeleteJoinTableQueryTests {
 
 	@ParameterizedTest
 	@ValueSource(strings = {TAGS, LABELS, MARKS, KEYED, NOTES})
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void leftJoin(String collection, SessionFactoryScope scope) {
 		assertEquals( List.of( 1, 2, 3 ),
 				ids( scope, "select o.id from Owner o left join o." + collection + " e order by o.id" ) );
@@ -148,6 +151,7 @@ public class SoftDeleteJoinTableQueryTests {
 
 	@ParameterizedTest
 	@ValueSource(strings = {TAGS, LABELS, MARKS, KEYED, NOTES})
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void leftJoinElement(String collection, SessionFactoryScope scope) {
 		assertEquals( singletonList( null ),
 				ids( scope, "select e.id from Owner o left join o." + collection + " e where o.id = 1" ) );
@@ -155,6 +159,7 @@ public class SoftDeleteJoinTableQueryTests {
 
 	@ParameterizedTest
 	@ValueSource(strings = {TAGS, NOTES, "byNote"})
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void innerJoinFetchKeepsOwnerWithOnlyDeletedRows(String collection, SessionFactoryScope scope) {
 		scope.inSession( session -> {
 			final var owners = session.createSelectionQuery(
@@ -166,6 +171,7 @@ public class SoftDeleteJoinTableQueryTests {
 
 	@ParameterizedTest
 	@ValueSource(strings = {TAGS, LABELS, MARKS, KEYED, NOTES})
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void leftJoinFetch(String collection, SessionFactoryScope scope) {
 		scope.inSession( session -> {
 			session.enableFilter( "liveMarks" );
@@ -337,6 +343,7 @@ public class SoftDeleteJoinTableQueryTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	void softDeletedMapKey(SessionFactoryScope scope) {
 		assertEquals( List.of( 20 ), ids( scope, "select key(v).id from Owner o join o.byNote v" ) );
 		assertEquals( List.of( 0, 1, 0 ), ids( scope, "select size(o.byNote) from Owner o order by o.id" ) );

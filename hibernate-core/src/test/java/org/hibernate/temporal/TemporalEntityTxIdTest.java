@@ -53,6 +53,7 @@ class TemporalEntityTxIdTest {
 	}
 
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsPrimaryKeyUpdate.class )
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsNestedJoinGroups.class )
 	@Test void test(SessionFactoryScope scope) {
 		final String friendIds = "select f.id from TemporalChild1 c left join c.friends f where c.id = 1";
 		scope.getSessionFactory().inTransaction(

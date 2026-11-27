@@ -1,7 +1,9 @@
 package org.hibernate.orm.test.softdelete.collections;
 
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -51,6 +53,7 @@ public class UsageTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	void testHqlManyToMany(SessionFactoryScope scope) {
 		var sqlCollector = scope.getCollectingStatementObserver();
 		sqlCollector.clear();
@@ -89,6 +92,7 @@ public class UsageTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	void testRemoveManyToMany(SessionFactoryScope scope) {
 		var sqlCollector = scope.getCollectingStatementObserver();
 		sqlCollector.clear();
@@ -139,6 +143,7 @@ public class UsageTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	void testDeleteManyToMany(SessionFactoryScope scope) {
 		var sqlCollector = scope.getCollectingStatementObserver();
 		sqlCollector.clear();

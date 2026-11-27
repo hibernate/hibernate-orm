@@ -40,6 +40,7 @@ import org.hibernate.dialect.lock.spi.EntityLockingStrategyRequest;
 import org.hibernate.dialect.lock.spi.LockingStrategy;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
@@ -332,6 +333,9 @@ public class EntityLockingStrategyFactoryTest {
 		final var persister = spy( scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( VersionedEntity.class ) );
 		final var entry = mock( EntityEntry.class );
 		final var session = mock( SharedSessionContractImplementor.class );
+		final var jdbcCoordinator = mock( JdbcCoordinator.class );
+		when( session.getJdbcCoordinator() ).thenReturn( jdbcCoordinator );
+		when( jdbcCoordinator.getJdbcSessionOwner() ).thenReturn( session );
 		final var entity = new VersionedEntity();
 		when( entry.getLockMode() ).thenReturn( modeUpgrade ? LockMode.READ : LockMode.PESSIMISTIC_FORCE_INCREMENT );
 		when( entry.getPersister() ).thenReturn( persister );

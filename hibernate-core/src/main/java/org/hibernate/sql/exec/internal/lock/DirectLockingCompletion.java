@@ -60,7 +60,7 @@ public final class DirectLockingCompletion {
 			pending.forEach( (key, entity) -> {
 				final var entry = managedEntry( key, entity, session );
 				if ( entry.getLockMode().lessThan( LockMode.PESSIMISTIC_FORCE_INCREMENT ) ) {
-					OptimisticLockHelper.forceVersionIncrement( entity, entry, session );
+					OptimisticLockHelper.forceVersionIncrementImmediately( entity, entry, session );
 				}
 			} );
 			pending.clear();

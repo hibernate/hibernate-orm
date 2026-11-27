@@ -59,7 +59,9 @@ public class GaussDBCastingIntervalSecondJdbcType implements AdjustableJdbcType 
 					SqlAppender sqlAppender,
 					SqlAstTranslator<?> walker,
 					SessionFactoryImplementor sessionFactory) {
-				final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
+				// The translator always supplies the session factory; a null one only occurs when the
+				// wrapper is rendered in isolation (unit tests), where the default rendering applies
+				final Dialect dialect = sessionFactory == null ? null : sessionFactory.getJdbcServices().getDialect();
 				if ( dialect instanceof GaussDBDialect g && g.isMMode() ) {
 					// M mode: column is numeric (seconds), read directly — no extract(epoch)
 					expression.accept( walker );

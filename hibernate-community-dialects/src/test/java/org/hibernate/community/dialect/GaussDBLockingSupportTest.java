@@ -24,10 +24,15 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 /// @author Steve Ebersole
 class GaussDBLockingSupportTest {
 	@Test
-	void finiteWaitIsConnectionLevel() {
+	void finiteWaitIsNotAppliedOnConnection() {
 		final var metadata = GaussDBLockingSupport.LOCKING_SUPPORT.getMetadata();
 
-		assertEquals( LockTimeoutType.CONNECTION, metadata.getLockTimeoutType( Timeout.seconds( 1 ) ) );
+		// GaussDB's `lockwait_timeout` does not time out row-lock waits (probe-verified on 505.2 in A and M
+		// mode: an `update` and a `select ... for update` contending a locked row blocked despite
+		// `set local lockwait_timeout = 2s`, while `for update nowait` failed immediately), so a finite
+		// wait cannot be honored on the connection
+		assertEquals( LockTimeoutType.NONE, metadata.getLockTimeoutType( Timeout.seconds( 1 ) ) );
+		assertEquals( LockTimeoutType.QUERY, metadata.getLockTimeoutType( Timeouts.NO_WAIT ) );
 		assertFalse( metadata.supportsWait() );
 	}
 

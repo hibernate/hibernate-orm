@@ -67,6 +67,7 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
+import org.hibernate.persister.state.internal.HistoryStateManagement;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.usertype.CompositeUserType;
 
@@ -312,6 +313,8 @@ public class PropertyBinder {
 	}
 
 	private void callAttributeBinders(Property property, Map<String, PersistentClass> persistentClasses) {
+		// The version property and temporal strategy are both known in the second pass.
+		validateTemporalVersionExclusion( property );
 		final var metaAnnotatedTargets =
 				memberDetails.getMetaAnnotated( AttributeBinderType.class, getSourceModelContext() );
 		for ( final var metaAnnotatedTarget : metaAnnotatedTargets ) {
@@ -608,6 +611,18 @@ public class PropertyBinder {
 			property.setTemporalExcluded( true );
 			property.setOptimisticLocked( false );
 			addTemporalExcludedColumnOptions( property );
+		}
+	}
+
+	private void validateTemporalVersionExclusion(Property property) {
+		if ( !property.isTemporalExcluded() && memberDetails.hasDirectAnnotationUsage( ExcludedFromVersioning.class ) ) {
+			final var entity = holder.getPersistentClass();
+			if ( entity != null && entity.isVersioned()
+					&& entity.getRootClass().getStateManagementType() == HistoryStateManagement.class ) {
+				throw new AnnotationException( "Property '" + qualify( holder.getPath(), property.getName() )
+						+ "' is annotated '@ExcludedFromVersioning' and must also be annotated '@Temporal.Excluded'"
+						+ " for a versioned entity using HISTORY_TABLE" );
+			}
 		}
 	}
 

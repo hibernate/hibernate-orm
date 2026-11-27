@@ -417,6 +417,7 @@ public class StatelessSessionImpl
 		checkNotReadOnly();
 		final var persister = getEntityPersister( entityName, entity );
 		final Object id;
+		final GeneratedValues generatedValues;
 		final Object[] state = persister.getValues( entity );
 		if ( persister.isVersioned() ) {
 			if ( seedVersion( entity, state, persister, this ) ) {
@@ -441,7 +442,7 @@ public class StatelessSessionImpl
 				final var event = eventMonitor.beginEntityInsertEvent();
 				boolean success = false;
 				try {
-					persister.getInsertCoordinator().insert( entity, id, state, this );
+					generatedValues = persister.getInsertCoordinator().insert( entity, id, state, this );
 					success = true;
 				}
 				catch (ConstraintViolationException cve) {
@@ -467,7 +468,7 @@ public class StatelessSessionImpl
 				boolean success = false;
 				Object generatedId = null;
 				try {
-					final var generatedValues = persister.getInsertCoordinator().insert( entity, state, this );
+					generatedValues = persister.getInsertCoordinator().insert( entity, state, this );
 					generatedId = castNonNull( generatedValues ).getGeneratedValue( persister.getIdentifierMapping() );
 					id = generatedId;
 					success = true;
@@ -496,7 +497,7 @@ public class StatelessSessionImpl
 				final var event = eventMonitor.beginEntityInsertEvent();
 				boolean success = false;
 				try {
-					persister.getInsertCoordinator().insert( entity, id, state, this );
+					generatedValues = persister.getInsertCoordinator().insert( entity, id, state, this );
 					success = true;
 				}
 				catch (ConstraintViolationException cve) {
@@ -507,6 +508,7 @@ public class StatelessSessionImpl
 				}
 			}
 		}
+		applyDatabaseResolvedVersion( id, entity, state, persister, generatedValues );
 		if ( persister.getTemporalMapping() != null && getSessionFactoryOptions().getTemporalTableStrategy() != NATIVE
 				&& getTransactionCoordinator().isTransactionActive() ) {
 			temporaryPersistenceContext.registerInsertedKey( persister, id );
@@ -741,7 +743,7 @@ public class StatelessSessionImpl
 				final var generatedValues =
 						persister.getUpdateCoordinator()
 								.update( entity, id, null, state, oldVersion, null, null, false, this );
-				applyDatabaseResolvedVersion( entity, state, persister, generatedValues );
+				applyDatabaseResolvedVersion( id, entity, state, persister, generatedValues );
 				success = true;
 			}
 			finally {
@@ -796,17 +798,25 @@ public class StatelessSessionImpl
 		}
 	}
 
-	private static void applyDatabaseResolvedVersion(
-			Object entity,
-			Object[] state,
-			EntityPersister persister,
-			GeneratedValues generatedValues) {
+	private void applyDatabaseResolvedVersion(
+			Object id, Object entity, Object[] state, EntityPersister persister, GeneratedValues generatedValues) {
 		final var versionMapping = persister.getVersionMapping();
-		if ( generatedValues != null && versionMapping != null ) {
-			final Object resolvedVersion = generatedValues.getGeneratedValue( versionMapping );
-			if ( resolvedVersion != null ) {
-				setVersion( state, resolvedVersion, persister );
-				persister.setValue( entity, persister.getVersionPropertyIndex(), resolvedVersion );
+		if ( versionMapping != null ) {
+			final var versionAttribute = versionMapping.getVersionAttribute();
+			// Conditional version increments return the version mapping. Property generators return the attribute.
+			Object version = generatedValues == null ? null : generatedValues.getGeneratedValue( versionMapping );
+			if ( version == null && generatedValues != null ) {
+				version = generatedValues.getGeneratedValue( versionAttribute );
+			}
+			final var generator = versionAttribute.getGenerator();
+			if ( version == null && generator != null && generator.generatedOnExecution( entity, this ) ) {
+				// A subsequent stateless write needs the actual optimistic lock value.
+				getJdbcCoordinator().executeBatch();
+				version = persister.getCurrentVersion( id, this );
+			}
+			if ( version != null ) {
+				setVersion( state, version, persister );
+				persister.setValue( entity, persister.getVersionPropertyIndex(), version );
 			}
 		}
 	}
@@ -905,7 +915,7 @@ public class StatelessSessionImpl
 				final var generatedValues =
 						persister.getMergeCoordinator()
 								.update( entity, id, null, state, oldVersion, null, null, false, this );
-				applyDatabaseResolvedVersion( entity, state, persister, generatedValues );
+				applyDatabaseResolvedVersion( id, entity, state, persister, generatedValues );
 				success = true;
 			}
 			finally {

@@ -85,7 +85,7 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 			return false;
 		}
 
-		initializeStateForRevisionInsert( context, entityPersister.getIdentifierTableDescriptor() );
+		initializeStateForRevisionInsert( context, entityPersister.getIdentifierTableDescriptor(), false );
 
 		final OptimisticLockStyle effectiveOptLockStyle = effectiveOptimisticLockStyle(
 				context.previousVersion(),

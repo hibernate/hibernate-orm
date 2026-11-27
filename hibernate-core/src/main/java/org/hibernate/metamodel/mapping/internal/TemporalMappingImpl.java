@@ -1,16 +1,17 @@
 package org.hibernate.metamodel.mapping.internal;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
-import jakarta.annotation.Nonnull;
-import org.hibernate.mapping.Column;
 import org.hibernate.dialect.temporal.spi.TemporalRestrictionRequest;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Stateful;
+import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.LegacyAuxiliaryMutationSupport;
@@ -44,8 +45,10 @@ import org.hibernate.sql.ast.spi.model.builder.TableInsertBuilder;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.emptyList;
 import static org.hibernate.metamodel.mapping.internal.CurrentState.ownerRevision;
@@ -65,6 +68,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 	private final String tableName;
 	/// The history table expression for each table expression, when each class has its own history table.
 	private final Map<String, String> historyTables;
+	private final Set<String> computedHistoryColumns;
 	private final SelectableMapping startingColumnMapping;
 	private final SelectableMapping endingColumnMapping;
 	private final JdbcMapping jdbcMapping;
@@ -81,6 +85,15 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 
 	public TemporalMappingImpl(
 			Stateful bootMapping,
+			String tableName,
+			Map<String, String> historyTables,
+			MappingModelCreationProcess creationProcess) {
+		this( bootMapping, bootMapping.getAuxiliaryTable(), tableName, historyTables, creationProcess );
+	}
+
+	private TemporalMappingImpl(
+			Stateful bootMapping,
+			@Nullable Table historyTable,
 			String tableName,
 			Map<String, String> historyTables,
 			MappingModelCreationProcess creationProcess) {
@@ -109,6 +122,12 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 		endingColumnMapping = endingColumnMapping( tableName, endingColumn, creationContext );
 
 		final var dialect = creationContext.getDialect();
+		computedHistoryColumns = historyTable != null && temporalTableStrategy == TemporalTableStrategy.HISTORY_TABLE
+				? historyTable.getColumns().stream()
+						.filter( column -> column.getGeneratedAs() != null )
+						.map( column -> column.getQuotedName( dialect ) )
+						.collect( Collectors.toUnmodifiableSet() )
+				: Set.of();
 		if ( creationContext.getSessionFactory()
 				.getChangesetCoordinator()
 				.useServerTimestamp( dialect ) ) {
@@ -182,7 +201,13 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 			@Nonnull MappingModelCreationProcess creationProcess) {
 		final String historyTable = historyTables.get( subclassPersister.getIdentifierTableName() );
 		return historyTable == null ? this
-				: new TemporalMappingImpl( subclass.getRootClass(), historyTable, historyTables, creationProcess );
+				: new TemporalMappingImpl( subclass.getRootClass(), subclass.getAuxiliaryTable(),
+						historyTable, historyTables, creationProcess );
+	}
+
+	@Override
+	public boolean isComputedHistoryColumn(String columnName) {
+		return computedHistoryColumns.contains( columnName );
 	}
 
 	@Nonnull

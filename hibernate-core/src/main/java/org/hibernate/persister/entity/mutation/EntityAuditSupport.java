@@ -29,8 +29,6 @@ import org.hibernate.sql.spi.mutation.MutationType;
 import org.hibernate.sql.ast.spi.model.MutationGroup;
 import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
 import org.hibernate.sql.ast.spi.model.ColumnWriteFragment;
-import org.hibernate.sql.ast.spi.model.ColumnValueParameterList;
-import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.ast.spi.model.TableMutation;
 import org.hibernate.sql.ast.spi.model.builder.TableInsertBuilderStandard;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
@@ -544,24 +542,11 @@ public class EntityAuditSupport {
 
 	private void addCollectionIndexColumns(TableInsertBuilderStandard insertBuilder, EntityTableMapping sourceMapping,
 			List<SelectableMapping> indexColumns) {
-		final String sourceTableName = sourceMapping.getTableName();
 		// The collection writes its index after the entity mutation. Copy the final
 		// physical value when writing the audit row at transaction completion.
 		for ( var column : indexColumns ) {
-			final var table = insertBuilder.getMutatingTable();
-			final var keys = sourceMapping.getKeyMapping();
-			final var parameters = new ColumnValueParameterList( table, ParameterUsage.SET, keys.getColumnCount() );
-			final var select = new SimpleSelect( factory.getJdbcServices().getDialect() )
-					.setTableName( sourceTableName )
-					.addColumn( column.getSelectionExpression() );
-			keys.forEachKeyColumn( (position, key) -> {
-				select.addRestriction( key.getColumnName() );
-				parameters.addColumValueParameter( key );
-			} );
-			insertBuilder.addColumnAssignment( new ColumnValueBinding(
-					new ColumnReference( table, column ),
-					new ColumnWriteFragment( "(" + select.toStatementString() + ")", parameters, column )
-			) );
+			AbstractMutationCoordinator.addColumnFromLiveTable( insertBuilder, sourceMapping, column, ParameterUsage.SET,
+					factory.getJdbcServices().getDialect() );
 		}
 	}
 

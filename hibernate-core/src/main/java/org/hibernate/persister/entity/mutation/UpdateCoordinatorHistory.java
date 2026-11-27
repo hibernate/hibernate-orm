@@ -10,27 +10,17 @@ import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.generator.Generator;
-import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.generator.values.GeneratedValues;
-import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.spi.mutation.TableMapping;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.spi.mutation.MutationType;
-import org.hibernate.sql.ast.spi.model.builder.AssigningTableMutationBuilder;
-import org.hibernate.sql.ast.spi.model.builder.TableInsertBuilderStandard;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
-import org.hibernate.sql.model.internal.MutationGroupSingle;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
-import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.persister.entity.mutation.TemporalMutationHelper.isRevisionFromCurrentTransaction;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
@@ -44,6 +34,7 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.sin
  */
 @Internal
 public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator {
+	private final HistoryTableMutation historyMutation;
 	private final UpdateCoordinator currentUpdateCoordinator;
 	private final EntityTableMapping identifierTableMapping;
 	private final EntityTableMapping historyTableMapping;
@@ -64,11 +55,13 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 		this.historyTableMapping =
 				createAuxiliaryTableMapping( identifierTableMapping, entityPersister,
 						temporalMapping.getTableName() );
+		historyMutation = new HistoryTableMutation( entityPersister, historyTableMapping );
 		final String entityName = entityPersister.getEntityName();
 		this.historyUpdateBatchKey = new BasicBatchKey( entityName + "#HISTORY_UPDATE" );
 		this.historyInsertBatchKey = new BasicBatchKey( entityName + "#HISTORY_INSERT" );
 		this.historyEndUpdateGroup = buildEndingUpdateGroup( historyTableMapping, temporalMapping );
-		this.historyInsertGroup = buildHistoryInsertGroup( entityPersister.getPropertyInsertability() );
+		final var insert = historyMutation.createInsert( entityPersister.getPropertyInsertability() );
+		this.historyInsertGroup = singleOperation( MutationType.INSERT, entityPersister, insert.createMutationOperation( null, factory ) );
 	}
 
 	@Nullable
@@ -152,7 +145,7 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 		final var partitionKeys = PartitionKeyValue.fromState( entityPersister(),
 				incomingOldValues == null ? values : incomingOldValues, session );
 		final var updateDetails = buildHistoryUpdateDetails(
-				entity, values, dirtyAttributeIndexes, currentRevision, partitionKeys, session );
+				values, dirtyAttributeIndexes, currentRevision, partitionKeys );
 		if ( updateDetails != null ) {
 			final var mutationExecutor =
 					mutationExecutorService.createExecutor( resolveBatchKeyAccess( true, session ),
@@ -173,7 +166,10 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 
 				PartitionKeyValue.bindRestrictions( partitionKeys, identifierTableMapping.getTableName(),
 						jdbcValueBindings, updateDetails.operationGroup.getSingleOperation() );
-				bindHistoryUpdateValues( values, updateDetails, session, jdbcValueBindings );
+				historyMutation.bindUpdate( values, updateDetails.attributeIndexes,
+						(value, column) -> jdbcValueBindings.bindValue(
+								value, historyTableMapping.getTableName(), column, ParameterUsage.SET ),
+						session );
 
 				mutationExecutor.execute(
 						entity,
@@ -193,60 +189,18 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 
 	@Nullable
 	private HistoryUpdateDetails buildHistoryUpdateDetails(
-			@Nonnull Object entity,
 			@Nonnull Object[] values,
 			@Nullable int[] dirtyAttributeIndexes,
 			boolean currentRevision,
-			@Nonnull List<PartitionKeyValue> partitionKeys,
-			@Nonnull SharedSessionContractImplementor session) {
+			@Nonnull List<PartitionKeyValue> partitionKeys) {
 		if ( !currentRevision && ( dirtyAttributeIndexes == null || dirtyAttributeIndexes.length == 0 ) ) {
 			return null;
 		}
 
-		final var attributeMappings = entityPersister().getAttributeMappings();
-		final boolean[] dirtyFlags = new boolean[attributeMappings.size()];
-		if ( dirtyAttributeIndexes != null ) {
-			for ( int dirtyAttributeIndex : dirtyAttributeIndexes ) {
-				dirtyFlags[dirtyAttributeIndex] = true;
-			}
-		}
-
-		final var versionMapping = entityPersister().getVersionMapping();
-		if ( currentRevision && versionMapping != null ) {
-			dirtyFlags[versionMapping.getVersionAttribute().getStateArrayPosition()] = true;
-		}
-		final var updateability = entityPersister().getPropertyUpdateability();
-
-		final var tableUpdateBuilder =
-				new TableUpdateBuilderStandard<>( entityPersister(), historyTableMapping, factory() );
-		final List<Integer> bindableAttributeIndexes = new ArrayList<>();
-		boolean hasValues = false;
-
-		for ( final int attributeIndex : identifierTableMapping.getAttributeIndexes() ) {
-			final var attributeMapping = attributeMappings.get( attributeIndex );
-			if ( attributeMapping instanceof PluralAttributeMapping
-					|| !currentRevision && !entityPersister().isPropertyTemporalExcluded( attributeIndex ) ) {
-				continue;
-			}
-			final var generator = attributeMapping.getGenerator();
-			if ( needsUpdateValueGeneration( entity, session, generator ) ) {
-				final var onExecutionGenerator = (OnExecutionGenerator) generator;
-				addSqlGeneratedValue( tableUpdateBuilder, attributeMapping, onExecutionGenerator );
-				hasValues = true;
-				if ( onExecutionGenerator.writePropertyValue() ) {
-					bindableAttributeIndexes.add( attributeIndex );
-				}
-			}
-			else if ( isGeneratedBeforeExecution( entity, session, generator )
-					|| updateability[attributeIndex] && values[attributeIndex] != UNFETCHED_PROPERTY
-						&& ( dirtyAttributeIndexes == null || dirtyFlags[attributeIndex] ) ) {
-				attributeMapping.forEachUpdatable( tableUpdateBuilder );
-				hasValues = true;
-				bindableAttributeIndexes.add( attributeIndex );
-			}
-		}
-
-		if ( hasValues ) {
+		final var tableUpdateBuilder = new TableUpdateBuilderStandard<>( entityPersister(), historyTableMapping, factory() );
+		final var assignments = historyMutation.addUpdateAssignments(
+				tableUpdateBuilder, values, dirtyAttributeIndexes, currentRevision );
+		if ( assignments != null ) {
 			applyKeyRestriction( null, entityPersister(), tableUpdateBuilder, historyTableMapping );
 			tableUpdateBuilder.addNullRestriction( temporalMapping.getEndingColumnMapping() );
 			applyPartitionKeyRestriction( tableUpdateBuilder, identifierTableMapping.getTableName(),
@@ -255,51 +209,13 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 
 			return new HistoryUpdateDetails(
 					createMutationOperationGroup( tableUpdateBuilder ),
-					toIntArray( bindableAttributeIndexes ),
+					assignments.bindableIndexes(),
 					entityPersister().optimisticLockStyle().isVersion()
-							&& versionMapping != null
+							&& entityPersister().getVersionMapping() != null
 			);
 		}
 		else {
 			return null;
-		}
-
-	}
-
-	private static boolean isGeneratedBeforeExecution(
-			@Nonnull Object entity, @Nonnull SharedSessionContractImplementor session, @Nullable Generator generator) {
-		return generator != null
-			&& generator.generatesOnUpdate()
-			&& generator.generatedBeforeExecution( entity, session );
-	}
-
-	private void bindHistoryUpdateValues(
-			@Nonnull Object[] values,
-			@Nonnull HistoryUpdateDetails updateDetails,
-			@Nonnull SharedSessionContractImplementor session,
-			@Nonnull JdbcValueBindings jdbcValueBindings) {
-		final var attributeMappings = entityPersister().getAttributeMappings();
-		for ( final int attributeIndex : updateDetails.attributeIndexes ) {
-			final var attributeMapping = attributeMappings.get( attributeIndex );
-			if ( !(attributeMapping instanceof PluralAttributeMapping) ) {
-				attributeMapping.decompose(
-						values[attributeIndex],
-						0,
-						jdbcValueBindings,
-						historyTableMapping,
-						(valueIndex, bindings, table, jdbcValue, selectableMapping) -> {
-							if ( selectableMapping.isUpdateable() && !selectableMapping.isFormula() ) {
-								bindings.bindValue(
-										jdbcValue,
-										table.getTableName(),
-										selectableMapping.getSelectionExpression(),
-										ParameterUsage.SET
-								);
-							}
-						},
-						session
-				);
-			}
 		}
 	}
 
@@ -323,166 +239,16 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 		final var mutationExecutor =
 				mutationExecutorService.createExecutor( () -> historyInsertBatchKey, historyInsertGroup, session );
 		try {
-			bindHistoryInsertValues( id, values, entityPersister().getPropertyInsertability(), session,
-					mutationExecutor.getJdbcValueBindings() );
+			final var bindings = mutationExecutor.getJdbcValueBindings();
+			final var history = historyTableMapping.getTableName();
+			historyMutation.bindInsert( id, values, entityPersister().getPropertyInsertability(),
+					(value, column) -> bindings.bindValue( value, history, column, ParameterUsage.SET ), session );
 			mutationExecutor.execute( id, null, null,
 					UpdateCoordinatorHistory::verifyOutcome, session );
 		}
 		finally {
 			mutationExecutor.release();
 		}
-	}
-
-	@Nonnull
-	private MutationOperationGroup buildHistoryInsertGroup(@Nonnull boolean[] propertyInclusions) {
-		final var insertBuilder =
-				new TableInsertBuilderStandard( entityPersister(), historyTableMapping, factory() );
-		applyHistoryInsertDetails( insertBuilder, propertyInclusions );
-		final var tableMutation = insertBuilder.buildMutation();
-		return singleOperation(
-				new MutationGroupSingle( MutationType.INSERT, entityPersister(), tableMutation ),
-				tableMutation.createMutationOperation( null, factory() )
-		);
-	}
-
-	private void applyHistoryInsertDetails(
-			@Nonnull TableInsertBuilderStandard insertBuilder,
-			@Nonnull boolean[] propertyInclusions) {
-		final var attributeMappings = entityPersister().getAttributeMappings();
-		for ( final int attributeIndex : identifierTableMapping.getAttributeIndexes() ) {
-			final var attributeMapping = attributeMappings.get( attributeIndex );
-			if ( propertyInclusions[attributeIndex] ) {
-				attributeMapping.forEachInsertable( insertBuilder );
-			}
-			else {
-				final var generator = attributeMapping.getGenerator();
-				if ( generator != null && isValueGeneratedOnInsert( generator ) ) {
-//					if ( session != null && generator.generatedBeforeExecution( entity, session ) ) {
-//						propertyInclusions[attributeIndex] = true;
-//						attributeMapping.forEachInsertable( insertBuilder );
-//					}
-//					else
-					if ( isValueGenerationInSql( generator ) ) {
-						addSqlGeneratedValue( insertBuilder, attributeMapping, (OnExecutionGenerator) generator );
-					}
-				}
-			}
-		}
-
-		final var mutatingTable = insertBuilder.getMutatingTable();
-		final var startingColumn = new ColumnReference( mutatingTable, temporalMapping.getStartingColumnMapping() );
-		insertBuilder.addColumnAssignment( temporalMapping.createStartingValueBinding( startingColumn ) );
-		final var endingColumn = new ColumnReference( mutatingTable, temporalMapping.getEndingColumnMapping() );
-		insertBuilder.addColumnAssignment( temporalMapping.createNullEndingValueBinding( endingColumn ) );
-
-		identifierTableMapping.getKeyMapping().forEachKeyColumn( insertBuilder::addColumnAssignment );
-	}
-
-	private void addSqlGeneratedValue(
-			@Nonnull AssigningTableMutationBuilder<?> updateBuilder,
-			@Nonnull AttributeMapping attributeMapping,
-			@Nonnull OnExecutionGenerator generator) {
-		final boolean writePropertyValue = generator.writePropertyValue();
-		final var columnValues =
-				writePropertyValue
-						? null
-						: generator.getReferencedColumnValues( factory.getJdbcServices().getDialect() );
-		attributeMapping.forEachSelectable( (j, mapping) ->
-				updateBuilder.addColumnAssignment( mapping, writePropertyValue ? "?" : columnValues[j] ) );
-	}
-
-	private void bindHistoryInsertValues(
-			@Nonnull Object id,
-			@Nonnull Object[] values,
-			@Nonnull boolean[] propertyInclusions,
-			@Nonnull SharedSessionContractImplementor session,
-			@Nonnull JdbcValueBindings jdbcValueBindings) {
-		final String historyTableName = historyTableMapping.getTableName();
-		historyTableMapping.getKeyMapping().breakDownKeyJdbcValues(
-				id,
-				(jdbcValue, columnMapping) -> jdbcValueBindings.bindValue(
-						jdbcValue,
-						historyTableName,
-						columnMapping.getColumnName(),
-						ParameterUsage.SET
-				),
-				session
-		);
-
-		final var attributeMappings = entityPersister().getAttributeMappings();
-		for ( final int attributeIndex : identifierTableMapping.getAttributeIndexes() ) {
-			if ( propertyInclusions[attributeIndex] ) {
-				final var attributeMapping = attributeMappings.get( attributeIndex );
-				if ( !(attributeMapping instanceof PluralAttributeMapping) ) {
-					attributeMapping.decompose(
-							values[attributeIndex],
-							0,
-							jdbcValueBindings,
-							null,
-							(valueIndex, bindings, noop, jdbcValue, selectableMapping) -> {
-								if ( selectableMapping.isInsertable() && !selectableMapping.isFormula() ) {
-									bindings.bindValue(
-											jdbcValue,
-											historyTableName,
-											selectableMapping.getSelectionExpression(),
-											ParameterUsage.SET
-									);
-								}
-							},
-							session
-					);
-				}
-			}
-		}
-
-		if ( TemporalMutationHelper.isUsingParameters( session ) ) {
-			jdbcValueBindings.bindValue(
-					session.getCurrentChangesetIdentifier(),
-					historyTableName,
-					temporalMapping.getStartingColumnMapping().getSelectionExpression(),
-					ParameterUsage.SET
-			);
-		}
-	}
-
-	private static boolean isValueGeneratedOnInsert(@Nullable Generator generator) {
-		return generator != null
-			&& generator.generatesOnInsert()
-			&& generator.generatedOnExecution();
-	}
-
-	private static boolean isValueGeneratedOnUpdate(@Nullable Generator generator) {
-		return generator != null
-			&& generator.generatesOnUpdate()
-			&& generator.generatedOnExecution();
-	}
-
-	private boolean isValueGenerationInSql(@Nonnull Generator generator) {
-		assert isValueGeneratedOnInsert( generator );
-		return ( (OnExecutionGenerator) generator ).referenceColumnsInSql( dialect() );
-	}
-
-	private boolean isUpdateValueGenerationInSql(@Nonnull Generator generator) {
-		assert isValueGeneratedOnUpdate( generator );
-		return ( (OnExecutionGenerator) generator ).referenceColumnsInSql( dialect() );
-	}
-
-	private boolean needsUpdateValueGeneration(
-			@Nonnull Object entity,
-			@Nullable SharedSessionContractImplementor session,
-			@Nullable Generator generator) {
-		return generator != null && isValueGeneratedOnUpdate( generator )
-			&& (session == null && generator.generatedOnExecution() || generator.generatedOnExecution( entity, session ) )
-			&& isUpdateValueGenerationInSql( generator );
-	}
-
-	@Nonnull
-	private static int[] toIntArray(@Nonnull List<Integer> values) {
-		final int[] result = new int[values.size()];
-		for ( int i = 0; i < values.size(); i++ ) {
-			result[i] = values.get( i );
-		}
-		return result;
 	}
 
 	private static final class HistoryUpdateDetails {

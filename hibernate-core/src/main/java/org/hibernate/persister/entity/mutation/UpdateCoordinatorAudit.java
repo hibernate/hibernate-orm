@@ -55,8 +55,8 @@ public class UpdateCoordinatorAudit extends AbstractAuditCoordinator implements 
 				hasDirtyCollection,
 				session
 		);
-		if ( shouldAuditUpdate( dirtyAttributeIndexes, hasDirtyCollection ) ) {
-			enqueueAuditEntry( resolveEntityKey( entity, id, session ), entity, values, ModificationType.MOD, session );
+		if ( auditSupport.isAuditedUpdate( dirtyAttributeIndexes, hasDirtyCollection ) ) {
+			recordModification( entity, id, ModificationType.MOD, session );
 		}
 		return generatedValues;
 	}
@@ -68,22 +68,5 @@ public class UpdateCoordinatorAudit extends AbstractAuditCoordinator implements 
 			@Nonnull Object nextVersion,
 			@Nonnull SharedSessionContractImplementor session) {
 		currentUpdateCoordinator.forceVersionIncrement( id, currentVersion, nextVersion, session );
-	}
-
-	boolean shouldAuditUpdate(@Nullable int[] dirtyAttributeIndexes, boolean hasDirtyCollection) {
-		if ( dirtyAttributeIndexes == null || dirtyAttributeIndexes.length == 0 ) {
-			return true;
-		}
-		else if ( hasDirtyCollection ) {
-			return true;
-		}
-		else {
-			for ( int dirtyIndex : dirtyAttributeIndexes ) {
-				if ( auditedPropertyMask[dirtyIndex] ) {
-					return true;
-				}
-			}
-			return false;
-		}
 	}
 }

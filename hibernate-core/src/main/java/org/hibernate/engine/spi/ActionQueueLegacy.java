@@ -40,7 +40,6 @@ import org.hibernate.action.queue.spi.CollectionTransition;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.audit.ModificationType;
-import org.hibernate.audit.spi.AuditWriter;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
 import org.hibernate.engine.internal.FlushProcessingContext;
@@ -700,13 +699,9 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQ
 	}
 
 	@Override
-	public void addAuditEntry(
-			EntityKey entityKey,
-			Object entity,
-			Object[] values,
-			ModificationType modificationType,
-			AuditWriter writer) {
-		session.getAuditWorkQueue().enqueue( entityKey, entity, values, modificationType, writer, session );
+	public void addAuditEntry(EntityKey entityKey, ModificationType modificationType) {
+		session.getAuditWorkQueue().enqueue(
+				entityKey, modificationType, entityKey.getPersister().getEntityAuditSupport(), session );
 	}
 
 	/**

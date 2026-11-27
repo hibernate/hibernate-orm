@@ -56,8 +56,6 @@ public class AuditCollectionMutationPlanContributor implements CollectionMutatio
 					if ( ownerChange != null ) {
 						collector.entityChanged(
 								ownerChange.entityKey(),
-								ownerChange.entity(),
-								ownerChange.values(),
 								ModificationType.MOD,
 								ownerChange.ownerMutationSupport()
 						);

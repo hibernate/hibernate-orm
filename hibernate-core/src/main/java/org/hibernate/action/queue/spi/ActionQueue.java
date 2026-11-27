@@ -11,7 +11,6 @@ import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.internal.OrphanRemovalAction;
 import org.hibernate.audit.ModificationType;
-import org.hibernate.audit.spi.AuditWriter;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.TransactionCompletionCallbacks;
 
@@ -209,8 +208,11 @@ public interface ActionQueue extends TransactionCompletionCallbacks {
 	/// @param changesetSession The child session used to persist the changelog entity
 	void setAuditChangesetContext(Object changelog, Session changesetSession);
 
-	/// Queue the audit log entry of a mutation which a mutation coordinator executed for an
+	/// Queue the audit log entry of a mutation which a mutation coordinator executes for an
 	/// audited entity, to be written when the transaction completes.
+	///
+	/// A [ModificationType#DEL DEL] entry must be queued before the mutation is executed,
+	/// since the audit rows which record a removal are copied from the current rows at once.
 	///
 	/// @apiNote [org.hibernate.action.queue.internal.GraphBasedActionQueue] executes an `IDENTITY`
 	/// insert through the insert coordinator of the entity as soon as it is queued. The audit
@@ -218,16 +220,8 @@ public interface ActionQueue extends TransactionCompletionCallbacks {
 	/// queue collects itself.
 	///
 	/// @param entityKey The key of the entity
-	/// @param entity The entity instance
-	/// @param values The state of the entity
 	/// @param modificationType The kind of mutation
-	/// @param writer Writes the audit row for [org.hibernate.engine.spi.ActionQueueLegacy]
-	void addAuditEntry(
-			EntityKey entityKey,
-			Object entity,
-			Object[] values,
-			ModificationType modificationType,
-			AuditWriter writer);
+	void addAuditEntry(EntityKey entityKey, ModificationType modificationType);
 
 	/// Execute actions after transaction completion.
 	///

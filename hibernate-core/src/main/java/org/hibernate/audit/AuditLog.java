@@ -115,8 +115,8 @@ public interface AuditLog extends AutoCloseable {
 	 * When {@code includeDeletions} is {@code false}, this
 	 * behaves identically to {@link #find(Class, Object, Object)},
 	 * returning {@code null} for DEL revisions. When {@code true},
-	 * the entity state at deletion is returned instead of
-	 * {@code null}.
+	 * the last recorded state of the deleted entity is
+	 * returned instead of {@code null}.
 	 *
 	 * @param entityClass the audited entity class
 	 * @param id the entity identifier
@@ -192,7 +192,7 @@ public interface AuditLog extends AutoCloseable {
 	 * (ADD/MOD/DEL).
 	 * <p>
 	 * For DEL entries, the entity snapshot reflects the state
-	 * at the moment of deletion.
+	 * which the previous changeset left the entity with.
 	 *
 	 * @param entityClass the audited entity class
 	 * @param id the entity identifier

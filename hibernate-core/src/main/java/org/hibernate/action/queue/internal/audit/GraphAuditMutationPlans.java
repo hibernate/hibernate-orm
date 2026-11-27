@@ -1,21 +1,15 @@
 package org.hibernate.action.queue.internal.audit;
 
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
 
 import org.hibernate.action.queue.spi.bind.BindPlan;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
 import org.hibernate.action.queue.spi.bind.OperationResultChecker;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
-import org.hibernate.audit.ModificationType;
-import org.hibernate.audit.spi.AuditChangeSet;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.mutation.CollectionAuditSupport;
 import org.hibernate.persister.collection.mutation.CollectionAuditSupport.AuditCollectionChange;
-import org.hibernate.persister.entity.mutation.EntityAuditSupport;
-import org.hibernate.persister.entity.mutation.EntityAuditSupport.AuditInsertPlan;
-import org.hibernate.persister.entity.mutation.EntityAuditSupport.TransactionEndPlan;
 
 /// Graph-audit helpers used while materializing merged audit changes as
 /// ordinary [FlushOperation] instances.
@@ -25,50 +19,6 @@ import org.hibernate.persister.entity.mutation.EntityAuditSupport.TransactionEnd
 /// the collector's change-set orchestration code.
 final class GraphAuditMutationPlans {
 	private GraphAuditMutationPlans() {
-	}
-
-	record EntityAuditInsertPlan(
-			EntityAuditSupport mutationSupport,
-			AuditInsertPlan plan) {
-		BindPlan createBindPlan(
-				AuditChangeSet.EntityChange<EntityAuditSupport> change,
-				Object changesetId) {
-			final var operation = plan.operation();
-			return new EntityAuditInsertBindPlan(
-					mutationSupport,
-					operation.tableIndex(),
-					change.entityKey().getIdentifier(),
-					change.values(),
-					plan.propertyInclusions(),
-					change.modificationType(),
-					changesetId
-			);
-		}
-
-		String describe(AuditChangeSet.EntityChange<EntityAuditSupport> change) {
-			return "GraphAuditEntity(" + change.entityKey().getEntityName() + "#insert)";
-		}
-	}
-
-	record EntityTransactionEndPlan(
-			EntityAuditSupport mutationSupport,
-			TransactionEndPlan plan) {
-		BindPlan createBindPlan(
-				AuditChangeSet.EntityChange<EntityAuditSupport> change,
-				Object changesetId) {
-			final var operation = plan.operation();
-			return new EntityTransactionEndBindPlan(
-					mutationSupport,
-					operation.tableIndex(),
-					change.entityKey().getIdentifier(),
-					change.modificationType(),
-					changesetId
-			);
-		}
-
-		String describe(AuditChangeSet.EntityChange<EntityAuditSupport> change) {
-			return "GraphAuditEntity(" + change.entityKey().getEntityName() + "#end)";
-		}
 	}
 
 	record CollectionAuditInsertPlan(
@@ -111,74 +61,6 @@ final class GraphAuditMutationPlans {
 			PersistentCollection<?> collection,
 			Object ownerId,
 			AuditCollectionChange change) {
-	}
-
-	private record EntityAuditInsertBindPlan(
-			EntityAuditSupport mutationSupport,
-			int tableIndex,
-			Object id,
-			Object[] values,
-			boolean[] propertyInclusions,
-			ModificationType modificationType,
-			Object changesetId) implements BindPlan {
-
-		@Override
-		public Object getEntityId() {
-			return id;
-		}
-
-		@Override
-		public void bindValues(
-				JdbcValueBindings valueBindings,
-				FlushOperation flushOperation,
-				SharedSessionContractImplementor session) {
-			mutationSupport.bindAuditInsertValues(
-					tableIndex,
-					id,
-					values,
-					propertyInclusions,
-					modificationType,
-					changesetId,
-					session,
-					valueBindings
-			);
-		}
-	}
-
-	private record EntityTransactionEndBindPlan(
-			EntityAuditSupport mutationSupport,
-			int tableIndex,
-			Object id,
-			ModificationType modificationType,
-			Object changesetId) implements BindPlan, OperationResultChecker {
-
-		@Override
-		public Object getEntityId() {
-			return id;
-		}
-
-		@Override
-		public void bindValues(
-				JdbcValueBindings valueBindings,
-				FlushOperation flushOperation,
-				SharedSessionContractImplementor session) {
-			mutationSupport.bindTransactionEndValues( tableIndex, id, changesetId, session, valueBindings );
-		}
-
-		@Override
-		public boolean checkResult(
-				int affectedRowCount,
-				PreparedStatement statement,
-				int batchPosition,
-				String sqlString,
-				org.hibernate.engine.spi.SessionFactoryImplementor sessionFactory) throws SQLException {
-			return EntityAuditSupport.verifyTransactionEndOutcome(
-					affectedRowCount,
-					modificationType,
-					mutationSupport.getEntityPersister().getEntityName(),
-					id
-			);
-		}
 	}
 
 	private record CollectionAuditInsertBindPlan(

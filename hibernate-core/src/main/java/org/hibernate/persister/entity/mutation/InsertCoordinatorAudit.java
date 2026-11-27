@@ -40,8 +40,9 @@ public class InsertCoordinatorAudit extends AbstractAuditCoordinator implements 
 			@Nonnull Object[] values,
 			@Nonnull SharedSessionContractImplementor session) {
 		final var generatedValues = currentInsertCoordinator.insert( entity, values, session );
+		// the entry of the entity does not yet have the generated identifier
 		final var id = resolveInsertedIdentifier( entity, null, generatedValues, session );
-		enqueueAuditEntry( new EntityKey( id, entityPersister() ), entity, values, ModificationType.ADD, session );
+		recordModification( new EntityKey( id, entityPersister() ), ModificationType.ADD, session );
 		return generatedValues;
 	}
 
@@ -53,7 +54,8 @@ public class InsertCoordinatorAudit extends AbstractAuditCoordinator implements 
 			@Nonnull Object[] values,
 			@Nonnull SharedSessionContractImplementor session) {
 		final var generatedValues = currentInsertCoordinator.insert( entity, id, values, session );
-		enqueueAuditEntry( resolveEntityKey( entity, resolveInsertedIdentifier( entity, id, generatedValues, session ), session ), entity, values, ModificationType.ADD, session );
+		recordModification( entity, resolveInsertedIdentifier( entity, id, generatedValues, session ),
+				ModificationType.ADD, session );
 		return generatedValues;
 	}
 }

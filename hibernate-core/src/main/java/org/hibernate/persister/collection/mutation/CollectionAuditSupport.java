@@ -95,8 +95,6 @@ public class CollectionAuditSupport {
 	/// session.
 	public record OwnerAuditChange(
 			EntityKey entityKey,
-			Object entity,
-			Object[] values,
 			EntityAuditSupport ownerMutationSupport) {
 	}
 
@@ -152,7 +150,7 @@ public class CollectionAuditSupport {
 			return null;
 		}
 		final var ownerKey = session.generateEntityKey( ownerPersister.getIdentifier( owner, session ), ownerPersister );
-		return new OwnerAuditChange( ownerKey, owner, ownerPersister.getValues( owner ), ownerMutationSupport );
+		return new OwnerAuditChange( ownerKey, ownerMutationSupport );
 	}
 
 	@Nonnull

@@ -67,10 +67,15 @@ Record the entity key when an update inserts a replacement revision, keep it acr
 This lets a second flush update the revision already created by the transaction.
 
 [[history-table-revision-copy-spi]]
-=== Copying revisions to a history table
+=== Copying rows to a history table or audit log
 
 Custom implementations of `SqlAstWalker` must implement `visitTableInsertSelect(TableInsertSelect)`, which visits an insert copying a row from another table.
 Custom implementations of `SharedSessionContractImplementor` must implement `getHistoryWorkQueue()`.
+
+An audit row of an entity is no longer written from the state of an entity instance, so the contracts which carried that state have changed.
+`AuditWriter` has been removed.
+`AuditWorkQueue.enqueue()` and `ActionQueue.addAuditEntry()` no longer accept an entity instance, its state, or a writer, and an entity change in an `AuditChangeSet` no longer holds them.
+`AuditMapping.getCollectionIndexColumns()` has been removed, and `AuxiliaryMapping.getCopiedColumns()` lists the columns copied to an audit log or history table.
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Changes in Behavior
@@ -160,6 +165,15 @@ With the `HISTORY_TABLE` temporal strategy, a revision of an entity is now writt
 A flush writes only the table holding current data, so a query which reads the history table does not see the changes made earlier in the same transaction.
 The statement which ends a revision no longer checks the version of the revision, since the version of the current row was already checked when that row was written.
 Outside of a transaction, a revision is written immediately after its current row.
+
+[[audit-row-copy]]
+=== Audit rows of an entity
+
+An audit row which records the creation or modification of an entity is now a copy of the row of the table holding current data.
+The audit row which records the removal of an entity is now a copy of its previous audit row.
+It holds the state which the previous changeset left the entity with, even when the instance passed to a stateless session holds different state, or the transaction which removes the entity first updates it.
+It holds the position of the entity in an audited `@OneToMany` list or map, which was previously null.
+With the default audit strategy, no audit row records the removal of an entity which has no audit row, for example, an entity created before it was audited.
 
 [[on-delete-on-entity-class]]
 === `@OnDelete` on an entity class which is not a `JOINED` subclass

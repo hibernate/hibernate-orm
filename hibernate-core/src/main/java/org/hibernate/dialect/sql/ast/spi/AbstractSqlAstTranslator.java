@@ -10479,13 +10479,19 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	/// If the source row is optional, the select reads the key from an anchor
 	/// table, to which the source table is outer joined.
 	///
+	/// If the source table holds several rows with the key, the select reads the
+	/// last of them, which is the row with no later row. The later row is found
+	/// by an outer join and not by a subquery, since the source table may be the
+	/// target table, which some databases do not allow a subquery to read.
+	///
 	/// A parameter in the select list is rendered as this dialect renders any
 	/// parameter which is a select item, since some databases do not infer the
 	/// type of a parameter in that position.
 	@Override
 	public void visitTableInsertSelect(TableInsertSelect tableInsert) {
-		final String anchorTableName = tableInsert.getAnchorTableName();
-		final String sourceQualifier = anchorTableName == null ? "" : "s.";
+		final String rowOrderColumn = tableInsert.getRowOrderColumn();
+		final String sourceQualifier =
+				tableInsert.getAnchorTableName() == null && rowOrderColumn == null ? "" : "s.";
 		final var keyRestrictions = tableInsert.getKeyRestrictions();
 		final var copiedColumns = tableInsert.getCopiedColumns();
 		final var valueBindings = tableInsert.getValueBindings();
@@ -10570,6 +10576,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					keyRestrictions.get( i ).getValueExpression().accept( this );
 					restrictionSeparator = " and ";
 				}
+				if ( rowOrderColumn != null ) {
+					// no later row
+					appendSql( " and n." );
+					appendSql( rowOrderColumn );
+					appendSql( " is null" );
+				}
 			}
 			finally {
 				getCurrentClauseStack().pop();
@@ -10580,18 +10592,18 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	/// The table holding the copied row, outer joined to its anchor table if it has one.
+	/// The table holding the copied row, outer joined to its anchor table if it
+	/// has one, or to its own later rows if it holds several rows with the key.
 	private void renderCopiedRowSource(TableInsertSelect tableInsert) {
+		final String sourceTableName = tableInsert.getSourceTableName();
 		final String anchorTableName = tableInsert.getAnchorTableName();
-		if ( anchorTableName == null ) {
-			appendSql( tableInsert.getSourceTableName() );
-		}
-		else {
+		final String rowOrderColumn = tableInsert.getRowOrderColumn();
+		final var keyRestrictions = tableInsert.getKeyRestrictions();
+		if ( anchorTableName != null ) {
 			appendSql( anchorTableName );
 			appendSql( " a left join " );
-			appendSql( tableInsert.getSourceTableName() );
+			appendSql( sourceTableName );
 			appendSql( " s" );
-			final var keyRestrictions = tableInsert.getKeyRestrictions();
 			String joinSeparator = " on ";
 			for ( int i = 0; i < keyRestrictions.size(); i++ ) {
 				appendSql( joinSeparator );
@@ -10602,13 +10614,38 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				joinSeparator = " and ";
 			}
 		}
+		else if ( rowOrderColumn != null ) {
+			appendSql( sourceTableName );
+			appendSql( " s left join " );
+			appendSql( sourceTableName );
+			appendSql( " n on " );
+			for ( int i = 0; i < keyRestrictions.size(); i++ ) {
+				appendSql( "n." );
+				appendSql( keyRestrictions.get( i ).getColumnReference().getColumnExpression() );
+				appendSql( '=' );
+				appendSql( keyColumn( tableInsert, i ) );
+				appendSql( " and " );
+			}
+			appendSql( "n." );
+			appendSql( rowOrderColumn );
+			appendSql( ">s." );
+			appendSql( rowOrderColumn );
+		}
+		else {
+			appendSql( sourceTableName );
+		}
 	}
 
 	/// The key column from which the select reads the key of the copied row.
 	private static String keyColumn(TableInsertSelect tableInsert, int position) {
-		return tableInsert.getAnchorTableName() == null
-				? tableInsert.getKeyRestrictions().get( position ).getColumnReference().getColumnExpression()
-				: "a." + tableInsert.getAnchorKeyColumns().get( position );
+		if ( tableInsert.getAnchorTableName() != null ) {
+			return "a." + tableInsert.getAnchorKeyColumns().get( position );
+		}
+		else {
+			final String keyColumn =
+					tableInsert.getKeyRestrictions().get( position ).getColumnReference().getColumnExpression();
+			return tableInsert.getRowOrderColumn() == null ? keyColumn : "s." + keyColumn;
+		}
 	}
 
 	@Override

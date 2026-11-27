@@ -24,6 +24,10 @@ import org.hibernate.sql.spi.mutation.MutationTarget;
 /// row of the anchor table, and the copied columns are null when the source row
 /// does not exist.
 ///
+/// The source table may instead hold several rows with the given key, ordered by
+/// a [row order column][#getRowOrderColumn]. The last of them is then copied. Such
+/// a source table may be the mutating table itself.
+///
 /// @author Gavin King
 /// @since 8.0
 public final class TableInsertSelect extends AbstractTableInsert {
@@ -32,6 +36,7 @@ public final class TableInsertSelect extends AbstractTableInsert {
 	private final List<ColumnValueBinding> keyRestrictions;
 	private final @Nullable String anchorTableName;
 	private final List<String> anchorKeyColumns;
+	private final @Nullable String rowOrderColumn;
 
 	/// @param copiedColumns the copied columns, not including the key columns
 	/// @param keyRestrictions the restriction of each key column of the source table
@@ -42,7 +47,8 @@ public final class TableInsertSelect extends AbstractTableInsert {
 			List<String> copiedColumns,
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictions) {
-		this( mutatingTable, mutationTarget, sourceTableName, copiedColumns, valueBindings, keyRestrictions, null, List.of() );
+		this( mutatingTable, mutationTarget, sourceTableName, copiedColumns, valueBindings, keyRestrictions,
+				null, List.of(), null );
 	}
 
 	/// @param copiedColumns the copied columns, not including the key columns
@@ -56,15 +62,45 @@ public final class TableInsertSelect extends AbstractTableInsert {
 			List<String> copiedColumns,
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictions,
-			@Nullable String anchorTableName,
+			String anchorTableName,
 			List<String> anchorKeyColumns) {
+		this( mutatingTable, mutationTarget, sourceTableName, copiedColumns, valueBindings, keyRestrictions,
+				anchorTableName, anchorKeyColumns, null );
+		assert anchorKeyColumns.size() == keyRestrictions.size();
+	}
+
+	/// @param copiedColumns the copied columns, not including the key columns
+	/// @param keyRestrictions the restriction of each key column of the source table
+	/// @param rowOrderColumn the column which orders the rows of the source table having the given key
+	public TableInsertSelect(
+			MutatingTableReference mutatingTable,
+			MutationTarget mutationTarget,
+			String sourceTableName,
+			List<String> copiedColumns,
+			List<ColumnValueBinding> valueBindings,
+			List<ColumnValueBinding> keyRestrictions,
+			String rowOrderColumn) {
+		this( mutatingTable, mutationTarget, sourceTableName, copiedColumns, valueBindings, keyRestrictions,
+				null, List.of(), rowOrderColumn );
+	}
+
+	private TableInsertSelect(
+			MutatingTableReference mutatingTable,
+			MutationTarget mutationTarget,
+			String sourceTableName,
+			List<String> copiedColumns,
+			List<ColumnValueBinding> valueBindings,
+			List<ColumnValueBinding> keyRestrictions,
+			@Nullable String anchorTableName,
+			List<String> anchorKeyColumns,
+			@Nullable String rowOrderColumn) {
 		super( mutatingTable, mutationTarget, parameters( valueBindings, keyRestrictions ), valueBindings );
-		assert anchorTableName == null || anchorKeyColumns.size() == keyRestrictions.size();
 		this.sourceTableName = sourceTableName;
 		this.copiedColumns = copiedColumns;
 		this.keyRestrictions = keyRestrictions;
 		this.anchorTableName = anchorTableName;
 		this.anchorKeyColumns = anchorKeyColumns;
+		this.rowOrderColumn = rowOrderColumn;
 	}
 
 	private static List<ColumnValueParameter> parameters(
@@ -102,6 +138,12 @@ public final class TableInsertSelect extends AbstractTableInsert {
 	/// The key columns of the anchor table, in the order of the [key restrictions][#getKeyRestrictions].
 	public List<String> getAnchorKeyColumns() {
 		return anchorKeyColumns;
+	}
+
+	/// The column which orders the rows of the source table having the given key,
+	/// if it may hold several of them. The row with the greatest value is copied.
+	public @Nullable String getRowOrderColumn() {
+		return rowOrderColumn;
 	}
 
 	/// The source row need not exist.

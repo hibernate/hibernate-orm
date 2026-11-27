@@ -112,20 +112,8 @@ public abstract class AbstractAuxiliaryRowWriter extends AbstractMutationCoordin
 			@Nonnull List<String> copiedColumns,
 			@Nonnull Function<MutatingTableReference, List<ColumnValueBinding>> assignments) {
 		final var target = new MutatingTableReference( auxiliaryTable );
-		final Set<String> keyColumns = new HashSet<>();
-		final List<ColumnValueBinding> keyRestrictions = new ArrayList<>();
-		currentTable.getKeyMapping().forEachKeyColumn( (position, key) -> {
-			final var column = new ColumnReference( target, key );
-			keyColumns.add( key.getColumnName() );
-			keyRestrictions.add( new ColumnValueBinding( column,
-					new ColumnWriteFragment( "?", new ColumnValueParameter( column, ParameterUsage.RESTRICT ), key ) ) );
-		} );
-		final List<String> nonKeyColumns = new ArrayList<>( copiedColumns.size() );
-		for ( String column : copiedColumns ) {
-			if ( !keyColumns.contains( column ) ) {
-				nonKeyColumns.add( column );
-			}
-		}
+		final var keyRestrictions = keyRestrictions( target, currentTable );
+		final var nonKeyColumns = withoutKeyColumns( copiedColumns, currentTable );
 		if ( currentTable.isIdentifierTable() ) {
 			return new TableInsertSelect( target, entityPersister(), currentTable.getTableName(),
 					nonKeyColumns, assignments.apply( target ), keyRestrictions );
@@ -138,6 +126,48 @@ public abstract class AbstractAuxiliaryRowWriter extends AbstractMutationCoordin
 					nonKeyColumns, assignments.apply( target ), keyRestrictions,
 					identifierTable.getTableName(), anchorKeyColumns );
 		}
+	}
+
+	/// Creates the insert which copies the last row of the given auxiliary table
+	/// which has a given key to a new row of the same table.
+	///
+	/// @param copiedColumns the columns which the auxiliary table copies
+	/// @param rowOrderColumn the column which orders the rows of the auxiliary
+	///                       table having a given key
+	/// @param assignments creates the bindings of the columns of the new row
+	///                    which do not come from the copied row
+	protected TableInsertSelect createCopyOfLastRow(
+			@Nonnull EntityTableMapping auxiliaryTable,
+			@Nonnull List<String> copiedColumns,
+			@Nonnull String rowOrderColumn,
+			@Nonnull Function<MutatingTableReference, List<ColumnValueBinding>> assignments) {
+		final var target = new MutatingTableReference( auxiliaryTable );
+		return new TableInsertSelect( target, entityPersister(), auxiliaryTable.getTableName(),
+				withoutKeyColumns( copiedColumns, auxiliaryTable ), assignments.apply( target ),
+				keyRestrictions( target, auxiliaryTable ), rowOrderColumn );
+	}
+
+	/// The restrictions which select the copied row by the key of the given table.
+	private static List<ColumnValueBinding> keyRestrictions(MutatingTableReference target, EntityTableMapping table) {
+		final List<ColumnValueBinding> keyRestrictions = new ArrayList<>();
+		table.getKeyMapping().forEachKeyColumn( (position, key) -> {
+			final var column = new ColumnReference( target, key );
+			keyRestrictions.add( new ColumnValueBinding( column,
+					new ColumnWriteFragment( "?", new ColumnValueParameter( column, ParameterUsage.RESTRICT ), key ) ) );
+		} );
+		return keyRestrictions;
+	}
+
+	private static List<String> withoutKeyColumns(List<String> copiedColumns, EntityTableMapping table) {
+		final Set<String> keyColumns = new HashSet<>();
+		table.getKeyMapping().forEachKeyColumn( (position, key) -> keyColumns.add( key.getColumnName() ) );
+		final List<String> nonKeyColumns = new ArrayList<>( copiedColumns.size() );
+		for ( String column : copiedColumns ) {
+			if ( !keyColumns.contains( column ) ) {
+				nonKeyColumns.add( column );
+			}
+		}
+		return nonKeyColumns;
 	}
 
 	/// Creates the group of operations which execute the given mutations of auxiliary tables.

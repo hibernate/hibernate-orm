@@ -1,6 +1,7 @@
 package org.hibernate.temporal;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -8,10 +9,13 @@ import jakarta.persistence.Version;
 
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SpannerDialect;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -54,7 +58,11 @@ class TemporalGeneratedTimestampHistoryTest {
 		@UpdateTimestamp Instant vmUpdated;
 		@CreationTimestamp(source = DB) Instant dbCreated;
 		@UpdateTimestamp(source = DB) Instant dbUpdated;
-		@Generated @ColumnDefault("current_timestamp") Instant defaultCreated;
+		@Generated
+		@ColumnDefault("current_timestamp")
+		@DialectOverride.ColumnDefault(dialect = MySQLDialect.class, override = @ColumnDefault("current_timestamp(6)"))
+		@DialectOverride.ColumnDefault(dialect = SybaseASEDialect.class, override = @ColumnDefault("getdate()"))
+		Instant defaultCreated;
 		@Generated @ColumnDefault("42") Integer answer;
 
 		Values values() {
@@ -70,7 +78,7 @@ class TemporalGeneratedTimestampHistoryTest {
 	static class Versioned {
 		@Id int id = 1;
 		int quantity;
-		@Version @UpdateTimestamp(source = DB) Instant version;
+		@Version @UpdateTimestamp(source = DB) LocalDateTime version;
 	}
 
 	@AfterEach

@@ -2,6 +2,8 @@ package org.hibernate.dialect.aggregate.internal;
 
 import org.hibernate.dialect.aggregate.spi.AggregateSupport;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -18,7 +20,13 @@ import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
 import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.sql.spi.StringBuilderSqlAppender;
 import org.hibernate.type.BasicPluralType;
+import org.hibernate.type.descriptor.ValueBinder;
+import org.hibernate.type.descriptor.ValueExtractor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.LocalDateTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.annotation.Nullable;
@@ -42,6 +50,27 @@ public class H2AggregateSupport extends AggregateSupportImpl {
 				: AggregateSupportImpl.INSTANCE;
 	}
 
+	// HQL sees the local fields. The document codec continues to use the legacy
+	// JDBC timestamp representation (UTC fields without an offset).
+	private static final TimestampJdbcType JSON_LOCAL_TIMESTAMP = new TimestampJdbcType() {
+		@Override
+		public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
+			return LocalDateTimeJdbcType.INSTANCE.getBinder( javaType );
+		}
+
+		@Override
+		public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
+			return LocalDateTimeJdbcType.INSTANCE.getExtractor( javaType );
+		}
+	};
+
+	@Override
+	public JdbcType aggregateComponentJdbcType(int aggregateCode, JavaType<?> javaType, JdbcType jdbcType) {
+		return ( aggregateCode == JSON || aggregateCode == JSON_ARRAY )
+				&& javaType.getJavaTypeClass() == LocalDateTime.class && jdbcType == TimestampJdbcType.INSTANCE
+				? JSON_LOCAL_TIMESTAMP : jdbcType;
+	}
+
 	@Override
 	public String aggregateComponentCustomReadExpression(
 			String template,
@@ -57,6 +86,10 @@ public class H2AggregateSupport extends AggregateSupportImpl {
 				final String readExpression = aggregateParentReadExpression.isEmpty() ?
 						columnExpression
 						: "(" + aggregateParentReadExpression + ").\"" + columnExpression + "\"";
+				if ( column.getJdbcMapping().getJdbcType() == JSON_LOCAL_TIMESTAMP ) {
+					return template.replace( placeholder, timestampInZone( valueExpression( readExpression, "timestamp(9)" ),
+							"UTC", ZoneId.systemDefault().getId(), getCastTypeName( column, typeConfiguration ) ) );
+				}
 				switch ( column.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() ) {
 					case JSON:
 					case JSON_ARRAY:
@@ -117,7 +150,19 @@ public class H2AggregateSupport extends AggregateSupportImpl {
 		return "stringdecode(regexp_replace(nullif(" + valueExpression + ",JSON'null'),'^\"(.*)\"$','$1'))";
 	}
 
+	// Attach the source zone explicitly. Casting a timestamp with time zone directly
+	// to TIMESTAMP would implicitly convert it to the H2 connection's time zone.
+	private static String timestampInZone(String value, String source, String target, String type) {
+		final String pattern = "'uuuu-MM-dd HH:mm:ss.SSSSSSSSS'";
+		return "cast(formatdatetime(parsedatetime(formatdatetime(" + value + "," + pattern
+				+ ")," + pattern + ",'en','" + source + "')," + pattern + ",'en','"
+				+ target + "') as " + type + ")";
+	}
+
 	private static String jsonCustomWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping) {
+		if ( jdbcMapping.getJdbcType() == JSON_LOCAL_TIMESTAMP ) {
+			return timestampInZone( customWriteExpression, ZoneId.systemDefault().getId(), "UTC", "timestamp(9)" );
+		}
 		StringBuilderSqlAppender sqlAppender = new StringBuilderSqlAppender();
 		appendJsonWriteExpression( sqlAppender, () -> sqlAppender.appendSql( customWriteExpression ), jdbcMapping );
 		return sqlAppender.toString();

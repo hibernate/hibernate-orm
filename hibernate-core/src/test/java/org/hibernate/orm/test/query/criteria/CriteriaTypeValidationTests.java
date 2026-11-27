@@ -3,6 +3,7 @@ package org.hibernate.orm.test.query.criteria;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.query.QueryTypeMismatchException;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -20,6 +21,9 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.SetJoin;
+import jakarta.persistence.criteria.Subquery;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DomainModel( annotatedClasses = {
 		CriteriaTypeValidationTests.Parent.class,
@@ -63,6 +67,50 @@ public class CriteriaTypeValidationTests {
 		);
 	}
 
+	@Test
+	@JiraKey( "HHH-18831" )
+	public void testSubquerySelectionIncompatibleWithResultType(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+					final CriteriaQuery<Parent> cq = cb.createQuery( Parent.class );
+
+					// subquery declared to return the entity, but selecting its id
+					final Subquery<Parent> subquery = cq.subquery( Parent.class );
+					final Root<Parent> subRoot = subquery.from( Parent.class );
+					assertThrows(
+							QueryTypeMismatchException.class,
+							() -> subquery.select( subRoot.get( "id" ) )
+					);
+				}
+		);
+	}
+
+	@Test
+	@JiraKey( "HHH-18831" )
+	public void testSubquerySelectionCompatibleWithResultType(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+
+					// entity compared to a subquery selecting the entity
+					final CriteriaQuery<Parent> entityQuery = cb.createQuery( Parent.class );
+					final Root<Parent> entityRoot = entityQuery.from( Parent.class );
+					final Subquery<Parent> entitySubquery = entityQuery.subquery( Parent.class );
+					entitySubquery.select( entitySubquery.from( Parent.class ) );
+					entityQuery.where( cb.in( entityRoot ).value( entitySubquery ) );
+					session.createQuery( entityQuery ).getResultList();
+
+					// id compared to a subquery selecting the id
+					final CriteriaQuery<Parent> idQuery = cb.createQuery( Parent.class );
+					final Root<Parent> idRoot = idQuery.from( Parent.class );
+					final Subquery<Long> idSubquery = idQuery.subquery( Long.class );
+					idSubquery.select( idSubquery.from( Parent.class ).get( "id" ) );
+					idQuery.where( cb.in( idRoot.<Long>get( "id" ) ).value( idSubquery ) );
+					session.createQuery( idQuery ).getResultList();
+				}
+		);
+	}
 
 	@Entity(name = "Parent")
 	public static class Parent {

@@ -250,7 +250,7 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransl
 	@Override
 	public void visitLikePredicate(LikePredicate likePredicate) {
 		// Custom implementation because MySQL uses backslash as the default escape character
-		if ( getDialect().getVersion().isSameOrAfter( 8, 0, 24 ) ) {
+		if ( getDialect().getMySQLVersion().isSameOrAfter( 8, 0, 24 ) ) {
 			// From version 8.0.24 we can override this by specifying an empty escape character
 			// See https://dev.mysql.com/doc/refman/8.0/en/string-comparison-functions.html#operator_like
 			super.visitLikePredicate( likePredicate );

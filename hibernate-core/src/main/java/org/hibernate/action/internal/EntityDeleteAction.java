@@ -141,6 +141,9 @@ public class EntityDeleteAction extends EntityAction {
 			final var event = eventMonitor.beginEntityDeleteEvent();
 			boolean success = false;
 			try {
+				if ( isInstanceLoaded() ) {
+					JoinedSelfReferenceDeleteCleanup.execute( persister, id, session );
+				}
 				persister.getDeleteCoordinator().delete( instance, id, version, session );
 				success = true;
 			}

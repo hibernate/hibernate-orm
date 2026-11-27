@@ -8,6 +8,12 @@ import org.hibernate.action.queue.spi.decompose.entity.PostDeleteHandling;
 import org.hibernate.action.queue.spi.decompose.entity.CancelledInsertPostDeleteHandling;
 
 import org.hibernate.action.internal.EntityDeleteAction;
+import org.hibernate.action.internal.JoinedSelfReferenceDeleteCleanup;
+import org.hibernate.action.queue.internal.cyclebreak.FixupJdbcUpdate;
+import org.hibernate.engine.jdbc.mutation.ParameterUsage;
+import org.hibernate.jdbc.Expectation;
+import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
+import org.hibernate.sql.Update;
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.StatementShapeKey;
 import org.hibernate.action.queue.spi.bind.PostExecutionCallback;
@@ -159,6 +165,9 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 			return;
 		}
 
+		final var cleanupOperations = createSelfReferenceCleanupOperations( ordinalBase, action, preDeleteHandling );
+		cleanupOperations.forEach( operationConsumer );
+
 		final var definedOptimisticLockStyle = definedOptimisticLockStyle();
 
 		// Match AbstractDeleteCoordinator pattern for obtaining loadedState and rowId
@@ -192,6 +201,7 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 					getUpdatedAttributeIndexesForDeletedEntity( decompositionContext, action ),
 					definedOptimisticLockStyle,
 					postDeleteHandling,
+					cleanupOperations,
 					session,
 					operationConsumer
 			);
@@ -210,6 +220,7 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 					getUpdatedAttributeIndexesForDeletedEntity( decompositionContext, action ),
 					definedOptimisticLockStyle,
 					postDeleteHandling,
+					cleanupOperations,
 					session,
 					operationConsumer
 			);
@@ -293,6 +304,65 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 				: decompositionContext.getUpdatedAttributeIndexesForDeletedEntity( action.getInstance() );
 	}
 
+	private List<FlushOperation> createSelfReferenceCleanupOperations(
+			int ordinalBase, EntityDeleteAction action, PreDeleteHandling preDeleteHandling) {
+		if ( action.getInstance() == null
+				|| !(entityPersister instanceof JoinedSubclassEntityPersister joined)
+				|| !JoinedSelfReferenceDeleteCleanup.isEligible( joined ) ) {
+			return List.of();
+		}
+
+		for ( var root : joined.getTableDescriptors() ) {
+			if ( root.name().equals( joined.getRootTableName() ) ) {
+				final var key = root.keyDescriptor().columns().get( 0 );
+				final var operations = new ArrayList<FlushOperation>();
+				for ( var name : joined.getPropertyNames() ) {
+					final var selectable = JoinedSelfReferenceDeleteCleanup.cleanupColumn( joined, name );
+					if ( selectable == null ) {
+						continue;
+					}
+					final String sql = new Update( sessionFactory )
+							.setTableName( root.name() )
+							.addAssignment( selectable.getSelectionExpression(), "null" )
+							.addRestriction( key.name() )
+							.addRestriction( selectable.getSelectionExpression(), key.name() )
+							.toStatementString();
+					final var mutation = new FixupJdbcUpdate(
+							sql,
+							root,
+							joined,
+							Map.of( key.name(), key.createValueDescriptor( ParameterUsage.RESTRICT, 1 ) ),
+							Expectation.None.INSTANCE
+					);
+					final var cleanup = new FlushOperation(
+							root,
+							MutationKind.UPDATE,
+							mutation,
+							(bindings, operation, session) -> joined.getIdentifierMapping().breakDownJdbcValues(
+									action.getId(),
+									(i, value, mapping) -> bindings.bindValue( value, key.name(), ParameterUsage.RESTRICT ),
+									session
+							),
+							ordinalBase * 1_000 + operations.size(),
+							origin + " [joined self-reference cleanup]"
+					);
+					cleanup.setPreExecutionCallback( preDeleteHandling.and(
+							session -> JoinedSelfReferenceDeleteCleanup.hasPhysicalSelfReference(
+									joined,
+									action.getId(),
+									key.name(),
+									selectable.getSelectionExpression(),
+									session
+							)
+					) );
+					operations.add( cleanup );
+				}
+				return operations;
+			}
+		}
+		return List.of();
+	}
+
 	private FlushOperation decomposeDynamicDelete(
 			int ordinalBase,
 			Object instance,
@@ -305,6 +375,7 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 			int[] sameFlushUpdatedAttributeIndexes,
 			OptimisticLockStyle optimisticLockStyle,
 			PostDeleteHandling postDeleteHandling,
+			List<FlushOperation> cleanupOperations,
 			SharedSessionContractImplementor session,
 			Consumer<FlushOperation> operationConsumer) {
 		final boolean applyVersion = instance != null;
@@ -339,6 +410,7 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 					null
 			);
 			op.setPreExecutionCallback( postDeleteHandling.getPreDeleteHandling() );
+			cleanupOperations.forEach( op::addExecutionPrerequisite );
 
 			if ( previousOperation != null ) {
 				operationConsumer.accept( previousOperation );
@@ -361,6 +433,7 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 			int[] sameFlushUpdatedAttributeIndexes,
 			OptimisticLockStyle optimisticLockStyle,
 			PostDeleteHandling postDeleteHandling,
+			List<FlushOperation> cleanupOperations,
 			SharedSessionContractImplementor session,
 			Consumer<FlushOperation> operationConsumer) {
 		final boolean applyVersion;
@@ -407,6 +480,7 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 					shapeKey
 			);
 			op.setPreExecutionCallback( postDeleteHandling.getPreDeleteHandling() );
+			cleanupOperations.forEach( op::addExecutionPrerequisite );
 
 			if ( previousOperation != null ) {
 				operationConsumer.accept( previousOperation );

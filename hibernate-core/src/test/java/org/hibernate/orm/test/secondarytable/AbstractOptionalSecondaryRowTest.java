@@ -192,17 +192,23 @@ public abstract class AbstractOptionalSecondaryRowTest {
 
 	@Test
 	void deleteLastDirtyColumnWithOptimisticLock(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.persist( new DynamicShipment( 2, null, "label" ) ) );
+		scope.inTransaction( session -> {
+			session.persist( new DynamicShipment( 2, null, "second" ) );
+			session.persist( new DynamicShipment( 3, null, "third" ) );
+		} );
 		scope.inTransaction( session -> {
 			session.find( DynamicShipment.class, 2 ).label = null;
+			session.find( DynamicShipment.class, 3 ).label = null;
 			scope.getCollectingStatementObserver().clear();
 		} );
 		assertThat( scope.getCollectingStatementObserver().getSqlQueries() )
 				.filteredOn( sql -> sql.contains( "optional_dynamic_shipment_detail" ) )
-				.singleElement().asString().startsWith( "delete from optional_dynamic_shipment_detail " );
+				.hasSize( 2 ).allSatisfy( sql -> assertThat( sql )
+						.startsWith( "delete from optional_dynamic_shipment_detail " )
+						.contains( "label" ) );
 		scope.inTransaction( session -> assertThat( session
-				.createNativeQuery( "select count(*) from optional_dynamic_shipment_detail where id = 2", Long.class )
-				.getSingleResult() ).isZero() );
+				.createNativeQuery( "select id from optional_dynamic_shipment_detail", Integer.class )
+				.getResultList() ).containsExactly( 1 ) );
 	}
 
 	@Test

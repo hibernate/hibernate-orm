@@ -1111,6 +1111,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
+	protected final void renderMergeUpdateValue(ColumnValueBinding binding, String targetAlias, String sourceAlias) {
+		if ( binding.isUpdateConditional() ) {
+			binding.forUpdate( targetAlias ).getValueExpression().accept( this );
+		}
+		else {
+			binding.getColumnReference().appendColumnForWrite( this, sourceAlias );
+		}
+	}
+
 	protected void renderColumnWrite(ColumnValueBinding selectionBinding) {
 		final ColumnWriteFragment valueExpression = selectionBinding.getValueExpression();
 		if ( valueExpression.getExpressionType().getJdbcType().isWriteExpressionTyped( getDialect() ) ) {
@@ -2644,7 +2653,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return StandardReturningRenderingSupport.STANDARD;
 	}
 
-	private void renderReturningMutation(
+	protected final void renderReturningMutation(
 			MutationKind mutationKind,
 			ReturningMutationSource source,
 			List<ColumnReference> returningColumns,

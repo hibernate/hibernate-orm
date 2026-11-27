@@ -73,6 +73,7 @@ import org.hibernate.sql.ast.spi.model.OptionalTableUpdate;
 import org.hibernate.sql.ast.spi.model.TableDeleteCustomSql;
 import org.hibernate.sql.ast.spi.model.TableDeleteStandard;
 import org.hibernate.sql.ast.spi.model.TableInsertCustomSql;
+import org.hibernate.sql.ast.spi.model.TableInsertSelect;
 import org.hibernate.sql.ast.spi.model.TableInsertStandard;
 import org.hibernate.sql.ast.spi.model.TableUpdateCustomSql;
 import org.hibernate.sql.ast.spi.model.TableUpdateStandard;
@@ -236,6 +237,8 @@ public interface SqlAstWalker {
 	void visitStandardTableInsert(TableInsertStandard tableInsert);
 
 	void visitCustomTableInsert(TableInsertCustomSql tableInsert);
+
+	void visitTableInsertSelect(TableInsertSelect tableInsert);
 
 	void visitStandardTableDelete(TableDeleteStandard tableDelete);
 

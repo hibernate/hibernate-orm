@@ -218,6 +218,7 @@ import org.hibernate.sql.ast.spi.model.OptionalTableUpdate;
 import org.hibernate.sql.ast.spi.model.TableDeleteCustomSql;
 import org.hibernate.sql.ast.spi.model.TableDeleteStandard;
 import org.hibernate.sql.ast.spi.model.TableInsertCustomSql;
+import org.hibernate.sql.ast.spi.model.TableInsertSelect;
 import org.hibernate.sql.ast.spi.model.TableInsertStandard;
 import org.hibernate.sql.ast.spi.model.TableUpdateCustomSql;
 import org.hibernate.sql.ast.spi.model.TableUpdateStandard;
@@ -10470,6 +10471,96 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		sqlBuffer.append( tableInsert.getCustomSql() );
 
 		tableInsert.forEachParameter( this::addParameterBinder );
+	}
+
+	/// Renders `insert into target (...) select ... from source where ...`,
+	/// copying a row of the source table to the target table.
+	///
+	/// A parameter in the select list is rendered as this dialect renders any
+	/// parameter which is a select item, since some databases do not infer the
+	/// type of a parameter in that position.
+	@Override
+	public void visitTableInsertSelect(TableInsertSelect tableInsert) {
+		getCurrentClauseStack().push( Clause.INSERT );
+		try {
+			applySqlComment( tableInsert.getMutationComment() );
+
+			final String targetTableName = tableInsert.getMutatingTable().getTableName();
+			appendSql( "insert into " );
+			appendSql( targetTableName );
+			registerAffectedTable( targetTableName );
+
+			final var copiedColumns = tableInsert.getCopiedColumns();
+			final var valueBindings = tableInsert.getValueBindings();
+
+			char separator = '(';
+			appendSql( ' ' );
+			for ( String column : copiedColumns ) {
+				appendSql( separator );
+				appendSql( column );
+				separator = ',';
+			}
+			for ( var binding : valueBindings ) {
+				appendSql( separator );
+				appendSql( binding.getColumnReference().getColumnExpression() );
+				separator = ',';
+			}
+
+			appendSql( ") select " );
+			getCurrentClauseStack().push( Clause.SELECT );
+			try {
+				String selectSeparator = "";
+				for ( String column : copiedColumns ) {
+					appendSql( selectSeparator );
+					appendSql( column );
+					selectSeparator = ",";
+				}
+				for ( var binding : valueBindings ) {
+					appendSql( selectSeparator );
+					final var value = binding.getValueExpression();
+					final var parameters = value.getParameters();
+					if ( parameters.size() == 1 && "?".equals( value.getFragment() ) ) {
+						final var parameter = parameters.iterator().next();
+						// a dialect which casts a parameter of a select list
+						// must cast it to the type of the column it is written to
+						renderSelectExpression( new SqlTypedMappingJdbcParameter( value.getSqlTypedMapping() ) {
+							@Override
+							public JdbcParameterBinder getParameterBinder() {
+								return parameter;
+							}
+						} );
+					}
+					else {
+						value.accept( this );
+					}
+					selectSeparator = ",";
+				}
+			}
+			finally {
+				getCurrentClauseStack().pop();
+			}
+
+			appendSql( " from " );
+			appendSql( tableInsert.getSourceTableName() );
+
+			getCurrentClauseStack().push( Clause.WHERE );
+			try {
+				String restrictionSeparator = " where ";
+				for ( var restriction : tableInsert.getSourceRestrictions() ) {
+					appendSql( restrictionSeparator );
+					appendSql( restriction.getColumnReference().getColumnExpression() );
+					appendSql( '=' );
+					restriction.getValueExpression().accept( this );
+					restrictionSeparator = " and ";
+				}
+			}
+			finally {
+				getCurrentClauseStack().pop();
+			}
+		}
+		finally {
+			getCurrentClauseStack().pop();
+		}
 	}
 
 	@Override

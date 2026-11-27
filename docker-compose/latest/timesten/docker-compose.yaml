@@ -1,0 +1,20 @@
+# The official TimesTen images are on the Oracle Container Registry and need you to accept the licence terms
+# on https://container-registry.oracle.com and run `docker login container-registry.oracle.com` before pulling.
+# Set TIMESTEN_IMAGE to use a different image, and TIMESTEN_PORT to publish the server on a different host port
+# (then pass `-DdbHost=localhost/<port>` to Gradle).
+services:
+  timesten:
+    image: ${TIMESTEN_IMAGE:-container-registry.oracle.com/timesten/timesten:22.1.1.42.0@sha256:6f9bdd22a0a4a8bba9f6da5a02623b32f621ae643634d9dcf869c69db497ff3d}
+    container_name: timesten
+    init: true
+    # The image does not create a database: init.sh does that
+    entrypoint: [ "/bin/bash", "/init/init.sh" ]
+    ports:
+      - "${TIMESTEN_PORT:-6625}:6625"
+    volumes:
+      - ../../build-config/timesten/init.sh:/init/init.sh:ro
+    healthcheck:
+      test: [ "CMD", "bash", "-c", ". /timesten/instance1/bin/ttenv.sh > /dev/null 2>&1; ttIsql -connstr 'DSN=hibernate_orm_test;UID=hibernate_orm_test;PWD=hibernate_orm_test' -e 'select 1 from dual; exit' > /dev/null 2>&1" ]
+      interval: 10s
+      timeout: 30s
+      retries: 30

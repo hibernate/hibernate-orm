@@ -298,15 +298,10 @@ public class SpannerDialect extends Dialect implements CurrentTemporalSupport, T
 		final boolean hasUpdatableBindings = optionalTableUpdate.getValueBindings().stream()
 				.anyMatch( ColumnValueBinding::isAttributeUpdatable );
 		if ( hasUpdatableBindings ) {
-			// If an entity contains BOTH updatable properties and read-only properties
-			// (like `@Column(updatable = false)`), we MUST fall back to Hibernate's core UPDATE-then-INSERT
-			// mutation workflow to protect the immutable state from being unintentionally overwritten,
-			// as Spanner's native `INSERT OR UPDATE` statement updates all columns.
-			// Spanner's native `INSERT OR UPDATE` statement does not support a `WHERE` clause,
-			// so optimistic locking checks cannot be applied there.
-			final boolean hasNonUpdatableBindings = optionalTableUpdate.getValueBindings().stream()
-					.anyMatch( binding -> !binding.isAttributeUpdatable() );
-			if ( hasNonUpdatableBindings || optionalTableUpdate.getNumberOfOptimisticLockBindings() > 0 ) {
+			// INSERT OR UPDATE uses the same column list for both writes and has no WHERE clause.
+			final boolean needsSeparateColumnLists = optionalTableUpdate.getValueBindings().stream()
+					.anyMatch( binding -> !binding.isAttributeInsertable() || !binding.isAttributeUpdatable() );
+			if ( needsSeparateColumnLists || optionalTableUpdate.getNumberOfOptimisticLockBindings() > 0 ) {
 				return super.createOptionalTableUpdateOperation( request );
 			}
 		}

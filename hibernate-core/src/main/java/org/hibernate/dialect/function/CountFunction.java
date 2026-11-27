@@ -316,6 +316,8 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 							sqlAppender.appendSql( argumentNumber );
 							sqlAppender.appendSql( "')" );
 							sqlAppender.appendSql( concatOperator );
+							chrFunction.render( sqlAppender, chrArguments, returnType, translator );
+							sqlAppender.appendSql( concatOperator );
 							sqlAppender.appendSql( "coalesce(nullif(coalesce(" );
 							needsConcat = renderCastedArgument( sqlAppender, translator, expressions.get( i ) );
 						}

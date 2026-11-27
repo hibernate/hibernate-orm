@@ -1201,7 +1201,8 @@ public class ToOneAttributeMapping
 			 */
 			return new CircularFetchImpl(
 					this,
-					fetchTiming,
+					// Circular fetches must honor the same eager-fetch requirements as non-joined fetches.
+					needsImmediateFetch( fetchTiming ) ? FetchTiming.IMMEDIATE : fetchTiming,
 					fetchablePath,
 					fetchParent,
 					isSelectByUniqueKey( sideNature ),

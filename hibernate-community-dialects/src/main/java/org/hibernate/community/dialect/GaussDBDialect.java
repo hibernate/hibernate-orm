@@ -351,9 +351,9 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 	 * Whether the target database runs in MySQL-compatible mode (datcompatibility "B" or "M").
 	 * <p>
 	 * {@code serverConfiguration} is assigned only after {@code super()} construction, during which
-	 * this method can already be called (e.g. from {@link #getDefaultUseGetGeneratedKeys()} via
-	 * {@code initDefaultProperties()}); treat that phase as A mode, matching the historical default,
-	 * and re-run {@code initDefaultProperties()} once the real mode is known.
+	 * this method can already be called (e.g. from {@link #contributeDefaultProperties(java.util.Properties)});
+	 * treat that phase as A mode, matching the historical default, and re-run
+	 * {@code contributeDefaultProperties(java.util.Properties)} once the real mode is known.
 	 */
 	public boolean isMMode() {
 		return serverConfiguration != null && serverConfiguration.getCompatibilityMode().isMySQLCompatible();

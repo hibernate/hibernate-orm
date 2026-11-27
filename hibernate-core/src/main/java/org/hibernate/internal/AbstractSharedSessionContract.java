@@ -1537,7 +1537,7 @@ abstract class AbstractSharedSessionContract
 		}
 	}
 
-	private AuditWorkQueue auditWorkQueue;
+	private transient AuditWorkQueue auditWorkQueue;
 
 	@Override
 	public AuditWorkQueue getAuditWorkQueue() {
@@ -1547,7 +1547,7 @@ abstract class AbstractSharedSessionContract
 		return auditWorkQueue;
 	}
 
-	private HistoryWorkQueue historyWorkQueue;
+	private transient HistoryWorkQueue historyWorkQueue;
 
 	@Override
 	public HistoryWorkQueue getHistoryWorkQueue() {

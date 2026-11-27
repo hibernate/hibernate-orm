@@ -107,16 +107,16 @@ class TemporalGeneratedUpsertHistoryTest {
 	}
 
 	@Test
-	void statelessInsertThenUpdateUsesTheReturnedVersion(SessionFactoryScope scope) {
+	void statelessInsertThenUpdateCopiesTheGeneratedVersionIntoHistory(SessionFactoryScope scope) {
 		var item = new Versioned();
 		item.id = 2;
 		var factory = scope.getSessionFactory();
 		var changeset = factory.fromStatelessTransaction( session -> {
 			session.insert( item );
+			session.refresh( item );
 			assertEquals( 43, item.version );
 			item.quantity++;
 			session.update( item );
-			assertEquals( 50, item.version );
 			return session.unwrap( SharedSessionContractImplementor.class ).getCurrentChangesetIdentifier();
 		} );
 		try ( var asOf = factory.withOptions().atChangeset( changeset ).openSession() ) {
@@ -125,22 +125,23 @@ class TemporalGeneratedUpsertHistoryTest {
 	}
 
 	@Test
-	void statelessUpsertReturnsTheDatabaseVersion(SessionFactoryScope scope) {
+	void statelessUpsertCopiesTheGeneratedVersionIntoHistoryWithoutASelect(SessionFactoryScope scope) {
 		var item = new Versioned();
 		var factory = scope.getSessionFactory();
 		var observer = scope.getCollectingStatementObserver();
 		var first = factory.fromStatelessTransaction( session -> {
 			observer.clear();
 			session.upsert( item );
-			assertEquals( 43, item.version );
-			long selects = observer.getSqlQueries().stream().filter( sql -> sql.startsWith( "select" ) ).count();
-			assertEquals( factory.getSessionFactoryOptions().isGetGeneratedKeysEnabled() ? 0L : 1L, selects );
+			observer.assertQueries().noneMatch( sql -> sql.startsWith( "select" ) );
 			return session.unwrap( SharedSessionContractImplementor.class ).getCurrentChangesetIdentifier();
 		} );
 		var second = factory.fromStatelessTransaction( session -> {
+			session.refresh( item );
+			assertEquals( 43, item.version );
 			item.quantity++;
+			observer.clear();
 			session.upsert( item );
-			assertEquals( 50, item.version );
+			observer.assertQueries().noneMatch( sql -> sql.startsWith( "select" ) );
 			return session.unwrap( SharedSessionContractImplementor.class ).getCurrentChangesetIdentifier();
 		} );
 		try ( var before = factory.withOptions().atChangeset( first ).openSession();
@@ -148,7 +149,7 @@ class TemporalGeneratedUpsertHistoryTest {
 			assertEquals( 43, before.find( Versioned.class, 1 ).version );
 			var revision = after.find( Versioned.class, 1 );
 			assertEquals( 1, revision.quantity );
-			assertEquals( item.version, revision.version );
+			assertEquals( 50, revision.version );
 		}
 	}
 }

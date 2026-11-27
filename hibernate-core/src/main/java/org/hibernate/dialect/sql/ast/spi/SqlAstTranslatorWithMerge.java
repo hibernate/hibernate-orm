@@ -6,6 +6,7 @@ import org.hibernate.SPI;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
 import org.hibernate.sql.ast.spi.model.OptionalTableUpdate;
@@ -37,14 +38,33 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 	/// wrapped in a [MergeOperation]. Override a protected rendering callback to
 	/// customize the SQL; the operation lifecycle itself is invariant.
 	public final MergeOperation createMergeOperation(OptionalTableUpdate optionalTableUpdate) {
-		renderMergeStatement( optionalTableUpdate );
+		// A delegate which reads generated values from the result of the statement names the columns to return.
+		final var delegate = optionalTableUpdate.getGeneratedValuesDelegate();
+		final var returningColumns = delegate == null ? List.<ColumnReference>of() : delegate.getReturningColumns();
+		// A statement which cannot return them is executed directly, and the values are read afterward.
+		final boolean returnsGeneratedValues =
+				delegate != null && ( returningColumns.isEmpty() || supportsMergeReturning() );
+		renderReturningMutation( MutationKind.UPDATE, ReturningMutationSource.MODEL,
+				returnsGeneratedValues ? returningColumns : List.of(),
+				() -> renderMergeStatement( optionalTableUpdate ) );
 		return new MergeOperation(
 				optionalTableUpdate.getMutatingTable().getTableMapping(),
 				optionalTableUpdate.getMutationTarget(),
 				getSql(),
 				expectation( optionalTableUpdate ),
-				getParameterBinders()
+				getParameterBinders(),
+				returnsGeneratedValues
 		);
+	}
+
+	/// Whether a `MERGE` statement can return the columns named by a generated
+	/// values delegate.
+	///
+	/// When it cannot, the statement is executed directly instead of by the
+	/// delegate.
+	@SPI(IMPLEMENT)
+	protected boolean supportsMergeReturning() {
+		return true;
 	}
 
 	protected Expectation expectation(OptionalTableUpdate optionalTableUpdate) {
@@ -307,7 +327,7 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 					appendSql( separator );
 					binding.getColumnReference().appendColumnForWrite( this, null );
 					appendSql( "=" );
-					binding.getColumnReference().appendColumnForWrite( this, "s" );
+					renderMergeUpdateValue( binding, "t", "s" );
 					separator = ',';
 				}
 			}

@@ -118,12 +118,11 @@ public abstract class PostgreSQLFamilySqlAstTranslator<T extends JdbcOperation> 
 					if ( valueBinding.isAttributeUpdatable() ) {
 						appendSql( separator );
 						appendSql( valueBinding.getColumnReference().getColumnExpression() );
+						appendSql( '=' );
 						if ( valueBinding.isAttributeInsertable() ) {
-							appendSql( "=excluded." );
-							appendSql( valueBinding.getColumnReference().getColumnExpression() );
+							renderMergeUpdateValue( valueBinding, optionalTableUpdate.getTableName(), "excluded" );
 						}
 						else {
-							appendSql( '=' );
 							valueBinding.getValueExpression().accept( this );
 						}
 						separator = ',';

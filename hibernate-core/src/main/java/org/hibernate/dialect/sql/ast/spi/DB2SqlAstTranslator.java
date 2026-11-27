@@ -187,6 +187,12 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslat
 	}
 
 	@Override
+	protected boolean supportsMergeReturning() {
+		// A data-change table reference accepts an insert, update, or delete, but not a merge.
+		return false;
+	}
+
+	@Override
 	protected InsertConflictRenderingSupport getInsertConflictRenderingSupport() {
 		return StandardInsertConflictRenderingSupport.MERGE;
 	}

@@ -22,7 +22,6 @@ import org.hibernate.engine.internal.FilteredUpdateCache;
 import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.jdbc.Expectation;
-import org.hibernate.sql.ast.spi.query.predicate.InListPredicate;
 import org.hibernate.sql.spi.mutation.TableMapping;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
@@ -51,18 +50,14 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.spi.mutation.MutationType;
-import org.hibernate.sql.ast.spi.query.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
-import org.hibernate.sql.ast.spi.query.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.spi.query.predicate.Junction;
-import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
-import org.hibernate.sql.ast.spi.model.ColumnValueParameter;
-import org.hibernate.sql.ast.spi.model.ColumnWriteFragment;
 import org.hibernate.sql.ast.spi.model.MutatingTableReference;
 import org.hibernate.sql.ast.spi.model.builder.AbstractTableUpdateBuilder;
 import org.hibernate.sql.ast.spi.model.builder.MutationGroupBuilder;
 import org.hibernate.sql.ast.spi.model.builder.TableMutationBuilder;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilder;
+import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
+import org.hibernate.sql.ast.spi.model.ConditionalVersionAssignment;
 import org.hibernate.sql.ast.internal.model.builder.TableUpdateBuilderSkipped;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
@@ -77,8 +72,6 @@ import static org.hibernate.internal.util.collections.ArrayHelper.contains;
 import static org.hibernate.internal.util.collections.ArrayHelper.join;
 import static org.hibernate.internal.util.collections.ArrayHelper.trim;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
-import static org.hibernate.query.sqm.ComparisonOperator.DISTINCT_FROM;
-import static org.hibernate.sql.ast.spi.query.predicate.Junction.Nature.DISJUNCTION;
 
 /**
  * Coordinates the updating of an entity.
@@ -440,7 +433,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 	}
 
-	private boolean supportsDatabaseDirtinessCheck(@Nullable EntityVersionMapping versionMapping) {
+	protected boolean supportsDatabaseDirtinessCheck(@Nullable EntityVersionMapping versionMapping) {
 		final var persister = entityPersister();
 		final var updateDelegate = persister.getUpdateDelegate();
 		if ( versionMapping != null && !persister.isVersionPropertyGenerated()
@@ -1430,7 +1423,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	@Nonnull
-	private TableMutationBuilder<?> createTableUpdateBuilder(@Nonnull EntityTableMapping tableMapping) {
+	protected TableMutationBuilder<?> createTableUpdateBuilder(@Nonnull EntityTableMapping tableMapping) {
 		final var delegate =
 				tableMapping.isIdentifierTable()
 						? entityPersister().getUpdateDelegate()
@@ -1628,46 +1621,25 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	private void addDatabaseDirtinessCheckedVersionAssignment(
 			@Nonnull EntityVersionMapping versionMapping,
 			@Nonnull TableUpdateBuilder<?> tableUpdateBuilder) {
-		final var mutatingTable = tableUpdateBuilder.getMutatingTable();
 		final var versionAttribute = versionMapping.getVersionAttribute();
-		final var versionColumn = new ColumnReference( mutatingTable, versionAttribute );
-		final var changedPredicate = new Junction( DISJUNCTION );
-		final List<ColumnValueParameter> parameters = new ArrayList<>();
-
+		final List<SelectableMapping> comparedColumns = new ArrayList<>();
 		final var persister = entityPersister();
 		final boolean[] updateability = persister.getPropertyUpdateability();
 		final boolean[] versionability = persister.getPropertyVersionability();
 		for ( int i = 0; i < updateability.length; i++ ) {
-			if ( updateability[i] && versionability[i] ) {
-				final var attribute = persister.getAttributeMapping( i );
-				if ( attribute != versionAttribute ) {
-					final var singularAttribute = (SingularAttributeMapping) attribute;
-					for ( int selectableIndex = 0; selectableIndex < singularAttribute.getJdbcTypeCount(); selectableIndex++ ) {
-						final var selectable = singularAttribute.getSelectable( selectableIndex );
-						if ( !selectable.isFormula() && selectable.isUpdateable() ) {
-							final var column = new ColumnReference( mutatingTable, selectable );
-							final var parameter = new ColumnValueParameter( column, ParameterUsage.RESTRICT );
-							parameters.add( parameter );
-							changedPredicate.add( new ComparisonPredicate( column, DISTINCT_FROM, parameter ) );
-						}
-					}
-				}
+			if ( updateability[i] && versionability[i] && i != persister.getVersionPropertyIndex() ) {
+				persister.getAttributeMapping( i ).forEachUpdatable( (position, column) -> comparedColumns.add( column ) );
 			}
 		}
-		if ( changedPredicate.isEmpty() ) {
-			// Keep a parameterized CASE shape even when the entity has no updateable
-			// versionable columns
-			// An empty in list predicate is always false, which we use to retain the shape
-			changedPredicate.add( new InListPredicate( versionColumn ) );
-		}
+		final var assignment = new ConditionalVersionAssignment(
+				new ColumnReference( tableUpdateBuilder.getMutatingTable(), versionAttribute ), versionMapping, comparedColumns );
+		tableUpdateBuilder.addColumnAssignment( versionAssignment( assignment ) );
+	}
 
-		final var nextVersion = new ColumnValueParameter( versionColumn, ParameterUsage.SET );
-		parameters.add( nextVersion );
-		final var versionExpression = new CaseSearchedExpression( versionMapping );
-		versionExpression.when( changedPredicate, nextVersion );
-		versionExpression.otherwise( versionColumn );
-		tableUpdateBuilder.addColumnAssignment( new ColumnValueBinding( versionColumn,
-				new ColumnWriteFragment( parameters, versionAttribute, versionExpression ) ) );
+	/// The assignment of the version by a statement which leaves the dirtiness check to the database.
+	protected ColumnValueBinding versionAssignment(@Nonnull ConditionalVersionAssignment assignment) {
+		// An update always finds an existing row.
+		return assignment.forUpdate( null );
 	}
 
 	protected void forEachUpdatable(@Nonnull AttributeMapping attributeMapping, @Nonnull TableUpdateBuilder<?> tableUpdateBuilder) {

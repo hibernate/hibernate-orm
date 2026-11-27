@@ -79,18 +79,12 @@ public final class ClassificationReportRenderer {
 	}
 
 	static final class ProjectionEntry {
-		private final String elementId;
 		private final String path;
 		private final boolean packageEntry;
 
 		private ProjectionEntry(String elementId, String path, boolean packageEntry) {
-			this.elementId = elementId;
 			this.path = path;
 			this.packageEntry = packageEntry;
-		}
-
-		String getElementId() {
-			return elementId;
 		}
 
 		String getPath() {

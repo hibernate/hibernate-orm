@@ -54,20 +54,6 @@ class TargetColumnAdapterJaxbColumn implements TargetColumnAdapter {
 	}
 
 	@Override
-	public void setInsertable(Boolean value) {
-		if ( value != null ) {
-			jaxbColumn.setInsertable( value );
-		}
-	}
-
-	@Override
-	public void setUpdatable(Boolean value) {
-		if ( value != null ) {
-			jaxbColumn.setUpdatable( value );
-		}
-	}
-
-	@Override
 	public void setLength(Integer value) {
 		if ( value != null ) {
 			jaxbColumn.setLength( value );

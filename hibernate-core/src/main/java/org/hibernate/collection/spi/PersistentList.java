@@ -715,29 +715,6 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 		}
 	}
 
-	final class Add extends AbstractListValueDelayedOperation {
-
-		public Add(int index, E addedValue) {
-			super( index, addedValue, null );
-		}
-
-		@Override
-		public QueuedCollectionOperation toQueuedOperation(int order) {
-			return new QueuedCollectionOperation(
-					QueuedCollectionOperation.Kind.ADD,
-					getAddedInstance(),
-					null,
-					getIndex(),
-					order
-			);
-		}
-
-		@Override
-		public void operate() {
-			list.add( getIndex(), getAddedInstance() );
-		}
-	}
-
 	final class Set extends AbstractListValueDelayedOperation {
 
 		public Set(int index, E addedValue, E orphan) {

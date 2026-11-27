@@ -32,7 +32,6 @@ import org.hibernate.cache.spi.SecondLevelCacheLogger;
 
 import static org.hibernate.cache.spi.RegionFactory.DEFAULT_QUERY_RESULTS_REGION_UNQUALIFIED_NAME;
 import static org.hibernate.cache.spi.RegionFactory.DEFAULT_UPDATE_TIMESTAMPS_REGION_UNQUALIFIED_NAME;
-import static org.hibernate.internal.util.StringHelper.qualifyConditionally;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 import static org.hibernate.pretty.MessageHelper.infoString;
 
@@ -148,14 +147,6 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 			}
 		}
 
-	}
-
-	private String qualifiedRegionName(DomainDataRegion region) {
-		return qualifyConditionally( getRegionPrefix(), region.getName() );
-	}
-
-	private String getRegionPrefix() {
-		return sessionFactory.getSessionFactoryOptions().getCacheRegionPrefix();
 	}
 
 	private DomainDataRegion buildRegion(DomainDataRegionConfig regionConfig) {

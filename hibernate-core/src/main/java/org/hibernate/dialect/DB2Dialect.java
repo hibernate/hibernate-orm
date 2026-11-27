@@ -241,13 +241,6 @@ public class DB2Dialect extends Dialect implements CurrentTemporalSupport, Tempo
 
 	private static final Pattern DB2_VERSION_PATTERN = Pattern.compile( "(?:ARI|DSN|QSQ|SQL)(\\d\\d)(\\d\\d)(\\d)\\d?" );
 	private static final int BIND_PARAMETERS_NUMBER_LIMIT = 32_767;
-
-	private static final String FOR_READ_ONLY_SQL = " for read only with rs";
-	private static final String FOR_SHARE_SQL = FOR_READ_ONLY_SQL + " use and keep share locks";
-	private static final String FOR_UPDATE_SQL = FOR_READ_ONLY_SQL + " use and keep update locks";
-	private static final String SKIP_LOCKED_SQL = " skip locked data";
-	private static final String FOR_SHARE_SKIP_LOCKED_SQL = FOR_SHARE_SQL + SKIP_LOCKED_SQL;
-	private static final String FOR_UPDATE_SKIP_LOCKED_SQL = FOR_UPDATE_SQL + SKIP_LOCKED_SQL;
 	private static final SequenceInformationExtractor SEQUENCE_INFORMATION_EXTRACTOR =
 			SequenceInformationExtractors.builder( "select * from syscat.sequences" )
 					.sequenceNameColumn( "seqname" )

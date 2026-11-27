@@ -338,8 +338,6 @@ public abstract class MockSessionFactory
 
 	abstract boolean isFieldDefined(String qualifiedClassName, String fieldName);
 
-	abstract boolean isConstructorDefined(String qualifiedClassName, List<Type> argumentTypes);
-
 	abstract Type propertyType(String typeName, String propertyPath);
 
 	protected abstract boolean isSubtype(String entityName, String subtypeEntityName);
@@ -515,20 +513,6 @@ public abstract class MockSessionFactory
 	@Override
 	public RootGraphImplementor<?> findEntityGraphByName(@Nonnull String s) {
 		throw new UnsupportedOperationException("operation not supported");
-	}
-
-	static Class<?> toPrimitiveClass(Class<?> type) {
-		return switch ( type.getName() ) {
-			case "java.lang.Boolean" -> boolean.class;
-			case "java.lang.Character" -> char.class;
-			case "java.lang.Integer" -> int.class;
-			case "java.lang.Short" -> short.class;
-			case "java.lang.Byte" -> byte.class;
-			case "java.lang.Long" -> long.class;
-			case "java.lang.Float" -> float.class;
-			case "java.lang.Double" -> double.class;
-			default -> Object.class;
-		};
 	}
 
 	@Override

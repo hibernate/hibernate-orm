@@ -9,19 +9,16 @@ import org.hibernate.internal.build.AllowSysOut;
  * {@link org.hibernate.tool.schema.spi.SchemaManagementTool} and friends.
  */
 @Deprecated
-class ScriptExporter implements Exporter {
-	@Override
+class ScriptExporter {
 	public boolean acceptsImportScripts() {
 		return false;
 	}
 
-	@Override
 	@AllowSysOut
 	public void export(String string) throws Exception {
 		System.out.println( string );
 	}
 
-	@Override
 	public void release() throws Exception {
 	}
 }

@@ -297,7 +297,6 @@ public class SybaseASEAggregateSupport extends AggregateSupportImpl {
 	}
 
 	interface XmlWriteExpression {
-		boolean isAggregate();
 		void append(
 				SqlAppender sb,
 				String path,
@@ -311,11 +310,6 @@ public class SybaseASEAggregateSupport extends AggregateSupportImpl {
 
 		private AggregateXmlWriteExpression(SelectableMapping selectableMapping) {
 			this.selectableMapping = selectableMapping;
-		}
-
-		@Override
-		public boolean isAggregate() {
-			return true;
 		}
 
 		protected void initializeSubExpressions(SelectableMapping aggregateColumn, SelectableMapping[] columns) {
@@ -448,11 +442,6 @@ public class SybaseASEAggregateSupport extends AggregateSupportImpl {
 		}
 
 		@Override
-		public boolean isAggregate() {
-			return selectableMapping.getJdbcMapping().getJdbcType().isXml();
-		}
-
-		@Override
 		public void append(
 				SqlAppender sb,
 				String path,
@@ -513,11 +502,6 @@ public class SybaseASEAggregateSupport extends AggregateSupportImpl {
 
 		PassThroughXmlWriteExpression(SelectableMapping selectableMapping) {
 			this.selectableMapping = selectableMapping;
-		}
-
-		@Override
-		public boolean isAggregate() {
-			return selectableMapping.getJdbcMapping().getJdbcType().isXml();
 		}
 
 		@Override

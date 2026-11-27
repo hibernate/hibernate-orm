@@ -37,10 +37,6 @@ public abstract class MockCollectionPersister implements CollectionPersister, Jo
 		this.ownerEntityName = root(role);
 	}
 
-	String getOwnerEntityName() {
-		return ownerEntityName;
-	}
-
 	@Nonnull
 	@Override
 	public String getRole() {
@@ -58,8 +54,6 @@ public abstract class MockCollectionPersister implements CollectionPersister, Jo
 	public EntityPersister getOwnerEntityPersister() {
 		return factory.getMetamodel().getEntityDescriptor(ownerEntityName);
 	}
-
-	abstract Type getElementPropertyType(String propertyPath);
 
 	@Nonnull
 	@Override

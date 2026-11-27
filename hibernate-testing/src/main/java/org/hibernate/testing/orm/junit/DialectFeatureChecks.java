@@ -379,6 +379,12 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsCircularCascadeDeleteCheck implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			if ( dialect instanceof org.hibernate.dialect.MySQLDialect mysqlDialect
+					&& mysqlDialect.isForeignKeysInServer() ) {
+				// The server-level foreign key implementation used when
+				// innodb_native_foreign_keys=OFF does not support circular cascade deletes
+				return false;
+			}
 			return switch ( dialect.getClass().getSimpleName() ) {
 				case "SQLServerDialect", "SQLServerLegacyDialect", "SpannerDialect",
 						"TeradataDialect", "SingleStoreDialect", "TimesTenDialect" -> false;

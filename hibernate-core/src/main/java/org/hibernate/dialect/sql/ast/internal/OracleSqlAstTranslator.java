@@ -722,13 +722,13 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 						appendSql( "=1" );
 						renderUnassignedColumnChecks( optionalTableUpdate, false );
 						appendSql( " then " );
-						binding.getColumnReference().appendColumnForWrite( this, "s" );
+						renderMergeUpdateValue( binding, "t", "s" );
 						appendSql( " else " );
 						binding.getColumnReference().appendColumnForWrite( this, "t" );
 						appendSql( " end" );
 					}
 					else {
-						binding.getColumnReference().appendColumnForWrite( this, "s" );
+						renderMergeUpdateValue( binding, "t", "s" );
 					}
 					separatorChar = COMMA_SEPARATOR_CHAR;
 				}

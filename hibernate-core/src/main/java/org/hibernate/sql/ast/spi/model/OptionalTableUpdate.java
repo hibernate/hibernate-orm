@@ -5,8 +5,11 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.dialect.sql.ast.spi.OptionalTableUpdateOperationRequest;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.persister.entity.mutation.InsertCoordinatorStandard;
 import org.hibernate.sql.ast.spi.SqlAstWalker;
@@ -30,6 +33,7 @@ public class OptionalTableUpdate
 	private final boolean versionedTarget;
 	private final boolean requiresExistingRowForOptimisticLock;
 	private final List<String> unassignedColumns;
+	private final GeneratedValuesMutationDelegate generatedValuesDelegate;
 
 	public OptionalTableUpdate(
 			MutatingTableReference mutatingTable,
@@ -61,12 +65,37 @@ public class OptionalTableUpdate
 		this(
 				mutatingTable,
 				mutationTarget,
+				versionedTarget,
+				unassignedColumns,
+				valueBindings,
+				keyRestrictionBindings,
+				optLockRestrictionBindings,
+				null
+		);
+	}
+
+	/// @param unassignedColumns mapped state columns left untouched by the update
+	/// @param generatedValuesDelegate the delegate which executes the statement
+	///        and reads the values it generates, if any
+	public OptionalTableUpdate(
+			MutatingTableReference mutatingTable,
+			MutationTarget mutationTarget,
+			boolean versionedTarget,
+			List<String> unassignedColumns,
+			List<ColumnValueBinding> valueBindings,
+			List<ColumnValueBinding> keyRestrictionBindings,
+			List<ColumnValueBinding> optLockRestrictionBindings,
+			@Nullable GeneratedValuesMutationDelegate generatedValuesDelegate) {
+		this(
+				mutatingTable,
+				mutationTarget,
 				"upsert for " + mutationTarget.getRolePath(),
 				versionedTarget,
 				unassignedColumns,
 				valueBindings,
 				keyRestrictionBindings,
-				optLockRestrictionBindings
+				optLockRestrictionBindings,
+				generatedValuesDelegate
 		);
 	}
 
@@ -86,7 +115,8 @@ public class OptionalTableUpdate
 				insertOnlyColumns( valueBindings ),
 				valueBindings,
 				keyRestrictionBindings,
-				optLockRestrictionBindings
+				optLockRestrictionBindings,
+				null
 		);
 	}
 
@@ -98,7 +128,8 @@ public class OptionalTableUpdate
 			List<String> unassignedColumns,
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,
-			List<ColumnValueBinding> optLockRestrictionBindings) {
+			List<ColumnValueBinding> optLockRestrictionBindings,
+			@Nullable GeneratedValuesMutationDelegate generatedValuesDelegate) {
 		super(
 				mutatingTable,
 				mutationTarget,
@@ -113,6 +144,7 @@ public class OptionalTableUpdate
 				&& optLockRestrictionBindings instanceof ColumnValueBindingList bindings
 				&& bindings.hasNonNullOldValue();
 		this.unassignedColumns = mutatingTable.isOptional() ? List.copyOf( unassignedColumns ) : List.of();
+		this.generatedValuesDelegate = generatedValuesDelegate;
 	}
 
 	private static List<String> insertOnlyColumns(List<ColumnValueBinding> valueBindings) {
@@ -151,6 +183,12 @@ public class OptionalTableUpdate
 		forEachThing( getValueBindings(), intermediateConsumer );
 		forEachThing( getKeyBindings(), intermediateConsumer );
 		forEachThing( getOptimisticLockBindings(), intermediateConsumer );
+	}
+
+	/// The delegate which executes the statement and reads the values it
+	/// generates, or `null` if the statement is executed directly.
+	public @Nullable GeneratedValuesMutationDelegate getGeneratedValuesDelegate() {
+		return generatedValuesDelegate;
 	}
 
 	public List<ColumnValueBinding> getValueBindings() {
@@ -202,7 +240,9 @@ public class OptionalTableUpdate
 				|| tableMapping.getInsertDetails().isDynamicMutation()
 				|| tableMapping.getDeleteDetails().getCustomSql() != null
 				|| tableMapping.getUpdateDetails().getCustomSql() != null
-				|| tableMapping.getUpdateDetails().isDynamicMutation() ) {
+				|| tableMapping.getUpdateDetails().isDynamicMutation()
+				// such an expression may refer to the existing row, so an update statement evaluates it
+				|| valueBindings.stream().anyMatch( ColumnValueBinding::isUpdateExpression ) ) {
 			return new OptionalTableUpdateOperation( getMutationTarget(), this );
 		}
 		return factory.getJdbcServices().getDialect().createOptionalTableUpdateOperation(

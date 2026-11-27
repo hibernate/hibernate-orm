@@ -6,6 +6,9 @@ import jakarta.annotation.Nullable;
 import org.hibernate.engine.internal.FilteredAssociationMutation;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.generator.EventType;
+import org.hibernate.generator.values.GeneratedValues;
+import org.hibernate.generator.values.internal.GeneratedValuesImpl;
+import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -13,8 +16,12 @@ import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
+import org.hibernate.sql.ast.spi.model.ConditionalVersionAssignment;
 import org.hibernate.sql.ast.spi.model.builder.AbstractTableUpdateBuilder;
 import org.hibernate.sql.ast.internal.model.builder.TableMergeBuilder;
+import org.hibernate.sql.ast.spi.model.builder.MutationGroupBuilder;
+import org.hibernate.sql.ast.spi.model.builder.TableMutationBuilder;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilder;
 
 /**
@@ -27,6 +34,38 @@ public class MergeCoordinatorStandard extends UpdateCoordinatorStandard {
 
 	public MergeCoordinatorStandard(@Nonnull EntityPersister entityPersister, @Nonnull SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
+	}
+
+	@Override
+	public @Nullable GeneratedValues update(
+			@Nonnull Object entity, @Nonnull Object id, @Nullable Object rowId, @Nonnull Object[] values,
+			@Nullable Object oldVersion, @Nullable Object[] oldValues, @Nullable int[] dirtyIndexes,
+			boolean hasDirtyCollection, @Nonnull SharedSessionContractImplementor session) {
+		final var result = super.update( entity, id, rowId, values, oldVersion, oldValues, dirtyIndexes, hasDirtyCollection, session );
+		final var persister = entityPersister();
+		if ( result == null && oldValues == null && dirtyIndexes == null
+				&& supportsDatabaseDirtinessCheck( persister.getVersionMapping() ) ) {
+			// An emulated upsert executes its own statements and cannot use the returning delegate.
+			final Object version = persister.getCurrentVersion( id, session );
+			if ( version == null ) {
+				throw new StaleObjectStateException( persister.getEntityName(), id );
+			}
+			final var generated = new GeneratedValuesImpl( 1 );
+			generated.addGeneratedValue( persister.getVersionMapping(), version );
+			return generated;
+		}
+		return result;
+	}
+
+	@Override
+	protected TableMutationBuilder<?> createTableUpdateBuilder(@Nonnull EntityTableMapping tableMapping) {
+		return newTableUpdateBuilder( tableMapping );
+	}
+
+	@Override
+	protected ColumnValueBinding versionAssignment(@Nonnull ConditionalVersionAssignment assignment) {
+		// An upsert stores the proposed version when it inserts the row.
+		return assignment;
 	}
 
 	@Nonnull
@@ -144,6 +183,32 @@ public class MergeCoordinatorStandard extends UpdateCoordinatorStandard {
 		}
 		else {
 			attributeMapping.forEachSelectable( tableUpdateBuilder );
+		}
+	}
+
+	@Override
+	protected void handleValueGeneration(
+			@Nonnull AttributeMapping attributeMapping, @Nonnull MutationGroupBuilder mutationGroupBuilder,
+			@Nonnull OnExecutionGenerator generator, @Nonnull EventType eventType) {
+		if ( generator.generatesOnInsert() ) {
+			super.handleValueGeneration( attributeMapping, mutationGroupBuilder, generator, eventType );
+		}
+		else {
+			// An insert does not generate the value, so only an update evaluates the SQL expression.
+			final String[] columnValues = generator.getReferencedColumnValues( dialect, eventType );
+			final boolean[] columnInclusions = generator.getColumnInclusions( dialect, eventType );
+			attributeMapping.forEachSelectable( (i, column) -> {
+				if ( columnInclusions == null || columnInclusions[i] ) {
+					final TableUpdateBuilder<?> tableUpdateBuilder = mutationGroupBuilder.findTableDetailsBuilder(
+							entityPersister().physicalTableNameForMutation( column ) );
+					if ( columnValues == null || columnValues[i] == null || "?".equals( columnValues[i] ) ) {
+						tableUpdateBuilder.addColumnAssignment( column, "?" );
+					}
+					else {
+						tableUpdateBuilder.addUpdateOnlyColumn( column, columnValues[i] );
+					}
+				}
+			} );
 		}
 	}
 

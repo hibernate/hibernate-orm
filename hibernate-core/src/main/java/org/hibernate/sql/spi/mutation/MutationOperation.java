@@ -95,6 +95,14 @@ public interface MutationOperation extends JdbcValueDescriptorAccess {
 	JdbcValueDescriptor findValueDescriptor(String columnName, ParameterUsage usage);
 
 	/**
+	 * Whether the generated values delegate of the mutation target, if it has one,
+	 * executes this operation and reads the values which it generates.
+	 */
+	default boolean supportsGeneratedValuesDelegate() {
+		return true;
+	}
+
+	/**
 	 * Form of {@link #findValueDescriptor}, throwing an exception if not found as opposed
 	 * to simply returning null
 	 */

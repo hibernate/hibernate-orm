@@ -150,6 +150,42 @@ public class HibernateEnhancerMojoTest {
 	}
 
 	@Test
+	void testNormalizePatterns() throws Exception {
+		FileSet fileSet = new FileSet();
+		fileSet.addInclude("/org/foo/**");
+		fileSet.addInclude("bar/**");
+		fileSet.addExclude("\\baz/**");
+		enhanceMojo.normalizePatterns(fileSet);
+		assertEquals("org/foo/**", fileSet.getIncludes().get(0));
+		assertEquals("bar/**", fileSet.getIncludes().get(1));
+		assertEquals("baz/**", fileSet.getExcludes().get(0));
+		assertEquals(2, logMessages.size());
+		assertTrue(logMessages.contains(
+				WARNING + HibernateEnhancerMojo.LEADING_SEPARATOR_STRIPPED.formatted("/org/foo/**", "org/foo/**")));
+		assertTrue(logMessages.contains(
+				WARNING + HibernateEnhancerMojo.LEADING_SEPARATOR_STRIPPED.formatted("\\baz/**", "baz/**")));
+	}
+
+	@Test
+	void testAddFileSetToSourceSetWithLeadingSeparatorInInclude() throws Exception {
+		Method addFileSetToSourceSetMethod = HibernateEnhancerMojo.class.getDeclaredMethod(
+				"addFileSetToSourceSet",
+				new Class[] { FileSet.class});
+		addFileSetToSourceSetMethod.setAccessible(true);
+		FileSet fileSet = new FileSet();
+		fileSet.setDirectory(classesDirectory.getAbsolutePath());
+		fileSet.addInclude("/org/foo/**");
+		addFileSetToSourceSetMethod.invoke(enhanceMojo, fileSet);
+		@SuppressWarnings("unchecked")
+		List<HibernateEnhancerMojo.SourceEntry> sourceSet =
+				(List<HibernateEnhancerMojo.SourceEntry>) sourceSetField.get(enhanceMojo);
+		var classFiles = sourceSet.stream().map(HibernateEnhancerMojo.SourceEntry::classFile).toList();
+		assertTrue(classFiles.contains(barClassFile));
+		assertTrue(logMessages.contains(
+				WARNING + HibernateEnhancerMojo.LEADING_SEPARATOR_STRIPPED.formatted("/org/foo/**", "org/foo/**")));
+	}
+
+	@Test
 	void testCreateClassLoader() throws Exception {
 		Method createClassLoaderMethod = HibernateEnhancerMojo.class.getDeclaredMethod("createClassLoader");
 		createClassLoaderMethod.setAccessible(true);

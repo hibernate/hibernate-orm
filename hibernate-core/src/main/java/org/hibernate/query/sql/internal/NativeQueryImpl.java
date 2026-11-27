@@ -1164,7 +1164,10 @@ public class NativeQueryImpl<R>
 		if ( isCacheableQuery() ) {
 			return getInterpretationCache().resolveSelectQueryPlan(
 					selectInterpretationsKey( mapping, parameterStartPosition ),
-					key -> createQueryPlan( key.getResultSetMapping(), key.getStartPosition() )
+					key -> createQueryPlan(
+							key.interpretationsKey().getResultSetMapping(),
+							key.interpretationsKey().getStartPosition()
+					)
 			);
 		}
 		else {
@@ -1304,14 +1307,35 @@ public class NativeQueryImpl<R>
 		);
 	}
 
-	private SelectInterpretationsKey selectInterpretationsKey(ResultSetMapping mapping, int parameterStartPosition) {
-		// The cached plan retains parameter occurrences, so preserve their names and positions in the key.
-		return new SelectInterpretationsKey(
+	private NativeSelectInterpretationsKey selectInterpretationsKey(ResultSetMapping mapping, int parameterStartPosition) {
+		return new NativeSelectInterpretationsKey(
 				originalSqlString,
-				mapping,
-				getSynchronizedQuerySpaces(),
-				parameterStartPosition
+				new SelectInterpretationsKey(
+						getQueryString(),
+						mapping,
+						getSynchronizedQuerySpaces(),
+						parameterStartPosition
+				)
 		);
+	}
+
+	// Plans retain parameter identities, which are absent from the adjusted SQL.
+	private record NativeSelectInterpretationsKey(
+			String originalSqlString,
+			SelectInterpretationsKey interpretationsKey) implements QueryInterpretationCache.Key {
+		@Override
+		public String getQueryString() {
+			// Keep cache statistics associated with the SQL used for execution.
+			return interpretationsKey.getQueryString();
+		}
+
+		@Override
+		public QueryInterpretationCache.Key prepareForStore() {
+			return new NativeSelectInterpretationsKey(
+					originalSqlString,
+					(SelectInterpretationsKey) interpretationsKey.prepareForStore()
+			);
+		}
 	}
 
 	private boolean isCacheableQuery() {

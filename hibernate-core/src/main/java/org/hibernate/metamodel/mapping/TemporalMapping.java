@@ -3,6 +3,8 @@ package org.hibernate.metamodel.mapping;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
+import java.util.List;
+
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.mapping.Property;
@@ -47,4 +49,12 @@ public interface TemporalMapping extends AuxiliaryMapping {
 
 	@Nonnull
 	ColumnValueBinding createNullEndingValueBinding(@Nonnull ColumnReference endingColumnReference);
+
+	/// The columns which a revision held in a separate history table copies
+	/// from the row of the table holding current data. Empty when revisions
+	/// are held in the table for current data itself.
+	@Nonnull
+	default List<String> getCurrentTableColumns() {
+		return List.of();
+	}
 }

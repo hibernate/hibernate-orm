@@ -18,6 +18,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
 import org.hibernate.audit.spi.AuditWorkQueue;
+import org.hibernate.temporal.spi.HistoryWorkQueue;
 import org.hibernate.bytecode.enhance.spi.interceptor.SessionAssociationMarkers;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -349,6 +350,16 @@ public interface SharedSessionContractImplementor
 	 */
 	@Incubating(since = "7.4")
 	AuditWorkQueue getAuditWorkQueue();
+
+	/**
+	 * Access the transaction-scoped queue of entities whose revisions
+	 * must be written to a history table. Lazily initialized on first
+	 * access.
+	 *
+	 * @since 8.0
+	 */
+	@Incubating(since = "8.0")
+	HistoryWorkQueue getHistoryWorkQueue();
 
 	/**
 	 * Instantiate an {@link EntityKey} with the given id and for the

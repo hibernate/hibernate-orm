@@ -486,6 +486,11 @@ public class GraphBasedActionQueue implements ActionQueue {
 
 		// Execute any pending JDBC batch
 		session.getJdbcCoordinator().executeBatch();
+
+		if ( !session.isTransactionInProgress() ) {
+			// With no changeset to wait for, revisions are written as soon as the current rows are.
+			session.getHistoryWorkQueue().currentRowsWritten( session );
+		}
 	}
 
 	private void executeFlushAndPrepareForTransactionCompletion() {

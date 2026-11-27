@@ -66,6 +66,12 @@ Custom implementations of `PersistenceContext` must implement `registerUpdatedTe
 Record the entity key when an update inserts a replacement revision, keep it across flushes and `Session.clear()`, and discard it at transaction completion.
 This lets a second flush update the revision already created by the transaction.
 
+[[history-table-revision-copy-spi]]
+=== Copying revisions to a history table
+
+Custom implementations of `SqlAstWalker` must implement `visitTableInsertSelect(TableInsertSelect)`, which visits an insert copying a row from another table.
+Custom implementations of `SharedSessionContractImplementor` must implement `getHistoryWorkQueue()`.
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Changes in Behavior
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -146,6 +152,14 @@ With the `HISTORY_TABLE` temporal strategy, each concrete entity class in a `TAB
 The table name defaults to the name of the corresponding current table with the suffix `_history` and can be set using `@Temporal.HistoryTable` on that class.
 If a database already contains subclass revisions in the root history table, move those revisions to the corresponding subclass history tables before upgrading.
 The old history table does not store a discriminator, so identifying the concrete type of those revisions may require application data.
+
+[[history-table-revision-copy]]
+=== Revisions of an entity in a history table
+
+With the `HISTORY_TABLE` temporal strategy, a revision of an entity is now written when the transaction completes, as a copy of the row of the table holding current data.
+A flush writes only the table holding current data, so a query which reads the history table does not see the changes made earlier in the same transaction.
+The statement which ends a revision no longer checks the version of the revision, since the version of the current row was already checked when that row was written.
+Outside of a transaction, a revision is written immediately after its current row.
 
 [[on-delete-on-entity-class]]
 === `@OnDelete` on an entity class which is not a `JOINED` subclass

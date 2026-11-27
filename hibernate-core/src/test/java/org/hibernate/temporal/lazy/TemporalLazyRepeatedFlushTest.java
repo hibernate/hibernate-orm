@@ -36,7 +36,7 @@ class TemporalLazyRepeatedFlushTest {
 			@Setting(name = CHANGESET_ID_SUPPLIER, value = SUPPLIER)
 	})
 	void updateTwiceSingleTable(SessionFactoryScope scope) {
-		updateTwice( scope, 3, 1 );
+		updateTwice( scope, 3, 1, 1 );
 	}
 
 	@Test
@@ -47,10 +47,13 @@ class TemporalLazyRepeatedFlushTest {
 			@Setting(name = CHANGESET_ID_SUPPLIER, value = SUPPLIER)
 	})
 	void updateTwiceHistoryTable(SessionFactoryScope scope) {
-		updateTwice( scope, 4, 2 );
+		// a revision is copied from the current row when the transaction completes,
+		// so no flush writes the history table, nor loads an unfetched attribute
+		updateTwice( scope, 1, 0, 1 );
 	}
 
-	private void updateTwice(SessionFactoryScope scope, int firstFlushStatements, int secondFlushStatements) {
+	private void updateTwice(
+			SessionFactoryScope scope, int firstFlushStatements, int firstFlushSelects, int secondFlushStatements) {
 		final var before = scope.fromTransaction( session -> {
 			session.persist( new Item( 1, "a" ) );
 			return session.getCurrentChangesetIdentifier();
@@ -63,7 +66,7 @@ class TemporalLazyRepeatedFlushTest {
 			observer.clear();
 			session.flush();
 			observer.assertStatements().hasSize( firstFlushStatements );
-			observer.assertQueries().filteredOn( sql -> sql.startsWith( "select" ) ).hasSize( 1 );
+			observer.assertQueries().filteredOn( sql -> sql.startsWith( "select" ) ).hasSize( firstFlushSelects );
 			session.clear();
 			final var reloaded = session.find( Item.class, 1 );
 			reloaded.body = "c";

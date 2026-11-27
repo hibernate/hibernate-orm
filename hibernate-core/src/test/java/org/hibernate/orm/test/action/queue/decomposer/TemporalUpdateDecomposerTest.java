@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests graph decomposition for temporal updates.
@@ -85,7 +86,7 @@ public class TemporalUpdateDecomposerTest {
 					value = "org.hibernate.orm.test.tenantid.TenantIdMutationTest$Resolver"),
 			@Setting(name = MultiTenancySettings.MULTI_TENANT_RLS_ENABLED, value = "false")
 	})
-	void tenantOwnershipCheckPreservesHistoryPrerequisite(EntityManagerFactoryScope scope) {
+	void tenantOwnershipCheckPlansNoHistoryOperation(EntityManagerFactoryScope scope) {
 		scope.inTransaction( em -> {
 			final var item = new TenantItem();
 			item.id = 1L;
@@ -105,11 +106,11 @@ public class TemporalUpdateDecomposerTest {
 
 			final var currentTable = persister.getIdentifierTableDetails().getTableName();
 			final var historyTable = persister.getTemporalMapping().getTableName();
+			// The ownership check is the only operation in the plan. A revision is copied
+			// to the history table when the transaction completes, which a failed check prevents.
 			final var ownershipCheck = operation( operations, currentTable, MutationKind.UPDATE );
-			final var closeHistory = operation( operations, historyTable, MutationKind.UPDATE );
-			final var insertHistory = operation( operations, historyTable, MutationKind.INSERT );
-			assertEquals( List.of( ownershipCheck ), closeHistory.getExecutionPrerequisites() );
-			assertEquals( List.of( closeHistory, ownershipCheck ), insertHistory.getExecutionPrerequisites() );
+			assertEquals( List.of( ownershipCheck ), operations );
+			assertTrue( operations.stream().noneMatch( op -> historyTable.equals( op.getTableExpression() ) ) );
 			item.name = "before";
 		} );
 	}

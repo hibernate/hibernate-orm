@@ -26,6 +26,7 @@ import org.hibernate.StatementObserver;
 import org.hibernate.audit.AuditLog;
 import org.hibernate.audit.spi.ChangelogSupplier;
 import org.hibernate.audit.spi.AuditWorkQueue;
+import org.hibernate.temporal.spi.HistoryWorkQueue;
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -1544,6 +1545,16 @@ abstract class AbstractSharedSessionContract
 			auditWorkQueue = new AuditWorkQueue();
 		}
 		return auditWorkQueue;
+	}
+
+	private HistoryWorkQueue historyWorkQueue;
+
+	@Override
+	public HistoryWorkQueue getHistoryWorkQueue() {
+		if ( historyWorkQueue == null ) {
+			historyWorkQueue = new HistoryWorkQueue();
+		}
+		return historyWorkQueue;
 	}
 
 	@Override

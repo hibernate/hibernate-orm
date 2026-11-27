@@ -117,7 +117,7 @@ public non-sealed class Set extends Collection {
 						.determineUniqueKeyName( new ImplicitUniqueKeyNameSource() {
 							@Override
 							public Identifier getTableName() {
-								return getTable().getNameIdentifier();
+								return collectionTable.getNameIdentifier();
 							}
 
 							@Override

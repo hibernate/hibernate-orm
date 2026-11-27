@@ -234,6 +234,19 @@ Reducing its precision may change stored values, including values near a second 
 Declare precision seven or retain an appropriate explicit column definition when that existing storage
 precision is intended.
 
+[[set-collection-unique-key-name]]
+=== Unique key names of `Set` collection tables
+
+The unique key that Hibernate adds to the table of a `Set` collection is now named from the collection table
+instead of the owner entity table.
+Before, all the sets of an entity whose tables use the same column names got the same constraint name.
+On most databases, constraint names are unique in a schema, so the schema update created only one of these constraints.
+
+The generated names of these unique keys change.
+With `hibernate.hbm2ddl.auto=update`, a `Set` collection table which already has the unique key created by
+Hibernate 7.4 to 8.0 gets a second unique key with the new name.
+Drop the previous constraints if you do not need them.
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Dependency changes

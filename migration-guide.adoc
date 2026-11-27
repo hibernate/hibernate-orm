@@ -165,6 +165,9 @@ With the `HISTORY_TABLE` temporal strategy, a revision of an entity is now writt
 A flush writes only the table holding current data, so a query which reads the history table does not see the changes made earlier in the same transaction.
 The statement which ends a revision no longer checks the version of the revision, since the version of the current row was already checked when that row was written.
 Outside of a transaction, a revision is written immediately after its current row.
+A revision of an entity which is an element of a `@OneToMany` association now holds the join column and order column written by the association, which were previously null, and the entity is given a new revision whenever the association writes those columns.
+If the association is annotated `@Temporal.Excluded`, the columns are instead updated in the open revision of the entity.
+An association which writes the row of a versioned entity must be so annotated, since a version of an entity has one revision; otherwise the mapping is rejected when the session factory is built.
 
 [[audit-row-copy]]
 === Audit rows of an entity

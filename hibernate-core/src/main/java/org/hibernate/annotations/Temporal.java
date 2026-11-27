@@ -214,6 +214,12 @@ public @interface Temporal {
 	 * an attribute annotated {@link jakarta.persistence.ExcludedFromVersioning}
 	 * or {@link OptimisticLock @OptimisticLock(excluded = true)} must also be
 	 * annotated {@code @Temporal.Excluded}.
+	 * <p>With the history table strategy, a revision of an entity holds the
+	 * join column and order column which a {@link jakarta.persistence.OneToMany}
+	 * association writes to its row, and the entity is given a new revision
+	 * when they are written, unless the association is annotated
+	 * {@code @Temporal.Excluded}. The association must be so annotated if the
+	 * entity is versioned.
 	 * <p>For {@linkplain TemporalTableStrategy#NATIVE
 	 * native temporal tables}, this is only supported
 	 * if the database itself provides a way to exclude

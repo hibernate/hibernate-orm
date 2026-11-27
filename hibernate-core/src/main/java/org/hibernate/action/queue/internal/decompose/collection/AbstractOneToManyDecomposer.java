@@ -564,6 +564,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			SharedSessionContractImplementor session,
 			Consumer<FlushOperation> operationConsumer) {
 		contributeIndexChanges( collection, key, ordinalBase, session, operationConsumer );
+		contributeElementRevisions( collection, key, ordinalBase, session, operationConsumer );
 		mutationPlanContributor.contributeCollectionChange(
 				new CollectionMutationPlanContributor.CollectionChangeContext(
 						persister,
@@ -849,6 +850,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 
 		if ( !operations.isEmpty() ) {
 			contributeIndexChanges( collection, key, ordinalBase, session, operations::add );
+			contributeElementRevisions( collection, key, ordinalBase, session, operations::add );
 		}
 		operations.forEach( operationConsumer );
 	}
@@ -975,6 +977,35 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 								queue.getAuditMutationCollector()::indexedElementChanged );
 					}
 			) );
+		}
+	}
+
+	/// Records the elements whose rows are written by the planned operations,
+	/// when a revision of an element holds a column written by the collection.
+	private void contributeElementRevisions(PersistentCollection<?> collection, Object key, int ordinalBase,
+			SharedSessionContractImplementor session, Consumer<FlushOperation> operationConsumer) {
+		if ( persister.hasElementRevisions() ) {
+			// the snapshot of the collection is replaced when the operations complete
+			final var elements = persister.getWrittenElements( collection, key, session );
+			if ( !elements.isEmpty() ) {
+				operationConsumer.accept( DecompositionSupport.createNoOpCallbackCarrier(
+						persister.getCollectionTableDescriptor(),
+						ordinalBase * 1_000 + 900,
+						executionSession -> persister.recordElementRevisions( elements, executionSession )
+				) );
+			}
+		}
+	}
+
+	/// Records the elements whose rows are written by the removal of every row
+	/// of a collection, when a revision of an element holds a column written
+	/// by the collection. The elements are identified just before the removal.
+	protected final void recordRemovedElementRevisions(FlushOperation removeOperation, Object key) {
+		if ( persister.hasElementRevisions() ) {
+			removeOperation.setPreExecutionCallback( executionSession -> {
+				persister.recordElementRevisions( persister.getRemovedElements( key, executionSession ), executionSession );
+				return true;
+			} );
 		}
 	}
 

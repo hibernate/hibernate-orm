@@ -73,6 +73,7 @@ public class StandardOneToManyDecomposer extends AbstractOneToManyDecomposer {
 					action.getKey(),
 					persister.getRole()
 			);
+			recordRemovedElementRevisions( plannedOp, action.getKey() );
 			// and attach to the operation
 			plannedOp.setPostExecutionCallback( postRemoveHandling );
 			operationConsumer.accept( plannedOp );

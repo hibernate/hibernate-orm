@@ -1,6 +1,7 @@
 package org.hibernate.persister.entity.mutation;
 
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -58,9 +59,15 @@ public final class HistoryRevisionWriter extends AbstractAuxiliaryRowWriter {
 	private final MutationOperationGroup copyGroup;
 	/// The attributes whose columns the database may rewrite on any update of the current row.
 	private final BitSet generatedOnUpdate = new BitSet();
+	/// The columns of the current row which are copied to a revision.
+	private final Set<String> copiedColumns;
 	/// The columns which may be refreshed in an open revision.
 	private final Set<String> refreshableColumns;
-	private final Map<BitSet, MutationOperationGroup> refreshGroups = new ConcurrentHashMap<>();
+	private final Map<Refreshed, MutationOperationGroup> refreshGroups = new ConcurrentHashMap<>();
+
+	/// What is copied to an open revision: the columns of attributes, and columns of no attribute.
+	private record Refreshed(BitSet attributes, Set<String> columns) {
+	}
 
 	public HistoryRevisionWriter(@Nonnull EntityPersister entityPersister, @Nonnull SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
@@ -71,7 +78,8 @@ public final class HistoryRevisionWriter extends AbstractAuxiliaryRowWriter {
 		endBatchKey = new BasicBatchKey( entityName + "#HISTORY_END" );
 		copyBatchKey = new BasicBatchKey( entityName + "#HISTORY_COPY" );
 
-		refreshableColumns = new HashSet<>( temporalMapping.getCopiedColumns( currentTableMapping.getTableName() ) );
+		copiedColumns = Set.copyOf( temporalMapping.getCopiedColumns( currentTableMapping.getTableName() ) );
+		refreshableColumns = new HashSet<>( copiedColumns );
 		currentTableMapping.getKeyMapping().forEachKeyColumn( (position, key) -> refreshableColumns.remove( key.getColumnName() ) );
 		final var versionMapping = entityPersister.getVersionMapping();
 		if ( versionMapping != null ) {
@@ -88,6 +96,16 @@ public final class HistoryRevisionWriter extends AbstractAuxiliaryRowWriter {
 
 		endGroup = buildEndGroup( null );
 		copyGroup = buildCopyGroup();
+	}
+
+	/// Whether a revision holds a copy of any of the given columns of the current row.
+	public boolean copiesAny(@Nonnull List<String> columnNames) {
+		for ( String columnName : columnNames ) {
+			if ( copiedColumns.contains( columnName ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/// Ends the open revision, if there is one.
@@ -129,21 +147,33 @@ public final class HistoryRevisionWriter extends AbstractAuxiliaryRowWriter {
 		} );
 	}
 
-	/// Copies the columns of the given attributes from the current row to the open
-	/// revision, along with every column the database may have generated when that
-	/// row was updated. Used when a change does not warrant a new revision.
+	/// Copies the columns of the given attributes, and the given columns, from the
+	/// current row to the open revision, along with every column the database may
+	/// have generated when that row was updated. Used when a change does not warrant
+	/// a new revision.
 	///
+	/// @param columns columns of the current row which belong to no attribute
 	/// @param partitionKeys the partition key of the open revision, as far as it is known
 	public void refreshRevision(
 			@Nonnull Object id,
 			@Nonnull BitSet attributes,
+			@Nonnull Collection<SelectableMapping> columns,
 			@Nonnull List<PartitionKeyValue> partitionKeys,
 			@Nonnull SharedSessionContractImplementor session) {
 		final var copied = (BitSet) attributes.clone();
 		copied.or( generatedOnUpdate );
-		final var group = PartitionKeyValue.needsDynamicRestriction( entityPersister(), partitionKeys )
-				? buildRefreshGroup( copied, partitionKeys )
-				: refreshGroups.computeIfAbsent( copied, columns -> buildRefreshGroup( columns, null ) );
+		final MutationOperationGroup group;
+		if ( PartitionKeyValue.needsDynamicRestriction( entityPersister(), partitionKeys ) ) {
+			group = buildRefreshGroup( copied, columns, partitionKeys );
+		}
+		else {
+			final Set<String> columnNames = new HashSet<>();
+			for ( var column : columns ) {
+				columnNames.add( column.getSelectionExpression() );
+			}
+			group = refreshGroups.computeIfAbsent( new Refreshed( copied, columnNames ),
+					refreshed -> buildRefreshGroup( copied, columns, null ) );
+		}
 		if ( group.getNumberOfOperations() > 0 ) {
 			execute( group, null, session, bindings -> {
 				bindKey( id, bindings, historyTableMapping, session );
@@ -179,21 +209,20 @@ public final class HistoryRevisionWriter extends AbstractAuxiliaryRowWriter {
 
 	/// @param partitionKeys the partition key of the revision, or `null` for
 	///                      a parameter for each of its columns
-	private MutationOperationGroup buildRefreshGroup(BitSet attributes, @Nullable List<PartitionKeyValue> partitionKeys) {
+	private MutationOperationGroup buildRefreshGroup(
+			BitSet attributes, Collection<SelectableMapping> otherColumns,
+			@Nullable List<PartitionKeyValue> partitionKeys) {
 		final var builder =
 				new TableUpdateBuilderStandard<MutationOperation>( entityPersister(), historyTableMapping, factory() );
 		final Set<String> columns = new HashSet<>();
 		for ( int index = attributes.nextSetBit( 0 ); index >= 0; index = attributes.nextSetBit( index + 1 ) ) {
 			final var attribute = entityPersister().getAttributeMapping( index );
 			if ( !attribute.isPluralAttributeMapping() ) {
-				attribute.forEachSelectable( (position, column) -> {
-					if ( !column.isFormula()
-							&& refreshableColumns.contains( column.getSelectionExpression() )
-							&& columns.add( column.getSelectionExpression() ) ) {
-						builder.addValueColumn( currentValueBinding( builder.getMutatingTable(), column ) );
-					}
-				} );
+				attribute.forEachSelectable( (position, column) -> refreshColumn( column, columns, builder ) );
 			}
+		}
+		for ( var column : otherColumns ) {
+			refreshColumn( column, columns, builder );
 		}
 		if ( columns.isEmpty() ) {
 			return noOperations( MutationType.UPDATE, entityPersister() );
@@ -202,6 +231,15 @@ public final class HistoryRevisionWriter extends AbstractAuxiliaryRowWriter {
 		builder.addNullRestriction( temporalMapping.getEndingColumnMapping() );
 		applyPartitionKeyRestriction( builder, currentTableMapping.getTableName(), partitionKeys, TableMapping::getUpdateDetails );
 		return createOperationGroup( MutationType.UPDATE, List.of( builder.buildMutation() ) );
+	}
+
+	private void refreshColumn(
+			SelectableMapping column, Set<String> columns, TableUpdateBuilderStandard<MutationOperation> builder) {
+		if ( !column.isFormula()
+				&& refreshableColumns.contains( column.getSelectionExpression() )
+				&& columns.add( column.getSelectionExpression() ) ) {
+			builder.addValueColumn( currentValueBinding( builder.getMutatingTable(), column ) );
+		}
 	}
 
 	/// Assigns a column of the history table the value held by the current row.

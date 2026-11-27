@@ -11,6 +11,7 @@ import org.hibernate.Incubating;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TransactionCompletionCallbacks;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.mutation.HistoryRevisionWriter;
 import org.hibernate.persister.entity.mutation.PartitionKeyValue;
 
@@ -58,6 +59,21 @@ public class HistoryWorkQueue implements TransactionCompletionCallbacks.BeforeCo
 			List<PartitionKeyValue> partitionKeys,
 			HistoryRevisionWriter writer, SharedSessionContractImplementor session) {
 		add( id, Change.updated( writer, newRevision, dirtyAttributes, partitionKeys ), session );
+	}
+
+	/// Record that an association wrote columns of the current row of an entity,
+	/// without the entity itself being updated.
+	///
+	/// @param newRevision whether the write warrants a new revision; if not, the
+	///                    columns are copied to the open revision
+	/// @param columns the columns which were written
+	/// @param partitionKeys the partition key of the row before it was written, as far as it is known
+	public void entityRowWritten(
+			Object id,
+			boolean newRevision, List<SelectableMapping> columns,
+			List<PartitionKeyValue> partitionKeys,
+			HistoryRevisionWriter writer, SharedSessionContractImplementor session) {
+		add( id, Change.rowWritten( writer, newRevision, columns, partitionKeys ), session );
 	}
 
 	/// Record the deletion of the current row of an entity.
@@ -110,7 +126,8 @@ public class HistoryWorkQueue implements TransactionCompletionCallbacks.BeforeCo
 					change.writer.copyRevision( id, session );
 				}
 				else if ( change.refreshesRevision() ) {
-					change.writer.refreshRevision( id, change.refreshedAttributes, change.partitionKeys, session );
+					change.writer.refreshRevision( id, change.refreshedAttributes,
+							change.refreshedColumns.values(), change.partitionKeys, session );
 				}
 			}
 			session.getJdbcCoordinator().executeBatch();
@@ -135,6 +152,8 @@ public class HistoryWorkQueue implements TransactionCompletionCallbacks.BeforeCo
 	/// @param newRevision whether some change warrants a new revision
 	/// @param refreshedAttributes the attributes modified by changes which do
 	///                            not warrant a new revision
+	/// @param refreshedColumns columns of no attribute, written by changes which
+	///                         do not warrant a new revision, by name
 	/// @param partitionKeys the partition key of the revision which was open
 	///                      when the changeset began, as far as it is known
 	private record Change(
@@ -144,11 +163,12 @@ public class HistoryWorkQueue implements TransactionCompletionCallbacks.BeforeCo
 			boolean exists,
 			boolean newRevision,
 			BitSet refreshedAttributes,
+			Map<String, SelectableMapping> refreshedColumns,
 			List<PartitionKeyValue> partitionKeys) {
 		private static final BitSet NONE = new BitSet( 0 );
 
 		static Change inserted(HistoryRevisionWriter writer) {
-			return new Change( writer, writer, false, true, true, NONE, List.of() );
+			return new Change( writer, writer, false, true, true, NONE, Map.of(), List.of() );
 		}
 
 		static Change updated(
@@ -164,11 +184,24 @@ public class HistoryWorkQueue implements TransactionCompletionCallbacks.BeforeCo
 					attributes.set( index );
 				}
 			}
-			return new Change( writer, writer, true, true, newRevision, attributes, partitionKeys );
+			return new Change( writer, writer, true, true, newRevision, attributes, Map.of(), partitionKeys );
+		}
+
+		static Change rowWritten(
+				HistoryRevisionWriter writer, boolean newRevision, List<SelectableMapping> columns,
+				List<PartitionKeyValue> partitionKeys) {
+			if ( newRevision ) {
+				return updated( writer, true, null, partitionKeys );
+			}
+			final Map<String, SelectableMapping> written = new LinkedHashMap<>();
+			for ( var column : columns ) {
+				written.put( column.getSelectionExpression(), column );
+			}
+			return new Change( writer, writer, true, true, false, NONE, written, partitionKeys );
 		}
 
 		static Change deleted(HistoryRevisionWriter writer, List<PartitionKeyValue> partitionKeys) {
-			return new Change( writer, writer, true, false, false, NONE, partitionKeys );
+			return new Change( writer, writer, true, false, false, NONE, Map.of(), partitionKeys );
 		}
 
 		Change followedBy(Change next) {
@@ -183,6 +216,17 @@ public class HistoryWorkQueue implements TransactionCompletionCallbacks.BeforeCo
 				attributes = (BitSet) refreshedAttributes.clone();
 				attributes.or( next.refreshedAttributes );
 			}
+			final Map<String, SelectableMapping> columns;
+			if ( next.refreshedColumns.isEmpty() ) {
+				columns = refreshedColumns;
+			}
+			else if ( refreshedColumns.isEmpty() ) {
+				columns = next.refreshedColumns;
+			}
+			else {
+				columns = new LinkedHashMap<>( refreshedColumns );
+				columns.putAll( next.refreshedColumns );
+			}
 			return new Change(
 					initialWriter,
 					next.writer,
@@ -191,6 +235,7 @@ public class HistoryWorkQueue implements TransactionCompletionCallbacks.BeforeCo
 					// a row which was removed and created again is a new revision
 					newRevision || next.newRevision || !exists && next.exists,
 					attributes,
+					columns,
 					partitionKeys
 			);
 		}
@@ -204,7 +249,8 @@ public class HistoryWorkQueue implements TransactionCompletionCallbacks.BeforeCo
 		}
 
 		boolean refreshesRevision() {
-			return exists && hadRevision && !newRevision && !refreshedAttributes.isEmpty();
+			return exists && hadRevision && !newRevision
+				&& ( !refreshedAttributes.isEmpty() || !refreshedColumns.isEmpty() );
 		}
 	}
 }

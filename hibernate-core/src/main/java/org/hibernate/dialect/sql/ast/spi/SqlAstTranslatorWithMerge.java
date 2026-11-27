@@ -65,11 +65,17 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 		if ( update.getMutationTarget() instanceof EntityMutationTarget entity
 				&& update.getMutatingTable().getTableName().equals( entity.getIdentifierTableName() ) ) {
 			final var persister = entity.getTargetPart().getEntityPersister();
-			if ( update.hasConditionalVersionAssignment() ) {
+			if ( update.hasConditionalVersionAssignment()
+					|| supportsReturningGeneratedValuesFromUpsert() && persister.hasUpsertGeneratedProperties() ) {
 				return persister.getUpdateDelegate();
 			}
 		}
 		return null;
+	}
+
+	/// Whether the identifier-table upsert can use this dialect's normal update returning mechanism.
+	protected boolean supportsReturningGeneratedValuesFromUpsert() {
+		return false;
 	}
 
 	protected Expectation expectation(OptionalTableUpdate optionalTableUpdate) {

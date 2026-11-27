@@ -149,6 +149,22 @@ class TemporalGeneratedTimestampHistoryTest {
 	}
 
 	@Test
+	void statelessUpsertReturnsTheStoredTimestampVersion(SessionFactoryScope scope) {
+		var item = new Versioned();
+		scope.inStatelessTransaction( session -> session.upsert( item ) );
+		assertNotNull( item.version );
+		scope.inSession( session -> assertEquals( session.find( Versioned.class, item.id ).version, item.version ) );
+
+		item.quantity++;
+		scope.inStatelessTransaction( session -> session.upsert( item ) );
+		scope.inSession( session -> {
+			var stored = session.find( Versioned.class, item.id );
+			assertEquals( 1, stored.quantity );
+			assertEquals( stored.version, item.version );
+		} );
+	}
+
+	@Test
 	void databaseGeneratedVersionAcrossFlushes(SessionFactoryScope scope) {
 		var first = scope.fromTransaction( session -> {
 			session.persist( new Versioned() );

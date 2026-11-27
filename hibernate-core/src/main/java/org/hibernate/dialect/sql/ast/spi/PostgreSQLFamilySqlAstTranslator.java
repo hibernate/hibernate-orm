@@ -23,6 +23,11 @@ public abstract class PostgreSQLFamilySqlAstTranslator<T extends JdbcOperation> 
 	}
 
 	@Override
+	protected boolean supportsReturningGeneratedValuesFromUpsert() {
+		return true;
+	}
+
+	@Override
 	@SPI(IMPLEMENT)
 	protected void renderTableReferenceAlias(String alias, TableReferenceAliasContext context) {
 		if ( context == TableReferenceAliasContext.INSERT_TARGET ) {

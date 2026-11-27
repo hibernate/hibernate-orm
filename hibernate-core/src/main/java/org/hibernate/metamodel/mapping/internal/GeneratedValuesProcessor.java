@@ -58,16 +58,29 @@ public class GeneratedValuesProcessor {
 	@Nullable private final JdbcParametersList jdbcParameters;
 
 	private final EntityPersister entityDescriptor;
+	private final boolean upsert;
+
+	public static GeneratedValuesProcessor forUpsert(
+			EntityPersister persister, List<AttributeMapping> attributes, SessionFactoryImplementor factory) {
+		return new GeneratedValuesProcessor( persister, attributes, EventType.UPDATE, factory, true );
+	}
 
 	public GeneratedValuesProcessor(
 			EntityPersister entityDescriptor,
 			List<AttributeMapping> generatedAttributes,
 			EventType timing,
 			SessionFactoryImplementor sessionFactory) {
+		this( entityDescriptor, generatedAttributes, timing, sessionFactory, false );
+	}
+
+	private GeneratedValuesProcessor(
+			EntityPersister entityDescriptor, List<AttributeMapping> generatedAttributes,
+			EventType timing, SessionFactoryImplementor sessionFactory, boolean upsert) {
 		this.entityDescriptor = entityDescriptor;
+		this.upsert = upsert;
 
 		generatedValuesToSelect = generatedAttributes;
-		if ( generatedValuesToSelect.isEmpty() || !needsSubsequentSelect( timing, generatedAttributes ) ) {
+		if ( generatedValuesToSelect.isEmpty() || !upsert && !needsSubsequentSelect( timing, generatedAttributes ) ) {
 			selectStatement = null;
 			jdbcSelect = null;
 			jdbcParameters = null;
@@ -161,15 +174,16 @@ public class GeneratedValuesProcessor {
 			@Nullable GeneratedValues generatedValues,
 			SharedSessionContractImplementor session) {
 		if ( hasActualGeneratedValuesToSelect( session, entity ) ) {
-			if ( selectStatement != null ) {
+			// An emulated upsert may return fewer columns than a native one on the same mapping.
+			if ( generatedValues != null && ( selectStatement == null
+					|| upsert && generatedValuesToSelect.stream().allMatch( generatedValues::containsGeneratedValue ) ) ) {
+				final var results = generatedValues.getGeneratedValues( generatedValuesToSelect );
+				setEntityAttributes( entity, state, results.toArray( new Object[0] ) );
+			}
+			else if ( selectStatement != null ) {
 				final var results = executeSelect( id, session );
 				assert results.size() == 1;
 				setEntityAttributes( entity, state, results.get( 0 ) );
-			}
-			else if ( generatedValues != null ) {
-				// can be null when an update action resulted in a no-op (e.g. only changes to unowned association)
-				final var results = generatedValues.getGeneratedValues( generatedValuesToSelect );
-				setEntityAttributes( entity, state, results.toArray( new Object[0] ) );
 			}
 		}
 	}

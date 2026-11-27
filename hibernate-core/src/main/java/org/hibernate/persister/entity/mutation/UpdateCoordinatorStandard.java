@@ -141,6 +141,14 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		return versionUpdateGroup;
 	}
 
+	@Override
+	protected BatchKeyAccess resolveBatchKeyAccess(boolean dynamicUpdate, @Nonnull SharedSessionContractImplementor session) {
+		// Stateless writes must execute before post-write processing reads generated attributes.
+		return session.isStateless() && entityPersister().hasUpdateGeneratedProperties()
+				? NoBatchKeyAccess.INSTANCE
+				: super.resolveBatchKeyAccess( dynamicUpdate, session );
+	}
+
 	@Nullable
 	protected BatchKey getBatchKey() {
 		return batchKey;

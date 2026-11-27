@@ -55,6 +55,11 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 	}
 
 	@Override
+	protected boolean supportsReturningGeneratedValuesFromUpsert() {
+		return true;
+	}
+
+	@Override
 	@SPI({ SPI.Role.IMPLEMENT, SPI.Role.SUPPLY })
 	protected SelectItemReferenceStrategy getGroupBySelectItemReferenceStrategy() {
 		return SelectItemReferenceStrategy.ALIAS;

@@ -476,6 +476,8 @@ public abstract class AbstractEntityPersister
 	private GeneratedValuesProcessor insertGeneratedValuesProcessor;
 	@Nullable
 	private GeneratedValuesProcessor updateGeneratedValuesProcessor;
+	@Nullable
+	private GeneratedValuesProcessor upsertGeneratedValuesProcessor;
 
 	@Nullable
 	private GeneratedValuesMutationDelegate insertDelegate;
@@ -3920,6 +3922,13 @@ public abstract class AbstractEntityPersister
 		if ( hasUpdateGeneratedProperties() ) {
 			updateGeneratedValuesProcessor =
 					createGeneratedValuesProcessor( UPDATE, updateGeneratedAttributes );
+			// A native upsert does not tell us which arm ran. These attributes are generated in both.
+			final var upsertAttributes = updateGeneratedAttributes.stream()
+					.filter( insertGeneratedAttributes::contains )
+					.toList();
+			if ( !upsertAttributes.isEmpty() ) {
+				upsertGeneratedValuesProcessor = GeneratedValuesProcessor.forUpsert( this, upsertAttributes, getFactory() );
+			}
 		}
 
 		if ( getAuditMapping() != null ) {
@@ -5666,6 +5675,20 @@ public abstract class AbstractEntityPersister
 			throw new AssertionFailure( "Entity has no update-generated properties - '" + getEntityName() + "'" );
 		}
 		updateGeneratedValuesProcessor.processGeneratedValues( entity, id, state, generatedValues, session );
+	}
+
+	@Override
+	public boolean hasUpsertGeneratedProperties() {
+		return upsertGeneratedValuesProcessor != null;
+	}
+
+	@Override
+	public void processUpsertGeneratedProperties(
+			@Nonnull Object id, @Nonnull Object entity, @Nonnull Object[] state,
+			@Nullable GeneratedValues generatedValues, @Nonnull SharedSessionContractImplementor session) {
+		if ( upsertGeneratedValuesProcessor != null ) {
+			upsertGeneratedValuesProcessor.processGeneratedValues( entity, id, state, generatedValues, session );
+		}
 	}
 
 	@Nonnull

@@ -115,6 +115,7 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 
 		final var roots = querySpec.getFromClause().getRoots();
 		final var movedJoins = collectMovedJoins( primaryRoot );
+
 		// Aliases that will still be directly reachable from the outer query after
 		// the plural fetch joins are moved there. Anything else referenced by the
 		// outer query has to be projected through the derived table first.

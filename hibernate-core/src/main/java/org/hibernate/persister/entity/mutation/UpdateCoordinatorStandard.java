@@ -2148,7 +2148,9 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					.buildTranslator( new SqlAstTranslationRequest.ModelMutation<>( factory(), updateBuilder.buildMutation() ) )
 					.translate( null, MutationQueryOptions.INSTANCE );
 
-			return MutationOperationGroupFactory.singleOperation( MutationType.UPDATE, entityPersister(), jdbcMutation );
+			// The update delegate did not build this statement, and its generated values are not needed.
+			return MutationOperationGroupFactory.singleOperationWithoutDelegate(
+					MutationType.UPDATE, entityPersister(), jdbcMutation );
 		}
 	}
 

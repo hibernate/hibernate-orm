@@ -3,6 +3,7 @@ package org.hibernate.metamodel.mapping;
 import jakarta.annotation.Nonnull;
 
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.Incubating;
 import org.hibernate.audit.spi.AuditEntityLoader;
@@ -56,6 +57,11 @@ public interface AuditMapping extends AuxiliaryMapping {
 	 */
 	@Nullable
 	SelectableMapping getInvalidatingChangesetIdMapping(@Nonnull String originalTableName);
+
+	/** Columns computed by the audit table itself. */
+	default Set<String> getComputedColumns(String originalTableName) {
+		return Set.of();
+	}
 
 	/** Columns of this entity table written by audited inverse collections. */
 	default List<SelectableMapping> getCollectionIndexColumns(String originalTableName) {

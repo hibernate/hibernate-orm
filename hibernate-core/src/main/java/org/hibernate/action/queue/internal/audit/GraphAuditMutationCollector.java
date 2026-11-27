@@ -200,13 +200,9 @@ public class GraphAuditMutationCollector {
 		int ordinal = operations.size();
 		for ( var change : changes ) {
 			final EntityAuditSupport mutationSupport = change.entityAuditHandler();
-			final boolean[] propertyInclusions = mutationSupport.resolvePropertyInclusions(
-					change.entity(),
-					change.values(),
-					session
-			);
+			final boolean[] propertyInclusions = mutationSupport.resolvePropertyInclusions( change.values() );
 			for ( var plan :
-					mutationSupport.resolveAuditInsertPlans( propertyInclusions, change.entity(), session ) ) {
+					mutationSupport.resolveAuditInsertPlans( propertyInclusions, change.modificationType() ) ) {
 				final var graphPlan = new EntityAuditInsertPlan( mutationSupport, plan );
 				final var operation = plan.operation();
 				operations.add( new FlushOperation(

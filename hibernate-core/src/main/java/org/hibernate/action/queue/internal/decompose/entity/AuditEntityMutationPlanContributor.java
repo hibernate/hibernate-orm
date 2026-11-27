@@ -71,9 +71,10 @@ public class AuditEntityMutationPlanContributor implements EntityMutationPlanCon
 			DeleteContext context,
 			Consumer<FlushOperation> operationConsumer) {
 		final var entityEntry = context.session().getPersistenceContextInternal().getEntry( context.action().getInstance() );
-		final Object[] deleteState = entityEntry != null && entityEntry.getLoadedState() != null
-				? entityEntry.getLoadedState()
-				: context.state();
+		final var loadedState = entityEntry == null ? null : entityEntry.getLoadedState();
+		final Object[] deleteState = entityAuditSupport.deletionState(
+				resolveEntityKey( context.identifier(), context.session() ),
+				loadedState == null ? context.state() : loadedState, loadedState != null, context.session() );
 
 		operationConsumer.accept( createAuditCallbackCarrier(
 				context.ordinalBase(),

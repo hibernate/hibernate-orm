@@ -5,6 +5,7 @@ import jakarta.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -80,11 +81,12 @@ public class AuditMappingImpl implements AuditMapping {
 			SelectableMapping changesetIdMapping,
 			@Nullable SelectableMapping modificationTypeMapping,
 			@Nullable SelectableMapping invalidatingChangesetMapping,
-			List<SelectableMapping> collectionIndexColumns
+			List<SelectableMapping> collectionIndexColumns,
+			Set<String> computedColumns
 	) {
 		public TableAuditInfo(String auditTableName, SelectableMapping changesetIdMapping,
 				@Nullable SelectableMapping modificationTypeMapping, @Nullable SelectableMapping invalidatingChangesetMapping) {
-			this( auditTableName, changesetIdMapping, modificationTypeMapping, invalidatingChangesetMapping, List.of() );
+			this( auditTableName, changesetIdMapping, modificationTypeMapping, invalidatingChangesetMapping, List.of(), Set.of() );
 		}
 	}
 
@@ -163,6 +165,11 @@ public class AuditMappingImpl implements AuditMapping {
 							+ "' (known tables: " + tableAuditInfoMap.keySet() + ")" );
 		}
 		return info;
+	}
+
+	@Override
+	public Set<String> getComputedColumns(String originalTableName) {
+		return resolveInfo( originalTableName ).computedColumns();
 	}
 
 	@Override

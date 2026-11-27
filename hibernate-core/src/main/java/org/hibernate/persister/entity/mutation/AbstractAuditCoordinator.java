@@ -29,6 +29,9 @@ import org.hibernate.sql.model.MutationOperationGroup;
 abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator implements AuditWriter {
 	protected final BasicBatchKey auditBatchKey;
 	private final BasicBatchKey transactionEndBatchKey;
+	private final BasicBatchKey deletionBatchKey;
+	@Nullable
+	private final MutationOperationGroup staticDeletionGroup;
 	protected final boolean[] auditedPropertyMask;
 	@Nullable
 	private final MutationOperationGroup staticAuditInsertGroup;
@@ -42,10 +45,14 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 		this.auditedPropertyMask = entityAuditSupport.getAuditedPropertyMask();
 		this.auditBatchKey = new BasicBatchKey( entityPersister.getEntityName() + "#AUDIT_INSERT" );
 		this.transactionEndBatchKey = new BasicBatchKey( entityPersister.getEntityName() + "#AUDIT_TRANSACTION_END" );
-		final var staticAuditInsertMutationGroup = entityAuditSupport.getStaticAuditInsertMutationGroup();
+		final var staticAuditInsertMutationGroup = entityAuditSupport.getStaticAuditInsertMutationGroup( ModificationType.ADD );
 		this.staticAuditInsertGroup = staticAuditInsertMutationGroup == null
 				? null
 				: createOperationGroup( null, staticAuditInsertMutationGroup );
+		final var deletionGroup = entityAuditSupport.getStaticAuditInsertMutationGroup( ModificationType.DEL );
+		this.staticDeletionGroup = deletionGroup == staticAuditInsertMutationGroup
+				? staticAuditInsertGroup : createOperationGroup( null, deletionGroup );
+		this.deletionBatchKey = new BasicBatchKey( entityPersister.getEntityName() + "#AUDIT_DELETE" );
 		this.transactionEndUpdateGroup = entityAuditSupport.getTransactionEndUpdateMutationGroup() == null
 				? null
 				: createOperationGroup( null, entityAuditSupport.getTransactionEndUpdateMutationGroup() );
@@ -100,19 +107,21 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 		updatePreviousTransactionEnd( id, modificationType, session );
 
 		final boolean dynamicInsert = entityPersister().isDynamicInsert();
-		final boolean[] propertyInclusions = entityAuditSupport.resolvePropertyInclusions( entity, values, session );
+		final boolean[] propertyInclusions = entityAuditSupport.resolvePropertyInclusions( values );
 		final var mutationGroup = dynamicInsert
-				? entityAuditSupport.resolveAuditInsertMutationGroup( propertyInclusions, entity, session )
+				? entityAuditSupport.resolveAuditInsertMutationGroup( propertyInclusions, modificationType )
 				: null;
 		final MutationOperationGroup operationGroup = dynamicInsert
 				? mutationGroup == null ? null : createOperationGroup( null, mutationGroup )
-				: staticAuditInsertGroup;
+				: modificationType == ModificationType.DEL ? staticDeletionGroup : staticAuditInsertGroup;
 		if ( operationGroup == null ) {
 			return;
 		}
 
+		final var batchKeyAccess = resolveBatchKeyAccess( dynamicInsert, session );
 		final var mutationExecutor = mutationExecutorService.createExecutor(
-				resolveBatchKeyAccess( dynamicInsert, session ),
+				operationGroup != staticAuditInsertGroup && batchKeyAccess.getBatchKey() != null
+						? () -> deletionBatchKey : batchKeyAccess,
 				operationGroup,
 				session
 		);

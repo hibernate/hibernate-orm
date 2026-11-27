@@ -39,6 +39,12 @@ public class AuditChangeSet<E, C> {
 	private final Map<EntityKey, MutableEntityChange<E>> entityChanges = new LinkedHashMap<>();
 	private final Map<CollectionKey, CollectionChange<C>> collectionChanges = new LinkedHashMap<>();
 
+	/// A delete cancels a pending addition and needs no audit snapshot.
+	public boolean hasPendingAddition(EntityKey key) {
+		final var change = entityChanges.get( key );
+		return change != null && change.modificationType == ModificationType.ADD;
+	}
+
 	/// Add or merge an entity audit change.
 	///
 	/// If this is the first change for `entityKey`, it is stored as-is.

@@ -48,6 +48,11 @@ public class AuditWorkQueue implements TransactionCompletionCallbacks.BeforeComp
 	private @Nullable Session changesetSession;
 	private boolean registered;
 
+	/// A delete cancels a pending addition and needs no audit snapshot.
+	public boolean hasPendingAddition(EntityKey key) {
+		return changeSet.hasPendingAddition( key );
+	}
+
 	/**
 	 * Enqueue an audit entry for deferred writing. If an entry
 	 * for the same entity already exists, the entries are merged.

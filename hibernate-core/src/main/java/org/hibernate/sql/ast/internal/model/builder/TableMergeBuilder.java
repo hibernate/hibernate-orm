@@ -1,6 +1,7 @@
 package org.hibernate.sql.ast.internal.model.builder;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.sql.ast.spi.model.builder.AbstractTableUpdateBuilder;
 import org.hibernate.sql.spi.mutation.MutationOperation;
@@ -30,6 +31,14 @@ public class TableMergeBuilder<O extends MutationOperation> extends AbstractTabl
 	@Override
 	protected EntityMutationTarget getMutationTarget() {
 		return (EntityMutationTarget) super.getMutationTarget();
+	}
+
+	@Override
+	public void addUpdateOnlyColumn(SelectableMapping column) {
+		if ( includesColumn( column ) ) {
+			final var binding = createValueBinding( column.getWriteExpression(), column );
+			addColumnAssignment( new ColumnValueBinding( binding.getColumnReference(), binding.getValueExpression(), false ) );
+		}
 	}
 
 	@SuppressWarnings("unchecked")

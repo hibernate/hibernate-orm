@@ -1140,14 +1140,9 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 			&& context.isCdiAvailable(); // CDI
 	}
 
-	void addEventBus() {
-		putMember( "<event>", new EventField( this ) );
-	}
-
 	private void addLifecycleEventListener() {
 		lifecycleEventListener = true;
-		addEventBus();
-		addLifecycleEventCallbacks( getQualifiedName() );
+		addLifecycleEventCallbacks();
 	}
 
 	/**
@@ -2345,27 +2340,24 @@ public class AnnotationMetaEntity extends AnnotationMeta implements AnnotationMe
 		}
 	}
 
-	private void addLifecycleEventCallbacks(String entity) {
-		addLifecycleEventCallbacks( entity, PRE_INSERT, "PreInsertEvent", POST_INSERT, "PostInsertEvent" );
-		addLifecycleEventCallbacks( entity, PRE_UPDATE, "PreUpdateEvent", POST_UPDATE, "PostUpdateEvent" );
-		addLifecycleEventCallbacks( entity, PRE_DELETE, "PreDeleteEvent", POST_DELETE, "PostDeleteEvent" );
-		addLifecycleEventCallbacks( entity, PRE_UPSERT, "PreUpsertEvent", POST_UPSERT, "PostUpsertEvent" );
-	}
-
-	private void addLifecycleEventCallbacks(
-			String entity,
-			String preCallback,
-			String preEventType,
-			String postCallback,
-			String postEventType) {
-		addLifecycleEventCallback( entity, preCallback, preEventType );
-		addLifecycleEventCallback( entity, postCallback, postEventType );
-	}
-
-	private void addLifecycleEventCallback(String entity, String callback, String eventType) {
-		lifecycleEventListener = true;
-		members.putIfAbsent( "event." + eventType + '.' + entity,
-				new LifecycleEventCallback( this, entity, callback, eventType ) );
+	private void addLifecycleEventCallbacks() {
+		final var fieldNames = new HashSet<String>();
+		for ( var member : members.values() ) {
+			if ( member instanceof DataAnnotationMetaAttribute attribute ) {
+				fieldNames.add( attribute.getPropertyName().replace( '.', '_' ) );
+			}
+		}
+		String eventFieldName = "event";
+		while ( !fieldNames.add( eventFieldName ) ) {
+			eventFieldName += "$";
+		}
+		members.putIfAbsent( "<event>", new EventField( this, getQualifiedName(), eventFieldName ) );
+		for ( String callback : List.of( PRE_INSERT, POST_INSERT, PRE_UPDATE, POST_UPDATE,
+				PRE_DELETE, POST_DELETE, PRE_UPSERT, POST_UPSERT ) ) {
+			final var callbackName = unqualify( callback );
+			members.putIfAbsent( "event." + callbackName,
+					new LifecycleEventCallback( this, getQualifiedName(), callback, callbackName, eventFieldName ) );
+		}
 	}
 
 	private boolean validateLifecycleReturnType(

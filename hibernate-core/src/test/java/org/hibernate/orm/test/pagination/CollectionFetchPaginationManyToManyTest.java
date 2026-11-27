@@ -14,6 +14,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.FilterJoinTable;
+import org.hibernate.annotations.ParamDef;
 import org.hibernate.cfg.QuerySettings;
 
 import org.hibernate.dialect.HSQLDialect;
@@ -154,6 +157,22 @@ public class CollectionFetchPaginationManyToManyTest {
 	}
 
 	@Test
+	void fetchJoinPaginationUsesLinkFilterInInnerAndOuterQuery(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.enableFilter( "pageByBook" ).setParameter( "book", "ssn-3" );
+			final var authors = session.createSelectionQuery(
+					"from Author a join fetch a.books order by a.authorId",
+					Author.class
+			).setFirstResult( 1 ).setMaxResults( 1 ).list();
+
+			assertEquals( 1, authors.size() );
+			assertEquals( 2L, authors.get( 0 ).getAuthorId() );
+			assertEquals( 1, authors.get( 0 ).getBooks().size() );
+			assertTrue( authors.get( 0 ).containsBook( "ssn-3" ) );
+		} );
+	}
+
+	@Test
 	void fetchLeftJoinWithMaxResults(SessionFactoryScope scope) {
 		final var sql = scope.getCollectingStatementObserver();
 		scope.inTransaction( session -> {
@@ -275,12 +294,14 @@ public class CollectionFetchPaginationManyToManyTest {
 
 	@Entity(name = "Author")
 	@Table(name = "author_entity")
+	@FilterDef(name = "pageByBook", parameters = @ParamDef(name = "book", type = String.class))
 	public static class Author {
 		@Id
 		private Long authorId;
 		private String name;
 
 		@ManyToMany(mappedBy = "authors")
+		@FilterJoinTable(name = "pageByBook", condition = "book_id = :book")
 		private Set<Book> books = new HashSet<>();
 
 		@OneToMany(mappedBy = "author", cascade = CascadeType.ALL)

@@ -1,5 +1,7 @@
 package org.hibernate.pretty;
 
+import java.util.Arrays;
+
 import org.hibernate.Internal;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.EntityEntry;
@@ -24,6 +26,36 @@ import jakarta.annotation.Nullable;
 public final class MessageHelper {
 
 	private MessageHelper() {
+	}
+
+
+	/**
+	 * Render a natural id using its mapped types without traversing associated entities.
+	 */
+	public static String naturalIdToLoggableString(
+			@Nullable Object naturalId, EntityMappingType entityDescriptor, SessionFactoryImplementor factory) {
+		final var naturalIdMapping = entityDescriptor.getNaturalIdMapping();
+		if ( naturalId == null || naturalIdMapping == null ) {
+			return String.valueOf( naturalId );
+		}
+		final var attributes = naturalIdMapping.getNaturalIdAttributes();
+		final var propertyTypes = entityDescriptor.getEntityPersister().getPropertyTypes();
+		if ( attributes.size() == 1 ) {
+			// A simple natural id may be wrapped, but an array may itself be its scalar value.
+			if ( naturalId instanceof Object[] values && values.length == 1
+					&& !naturalIdMapping.isNormalized( naturalId ) ) {
+				naturalId = values[0];
+			}
+			return propertyTypes[attributes.get( 0 ).getStateArrayPosition()]
+					.toLoggableString( naturalId, factory );
+		}
+		final var values = (Object[]) naturalId;
+		final var loggableValues = new String[attributes.size()];
+		for ( int i = 0; i < attributes.size(); i++ ) {
+			loggableValues[i] = propertyTypes[attributes.get( i ).getStateArrayPosition()]
+					.toLoggableString( values[i], factory );
+		}
+		return Arrays.toString( loggableValues );
 	}
 
 

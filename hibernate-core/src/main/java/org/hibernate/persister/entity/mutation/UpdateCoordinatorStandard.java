@@ -895,7 +895,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		if ( needsDynamicUpdate || generatedInSql || inclusionChecker.include( attributeIndex, attributeMapping ) ) {
 			final int jdbcTypeCount = attributeMapping.getJdbcTypeCount();
 			for ( int i = 0; i < jdbcTypeCount; i++ ) {
-				processSet( analysis, attributeMapping.getSelectable( i ), needsDynamicUpdate );
+				processSet( analysis, attributeMapping, attributeMapping.getSelectable( i ), needsDynamicUpdate );
 			}
 		}
 
@@ -921,8 +921,12 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 	}
 
-	private void processSet(@Nonnull UpdateValuesAnalysisImpl analysis, @Nullable SelectableMapping selectable, boolean needsDynamicUpdate) {
-		if ( selectable != null && !selectable.isFormula() && isColumnIncludedInSet( selectable )
+	private void processSet(
+			@Nonnull UpdateValuesAnalysisImpl analysis,
+			@Nonnull AttributeMapping attribute,
+			@Nullable SelectableMapping selectable,
+			boolean needsDynamicUpdate) {
+		if ( selectable != null && !selectable.isFormula() && isColumnIncludedInSet( attribute, selectable )
 				&& analysis.filteredAssociations.includesColumn( selectable ) ) {
 			final var tableMapping = physicalTableMappingForMutation( entityPersister(), selectable );
 			analysis.registerColumnSet( tableMapping, selectable.getSelectionExpression(), selectable.getWriteExpression() );
@@ -934,6 +938,11 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 	protected boolean isColumnIncludedInSet(@Nonnull SelectableMapping selectable) {
 		return selectable.isUpdateable();
+	}
+
+	/// Whether the statement assigns the given column of the given attribute.
+	protected boolean isColumnIncludedInSet(@Nonnull AttributeMapping attribute, @Nonnull SelectableMapping selectable) {
+		return isColumnIncludedInSet( selectable );
 	}
 
 	@Nonnull
@@ -1182,7 +1191,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				tableMapping,
 				(valueIndex, bindings, table, jdbcValue, jdbcMapping) -> {
 					if ( !jdbcMapping.isFormula()
-							&& isColumnIncludedInSet( jdbcMapping )
+							&& isColumnIncludedInSet( attributeMapping, jdbcMapping )
 							&& filteredAssociations.includesColumn( jdbcMapping )
 							&& shouldBindValue( onExecutionGenerator, columnValues, columnInclusions, bindAllValues, valueIndex )
 							// a merge which matches the row by its partition key does not assign it

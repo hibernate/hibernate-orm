@@ -4,9 +4,11 @@ import java.util.List;
 
 import jakarta.annotation.Nullable;
 import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.aggregate.spi.AggregateArrayElementDescriptor;
 import org.hibernate.dialect.aggregate.spi.AggregateColumnDescriptor;
 import org.hibernate.mapping.AggregateColumn;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
@@ -52,6 +54,22 @@ public final class AggregateColumnDescriptorAdapter implements AggregateColumnDe
 	public static int effectiveSqlTypeCode(AggregateColumn column) {
 		final int jdbcTypeCode = column.getType().getJdbcType().getDefaultSqlTypeCode();
 		return jdbcTypeCode == SqlTypes.ARRAY ? column.getTypeCode() : jdbcTypeCode;
+	}
+
+	/// Whether the members of the aggregate are JSON keys or XML elements, which are not SQL identifiers.
+	public static boolean hasPlainMemberNames(AggregateColumn column) {
+		final int typeCode = effectiveSqlTypeCode( column );
+		return SqlTypes.isJsonType( typeCode ) || SqlTypes.isXmlType( typeCode );
+	}
+
+	/// The name of a column within its aggregate, without the dialect quotes for a JSON or XML aggregate.
+	public static String memberName(Column column, Dialect dialect) {
+		final AggregateColumn aggregate = column instanceof AggregateColumn aggregateColumn
+				? aggregateColumn.getComponent().getParentAggregateColumn()
+				: column.getValue() instanceof BasicValue basicValue ? basicValue.getAggregateColumn() : null;
+		return aggregate != null && hasPlainMemberNames( aggregate )
+				? column.getName()
+				: column.getQuotedName( dialect );
 	}
 
 	public static Column column(SqlTypedMapping mapping) {

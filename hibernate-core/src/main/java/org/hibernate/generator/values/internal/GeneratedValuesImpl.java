@@ -38,6 +38,11 @@ public class GeneratedValuesImpl implements GeneratedValues {
 	}
 
 	@Override
+	public boolean containsGeneratedValue(ModelPart modelPart) {
+		return generatedValuesMap.containsKey( modelPart );
+	}
+
+	@Override
 	public List<Object> getGeneratedValues(List<? extends ModelPart> modelParts) {
 		if ( isEmpty( modelParts ) ) {
 			return emptyList();

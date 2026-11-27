@@ -24,6 +24,12 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.sql.SimpleSelect;
+import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
+import org.hibernate.sql.ast.spi.model.ColumnValueParameterList;
+import org.hibernate.sql.ast.spi.model.ColumnWriteFragment;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.spi.mutation.MutationOperation;
@@ -58,6 +64,24 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.sin
  */
 @Internal
 public abstract class AbstractMutationCoordinator {
+	/// Copy the physical value of a live column as part of the auxiliary table write.
+	/// Reuse the identifier bindings, including all components of a composite key.
+	static void addColumnFromLiveTable(
+			AssigningTableMutationBuilder<?> builder, EntityTableMapping sourceTable, SelectableMapping column,
+			ParameterUsage keyUsage, Dialect dialect) {
+		final var target = builder.getMutatingTable();
+		final var keys = sourceTable.getKeyMapping();
+		final var parameters = new ColumnValueParameterList( target, keyUsage, keys.getColumnCount() );
+		final var select = new SimpleSelect( dialect ).setTableName( sourceTable.getTableName() )
+				.addColumn( column.getSelectionExpression() );
+		keys.forEachKeyColumn( (position, key) -> {
+			select.addRestriction( key.getColumnName() );
+			parameters.addColumValueParameter( key );
+		} );
+		builder.addColumnAssignment( new ColumnValueBinding( new ColumnReference( target, column ),
+				new ColumnWriteFragment( "(" + select.toStatementString() + ")", parameters, column ) ) );
+	}
+
 	protected final EntityPersister entityPersister;
 	protected final SessionFactoryImplementor factory;
 	protected final MutationExecutorService mutationExecutorService;

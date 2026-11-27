@@ -23,6 +23,11 @@ public abstract class PostgreSQLFamilySqlAstTranslator<T extends JdbcOperation> 
 	}
 
 	@Override
+	protected boolean supportsReturningGeneratedValuesFromUpsert() {
+		return true;
+	}
+
+	@Override
 	@SPI(IMPLEMENT)
 	protected void renderTableReferenceAlias(String alias, TableReferenceAliasContext context) {
 		if ( context == TableReferenceAliasContext.INSERT_TARGET ) {
@@ -118,8 +123,13 @@ public abstract class PostgreSQLFamilySqlAstTranslator<T extends JdbcOperation> 
 					if ( valueBinding.isAttributeUpdatable() ) {
 						appendSql( separator );
 						appendSql( valueBinding.getColumnReference().getColumnExpression() );
-						appendSql( "=excluded." );
-						appendSql( valueBinding.getColumnReference().getColumnExpression() );
+						appendSql( '=' );
+						if ( valueBinding.isAttributeInsertable() ) {
+							renderMergeUpdateValue( valueBinding, optionalTableUpdate.getTableName(), "excluded" );
+						}
+						else {
+							valueBinding.getValueExpression().accept( this );
+						}
 						separator = ',';
 					}
 				}

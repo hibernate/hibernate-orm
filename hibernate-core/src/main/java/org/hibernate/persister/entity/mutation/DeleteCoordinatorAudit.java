@@ -42,16 +42,10 @@ public class DeleteCoordinatorAudit extends AbstractAuditCoordinator implements 
 			@Nonnull SharedSessionContractImplementor session) {
 		final var entity = requireNonNull( instance );
 		final var entityEntry = session.getPersistenceContextInternal().getEntry( entity );
-		final Object[] state;
-		final EntityKey entityKey;
-		if ( entityEntry != null ) {
-			state = entityEntry.getLoadedState();
-			entityKey = entityEntry.getEntityKey();
-		}
-		else {
-			state = entityPersister().getValues( entity );
-			entityKey = new EntityKey( id, entityPersister() );
-		}
+		final var entityKey = entityEntry == null ? new EntityKey( id, entityPersister() ) : entityEntry.getEntityKey();
+		final var loadedState = entityEntry == null ? null : entityEntry.getLoadedState();
+		final var state = entityPersister().getEntityAuditSupport().deletionState( entityKey,
+				loadedState == null ? entityPersister().getValues( entity ) : loadedState, loadedState != null, session );
 
 		currentDeleteCoordinator.delete( entity, id, version, session );
 

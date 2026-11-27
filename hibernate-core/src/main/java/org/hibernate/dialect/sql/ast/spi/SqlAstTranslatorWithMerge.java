@@ -2,7 +2,13 @@ package org.hibernate.dialect.sql.ast.spi;
 
 import java.util.List;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.SPI;
+import org.hibernate.id.insert.InsertReturningDelegate;
+import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
+import org.hibernate.persister.entity.mutation.EntityMutationTarget;
+
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.sql.ast.spi.Statement;
@@ -37,14 +43,39 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 	/// wrapped in a [MergeOperation]. Override a protected rendering callback to
 	/// customize the SQL; the operation lifecycle itself is invariant.
 	public final MergeOperation createMergeOperation(OptionalTableUpdate optionalTableUpdate) {
-		renderMergeStatement( optionalTableUpdate );
+		final var delegate = returningDelegate( optionalTableUpdate );
+		if ( delegate instanceof InsertReturningDelegate returning ) {
+			renderReturningMutation( MutationKind.UPDATE, ReturningMutationSource.MODEL, returning.getGeneratedColumns(),
+					() -> renderMergeStatement( optionalTableUpdate ) );
+		}
+		else {
+			renderMergeStatement( optionalTableUpdate );
+		}
 		return new MergeOperation(
 				optionalTableUpdate.getMutatingTable().getTableMapping(),
 				optionalTableUpdate.getMutationTarget(),
 				getSql(),
 				expectation( optionalTableUpdate ),
-				getParameterBinders()
+				getParameterBinders(),
+				delegate != null
 		);
+	}
+
+	private @Nullable GeneratedValuesMutationDelegate returningDelegate(OptionalTableUpdate update) {
+		if ( update.getMutationTarget() instanceof EntityMutationTarget entity
+				&& update.getMutatingTable().getTableName().equals( entity.getIdentifierTableName() ) ) {
+			final var persister = entity.getTargetPart().getEntityPersister();
+			if ( update.hasConditionalVersionAssignment()
+					|| supportsReturningGeneratedValuesFromUpsert() && persister.hasUpsertGeneratedProperties() ) {
+				return persister.getUpdateDelegate();
+			}
+		}
+		return null;
+	}
+
+	/// Whether the identifier-table upsert can use this dialect's normal update returning mechanism.
+	protected boolean supportsReturningGeneratedValuesFromUpsert() {
+		return false;
 	}
 
 	protected Expectation expectation(OptionalTableUpdate optionalTableUpdate) {
@@ -307,7 +338,7 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 					appendSql( separator );
 					binding.getColumnReference().appendColumnForWrite( this, null );
 					appendSql( "=" );
-					binding.getColumnReference().appendColumnForWrite( this, "s" );
+					renderMergeUpdateValue( binding, "t", "s" );
 					separator = ',';
 				}
 			}

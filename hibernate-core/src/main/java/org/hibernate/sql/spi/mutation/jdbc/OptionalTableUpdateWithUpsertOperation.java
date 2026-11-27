@@ -9,7 +9,6 @@ import org.hibernate.sql.ast.spi.model.MutatingTableReference;
 import org.hibernate.sql.ast.spi.model.OptionalTableInsert;
 import org.hibernate.sql.ast.spi.model.OptionalTableUpdate;
 import static java.util.Collections.emptyList;
-import static org.hibernate.internal.util.collections.CollectionHelper.combine;
 
 /**
  * Uses {@link org.hibernate.sql.ast.spi.model.OptionalTableInsert} for the insert operation,
@@ -65,7 +64,7 @@ public final class OptionalTableUpdateWithUpsertOperation extends OptionalTableU
 			final var tableInsert = new OptionalTableInsert(
 					new MutatingTableReference( tableDetails ),
 					getMutationTarget(),
-					combine( getValueBindings(), getKeyBindings() ),
+					getInsertBindings(),
 					emptyList(),
 					getParameters(),
 					null,

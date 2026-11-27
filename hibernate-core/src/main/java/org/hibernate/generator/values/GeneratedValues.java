@@ -24,6 +24,12 @@ public interface GeneratedValues {
 	 */
 	Object getGeneratedValue(ModelPart modelPart);
 
+	/// Whether the mutation returned this part. Containers which distinguish an
+	/// absent column from a returned SQL NULL should report the latter as present.
+	default boolean containsGeneratedValue(ModelPart modelPart) {
+		return getGeneratedValue( modelPart ) != null;
+	}
+
 	/**
 	 * Retrieves a list of generated values corresponding to the list of requested {@link ModelPart}s.
 	 * Ensures the order of the values in the returned list corresponds to the input properties.

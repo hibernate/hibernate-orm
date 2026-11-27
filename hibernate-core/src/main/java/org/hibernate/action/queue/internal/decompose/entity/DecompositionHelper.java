@@ -12,6 +12,7 @@ import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.persister.entity.mutation.HistoryTableMutation;
 
 /// @author Steve Ebersole
 public class DecompositionHelper {
@@ -101,7 +102,7 @@ public class DecompositionHelper {
 	}
 
 	/// A replacement row must also contain the insertable values omitted from this update's state.
-	static void initializeStateForRevisionInsert(UpdateContext context, EntityTableDescriptor table) {
+	static void initializeStateForRevisionInsert(UpdateContext context, EntityTableDescriptor table, boolean copyGeneratedFromLiveTable) {
 		final var entityPersister = context.entityPersister();
 		final var insertable = entityPersister.getPropertyInsertability();
 		final var state = context.state();
@@ -109,7 +110,8 @@ public class DecompositionHelper {
 		for ( var attribute : table.attributes() ) {
 			final int index = attribute.getStateArrayPosition();
 			if ( insertable[index] && state[index] == LazyPropertyInitializer.UNFETCHED_PROPERTY
-					&& !attribute.isPluralAttributeMapping() ) {
+					&& !attribute.isPluralAttributeMapping()
+					&& !( copyGeneratedFromLiveTable && HistoryTableMutation.isGenerated( attribute ) ) ) {
 				if ( missing == null ) {
 					missing = new ArrayList<>();
 				}

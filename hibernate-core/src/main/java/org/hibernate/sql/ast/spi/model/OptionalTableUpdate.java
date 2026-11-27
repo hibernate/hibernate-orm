@@ -153,6 +153,10 @@ public class OptionalTableUpdate
 		forEachThing( getOptimisticLockBindings(), intermediateConsumer );
 	}
 
+	public boolean hasConditionalVersionAssignment() {
+		return valueBindings.stream().anyMatch( ConditionalVersionAssignment.class::isInstance );
+	}
+
 	public List<ColumnValueBinding> getValueBindings() {
 		return valueBindings;
 	}

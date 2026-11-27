@@ -208,6 +208,7 @@ import org.hibernate.sql.spi.mutation.MutationTarget;
 import org.hibernate.sql.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
+import org.hibernate.sql.ast.spi.model.ConditionalVersionAssignment;
 import org.hibernate.sql.ast.spi.model.TenantIdColumnValueBinding;
 import org.hibernate.sql.ast.spi.model.ColumnValueParameter;
 import org.hibernate.sql.ast.spi.model.ColumnWriteFragment;
@@ -219,6 +220,7 @@ import org.hibernate.sql.ast.spi.model.TableDeleteCustomSql;
 import org.hibernate.sql.ast.spi.model.TableDeleteStandard;
 import org.hibernate.sql.ast.spi.model.TableInsertCustomSql;
 import org.hibernate.sql.ast.spi.model.TableInsertStandard;
+import org.hibernate.sql.ast.spi.model.TableInsertSelect;
 import org.hibernate.sql.ast.spi.model.TableUpdateCustomSql;
 import org.hibernate.sql.ast.spi.model.TableUpdateStandard;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
@@ -1108,6 +1110,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		if ( limit.getMaxRows() != null ) {
 			setLimitParameter( JdbcParameterFactory.queryLimit( sessionFactory.getTypeConfiguration() ) );
+		}
+	}
+
+	protected final void renderMergeUpdateValue(ColumnValueBinding binding, String targetAlias, String sourceAlias) {
+		if ( binding instanceof ConditionalVersionAssignment version ) {
+			version.forUpdate( targetAlias ).getValueExpression().accept( this );
+		}
+		else {
+			binding.getColumnReference().appendColumnForWrite( this, sourceAlias );
 		}
 	}
 
@@ -2644,7 +2655,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return StandardReturningRenderingSupport.STANDARD;
 	}
 
-	private void renderReturningMutation(
+	protected final void renderReturningMutation(
 			MutationKind mutationKind,
 			ReturningMutationSource source,
 			List<ColumnReference> returningColumns,
@@ -10405,7 +10416,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		} );
 
 		// A table-less SELECT produces one row even if a scalar subquery finds no match.
-		final boolean selectSource = tableInsert.hasValueSubquery()
+		final boolean selectSource = tableInsert instanceof TableInsertSelect || tableInsert.hasValueSubquery()
 				&& !dialect.getSubquerySupport().supports( SubquerySupport.Feature.INSERT_VALUES );
 		getCurrentClauseStack().push( selectSource ? Clause.SELECT : Clause.VALUES );
 		try {
@@ -10422,7 +10433,23 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			getCurrentClauseStack().pop();
 		}
 
-		sqlBuffer.append( selectSource ? getSelectOnlyFromClause() : ")" );
+		if ( tableInsert instanceof TableInsertSelect select ) {
+			final var sourceTable = select.getSourceTable().getTableName();
+			appendSql( " from " );
+			appendSql( sourceTable );
+			registerAffectedTable( sourceTable );
+			String separator = " where ";
+			for ( var key : select.getSourceKey() ) {
+				appendSql( separator );
+				key.getColumnReference().appendColumnForWrite( this );
+				appendSql( '=' );
+				key.accept( this );
+				separator = " and ";
+			}
+		}
+		else {
+			sqlBuffer.append( selectSource ? getSelectOnlyFromClause() : ")" );
+		}
 	}
 
 	/**

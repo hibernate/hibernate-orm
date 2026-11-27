@@ -144,7 +144,12 @@ public abstract class SqlAstTranslatorWithOnDuplicateKeyUpdate<T extends JdbcOpe
 					appendSql( separator );
 					appendSql( valueBinding.getColumnReference().getColumnExpression() );
 					append( '=' );
-					renderUpdateValue( valueBinding );
+					if ( valueBinding.isAttributeInsertable() ) {
+						renderUpdateValue( valueBinding );
+					}
+					else {
+						valueBinding.getValueExpression().accept( this );
+					}
 					separator = ',';
 				}
 			}

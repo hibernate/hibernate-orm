@@ -39,6 +39,11 @@ public interface TemporalMapping extends AuxiliaryMapping {
 	@Nonnull
 	SelectableMapping getEndingColumnMapping();
 
+	/// Whether the history table computes this physical column itself (GENERATED ALWAYS AS).
+	default boolean isComputedHistoryColumn(String columnName) {
+		return false;
+	}
+
 	@Nonnull
 	ColumnValueBinding createStartingValueBinding(@Nonnull ColumnReference startingColumnReference);
 

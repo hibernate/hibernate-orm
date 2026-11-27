@@ -5,23 +5,22 @@ import jakarta.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Map;
 
 import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
 import org.hibernate.MappingException;
 import org.hibernate.audit.AuditException;
 import org.hibernate.audit.ModificationType;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.generator.Generator;
-import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.loader.ast.internal.SingleIdEntityLoaderSupport;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AuditMapping;
 import org.hibernate.metamodel.mapping.DiscriminatorValue;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.spi.mutation.MutationOperation;
@@ -29,14 +28,13 @@ import org.hibernate.sql.spi.mutation.MutationType;
 import org.hibernate.sql.ast.spi.model.MutationGroup;
 import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
 import org.hibernate.sql.ast.spi.model.ColumnWriteFragment;
-import org.hibernate.sql.ast.spi.model.ColumnValueParameterList;
-import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.ast.spi.model.TableMutation;
 import org.hibernate.sql.ast.spi.model.builder.TableInsertBuilderStandard;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.internal.MutationGroupSingle;
 import org.hibernate.sql.model.internal.MutationGroupStandard;
 
+import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 import static org.hibernate.persister.entity.mutation.AbstractMutationCoordinator.createAuxiliaryTableMapping;
 import static org.hibernate.persister.entity.mutation.InsertCoordinatorStandard.getPropertiesToInsert;
 
@@ -81,9 +79,7 @@ public class EntityAuditSupport {
 	/// to a logical audited entity change.
 	///
 	/// The property inclusion mask is the already audit-masked set of entity
-	/// properties that should be bound for this logical entity change. Dynamic
-	/// insert planning may update this mask while resolving generated values, so
-	/// the plan takes an owned copy after resolution.
+	/// properties to include in the snapshot of this entity change.
 	public record AuditInsertPlan(
 			@Nonnull AuditMutationOperation operation,
 			@Nonnull boolean[] propertyInclusions) {
@@ -109,6 +105,10 @@ public class EntityAuditSupport {
 	private final AuditMapping auditMapping;
 	private final EntityTableMapping[] auditTableMappings;
 	private final boolean[] auditedPropertyMask;
+	private final AuditTableMutation[] tableMutations;
+	private final List<AttributeMapping> storedAttributes;
+	@Nullable
+	private final MutationGroup staticDeletionGroup;
 	private final boolean useServerTransactionTimestamps;
 	@Nullable
 	private final String currentTimestampFunctionName;
@@ -137,9 +137,22 @@ public class EntityAuditSupport {
 		this.currentTimestampFunctionName = useServerTransactionTimestamps
 				? factory.getJdbcServices().getDialect().getCurrentTemporalSupport().currentTimestamp()
 				: null;
-		this.staticAuditInsertMutationGroup = entityPersister.isDynamicInsert()
-				? null
-				: buildAuditInsertMutationGroup( applyAuditMask( entityPersister.getPropertyInsertability() ), null, null );
+		final var stored = new LinkedHashSet<AttributeMapping>();
+		tableMutations = new AuditTableMutation[auditTableMappings.length];
+		for ( int i = 0; i < tableMutations.length; i++ ) {
+			if ( auditTableMappings[i] != null ) {
+				final var source = entityPersister.getTableMappings()[i];
+				tableMutations[i] = new AuditTableMutation( entityPersister, source,
+						auditMapping.getComputedColumns( source.getTableName() ) );
+				stored.addAll( tableMutations[i].storedAttributes() );
+			}
+		}
+		storedAttributes = List.copyOf( stored );
+		final var inclusions = applyAuditMask( entityPersister.getPropertyInsertability() );
+		staticAuditInsertMutationGroup = entityPersister.isDynamicInsert() ? null
+				: buildAuditInsertMutationGroup( inclusions, ModificationType.ADD );
+		staticDeletionGroup = !stored.isEmpty() && !entityPersister.isDynamicInsert()
+				? buildAuditInsertMutationGroup( inclusions, ModificationType.DEL ) : staticAuditInsertMutationGroup;
 		this.transactionEndUpdateMutationGroup = buildTransactionEndUpdateMutationGroup();
 	}
 
@@ -154,16 +167,41 @@ public class EntityAuditSupport {
 	/// read-only by callers. It is exposed directly because the legacy audit
 	/// coordinator keeps a reference for compatibility with its existing shape.
 	/// Code that needs to alter the mask should first clone it, as
-	/// [#resolvePropertyInclusions(Object, Object[], SharedSessionContractImplementor)]
+	/// [#resolvePropertyInclusions(Object[])]
 	/// does.
 	@Nonnull
 	public boolean[] getAuditedPropertyMask() {
 		return auditedPropertyMask;
 	}
 
+	/// Capture missing values before the delete removes the row supplying them.
+	public Object[] deletionState(EntityKey key, Object[] values, boolean hasLoadedState,
+			SharedSessionContractImplementor session) {
+		if ( storedAttributes.isEmpty() ) {
+			return values;
+		}
+		final var missing = hasLoadedState ? storedAttributes.stream()
+				.filter( attribute -> values[attribute.getStateArrayPosition()] == UNFETCHED_PROPERTY ).toList()
+				: storedAttributes;
+		if ( missing.isEmpty() || !session.isEventSource() && session.getAuditWorkQueue().hasPendingAddition( key ) ) {
+			return values;
+		}
+		session.getJdbcCoordinator().executeBatch();
+		final var snapshot = SingleIdEntityLoaderSupport.loadAttributeSnapshot(
+				entityPersister, key.getIdentifier(), missing, session );
+		if ( snapshot == null ) {
+			return values;
+		}
+		final var state = values.clone();
+		for ( int i = 0; i < missing.size(); i++ ) {
+			state[missing.get( i ).getStateArrayPosition()] = snapshot[i];
+		}
+		return state;
+	}
+
 	@Nullable
-	public MutationGroup getStaticAuditInsertMutationGroup() {
-		return staticAuditInsertMutationGroup;
+	public MutationGroup getStaticAuditInsertMutationGroup(ModificationType type) {
+		return type == ModificationType.DEL ? staticDeletionGroup : staticAuditInsertMutationGroup;
 	}
 
 	@Nullable
@@ -172,10 +210,7 @@ public class EntityAuditSupport {
 	}
 
 	@Nonnull
-	public boolean[] resolvePropertyInclusions(
-			@Nonnull Object entity,
-			@Nonnull Object[] values,
-			@Nonnull SharedSessionContractImplementor session) {
+	public boolean[] resolvePropertyInclusions(@Nonnull Object[] values) {
 		return applyAuditMask(
 				entityPersister.isDynamicInsert()
 						? getPropertiesToInsert( entityPersister, values )
@@ -186,19 +221,17 @@ public class EntityAuditSupport {
 	@Nullable
 	public MutationGroup resolveAuditInsertMutationGroup(
 			@Nonnull boolean[] propertyInclusions,
-			@Nonnull Object entity,
-			@Nonnull SharedSessionContractImplementor session) {
+			@Nonnull ModificationType type) {
 		return entityPersister.isDynamicInsert()
-				? buildAuditInsertMutationGroup( propertyInclusions, entity, session )
-				: staticAuditInsertMutationGroup;
+				? buildAuditInsertMutationGroup( propertyInclusions, type )
+				: getStaticAuditInsertMutationGroup( type );
 	}
 
 	@Nonnull
 	private List<AuditMutationOperation> resolveAuditInsertOperations(
 			@Nonnull boolean[] propertyInclusions,
-			@Nonnull Object entity,
-			@Nonnull SharedSessionContractImplementor session) {
-		final var mutationGroup = resolveAuditInsertMutationGroup( propertyInclusions, entity, session );
+			@Nonnull ModificationType type) {
+		final var mutationGroup = resolveAuditInsertMutationGroup( propertyInclusions, type );
 		return mutationGroup == null
 				? List.of()
 				: createMutationOperations( mutationGroup );
@@ -214,9 +247,8 @@ public class EntityAuditSupport {
 	@Nonnull
 	public List<AuditInsertPlan> resolveAuditInsertPlans(
 			@Nonnull boolean[] propertyInclusions,
-			@Nonnull Object entity,
-			@Nonnull SharedSessionContractImplementor session) {
-		final var operations = resolveAuditInsertOperations( propertyInclusions, entity, session );
+			@Nonnull ModificationType type) {
+		final var operations = resolveAuditInsertOperations( propertyInclusions, type );
 		if ( operations.isEmpty() ) {
 			return List.of();
 		}
@@ -262,7 +294,6 @@ public class EntityAuditSupport {
 		if ( auditTableMappings[tableIndex] == null ) {
 			return;
 		}
-		final var attributeMappings = entityPersister.getAttributeMappings();
 		final EntityTableMapping[] sourceMappings = entityPersister.getTableMappings();
 		final String tableName = auditTableMappings[tableIndex].getTableName();
 
@@ -274,25 +305,8 @@ public class EntityAuditSupport {
 				session
 		);
 
-		for ( final int attributeIndex : sourceMappings[tableIndex].getAttributeIndexes() ) {
-			if ( propertyInclusions[attributeIndex] ) {
-				final var attributeMapping = attributeMappings.get( attributeIndex );
-				if ( !( attributeMapping instanceof PluralAttributeMapping ) ) {
-					attributeMapping.decompose(
-							values[attributeIndex], 0, jdbcValueBindings, null,
-							(valueIndex, bindings, noop, jdbcValue, selectableMapping) -> {
-								if ( selectableMapping.isInsertable() && !selectableMapping.isFormula() ) {
-									bindings.bindValue(
-											jdbcValue, tableName,
-											selectableMapping.getSelectionExpression(), ParameterUsage.SET
-									);
-								}
-							},
-							session
-					);
-				}
-			}
-		}
+		tableMutations[tableIndex].bindValues( values, propertyInclusions, modificationType,
+				(value, column) -> jdbcValueBindings.bindValue( value, tableName, column, ParameterUsage.SET ), session );
 
 		final String sourceTableName = sourceMappings[tableIndex].getTableName();
 		if ( !useServerTransactionTimestamps ) {
@@ -360,7 +374,6 @@ public class EntityAuditSupport {
 		if ( auditTableMappings[tableIndex] == null ) {
 			return;
 		}
-		final var attributeMappings = entityPersister.getAttributeMappings();
 		final EntityTableMapping[] sourceMappings = entityPersister.getTableMappings();
 
 		sourceMappings[tableIndex].getKeyMapping().breakDownKeyJdbcValues(
@@ -371,26 +384,8 @@ public class EntityAuditSupport {
 				session
 		);
 
-		for ( final int attributeIndex : sourceMappings[tableIndex].getAttributeIndexes() ) {
-			if ( propertyInclusions[attributeIndex] ) {
-				final var attributeMapping = attributeMappings.get( attributeIndex );
-				if ( !( attributeMapping instanceof PluralAttributeMapping ) ) {
-					attributeMapping.decompose(
-							values[attributeIndex], 0, jdbcValueBindings, null,
-							(valueIndex, bindings, noop, jdbcValue, selectableMapping) -> {
-								if ( selectableMapping.isInsertable() && !selectableMapping.isFormula() ) {
-									bindings.bindValue(
-											jdbcValue,
-											selectableMapping.getSelectionExpression(),
-											ParameterUsage.SET
-									);
-								}
-							},
-							session
-					);
-				}
-			}
-		}
+		tableMutations[tableIndex].bindValues( values, propertyInclusions, modificationType,
+				(value, column) -> jdbcValueBindings.bindValue( value, column, ParameterUsage.SET ), session );
 
 		final String sourceTableName = sourceMappings[tableIndex].getTableName();
 		if ( !useServerTransactionTimestamps ) {
@@ -477,10 +472,8 @@ public class EntityAuditSupport {
 	@Nullable
 	private MutationGroup buildAuditInsertMutationGroup(
 			@Nonnull boolean[] propertyInclusions,
-			@Nullable Object entity,
-			@Nullable SharedSessionContractImplementor session) {
+			@Nonnull ModificationType type) {
 		final EntityTableMapping[] sourceMappings = entityPersister.getTableMappings();
-		final var attributeMappings = entityPersister.getAttributeMappings();
 		final List<TableMutation<?>> mutations = new ArrayList<>( auditTableMappings.length );
 
 		for ( int i = 0; i < auditTableMappings.length; i++ ) {
@@ -490,24 +483,7 @@ public class EntityAuditSupport {
 			final var insertBuilder =
 					new TableInsertBuilderStandard( entityPersister, auditTableMappings[i], factory );
 			final var sourceMapping = sourceMappings[i];
-			for ( final int attributeIndex : sourceMapping.getAttributeIndexes() ) {
-				final var attributeMapping = attributeMappings.get( attributeIndex );
-				if ( propertyInclusions[attributeIndex] ) {
-					attributeMapping.forEachInsertable( insertBuilder );
-				}
-				else {
-					final var generator = attributeMapping.getGenerator();
-					if ( generator != null && isValueGenerated( generator ) ) {
-						if ( entity != null && generator.generatedBeforeExecution( entity, session ) ) {
-							propertyInclusions[attributeIndex] = true;
-							attributeMapping.forEachInsertable( insertBuilder );
-						}
-						else if ( isValueGenerationInSql( generator ) ) {
-							addSqlGeneratedValue( insertBuilder, attributeMapping, (OnExecutionGenerator) generator );
-						}
-					}
-				}
-			}
+			tableMutations[i].addStateAssignments( insertBuilder, propertyInclusions, type );
 
 			if ( sourceMapping.isIdentifierTable() ) {
 				final var discriminatorMapping = entityPersister.getDiscriminatorMapping();
@@ -522,7 +498,6 @@ public class EntityAuditSupport {
 
 			final var sourceTableName = sourceMapping.getTableName();
 			final var indexColumns = auditMapping.getCollectionIndexColumns( sourceTableName );
-			addCollectionIndexColumns( insertBuilder, sourceMapping, indexColumns );
 			final var txIdMapping = auditMapping.getChangesetIdMapping( sourceTableName );
 			final var modTypeMapping = auditMapping.getModificationTypeMapping( sourceTableName );
 			insertBuilder.addColumnAssignment( txIdMapping, useServerTransactionTimestamps ? currentTimestampFunctionName : "?" );
@@ -530,8 +505,7 @@ public class EntityAuditSupport {
 				insertBuilder.addColumnAssignment( modTypeMapping, "?" );
 			}
 
-			sourceMapping.getKeyMapping().forEachKeyColumn( insertBuilder::addColumnAssignment );
-			mutations.add( insertBuilder.buildMutation( !indexColumns.isEmpty() ) );
+			mutations.add( tableMutations[i].buildInsert( insertBuilder, type, indexColumns ) );
 		}
 
 		if ( mutations.isEmpty() ) {
@@ -540,29 +514,6 @@ public class EntityAuditSupport {
 		return mutations.size() == 1
 				? new MutationGroupSingle( MutationType.INSERT, entityPersister, mutations.get( 0 ) )
 				: new MutationGroupStandard( MutationType.INSERT, entityPersister, mutations );
-	}
-
-	private void addCollectionIndexColumns(TableInsertBuilderStandard insertBuilder, EntityTableMapping sourceMapping,
-			List<SelectableMapping> indexColumns) {
-		final String sourceTableName = sourceMapping.getTableName();
-		// The collection writes its index after the entity mutation. Copy the final
-		// physical value when writing the audit row at transaction completion.
-		for ( var column : indexColumns ) {
-			final var table = insertBuilder.getMutatingTable();
-			final var keys = sourceMapping.getKeyMapping();
-			final var parameters = new ColumnValueParameterList( table, ParameterUsage.SET, keys.getColumnCount() );
-			final var select = new SimpleSelect( factory.getJdbcServices().getDialect() )
-					.setTableName( sourceTableName )
-					.addColumn( column.getSelectionExpression() );
-			keys.forEachKeyColumn( (position, key) -> {
-				select.addRestriction( key.getColumnName() );
-				parameters.addColumValueParameter( key );
-			} );
-			insertBuilder.addColumnAssignment( new ColumnValueBinding(
-					new ColumnReference( table, column ),
-					new ColumnWriteFragment( "(" + select.toStatementString() + ")", parameters, column )
-			) );
-		}
 	}
 
 	@Nullable
@@ -665,27 +616,4 @@ public class EntityAuditSupport {
 		return masked;
 	}
 
-	private static boolean isValueGenerated(@Nullable Generator generator) {
-		return generator != null
-				&& generator.generatesOnInsert()
-				&& generator.generatedOnExecution();
-	}
-
-	private boolean isValueGenerationInSql(@Nonnull Generator generator) {
-		assert isValueGenerated( generator );
-		return ( (OnExecutionGenerator) generator ).referenceColumnsInSql( factory.getJdbcServices().getDialect() );
-	}
-
-	private void addSqlGeneratedValue(
-			@Nonnull TableInsertBuilderStandard insertBuilder,
-			@Nonnull AttributeMapping attributeMapping,
-			@Nonnull OnExecutionGenerator generator) {
-		final boolean writePropertyValue = generator.writePropertyValue();
-		final String[] columnValues = writePropertyValue
-				? null
-				: generator.getReferencedColumnValues( factory.getJdbcServices().getDialect() );
-		attributeMapping.forEachSelectable( (j, mapping) ->
-				insertBuilder.addColumnAssignment( mapping, writePropertyValue ? "?" : columnValues[j] )
-		);
-	}
 }

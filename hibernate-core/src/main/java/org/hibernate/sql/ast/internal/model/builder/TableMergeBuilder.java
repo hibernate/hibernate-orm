@@ -1,11 +1,13 @@
 package org.hibernate.sql.ast.internal.model.builder;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.sql.ast.spi.model.builder.AbstractTableUpdateBuilder;
 import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.spi.mutation.TableMapping;
 import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
+import org.hibernate.sql.ast.spi.model.ConditionalVersionAssignment;
 import org.hibernate.sql.ast.spi.model.LogicalTableUpdate;
 import org.hibernate.sql.ast.spi.model.OptionalTableUpdate;
 import org.hibernate.sql.ast.spi.model.TableUpdateStandard;
@@ -32,6 +34,13 @@ public class TableMergeBuilder<O extends MutationOperation> extends AbstractTabl
 		return (EntityMutationTarget) super.getMutationTarget();
 	}
 
+	public void addUpdateOnlyColumn(SelectableMapping column) {
+		if ( includesColumn( column ) ) {
+			final var binding = createValueBinding( column.getWriteExpression(), column );
+			addColumnAssignment( new ColumnValueBinding( binding.getColumnReference(), binding.getValueExpression(), false ) );
+		}
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public LogicalTableUpdate<O> buildMutation() {
@@ -53,6 +62,8 @@ public class TableMergeBuilder<O extends MutationOperation> extends AbstractTabl
 			if ( valueBindings.isEmpty() ) {
 				return (LogicalTableUpdate<O>) new TableUpdateNoSet( getMutatingTable(), getMutationTarget() );
 			}
+			valueBindings.replaceAll( binding -> binding instanceof ConditionalVersionAssignment version
+					? version.forUpdate( null ) : binding );
 			return (LogicalTableUpdate<O>) new TableUpdateStandard(
 					getMutatingTable(), getMutationTarget(), getSqlComment(), valueBindings,
 					getKeyRestrictionBindings(), getOptimisticLockBindings(), null,

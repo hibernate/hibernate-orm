@@ -1200,6 +1200,17 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 			@Nullable GeneratedValues generatedValues,
 			@Nonnull SharedSessionContractImplementor session);
 
+	/// Whether any attributes are generated on both arms of an upsert.
+	default boolean hasUpsertGeneratedProperties() {
+		return false;
+	}
+
+	/// Apply attributes generated on both arms of an upsert.
+	default void processUpsertGeneratedProperties(
+			@Nonnull Object id, @Nonnull Object entity, @Nonnull Object[] state,
+			@Nullable GeneratedValues generatedValues, @Nonnull SharedSessionContractImplementor session) {
+	}
+
 	@Nonnull
 	default List<? extends ModelPart> getUpdateGeneratedProperties() {
 		return Collections.emptyList();

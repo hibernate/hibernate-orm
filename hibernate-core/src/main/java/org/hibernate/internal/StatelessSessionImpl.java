@@ -417,6 +417,7 @@ public class StatelessSessionImpl
 		checkNotReadOnly();
 		final var persister = getEntityPersister( entityName, entity );
 		final Object id;
+		final GeneratedValues generatedValues;
 		final Object[] state = persister.getValues( entity );
 		if ( persister.isVersioned() ) {
 			if ( seedVersion( entity, state, persister, this ) ) {
@@ -441,7 +442,7 @@ public class StatelessSessionImpl
 				final var event = eventMonitor.beginEntityInsertEvent();
 				boolean success = false;
 				try {
-					persister.getInsertCoordinator().insert( entity, id, state, this );
+					generatedValues = persister.getInsertCoordinator().insert( entity, id, state, this );
 					success = true;
 				}
 				catch (ConstraintViolationException cve) {
@@ -467,7 +468,7 @@ public class StatelessSessionImpl
 				boolean success = false;
 				Object generatedId = null;
 				try {
-					final var generatedValues = persister.getInsertCoordinator().insert( entity, state, this );
+					generatedValues = persister.getInsertCoordinator().insert( entity, state, this );
 					generatedId = castNonNull( generatedValues ).getGeneratedValue( persister.getIdentifierMapping() );
 					id = generatedId;
 					success = true;
@@ -496,7 +497,7 @@ public class StatelessSessionImpl
 				final var event = eventMonitor.beginEntityInsertEvent();
 				boolean success = false;
 				try {
-					persister.getInsertCoordinator().insert( entity, id, state, this );
+					generatedValues = persister.getInsertCoordinator().insert( entity, id, state, this );
 					success = true;
 				}
 				catch (ConstraintViolationException cve) {
@@ -506,6 +507,9 @@ public class StatelessSessionImpl
 					eventMonitor.completeEntityInsertEvent( event, id, persister.getEntityName(), success, this );
 				}
 			}
+		}
+		if ( persister.hasInsertGeneratedProperties() ) {
+			persister.processInsertGeneratedProperties( id, entity, state, generatedValues, this );
 		}
 		if ( persister.getTemporalMapping() != null && getSessionFactoryOptions().getTemporalTableStrategy() != NATIVE
 				&& getTransactionCoordinator().isTransactionActive() ) {
@@ -741,6 +745,9 @@ public class StatelessSessionImpl
 				final var generatedValues =
 						persister.getUpdateCoordinator()
 								.update( entity, id, null, state, oldVersion, null, null, false, this );
+				if ( persister.hasUpdateGeneratedProperties() ) {
+					persister.processUpdateGeneratedProperties( id, entity, state, generatedValues, this );
+				}
 				applyDatabaseResolvedVersion( entity, state, persister, generatedValues );
 				success = true;
 			}
@@ -905,6 +912,7 @@ public class StatelessSessionImpl
 				final var generatedValues =
 						persister.getMergeCoordinator()
 								.update( entity, id, null, state, oldVersion, null, null, false, this );
+				persister.processUpsertGeneratedProperties( id, entity, state, generatedValues, this );
 				applyDatabaseResolvedVersion( entity, state, persister, generatedValues );
 				success = true;
 			}

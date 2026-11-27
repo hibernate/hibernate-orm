@@ -359,7 +359,11 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 						csIdJdbcMapping,
 						creationProcess
 				),
-				List.copyOf( indexColumns )
+				List.copyOf( indexColumns ),
+				holder.getAuxiliaryTable().getColumns().stream()
+						.filter( column -> column.getGeneratedAs() != null )
+						.map( column -> column.getQuotedName( creationProcess.getCreationContext().getDialect() ) )
+						.collect( java.util.stream.Collectors.toUnmodifiableSet() )
 		);
 	}
 

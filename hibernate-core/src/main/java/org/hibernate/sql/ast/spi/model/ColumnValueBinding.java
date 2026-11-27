@@ -20,9 +20,13 @@ public class ColumnValueBinding {
 	private final boolean attributeUpdatable;
 
 	public ColumnValueBinding(ColumnReference columnReference, ColumnWriteFragment valueExpression) {
+		this( columnReference, valueExpression, determineAttributeInsertable( valueExpression ) );
+	}
+
+	public ColumnValueBinding(ColumnReference columnReference, ColumnWriteFragment valueExpression, boolean insertable) {
 		this.columnReference = columnReference;
 		this.valueExpression = valueExpression;
-		this.attributeInsertable = determineAttributeInsertable( valueExpression );
+		this.attributeInsertable = insertable;
 		this.attributeUpdatable = determineAttributeUpdatable( valueExpression );
 	}
 

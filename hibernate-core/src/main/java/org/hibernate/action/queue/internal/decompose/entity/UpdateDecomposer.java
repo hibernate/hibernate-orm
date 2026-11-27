@@ -300,8 +300,9 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 			);
 			if ( forceIncrementOperation != null ) {
 				final List<FlushOperation> additionalOperations = new ArrayList<>();
-				mutationPlanContributor.contributeAdditionalUpdate( context, additionalOperations::add );
-				emitTailOperations( forceIncrementOperation, additionalOperations, postUpdateHandling, ordinalBase, operationConsumer );
+				mutationPlanContributor.contributeAdditionalUpdate( context, forceIncrementOperation, additionalOperations::add );
+				emitTailOperations( forceIncrementOperation, additionalOperations,
+						postUpdateHandling, ordinalBase, operationConsumer );
 				return;
 			}
 		}
@@ -369,6 +370,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 
 		int localOrd = 0;
 		FlushOperation previousOperation = null;
+		FlushOperation identifierTableMutation = null;
 
 		// determine whether the entity we are about to update is being deleted in the same flush
 		final boolean isBeingDeleted = decompositionContext != null
@@ -426,14 +428,18 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 							operationConsumer.accept( previousOperation );
 						}
 						previousOperation = op;
+						if ( tableDescriptor.isIdentifierTable() ) {
+							identifierTableMutation = op;
+						}
 					}
 				}
 			}
 		}
 
 		final List<FlushOperation> additionalOperations = new ArrayList<>();
-		mutationPlanContributor.contributeAdditionalUpdate( context, additionalOperations::add );
-		emitTailOperations( previousOperation, additionalOperations, postUpdateHandling, ordinalBase, operationConsumer );
+		mutationPlanContributor.contributeAdditionalUpdate( context, identifierTableMutation, additionalOperations::add );
+		emitTailOperations( previousOperation, additionalOperations,
+				postUpdateHandling, ordinalBase, operationConsumer );
 	}
 
 	private FilteredUpdateCache.Key filteredUpdateKey(

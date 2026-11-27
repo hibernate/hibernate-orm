@@ -120,6 +120,19 @@ public class JsonEmbeddableTest {
 	}
 
 	@Test
+	@JiraKey( "HHH-18660" )
+	public void testNativeQueryWithEntityResult(SessionFactoryScope scope) {
+		scope.inSession(
+				session -> {
+					List<JsonHolder> jsonHolders = session.createNativeQuery( "select * from JsonHolder b where b.id = 1", JsonHolder.class ).getResultList();
+					assertEquals( 1, jsonHolders.size() );
+					assertEquals( 1L, jsonHolders.get( 0 ).getId() );
+					EmbeddableAggregate.assertEquals( EmbeddableAggregate.createAggregate1(), jsonHolders.get( 0 ).getAggregate() );
+				}
+		);
+	}
+
+	@Test
 	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support decode function" )
 	public void testSelectionItems(SessionFactoryScope scope) {
 		scope.inSession(

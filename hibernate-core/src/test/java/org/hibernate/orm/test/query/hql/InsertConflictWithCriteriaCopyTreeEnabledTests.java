@@ -14,8 +14,10 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
 import org.hibernate.query.criteria.JpaCriteriaInsertValues;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -41,6 +43,7 @@ import org.junit.jupiter.api.Test;
 public class InsertConflictWithCriteriaCopyTreeEnabledTests {
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBAMode.class, comment = "The insert targets only the PK column; GaussDB A mode does not support ON CONFLICT and its ON DUPLICATE KEY UPDATE rejects updating key columns, so DO NOTHING cannot be emulated.")
 	void createCriteriaInsertValuesTest(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -58,6 +61,7 @@ public class InsertConflictWithCriteriaCopyTreeEnabledTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBAMode.class, comment = "The insert targets only the PK column; GaussDB A mode does not support ON CONFLICT and its ON DUPLICATE KEY UPDATE rejects updating key columns, so DO NOTHING cannot be emulated.")
 	void createCriteriaInsertSelectTest(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

@@ -43,6 +43,7 @@ import static org.junit.jupiter.api.AssertionsKt.assertNull;
 public class SchemaBasedMultitenancyTest {
 	private static String currentTenantIdentifier;
 
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class, comment = "GaussDB M mode is case-sensitive for schema identifiers (MySQL behavior): the test creates schema HELLO but the tenant resolver yields hello, which don't match; A mode (PG kernel) folds to lowercase.")
 	@Test void test(EntityManagerFactoryScope scope) {
 		var schemaManager = (SchemaManager) scope.getEntityManagerFactory().getSchemaManager();
 		createSchema( schemaManager, "HELLO" );

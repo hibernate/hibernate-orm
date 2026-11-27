@@ -168,6 +168,7 @@ Outside of a transaction, a revision is written immediately after its current ro
 A revision of an entity which is an element of a `@OneToMany` association now holds the join column and order column written by the association, which were previously null, and the entity is given a new revision whenever the association writes those columns.
 If the association is annotated `@Temporal.Excluded`, the columns are instead updated in the open revision of the entity.
 An association which writes the row of a versioned entity must be so annotated, since a version of an entity has one revision; otherwise the mapping is rejected when the session factory is built.
+Sessions which share a transaction now share its changeset identifier.
 
 [[audit-row-copy]]
 === Audit rows of an entity

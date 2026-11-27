@@ -33,6 +33,14 @@ public interface CommonSharedOptions extends SharedSessionCreationOptions {
 
 	@Override
 	@Nullable
+	default SharedSessionContractImplementor getTransactionOwner() {
+		return isTransactionCoordinatorShared()
+				? getOriginalSession()
+				: null;
+	}
+
+	@Override
+	@Nullable
 	default TransactionCoordinator getTransactionCoordinator() {
 		return isTransactionCoordinatorShared()
 				? getOriginalSession().getTransactionCoordinator()

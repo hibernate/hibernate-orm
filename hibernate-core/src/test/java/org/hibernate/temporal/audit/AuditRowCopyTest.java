@@ -235,6 +235,19 @@ class AuditRowCopyTest {
 	}
 
 	@Test
+	void sessionSharingTheTransactionRemovesAndInsertsAgain(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.persist( new Thing( "a", "c1" ) ) );
+		scope.inTransaction( session -> {
+			try ( var child = session.statelessWithOptions().connection().open() ) {
+				child.delete( child.get( Thing.class, 1 ) );
+				child.insert( new Thing( "b", "c2" ) );
+			}
+		} );
+		// the removal and the insert are merged in the changeset of the shared transaction
+		assertEquals( List.of( new Row( "a", "c1", ADD ), new Row( "b", "c2", MOD ) ), auditRows( scope ) );
+	}
+
+	@Test
 	void removePersistAndRemoveAgainInOneChangeset(SessionFactoryScope scope) {
 		scope.inTransaction( session -> session.persist( new Thing( "a", "c1" ) ) );
 		scope.inTransaction( session -> {

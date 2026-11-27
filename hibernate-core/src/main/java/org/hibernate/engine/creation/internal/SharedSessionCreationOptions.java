@@ -59,6 +59,14 @@ public interface SharedSessionCreationOptions extends SessionCreationOptions {
 	TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacks();
 
 	/**
+	 * If the transaction coordinator is shared, return the
+	 * session which shares it with the new session, otherwise,
+	 * return {@code null}.
+	 */
+	@Nullable
+	SharedSessionContractImplementor getTransactionOwner();
+
+	/**
 	 * Registers callbacks for the child session to integrate
 	 * with events of the parent session.
 	 */

@@ -226,6 +226,11 @@ abstract class AbstractSharedSessionContract
 
 	private final boolean autoJoinTransactions;
 	private final boolean isTransactionCoordinatorShared;
+	/// The session whose transaction this session shares, if any. A changeset
+	/// belongs to a transaction, so its identifier, and the history and audit
+	/// work pending for it, are held by the session which owns the transaction.
+	@Nullable
+	private transient final SharedSessionContractImplementor transactionOwner;
 	private final boolean isInterceptorShared;
 	private final boolean shouldReleaseInterceptor;
 	@Nonnull
@@ -316,6 +321,7 @@ abstract class AbstractSharedSessionContract
 		if ( options instanceof SharedSessionCreationOptions sharedOptions
 				&& sharedOptions.isTransactionCoordinatorShared() ) {
 			isTransactionCoordinatorShared = true;
+			transactionOwner = sharedOptions.getTransactionOwner();
 			if ( options.getConnection() != null ) {
 				throw new SessionException( "Cannot simultaneously share transaction context and specify connection" );
 			}
@@ -347,6 +353,7 @@ abstract class AbstractSharedSessionContract
 		}
 		else {
 			isTransactionCoordinatorShared = false;
+			transactionOwner = null;
 			autoJoinTransactions = options.shouldAutoJoinTransactions();
 			connectionHandlingMode = options.getPhysicalConnectionHandlingMode();
 			jdbcSessionContext = createJdbcSessionContext( options.getStatementObserver(), statementInspector );
@@ -1223,7 +1230,10 @@ abstract class AbstractSharedSessionContract
 
 	@Override
 	public Object getCurrentChangesetIdentifier() {
-		if ( currentChangesetId != null ) {
+		if ( transactionOwner != null ) {
+			return transactionOwner.getCurrentChangesetIdentifier();
+		}
+		else if ( currentChangesetId != null ) {
 			return currentChangesetId;
 		}
 		else if ( isTransactionInProgress() ) {
@@ -1257,7 +1267,10 @@ abstract class AbstractSharedSessionContract
 
 	@Override
 	public @Nullable Object getCurrentChangesetContext() {
-		if ( currentChangesetContext != null ) {
+		if ( transactionOwner != null ) {
+			return transactionOwner.getCurrentChangesetContext();
+		}
+		else if ( currentChangesetContext != null ) {
 			return currentChangesetContext;
 		}
 		getCurrentChangesetIdentifier();
@@ -1541,6 +1554,9 @@ abstract class AbstractSharedSessionContract
 
 	@Override
 	public AuditWorkQueue getAuditWorkQueue() {
+		if ( transactionOwner != null ) {
+			return transactionOwner.getAuditWorkQueue();
+		}
 		if ( auditWorkQueue == null ) {
 			auditWorkQueue = new AuditWorkQueue();
 		}
@@ -1551,6 +1567,9 @@ abstract class AbstractSharedSessionContract
 
 	@Override
 	public HistoryWorkQueue getHistoryWorkQueue() {
+		if ( transactionOwner != null ) {
+			return transactionOwner.getHistoryWorkQueue();
+		}
 		if ( historyWorkQueue == null ) {
 			historyWorkQueue = new HistoryWorkQueue();
 		}

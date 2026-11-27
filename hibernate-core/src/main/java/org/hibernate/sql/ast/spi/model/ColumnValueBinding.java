@@ -3,6 +3,8 @@ package org.hibernate.sql.ast.spi.model;
 import java.util.Locale;
 import java.util.Objects;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 
@@ -44,6 +46,28 @@ public class ColumnValueBinding {
 
 	public boolean isAttributeUpdatable() {
 		return attributeUpdatable;
+	}
+
+	/// The assignment made when an existing row is updated, which may differ
+	/// from the value stored by an insert.
+	///
+	/// @param targetAlias the alias of the updated table, or `null` if its
+	///                    columns are not qualified
+	public ColumnValueBinding forUpdate(@Nullable String targetAlias) {
+		return this;
+	}
+
+	/// Whether the value stored by an update depends on the existing row, so
+	/// that it differs from the value stored by an insert, and is known only
+	/// to the database.
+	public boolean isUpdateConditional() {
+		return false;
+	}
+
+	/// Whether the value is an SQL expression which only an update assigns.
+	/// Such an expression may refer to the existing row.
+	public boolean isUpdateExpression() {
+		return !attributeInsertable && valueExpression != null && valueExpression.getParameters().isEmpty();
 	}
 
 	private static boolean determineAttributeInsertable(ColumnWriteFragment valueExpression) {

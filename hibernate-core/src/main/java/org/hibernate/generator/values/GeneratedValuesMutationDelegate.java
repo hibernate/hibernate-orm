@@ -8,9 +8,11 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.sql.ast.spi.model.builder.TableMutationBuilder;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 
 import java.sql.PreparedStatement;
+import java.util.List;
 
 /**
  * Each implementation defines a strategy for retrieving values
@@ -33,6 +35,14 @@ public interface GeneratedValuesMutationDelegate {
 	 * Create a {@link TableMutationBuilder} instance used to build table mutations for this delegate.
 	 */
 	TableMutationBuilder<?> createTableMutationBuilder(Expectation expectation, SessionFactoryImplementor sessionFactory);
+
+	/**
+	 * The columns which a statement executed by this delegate returns, if the delegate
+	 * reads the generated values from the result of the statement itself.
+	 */
+	default List<ColumnReference> getReturningColumns() {
+		return List.of();
+	}
 
 	/**
 	 * Create a {@link PreparedStatement} from the provided {@code sql} based on the delegate needs.

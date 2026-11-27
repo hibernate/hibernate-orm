@@ -1,10 +1,12 @@
 package org.hibernate.sql.ast.internal.model.builder;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.sql.ast.spi.model.builder.AbstractTableUpdateBuilder;
 import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.spi.mutation.MutationType;
 import org.hibernate.sql.spi.mutation.TableMapping;
 import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
 import org.hibernate.sql.ast.spi.model.LogicalTableUpdate;
@@ -35,8 +37,13 @@ public class TableMergeBuilder<O extends MutationOperation> extends AbstractTabl
 
 	@Override
 	public void addUpdateOnlyColumn(SelectableMapping column) {
+		addUpdateOnlyColumn( column, column.getWriteExpression() );
+	}
+
+	@Override
+	public void addUpdateOnlyColumn(SelectableMapping column, String assignment) {
 		if ( includesColumn( column ) ) {
-			final var binding = createValueBinding( column.getWriteExpression(), column );
+			final var binding = createValueBinding( assignment, column );
 			addColumnAssignment( new ColumnValueBinding( binding.getColumnReference(), binding.getValueExpression(), false ) );
 		}
 	}
@@ -62,6 +69,7 @@ public class TableMergeBuilder<O extends MutationOperation> extends AbstractTabl
 			if ( valueBindings.isEmpty() ) {
 				return (LogicalTableUpdate<O>) new TableUpdateNoSet( getMutatingTable(), getMutationTarget() );
 			}
+			valueBindings.replaceAll( binding -> binding.forUpdate( null ) );
 			return (LogicalTableUpdate<O>) new TableUpdateStandard(
 					getMutatingTable(), getMutationTarget(), getSqlComment(), valueBindings,
 					getKeyRestrictionBindings(), getOptimisticLockBindings(), null,
@@ -80,7 +88,17 @@ public class TableMergeBuilder<O extends MutationOperation> extends AbstractTabl
 				getMutatingTable().isOptional() ? unassignedColumns( entity, assignments ) : emptyList(),
 				assignments,
 				getKeyRestrictionBindings(),
-				getOptimisticLockBindings()
+				getOptimisticLockBindings(),
+				generatedValuesDelegate( assignments )
 		);
+	}
+
+	/// A value known only to the database is read by the update delegate,
+	/// which therefore executes the statement.
+	private GeneratedValuesMutationDelegate generatedValuesDelegate(List<ColumnValueBinding> assignments) {
+		return getMutatingTable().getTableMapping().isIdentifierTable()
+			&& assignments.stream().anyMatch( ColumnValueBinding::isUpdateConditional )
+				? getMutationTarget().getMutationDelegate( MutationType.UPDATE )
+				: null;
 	}
 }

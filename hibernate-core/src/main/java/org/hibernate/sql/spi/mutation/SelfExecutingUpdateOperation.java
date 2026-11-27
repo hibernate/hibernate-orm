@@ -15,4 +15,12 @@ public interface SelfExecutingUpdateOperation extends MutationOperation {
 			ValuesAnalysis valuesAnalysis,
 			SharedSessionContractImplementor session);
 
+	/**
+	 * An operation which executes its own statements does not hand them
+	 * to a generated values delegate.
+	 */
+	@Override
+	default boolean supportsGeneratedValuesDelegate() {
+		return false;
+	}
 }

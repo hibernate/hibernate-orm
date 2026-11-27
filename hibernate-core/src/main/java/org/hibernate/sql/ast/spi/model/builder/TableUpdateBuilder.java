@@ -37,6 +37,11 @@ public interface TableUpdateBuilder<O extends MutationOperation>
 		addColumnAssignment( column );
 	}
 
+	/** Assign an SQL expression to a column which an update writes, but which an insert leaves to the database. */
+	default void addUpdateOnlyColumn(SelectableMapping column, String assignment) {
+		addColumnAssignment( column, assignment );
+	}
+
 	/** Limit assignments, including generated assignments, to the included columns. */
 	void setColumnInclusion(Predicate<SelectableMapping> columnInclusion);
 

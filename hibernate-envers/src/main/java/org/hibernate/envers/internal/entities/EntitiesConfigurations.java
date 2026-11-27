@@ -139,6 +139,73 @@ public class EntitiesConfigurations {
 		}
 	}
 
+	/**
+	 * Determines the audited sub entities of the specified entity which themselves declare a property
+	 * with the specified name, i.e. not by inheriting it from a super entity.
+	 * <p>
+	 * Used to resolve associations which are not declared on the declared type of a traversed
+	 * association, but only on one of its sub entities.
+	 *
+	 * @param entityName the entity name
+	 * @param propertyName the property name
+	 * @return the names of the declaring sub entities; empty if the specified entity or one of its
+	 * super entities declares the property itself, or if no sub entity declares it
+	 */
+	public Set<String> getSubEntityNamesDeclaringProperty(String entityName, String propertyName) {
+		final EntityConfiguration entCfg = getEntityConfiguration( entityName );
+		if ( entCfg == null || getPropertyNames( entCfg ).contains( propertyName ) ) {
+			return Set.of();
+		}
+		final Set<String> subEntityNames = new HashSet<>();
+		for ( Map.Entry<String, EntityConfiguration> entry : entitiesConfigurations.entrySet() ) {
+			if ( isSubEntity( entry.getValue(), entityName ) && declaresProperty( entry.getValue(), propertyName ) ) {
+				subEntityNames.add( entry.getKey() );
+			}
+		}
+		return subEntityNames;
+	}
+
+	private EntityConfiguration getEntityConfiguration(String entityName) {
+		return isVersioned( entityName ) ? get( entityName ) : getNotVersionEntityConfiguration( entityName );
+	}
+
+	private boolean isSubEntity(EntityConfiguration entCfg, String superEntityName) {
+		String parentEntityName = entCfg.getParentEntityName();
+		while ( parentEntityName != null ) {
+			if ( parentEntityName.equals( superEntityName ) ) {
+				return true;
+			}
+			final EntityConfiguration parentCfg = getEntityConfiguration( parentEntityName );
+			parentEntityName = parentCfg == null ? null : parentCfg.getParentEntityName();
+		}
+		return false;
+	}
+
+	private boolean declaresProperty(EntityConfiguration entCfg, String propertyName) {
+		if ( entCfg.getRelationDescription( propertyName ) != null
+				|| entCfg.getComponentDescription( propertyName ) != null ) {
+			return true;
+		}
+		// The property mapper of a sub entity also exposes the properties of its super entities
+		if ( !getPropertyNames( entCfg ).contains( propertyName ) ) {
+			return false;
+		}
+		final EntityConfiguration parentCfg = entCfg.getParentEntityName() == null
+				? null
+				: getEntityConfiguration( entCfg.getParentEntityName() );
+		return parentCfg == null || !getPropertyNames( parentCfg ).contains( propertyName );
+	}
+
+	private static Set<String> getPropertyNames(EntityConfiguration entCfg) {
+		final Set<String> propertyNames = new HashSet<>();
+		if ( entCfg.getPropertyMapper() != null ) {
+			for ( PropertyData propertyData : entCfg.getPropertyMapper().getProperties().keySet() ) {
+				propertyNames.add( propertyData.getName() );
+			}
+		}
+		return propertyNames;
+	}
+
 	private void addWithParentEntityNames(String entityName, Set<String> entityNames) {
 		entityNames.add( entityName );
 		final EntityConfiguration entCfg = entitiesConfigurations.get( entityName );

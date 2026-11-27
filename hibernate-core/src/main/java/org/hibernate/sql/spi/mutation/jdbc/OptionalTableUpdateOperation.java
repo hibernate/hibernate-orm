@@ -37,6 +37,7 @@ import org.hibernate.sql.ast.spi.model.TenantIdColumnValueBinding;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -44,7 +45,6 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.joining;
 import static org.hibernate.exception.ConstraintViolationException.ConstraintKind.UNIQUE;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
-import static org.hibernate.internal.util.collections.CollectionHelper.combine;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 import static org.hibernate.SPI.Role.IMPLEMENT;
 import static org.hibernate.SPI.Role.USE;
@@ -76,7 +76,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	// however many times the operation is performed.
 	private volatile JdbcMutationOperation translatedUpdate;
 	private volatile JdbcMutationOperation translatedUpdateWithStoredValues;
-	private volatile JdbcMutationOperation translatedInsert;
+	private volatile InsertPlan translatedInsert;
 	private volatile JdbcDeleteMutation translatedDelete;
 
 	public OptionalTableUpdateOperation(
@@ -394,10 +394,61 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		return update;
 	}
 
-	private JdbcMutationOperation translatedInsert(SharedSessionContractImplementor session) {
+	private record InsertPlan(JdbcMutationOperation operation, int[][] jdbcPositions) {
+		void bind(BindingGroup group, PreparedStatement statement, SharedSessionContractImplementor session)
+				throws SQLException {
+			int bound = 0;
+			if ( group != null ) {
+				for ( var binding : group.getBindings() ) {
+					final int position = binding.getPosition();
+					if ( jdbcPositions == null ) {
+						if ( position <= operation.getParameterBinders().size() ) {
+							binding.getValueBinder().bind( statement, binding.getValue(), position, session );
+							bound++;
+						}
+						continue;
+					}
+					final int[] destinations = jdbcPositions[position];
+					if ( destinations != null ) {
+						for ( int destination : destinations ) {
+							binding.getValueBinder().bind( statement, binding.getValue(), destination, session );
+							bound++;
+						}
+					}
+				}
+			}
+			if ( jdbcPositions != null && bound != operation.getParameterBinders().size() ) {
+				throw new IllegalStateException( "Missing parameter binding for " + operation.getSqlString() );
+			}
+		}
+	}
+
+	private InsertPlan translatedInsert(SharedSessionContractImplementor session) {
 		var insert = translatedInsert;
 		if ( insert == null ) {
-			translatedInsert = insert = createJdbcOptionalInsert( session );
+			final var operation = createJdbcOptionalInsert( session );
+			if ( valueBindings.stream().allMatch( ColumnValueBinding::isAttributeInsertable ) ) {
+				translatedInsert = insert = new InsertPlan( operation, null );
+				return insert;
+			}
+			final int[][] positions = new int[jdbcValueDescriptors.size() + 1][];
+			int destination = 0;
+			for ( var binder : operation.getParameterBinders() ) {
+				final var parameter = (ColumnValueParameter) binder;
+				final String column = parameter.getColumnReference().getColumnExpression();
+				final var descriptor = findValueDescriptor( column, parameter.getUsage() );
+				if ( descriptor == null ) {
+					throw new IllegalStateException( "Missing value descriptor for insert column " + column );
+				}
+				final int source = descriptor.getJdbcPosition();
+				// One value may supply more than one placeholder in the translated insert.
+				final int[] previous = positions[source];
+				final int length = previous == null ? 0 : previous.length;
+				final int[] destinations = previous == null ? new int[1] : java.util.Arrays.copyOf( previous, length + 1 );
+				destinations[length] = ++destination;
+				positions[source] = destinations;
+			}
+			translatedInsert = insert = new InsertPlan( operation, positions );
 		}
 		return insert;
 	}
@@ -441,7 +492,8 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	}
 
 	private boolean performInsert(JdbcValueBindings jdbcValueBindings, SharedSessionContractImplementor session) {
-		final var jdbcInsert = translatedInsert( session );
+		final var plan = translatedInsert( session );
+		final var jdbcInsert = plan.operation();
 		final var jdbcServices = session.getJdbcServices();
 		final var jdbcCoordinator = session.getJdbcCoordinator();
 		final var insertStatement = createStatementDetails( jdbcInsert, jdbcCoordinator );
@@ -449,29 +501,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		try {
 			jdbcServices.getSqlStatementLogger().logStatement( sql );
 			session.getJdbcSessionContext().getStatementObserver().performingSql( sql, -1 );
-			final var bindingGroup = jdbcValueBindings.getBindingGroup( tableMapping.getTableName() );
-			if ( bindingGroup != null ) {
-				bindingGroup.forEachBinding( binding -> {
-					// Skip parameter bindings for e.g. optimistic version check
-					if ( binding.getPosition() <= jdbcInsert.getParameterBinders().size() ) {
-						try {
-							binding.getValueBinder().bind(
-									insertStatement,
-									binding.getValue(),
-									binding.getPosition(),
-									session
-							);
-						}
-						catch (SQLException e) {
-							throw jdbcServices.getSqlExceptionHelper().convert(
-									e,
-									"Unable to bind parameter for upsert insert",
-									sql
-							);
-						}
-					}
-				} );
-			}
+			plan.bind( jdbcValueBindings.getBindingGroup( tableMapping.getTableName() ), insertStatement, session );
 			final int rowCount = jdbcCoordinator.getResultSetReturn().executeUpdate( insertStatement, sql );
 			if ( rowCount == 0 && isRetryUpdateAfterInsert() ) {
 				return true;
@@ -516,7 +546,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	protected JdbcInsertMutation createJdbcInsert(SharedSessionContractImplementor session) {
 		final var insertDetails = tableMapping.getInsertDetails();
 		final var table = new MutatingTableReference( tableMapping );
-		final var combinedBindings = combine( valueBindings, keyBindings );
+		final var combinedBindings = getInsertBindings();
 		final var target = getMutationTarget();
 		final var tableInsert =
 				insertDetails != null && insertDetails.getCustomSql() != null
@@ -541,6 +571,17 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	@Override
 	public String toString() {
 		return "OptionalTableUpdateOperation(" + tableMapping + ")";
+	}
+
+	protected List<ColumnValueBinding> getInsertBindings() {
+		final var insertBindings = new ArrayList<ColumnValueBinding>( valueBindings.size() + keyBindings.size() );
+		for ( var binding : valueBindings ) {
+			if ( binding.isAttributeInsertable() ) {
+				insertBindings.add( binding );
+			}
+		}
+		insertBindings.addAll( keyBindings );
+		return insertBindings;
 	}
 
 	private List<ColumnValueBinding> getUpdatableValueBindings() {

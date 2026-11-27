@@ -2,16 +2,21 @@ package org.hibernate.action.queue.internal.decompose.entity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
 
+import org.hibernate.action.queue.internal.decompose.collection.DecompositionSupport;
 import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor.UpdateContext;
 import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
+import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.persister.entity.EntityPersister;
 
 /// @author Steve Ebersole
 public class DecompositionHelper {
@@ -123,5 +128,31 @@ public class DecompositionHelper {
 				state[attribute.getStateArrayPosition()] = attribute.getValue( entity );
 			}
 		}
+	}
+
+	/// Creates a no-op operation, ordered after the current-table operations of
+	/// an entity mutation, whose callback records the mutated entity on behalf
+	/// of a table derived from its current rows.
+	///
+	/// @param identifier the identifier, or `null` if an insert generates it
+	/// @param recorder receives the identifier, which is assigned to the entity
+	///                 by the time the callback is invoked
+	static FlushOperation createChangeRecorder(
+			EntityPersister entityPersister,
+			int ordinalBase,
+			Object identifier,
+			Object entity,
+			BiConsumer<Object, SessionImplementor> recorder) {
+		return DecompositionSupport.createNoOpCallbackCarrier(
+				entityPersister.getIdentifierTableDescriptor(),
+				ordinalBase * 1_000 + 900,
+				session -> recorder.accept( resolveIdentifier( entityPersister, identifier, entity, session ), session )
+		);
+	}
+
+	/// The identifier of an entity, which an insert may only just have generated.
+	static Object resolveIdentifier(
+			EntityPersister entityPersister, Object identifier, Object entity, SessionImplementor session) {
+		return identifier == null ? entityPersister.getIdentifier( entity, session ) : identifier;
 	}
 }

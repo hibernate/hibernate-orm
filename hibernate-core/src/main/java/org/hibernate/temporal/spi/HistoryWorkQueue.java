@@ -1,6 +1,5 @@
 package org.hibernate.temporal.spi;
 
-import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -41,31 +40,24 @@ import org.hibernate.persister.entity.mutation.PartitionKeyValue;
 @Incubating(since = "8.0")
 public class HistoryWorkQueue implements TransactionCompletionCallbacks.BeforeCompletionCallback {
 	private final Map<EntityKey, Change> changes = new LinkedHashMap<>();
-	/// Changes to an entity whose identifier is assigned when its row is inserted.
-	private final List<UnidentifiedChange> unidentifiedChanges = new ArrayList<>();
 	private boolean registered;
 
 	/// Record the insertion of the current row of an entity.
-	///
-	/// @param id the identifier, or `null` if it is not yet assigned
-	public void entityInserted(
-			Object entity, @Nullable Object id,
-			HistoryRevisionWriter writer, SharedSessionContractImplementor session) {
-		add( entity, id, Change.inserted( writer ), session );
+	public void entityInserted(Object id, HistoryRevisionWriter writer, SharedSessionContractImplementor session) {
+		add( id, Change.inserted( writer ), session );
 	}
 
 	/// Record an update of the current row of an entity.
 	///
-	/// @param id the identifier, or `null` if it is not yet assigned
 	/// @param newRevision whether the update warrants a new revision
 	/// @param dirtyAttributes the modified attributes, if known
 	/// @param partitionKeys the partition key of the row before the update, as far as it is known
 	public void entityUpdated(
-			Object entity, @Nullable Object id,
+			Object id,
 			boolean newRevision, @Nullable int[] dirtyAttributes,
 			List<PartitionKeyValue> partitionKeys,
 			HistoryRevisionWriter writer, SharedSessionContractImplementor session) {
-		add( entity, id, Change.updated( writer, newRevision, dirtyAttributes, partitionKeys ), session );
+		add( id, Change.updated( writer, newRevision, dirtyAttributes, partitionKeys ), session );
 	}
 
 	/// Record the deletion of the current row of an entity.
@@ -74,22 +66,18 @@ public class HistoryWorkQueue implements TransactionCompletionCallbacks.BeforeCo
 	public void entityDeleted(
 			Object id, List<PartitionKeyValue> partitionKeys,
 			HistoryRevisionWriter writer, SharedSessionContractImplementor session) {
-		add( null, id, Change.deleted( writer, partitionKeys ), session );
+		add( id, Change.deleted( writer, partitionKeys ), session );
 	}
 
 	/// Called when the statements which write current rows have been executed.
 	/// Outside of a transaction, the recorded entities are reconciled at once.
 	public void currentRowsWritten(SharedSessionContractImplementor session) {
-		if ( !registered && hasWork() ) {
+		if ( !registered && !changes.isEmpty() ) {
 			writeRevisions( session );
 		}
 	}
 
-	private boolean hasWork() {
-		return !changes.isEmpty() || !unidentifiedChanges.isEmpty();
-	}
-
-	private void add(@Nullable Object entity, @Nullable Object id, Change change, SharedSessionContractImplementor session) {
+	private void add(Object id, Change change, SharedSessionContractImplementor session) {
 		if ( !registered && session.isTransactionInProgress() ) {
 			final var callbacks = session.getTransactionCompletionCallbacks();
 			callbacks.registerCallback( this );
@@ -97,12 +85,7 @@ public class HistoryWorkQueue implements TransactionCompletionCallbacks.BeforeCo
 			callbacks.registerCallback( (success, completingSession) -> clear() );
 			registered = true;
 		}
-		if ( id == null ) {
-			unidentifiedChanges.add( new UnidentifiedChange( entity, change ) );
-		}
-		else {
-			changes.merge( session.generateEntityKey( id, change.writer.getEntityPersister() ), change, Change::followedBy );
-		}
+		changes.merge( session.generateEntityKey( id, change.writer.getEntityPersister() ), change, Change::followedBy );
 	}
 
 	@Override
@@ -112,16 +95,15 @@ public class HistoryWorkQueue implements TransactionCompletionCallbacks.BeforeCo
 
 	private void writeRevisions(SharedSessionContractImplementor session) {
 		try {
-			final var resolved = resolveChanges( session );
 			// End every superseded revision before opening any new one,
 			// since a new revision is itself an open revision of its entity.
-			for ( var entry : resolved.entrySet() ) {
+			for ( var entry : changes.entrySet() ) {
 				final var change = entry.getValue();
 				if ( change.endsRevision() ) {
 					change.initialWriter.endRevision( entry.getKey().getIdentifier(), change.partitionKeys, session );
 				}
 			}
-			for ( var entry : resolved.entrySet() ) {
+			for ( var entry : changes.entrySet() ) {
 				final var change = entry.getValue();
 				final Object id = entry.getKey().getIdentifier();
 				if ( change.opensRevision() ) {
@@ -138,33 +120,9 @@ public class HistoryWorkQueue implements TransactionCompletionCallbacks.BeforeCo
 		}
 	}
 
-	/// A change recorded before the identifier was assigned precedes every
-	/// change to the same entity recorded under its identifier.
-	private Map<EntityKey, Change> resolveChanges(SharedSessionContractImplementor session) {
-		if ( unidentifiedChanges.isEmpty() ) {
-			return changes;
-		}
-		final Map<EntityKey, Change> resolved = new LinkedHashMap<>();
-		for ( var unidentified : unidentifiedChanges ) {
-			final var persister = unidentified.change.writer.getEntityPersister();
-			final Object id = persister.getIdentifier( unidentified.entity, session );
-			if ( id != null ) {
-				resolved.merge( session.generateEntityKey( id, persister ), unidentified.change, Change::followedBy );
-			}
-		}
-		for ( var entry : changes.entrySet() ) {
-			resolved.merge( entry.getKey(), entry.getValue(), Change::followedBy );
-		}
-		return resolved;
-	}
-
 	private void clear() {
 		changes.clear();
-		unidentifiedChanges.clear();
 		registered = false;
-	}
-
-	private record UnidentifiedChange(Object entity, Change change) {
 	}
 
 	/// The net effect of the changes made to one entity during the changeset.

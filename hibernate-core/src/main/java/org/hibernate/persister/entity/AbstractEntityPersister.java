@@ -3928,7 +3928,7 @@ public abstract class AbstractEntityPersister
 			entityAuditSupport = new EntityAuditSupport( this, getFactory() );
 		}
 		final var temporalMapping = getTemporalMapping();
-		if ( temporalMapping != null && !temporalMapping.getCurrentTableColumns().isEmpty() ) {
+		if ( temporalMapping != null && !temporalMapping.getCopiedColumns( getIdentifierTableName() ).isEmpty() ) {
 			historyRevisionWriter = new HistoryRevisionWriter( this, getFactory() );
 		}
 		final var legacyIntegration = stateManagement.getLegacyIntegration();

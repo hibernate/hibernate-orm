@@ -209,7 +209,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 
 	@Nonnull
 	@Override
-	public List<String> getCurrentTableColumns() {
+	public List<String> getCopiedColumns(@Nonnull String originalTableName) {
 		return currentTableColumns;
 	}
 

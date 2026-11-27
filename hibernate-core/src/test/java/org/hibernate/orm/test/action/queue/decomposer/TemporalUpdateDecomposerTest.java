@@ -109,7 +109,8 @@ public class TemporalUpdateDecomposerTest {
 			// The ownership check is the only operation in the plan. A revision is copied
 			// to the history table when the transaction completes, which a failed check prevents.
 			final var ownershipCheck = operation( operations, currentTable, MutationKind.UPDATE );
-			assertEquals( List.of( ownershipCheck ), operations );
+			assertEquals( List.of( ownershipCheck ),
+					operations.stream().filter( op -> op.getKind() != MutationKind.NO_OP ).toList() );
 			assertTrue( operations.stream().noneMatch( op -> historyTable.equals( op.getTableExpression() ) ) );
 			item.name = "before";
 		} );

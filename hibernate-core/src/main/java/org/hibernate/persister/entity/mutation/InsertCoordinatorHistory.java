@@ -52,7 +52,7 @@ public class InsertCoordinatorHistory extends AbstractMutationCoordinator implem
 	@Override
 	public GeneratedValues insert(@Nonnull Object entity, @Nonnull Object[] values, @Nonnull SharedSessionContractImplementor session) {
 		final var generatedValues = currentInsertCoordinator.insert( entity, values, session );
-		recordInsert( entity, resolveInsertedIdentifier( entity, null, generatedValues, session ), session );
+		recordInsert( resolveInsertedIdentifier( entity, null, generatedValues, session ), session );
 		return generatedValues;
 	}
 
@@ -64,13 +64,13 @@ public class InsertCoordinatorHistory extends AbstractMutationCoordinator implem
 			@Nonnull Object[] values,
 			@Nonnull SharedSessionContractImplementor session) {
 		final var generatedValues = currentInsertCoordinator.insert( entity, id, values, session );
-		recordInsert( entity, resolveInsertedIdentifier( entity, id, generatedValues, session ), session );
+		recordInsert( resolveInsertedIdentifier( entity, id, generatedValues, session ), session );
 		return generatedValues;
 	}
 
-	private void recordInsert(Object entity, Object id, SharedSessionContractImplementor session) {
+	private void recordInsert(Object id, SharedSessionContractImplementor session) {
 		final var queue = session.getHistoryWorkQueue();
-		queue.entityInserted( entity, id, revisionWriter, session );
+		queue.entityInserted( id, revisionWriter, session );
 		queue.currentRowsWritten( session );
 	}
 }

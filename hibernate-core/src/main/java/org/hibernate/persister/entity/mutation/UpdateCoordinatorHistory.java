@@ -68,7 +68,6 @@ public class UpdateCoordinatorHistory implements UpdateCoordinator {
 		);
 		final var queue = session.getHistoryWorkQueue();
 		queue.entityUpdated(
-				entity,
 				id,
 				!entityPersister.excludedFromTemporalVersioning( dirtyAttributeIndexes, hasDirtyCollection ),
 				dirtyAttributeIndexes,

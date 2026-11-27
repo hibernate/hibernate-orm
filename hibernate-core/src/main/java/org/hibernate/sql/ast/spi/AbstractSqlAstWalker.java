@@ -605,7 +605,7 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 			columnValueBinding.getValueExpression().accept( this );
 		} );
 
-		for ( var restriction : tableInsert.getSourceRestrictions() ) {
+		for ( var restriction : tableInsert.getKeyRestrictions() ) {
 			restriction.getColumnReference().accept( this );
 			restriction.getValueExpression().accept( this );
 		}

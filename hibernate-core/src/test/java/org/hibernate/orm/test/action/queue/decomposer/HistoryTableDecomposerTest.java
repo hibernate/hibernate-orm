@@ -2,6 +2,7 @@ package org.hibernate.orm.test.action.queue.decomposer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -76,7 +77,7 @@ public class HistoryTableDecomposerTest {
 					(EventSource) session
 			);
 			final List<FlushOperation> operations = new ArrayList<>();
-			persister.getInsertDecomposer().decompose( action, 0, session, null, operations::add );
+			persister.getInsertDecomposer().decompose( action, 0, session, null, collectingWrites( operations ) );
 
 			assertEquals( 1, operations.size() );
 			assertOperation( operations.get( 0 ), MutationKind.INSERT, "graph_history_entity" );
@@ -118,7 +119,7 @@ public class HistoryTableDecomposerTest {
 					(EventSource) session
 			);
 			final List<FlushOperation> operations = new ArrayList<>();
-			persister.getUpdateDecomposer().decompose( action, 0, session, null, operations::add );
+			persister.getUpdateDecomposer().decompose( action, 0, session, null, collectingWrites( operations ) );
 
 			assertEquals( 1, operations.size() );
 			assertOperation( operations.get( 0 ), MutationKind.UPDATE, "graph_history_entity" );
@@ -155,7 +156,7 @@ public class HistoryTableDecomposerTest {
 					(EventSource) session
 			);
 			final List<FlushOperation> operations = new ArrayList<>();
-			persister.getDeleteDecomposer().decompose( action, 0, session, null, operations::add );
+			persister.getDeleteDecomposer().decompose( action, 0, session, null, collectingWrites( operations ) );
 
 			assertEquals( 1, operations.size() );
 			assertOperation( operations.get( 0 ), MutationKind.DELETE, "graph_history_entity" );
@@ -186,7 +187,7 @@ public class HistoryTableDecomposerTest {
 					(EventSource) session
 			);
 			final List<FlushOperation> operations = new ArrayList<>();
-			persister.getInsertDecomposer().decompose( action, 0, session, null, operations::add );
+			persister.getInsertDecomposer().decompose( action, 0, session, null, collectingWrites( operations ) );
 
 			assertEquals( 2, operations.size() );
 			assertOperation( operations.get( 0 ), MutationKind.INSERT, "graph_history_secondary_entity" );
@@ -231,7 +232,7 @@ public class HistoryTableDecomposerTest {
 					(EventSource) session
 			);
 			final List<FlushOperation> operations = new ArrayList<>();
-			persister.getUpdateDecomposer().decompose( action, 0, session, null, operations::add );
+			persister.getUpdateDecomposer().decompose( action, 0, session, null, collectingWrites( operations ) );
 
 			assertEquals( 2, operations.size() );
 			assertOperation( operations.get( 0 ), MutationKind.UPDATE, "graph_history_secondary_entity" );
@@ -271,7 +272,7 @@ public class HistoryTableDecomposerTest {
 					(EventSource) session
 			);
 			final List<FlushOperation> operations = new ArrayList<>();
-			persister.getDeleteDecomposer().decompose( action, 0, session, null, operations::add );
+			persister.getDeleteDecomposer().decompose( action, 0, session, null, collectingWrites( operations ) );
 
 			assertEquals( 2, operations.size() );
 			assertOperation( operations.get( 0 ), MutationKind.DELETE, "graph_history_secondary_entity_details" );
@@ -303,7 +304,7 @@ public class HistoryTableDecomposerTest {
 					(EventSource) session
 			);
 			final List<FlushOperation> operations = new ArrayList<>();
-			persister.getInsertDecomposer().decompose( action, 0, session, null, operations::add );
+			persister.getInsertDecomposer().decompose( action, 0, session, null, collectingWrites( operations ) );
 
 			assertEquals( 2, operations.size() );
 			assertOperation( operations.get( 0 ), MutationKind.INSERT, "graph_history_joined_parent" );
@@ -348,7 +349,7 @@ public class HistoryTableDecomposerTest {
 					(EventSource) session
 			);
 			final List<FlushOperation> operations = new ArrayList<>();
-			persister.getUpdateDecomposer().decompose( action, 0, session, null, operations::add );
+			persister.getUpdateDecomposer().decompose( action, 0, session, null, collectingWrites( operations ) );
 
 			assertEquals( 2, operations.size() );
 			assertOperation( operations.get( 0 ), MutationKind.UPDATE, "graph_history_joined_parent" );
@@ -388,12 +389,21 @@ public class HistoryTableDecomposerTest {
 					(EventSource) session
 			);
 			final List<FlushOperation> operations = new ArrayList<>();
-			persister.getDeleteDecomposer().decompose( action, 0, session, null, operations::add );
+			persister.getDeleteDecomposer().decompose( action, 0, session, null, collectingWrites( operations ) );
 
 			assertEquals( 2, operations.size() );
 			assertOperation( operations.get( 0 ), MutationKind.DELETE, "graph_history_joined_child" );
 			assertOperation( operations.get( 1 ), MutationKind.DELETE, "graph_history_joined_parent" );
 		} );
+	}
+
+	/// Leaves out the no-op operation whose callback records the entity in the history work queue.
+	private static Consumer<FlushOperation> collectingWrites(List<FlushOperation> operations) {
+		return operation -> {
+			if ( operation.getKind() != MutationKind.NO_OP ) {
+				operations.add( operation );
+			}
+		};
 	}
 
 	private static void assertOperation(

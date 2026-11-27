@@ -10476,11 +10476,20 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	/// Renders `insert into target (...) select ... from source where ...`,
 	/// copying a row of the source table to the target table.
 	///
+	/// If the source row is optional, the select reads the key from an anchor
+	/// table, to which the source table is outer joined.
+	///
 	/// A parameter in the select list is rendered as this dialect renders any
 	/// parameter which is a select item, since some databases do not infer the
 	/// type of a parameter in that position.
 	@Override
 	public void visitTableInsertSelect(TableInsertSelect tableInsert) {
+		final String anchorTableName = tableInsert.getAnchorTableName();
+		final String sourceQualifier = anchorTableName == null ? "" : "s.";
+		final var keyRestrictions = tableInsert.getKeyRestrictions();
+		final var copiedColumns = tableInsert.getCopiedColumns();
+		final var valueBindings = tableInsert.getValueBindings();
+
 		getCurrentClauseStack().push( Clause.INSERT );
 		try {
 			applySqlComment( tableInsert.getMutationComment() );
@@ -10490,11 +10499,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			appendSql( targetTableName );
 			registerAffectedTable( targetTableName );
 
-			final var copiedColumns = tableInsert.getCopiedColumns();
-			final var valueBindings = tableInsert.getValueBindings();
-
-			char separator = '(';
 			appendSql( ' ' );
+			char separator = '(';
+			for ( var restriction : keyRestrictions ) {
+				appendSql( separator );
+				appendSql( restriction.getColumnReference().getColumnExpression() );
+				separator = ',';
+			}
 			for ( String column : copiedColumns ) {
 				appendSql( separator );
 				appendSql( column );
@@ -10510,8 +10521,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			getCurrentClauseStack().push( Clause.SELECT );
 			try {
 				String selectSeparator = "";
+				for ( int i = 0; i < keyRestrictions.size(); i++ ) {
+					appendSql( selectSeparator );
+					appendSql( keyColumn( tableInsert, i ) );
+					selectSeparator = ",";
+				}
 				for ( String column : copiedColumns ) {
 					appendSql( selectSeparator );
+					appendSql( sourceQualifier );
 					appendSql( column );
 					selectSeparator = ",";
 				}
@@ -10541,16 +10558,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 
 			appendSql( " from " );
-			appendSql( tableInsert.getSourceTableName() );
+			renderCopiedRowSource( tableInsert );
 
 			getCurrentClauseStack().push( Clause.WHERE );
 			try {
 				String restrictionSeparator = " where ";
-				for ( var restriction : tableInsert.getSourceRestrictions() ) {
+				for ( int i = 0; i < keyRestrictions.size(); i++ ) {
 					appendSql( restrictionSeparator );
-					appendSql( restriction.getColumnReference().getColumnExpression() );
+					appendSql( keyColumn( tableInsert, i ) );
 					appendSql( '=' );
-					restriction.getValueExpression().accept( this );
+					keyRestrictions.get( i ).getValueExpression().accept( this );
 					restrictionSeparator = " and ";
 				}
 			}
@@ -10561,6 +10578,37 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		finally {
 			getCurrentClauseStack().pop();
 		}
+	}
+
+	/// The table holding the copied row, outer joined to its anchor table if it has one.
+	private void renderCopiedRowSource(TableInsertSelect tableInsert) {
+		final String anchorTableName = tableInsert.getAnchorTableName();
+		if ( anchorTableName == null ) {
+			appendSql( tableInsert.getSourceTableName() );
+		}
+		else {
+			appendSql( anchorTableName );
+			appendSql( " a left join " );
+			appendSql( tableInsert.getSourceTableName() );
+			appendSql( " s" );
+			final var keyRestrictions = tableInsert.getKeyRestrictions();
+			String joinSeparator = " on ";
+			for ( int i = 0; i < keyRestrictions.size(); i++ ) {
+				appendSql( joinSeparator );
+				appendSql( "s." );
+				appendSql( keyRestrictions.get( i ).getColumnReference().getColumnExpression() );
+				appendSql( '=' );
+				appendSql( keyColumn( tableInsert, i ) );
+				joinSeparator = " and ";
+			}
+		}
+	}
+
+	/// The key column from which the select reads the key of the copied row.
+	private static String keyColumn(TableInsertSelect tableInsert, int position) {
+		return tableInsert.getAnchorTableName() == null
+				? tableInsert.getKeyRestrictions().get( position ).getColumnReference().getColumnExpression()
+				: "a." + tableInsert.getAnchorKeyColumns().get( position );
 	}
 
 	@Override

@@ -795,7 +795,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	@Nullable
 	default HistoryRevisionWriter getHistoryRevisionWriter() {
 		final var temporalMapping = getTemporalMapping();
-		return temporalMapping == null || temporalMapping.getCurrentTableColumns().isEmpty() ? null
+		return temporalMapping == null || temporalMapping.getCopiedColumns( getIdentifierTableName() ).isEmpty() ? null
 				: new HistoryRevisionWriter( this, getFactory() );
 	}
 

@@ -1,9 +1,12 @@
 package org.hibernate.orm.test.function.srf;
 
 import jakarta.persistence.Tuple;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaFunctionJoin;
 import org.hibernate.query.criteria.JpaFunctionRoot;
+import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.library.Book;
@@ -229,6 +232,22 @@ public class GenerateSeriesTest {
 			assertEquals( 2, resultList.get( 0 ).get( 1 ) );
 			assertEquals( 2L, resultList.get( 1 ).get( 0 ) );
 			assertEquals( 3, resultList.get( 1 ).get( 1 ) );
+		} );
+	}
+
+	@Test
+	public void testNodeBuilderGenerateSeriesJoinCopyTree(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			em.setProperty( AvailableSettings.CRITERIA_COPY_TREE, true );
+			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
+			final JpaCriteriaQuery<Integer> cq = cb.createQuery( Integer.class );
+			final JpaRoot<Book> book = cq.from( Book.class );
+			final JpaFunctionJoin<Integer> series = book.join( cb.generateSeries( 1, 3 ) );
+			cq.select( series );
+			cq.orderBy( cb.asc( series ) );
+			List<Integer> resultList = em.createQuery( cq ).getResultList();
+
+			assertEquals( List.of( 1, 2, 3 ), resultList );
 		} );
 	}
 

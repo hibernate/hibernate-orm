@@ -304,7 +304,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		session.getJdbcServices().getSqlStatementLogger().logStatement( jdbcDelete.getSqlString() );
 		session.getJdbcSessionContext().getStatementObserver().performingSql( jdbcDelete.getSqlString(), -1 );
 		try {
-			bindParameters( jdbcValueBindings, deleteStatement, deleteParameters, jdbcDelete.getSqlString(), session );
+			bindStatementValues( jdbcValueBindings, deleteStatement, jdbcDelete, session );
 			return jdbcCoordinator.getResultSetReturn().executeUpdate( deleteStatement, jdbcDelete.getSqlString() ) > 0;
 		}
 		finally {
@@ -343,18 +343,15 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		final var jdbcServices = session.getJdbcServices();
 		final var updateValueBindings = getUpdatableValueBindings();
 		final var updateParameters = collectUpdateParameters( updateValueBindings );
-		final var statementDetails =
-				new PreparedStatementGroupSingleTable(
-						translatedUpdate( session, updateValueBindings, updateParameters, needsStoredValues ),
-						session
-				)
-						.resolvePreparedStatementDetails( tableMapping.getTableName() );
+		final var jdbcUpdate = translatedUpdate( session, updateValueBindings, updateParameters, needsStoredValues );
+		final var statementDetails = new PreparedStatementGroupSingleTable( jdbcUpdate, session )
+				.resolvePreparedStatementDetails( tableMapping.getTableName() );
 		final String sql = statementDetails.getSqlString();
 		try {
 			final var updateStatement = statementDetails.resolveStatement();
 			jdbcServices.getSqlStatementLogger().logStatement( sql );
 			session.getJdbcSessionContext().getStatementObserver().performingSql( sql, -1 );
-			bindParameters( jdbcValueBindings, updateStatement, updateParameters, sql, session );
+			bindStatementValues( jdbcValueBindings, updateStatement, jdbcUpdate, session );
 			final int rowCount =
 					session.getJdbcCoordinator().getResultSetReturn()
 							.executeUpdate( updateStatement, sql );
@@ -411,15 +408,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 			int bound = 0;
 			if ( group != null ) {
 				for ( var binding : group.getBindings() ) {
-					final int position = binding.getPosition();
-					if ( jdbcPositions == null ) {
-						if ( position <= operation.getParameterBinders().size() ) {
-							binding.getValueBinder().bind( statement, binding.getValue(), position, session );
-							bound++;
-						}
-						continue;
-					}
-					final int[] destinations = jdbcPositions[position];
+					final int[] destinations = jdbcPositions[binding.getPosition()];
 					if ( destinations != null ) {
 						for ( int destination : destinations ) {
 							binding.getValueBinder().bind( statement, binding.getValue(), destination, session );
@@ -428,7 +417,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 					}
 				}
 			}
-			if ( jdbcPositions != null && bound != operation.getParameterBinders().size() ) {
+			if ( bound != operation.getParameterBinders().size() ) {
 				throw new IllegalStateException( "Missing parameter binding for " + operation.getSqlString() );
 			}
 		}
@@ -438,10 +427,6 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		var insert = translatedInsert;
 		if ( insert == null ) {
 			final var operation = createJdbcOptionalInsert( session );
-			if ( valueBindings.stream().allMatch( ColumnValueBinding::isAttributeInsertable ) ) {
-				translatedInsert = insert = new InsertPlan( operation, null );
-				return insert;
-			}
 			final int[][] positions = new int[jdbcValueDescriptors.size() + 1][];
 			int destination = 0;
 			for ( var binder : operation.getParameterBinders() ) {
@@ -674,11 +659,10 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		);
 	}
 
-	private void bindParameters(
+	private void bindStatementValues(
 			JdbcValueBindings jdbcValueBindings,
 			PreparedStatement statement,
-			List<ColumnValueParameter> statementParameters,
-			String sql,
+			JdbcMutationOperation operation,
 			SharedSessionContractImplementor session) {
 		final var bindingGroup =
 				jdbcValueBindings.getBindingGroup( tableMapping.getTableName() );
@@ -686,20 +670,21 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 			throw new IllegalStateException(
 					String.format(
 							Locale.ROOT,
-							"No value bindings for table : %s",
+							"No value bindings for table mutation : %s",
 							tableMapping.getTableName()
 					)
 			);
 		}
 
 		int jdbcBindingPosition = 1;
-		for ( var parameter : statementParameters ) {
+		for ( var binder : operation.getParameterBinders() ) {
+			final var parameter = (ColumnValueParameter) binder;
 			final var binding = bindingGroup.findBinding( parameter.getColumnReference().getColumnExpression(), parameter.getUsage() );
 			if ( binding == null ) {
 				throw new IllegalStateException(
 						String.format(
 								Locale.ROOT,
-								"Missing value binding : %s.%s (%s)",
+								"Missing value binding for mutation : %s.%s (%s)",
 								tableMapping.getTableName(),
 								parameter.getColumnReference().getColumnExpression(),
 								parameter.getUsage()
@@ -713,8 +698,8 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 			catch (SQLException e) {
 				throw session.getJdbcServices().getSqlExceptionHelper().convert(
 						e,
-						"Unable to bind parameter for optional table mutation",
-						sql
+						"Unable to bind parameter for upsert",
+						operation.getSqlString()
 				);
 			}
 		}

@@ -5,6 +5,7 @@ import java.util.List;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.boot.model.naming.ColumnNamingContext;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitCollectionTableNameSource;
@@ -298,7 +299,8 @@ public class TableBinder {
 				options,
 				buildingContext,
 				null,
-				null
+				null,
+				new ColumnNamingContext( ownerEntity, ownerClassName )
 		);
 	}
 
@@ -441,7 +443,8 @@ public class TableBinder {
 			Identifier logicalName,
 			boolean isAbstract,
 			UniqueConstraint[] uniqueConstraints,
-			MetadataBuildingContext buildingContext) {
+			MetadataBuildingContext buildingContext,
+			ColumnNamingContext columnNamingContext) {
 		return buildAndFillTable(
 				schema,
 				catalog,
@@ -453,7 +456,8 @@ public class TableBinder {
 				null,
 				buildingContext,
 				null,
-				null
+				null,
+				columnNamingContext
 		);
 	}
 
@@ -465,7 +469,8 @@ public class TableBinder {
 			UniqueConstraint[] uniqueConstraints,
 			MetadataBuildingContext buildingContext,
 			String subselect,
-			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
+			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref,
+			ColumnNamingContext columnNamingContext) {
 		return buildAndFillTable(
 				schema,
 				catalog,
@@ -477,7 +482,8 @@ public class TableBinder {
 				null,
 				buildingContext,
 				subselect,
-				denormalizedSuperTableXref
+				denormalizedSuperTableXref,
+				columnNamingContext
 		);
 	}
 
@@ -492,7 +498,8 @@ public class TableBinder {
 			String options,
 			MetadataBuildingContext buildingContext,
 			String subselect,
-			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
+			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref,
+			ColumnNamingContext columnNamingContext) {
 		final var metadataCollector = buildingContext.getMetadataCollector();
 
 		final var table = addTable(
@@ -507,11 +514,11 @@ public class TableBinder {
 		);
 
 		if ( uniqueConstraints != null ) {
-			new IndexBinder( buildingContext ).bindUniqueConstraints( table, uniqueConstraints );
+			new IndexBinder( buildingContext, columnNamingContext ).bindUniqueConstraints( table, uniqueConstraints );
 		}
 
 		if ( indexes != null ) {
-			new IndexBinder( buildingContext ).bindIndexes( table, indexes );
+			new IndexBinder( buildingContext, columnNamingContext ).bindIndexes( table, indexes );
 		}
 
 		addTableType( table, type );
@@ -889,8 +896,12 @@ public class TableBinder {
 		}
 	}
 
-	static void addJpaIndexes(Table table, Index[] indexes, MetadataBuildingContext context) {
-		new IndexBinder( context ).bindIndexes( table, indexes );
+	static void addJpaIndexes(
+			Table table,
+			Index[] indexes,
+			MetadataBuildingContext context,
+			ColumnNamingContext columnNamingContext) {
+		new IndexBinder( context, columnNamingContext ).bindIndexes( table, indexes );
 	}
 
 	static void addTableCheck(

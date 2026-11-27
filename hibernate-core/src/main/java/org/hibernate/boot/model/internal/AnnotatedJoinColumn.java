@@ -399,7 +399,8 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			}
 		}
 //		else {
-			return parent.buildDefaultColumnName( referencedEntity, logicalReferencedColumn );
+			return parent.buildDefaultColumnName( referencedEntity, logicalReferencedColumn,
+					ColumnNamingContexts.forColumns( parent ) );
 //		}
 	}
 
@@ -423,7 +424,8 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 						} );
 		final var database = context.getMetadataCollector().getDatabase();
 		return buildingOptions.getPhysicalNamingStrategy()
-				.toPhysicalColumnName( logicalColumnName, database.getJdbcEnvironment() )
+				.toPhysicalColumnName( logicalColumnName, database.getJdbcEnvironment(),
+						ColumnNamingContexts.forColumns( getParent() ) )
 				.render( database.getDialect() );
 	}
 

@@ -66,6 +66,7 @@ import org.hibernate.annotations.View;
 import org.hibernate.annotations.Changelog;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.internal.InheritanceState.ElementsToProcess;
+import org.hibernate.boot.model.naming.ColumnNamingContext;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitEntityNameSource;
@@ -461,7 +462,8 @@ public class EntityBinder {
 		final var jpaTableUsage = annotatedClass.getAnnotationUsage( jakarta.persistence.Table.class, models );
 		if ( jpaTableUsage != null ) {
 			final var table = persistentClass.getTable();
-			TableBinder.addJpaIndexes( table, jpaTableUsage.indexes(), context );
+			TableBinder.addJpaIndexes( table, jpaTableUsage.indexes(), context,
+					ColumnNamingContexts.forEntity( persistentClass ) );
 			TableBinder.addTableCheck( table, jpaTableUsage.check() );
 			TableBinder.addTableComment( table, jpaTableUsage.comment() );
 			TableBinder.addTableType( table, jpaTableUsage.type() );
@@ -473,7 +475,8 @@ public class EntityBinder {
 			final Identifier secondaryTableLogicalName = toIdentifier( usage.name() );
 			final var table = entityTableXref.resolveTable( secondaryTableLogicalName );
 			assert table != null;
-			TableBinder.addJpaIndexes( table, usage.indexes(), context );
+			TableBinder.addJpaIndexes( table, usage.indexes(), context,
+					ColumnNamingContexts.forEntity( persistentClass ) );
 		} );
 	}
 
@@ -2092,7 +2095,8 @@ public class EntityBinder {
 				uniqueConstraints,
 				context,
 				subselect,
-				denormalizedSuperTableXref
+				denormalizedSuperTableXref,
+				ColumnNamingContexts.forEntity( persistentClass )
 		);
 		table.setRowId( rowId );
 		table.setViewQuery( viewQuery );
@@ -2340,7 +2344,7 @@ public class EntityBinder {
 				secondaryTable.uniqueConstraints()
 		);
 		final var table = join.getTable();
-		new IndexBinder( context ).bindIndexes( table, secondaryTable.indexes() );
+		new IndexBinder( context, columnNamingContext( holder ) ).bindIndexes( table, secondaryTable.indexes() );
 		TableBinder.addTableCheck( table, secondaryTable.check() );
 		TableBinder.addTableComment( table, secondaryTable.comment() );
 		TableBinder.addTableType( table, secondaryTable.type() );
@@ -2370,9 +2374,16 @@ public class EntityBinder {
 						logicalName.getTableName(),
 						false,
 						uniqueConstraints,
-						context
+						context,
+						columnNamingContext( propertyHolder )
 				)
 		);
+	}
+
+	private ColumnNamingContext columnNamingContext(PropertyHolder propertyHolder) {
+		return propertyHolder == null
+				? ColumnNamingContexts.forEntity( persistentClass )
+				: ColumnNamingContexts.forPropertyHolder( propertyHolder );
 	}
 
 	private QualifiedTableName logicalTableName(String name, String schema, String catalog) {

@@ -132,6 +132,10 @@ public class SybaseASEDialect extends SybaseDialect implements CurrentTemporalSu
 
 	public static final int MAX_PAGE_SIZE = 16_384;
 
+	private final MutationSyntaxSupport mutationSyntaxSupport = MutationSyntaxSupport.builder()
+			.capability( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE )
+			.capability( MutationKind.DELETE, MutationSyntaxCapability.JOIN )
+			.build();
 	private final SizeStrategy sizeStrategy = new StandardSizeStrategy( this ) {
 		@Override
 		public Size resolveSize(
@@ -872,10 +876,7 @@ public class SybaseASEDialect extends SybaseDialect implements CurrentTemporalSu
 
 	@Override
 	public MutationSyntaxSupport getMutationSyntaxSupport() {
-		return MutationSyntaxSupport.builder()
-				.capability( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE )
-				.capability( MutationKind.DELETE, MutationSyntaxCapability.JOIN )
-				.build();
+		return mutationSyntaxSupport;
 	}
 
 	@Override

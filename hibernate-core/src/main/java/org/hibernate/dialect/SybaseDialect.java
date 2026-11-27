@@ -134,6 +134,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect implements Current
 
 	private static final int PARAM_COUNT_LIMIT = 2000;
 
+	private final MutationSyntaxSupport mutationSyntaxSupport = MutationSyntaxSupport.of( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE );
 	private final UniqueDelegate uniqueDelegate = UniqueDelegates.skipNullable( this );
 	private final SybaseDriverKind driverKind;
 	private final JdbcMetadataOverrides jdbcMetadataOverrides;
@@ -648,7 +649,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect implements Current
 
 	@Override
 	public MutationSyntaxSupport getMutationSyntaxSupport() {
-		return MutationSyntaxSupport.of( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE );
+		return mutationSyntaxSupport;
 	}
 
 	@Override

@@ -286,6 +286,11 @@ public class MySQLDialect extends Dialect implements CurrentTemporalSupport, Tem
 
 	private final int maxVarcharLength;
 	private final int maxVarbinaryLength;
+	private final CteSupport cteSupport;
+	private final MutationSyntaxSupport mutationSyntaxSupport = MutationSyntaxSupport.builder()
+			.capability( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE )
+			.capability( MutationKind.DELETE, MutationSyntaxCapability.JOIN )
+			.build();
 	private final TypeSizingProfile typeSizingProfile;
 
 	private final boolean noBackslashEscapesEnabled;
@@ -310,8 +315,15 @@ public class MySQLDialect extends Dialect implements CurrentTemporalSupport, Tem
 	@SPI( IMPLEMENT )
 	public MySQLDialect(DatabaseVersion version, MySQLServerConfiguration serverConfiguration) {
 		super( version );
-		maxVarcharLength = maxVarcharLength( getMySQLVersion(), serverConfiguration.getBytesPerCharacter() ); //conservative assumption
-		maxVarbinaryLength = maxVarbinaryLength( getMySQLVersion() );
+		final DatabaseVersion mysqlVersion = getMySQLVersion();
+		maxVarcharLength = maxVarcharLength( mysqlVersion, serverConfiguration.getBytesPerCharacter() ); //conservative assumption
+		maxVarbinaryLength = maxVarbinaryLength( mysqlVersion );
+		cteSupport = CteSupport.builder()
+				.recursiveFeature(
+						CteSupport.RecursiveFeature.RECURSIVE,
+						mysqlVersion.isSameOrAfter( 8, 0, 14 )
+				)
+				.build();
 		typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
 				.defaultLobLength( Length.LONG32 )
 				.floatPrecision( 23 )
@@ -1480,12 +1492,7 @@ public class MySQLDialect extends Dialect implements CurrentTemporalSupport, Tem
 
 	@Override
 	public CteSupport getCteSupport() {
-		return CteSupport.builder()
-				.recursiveFeature(
-						CteSupport.RecursiveFeature.RECURSIVE,
-						getMySQLVersion().isSameOrAfter( 8, 0, 14 )
-				)
-				.build();
+		return cteSupport;
 	}
 
 	@Override
@@ -1549,10 +1556,7 @@ public class MySQLDialect extends Dialect implements CurrentTemporalSupport, Tem
 
 	@Override
 	public MutationSyntaxSupport getMutationSyntaxSupport() {
-		return MutationSyntaxSupport.builder()
-				.capability( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE )
-				.capability( MutationKind.DELETE, MutationSyntaxCapability.JOIN )
-				.build();
+		return mutationSyntaxSupport;
 	}
 
 	@Override

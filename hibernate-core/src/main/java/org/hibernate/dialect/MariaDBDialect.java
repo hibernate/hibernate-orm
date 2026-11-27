@@ -108,6 +108,10 @@ public class MariaDBDialect extends MySQLDialect {
 			"GEOMETRY"
 	);
 
+	private final CteSupport cteSupport = CteSupport.builder( super.getCteSupport() )
+			.placement( CteSupport.Placement.TOP_LEVEL )
+			.recursiveFeatures( CteSupport.RecursiveFeature.RECURSIVE )
+			.build();
 	private final LockingSupport lockingSupport;
 
 	public MariaDBDialect() {
@@ -303,10 +307,7 @@ public class MariaDBDialect extends MySQLDialect {
 
 	@Override
 	public CteSupport getCteSupport() {
-		return CteSupport.builder( super.getCteSupport() )
-				.placement( CteSupport.Placement.TOP_LEVEL )
-				.recursiveFeatures( CteSupport.RecursiveFeature.RECURSIVE )
-				.build();
+		return cteSupport;
 	}
 
 	@Override

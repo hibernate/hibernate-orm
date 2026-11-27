@@ -250,6 +250,12 @@ public class HANADialect extends Dialect implements CurrentTemporalSupport, Temp
 		return this;
 	}
 	private static final RefCursorSupportFactory REF_CURSOR_SUPPORT_FACTORY = RefCursorSupports.hana();
+	private final MutationSyntaxSupport platformMutationSyntaxSupport =
+			MutationSyntaxSupport.of( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE );
+	// HANA doesn't seem to support correlation, so report top-level support only
+	private final CteSupport cteSupport = CteSupport.builder()
+			.placement( CteSupport.Placement.TOP_LEVEL )
+			.build();
 	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
 			.defaultTimestampPrecision( 7 )
 			.maxTimestampPrecision( 7 )
@@ -1920,9 +1926,7 @@ public class HANADialect extends Dialect implements CurrentTemporalSupport, Temp
 
 	@Override
 	public MutationSyntaxSupport getMutationSyntaxSupport() {
-		return isCloud()
-				? MutationSyntaxSupport.NONE
-				: MutationSyntaxSupport.of( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE );
+		return isCloud() ? MutationSyntaxSupport.NONE : platformMutationSyntaxSupport;
 	}
 
 
@@ -1947,10 +1951,7 @@ public class HANADialect extends Dialect implements CurrentTemporalSupport, Temp
 
 	@Override
 	public CteSupport getCteSupport() {
-		// HANA doesn't seem to support correlation, so report top-level support only
-		return CteSupport.builder()
-				.placement( CteSupport.Placement.TOP_LEVEL )
-				.build();
+		return cteSupport;
 	}
 
 }

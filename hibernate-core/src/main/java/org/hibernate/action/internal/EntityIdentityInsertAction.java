@@ -17,6 +17,7 @@ import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.CompositeType;
 
 
 /**
@@ -235,6 +236,12 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 			else {
 				final var values = idMapping.getValues( currentId );
 				if ( unpackGeneratedValues( generatedValues, generatedMapping, values ) ) {
+					if ( persister.getIdentifierType() instanceof CompositeType compositeType
+							&& !compositeType.isMutable() ) {
+						// the id is immutable (a record), so we need a new instance
+						return idMapping.getRepresentationStrategy()
+								.getInstantiator().instantiate( () -> values );
+					}
 					idMapping.setValues( currentId, values );
 					return currentId;
 				}

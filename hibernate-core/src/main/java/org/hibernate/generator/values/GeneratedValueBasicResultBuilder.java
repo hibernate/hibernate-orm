@@ -102,8 +102,8 @@ public class GeneratedValueBasicResultBuilder implements ResultBuilder {
 
 	private static int columnIndex(JdbcValuesMetadata jdbcResultsMetadata, BasicValuedModelPart modelPart) {
 		if ( jdbcResultsMetadata.getColumnCount() == 1 ) {
-			assert modelPart.isEntityIdentifierMapping()
-				|| getColumnPosition( jdbcResultsMetadata, modelPart ) == 1;
+			// The only column must be the generated value. Don't look it up by name,
+			// because the driver might use a different one (e.g. GENERATED_KEY for MySQL)
 			return 0;
 		}
 		else {

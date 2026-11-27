@@ -8,6 +8,7 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.Temporal;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -15,6 +16,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 
 import org.junit.jupiter.api.Test;
 
@@ -48,6 +50,8 @@ class TemporalGeneratedUpsertDefaultHistoryTest {
 	static class DynamicItem extends ItemWithDefault {}
 
 	@Test
+	@SkipForDialect(dialectClass = SpannerDialect.class,
+			reason = "The Spanner INSERT OR UPDATE binds null for the insert-only default column")
 	void upsertWithInsertDefault(SessionFactoryScope scope) {
 		assertUpsertWithInsertDefault( scope, new Item() );
 	}

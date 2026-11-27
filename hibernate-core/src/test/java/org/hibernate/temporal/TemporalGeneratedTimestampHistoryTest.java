@@ -11,6 +11,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -18,6 +19,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -77,6 +79,7 @@ class TemporalGeneratedTimestampHistoryTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner does not allow updating primary key columns")
 	void revisionsRetainCreationTimesAndTrackUpdateTimes(SessionFactoryScope scope) {
 		var first = scope.fromTransaction( session -> {
 			session.persist( new Timestamps() );
@@ -165,6 +168,7 @@ class TemporalGeneratedTimestampHistoryTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner does not allow updating primary key columns")
 	void databaseGeneratedVersionAcrossFlushes(SessionFactoryScope scope) {
 		var first = scope.fromTransaction( session -> {
 			session.persist( new Versioned() );

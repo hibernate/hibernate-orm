@@ -1,5 +1,6 @@
 package org.hibernate.sql.model.internal;
 
+import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
@@ -52,6 +53,20 @@ public final class MutationOperationGroupFactory {
 
 	public static MutationOperationGroup singleOperation(final MutationGroup mutationGroup, final MutationOperation operation) {
 		return singleOperation( mutationGroup.getMutationType(), mutationGroup.getMutationTarget(), operation );
+	}
+
+	/// A group whose single operation is executed directly. A generated values
+	/// delegate executes only a statement built by its own builder.
+	public static MutationOperationGroup singleOperationWithoutDelegate(
+			final MutationType mutationType,
+			final EntityMutationTarget mutationTarget,
+			final MutationOperation operation) {
+		return new EntityMutationOperationGroupStandard( mutationType, mutationTarget, operation ) {
+			@Override
+			public GeneratedValuesMutationDelegate getMutationDelegate() {
+				return null;
+			}
+		};
 	}
 
 	public static MutationOperationGroup manyOperations(

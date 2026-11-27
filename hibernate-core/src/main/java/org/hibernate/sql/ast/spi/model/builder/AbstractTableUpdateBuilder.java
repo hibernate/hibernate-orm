@@ -133,9 +133,13 @@ public abstract class AbstractTableUpdateBuilder<O extends MutationOperation>
 		return rowKnownToExist;
 	}
 
+	protected boolean includesColumn(SelectableMapping column) {
+		return columnInclusion == null || columnInclusion.test( column );
+	}
+
 	@Override
 	public void addColumnAssignment(SelectableMapping columnMapping, String assignment) {
-		if ( columnInclusion == null || columnInclusion.test( columnMapping ) ) {
+		if ( includesColumn( columnMapping ) ) {
 			addColumnAssignment( createValueBinding( assignment, columnMapping ) );
 		}
 	}

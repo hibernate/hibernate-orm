@@ -4,6 +4,8 @@ import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
 import org.hibernate.engine.internal.FilteredAssociationMutation;
+import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.generator.EventType;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.generator.values.internal.GeneratedValuesImpl;
 import org.hibernate.StaleObjectStateException;
@@ -152,7 +154,16 @@ public class MergeCoordinatorStandard extends UpdateCoordinatorStandard {
 	}
 	@Override
 	protected void forEachUpdatable(@Nonnull AttributeMapping attributeMapping, @Nonnull TableUpdateBuilder<?> tableUpdateBuilder) {
-		attributeMapping.forEachSelectable( tableUpdateBuilder );
+		if ( tableUpdateBuilder instanceof TableMergeBuilder<?> merge
+				&& attributeMapping.getGenerator() instanceof OnExecutionGenerator generator
+				&& generator.generatesOnInsert() && !generator.generatesOnUpdate()
+				&& !generator.referenceColumnsInSql( dialect, EventType.INSERT ) ) {
+			// Let the database supply the insert default. The application may still update this property.
+			attributeMapping.forEachUpdatable( (i, column) -> merge.addUpdateOnlyColumn( column ) );
+		}
+		else {
+			attributeMapping.forEachSelectable( tableUpdateBuilder );
+		}
 	}
 
 	@Nonnull

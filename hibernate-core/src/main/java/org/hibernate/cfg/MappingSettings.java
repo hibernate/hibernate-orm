@@ -680,4 +680,25 @@ public interface MappingSettings {
 	 */
 	String USE_NATIONALIZED_CHARACTER_DATA = "hibernate.use_nationalized_character_data";
 
+	/**
+	 * Specifies a custom {@link org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver}, which
+	 * determines how instances of entities and embeddables are created and accessed. Intended for
+	 * integrators whose managed types are not Java classes. A custom resolver should delegate to
+	 * {@link org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard#INSTANCE}
+	 * for every type it does not handle itself.
+	 * <p>
+	 * Accepts any of:
+	 * <ul>
+	 *     <li>an instance of {@code ManagedTypeRepresentationResolver}
+	 *     <li>a {@link Class} implementing {@code ManagedTypeRepresentationResolver}
+	 *     <li>the name of a class implementing {@code ManagedTypeRepresentationResolver}
+	 * </ul>
+	 *
+	 * @settingDefault {@link org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard}
+	 *
+	 * @since 8.1
+	 */
+	@Incubating(since = "8.1")
+	String MANAGED_TYPE_REPRESENTATION_RESOLVER = "hibernate.mapping.representation_resolver";
+
 }

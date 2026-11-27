@@ -41,6 +41,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
+import static org.hibernate.cfg.MappingSettings.MANAGED_TYPE_REPRESENTATION_RESOLVER;
 import static org.hibernate.cfg.PersistenceSettings.SCANNER;
 import static org.hibernate.cfg.PersistenceSettings.SCANNER_ARCHIVE_INTERPRETER;
 
@@ -96,7 +97,11 @@ public class BootstrapContextImpl implements BootstrapContext {
 				configService.getSettings().get( SCANNER_ARCHIVE_INTERPRETER )
 		);
 
-		representationStrategySelector = ManagedTypeRepresentationResolverStandard.INSTANCE;
+		representationStrategySelector = strategySelector.resolveDefaultableStrategy(
+				ManagedTypeRepresentationResolver.class,
+				configService.getSettings().get( MANAGED_TYPE_REPRESENTATION_RESOLVER ),
+				ManagedTypeRepresentationResolverStandard.INSTANCE
+		);
 
 		beanInstanceProducer = new TypeBeanInstanceProducer( configService, serviceRegistry );
 		sqmFunctionRegistry = new SqmFunctionRegistry();

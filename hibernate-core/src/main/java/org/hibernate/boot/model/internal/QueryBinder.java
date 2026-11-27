@@ -17,8 +17,11 @@ import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.StoredProcedureParameter;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.query.JakartaQuery;
+import jakarta.persistence.query.JakartaStatement;
 import jakarta.persistence.query.NativeQuery;
+import jakarta.persistence.query.NativeStatement;
 import jakarta.persistence.query.QueryOptions;
+import jakarta.persistence.query.StatementOptions;
 import org.hibernate.AnnotationException;
 import org.hibernate.CacheMode;
 import org.hibernate.LockMode;
@@ -244,9 +247,19 @@ public abstract class QueryBinder {
 			Set<MethodSignature> processedMethods) {
 		for ( var methodDetails : methodClassDetails.getMethods() ) {
 			processedMethods.add( MethodSignature.of( methodDetails ) );
-			bindStaticQuery( registrationClassDetails, methodDetails, context, modelsContext );
-			bindStaticNativeQuery( registrationClassDetails, methodDetails, context, modelsContext );
+			bindStaticQueryMethod( registrationClassDetails, methodDetails, context, modelsContext );
 		}
+	}
+
+	private static void bindStaticQueryMethod(
+			ClassDetails classDetails,
+			MethodDetails methodDetails,
+			MetadataBuildingContext context,
+			ModelsContext modelsContext) {
+		bindStaticQuery( classDetails, methodDetails, context, modelsContext );
+		bindStaticStatement( classDetails, methodDetails, context, modelsContext );
+		bindStaticNativeQuery( classDetails, methodDetails, context, modelsContext );
+		bindStaticNativeStatement( classDetails, methodDetails, context, modelsContext );
 	}
 
 	private static boolean isJakartaDataRepository(ClassDetails classDetails) {
@@ -275,8 +288,7 @@ public abstract class QueryBinder {
 				&& processedTypes.add( classDetails.getName() ) ) {
 			for ( var methodDetails : classDetails.getMethods() ) {
 				if ( processedMethods.add( MethodSignature.of( methodDetails ) ) ) {
-					bindStaticQuery( repositoryClassDetails, methodDetails, context, modelsContext );
-					bindStaticNativeQuery( repositoryClassDetails, methodDetails, context, modelsContext );
+					bindStaticQueryMethod( repositoryClassDetails, methodDetails, context, modelsContext );
 				}
 			}
 
@@ -320,26 +332,16 @@ public abstract class QueryBinder {
 			ModelsContext modelsContext) {
 		final String queryString = staticQueryString( methodDetails, modelsContext );
 		if ( queryString != null ) {
-			final String registrationName = staticQueryName( classDetails, methodDetails );
-			if ( BOOT_LOGGER.isTraceEnabled() ) {
-				BOOT_LOGGER.bindingNamedQuery( registrationName, queryString.replace( '\n', ' ' ) );
-			}
-
-			final var options = methodDetails.getAnnotationUsage( QueryOptions.class, modelsContext );
 			if ( isStatement( queryString ) ) {
-				final var definition = new NamedHqlMutationDefinitionImpl<>(
-						registrationName,
-						staticQueryLocation( classDetails, methodDetails ),
-						queryString,
-						null,
-						queryFlushMode( options ),
-						timeout( options ),
-						null,
-						hints( options )
-				);
-				context.getMetadataCollector().addNamedQuery( definition );
+				addStaticStatement( classDetails, methodDetails, queryString, context, modelsContext );
 			}
 			else {
+				final String registrationName = staticQueryName( classDetails, methodDetails );
+				if ( BOOT_LOGGER.isTraceEnabled() ) {
+					BOOT_LOGGER.bindingNamedQuery( registrationName, queryString.replace( '\n', ' ' ) );
+				}
+
+				final var options = methodDetails.getAnnotationUsage( QueryOptions.class, modelsContext );
 				final var resultType = staticSelectionResultType( classDetails, methodDetails, modelsContext );
 				final var definition = new NamedHqlSelectionDefinitionImpl<>(
 						registrationName,
@@ -367,6 +369,42 @@ public abstract class QueryBinder {
 				context.getMetadataCollector().addNamedQuery( definition );
 			}
 		}
+	}
+
+	private static void bindStaticStatement(
+			ClassDetails classDetails,
+			MethodDetails methodDetails,
+			MetadataBuildingContext context,
+			ModelsContext modelsContext) {
+		final var statement = methodDetails.getAnnotationUsage( JakartaStatement.class, modelsContext );
+		if ( statement != null ) {
+			addStaticStatement( classDetails, methodDetails, statement.value(), context, modelsContext );
+		}
+	}
+
+	private static void addStaticStatement(
+			ClassDetails classDetails,
+			MethodDetails methodDetails,
+			String statement,
+			MetadataBuildingContext context,
+			ModelsContext modelsContext) {
+		final String registrationName = staticQueryName( classDetails, methodDetails );
+		if ( BOOT_LOGGER.isTraceEnabled() ) {
+			BOOT_LOGGER.bindingNamedQuery( registrationName, statement.replace( '\n', ' ' ) );
+		}
+
+		final var options = statementOptions( methodDetails, modelsContext );
+		final var definition = new NamedHqlMutationDefinitionImpl<>(
+				registrationName,
+				staticQueryLocation( classDetails, methodDetails ),
+				statement,
+				null,
+				options.flushMode(),
+				options.timeout(),
+				null,
+				options.hints()
+		);
+		context.getMetadataCollector().addNamedQuery( definition );
 	}
 
 	private static String staticSelectionQueryString(String queryString, Class<?> resultType,
@@ -507,26 +545,16 @@ public abstract class QueryBinder {
 			ModelsContext modelsContext) {
 		final var query = methodDetails.getAnnotationUsage( NativeQuery.class, modelsContext );
 		if ( query != null ) {
-			final String registrationName = staticQueryName( classDetails, methodDetails );
-			if ( BOOT_LOGGER.isTraceEnabled() ) {
-				BOOT_LOGGER.bindingNamedNativeQuery( registrationName, query.value().replace( '\n', ' ' ) );
-			}
-
-			final var options = methodDetails.getAnnotationUsage( QueryOptions.class, modelsContext );
 			if ( isStatement( query.value() ) ) {
-				final var definition = new NamedNativeMutationDefinitionImpl<>(
-						registrationName,
-						staticQueryLocation( classDetails, methodDetails ),
-						query.value(),
-						new HashSet<>(),
-						queryFlushMode( options ),
-						timeout( options ),
-						null,
-						hints( options )
-				);
-				context.getMetadataCollector().addNamedNativeQuery( definition );
+				addStaticNativeStatement( classDetails, methodDetails, query.value(), context, modelsContext );
 			}
 			else {
+				final String registrationName = staticQueryName( classDetails, methodDetails );
+				if ( BOOT_LOGGER.isTraceEnabled() ) {
+					BOOT_LOGGER.bindingNamedNativeQuery( registrationName, query.value().replace( '\n', ' ' ) );
+				}
+
+				final var options = methodDetails.getAnnotationUsage( QueryOptions.class, modelsContext );
 				final var definition = new NamedNativeSelectionDefinitionImpl<>(
 						registrationName,
 						staticQueryLocation( classDetails, methodDetails ),
@@ -553,6 +581,42 @@ public abstract class QueryBinder {
 				context.getMetadataCollector().addNamedNativeQuery( definition );
 			}
 		}
+	}
+
+	private static void bindStaticNativeStatement(
+			ClassDetails classDetails,
+			MethodDetails methodDetails,
+			MetadataBuildingContext context,
+			ModelsContext modelsContext) {
+		final var statement = methodDetails.getAnnotationUsage( NativeStatement.class, modelsContext );
+		if ( statement != null ) {
+			addStaticNativeStatement( classDetails, methodDetails, statement.value(), context, modelsContext );
+		}
+	}
+
+	private static void addStaticNativeStatement(
+			ClassDetails classDetails,
+			MethodDetails methodDetails,
+			String statement,
+			MetadataBuildingContext context,
+			ModelsContext modelsContext) {
+		final String registrationName = staticQueryName( classDetails, methodDetails );
+		if ( BOOT_LOGGER.isTraceEnabled() ) {
+			BOOT_LOGGER.bindingNamedNativeQuery( registrationName, statement.replace( '\n', ' ' ) );
+		}
+
+		final var options = statementOptions( methodDetails, modelsContext );
+		final var definition = new NamedNativeMutationDefinitionImpl<>(
+				registrationName,
+				staticQueryLocation( classDetails, methodDetails ),
+				statement,
+				new HashSet<>(),
+				options.flushMode(),
+				options.timeout(),
+				null,
+				options.hints()
+		);
+		context.getMetadataCollector().addNamedNativeQuery( definition );
 	}
 
 	private static String bindStaticNativeQueryResultSetMapping(
@@ -798,6 +862,33 @@ public abstract class QueryBinder {
 
 	private static String staticQueryLocation(ClassDetails classDetails, MethodDetails methodDetails) {
 		return classDetails.getName() + "#" + methodDetails.getName();
+	}
+
+	/**
+	 * The options of a static statement, specified using {@link StatementOptions},
+	 * or using {@link QueryOptions} when the statement is declared by an annotation
+	 * for declaring queries.
+	 */
+	private record StaticStatementOptions(QueryFlushMode flushMode, Timeout timeout, Map<String,Object> hints) {
+	}
+
+	private static StaticStatementOptions statementOptions(MethodDetails methodDetails, ModelsContext modelsContext) {
+		final var options = methodDetails.getAnnotationUsage( StatementOptions.class, modelsContext );
+		if ( options != null ) {
+			return new StaticStatementOptions(
+					options.flush(),
+					options.timeout() < 0 ? null : Timeout.milliseconds( options.timeout() ),
+					extractHints( options.hints() )
+			);
+		}
+		else {
+			final var queryOptions = methodDetails.getAnnotationUsage( QueryOptions.class, modelsContext );
+			return new StaticStatementOptions(
+					queryFlushMode( queryOptions ),
+					timeout( queryOptions ),
+					hints( queryOptions )
+			);
+		}
 	}
 
 	private static QueryFlushMode queryFlushMode(QueryOptions options) {

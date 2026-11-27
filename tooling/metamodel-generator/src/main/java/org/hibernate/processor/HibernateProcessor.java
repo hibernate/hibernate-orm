@@ -84,6 +84,7 @@ import static org.hibernate.processor.util.Constants.HIB_NAMED_QUERIES;
 import static org.hibernate.processor.util.Constants.HIB_NAMED_QUERY;
 import static org.hibernate.processor.util.Constants.HQL;
 import static org.hibernate.processor.util.Constants.JAKARTA_QUERY;
+import static org.hibernate.processor.util.Constants.JAKARTA_STATEMENT;
 import static org.hibernate.processor.util.Constants.JD_DELETE;
 import static org.hibernate.processor.util.Constants.JD_FIND;
 import static org.hibernate.processor.util.Constants.JD_INSERT;
@@ -103,7 +104,9 @@ import static org.hibernate.processor.util.Constants.NAMED_QUERY;
 import static org.hibernate.processor.util.Constants.NAMED_STATEMENT;
 import static org.hibernate.processor.util.Constants.NAMED_STATEMENTS;
 import static org.hibernate.processor.util.Constants.NATIVE_QUERY;
+import static org.hibernate.processor.util.Constants.NATIVE_STATEMENT;
 import static org.hibernate.processor.util.Constants.QUERY_OPTIONS;
+import static org.hibernate.processor.util.Constants.STATEMENT_OPTIONS;
 import static org.hibernate.processor.util.Constants.SQL;
 import static org.hibernate.processor.util.Constants.SQL_RESULT_SET_MAPPING;
 import static org.hibernate.processor.util.Constants.SQL_RESULT_SET_MAPPINGS;
@@ -134,6 +137,7 @@ import static org.hibernate.processor.util.TypeUtils.isMemberType;
 		// standard for JPA 4
 		NAMED_STATEMENT, NAMED_STATEMENTS, NAMED_NATIVE_STATEMENT, NAMED_NATIVE_STATEMENTS,
 		JAKARTA_QUERY, NATIVE_QUERY, QUERY_OPTIONS,
+		JAKARTA_STATEMENT, NATIVE_STATEMENT, STATEMENT_OPTIONS,
 		ENTITY_RESULT, ENTITY_RESULTS, CONSTRUCTOR_RESULT, CONSTRUCTOR_RESULTS, COLUMN_RESULT, COLUMN_RESULTS,
 		// Hibernate query methods
 		HQL, SQL, FIND,
@@ -646,7 +650,7 @@ public class HibernateProcessor extends AbstractProcessor {
 
 	private static boolean hasStaticQueryMethods(TypeElement typeElement) {
 		for ( var member : typeElement.getEnclosedElements() ) {
-			if ( hasAnnotation( member, JAKARTA_QUERY, NATIVE_QUERY ) ) {
+			if ( hasAnnotation( member, JAKARTA_QUERY, JAKARTA_STATEMENT, NATIVE_QUERY, NATIVE_STATEMENT ) ) {
 				return true;
 			}
 		}

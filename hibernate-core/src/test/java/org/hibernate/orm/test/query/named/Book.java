@@ -14,7 +14,10 @@ import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.Table;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.query.JakartaQuery;
+import jakarta.persistence.query.JakartaStatement;
+import jakarta.persistence.query.NativeStatement;
 import jakarta.persistence.query.QueryOptions;
+import jakarta.persistence.query.StatementOptions;
 
 @Entity( name = "Jpa4StaticQueryBook" )
 @NamedEntityGraph( name = "Book.summary" )
@@ -167,6 +170,33 @@ public class Book {
 	@jakarta.persistence.query.NativeQuery( "delete from jpa4_static_query_book where title = ?" )
 	@QueryOptions( flush = QueryFlushMode.FLUSH, timeout = 345 )
 	public int nativeDeleteByTitleWithOptions(String title) {
+		throw new UnsupportedOperationException();
+	}
+
+	@JakartaStatement( "update Jpa4StaticQueryBook set title = :title where title = :previousTitle" )
+	public int rename(String title, String previousTitle) {
+		throw new UnsupportedOperationException();
+	}
+
+	@JakartaStatement( "delete from Jpa4StaticQueryBook where title = :title" )
+	@StatementOptions( flush = QueryFlushMode.NO_FLUSH, timeout = 456 )
+	public int removeByTitleWithOptions(String title) {
+		throw new UnsupportedOperationException();
+	}
+
+	@NativeStatement( "delete from jpa4_static_query_book where title = ?" )
+	public int nativeRemoveByTitle(String title) {
+		throw new UnsupportedOperationException();
+	}
+
+	@NativeStatement( "delete from jpa4_static_query_book where title = ?" )
+	@StatementOptions( flush = QueryFlushMode.FLUSH, timeout = 567 )
+	public int nativeRemoveByTitleWithOptions(String title) {
+		throw new UnsupportedOperationException();
+	}
+
+	@NativeStatement( "/* not recognizable by its first keyword */ delete from jpa4_static_query_book" )
+	public int nativeRemoveAll() {
 		throw new UnsupportedOperationException();
 	}
 }

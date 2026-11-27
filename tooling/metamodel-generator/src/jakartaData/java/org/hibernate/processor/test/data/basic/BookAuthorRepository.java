@@ -29,8 +29,11 @@ import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.QueryHint;
 import jakarta.persistence.query.JakartaQuery;
+import jakarta.persistence.query.JakartaStatement;
 import jakarta.persistence.query.NativeQuery;
+import jakarta.persistence.query.NativeStatement;
 import jakarta.persistence.query.QueryOptions;
+import jakarta.persistence.query.StatementOptions;
 import org.hibernate.StatelessSession;
 import org.hibernate.annotations.processing.HQL;
 import org.hibernate.annotations.processing.SQL;
@@ -57,6 +60,17 @@ public interface BookAuthorRepository {
 	@Delete
 	@QueryOptions(timeout = 700, flush = QueryFlushMode.NO_FLUSH)
 	int deleteByTitle(String title);
+
+	@Delete
+	@StatementOptions(timeout = 750)
+	long deleteByPublicationDate(LocalDate publicationDate);
+
+	@JakartaStatement("update Book set title = :title where isbn = :isbn")
+	@StatementOptions(timeout = 800, flush = QueryFlushMode.FLUSH)
+	int retitle(String isbn, String title);
+
+	@NativeStatement("/* not recognizable by its first keyword */ delete from books where isbn = :isbn")
+	void nativeRemove(String isbn);
 
 	@Insert
 	void insertBooks0(Book[] books);

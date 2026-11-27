@@ -21,7 +21,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import jakarta.persistence.Table;
-import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.Dialect;
@@ -35,6 +34,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedClass;
@@ -125,9 +125,25 @@ public class OffsetTimeTest extends AbstractJavaTimeTypeTests<OffsetTime, Offset
 	}
 
 	@Override
-	public StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder builder) {
+	protected void configureServiceRegistry(StandardServiceRegistryBuilder builder) {
 		builder.applySetting( TIMEZONE_DEFAULT_STORAGE, NORMALIZE );
-		return super.produceServiceRegistry( builder );
+		super.configureServiceRegistry( builder );
+	}
+
+	@Override
+	protected void assertPropertyValueEquals(OffsetTime expected, OffsetTime actual, String message) {
+		if ( testParam.env().directJdbc() ) {
+			// Direct JDBC may retain an offset instead of normalizing to the JVM zone.
+			Assertions.assertEquals( expected.withOffsetSameInstant( ZoneOffset.UTC ), actual.withOffsetSameInstant( ZoneOffset.UTC ), message );
+		}
+		else {
+			super.assertPropertyValueEquals( expected, actual, message );
+		}
+	}
+
+	@Override
+	protected Class<OffsetTime> getJavaTimeType() {
+		return OffsetTime.class;
 	}
 
 	@Override
@@ -273,7 +289,7 @@ public class OffsetTimeTest extends AbstractJavaTimeTypeTests<OffsetTime, Offset
 	private static class ParametersBuilder
 			extends AbstractParametersBuilder<OffsetTime, DataImpl, ParametersBuilder> {
 		protected ParametersBuilder(Dialect dialect) {
-			super( dialect );
+			super( dialect, OffsetTime.class );
 		}
 
 		public ParametersBuilder add(int hour, int minute, int second, int nanosecond, String offset, ZoneId defaultTimeZone) {

@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.type.descriptor.java;
 
+import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,7 +9,9 @@ import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
@@ -23,6 +26,7 @@ import org.hibernate.type.OrderedSetType;
 import org.hibernate.type.descriptor.java.ArrayJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.LongJavaType;
+import org.hibernate.type.descriptor.java.SerializableJavaType;
 import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.java.spi.BasicCollectionJavaType;
 import org.hibernate.type.internal.ParameterizedTypeImpl;
@@ -36,6 +40,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @JiraKey("HHH-21149")
@@ -70,6 +75,123 @@ class BasicCollectionJavaTypeTest {
 				StandardBagSemantics.INSTANCE, LongJavaType.INSTANCE );
 
 		assertFalse( javaType.areEqual( List.of( 1L, 1L, 2L ), List.of( 1L, 2L, 2L ) ) );
+	}
+
+	@Test
+	void reorderedDuplicateHeavyBagsAreComparedLinearly() {
+		final var elementType = new CountingValueJavaType();
+		final BasicCollectionJavaType<Collection<CountingValue>, CountingValue> javaType = descriptor(
+				StandardBagSemantics.INSTANCE, elementType );
+		final int repeats = 1_000;
+		final var comparisons = new AtomicInteger();
+		final var grouped = new ArrayList<CountingValue>( 2 * repeats );
+		final var alternating = new ArrayList<CountingValue>( 2 * repeats );
+		for ( int i = 0; i < repeats; i++ ) {
+			grouped.add( new CountingValue( 1, comparisons ) );
+			alternating.add( new CountingValue( 0, comparisons ) );
+			alternating.add( new CountingValue( 1, comparisons ) );
+		}
+		for ( int i = 0; i < repeats; i++ ) {
+			grouped.add( new CountingValue( 0, comparisons ) );
+		}
+
+		assertTrue( javaType.areEqual( grouped, alternating ) );
+		assertTrue( comparisons.get() <= 2 * grouped.size(),
+				() -> "Compared elements " + comparisons.get() + " times" );
+	}
+
+	private static class CountingValueJavaType extends SerializableJavaType<CountingValue> {
+		CountingValueJavaType() {
+			super( CountingValue.class );
+		}
+
+		@Override
+		public boolean useObjectEqualsHashCode() {
+			return true;
+		}
+
+		@Override
+		public boolean areEqual(CountingValue one, CountingValue another) {
+			return Objects.equals( one, another );
+		}
+	}
+
+	private record CountingValue(int id, AtomicInteger comparisons) implements Serializable {
+		@Override
+		public boolean equals(Object obj) {
+			comparisons.incrementAndGet();
+			return obj instanceof CountingValue that && id == that.id;
+		}
+
+		@Override
+		public int hashCode() {
+			return id;
+		}
+	}
+
+	@Test
+	void bagsDoNotConfuseElementsWithTheSameHashCode() {
+		final var type = descriptor( StandardBagSemantics.INSTANCE, LongJavaType.INSTANCE );
+		// Both Long values hash to 1.
+		assertTrue( type.areEqual( List.of( 1L, 1L << 32 ), List.of( 1L << 32, 1L ) ) );
+		assertFalse( type.areEqual( List.of( 1L, 1L << 32 ), List.of( 1L << 32, 1L << 32 ) ) );
+	}
+
+	@Test
+	void reorderedBagsRespectSerializableEqualityEvenWithDifferentHashes() {
+		final var javaType = new SerializableJavaType<>( SerializableValue.class );
+		final var bagType = descriptor( StandardBagSemantics.INSTANCE, javaType );
+		final var one = new SerializableValue( 1, "first" );
+		final var another = new SerializableValue( 1, "second" );
+		final var other = new SerializableValue( 2, "other" );
+		assertTrue( javaType.areEqual( one, another ) );
+		assertNotEquals( javaType.extractHashCode( one ), javaType.extractHashCode( another ) );
+		assertTrue( bagType.areEqual( List.of( one, other ), List.of( other, another ) ) );
+	}
+
+	@Test
+	void reorderedBagsRetainTheFirstMatchForSerializableValues() {
+		final var javaType = new SerializableJavaType<>( TransitionalValue.class );
+		final var bagType = descriptor( StandardBagSemantics.INSTANCE, javaType );
+		final var a = new TransitionalValue( "first", 1 );
+		final var b = new TransitionalValue( "second", 1 );
+		final var c = new TransitionalValue( "second", 2 );
+		assertTrue( javaType.areEqual( a, b ) );
+		assertTrue( javaType.areEqual( b, c ) );
+		assertFalse( javaType.areEqual( a, c ) );
+		assertFalse( bagType.areEqual( List.of( a, c ), List.of( b, a ) ) );
+	}
+
+	private static class TransitionalValue implements Serializable {
+		private final String stored;
+		private final transient int key;
+
+		TransitionalValue(String stored, int key) {
+			this.stored = stored;
+			this.key = key;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			return obj instanceof TransitionalValue that && key == that.key;
+		}
+
+		@Override
+		public int hashCode() {
+			return key;
+		}
+	}
+
+	private record SerializableValue(int id, String note) implements Serializable {
+		@Override
+		public boolean equals(Object obj) {
+			return obj instanceof SerializableValue that && id == that.id;
+		}
+
+		@Override
+		public int hashCode() {
+			return id;
+		}
 	}
 
 	@ParameterizedTest

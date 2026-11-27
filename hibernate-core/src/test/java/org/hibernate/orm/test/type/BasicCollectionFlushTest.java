@@ -2,6 +2,7 @@ package org.hibernate.orm.test.type;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.LongStream;
 
@@ -66,6 +67,30 @@ class BasicCollectionFlushTest {
 	}
 
 	@Test
+	void unchangedBagUsesTheIterationOrderFastPathOnFlush(SessionFactoryScope scope) {
+		final var values = Collections.nCopies( 1_000, 1L );
+		scope.inTransaction( session -> {
+			final var entity = new CollectionEntity();
+			entity.id = 3;
+			entity.bag = new ArrayList<>( values );
+			session.persist( entity );
+		} );
+		final var statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
+		scope.inTransaction( session -> {
+			session.find( CollectionEntity.class, 3 );
+			final var elementType = (CountingLongJavaType) session.getTypeConfiguration()
+					.getJavaTypeRegistry().resolveDescriptor( Long.class );
+			elementType.comparisons = 0;
+			elementType.hashExtractions = 0;
+			session.flush();
+			assertEquals( values.size(), elementType.comparisons );
+			assertEquals( 0, elementType.hashExtractions );
+		} );
+		assertEquals( 0, statistics.getEntityUpdateCount() );
+	}
+
+	@Test
 	void bagMultiplicityChangeIsStoredOnFlush(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final var entity = new CollectionEntity();
@@ -107,6 +132,13 @@ class BasicCollectionFlushTest {
 
 	public static class CountingLongJavaType extends LongJavaType {
 		private int comparisons;
+		private int hashExtractions;
+
+		@Override
+		public int extractHashCode(Long value) {
+			hashExtractions++;
+			return super.extractHashCode( value );
+		}
 
 		@Override
 		public boolean areEqual(Long one, Long another) {

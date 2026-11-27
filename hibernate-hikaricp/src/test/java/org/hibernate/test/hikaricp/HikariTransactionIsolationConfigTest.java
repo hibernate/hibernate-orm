@@ -1,6 +1,5 @@
 package org.hibernate.test.hikaricp;
 
-import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.community.dialect.TiDBDialect;
@@ -19,8 +18,6 @@ import org.hibernate.testing.orm.junit.SkipForDialect;
 		reason = "The jTDS driver doesn't implement Connection#getNetworkTimeout() so this fails")
 @SkipForDialect(dialectClass = TiDBDialect.class,
 		reason = "Doesn't support SERIALIZABLE isolation")
-@SkipForDialect(dialectClass = AltibaseDialect.class,
-		reason = "Altibase cannot change isolation level in autocommit mode")
 @SkipForDialect(dialectClass = GaussDBDialect.class,
 		reason = "GaussDB does not support SERIALIZABLE isolation")
 public class HikariTransactionIsolationConfigTest extends BaseTransactionIsolationConfigTest {

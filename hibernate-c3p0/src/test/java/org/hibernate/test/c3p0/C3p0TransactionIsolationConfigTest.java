@@ -1,7 +1,6 @@
 package org.hibernate.test.c3p0;
 
 import org.hibernate.c3p0.internal.C3P0ConnectionProvider;
-import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.community.dialect.TiDBDialect;
@@ -18,7 +17,6 @@ import org.hibernate.testing.orm.junit.SkipForDialect;
  * @author Steve Ebersole
  */
 @SkipForDialect(dialectClass = TiDBDialect.class, reason = "Doesn't support SERIALIZABLE isolation")
-@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase cannot change isolation level in autocommit mode")
 @SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "JtdsConnection.isValid not implemented")
 @SkipForDialect(dialectClass = GaussDBDialect.class, reason = "GaussDB does not support SERIALIZABLE isolation")
 @ServiceRegistry

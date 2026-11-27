@@ -1,12 +1,14 @@
 package org.hibernate.orm.test.locking;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityAgent;
 import jakarta.persistence.ExcludedFromVersioning;
 import jakarta.persistence.Id;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.Version;
 
 import org.hibernate.dialect.CockroachDialect;
@@ -25,6 +27,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hibernate.dialect.generated.spi.GeneratedValuesSupport.Capability.UPDATE_RETURNING;
 
 /// Behavioral tests for `@jakarta.persistence.ExcludedFromVersioning`, shared by an annotation-mapped
@@ -118,12 +121,18 @@ public abstract class ExcludedFromVersioningTestsBase {
 	@ParameterizedTest
 	@ValueSource(booleans = { false, true })
 	void testEntityAgentUpsertWithExcludedProperties(boolean multiple, SessionFactoryScope factoryScope) {
-		final var phone = factoryScope.fromTransaction( session -> {
-			final var created = new Phone();
-			created.setId( 1L );
-			created.setNumber( "123-456-7890" );
-			session.persist( created );
-			return created;
+		final var phone = new Phone();
+		phone.setId( 1L );
+		phone.setNumber( "123-456-7890" );
+		final Consumer<EntityAgent> upsert = multiple
+				? agent -> agent.upsertMultiple( List.of( phone ) )
+				: agent -> agent.upsert( phone );
+		factoryScope.getSessionFactory().runInTransaction( EntityAgent.class, upsert );
+		assertThat( phone.getVersion() ).isZero();
+		factoryScope.inTransaction( session -> {
+			final var inserted = session.find( Phone.class, phone.getId() );
+			assertThat( inserted.getNumber() ).isEqualTo( phone.getNumber() );
+			assertThat( inserted.getVersion() ).isZero();
 		} );
 
 		for ( int i = 0; i < 3; i++ ) {
@@ -132,15 +141,8 @@ public abstract class ExcludedFromVersioningTestsBase {
 				phone.setNumber( "+123-456-7890" );
 			}
 			final long expectedVersion = i == 0 ? 0 : 1;
-			factoryScope.getSessionFactory().runInTransaction( EntityAgent.class, agent -> {
-				if ( multiple ) {
-					agent.upsertMultiple( List.of( phone ) );
-				}
-				else {
-					agent.upsert( phone );
-				}
-				assertThat( phone.getVersion() ).isEqualTo( expectedVersion );
-			} );
+			factoryScope.getSessionFactory().runInTransaction( EntityAgent.class, upsert );
+			assertThat( phone.getVersion() ).isEqualTo( expectedVersion );
 			factoryScope.inTransaction( session -> {
 				final var reloaded = session.find( Phone.class, phone.getId() );
 				assertThat( reloaded.getCallCount() ).isEqualTo( phone.getCallCount() );
@@ -148,6 +150,26 @@ public abstract class ExcludedFromVersioningTestsBase {
 				assertThat( reloaded.getVersion() ).isEqualTo( expectedVersion );
 			} );
 		}
+	}
+
+	@Test
+	void upsertMissingPhoneWithAssignedVersion(SessionFactoryScope scope) {
+		final var phone = new Phone();
+		phone.setId( 1L );
+		phone.setNumber( "123" );
+		phone.version = 7L;
+		scope.inStatelessTransaction( session -> session.upsert( phone ) );
+		assertThat( phone.getVersion() ).isEqualTo( 8L );
+
+		phone.version = 7L;
+		phone.incrementCallCount();
+		assertThatThrownBy( () -> scope.inStatelessTransaction( session -> session.upsert( phone ) ) )
+				.isInstanceOf( OptimisticLockException.class );
+		scope.inSession( session -> {
+			final var stored = session.find( Phone.class, 1L );
+			assertThat( stored.getVersion() ).isEqualTo( 8L );
+			assertThat( stored.getCallCount() ).isZero();
+		} );
 	}
 
 	@Test @JiraKey("HHH-20828")

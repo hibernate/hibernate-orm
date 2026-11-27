@@ -23,6 +23,7 @@ import org.hibernate.sql.spi.mutation.TableMapping;
 import org.hibernate.sql.spi.mutation.ValuesAnalysis;
 import org.hibernate.sql.ast.spi.model.AbstractTableUpdate;
 import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
+import org.hibernate.sql.ast.spi.model.ConditionalVersionAssignment;
 import org.hibernate.sql.ast.spi.model.ColumnValueParameter;
 import org.hibernate.sql.ast.spi.model.ColumnWriteFragment;
 import org.hibernate.sql.ast.spi.model.MutatingTableReference;
@@ -111,6 +112,16 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		this.jdbcValueDescriptors = arrayList( parameters.size() );
 		for ( int i = 0; i < parameters.size(); i++ ) {
 			jdbcValueDescriptors.add( new JdbcValueDescriptorImpl( parameters.get( i ), i + 1 ) );
+		}
+		// Insert parameters keep their positions. The update additionally compares the old row.
+		for ( var binding : valueBindings ) {
+			if ( binding instanceof ConditionalVersionAssignment version ) {
+				for ( var parameter : version.forUpdate( null ).getValueExpression().getParameters() ) {
+					if ( parameter.getUsage() == ParameterUsage.RESTRICT ) {
+						jdbcValueDescriptors.add( new JdbcValueDescriptorImpl( parameter, jdbcValueDescriptors.size() + 1 ) );
+					}
+				}
+			}
 		}
 	}
 
@@ -545,14 +556,15 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 
 	private List<ColumnValueBinding> getUpdatableValueBindings() {
 		// when there is nothing to assign, the update still tells us whether the row exists
-		if ( !valueBindings.isEmpty() && !hasNonUpdatableBinding() ) {
+		if ( !valueBindings.isEmpty() && !needsSeparateUpdateBindings() ) {
 			return valueBindings;
 		}
 		else {
 			final List<ColumnValueBinding> updateBindings = arrayList( valueBindings.size() );
 			for ( var binding : valueBindings ) {
 				if ( binding.isAttributeUpdatable() ) {
-					updateBindings.add( binding );
+					updateBindings.add( binding instanceof ConditionalVersionAssignment version
+							? version.forUpdate( null ) : binding );
 				}
 			}
 			if ( updateBindings.isEmpty() ) {
@@ -565,9 +577,9 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		}
 	}
 
-	private boolean hasNonUpdatableBinding() {
+	private boolean needsSeparateUpdateBindings() {
 		for ( var binding : valueBindings ) {
-			if ( !binding.isAttributeUpdatable() ) {
+			if ( !binding.isAttributeUpdatable() || binding instanceof ConditionalVersionAssignment ) {
 				return true;
 			}
 		}

@@ -84,6 +84,10 @@ public class XmlDocumentContextImpl implements XmlDocumentContext {
 			builder.setPluralAttributesImplicitlyLazy( true );
 		}
 
+		if ( documentDefaults.getDefaultCascade() != null ) {
+			builder.setImplicitCascadeStyleName( documentDefaults.getDefaultCascade() );
+		}
+
 		return builder.build();
 	}
 }

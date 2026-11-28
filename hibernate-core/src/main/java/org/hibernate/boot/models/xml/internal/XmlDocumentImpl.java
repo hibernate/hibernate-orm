@@ -204,24 +204,22 @@ public class XmlDocumentImpl implements XmlDocument {
 		private final String accessorStrategy;
 		private final String catalog;
 		private final String schema;
+		private final String cascade;
 		private final boolean autoImport;
 		private final boolean impliedLaziness;
 
-		private DefaultsImpl(
-				String pckg,
-				AccessType accessType,
-				String accessorStrategy,
-				String catalog,
-				String schema,
-				Boolean autoImport,
-				Boolean impliedLaziness) {
-			this.pckg = pckg;
-			this.accessType = accessType;
-			this.accessorStrategy = accessorStrategy;
-			this.catalog = catalog;
-			this.schema = schema;
-			this.autoImport = NullnessHelper.nullif( autoImport, true );
-			this.impliedLaziness = NullnessHelper.nullif( impliedLaziness, false );
+		private DefaultsImpl(JaxbEntityMappingsImpl jaxbRoot, PersistenceUnitMetadata metadata) {
+			this.pckg = jaxbRoot.getPackage();
+			this.accessType = NullnessHelper.coalesce( jaxbRoot.getAccess(), metadata.getAccessType() );
+			this.accessorStrategy = NullnessHelper.coalesce(
+					jaxbRoot.getAttributeAccessor(),
+					metadata.getDefaultAccessStrategyName()
+			);
+			this.catalog = jaxbRoot.getCatalog();
+			this.schema = jaxbRoot.getSchema();
+			this.autoImport = NullnessHelper.nullif( jaxbRoot.isAutoImport(), true );
+			this.impliedLaziness = NullnessHelper.nullif( jaxbRoot.isDefaultLazy(), false );
+			this.cascade = jaxbRoot.getDefaultCascade();
 		}
 
 		@Override
@@ -259,16 +257,13 @@ public class XmlDocumentImpl implements XmlDocument {
 			return impliedLaziness;
 		}
 
+		@Override
+		public String getDefaultCascade() {
+			return cascade;
+		}
+
 		static DefaultsImpl consume(JaxbEntityMappingsImpl jaxbRoot, PersistenceUnitMetadata metadata) {
-			return new DefaultsImpl(
-					jaxbRoot.getPackage(),
-					NullnessHelper.coalesce( jaxbRoot.getAccess(), metadata.getAccessType() ),
-					NullnessHelper.coalesce( jaxbRoot.getAttributeAccessor(), metadata.getDefaultAccessStrategyName() ),
-					jaxbRoot.getCatalog(),
-					jaxbRoot.getSchema(),
-					jaxbRoot.isAutoImport(),
-					jaxbRoot.isDefaultLazy()
-			);
+			return new DefaultsImpl( jaxbRoot, metadata );
 		}
 	}
 

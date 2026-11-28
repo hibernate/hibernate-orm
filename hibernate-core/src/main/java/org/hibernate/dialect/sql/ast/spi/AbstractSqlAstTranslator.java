@@ -230,6 +230,7 @@ import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.internal.TemporalPreservationGuard;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -6716,6 +6717,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 		}
 		else {
+			checkTemporalLiteral( literal.getJdbcMapping(), literal.getLiteralValue() );
 			literalFormatter.appendJdbcLiteral(
 					this,
 					literal.getLiteralValue(),
@@ -6723,6 +6725,17 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					getWrapperOptions()
 			);
 		}
+	}
+
+	/// With temporal preservation enabled, a Java Time value is checked
+	/// before it is rendered as a literal, whichever formatter renders it.
+	private void checkTemporalLiteral(JdbcMapping jdbcMapping, Object literalValue) {
+		TemporalPreservationGuard.checkLiteral(
+				literalValue,
+				jdbcMapping.getJdbcJavaType(),
+				jdbcMapping.getJdbcType(),
+				getWrapperOptions()
+		);
 	}
 
 
@@ -9268,6 +9281,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				throw new IllegalArgumentException( "Can't render parameter as literal, no literal formatter found" );
 			}
 			else {
+				checkTemporalLiteral( jdbcMapping, literalValue );
 				literalFormatter.appendJdbcLiteral( this, literalValue, dialect, getWrapperOptions() );
 			}
 		}

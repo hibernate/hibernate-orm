@@ -4,6 +4,7 @@ package org.hibernate.dialect;
 import org.hibernate.dialect.type.spi.DdlTypeBuilder;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
+import org.hibernate.dialect.type.spi.TemporalPreservation;
 import org.hibernate.dialect.type.spi.EnumSupport;
 import org.hibernate.dialect.type.spi.EnumSupports;
 import org.hibernate.dialect.type.spi.ObjectNullBindingStrategy;
@@ -73,6 +74,7 @@ import org.hibernate.dialect.function.CastStrEmulation;
 import org.hibernate.dialect.function.CoalesceIfnullEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CurrentFunction;
+import org.hibernate.dialect.function.CurrentInstantFunction;
 import org.hibernate.dialect.function.ExtractFunction;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
 import org.hibernate.dialect.function.LocatePositionEmulation;
@@ -193,6 +195,7 @@ import org.hibernate.type.descriptor.jdbc.ArrayJdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.LongNVarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.LongVarbinaryJdbcType;
@@ -764,6 +767,59 @@ public abstract class Dialect implements ConversionContext, AlterTableSupport,
 		return DirectJavaTimeJdbcSupports.jdbc42();
 	}
 
+	/// Whether, with [temporal preservation][org.hibernate.cfg.MappingSettings#TEMPORAL_PRESERVATION]
+	/// enabled, a value of the exact Java Time class is exchanged through
+	/// the JDBC type registered for that class itself, such as
+	/// [org.hibernate.type.SqlTypes#LOCAL_DATE_TIME] for a `LocalDateTime`,
+	/// although the JDBC driver does not [exchange it directly][#getDirectJavaTimeJdbcSupport()].
+	///
+	/// For a Dialect which, with temporal preservation enabled, registers a
+	/// JDBC type under that type code which preserves the value in some
+	/// other way than by handing it to the driver. Not consulted when
+	/// temporal preservation is disabled.
+	///
+	/// @since 8.1
+	@Incubating(since = "8.1")
+	@SPI({ IMPLEMENT, SUPPLY })
+	public boolean usesJavaTimeJdbcTypeForTemporalPreservation(Class<?> javaTimeType) {
+		return false;
+	}
+
+	/// Report how the exact combination of Java type and JDBC type stores a
+	/// Java Time value on this database with its JDBC driver. Consulted only
+	/// when [temporal preservation][org.hibernate.cfg.MappingSettings#TEMPORAL_PRESERVATION]
+	/// is enabled.
+	///
+	/// The answer must rest on evidence about the database and the driver,
+	/// identified by the exact classes of the two descriptors. Do not infer
+	/// an answer from a SQL type code, from a Java class alone, or from a
+	/// descriptor's superclass. Anything which has not been assessed must be
+	/// reported as [TemporalPreservation#unknown()], which is the default.
+	///
+	/// The answer must be deterministic and must not use a JDBC connection.
+	/// It is requested for every bound and extracted Java Time value, so it
+	/// should be cheap.
+	///
+	/// A subclass of a Dialect inherits its answers. A subclass for a
+	/// different database or driver must override them.
+	///
+	/// Where the answer is [TemporalPreservation#unknown()], a JDBC type
+	/// which implements [org.hibernate.type.descriptor.jdbc.TemporalJdbcType]
+	/// is asked to report for itself.
+	///
+	/// @param javaType the Java type of the value at the JDBC boundary, after
+	///        any attribute conversion
+	/// @param jdbcType the JDBC type which binds and extracts the value
+	///
+	/// @return the non-null report
+	///
+	/// @since 8.1
+	@Incubating(since = "8.1")
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
+		return TemporalPreservation.unknown();
+	}
+
 	/*
 	 * Initialize the given registry with any dialect-specific functions.
 	 * <p>
@@ -1190,7 +1246,7 @@ public abstract class Dialect implements ConversionContext, AlterTableSupport,
 		);
 		functionRegistry.register(
 				"offset_datetime",
-				new CurrentFunction(
+				new CurrentInstantFunction(
 						"offset_datetime",
 						currentTemporalSupport.currentTimestampWithTimeZone(),
 						offsetDateTimeType
@@ -1203,7 +1259,7 @@ public abstract class Dialect implements ConversionContext, AlterTableSupport,
 
 		functionRegistry.register(
 				"instant",
-				new CurrentFunction(
+				new CurrentInstantFunction(
 						"instant",
 						currentTemporalSupport.currentTimestampWithTimeZone(),
 						instantType

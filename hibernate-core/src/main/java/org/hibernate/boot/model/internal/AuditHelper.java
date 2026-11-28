@@ -733,7 +733,15 @@ public final class AuditHelper {
 		final var support = value.getDialect().getTemporalTableSupport();
 		column.setTemporalPrecision( support.getTemporalColumnPrecision() );
 		final var preferredType = value.getJdbcType( value.getPreferredSqlTypeCodeForInstant() );
-		final var keyType = support.getInstantAuditKeyJdbcType( preferredType );
+		// with temporal preservation enabled, where the column cannot have the type
+		// an Instant is otherwise stored in, the Dialect may name the descriptor
+		// which preserves it in this one
+		final var preserving =
+				MetadataBuildingContext.isTemporalPreservationEnabled( context.getBootstrapContext().getServiceRegistry() )
+						&& !support.supportsPreservedInstantAsTemporalColumn()
+						? support.getPreservedInstantJdbcTypeForTemporalColumn()
+						: null;
+		final var keyType = preserving != null ? preserving : support.getInstantAuditKeyJdbcType( preferredType );
 		if ( keyType != preferredType ) {
 			value.setExplicitJdbcTypeAccess( typeConfiguration -> keyType );
 		}

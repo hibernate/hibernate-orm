@@ -23,6 +23,8 @@ import static org.hibernate.SPI.Role.SUPPLY;
 
 import org.hibernate.dialect.type.spi.StandardDdlTypes;
 import org.hibernate.dialect.type.internal.SQLServerTimeDdlType;
+import org.hibernate.dialect.type.internal.StandardTemporalPreservations;
+import org.hibernate.dialect.type.spi.TemporalPreservation;
 
 import org.hibernate.dialect.type.spi.TypeSizingProfile;
 
@@ -134,6 +136,8 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.OffsetDateTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.OffsetTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntAsSmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
@@ -141,6 +145,8 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
@@ -450,6 +456,84 @@ public class SQLServerDialect extends AbstractTransactSQLDialect implements Curr
 		return 128;
 	}
 
+	/// The greatest offset from UTC which a DATETIMEOFFSET holds, in either direction.
+	private static final ZoneOffset GREATEST_OFFSET = ZoneOffset.ofHours( 14 );
+
+	/// What has been established for SQL Server with the Microsoft JDBC Driver.
+	///
+	/// A date or a date and time is exchanged with the driver directly. The
+	/// driver moves a date in the ten days which the Julian and Gregorian
+	/// calendars leave out between them, 5 to 14 October 1582, ten days
+	/// forward as it writes it, so only dates from 15 October 1582 are
+	/// qualified. An `Instant` is stored in a DATETIMEOFFSET column, which
+	/// itself denotes an instant, by way of a [java.sql.Timestamp], which
+	/// stores the date of the Julian calendar before 15 October 1582 and
+	/// reads a stored date before then as another, so only values from 1583
+	/// are qualified.
+	///
+	/// A DATETIMEOFFSET keeps an offset to the minute only, and none beyond
+	/// fourteen hours, which the driver refuses outright. An `OffsetDateTime`
+	/// or `ZonedDateTime` stored in one therefore keeps its instant and not
+	/// its offset, and an `OffsetTime`, stored on the first day of 1900, its
+	/// time of day at UTC.
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
+		var preservation = StandardTemporalPreservations.directLocal(
+				javaType,
+				jdbcType,
+				StandardTemporalPreservations.GREGORIAN_START
+		);
+		if ( preservation == TemporalPreservation.unknown() ) {
+			preservation = StandardTemporalPreservations.directLocalTime( javaType, jdbcType );
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			preservation = StandardTemporalPreservations.instant(
+					javaType,
+					jdbcType,
+					TimestampUtcAsJdbcTimestampJdbcType.class,
+					TemporalPreservation.InstantBasis.NATIVE,
+					StandardTemporalPreservations.TIMESTAMP_READ_SAFE_START
+			);
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			final var inline = StandardTemporalPreservations.offsetOrZoned(
+					javaType,
+					jdbcType,
+					OffsetDateTimeJdbcType.class,
+					TemporalPreservation.Level.UNSUPPORTED,
+					StandardTemporalPreservations.TIMESTAMP_READ_SAFE_START
+			);
+			if ( inline != TemporalPreservation.unknown() ) {
+				// The value is written with its own offset, so its date in that offset
+				// must not pass the year 9999 either, which the driver refuses as well.
+				preservation = new TemporalPreservation(
+						inline.date(),
+						inline.time(),
+						inline.instant(),
+						inline.offset(),
+						inline.zoneId(),
+						inline.instantBasis(),
+						inline.minimum(),
+						( (Instant) inline.maximum() ).minusSeconds( GREATEST_OFFSET.getTotalSeconds() ),
+						GREATEST_OFFSET
+				);
+			}
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			final var time = StandardTemporalPreservations.offsetTime(
+					javaType,
+					jdbcType,
+					OffsetTimeJdbcType.class,
+					TemporalPreservation.Level.UNSUPPORTED
+			);
+			if ( time != TemporalPreservation.unknown() ) {
+				preservation = time.withGreatestOffset( GREATEST_OFFSET );
+			}
+		}
+		return preservation;
+	}
+
 	@Override
 	@SPI({ IMPLEMENT, SUPPLY })
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
@@ -725,6 +809,13 @@ public class SQLServerDialect extends AbstractTransactSQLDialect implements Curr
 	@SPI({ USE, IMPLEMENT })
 	public String currentTimestampWithTimeZone() {
 		return "sysdatetimeoffset()";
+	}
+
+	@Override
+	public boolean isLocalDateTimeReadInTimeZoneOfCurrentTimestamp() {
+		// a datetime2 converted to a datetimeoffset is given the offset +00:00,
+		// whereas sysdatetime() is in the time zone of the server
+		return false;
 	}
 
 	@Override

@@ -1,5 +1,10 @@
 package org.hibernate.dialect;
 
+import org.hibernate.type.descriptor.jdbc.OffsetDateTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.OffsetTimeJdbcType;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.dialect.type.spi.TemporalPreservation;
+import org.hibernate.dialect.type.internal.StandardTemporalPreservations;
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
@@ -750,6 +755,51 @@ public class H2Dialect extends Dialect implements CurrentTemporalSupport, Tempor
 	@SPI({ IMPLEMENT, SUPPLY })
 	public TemporalValueSemantics getTemporalValueSemantics() {
 		return TemporalValueSemantics.OFFSET_LITERALS;
+	}
+
+	/// Assessed for H2 with its own JDBC driver. H2 uses the proleptic Gregorian
+	/// calendar and accepts and returns Java Time values directly, including
+	/// an `Instant` for a `timestamp with time zone` column. That column keeps
+	/// the offset of an `OffsetDateTime` as well as its instant.
+	@Override
+	public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
+		var preservation = StandardTemporalPreservations.directLocal(
+				javaType,
+				jdbcType,
+				StandardTemporalPreservations.COMMON_ERA_START
+		);
+		if ( preservation == TemporalPreservation.unknown() ) {
+			preservation = StandardTemporalPreservations.directLocalTime( javaType, jdbcType );
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			preservation = StandardTemporalPreservations.instant(
+					javaType,
+					jdbcType,
+					TimestampUtcAsInstantJdbcType.class,
+					TemporalPreservation.InstantBasis.NATIVE,
+					StandardTemporalPreservations.COMMON_ERA_START
+			);
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			// the column keeps the offset, to the second, but not a region
+			preservation = StandardTemporalPreservations.offsetOrZoned(
+					javaType,
+					jdbcType,
+					OffsetDateTimeJdbcType.class,
+					TemporalPreservation.Level.SUPPORTED,
+					StandardTemporalPreservations.COMMON_ERA_START
+			);
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			// the column keeps the time and the offset, to the second
+			preservation = StandardTemporalPreservations.offsetTime(
+					javaType,
+					jdbcType,
+					OffsetTimeJdbcType.class,
+					TemporalPreservation.Level.SUPPORTED
+			);
+		}
+		return preservation;
 	}
 
 	@Override

@@ -13,7 +13,6 @@ import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
 import org.hibernate.id.enhanced.StandardOptimizerDescriptor;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.type.WrapperArrayHandling;
-import org.hibernate.type.descriptor.jdbc.JavaTimeJdbcType;
 import org.hibernate.type.format.FormatMapper;
 
 import jakarta.persistence.Column;
@@ -229,6 +228,137 @@ public interface MappingSettings {
 	String PREFERRED_INSTANT_JDBC_TYPE = "hibernate.type.preferred_instant_jdbc_type";
 
 	/**
+	 * Enables <em>temporal preservation</em>, a strict mode for
+	 * {@linkplain java.time Java Time} values.
+	 * <p>
+	 * When disabled, which is the default, Java Time values are converted to
+	 * and from {@link java.sql.Date}, {@link java.sql.Time} and
+	 * {@link java.sql.Timestamp} at the JDBC boundary, and Hibernate makes no
+	 * claim about what the database stores for any particular value.
+	 * <p>
+	 * When enabled, Hibernate either preserves a Java Time value or rejects it:
+	 * <ul>
+	 * <li>Every mapped Java Time value must use a combination of Java type and
+	 *     JDBC type which the {@linkplain org.hibernate.dialect.Dialect Dialect}
+	 *     {@linkplain org.hibernate.dialect.Dialect#getTemporalPreservation
+	 *     reports} as preserving every part of the value which the Java type
+	 *     requires. For an {@link java.time.OffsetDateTime} or a
+	 *     {@link java.time.ZonedDateTime}, the required parts can be reduced
+	 *     to the instant alone with
+	 *     {@link org.hibernate.annotations.TemporalPreservationPolicy} or
+	 *     {@link #TEMPORAL_PRESERVATION_POLICY}. A mapping which is known to
+	 *     lose a required part, or which has
+	 *     simply not been assessed, is rejected when the
+	 *     {@link org.hibernate.SessionFactory} is built. There is no
+	 *     warn-and-continue mode.
+	 * <li>A value outside the range for which the mapping is known to preserve
+	 *     is rejected with a {@link org.hibernate.TemporalPreservationException}
+	 *     before it is bound to a statement, before it is rendered as a SQL
+	 *     literal, and when it is read from a result.
+	 * </ul>
+	 * <p>
+	 * This setting does not prescribe how a value crosses the JDBC boundary.
+	 * As with {@link #JAVA_TIME_USE_DIRECT_JDBC}, which this setting implies
+	 * and which must not be explicitly disabled together with it, Hibernate
+	 * passes a Java Time value to the JDBC driver, and requests it from the
+	 * driver, directly wherever the Dialect
+	 * {@linkplain org.hibernate.dialect.Dialect#getDirectJavaTimeJdbcSupport()
+	 * reports that the driver supports} doing so for the Java class. Where it
+	 * does not, Hibernate selects a JDBC type which converts the value, for
+	 * example to a {@link java.sql.Timestamp}, exactly as it does when this
+	 * setting is disabled. Either way, the selected combination is accepted
+	 * only if the Dialect reports it as preserving. A conversion may therefore
+	 * be accepted, and direct access may be rejected.
+	 * <p>
+	 * <em>Preserved</em> means that the stored SQL value is correct according
+	 * to the semantics of the database itself, and not merely that Hibernate
+	 * reads back the value it wrote.
+	 * <p>
+	 * The guarantee covers values Hibernate itself binds and reads through
+	 * mapped attributes and query parameters. It does not extend to values
+	 * computed by database functions, to native SQL fragments, nor to rows
+	 * written by other clients or with this setting disabled. Enabling or
+	 * disabling the setting never migrates existing data.
+	 * <p>
+	 * Only a limited set of databases, Java types and operations is supported.
+	 * See the User Guide for the current list.
+	 *
+	 * @settingDefault {@value #TEMPORAL_PRESERVATION_DEFAULT}
+	 *
+	 * @see org.hibernate.dialect.Dialect#getTemporalPreservation
+	 *
+	 * @since 8.1
+	 */
+	@Incubating(since = "8.1")
+	String TEMPORAL_PRESERVATION = "hibernate.type.temporal_preservation";
+
+	/**
+	 * The default value for {@link #TEMPORAL_PRESERVATION}.
+	 *
+	 * @since 8.1
+	 */
+	boolean TEMPORAL_PRESERVATION_DEFAULT = false;
+
+	/**
+	 * Selects, for every {@link java.time.OffsetTime},
+	 * {@link java.time.OffsetDateTime} and
+	 * {@link java.time.ZonedDateTime} mapping which does not select one with
+	 * {@link org.hibernate.annotations.TemporalPreservationPolicy}, which parts
+	 * of the value must be preserved when {@link #TEMPORAL_PRESERVATION} is
+	 * enabled.
+	 * <p>
+	 * Accepts a {@link org.hibernate.annotations.TemporalPreservationPolicy.Type}
+	 * or its name, in any case: {@code value} requires every part of
+	 * the value, and {@code normalized} requires only the instant, or for an
+	 * {@code OffsetTime} only the time of day as expressed at UTC.
+	 * <p>
+	 * Has no effect when {@link #TEMPORAL_PRESERVATION} is disabled.
+	 *
+	 * @settingDefault {@code value}
+	 *
+	 * @see #TEMPORAL_PRESERVATION_POLICY_OFFSET_TIME
+	 * @see #TEMPORAL_PRESERVATION_POLICY_OFFSET_DATETIME
+	 * @see #TEMPORAL_PRESERVATION_POLICY_ZONED_DATETIME
+	 *
+	 * @since 8.1
+	 */
+	@Incubating(since = "8.1")
+	String TEMPORAL_PRESERVATION_POLICY = "hibernate.type.temporal_preservation_policy";
+
+	/**
+	 * As {@link #TEMPORAL_PRESERVATION_POLICY}, for
+	 * {@link java.time.OffsetTime} only, and taking precedence over it.
+	 *
+	 * @settingDefault The value of {@link #TEMPORAL_PRESERVATION_POLICY}
+	 *
+	 * @since 8.1
+	 */
+	@Incubating(since = "8.1")
+	String TEMPORAL_PRESERVATION_POLICY_OFFSET_TIME = "hibernate.type.temporal_preservation_policy.offset_time";
+
+	/**
+	 * As {@link #TEMPORAL_PRESERVATION_POLICY}, for
+	 * {@link java.time.OffsetDateTime} only, and taking precedence over it.
+	 *
+	 * @settingDefault The value of {@link #TEMPORAL_PRESERVATION_POLICY}
+	 *
+	 * @since 8.1
+	 */
+	@Incubating(since = "8.1")
+	String TEMPORAL_PRESERVATION_POLICY_OFFSET_DATETIME = "hibernate.type.temporal_preservation_policy.offset_datetime";
+
+	/**
+	 * As {@link #TEMPORAL_PRESERVATION_POLICY}, for
+	 * {@link java.time.ZonedDateTime} only, and taking precedence over it.
+	 *
+	 * @settingDefault The value of {@link #TEMPORAL_PRESERVATION_POLICY}
+	 *
+	 * @since 8.1
+	 */
+	@Incubating(since = "8.1")
+	String TEMPORAL_PRESERVATION_POLICY_ZONED_DATETIME = "hibernate.type.temporal_preservation_policy.zoned_datetime";
+
+	/**
 	 * Indicates whether to use {@linkplain java.time Java Time} references at the JDBC
 	 * boundary for binding and extracting temporal values to/from the database using
 	 * the support added in JDBC 4.2 via {@linkplain java.sql.PreparedStatement#setObject(int, Object, int)}
@@ -236,7 +366,7 @@ public interface MappingSettings {
 	 * <p>
 	 * Used to set the value across the entire system as opposed to scattered, individual
 	 * {@linkplain org.hibernate.annotations.JdbcTypeCode} and {@linkplain org.hibernate.annotations.JdbcType}
-	 * naming specific {@linkplain JavaTimeJdbcType} implementations.
+	 * naming specific {@linkplain org.hibernate.type.descriptor.jdbc.JavaTimeJdbcType} implementations.
 	 * The setting is a preference which is applied only when the configured
 	 * {@linkplain org.hibernate.dialect.Dialect Dialect} reports support for the
 	 * Java Time class used at the JDBC boundary.
@@ -248,6 +378,15 @@ public interface MappingSettings {
 	 * {@linkplain java.time.Instant} references, use {@code hibernate.type.preferred_instant_jdbc_type=INSTANT}.
 	 * See {@linkplain #PREFERRED_INSTANT_JDBC_TYPE}, {@linkplain org.hibernate.type.SqlTypes#INSTANT} and
 	 * {@linkplain org.hibernate.type.descriptor.jdbc.InstantJdbcType}.
+	 *
+	 * <p>
+	 * This setting concerns only how values cross the JDBC boundary. It makes
+	 * no claim about what the database stores, and nothing is rejected on its
+	 * account. See {@link #TEMPORAL_PRESERVATION} for that.
+	 *
+	 * Enabling {@link #TEMPORAL_PRESERVATION} implies this setting. Explicitly
+	 * disabling this setting while enabling that one is contradictory, and is
+	 * rejected when Hibernate starts.
 	 *
 	 * @settingDefault {@value #JAVA_TIME_USE_DIRECT_JDBC_DEFAULT}
 	 *

@@ -27,6 +27,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -85,6 +86,7 @@ class DirectJavaTimeJdbcAccessTests {
 					name = JdbcSettings.DIALECT,
 					value = "org.hibernate.orm.test.mapping.javatime.DirectJavaTimeJdbcAccessTests$NoDirectJavaTimeDialect"
 			),
+			@Setting(name = MappingSettings.TEMPORAL_PRESERVATION, value = "false"),
 			@Setting(name = MappingSettings.JAVA_TIME_USE_DIRECT_JDBC, value = "false")
 	})
 	@DomainModel(annotatedClasses = EntityWithLocalDates.class)
@@ -103,6 +105,11 @@ class DirectJavaTimeJdbcAccessTests {
 	})
 	@DomainModel(annotatedClasses = EntityWithOffsets.class)
 	@SessionFactory(exportSchema = false)
+	@DisabledIfSystemProperty(
+			named = "hibernate.type.temporal_preservation",
+			matches = "true",
+			disabledReason = "Asserts the warnings of a mapping which temporal preservation maps differently"
+	)
 	void offsetTypesShareOneWarning(MessageKeyWatcher warningWatcher) {
 		assertThat( warningWatcher.getTriggeredMessages() )
 				.singleElement()

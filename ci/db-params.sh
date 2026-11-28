@@ -109,6 +109,10 @@ elif [ "$RDBMS" == "base-database-service-26ai-rac" ]; then
 elif [ "$RDBMS" == "db2" ]; then
   goal="-Pdb=db2"
   containerName=db2
+elif [ "$RDBMS" == "db2_tz" ]; then
+  # TEMPORARY: a Db2 server which is not at UTC, for the temporal preservation probes
+  goal="-Pdb=db2"
+  containerName=db2
 elif [ "$RDBMS" == "db2_11_5" ]; then
   goal="-Pdb=db2_old"
   containerName=db2

@@ -11,9 +11,8 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.internal.TemporalPreservationSettings;
 
-import static org.hibernate.cfg.MappingSettings.JAVA_TIME_USE_DIRECT_JDBC;
-import static org.hibernate.cfg.MappingSettings.JAVA_TIME_USE_DIRECT_JDBC_DEFAULT;
 import static org.hibernate.cfg.MappingSettings.PREFER_LOCALE_LANGUAGE_TAG;
 import static org.hibernate.cfg.MappingSettings.PREFER_NATIVE_ENUM_TYPES;
 import static org.hibernate.audit.AuditStrategy.DEFAULT;
@@ -110,10 +109,10 @@ public interface MetadataBuildingContext {
 	@Remove
 	default boolean isDirectJavaTimeJdbcAccessEnabled(Class<?> javaTimeType) {
 		return isPreferJavaTimeJdbcTypesEnabled()
-				&& getRegistry().requireService( JdbcServices.class )
-						.getDialect()
-						.getDirectJavaTimeJdbcSupport()
-						.supports( javaTimeType );
+				&& TemporalPreservationSettings.javaTimeJdbcTypeSupport(
+						getRegistry().requireService( JdbcServices.class ).getDialect(),
+						isTemporalPreservationEnabled( getRegistry() )
+				).supports( javaTimeType );
 	}
 
 	/**
@@ -164,11 +163,19 @@ public interface MetadataBuildingContext {
 
 	@Remove
 	static boolean isPreferJavaTimeJdbcTypesEnabled(ConfigurationService configurationService) {
-		return getBoolean(
-				JAVA_TIME_USE_DIRECT_JDBC,
-				configurationService.getSettings(),
-				JAVA_TIME_USE_DIRECT_JDBC_DEFAULT
-		);
+		return TemporalPreservationSettings.resolve( configurationService.getSettings() ).directJdbcPreferred();
+	}
+
+	/**
+	 * Whether temporal preservation is enabled.
+	 *
+	 * @since 8.1
+	 * @see org.hibernate.cfg.MappingSettings#TEMPORAL_PRESERVATION
+	 */
+	static boolean isTemporalPreservationEnabled(ServiceRegistry serviceRegistry) {
+		return TemporalPreservationSettings.resolve(
+				serviceRegistry.requireService( ConfigurationService.class ).getSettings()
+		).preservationEnabled();
 	}
 
 	@Remove

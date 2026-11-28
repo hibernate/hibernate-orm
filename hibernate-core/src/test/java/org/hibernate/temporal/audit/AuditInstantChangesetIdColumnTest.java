@@ -28,6 +28,7 @@ import static org.hibernate.cfg.JdbcSettings.ALLOW_METADATA_ON_BOOT;
 import static org.hibernate.cfg.JdbcSettings.DIALECT;
 import static org.hibernate.cfg.StateManagementSettings.AUDIT_STRATEGY;
 import static org.hibernate.cfg.MappingSettings.PREFERRED_INSTANT_JDBC_TYPE;
+import static org.hibernate.cfg.MappingSettings.TEMPORAL_PRESERVATION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -77,7 +78,9 @@ class AuditInstantChangesetIdColumnTest {
 			@Setting(name = DIALECT, value = "org.hibernate.dialect.OracleDialect"),
 			@Setting(name = ALLOW_METADATA_ON_BOOT, value = "false"),
 			@Setting(name = AUDIT_STRATEGY, value = "VALIDITY"),
-			@Setting(name = PREFERRED_INSTANT_JDBC_TYPE, value = "TIMESTAMP")
+			@Setting(name = PREFERRED_INSTANT_JDBC_TYPE, value = "TIMESTAMP"),
+			// with temporal preservation enabled, the column has the descriptor which preserves an Instant
+			@Setting(name = TEMPORAL_PRESERVATION, value = "false")
 	})
 	@DomainModel(annotatedClasses = Book.class)
 	void keepsPreferredTimestampBinderOnOracle(DomainModelScope scope) {

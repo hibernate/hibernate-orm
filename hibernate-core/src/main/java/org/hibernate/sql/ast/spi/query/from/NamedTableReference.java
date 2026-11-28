@@ -61,7 +61,12 @@ public class NamedTableReference extends AbstractTableReference {
 					&& ( !current || temporalTableSupport.useAsOfOperatorForCurrent( temporalTableStrategy ) ) ) {
 				asOfTransactionIdentifier = current && changesets.useServerTimestamp( dialect )
 						? new SelfRenderingSqlFragmentExpression(
-								dialect.getCurrentTemporalSupport().currentTimestamp(),
+								org.hibernate.type.descriptor.jdbc.internal.TemporalPreservationGuard.currentInstantExpression(
+										dialect,
+										temporalMapping.getJdbcMapping(),
+										factory.getSessionFactoryOptions().isTemporalPreservationEnabled(),
+										getTableExpression()
+								),
 								temporalMapping.getJdbcMapping()
 						)
 						: new TemporalJdbcParameter( temporalMapping.getEndingColumnMapping(), current );

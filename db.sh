@@ -419,6 +419,19 @@ db2_11_5() {
     db2_post_setup
 }
 
+# TEMPORARY: a Db2 server which is not at UTC, for the temporal preservation probes.
+# The instance is started from a login shell, which does not inherit the TZ of the
+# container, so the time zone of the system is changed as well and the instance restarted.
+db2_tz() {
+    compose_down "db2"
+    db2_osx_setup
+    compose_up "probe/db2-tz/docker-compose.yaml"
+    db2_post_setup
+    $PRIVILEGED_CLI $CONTAINER_CLI exec -t db2 bash -c "ls /usr/share/zoneinfo/Asia/Kathmandu && ln -sf /usr/share/zoneinfo/Asia/Kathmandu /etc/localtime; echo 'export TZ=Asia/Kathmandu' >> /database/config/orm_test/.profile; echo 'export TZ=Asia/Kathmandu' >> /database/config/orm_test/sqllib/userprofile; date" || true
+    $CONTAINER_CLI exec -t db2 su - orm_test bash -c ". /database/config/orm_test/sqllib/db2profile; export TZ=Asia/Kathmandu; /database/config/orm_test/sqllib/adm/db2set DB2ENVLIST=TZ; /database/config/orm_test/sqllib/adm/db2stop force; /database/config/orm_test/sqllib/adm/db2start; /database/config/orm_test/sqllib/bin/db2 'connect to orm_test'; /database/config/orm_test/sqllib/bin/db2 'values (current timezone, current timestamp)'; date" || true
+    db2_setup
+}
+
 db2_12_1() {
     compose_down "db2"
     db2_osx_setup

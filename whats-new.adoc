@@ -70,3 +70,27 @@ where p.address(street, city, zip) = (:street, :city, :zip)
 ----
 
 Unlike a direct comparison of an embedded attribute with a tuple, the result of this comparison does not depend on the order in which the fields of the embeddable class are enumerated.
+
+[[temporal-preservation]]
+== Preservation of Java Time values
+
+The new `hibernate.type.temporal_preservation` setting asks Hibernate to guarantee that a
+`java.time` value which is written is the value which is stored, and the value which is read back.
+It is disabled by default, and nothing changes while it is disabled:
+
+[source,properties]
+----
+hibernate.type.temporal_preservation=true
+----
+
+When it is enabled, each `LocalDate`, `LocalTime`, `LocalDateTime`, `Instant`, `OffsetDateTime`,
+`ZonedDateTime` and `OffsetTime` is exchanged with the JDBC driver in a way which does not depend
+on the default time zone of the JVM, nor on the time zone of the database session.
+A mapping, a value, or a query for which that cannot be guaranteed is rejected, rather than stored
+with a silently different value.
+
+An `OffsetDateTime` or `ZonedDateTime` is stored in a single column where that column keeps the whole value,
+and otherwise in two, the second holding its offset or zone.
+The new `@TemporalPreservationPolicy` annotation declares what must be preserved of such a value,
+and the new `@TimeZoneAdjustment` annotation declares the zone of an attribute, so that it need not be stored.
+See the link:{userGuideBase}#basic-temporal-preservation[user guide] for details, including which databases and types are supported.

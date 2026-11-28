@@ -1,5 +1,6 @@
 package org.hibernate.dialect.temporal.spi;
 
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import java.util.List;
 
 import org.hibernate.SPI;
@@ -44,6 +45,32 @@ public interface TemporalTableSupport {
 	/// @since 8.1
 	default JdbcType getInstantAuditKeyJdbcType(JdbcType preferredType) {
 		return preferredType;
+	}
+
+	/// Whether a temporal effectivity column, which is part of a primary key,
+	/// may have the type of column in which the Dialect stores an `Instant`
+	/// with temporal preservation enabled. Where it may not, the column keeps
+	/// the type of [#getTemporalColumnType()], and with temporal preservation
+	/// enabled the mapping is rejected unless that type is established to
+	/// preserve an `Instant`.
+	///
+	/// @since 8.1
+	default boolean supportsPreservedInstantAsTemporalColumn() {
+		return true;
+	}
+
+	/// The descriptor with which an `Instant` is held in a temporal effectivity
+	/// column where [#supportsPreservedInstantAsTemporalColumn()] answers no.
+	/// It is used with temporal preservation enabled, in a column of the type
+	/// of [#getTemporalColumnType()], and the Dialect must report it as
+	/// preserving an `Instant`, or the mapping is rejected.
+	///
+	/// @return the descriptor, or `null` to use the one registered for the
+	/// 		type of the column
+	///
+	/// @since 8.1
+	default @Nullable JdbcType getPreservedInstantJdbcTypeForTemporalColumn() {
+		return null;
 	}
 
 	/// Render the trailing table options for the supplied table. Use every name

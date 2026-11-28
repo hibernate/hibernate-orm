@@ -47,6 +47,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import static org.hibernate.type.descriptor.jdbc.internal.TemporalPreservationGuard.currentInstantExpression;
 import static java.util.Collections.emptyList;
 import static org.hibernate.metamodel.mapping.internal.CurrentState.ownerRevision;
 import static org.hibernate.boot.model.internal.TemporalHelper.ROW_END;
@@ -112,7 +113,12 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 		if ( creationContext.getSessionFactory()
 				.getChangesetCoordinator()
 				.useServerTimestamp( dialect ) ) {
-			currentTimestampFunctionName = dialect.getCurrentTemporalSupport().currentTimestamp();
+			currentTimestampFunctionName = currentInstantExpression(
+					dialect,
+					jdbcMapping,
+					creationContext.getSessionFactory().getSessionFactoryOptions().isTemporalPreservationEnabled(),
+					tableName + "." + startingColumn.getName()
+			);
 			currentTimestampExpression =
 					new SelfRenderingSqlFragmentExpression( currentTimestampFunctionName, jdbcMapping );
 		}

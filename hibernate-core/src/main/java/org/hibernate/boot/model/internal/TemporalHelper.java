@@ -396,11 +396,19 @@ public class TemporalHelper {
 				context.getBuildingOptions().getPhysicalNamingStrategy() );
 		context.getMetadataCollector().addSecondPass( (OptionalDeterminationSecondPass) ignored -> {
 			final var changesetIdJavaType = getChangesetIdType( context );
-			setTemporalColumnType( temporalPrecision, column, database, changesetIdJavaType );
-			if ( Instant.class.equals( changesetIdJavaType ) ) {
-				final int temporalColumnType = database.getDialect().getTemporalTableSupport().getTemporalColumnType();
-				basicValue.setExplicitJdbcTypeAccess( typeConfiguration ->
-						typeConfiguration.getJdbcTypeRegistry().findDescriptor( temporalColumnType ) );
+			final boolean asAnyInstant = isStoredAsAnyInstant( context );
+			setTemporalColumnType( temporalPrecision, column, database, changesetIdJavaType, asAnyInstant );
+			if ( Instant.class.equals( changesetIdJavaType ) && !asAnyInstant ) {
+				final var temporalTableSupport = database.getDialect().getTemporalTableSupport();
+				final int temporalColumnType = temporalTableSupport.getTemporalColumnType();
+				// where the column cannot have the type an Instant is otherwise stored in,
+				// the Dialect may name the descriptor which preserves it in this one
+				final var preserving = isPreservedInColumnOfItsOwnType( context )
+						? temporalTableSupport.getPreservedInstantJdbcTypeForTemporalColumn()
+						: null;
+				basicValue.setExplicitJdbcTypeAccess( typeConfiguration -> preserving != null
+						? preserving
+						: typeConfiguration.getJdbcTypeRegistry().findDescriptor( temporalColumnType ) );
 			}
 		} );
 		return column;
@@ -410,15 +418,43 @@ public class TemporalHelper {
 			Integer temporalPrecision,
 			Column column,
 			Database database,
-			Class<?> changesetIdJavaType) {
+			Class<?> changesetIdJavaType,
+			boolean asAnyInstant) {
 		if ( temporalPrecision != null ) {
 			column.setTemporalPrecision( temporalPrecision );
 		}
 		else if ( Instant.class.equals( changesetIdJavaType ) ) {
 			final var temporalTableSupport = database.getDialect().getTemporalTableSupport();
 			column.setTemporalPrecision( temporalTableSupport.getTemporalColumnPrecision() );
-			column.setSqlTypeCode( temporalTableSupport.getTemporalColumnType() );
+			if ( !asAnyInstant ) {
+				column.setSqlTypeCode( temporalTableSupport.getTemporalColumnType() );
+			}
 		}
+	}
+
+	/// With temporal preservation enabled, a row start or row end which is an
+	/// `Instant` is stored as any other `Instant` is, since that is the mapping
+	/// established to preserve it, unless the database maintains the column
+	/// itself, where the column must have the type the database requires, or
+	/// the database does not allow a column of that type in a primary key.
+	private static boolean isStoredAsAnyInstant(MetadataBuildingContext context) {
+		return context.getTemporalTableStrategy() != TemporalTableStrategy.NATIVE
+			&& context.getMetadataCollector().getDatabase().getDialect().getTemporalTableSupport()
+					.supportsPreservedInstantAsTemporalColumn()
+			&& MetadataBuildingContext.isTemporalPreservationEnabled(
+					context.getBootstrapContext().getServiceRegistry() );
+	}
+
+	/// Whether, with temporal preservation enabled, the column keeps the type
+	/// which the Dialect has for a temporal column although Hibernate
+	/// maintains it, because the type an `Instant` is otherwise stored in is
+	/// not allowed there.
+	private static boolean isPreservedInColumnOfItsOwnType(MetadataBuildingContext context) {
+		return context.getTemporalTableStrategy() != TemporalTableStrategy.NATIVE
+			&& !context.getMetadataCollector().getDatabase().getDialect().getTemporalTableSupport()
+					.supportsPreservedInstantAsTemporalColumn()
+			&& MetadataBuildingContext.isTemporalPreservationEnabled(
+					context.getBootstrapContext().getServiceRegistry() );
 	}
 
 	private static void setTemporalColumnName(

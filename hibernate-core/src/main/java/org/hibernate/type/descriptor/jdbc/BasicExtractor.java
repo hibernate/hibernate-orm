@@ -14,6 +14,7 @@ import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.internal.TemporalPreservationGuard;
 
 import static org.hibernate.SPI.Role.IMPLEMENT;
 import static org.hibernate.SPI.Role.USE;
@@ -28,12 +29,14 @@ import static org.hibernate.SPI.Role.USE;
 public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializable {
 	private final JavaType<J> javaType;
 	private final JdbcType jdbcType;
+	private final boolean temporalPreservationGuarded;
 
 	/// Create an extractor for the paired Java and JDBC descriptors.
 	@SPI(IMPLEMENT)
 	public BasicExtractor(JavaType<J> javaType, JdbcType jdbcType) {
 		this.javaType = javaType;
 		this.jdbcType = jdbcType;
+		this.temporalPreservationGuarded = TemporalPreservationGuard.appliesTo( javaType );
 	}
 
 	public JavaType<J> getJavaType() {
@@ -59,6 +62,9 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializab
 			return null;
 		}
 		else {
+			if ( temporalPreservationGuarded ) {
+				TemporalPreservationGuard.checkExtracted( value, javaType, jdbcType, options );
+			}
 			if ( JdbcExtractingLogging.LOGGER.isTraceEnabled() ) {
 				JdbcExtractingLogging.logExtracted(
 						paramIndex,
@@ -87,6 +93,9 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializab
 	@Nullable
 	public J extract(@Nonnull CallableStatement statement, int paramIndex, @Nonnull WrapperOptions options)
 			throws SQLException {
+		if ( temporalPreservationGuarded ) {
+			TemporalPreservationGuard.rejectCallableOutput( javaType, options );
+		}
 		final J value = doExtract( statement, paramIndex, options );
 		if ( value == null || statement.wasNull() ) {
 			if ( JdbcExtractingLogging.LOGGER.isTraceEnabled() ) {
@@ -99,6 +108,9 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializab
 			return null;
 		}
 		else {
+			if ( temporalPreservationGuarded ) {
+				TemporalPreservationGuard.checkExtracted( value, javaType, jdbcType, options );
+			}
 			if ( JdbcExtractingLogging.LOGGER.isTraceEnabled() ) {
 				JdbcExtractingLogging.LOGGER.tracef(
 						"extracted procedure output  parameter ([%s] : [%s]) - [%s]",
@@ -128,6 +140,9 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializab
 	@Nullable
 	public J extract(@Nonnull CallableStatement statement, @Nonnull String paramName, @Nonnull WrapperOptions options)
 			throws SQLException {
+		if ( temporalPreservationGuarded ) {
+			TemporalPreservationGuard.rejectCallableOutput( javaType, options );
+		}
 		final J value = doExtract( statement, paramName, options );
 		if ( value == null || statement.wasNull() ) {
 			if ( JdbcExtractingLogging.LOGGER.isTraceEnabled() ) {
@@ -140,6 +155,9 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializab
 			return null;
 		}
 		else {
+			if ( temporalPreservationGuarded ) {
+				TemporalPreservationGuard.checkExtracted( value, javaType, jdbcType, options );
+			}
 			if ( JdbcExtractingLogging.LOGGER.isTraceEnabled() ) {
 				JdbcExtractingLogging.LOGGER.tracef(
 						"extracted named procedure output  parameter ([%s] : [%s]) - [%s]",

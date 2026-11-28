@@ -122,6 +122,12 @@ import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimeUtcAsLocalTimeJdbcType;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.dialect.type.spi.TemporalPreservation;
+import org.hibernate.dialect.type.internal.StandardTemporalPreservations;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -188,6 +194,56 @@ public class CockroachDialect extends Dialect implements CurrentTemporalSupport,
 	@Override
 	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
 		return DirectJavaTimeJdbcSupports.local();
+	}
+
+	/// Assessed for CockroachDB with the PostgreSQL JDBC driver, which is the
+	/// driver used with it. CockroachDB is a different database than
+	/// PostgreSQL, so what [PostgreSQLDialect] answers is not taken for
+	/// granted: it has been verified against CockroachDB itself, and holds
+	/// there as well. The first day for an `Instant` comes from the driver,
+	/// which reads a `timestamp with time zone` by way of a
+	/// [java.sql.Timestamp] the same way whichever database it talks to.
+	///
+	/// @see PostgreSQLDialect#getTemporalPreservation
+	@Override
+	public TemporalPreservation getTemporalPreservation(JavaType<?> javaType, JdbcType jdbcType) {
+		var preservation = StandardTemporalPreservations.directLocal(
+				javaType,
+				jdbcType,
+				StandardTemporalPreservations.COMMON_ERA_START
+		);
+		if ( preservation == TemporalPreservation.unknown() ) {
+			preservation = StandardTemporalPreservations.directLocalTime( javaType, jdbcType );
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			preservation = StandardTemporalPreservations.instant(
+					javaType,
+					jdbcType,
+					TimestampUtcAsJdbcTimestampJdbcType.class,
+					TemporalPreservation.InstantBasis.NATIVE,
+					StandardTemporalPreservations.TIMESTAMP_READ_SAFE_START
+			);
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			// stored the way an Instant is: the column keeps the instant and nothing else
+			preservation = StandardTemporalPreservations.offsetOrZoned(
+					javaType,
+					jdbcType,
+					TimestampUtcAsJdbcTimestampJdbcType.class,
+					TemporalPreservation.Level.UNSUPPORTED,
+					StandardTemporalPreservations.TIMESTAMP_READ_SAFE_START
+			);
+		}
+		if ( preservation == TemporalPreservation.unknown() ) {
+			// stored as its time of day at UTC, in a column which keeps nothing else
+			preservation = StandardTemporalPreservations.offsetTime(
+					javaType,
+					jdbcType,
+					TimeUtcAsLocalTimeJdbcType.class,
+					TemporalPreservation.Level.UNSUPPORTED
+			);
+		}
+		return preservation;
 	}
 
 	private IfExistsSupport ifExistsSupport;
@@ -462,6 +518,12 @@ public class CockroachDialect extends Dialect implements CurrentTemporalSupport,
 	protected void contributeCockroachTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final var jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
+		if ( serviceRegistry != null && MetadataBuildingContext.isTemporalPreservationEnabled( serviceRegistry ) ) {
+			// The time of an OffsetTime at UTC is exchanged with the driver as a LocalTime.
+			// Passing through a java.sql.Time stores a time which depends on the default
+			// time zone of the JVM, which is left as it is when preservation is disabled.
+			jdbcTypeRegistry.addDescriptor( TimeUtcAsLocalTimeJdbcType.INSTANCE );
+		}
 		// Don't use this type due to https://github.com/pgjdbc/pgjdbc/issues/2862
 		//jdbcTypeRegistry.addDescriptor( TimestampUtcAsOffsetDateTimeJdbcType.INSTANCE );
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {

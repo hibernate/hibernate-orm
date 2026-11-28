@@ -822,36 +822,545 @@ The Java type exchanged with the JDBC driver at this boundary can differ from th
 For example, Hibernate can map a `LocalDate` attribute to a SQL `DATE` column either by passing the `LocalDate` directly to the driver,
 or by converting it to a `java.sql.Date` for JDBC access and converting the retrieved value back to `LocalDate`.
 
-The <<settings-hibernate.type.java_time_use_direct_jdbc,`hibernate.type.java_time_use_direct_jdbc`>> setting controls
-whether Hibernate prefers to exchange `java.time` values directly with the driver using `PreparedStatement.setObject()`
-and `ResultSet.getObject(..., Class)`.
-It defaults to `false`, so Hibernate converts `java.time` values to legacy JDBC representations by default.
-This setting controls the Java representation at the JDBC boundary, independently of the SQL column type and time-zone storage strategy.
+By default, Hibernate converts `java.time` values to and from `java.sql.Date`, `java.sql.Time` and `java.sql.Timestamp`.
+These conversions go through the default time zone of the JVM and through the calendar of `java.util.GregorianCalendar`,
+and for some values the database ends up storing something other than what the application wrote.
+A `LocalDateTime` which falls in the hour skipped when clocks are set forward is one example,
+and a date before 15 October 1582 is another.
+For time-zone configuration when using these JDBC types, see <<basic-datetime-time-zone>>.
 
-JDBC 4.2, included in Java 8, requires support for `LocalDate`, `LocalTime`, `LocalDateTime`, `OffsetTime`, and `OffsetDateTime`.
-Despite this requirement, some JDBC drivers still do not support all of these types at the JDBC boundary.
-Running on Java 8 or later therefore does not by itself guarantee that a driver can bind and extract these values directly.
+The <<settings-hibernate.type.java_time_use_direct_jdbc,`hibernate.type.java_time_use_direct_jdbc`>> setting makes Hibernate prefer
+to exchange `java.time` values directly with the driver, using `PreparedStatement.setObject()` and `ResultSet.getObject(..., Class)`.
+JDBC 4.2 requires drivers to support `LocalDate`, `LocalTime`, `LocalDateTime`, `OffsetTime`, and `OffsetDateTime` this way, but not every driver does.
 Hibernate uses the configured dialect's knowledge of driver support to select direct access for each Java time type.
-When direct access is requested but the dialect reports a type as unsupported, Hibernate uses the corresponding legacy JDBC representation
-and logs the known limitation.
+Where the dialect reports a type as unsupported, Hibernate uses the corresponding `java.sql` type and logs the known limitation.
+An individual attribute can be mapped the same way by naming one of the JDBC type codes for `java.time` types, for example `@JdbcTypeCode(SqlTypes.LOCAL_DATE_TIME)`.
 
-To enable direct JDBC access globally for supported Java time types, set:
+Direct access removes the conversions, but Hibernate makes no promise about the result.
+For a guarantee, use temporal preservation.
+
+[[basic-temporal-preservation]]
+===== Temporal preservation
+
+_Temporal preservation_ is a strict mode for `java.time` values.
+It is disabled by default, and enabled with the
+<<settings-hibernate.type.temporal_preservation,`hibernate.type.temporal_preservation`>> setting:
 
 [source,properties]
 ----
-hibernate.type.java_time_use_direct_jdbc=true
+hibernate.type.temporal_preservation=true
 ----
 
-The entity attributes may still use `java.time` types; Hibernate performs the conversions needed for JDBC access.
-For time-zone configuration when using legacy JDBC temporal types, see <<basic-datetime-time-zone>>.
+When temporal preservation is enabled, Hibernate either preserves a `java.time` value or rejects it.
+A value is _preserved_ when the value stored in the database is correct according to the database itself,
+so that SQL written by hand, a report, or another application sees the same date, time or instant that the Java value holds.
+It is not enough for Hibernate to read back the value it wrote.
+
+Preservation is stated for each _part_ of a value.
+
+[cols="1,3",options="header"]
+|===
+|Part |Java types which have it
+|`DATE` |`LocalDate`, `LocalDateTime`
+|`TIME` |`LocalTime`, `LocalDateTime`, `OffsetTime`.
+For an `OffsetTime` this is its time of day as expressed at UTC, from which its own time of day follows by its offset
+|`INSTANT` |`Instant`, `OffsetDateTime`, `ZonedDateTime`
+|`OFFSET` |`OffsetTime`, `OffsetDateTime`, `ZonedDateTime`
+|`ZONE_ID` |`ZonedDateTime`
+|===
+
+Enabling temporal preservation has three effects.
+
+. Hibernate exchanges `java.time` values directly with the JDBC driver wherever the dialect reports that the driver supports it.
+  Where it does not, Hibernate still selects a JDBC type which converts the value, as it does with temporal preservation disabled.
+. Every mapped `java.time` value must use a combination of Java type and JDBC type which the dialect reports as preserving every part of the value,
+  whether that JDBC type exchanges the value directly or converts it.
+  A mapping which is known to lose a part, and equally a mapping which has simply not been assessed, is rejected with a `MappingException` when the `SessionFactory` is built.
+  There is no fallback to a conversion which might lose something, and no mode which only warns.
+. Each supported mapping preserves a stated range of values.
+  A value outside that range is rejected with a `TemporalPreservationException` before it is bound to a statement,
+  before it is rendered as a SQL literal, and when it is read from a result.
+
+[[basic-temporal-preservation-support]]
+====== What is supported
+
+Temporal preservation is supported on H2, HSQLDB, PostgreSQL, EDB Postgres Advanced Server, CockroachDB, Oracle, MySQL, MariaDB, SQL Server and Db2, for `LocalDate`, `LocalTime`, `LocalDateTime`, `Instant`,
+`OffsetTime`, `OffsetDateTime` and `ZonedDateTime`. The last three are described further under <<basic-temporal-preservation-policy>>.
+On every other database, a mapped value is rejected.
+The driver does not accept a `LocalDateTime` directly, and reads one requested directly through that same time zone.
+
+The following table lists every combination which has been assessed.
+An `Outcome` of `QUALIFIED` means that the mapping is accepted, and `REJECTED` that the `SessionFactory` cannot be built with such an attribute.
+`Minimum` and `Maximum` are the least and greatest values which are preserved, and are empty where every value is.
+An `Instant basis` of `NATIVE` means that the column type itself denotes an instant.
+`UTC_CONVENTION` means that the database has no such column type, and that Hibernate stores the date and time of the instant at UTC in a column which knows of no time zone.
+The database then compares and orders the values correctly, but anything else which reads the column must know that it holds UTC.
+A row for a Java type alone is for an attribute with nothing declared.
+A row marked `INLINE` or `COLUMN` is for that representation, and a row marked `NORMALIZED` for that policy.
+A row marked `ADJUSTED` is for an attribute whose zone is declared with `@TimeZoneAdjustment`, of which the column need only keep the instant.
+A row for a mapping with two columns names both JDBC types and both column types.
+
+[%header,format=csv]
+|===
+include::{core-project-dir}/src/test/resources/org/hibernate/orm/test/type/temporal/preservation/temporal-preservation-support.csv[]
+|===
+
+The table is verified against each listed database by Hibernate's own test suite.
+It was established with H2 2.5.252, with HSQLDB 2.7.4, with PostgreSQL 18.6 and version 42.7.14 of its JDBC driver,
+with EDB Postgres Advanced Server 17.4 and version 42.7.3.5 of its JDBC driver, where everything said of PostgreSQL holds as well,
+with CockroachDB 26.3 and version 42.7.14 of the PostgreSQL JDBC driver, where everything said of PostgreSQL holds as well,
+with Oracle Database 23.26 and version 23.26.4 of its JDBC driver,
+with MySQL 26.10 and version 26.10.0 of MySQL Connector/J,
+with MariaDB 13.0 and version 4.0.0 of MariaDB Connector/J,
+for SQL Server with Azure SQL Edge 15.0 and version 13.6.2 of the Microsoft JDBC Driver,
+and for Db2 with version 4.38.7 of the IBM Data Server Driver for JDBC and SQLJ.
+A dialect for another database of the same family, such as Db2 for z/OS and Db2 for i, has not been assessed and supports nothing.
+A dialect which extends one of the listed dialects inherits its rows, unless it says otherwise.
+
+The ranges are narrower than what these databases are able to store, for the following reasons.
+
+* Dates before the year 1 are excluded because Hibernate does not render SQL literals for them correctly.
+* Years after 9999 are excluded because the format of a SQL literal is no longer unambiguous.
+* On Oracle, dates before 15 October 1582 are excluded because Oracle uses the Julian calendar for them.
+  Such a date would keep its year, month and day, but would denote a different day in date arithmetic done by the database.
+* On PostgreSQL, an `Instant`, `OffsetDateTime` or `ZonedDateTime` before the year 1583 is excluded because the PostgreSQL JDBC driver uses the Julian calendar for a `java.sql.Timestamp` before 15 October 1582.
+  A stored instant from before that date would be read as one ten days later.
+  The driver decides this by the date as seen in the time zone of the database session, which can be most of a day away from the date in UTC,
+  so only a value read as 1 January 1583 or later can be trusted in every session time zone.
+  `LocalDate` and `LocalDateTime` are not affected, since they are not exchanged as a `java.sql.Timestamp`.
+* On MySQL and MariaDB, the same holds for the same reason: an `Instant`, `OffsetDateTime` or `ZonedDateTime` before the year 1583 is excluded,
+  because it passes through a `java.sql.Timestamp`. A value written before 15 October 1582 would also be stored as the date of the Julian calendar.
+* On MySQL and MariaDB, a `LocalDate` or `LocalDateTime` before the year 1000 is excluded. Earlier dates were stored and returned correctly when tested,
+  but both databases document the year 1000 as the start of the supported range of their `DATE` and `DATETIME` types, with no guarantee before it.
+* On SQL Server, a `LocalDate` or `LocalDateTime` before 15 October 1582 is excluded because the JDBC driver moves a date in the ten days which precede it,
+  5 to 14 October 1582, ten days forward as it writes it. Earlier dates are not affected, but a range cannot leave out ten days.
+* On SQL Server, an `Instant`, `OffsetDateTime` or `ZonedDateTime` before the year 1583 is excluded for the same reason as on PostgreSQL, since it passes through a `java.sql.Timestamp`.
+* On SQL Server, an `OffsetDateTime`, `ZonedDateTime` or `OffsetTime` stored in a single column is written with its own offset, and a `DATETIMEOFFSET` column holds no offset beyond fourteen hours.
+  A value with a greater offset is rejected when it is bound. For the same reason the range of an `OffsetDateTime` or `ZonedDateTime` in a single column ends fourteen hours early,
+  so that its date in its own offset does not pass the year 9999. Stored in two columns, the first is written at UTC, and neither restriction applies.
+* On SQL Server, a `LocalTime` is preserved only when the connection property `sendTimeAsDatetime` is `false`, which Hibernate cannot check.
+  See link:{doc-dialect-url}#required-driver-settings[Required JDBC driver settings].
+* On Db2, a `LocalDate` before the year 1583 is excluded. It passes through a `java.sql.Date`, and the JDBC driver moves a date in the ten days from 5 to 14 October 1582 ten days forward as it writes it,
+  and reads a stored date in those ten days as the date ten days later. An `Instant`, `OffsetDateTime` or `ZonedDateTime` before the year 1583 is excluded for the same reason as on PostgreSQL.
+* On HSQLDB, dates before 15 October 1582 are excluded because HSQLDB uses the Julian calendar for them.
+  A `LocalDate` or `LocalDateTime` from before then is moved to that calendar as it is written, and is not moved back as it is read.
+  An `OffsetDateTime` in a single column is written with its own offset, in which its date may fall before 15 October 1582 while its date at UTC does not, so it is excluded before the year 1583.
+* On Oracle, an `OffsetDateTime` or `ZonedDateTime` before the year 1583 is excluded, to keep clear of values
+  whose date in their own offset falls before 15 October 1582 while their date in UTC does not, or the reverse.
+
+A range is stated without regard to the precision of the column.
+Fractional seconds beyond the precision of the column are rounded or truncated as the database sees fit, with temporal preservation enabled or not.
+
+[[basic-temporal-preservation-policy]]
+====== `OffsetTime`, `OffsetDateTime` and `ZonedDateTime`
+
+An `OffsetDateTime` is an instant together with an offset from UTC, and a `ZonedDateTime` adds the zone, such as `Europe/Paris`.
+Few databases can store all of that in one column:
+
+[cols="1,1,1,1",options="header"]
+|===
+|Database |Instant |Offset |Zone
+|H2, HSQLDB |Kept |Kept |Lost
+|PostgreSQL |Kept |Lost: every value is read back at UTC |Lost
+|Oracle |Kept |Kept only to the minute, so an offset with seconds is lost |Lost
+|MySQL, MariaDB, Db2 |Kept, as its date and time at UTC |Lost: every value is read back at UTC |Lost
+|SQL Server |Kept |Kept only to the minute, and only within fourteen hours of UTC |Lost
+|===
+
+Nothing needs to be declared to deal with this.
+With temporal preservation enabled, Hibernate requires the whole value to be preserved,
+and stores it in a single column where that column keeps the whole value, and in two columns where it does not:
+
+[cols="1,1,2",options="header"]
+|===
+|Type |H2, HSQLDB |PostgreSQL, Oracle, MySQL, MariaDB, SQL Server, Db2
+|`OffsetDateTime` |One column |Instant, and offset
+|`ZonedDateTime` |Instant, and zone |Instant, and zone
+|===
+
+The columns of a mapping therefore depend on the database, and what is preserved does not.
+Two annotations make either decision explicit: where the offset or zone is stored, and what must be preserved.
+A third declares the zone of an attribute once and for all, so that it need not be stored.
+
+*Where the offset or zone is stored*
+
+`@TimeZoneRepresentation` selects it:
+
+`DEFAULT`:: `INLINE` where a single column preserves what the policy of the mapping requires, and `COLUMN` otherwise.
+This is what applies when nothing is declared.
+`INLINE`:: The value is stored in a single column, and its offset and zone are kept only as far as that column keeps them, as in the first table above.
+`COLUMN`:: The instant is stored in one column, and in a second column what the value has beyond its instant:
+for an `OffsetDateTime`, the offset from UTC as a number of seconds;
+for a `ZonedDateTime`, the identifier of its zone, such as `Europe/Paris` or `+05:45`.
+
+[source,java]
+----
+@TimeZoneRepresentation(COLUMN)
+OffsetDateTime recordedAt;
+----
+
+The second column is named after the first, with the suffix `_tz`, and can be customized with `@TimeZoneColumn`.
+Other consumers of the table need both columns to reconstruct the value.
+
+The instant and the zone together determine a `ZonedDateTime` exactly, including which occurrence it is of a time repeated when clocks are set back.
+Its local date and time are not stored, and follow from the instant by the rules of the zone.
+If those rules are later changed for a date in the future, a value stored for that date keeps its instant, and its local time moves.
+
+In a query, a value stored in two columns can be selected, ordered by, and compared.
+Compared with a parameter, both columns are compared.
+Compared with anything which occupies a single column, such as a literal, it is compared by its instant.
+A literal is then rendered as a literal for that instant, in the form which the column holding the instant needs.
+That holds for the comparison operators, for `between`, and for `in` with a list of values.
+Within one `between` or `in`, parameters and values which occupy a single column cannot be mixed, since a parameter stands for both columns.
+`in` with a subquery which selects a single column is rejected.
+Functions which need the local date, time or offset of a `ZonedDateTime` stored this way, such as `extract(hour from ...)`, are not yet supported, and are rejected.
+They are supported for an `OffsetDateTime` stored in two columns.
+Aggregate functions such as `min()` and `max()` are not supported for a value stored in two columns.
+
+A value generated in the JVM, as with `@CreationTimestamp` and `@UpdateTimestamp`, can be stored in two columns.
+
+A second column is not available for:
+
+* an identifier or a version;
+* the elements or keys of a collection;
+* an attribute with an `AttributeConverter` or an explicit JDBC type;
+* a value generated by the database, as with `@CurrentTimestamp` by default, since the database generates a single value.
+
+Those are always stored in a single column, and are rejected when that column does not preserve what their policy requires.
+For a timestamp generated by the database, which has no zone of its own to preserve, the `NORMALIZED` policy is the natural choice.
+A timestamp generated by the database for an `Instant`, `OffsetDateTime` or `ZonedDateTime` is the current instant whatever the time zone of the database session.
+On MySQL, MariaDB, HSQLDB and Db2, where the column holds the date and time at UTC, the database is asked for the current date and time at UTC and not for its current timestamp, which is in the time zone of the session, or on Db2 in that of the server.
+
+The same holds for the instants which Hibernate itself asks the database for: the `instant` and `offset datetime` functions of HQL,
+a `@Version` which the database generates, the timestamp of a soft delete with `SoftDeleteType.TIMESTAMP`, and,
+with `hibernate.temporal.use_server_transaction_timestamps` enabled,
+the row start and row end of a temporal table and the changeset of an audit table.
+A version generated by the database is selected before its row is written, and is read as a value of its own type is, and not as a `java.sql.Timestamp`.
+
+The row start and row end of a temporal table, and a changeset of an audit table which is an `Instant`, are stored as any other `Instant` is, in a column of the same type.
+The exception is a temporal table which the database maintains itself, with `TemporalTableStrategy.NATIVE`: its columns have the type which the database requires,
+and the mapping is rejected when that type has not been established to preserve an `Instant`.
+Oracle does not allow a column with a time zone in a primary key or a unique constraint, which the row start of a temporal table and the changeset of an audit table are part of.
+There those columns are plain `timestamp` columns which hold the date and time at UTC, as an `Instant` is held on MySQL, while any other `Instant` on Oracle keeps its `timestamp with time zone`.
+Since Oracle would compare the two in the time zone of its session, a query cannot compare such a column with an ordinary `Instant` attribute, as described below for HSQLDB.
+An `Instant` in an identifier of your own is not stored that way: its column has a time zone, and Oracle refuses it in the primary key when the schema is created.
+
+Two attributes which hold instants can be compared with each other in a query, with one exception.
+On HSQLDB an `Instant`, and the instant of a value stored in two columns, is held as its date and time at UTC in a column which knows of no time zone,
+while an `OffsetDateTime` or `ZonedDateTime` stored in a single column is held in a column with a time zone.
+HSQLDB would compare the two in the time zone of its session, so a comparison between them is rejected. Compare each with a parameter or a literal instead.
+This applies equally where one of the two is what a subquery selects.
+
+The functions `current_timestamp` and `local datetime` return the date and time in the time zone of the database session, or of the server.
+Compared with an `Instant`, `OffsetDateTime` or `ZonedDateTime`, they stand for the current instant instead, exactly as `instant` and `offset datetime` do,
+also where a date and time is computed from them:
+
+[source,hql]
+----
+from Token t where t.expiresAt < current_timestamp
+from Token t where t.issuedAt > local datetime - 7 day
+----
+
+On MySQL, MariaDB, HSQLDB and Db2 the database is then asked for its current date and time at UTC where the column holds that.
+Selected, or compared with anything else, the two functions mean what they always did.
+
+The current date and the current time of the database, as `current_date`, `local date`, `current_time` and `local time`, cannot be given such a meaning.
+A comparison of one of them with a value which the column holds at UTC is rejected on MySQL, MariaDB, HSQLDB and Db2, since its result would depend on the time zone of the session,
+and on SQL Server, which reads a date without a time zone as being at UTC while its current date is that of the server.
+Compare with a parameter instead.
+
+*`OffsetTime`*
+
+An `OffsetTime` is a time of day together with an offset from UTC, and is handled the same way.
+Whether a single column keeps the whole value again depends on the database:
+
+[cols="1,2,2",options="header"]
+|===
+|Database |Stored in a single column |By default
+|H2, HSQLDB |The time and the offset are kept |One column
+|PostgreSQL, MySQL, MariaDB, Db2 |The time at UTC is kept, and the offset is lost |Time at UTC, and offset
+|SQL Server |The time at UTC is kept, and the offset only to the minute and within fourteen hours of UTC |Time at UTC, and offset
+|Oracle |The time at UTC is kept, and the offset only to the minute |Time at UTC, and offset
+|===
+
+With `@TimeZoneRepresentation(COLUMN)`, the first column holds the time of day at UTC, and the second the offset as a number of seconds.
+With the `NORMALIZED` policy, only the time of day at UTC is required, which a single column keeps on every supported database.
+
+On PostgreSQL, MySQL, MariaDB and Db2, the time at UTC is exchanged with the JDBC driver as a `LocalTime` when temporal preservation is enabled.
+When it is disabled, the value passes through a `java.sql.Time` instead, and what is stored depends on the default time zone of the JVM unless that is UTC.
+A table written with temporal preservation disabled by a JVM in another time zone therefore holds other times than one written with it enabled.
+
+In a query, an `OffsetTime` stored in two columns can be selected, compared with a parameter, and taken apart with functions such as `extract(hour from ...)`.
+Comparing it with anything which occupies a single column, such as a literal or `current_time`, is rejected.
+
+*What must be preserved*
+
+Sometimes the instant is all that matters to the application, and a second column is not wanted.
+The _preservation policy_ of a mapping says so:
+
+`VALUE`:: The whole value must be preserved. This is the default.
+`NORMALIZED`:: Only the instant must be preserved. The value read back denotes the same instant as the value written,
+but may have a different offset or zone.
+
+With the `NORMALIZED` policy a single column suffices on every supported database.
+
+The policy is selected with `@TemporalPreservationPolicy`:
+
+[source,java]
+----
+@TemporalPreservationPolicy(NORMALIZED)
+ZonedDateTime occurredAt;
+----
+
+On a class, package or module the annotation may be repeated, and may name the types it applies to:
+
+[source,java]
+----
+@TemporalPreservationPolicy(value = NORMALIZED, types = ZonedDateTime.class)
+@TemporalPreservationPolicy(value = VALUE, types = OffsetDateTime.class)
+@Entity
+class Event { ... }
+----
+
+The policy can also be selected for the whole `SessionFactory`:
+
+[source,properties]
+----
+hibernate.type.temporal_preservation_policy=normalized
+hibernate.type.temporal_preservation_policy.offset_time=normalized
+hibernate.type.temporal_preservation_policy.offset_datetime=value
+hibernate.type.temporal_preservation_policy.zoned_datetime=normalized
+----
+
+A policy states a requirement and nothing more.
+It does not make an unsupported mapping supported: a mapping which does not meet it is rejected when the `SessionFactory` is built.
+What is read back with the `NORMALIZED` policy depends on the database: at UTC on PostgreSQL, MySQL and MariaDB, and with the offset which was written on H2, HSQLDB, Oracle and SQL Server.
+
+The policy governs what a mapped attribute must preserve.
+A value which is not being written to or read from a mapped attribute, such as a query parameter compared with a column,
+need only be exchanged with the database without changing its instant.
+
+*A zone fixed by the mapping*
+
+Often every value of an attribute is in the same zone: timestamps kept in UTC, or opening hours in the zone of the shop.
+`@TimeZoneAdjustment` declares that zone, as a zone identifier or a fixed offset:
+
+[source,java]
+----
+@TimeZoneAdjustment("Europe/Paris")
+ZonedDateTime opensAt;
+
+@TimeZoneAdjustment("UTC")
+OffsetDateTime recordedAt;
+----
+
+The zone is then part of the mapping and is not stored.
+The value is stored in a single column on every database, of which only the instant is required, and is always read back in the declared zone.
+For an `OffsetDateTime`, that is the offset which the zone has at the instant of the value, so `+02:00` in summer and `+01:00` in winter for `Europe/Paris`.
+For an `OffsetTime`, which has no date by which to tell, the zone must be a fixed offset such as `+02:00`.
+
+What happens to a value which is written in another zone or offset depends on the policy of the attribute:
+
+`VALUE`:: It is rejected with a `TemporalPreservationException`, since its own zone or offset would be lost.
+The same goes for a value bound to a query parameter which is compared with the attribute.
+`NORMALIZED`:: It is converted to the declared zone, keeping its instant.
+With a declared zone, what is read back under this policy no longer depends on the database.
+
+A declared zone also applies to the elements of a collection, where a second column is not available.
+It cannot be combined with `@TimeZoneRepresentation(COLUMN)`, which stores the zone or offset of each value, and the combination is rejected.
+`@TimeZoneAdjustment(TimeZoneAdjustment.NONE)` cancels a zone declared on the class, package or module.
+
+A zone declared on a class, package or module is not applied to an identifier or a version,
+nor to an attribute with an `AttributeConverter` or a custom type, which are held to their policy as usual.
+Declared on such a field or property itself, it is rejected.
+
+The declared zone is applied by Hibernate, to values on their way to and from the database.
+An expression evaluated by the database, such as `extract(hour from ...)`, sees the stored instant, in whatever zone the database expresses it.
+
+*How the annotations are resolved*
+
+The three annotations may be placed on a field or property, on a class, on a package, or on a module.
+For an attribute, each is taken from the first of the following which declares it:
+
+. the field or property;
+. the class which declares it, and then each superclass of that class in turn;
+. the package of that class, and then its module;
+. for the policy only, the setting for the type, and then the general setting.
+
+On a class, package or module, a policy naming the type of the attribute wins over one naming no types.
+
+All three apply to `OffsetTime`, `OffsetDateTime` and `ZonedDateTime` only.
+On a field or property of any other type, each is rejected when temporal preservation is enabled.
+When it is disabled, none has any effect, and none is checked.
+
+`@TimeZoneStorage` and the setting `hibernate.timezone.default_storage` are not supported with temporal preservation enabled, and are rejected.
+Each of their values selects where the offset is stored, in which time zone values are expressed and which column type is used, all at once,
+and some leave part of that to the dialect, which temporal preservation cannot hold to anything.
+They keep their meaning when temporal preservation is disabled.
+
+[[basic-temporal-preservation-custom]]
+====== Custom JDBC types
+
+What is supported is decided for each exact combination of `JavaType` and `JdbcType`.
+A `JdbcType` of your own, selected with `@JdbcType` or contributed to the registry, is therefore rejected,
+even when it extends one which is supported: Hibernate cannot tell what it does differently.
+
+Such a descriptor can state for itself what it preserves, by implementing `TemporalJdbcType`:
+
+[source,java]
+----
+public class MyDateJdbcType extends LocalDateJdbcType implements TemporalJdbcType {
+    @Override
+    public Optional<TemporalPreservation> getTemporalPreservation(JavaType<?> javaType, Dialect dialect) {
+        return javaType.getJavaTypeClass() == LocalDate.class && dialect instanceof PostgreSQLDialect
+                ? Optional.of( TemporalPreservation.ofDate( LocalDate.of( 1, 1, 1 ), LocalDate.of( 9999, 12, 31 ) ) )
+                : Optional.empty();
+    }
+}
+----
+
+The report is a statement by the author of the descriptor that values survive being written and read back through it, and Hibernate acts on it as given:
+the mapping is checked against it, with its preservation policy, when the `SessionFactory` is built, and every value bound or read is held to the range it states.
+An empty result declines to report, and the mapping is rejected.
+
+Values are checked against the report as they are bound and read, which happens in `BasicBinder` and `BasicExtractor`.
+The binder and the extractor of the descriptor must extend those, must be created for the descriptor itself and not borrowed from another, and must not override `BasicExtractor.extract()`.
+A descriptor which exchanges values by other means would have them go unchecked, so a mapping which uses one is rejected.
+A value rendered as a SQL literal in a query is checked before the literal formatter of the descriptor is asked, so the formatter may be of any kind.
+State each part for what the descriptor really does: one which keeps the instant of an `OffsetDateTime` and not its offset should say so, and is then accepted with the `NORMALIZED` policy.
+
+The descriptor is asked only where the Dialect knows nothing of the combination, so it cannot change what a Dialect has assessed.
+An application with a Dialect of its own may report there instead, by overriding `Dialect.getTemporalPreservation()`.
+
+An attribute mapped with a custom `UserType` remains outside temporal preservation, as described below.
+
+[[basic-temporal-preservation-exclusions]]
+====== What is rejected, and what is not covered
+
+With temporal preservation enabled, the following are always rejected.
+
+[cols="2,3",options="header"]
+|===
+|What |Where it is rejected
+|An attribute, identifier, version, collection element or map key of type `OffsetTime`, `OffsetDateTime` or `ZonedDateTime` whose mapping does not meet its <<basic-temporal-preservation-policy,preservation policy>>
+|When the `SessionFactory` is built
+
+|An `OffsetTime`, `OffsetDateTime` or `ZonedDateTime` annotated `@TimeZoneStorage`, or mapped while `hibernate.timezone.default_storage` is set to anything but `DEFAULT`
+|When the `SessionFactory` is built
+
+|A SQL literal for a value with an offset, when the offset has seconds, or when the year of the date in that offset is before 1 or after 9999.
+Also a SQL literal for an `OffsetTime` on Oracle and SQL Server, where the column which holds one is not of a type for a time of day,
+and a SQL literal for an `OffsetTime` or `OffsetDateTime` on HSQLDB, which renders no offset in a literal.
+Such a value can be bound as a parameter
+|When the literal is rendered
+
+|A `java.time` value mapped to a JDBC type, whether selected by Hibernate or named explicitly, which is not listed as `QUALIFIED` above
+and does not <<basic-temporal-preservation-custom,report for itself>>.
+An example is a `LocalDate` mapped with `@JdbcTypeCode(Types.DATE)`, which converts it to a `java.sql.Date`
+|When the `SessionFactory` is built
+
+|An array or collection of `java.time` values stored in a single column
+|When the `SessionFactory` is built, and when such a value is bound as a parameter
+
+|A `java.time` member of an embeddable which is aggregated into a single column, for example a `STRUCT`, JSON or XML column, or of an array or collection of such embeddables
+|When the `SessionFactory` is built
+
+|`@TemporalPreservationPolicy` or `@TimeZoneRepresentation` on a field or property whose stored value is not an `OffsetTime`, `OffsetDateTime` or `ZonedDateTime`, where it would otherwise be silently ignored
+|When the `SessionFactory` is built
+
+|`@TimeZoneAdjustment` on a field or property it is not applied to, combined with `@TimeZoneRepresentation(COLUMN)`, or naming a region for an `OffsetTime`
+
+|An `OffsetTime` stored in two columns which a query compares with something occupying a single column
+|When the query is translated
+
+|A value stored in two columns which a query tests with `in` against a subquery selecting a single column
+|When the query is translated
+
+|Two instants which a query compares, also through a subquery, where one is held as its date and time at UTC and the other in a column with a time zone, as on HSQLDB
+|When the query is translated
+
+|`current_timestamp` or `local datetime` which a query compares with an instant held as its date and time at UTC, where the Dialect has no expression for the current date and time at UTC
+|When the query is translated
+
+|`current_date`, `local date`, `current_time` or `local time` which a query compares with a value held at UTC, and on SQL Server with any instant
+|When the query is translated
+
+|A `java.time` value mapped to a JDBC type whose binder or extractor does not pass through `BasicBinder` and `BasicExtractor`
+|When the `SessionFactory` is built
+|When the `SessionFactory` is built
+
+|A value written to an attribute whose zone is declared with `@TimeZoneAdjustment`, or bound to a query parameter compared with it, when the value is in another zone or offset and the policy is `VALUE`
+|When the value is bound
+
+|A column of a native SQL query result with a date or time type, when no Java type is given for it.
+Name the type, as in `createNativeQuery(sql, LocalDateTime.class)` or with `addScalar()`
+|When the value is read
+
+|A query parameter or query result of a `java.time` type which is not supported
+|When the value is bound or read
+
+|An output parameter of a stored procedure or function which has a `java.time` type, whether `OUT` or `INOUT`
+|When the procedure is called, before it is executed
+|===
+
+The following are outside temporal preservation.
+Hibernate neither preserves nor rejects them, and they behave the same with temporal preservation enabled or disabled.
+
+* Values of `java.util.Date`, `java.util.Calendar` and the `java.sql` date and time types, and of `Year`, `YearMonth`, `Duration` and the other `java.time` types not named above.
+* An attribute with an `AttributeConverter` which produces something other than a `java.time` value for the database, and an attribute mapped with a custom `UserType`.
+  The value which a converter produces for the database is what is checked, so a converter which produces a `LocalDate` is covered.
+* Values computed by the database, for example with `current_timestamp`, a cast, or date arithmetic.
+  Reading the result of such an expression as a `java.time` value is covered, but what the database computed is not.
+* Native SQL, apart from `java.time` values bound to its parameters and read from its results.
+  A result of a native SQL query is read as the Java type which the query names, and Hibernate does not check that type against the type of the column.
+  Reading a `TIME` column as an `Instant`, for example, is left to the JDBC driver, which may make up the missing date.
+* Rows written by other applications, or by Hibernate with temporal preservation disabled.
+  Enabling or disabling the setting does not migrate any data.
+  A row which holds a value outside the supported range is rejected when it is read.
+
+[[basic-temporal-preservation-direct-jdbc]]
+====== Relationship to `java_time_use_direct_jdbc`
+
+`hibernate.type.java_time_use_direct_jdbc` is a separate setting, which is about the JDBC boundary only.
+It makes Hibernate exchange `java.time` values directly with the driver where the dialect reports that the driver supports it,
+and fall back to the `java.sql` types, with a warning, where it does not.
+It makes no claim about what is stored, and nothing is rejected because of it.
+
+Temporal preservation implies `java_time_use_direct_jdbc`, so there is no need to set both.
+Setting `hibernate.type.java_time_use_direct_jdbc=false` together with `hibernate.type.temporal_preservation=true` is contradictory, and Hibernate throws an exception at bootstrap.
+
+[[basic-temporal-preservation-time-zones]]
+====== Time zones
+
+What temporal preservation stores does not depend on the default time zone of the JVM, on the time zone of the database session,
+or on <<basic-datetime-time-zone,`hibernate.jdbc.time_zone`>>, whether configured for the `SessionFactory` or given to an individual `Session`.
+
+* A `LocalDate`, `LocalTime` or `LocalDateTime` is exchanged with the driver as its fields, with no time zone involved.
+  The exception is a `LocalDate` on Db2, which is exchanged as a `java.sql.Date`. The driver was established to store the same date whatever the default time zone of the JVM.
+  A `LocalTime` on Db2 is exchanged directly, as elsewhere.
+  A `LocalDateTime` on Db2 is exchanged as text, which the database itself converts to and from the `TIMESTAMP` of the column.
+  The driver passes a `LocalDateTime` through the default time zone of the JVM however it is given one, which cannot express a time skipped there as clocks are set forward, and stores the time an hour later instead.
+  So Hibernate writes the value through `cast(cast(? as varchar(40)) as timestamp(12))` and reads it through `varchar_format(…,'YYYY-MM-DD HH24:MI:SS.FF9')`, in the SQL it generates.
+  A native query is not rewritten: one which returns such a column as a `LocalDateTime` has to format it the same way, and is rejected otherwise, and one which passes a `LocalDateTime` as a parameter has to cast the parameter the same way.
+  A `LocalDateTime` is not passed to or returned from a stored procedure on Db2.
+  Oracle has no `TIME` type, so a `LocalTime` is stored there in a `TIMESTAMP` column, on the first day of 1970, and is exchanged with the driver as a `LocalDateTime` on that day.
+  What the driver stores for a `LocalTime` passed as such depends on the default time zone of the JVM, which is how the value is exchanged when temporal preservation is not enabled.
+  Times stored that way may therefore be on another day and at another hour; a value read back is the time of whatever date is stored.
+  A `java.sql.Date` cannot express a day which the default time zone of the JVM skipped altogether, as `Pacific/Apia` skipped 30 December 2011, and stands for the next day instead.
+  On Db2, in a JVM with such a time zone, a `LocalDate` on the skipped day is therefore rejected when it is written, and one on the day after it is rejected when it is read, since it may stand for either day.
+* An `Instant` is exchanged in a form which fixes it to UTC: as an `Instant` on H2, as an `OffsetDateTime` at UTC on Oracle,
+  and on HSQLDB, PostgreSQL, MySQL, MariaDB, SQL Server and Db2 as a `java.sql.Timestamp` with a UTC calendar, which is not replaced by the configured JDBC time zone.
+* An `Instant` rendered as a SQL literal carries an explicit UTC offset.
+  On HSQLDB, MySQL and MariaDB, where the column holds the date and time at UTC and knows of no time zone, the literal for an `Instant`,
+  `OffsetDateTime` or `ZonedDateTime` is its date and time at UTC without an offset, since the database would convert a literal with an offset to the time zone of its session.
+
+`hibernate.jdbc.time_zone` keeps its meaning for everything outside temporal preservation, such as `java.util.Date` attributes mapped in the same application.
 
 [NOTE]
 ====
-JDBC 4.2 does not require direct support for `Instant` or `ZonedDateTime`.
-The `hibernate.type.java_time_use_direct_jdbc` setting does not enable direct `Instant` access.
-That requires `hibernate.type.preferred_instant_jdbc_type=INSTANT` and dialect support for the driver's `Instant` handling.
-For a `ZonedDateTime` attribute, Hibernate may exchange an `OffsetDateTime` at the JDBC boundary when the driver supports that type
-but does not support `ZonedDateTime` directly.
+JDBC 4.2 does not require direct support for `Instant`.
+An `Instant` is stored through the JDBC type selected by `hibernate.type.preferred_instant_jdbc_type`,
+and temporal preservation does not change that selection; it checks the selected combination like any other.
 ====
 
 [[basic-datetime-time-zone]]

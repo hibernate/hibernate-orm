@@ -36,8 +36,14 @@ import static org.hibernate.action.queue.internal.audit.GraphAuditMutationPlans.
 /// @author Steve Ebersole
 public class GraphAuditMutationCollector {
 	private final AuditChangeSet<EntityAuditSupport, CollectionAuditSupport> changeSet = new AuditChangeSet<>();
+	private final Runnable firstChangeListener;
 	private Object changelog;
 	private @Nullable Session changesetSession;
+
+	/// @param firstChangeListener Notified before the first change of a transaction is collected
+	public GraphAuditMutationCollector(Runnable firstChangeListener) {
+		this.firstChangeListener = firstChangeListener;
+	}
 
 	public void entityChanged(
 			EntityKey entityKey,
@@ -45,10 +51,12 @@ public class GraphAuditMutationCollector {
 			Object[] values,
 			ModificationType modificationType,
 			EntityAuditSupport mutationSupport) {
+		beforeChange();
 		changeSet.addEntityChange( entityKey, entity, values, modificationType, mutationSupport );
 	}
 
 	public void indexedElementChanged(EntityEntry entry, Object entity) {
+		beforeChange();
 		changeSet.addIndexedElementChange( entry, entity, EntityPersister::getEntityAuditSupport );
 	}
 
@@ -58,7 +66,14 @@ public class GraphAuditMutationCollector {
 			Object ownerId,
 			Object originalSnapshot,
 			CollectionAuditSupport mutationSupport) {
+		beforeChange();
 		changeSet.addCollectionChange( collectionPersister, collection, ownerId, originalSnapshot, mutationSupport );
+	}
+
+	private void beforeChange() {
+		if ( changeSet.isEmpty() ) {
+			firstChangeListener.run();
+		}
 	}
 
 	public boolean hasWork() {

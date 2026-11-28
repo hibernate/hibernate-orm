@@ -99,7 +99,7 @@ public class GraphBasedActionQueue implements ActionQueue {
 				entityPersistersByTable,
 				session
 		);
-		this.auditMutationCollector = new GraphAuditMutationCollector();
+		this.auditMutationCollector = new GraphAuditMutationCollector( this::registerSharedAuditCompletion );
 		this.deferIdentityInserts = deferIdentityInserts;
 
 		this.orphanCollectionRemovals = new ArrayList<>();
@@ -135,7 +135,7 @@ public class GraphBasedActionQueue implements ActionQueue {
 			SessionImplementor session) {
 		this.session = session;
 		this.flushCoordinator = flushCoordinator;
-		this.auditMutationCollector = new GraphAuditMutationCollector();
+		this.auditMutationCollector = new GraphAuditMutationCollector( this::registerSharedAuditCompletion );
 		this.deferIdentityInserts = deferIdentityInserts;
 
 		this.orphanCollectionRemovals = orphanCollectionRemovals;
@@ -1020,6 +1020,18 @@ public class GraphBasedActionQueue implements ActionQueue {
 			auditMutationCollector.executeAuditMutations( session );
 			transactionCompletionCallbacks.beforeTransactionCompletion();
 			session.getJdbcCoordinator().executeBatch();
+		}
+	}
+
+	/// A queue which shares the transaction of another session does not complete that
+	/// transaction itself. The audit mutations it collects are executed by the callbacks
+	/// it shares with that session.
+	private void registerSharedAuditCompletion() {
+		if ( isTransactionCoordinatorShared ) {
+			final BeforeCompletionCallback execution = auditMutationCollector::executeAuditMutations;
+			final AfterCompletionCallback cleanup = (success, completingSession) -> auditMutationCollector.clear();
+			transactionCompletionCallbacks.registerCallback( execution );
+			transactionCompletionCallbacks.registerCallback( cleanup );
 		}
 	}
 

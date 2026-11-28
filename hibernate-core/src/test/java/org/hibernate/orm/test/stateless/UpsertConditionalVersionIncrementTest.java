@@ -6,45 +6,24 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.Version;
 
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.sql.ast.spi.OptionalTableUpdateOperationRequest;
-import org.hibernate.dialect.sql.ast.spi.PredicateSupport;
-import org.hibernate.sql.spi.mutation.MutationOperation;
-import org.hibernate.sql.spi.mutation.jdbc.OptionalTableUpdateOperation;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.cfg.JdbcSettings.DIALECT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-/// A dialect which emulates `is distinct from` renders the compared parameter twice.
+/// An upsert increments the version of an existing row only when versioned
+/// state changes. Where the database lacks `is distinct from`, the compared
+/// parameter is rendered twice, and where the dialect executes an upsert as an
+/// update followed by an insert, that statement binds it at each position.
 @JiraKey("HHH-21288")
-@DomainModel(annotatedClasses = UpsertVersionEmulatedDistinctFromTest.Item.class)
+@DomainModel(annotatedClasses = UpsertConditionalVersionIncrementTest.Item.class)
 @SessionFactory
-@RequiresDialect(H2Dialect.class)
-@ServiceRegistry(settings = @Setting(name = DIALECT,
-		value = "org.hibernate.orm.test.stateless.UpsertVersionEmulatedDistinctFromTest$EmulatingDialect"))
-class UpsertVersionEmulatedDistinctFromTest {
-	public static class EmulatingDialect extends H2Dialect {
-		@Override
-		public MutationOperation createOptionalTableUpdateOperation(OptionalTableUpdateOperationRequest request) {
-			return new OptionalTableUpdateOperation( request.mutationTarget(), request.update() );
-		}
-
-		@Override
-		public PredicateSupport getPredicateSupport() {
-			return PredicateSupport.STANDARD;
-		}
-	}
-
+class UpsertConditionalVersionIncrementTest {
 	@Entity(name = "VersionedItem")
 	static class Item {
 		@Id int id;
@@ -54,7 +33,7 @@ class UpsertVersionEmulatedDistinctFromTest {
 	}
 
 	@Test
-	void fallbackUpsertBindsRepeatedParameter(SessionFactoryScope scope) {
+	void upsertIncrementsVersionOnlyWhenVersionedStateChanges(SessionFactoryScope scope) {
 		var item = new Item();
 		item.id = 1;
 		item.name = "a";
@@ -77,7 +56,7 @@ class UpsertVersionEmulatedDistinctFromTest {
 	}
 
 	@Test
-	void fallbackUpsertBindsOldAndNewVersions(SessionFactoryScope scope) {
+	void upsertTreatsNullAsChangeAndChecksVersion(SessionFactoryScope scope) {
 		var item = new Item();
 		item.id = 2;
 		item.name = "initial";

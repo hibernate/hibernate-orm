@@ -7,29 +7,22 @@ import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
 
 import org.hibernate.annotations.PartitionKey;
-import org.hibernate.cfg.JdbcSettings;
-import org.hibernate.dialect.H2Dialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Where the partition key belongs to the primary key, a partition key column
- * of a secondary table belongs to the primary key of the secondary table.
+ * Where the dialect adds the partition key to the primary key, as on PostgreSQL,
+ * MySQL, and Sybase, a partition key column of a secondary table belongs to the
+ * primary key of the secondary table.
  */
 @DomainModel(annotatedClasses = SecondaryTablePartitionKeyTest.Parcel.class)
 @SessionFactory
-@ServiceRegistry(settings = @Setting(name = JdbcSettings.DIALECT,
-		value = "org.hibernate.orm.test.mapping.identifier.SecondaryTablePartitionKeyTest$PartitionKeyInPrimaryKeyDialect"))
-@RequiresDialect(H2Dialect.class)
 @JiraKey("HHH-21280")
 public class SecondaryTablePartitionKeyTest {
 	@Test
@@ -38,9 +31,12 @@ public class SecondaryTablePartitionKeyTest {
 		assertThat( entityBinding.getTable().getPrimaryKey().getColumns() )
 				.extracting( org.hibernate.mapping.Column::getName )
 				.containsExactly( "id" );
+		final var secondaryKey = scope.getDomainModel().getDatabase().getDialect().addPartitionKeyToPrimaryKey()
+				? new String[] { "id", "region" }
+				: new String[] { "id" };
 		assertThat( entityBinding.getJoins().get( 0 ).getTable().getPrimaryKey().getColumns() )
 				.extracting( org.hibernate.mapping.Column::getName )
-				.containsExactly( "id", "region" );
+				.containsExactly( secondaryKey );
 	}
 
 	@Test
@@ -70,13 +66,6 @@ public class SecondaryTablePartitionKeyTest {
 		Parcel(Integer id, String region) {
 			this.id = id;
 			this.region = region;
-		}
-	}
-
-	public static class PartitionKeyInPrimaryKeyDialect extends H2Dialect {
-		@Override
-		public boolean addPartitionKeyToPrimaryKey() {
-			return true;
 		}
 	}
 }

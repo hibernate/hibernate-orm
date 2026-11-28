@@ -9328,10 +9328,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	@Override
 	public void visitBetweenPredicate(BetweenPredicate betweenPredicate) {
 		final var tuple = getSqlTuple( betweenPredicate.getExpression() );
-		if ( tuple != null && tuple.getExpressions().size() > 1
-				&& !dialect.getRowValueSupport().supports( ORDERING_COMPARISON ) ) {
-			// Use the existing lexicographic tuple comparison emulation, including
-			// ordinary SQL null semantics, on databases without row ordering syntax.
+		if ( tuple != null && tuple.getExpressions().size() > 1 ) {
+			// A multi-column BETWEEN is rendered as two lexicographic comparisons,
+			// each native or emulated as the dialect requires, with ordinary SQL
+			// null semantics. A database which accepts row values in an ordering
+			// comparison need not accept them in BETWEEN: MySQL and MariaDB do not.
 			final boolean negated = betweenPredicate.isNegated();
 			appendSql( OPEN_PARENTHESIS );
 			visitRelationalPredicate( new ComparisonPredicate(

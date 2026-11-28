@@ -155,6 +155,28 @@ public abstract class AbstractOptionalSecondaryRowTest {
 		assertNoDetailRow( scope, 2 );
 	}
 
+	@Test
+	void statelessUpsertReusesStatementsAcrossRows(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.persist( new Memo( 2, "second" ) ) );
+
+		scope.inStatelessTransaction( session -> {
+			var first = new Memo( 1, "first update" );
+			session.upsert( first );
+			session.upsert( new Memo( 2, "second update" ) );
+			first.text = "last update";
+			session.upsert( first );
+		} );
+
+		scope.inSession( session -> {
+			var first = session.find( Memo.class, 1 );
+			assertThat( first.text ).isEqualTo( "last update" );
+			assertThat( first.version ).isEqualTo( 2 );
+			var second = session.find( Memo.class, 2 );
+			assertThat( second.text ).isEqualTo( "second update" );
+			assertThat( second.version ).isEqualTo( 1 );
+		} );
+	}
+
 	private static void assertNoDetailRow(SessionFactoryScope scope, int id) {
 		scope.inTransaction( session -> assertThat( session
 				.createNativeQuery( "select count(*) from optional_shipment_detail where id = :id", Long.class )

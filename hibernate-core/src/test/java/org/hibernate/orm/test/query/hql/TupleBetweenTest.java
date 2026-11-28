@@ -1,14 +1,9 @@
 package org.hibernate.orm.test.query.hql;
 
-import org.hibernate.cfg.JdbcSettings;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
@@ -20,16 +15,16 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/// A multi-column BETWEEN must use the lexicographic comparison emulation on
-/// databases without row-value ordering syntax.
+/// A multi-column BETWEEN compares lexicographically. It is rendered as two
+/// comparisons, since a database which accepts row values in an ordering
+/// comparison, such as MySQL or MariaDB, need not accept them in BETWEEN.
 ///
 /// @author Steve Ebersole
-@RequiresDialect(H2Dialect.class)
-@ServiceRegistry(settings = @Setting(name = JdbcSettings.DIALECT,
-		value = "org.hibernate.orm.test.query.hql.TupleBetweenEmulationTest$NoRowValuesDialect"))
-@DomainModel(annotatedClasses = TupleBetweenEmulationTest.Row.class)
+@JiraKey("HHH-21172")
+@JiraKey("HHH-21298")
+@DomainModel(annotatedClasses = TupleBetweenTest.Row.class)
 @SessionFactory(useCollectingStatementInspector = true)
-class TupleBetweenEmulationTest {
+class TupleBetweenTest {
 	@BeforeEach
 	void prepare(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
@@ -72,13 +67,6 @@ class TupleBetweenEmulationTest {
 				.setParameter( "high", new Version( 3, 1 ) )
 				.getResultList() ).containsExactly( 1, 2, 8, 9 ) );
 		assertThat( inspector.getSqlQueries().get( 0 ) ).doesNotContain( " between " );
-	}
-
-	public static class NoRowValuesDialect extends H2Dialect {
-		@Override
-		public RowValueSupport getRowValueSupport() {
-			return RowValueSupport.NONE;
-		}
 	}
 
 	@Entity(name = "TupleBetweenRow")

@@ -717,7 +717,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 		listeners.forEach( jaxbEntityListener -> {
 			final var listenerClassDetails =
 					classDetailsRegistry.resolveClassDetails( jaxbEntityListener.getClazz() );
-			final var lifecycleEventHandler = LifecycleEventHandler.from(
+			final var lifecycleEventHandlers = LifecycleEventHandler.from(
 						JpaEventListenerStyle.LISTENER,
 						listenerClassDetails,
 						jaxbEntityListener,
@@ -727,13 +727,13 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 			final var persistenceUnitLifecycleEventHandler =
 					PersistenceUnitLifecycleEventHandler.from( listenerClassDetails, jaxbEntityListener );
 
-			if ( lifecycleEventHandler.hasCallbackMethods() ) {
+			for ( var lifecycleEventHandler : lifecycleEventHandlers ) {
 				addJpaEventListener( lifecycleEventHandler );
 			}
 			if ( persistenceUnitLifecycleEventHandler.hasCallbackMethods() ) {
 				addPersistenceUnitLifecycleEventHandler( persistenceUnitLifecycleEventHandler );
 			}
-			if ( !lifecycleEventHandler.hasCallbackMethods()
+			if ( lifecycleEventHandlers.isEmpty()
 					&& !persistenceUnitLifecycleEventHandler.hasCallbackMethods() ) {
 				throw new ModelsException( "Mapping for entity listener specified no callback methods: "
 						+ listenerClassDetails.getClassName() );

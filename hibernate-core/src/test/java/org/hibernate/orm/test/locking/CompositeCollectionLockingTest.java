@@ -1,7 +1,10 @@
 package org.hibernate.orm.test.locking;
 
 import java.io.Serializable;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -32,9 +35,12 @@ import org.hibernate.LockOptions;
 import org.hibernate.Locking;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.Timeouts;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.lock.internal.LockingSqlRewriterSupport;
+import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -43,6 +49,8 @@ import org.hibernate.query.SelectionQuery;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.lock.LockingHelper;
 
+import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
+import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProviderSettingProvider;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -50,7 +58,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.orm.junit.SettingProvider;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -69,6 +77,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.LockMode.PESSIMISTIC_FORCE_INCREMENT;
 import static org.hibernate.LockMode.PESSIMISTIC_READ;
 import static org.hibernate.LockMode.PESSIMISTIC_WRITE;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
@@ -86,7 +95,9 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 @ServiceRegistry(settings = {
 		@Setting(name = "hibernate.connection.isolation", value = "2"),
 		@Setting(name = "hibernate.use_sql_comments", value = "false")
-})
+}, settingProviders = @SettingProvider(
+		settingName = "hibernate.connection.provider_class",
+		provider = PreparedStatementSpyConnectionProviderSettingProvider.class))
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSelectLocking.class)
 @ExtendWith(FollowOnLockingTestSupport.ReadCommittedEligibility.class)
 @Tag("db-locking")
@@ -96,7 +107,8 @@ class CompositeCollectionLockingTest {
 
 	@BeforeEach
 	void createData(SessionFactoryScope scope) {
-		FollowOnLockingTestSupport.requireAcquisition( scope );
+		// Only the contention tests require an explicit update-lock-read guarantee.
+		// Mapping, binding and state checks also run on HSQLDB.
 		scope.inTransaction( session -> {
 			FollowOnLockingTestSupport.assertReadCommitted( session );
 			Stream.concat( SELECTED.stream(), CONTROLS.stream() ).forEach( id -> {
@@ -180,8 +192,8 @@ class CompositeCollectionLockingTest {
 	@EnumSource(Route.class)
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSkipLocked.class)
-	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "READPAST does not reliably skip all locked rows for these probes")
 	void protectsCompleteKeysAndOnlyTheRequestedScope(Route route, SessionFactoryScope scope) {
+		FollowOnLockingTestSupport.requireAcquisition( scope );
 		requireRoute( route, scope );
 		scope.inTransaction( session -> {
 			assertThat( query( session, route, PESSIMISTIC_WRITE ).getResultList() ).hasSize( 3 );
@@ -203,18 +215,36 @@ class CompositeCollectionLockingTest {
 			"true,true,0", "true,true,1", "true,true,2", "true,true,3" })
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSkipLocked.class)
-	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "READPAST does not reliably skip all locked rows for these probes")
+	void helperOverloadsProtectEmptySingleAndDuplicateKeys(boolean collected, boolean propertyRef, int count, SessionFactoryScope scope) {
+		FollowOnLockingTestSupport.requireAcquisition( scope );
+		checkHelperOverloads( collected, propertyRef, count, true, scope );
+	}
+
+	@ParameterizedTest
+	@CsvSource({ "false,false,0", "false,false,1", "false,false,2", "false,false,3",
+			"false,true,0", "false,true,1", "false,true,2", "false,true,3",
+			"true,false,0", "true,false,1", "true,false,2", "true,false,3",
+			"true,true,0", "true,true,1", "true,true,2", "true,true,3" })
 	void helperOverloadsHandleEmptySingleAndDuplicateKeys(boolean collected, boolean propertyRef, int count, SessionFactoryScope scope) {
+		checkHelperOverloads( collected, propertyRef, count, false, scope );
+	}
+
+	private void checkHelperOverloads(boolean collected, boolean propertyRef, int count, boolean checkProtection, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final var owners = session.createQuery( "from CollectionKeyOwner o where o.chosen = true order by o.id.tenant, o.id.local", Owner.class ).getResultList();
 			final var selected = new ArrayList<>( owners.subList( 0, Math.min( count, 2 ) ) );
 			if ( count == 3 ) {
 				selected.add( selected.get( 0 ) );
 			}
+			connectionProvider( scope ).clear();
 			lock( session, selected, propertyRef, collected );
+			final var keys = selected.stream().map( owner -> owner.id );
+			assertCollectionBindings( session, scope, propertyRef, (collected ? keys : keys.distinct()).toList() );
 			for ( int i = 0; i < owners.size(); i++ ) {
 				assertThat( Hibernate.isInitialized( owners.get( i ).tags ) ).isFalse();
-				assertProtection( scope, propertyRef, owners.get( i ).id, i < Math.min( count, 2 ) );
+				if ( checkProtection ) {
+					assertProtection( scope, propertyRef, owners.get( i ).id, i < Math.min( count, 2 ) );
+				}
 			}
 		} );
 	}
@@ -224,8 +254,19 @@ class CompositeCollectionLockingTest {
 			"true,false,false", "true,false,true", "true,true,false", "true,true,true" })
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSkipLocked.class)
-	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "READPAST does not reliably skip all locked rows for these probes")
+	void propertyRefProtectsPersistedKeyDespiteLocalCollectionChanges(boolean readOnly, boolean clear, boolean initialized, SessionFactoryScope scope) {
+		FollowOnLockingTestSupport.requireAcquisition( scope );
+		checkPersistedPropertyRef( readOnly, clear, initialized, true, scope );
+	}
+
+	@ParameterizedTest
+	@CsvSource({ "false,false,false", "false,false,true", "false,true,false", "false,true,true",
+			"true,false,false", "true,false,true", "true,true,false", "true,true,true" })
 	void propertyRefUsesPersistedKeyDespiteLocalCollectionChanges(boolean readOnly, boolean clear, boolean initialized, SessionFactoryScope scope) {
+		checkPersistedPropertyRef( readOnly, clear, initialized, false, scope );
+	}
+
+	private void checkPersistedPropertyRef(boolean readOnly, boolean clear, boolean initialized, boolean checkProtection, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			session.setHibernateFlushMode( FlushMode.MANUAL );
 			final var owner = session.find( Owner.class, SELECTED.get( 0 ) );
@@ -238,13 +279,17 @@ class CompositeCollectionLockingTest {
 			final var replacement = clear ? null : new HashSet<>( Set.of( "local" ) );
 			owner.labels = replacement;
 			owner.business = new BusinessKey( -1, -2 );
+			connectionProvider( scope ).clear();
 			lock( session, List.of( owner ), true, false );
+			assertCollectionBindings( session, scope, true, List.of( owner.id ) );
 			assertThat( (Object) owner.labels ).isSameAs( replacement );
 			assertThat( Hibernate.isInitialized( original ) ).isEqualTo( initialized );
 			assertThat( entry( session, owner ).getLoadedState() ).isSameAs( snapshot );
 			assertThat( owner.business.region ).isEqualTo( -1 );
 			assertThat( owner.version ).isZero();
-			assertProtection( scope, true, owner.id, true );
+			if ( checkProtection ) {
+				assertProtection( scope, true, owner.id, true );
+			}
 		} );
 	}
 
@@ -275,23 +320,39 @@ class CompositeCollectionLockingTest {
 	@CsvSource({ "false", "true" })
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSkipLocked.class)
-	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "READPAST does not reliably skip all locked rows for these probes")
+	void fetchedPropertyRefCollectionsProtectTheirOwnKeys(boolean readOnly, SessionFactoryScope scope) {
+		FollowOnLockingTestSupport.requireAcquisition( scope );
+		checkFetchedPropertyRef( readOnly, true, scope );
+	}
+
+	@ParameterizedTest
+	@CsvSource({ "false", "true" })
 	void fetchedPropertyRefCollectionsUseTheirOwnKeys(boolean readOnly, SessionFactoryScope scope) {
+		checkFetchedPropertyRef( readOnly, false, scope );
+	}
+
+	private void checkFetchedPropertyRef(boolean readOnly, boolean checkProtection, SessionFactoryScope scope) {
 		requireRoute( Route.FOLLOW_ON_FETCHED, scope );
 		scope.inTransaction( session -> {
 			session.setDefaultReadOnly( readOnly );
 			final var query = session.createQuery( "from CollectionKeyOwner o join fetch o.labels where o.chosen = true", Owner.class )
 					.setHibernateLockMode( PESSIMISTIC_WRITE ).setLockScope( FETCHED ).setFollowOnStrategy( Locking.FollowOn.FORCE );
 			FollowOnLockingTestSupport.assertFollowOnPlan( session, query );
+			connectionProvider( scope ).clear();
 			final var owners = query.getResultList();
 			assertThat( owners ).hasSize( 3 );
+			assertCollectionBindings( session, scope, true, SELECTED );
 			owners.forEach( owner -> {
 				assertThat( Hibernate.isInitialized( owner.labels ) ).isTrue();
 				assertThat( Hibernate.isInitialized( owner.tags ) ).isFalse();
-				assertProtection( scope, true, owner.id, true );
-				assertProtection( scope, false, owner.id, false );
+				if ( checkProtection ) {
+					assertProtection( scope, true, owner.id, true );
+					assertProtection( scope, false, owner.id, false );
+				}
 			} );
-			CONTROLS.forEach( id -> assertProtection( scope, true, id, false ) );
+			if ( checkProtection ) {
+				CONTROLS.forEach( id -> assertProtection( scope, true, id, false ) );
+			}
 		} );
 	}
 
@@ -378,7 +439,65 @@ class CompositeCollectionLockingTest {
 		return session.getPersistenceContextInternal().getEntry( owner );
 	}
 
+	private static PreparedStatementSpyConnectionProvider connectionProvider(SessionFactoryScope scope) {
+		return (PreparedStatementSpyConnectionProvider) scope.getSessionFactory().getServiceRegistry()
+				.getService( ConnectionProvider.class );
+	}
+
+	private static void assertCollectionBindings(
+			SessionImplementor session, SessionFactoryScope scope, boolean propertyRef, List<Key> keys) {
+		final var provider = connectionProvider( scope );
+		final var statements = provider.getPreparedStatementsAndSql().entrySet().stream()
+				.filter( entry -> collectionSelect( entry.getValue() ) ).toList();
+		assertThat( statements ).hasSize( 1 );
+		final var statement = statements.get( 0 );
+		assertThat( statement.getValue() ).contains( propertyRef ? " from cc_labels tbl" : " from cc_tags tbl" );
+		final var columns = new ArrayList<String>();
+		attribute( session, propertyRef ).getKeyDescriptor()
+				.forEachSelectable( (i, selectable) -> columns.add( selectable.getSelectionExpression() ) );
+		final var expected = keys.stream().map( key -> columns.stream().map( column -> switch ( column ) {
+			case "local_fk" -> key.local;
+			case "tenant_fk" -> key.tenant;
+			case "business_number_fk" -> key.tenant + 200;
+			case "business_region_fk" -> key.local + 100;
+			default -> throw new AssertionError( column );
+		} ).toList() ).toList();
+		try {
+			final var calls = provider.spyContext.getCalls(
+					PreparedStatement.class.getMethod( "setInt", int.class, int.class ), statement.getKey() ).stream()
+					.sorted( Comparator.comparingInt( args -> (int) args[0] ) ).toList();
+			assertThat( calls ).hasSize( keys.size() * columns.size() );
+			final var actual = new ArrayList<List<Integer>>();
+			for ( int i = 0; i < calls.size(); i += columns.size() ) {
+				final var tuple = new ArrayList<Integer>();
+				for ( int j = 0; j < columns.size(); j++ ) {
+					assertThat( calls.get( i + j )[0] ).isEqualTo( i + j + 1 );
+					tuple.add( (Integer) calls.get( i + j )[1] );
+				}
+				actual.add( tuple );
+			}
+			assertThat( actual ).containsExactlyInAnyOrderElementsOf( expected );
+		}
+		catch (NoSuchMethodException e) {
+			throw new AssertionError( e );
+		}
+		if ( keys.isEmpty() ) {
+			assertThat( statement.getValue() ).contains( "1=0" );
+		}
+		else if ( session.getDialect().getRowValueSupport() == RowValueSupport.NONE ) {
+			assertThat( statement.getValue() ).doesNotContain( " in (" );
+			if ( keys.size() > 1 ) {
+				assertThat( statement.getValue() ).contains( " or " );
+			}
+		}
+	}
+
 	private static void assertProtection(SessionFactoryScope scope, boolean propertyRef, Key id, boolean locked) {
+		final var dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+		if ( dialect instanceof SQLServerDialect || dialect instanceof H2Dialect ) {
+			assertUpdateProtection( scope, propertyRef, id, locked );
+			return;
+		}
 		final int count = scope.fromTransaction( session -> {
 			FollowOnLockingTestSupport.assertReadCommitted( session );
 			final String table = propertyRef ? "cc_labels" : "cc_tags";
@@ -392,6 +511,52 @@ class CompositeCollectionLockingTest {
 		} );
 		assertThat( count ).as( "%s collection for (%s,%s)", propertyRef ? "property-ref" : "identifier", id.tenant, id.local )
 				.isEqualTo( locked ? 0 : 2 );
+	}
+
+	/// SQL Server's READPAST can skip a conflicting page or index lock even for an unrelated
+	/// collection. An actual UPDATE must instead succeed or report a native lock
+	/// timeout for each existing element while the acquiring transaction is open.
+	/// H2 also exercises this probe in the default test run.
+	private static void assertUpdateProtection(SessionFactoryScope scope, boolean propertyRef, Key id, boolean locked) {
+		final String table = propertyRef ? "cc_labels" : "cc_tags";
+		final String hint = scope.getSessionFactory().getJdbcServices().getDialect() instanceof SQLServerDialect
+				? " with (rowlock)" : "";
+		final String column = propertyRef ? "labels" : "tags";
+		final String firstColumn = propertyRef ? "business_number_fk" : "local_fk";
+		final String secondColumn = propertyRef ? "business_region_fk" : "tenant_fk";
+		for ( String element : List.of( "first", "second" ) ) {
+			scope.inSession( session -> {
+				final var transaction = session.beginTransaction();
+				try {
+					FollowOnLockingTestSupport.assertReadCommitted( session );
+					session.doWork( connection -> {
+						try ( var lockWait = ConcurrencyTestSupport.boundedLockWait( connection, session.getFactory() ) ) {
+							try ( var update = connection.prepareStatement( "update " + table + hint + " set "
+									+ column + "=? where " + firstColumn + "=? and " + secondColumn + "=? and " + column + "=?" ) ) {
+								update.setQueryTimeout( 10 );
+								update.setString( 1, "contender" );
+								update.setInt( 2, propertyRef ? id.tenant + 200 : id.local );
+								update.setInt( 3, propertyRef ? id.local + 100 : id.tenant );
+								update.setString( 4, element );
+								if ( locked ) {
+									ConcurrencyTestSupport.assertLockConflict(
+											assertThrows( SQLException.class, update::executeUpdate ), session.getFactory() );
+								}
+								else {
+									assertThat( update.executeUpdate() ).isOne();
+								}
+							}
+							finally {
+								connection.rollback();
+							}
+						}
+					} );
+				}
+				finally {
+					transaction.rollback();
+				}
+			} );
+		}
 	}
 
 	@Embeddable

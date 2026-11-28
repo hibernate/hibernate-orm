@@ -3,6 +3,7 @@ package org.hibernate.orm.test.locking;
 import jakarta.persistence.Entity;
 
 import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -55,7 +56,14 @@ public class AnnotatedExcludedFromVersioningTests extends ExcludedFromVersioning
 		assertThat( phone.getVersion() ).isZero();
 
 		phone.setNumber( "456" );
+		final var observer = scope.getCollectingStatementObserver();
+		observer.clear();
 		scope.inStatelessTransaction( session -> session.upsert( phone ) );
+		if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof DB2Dialect ) {
+			observer.assertQueries().hasSize( 2 );
+			observer.assertQuery( 0 ).startsWith( "merge into " );
+			observer.assertQuery( 1 ).startsWith( "select " );
+		}
 		assertThat( phone.getVersion() ).isOne();
 		scope.inSession( session -> {
 			final var stored = session.find( Phone.class, 1L );

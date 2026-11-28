@@ -1,15 +1,18 @@
 package org.hibernate.orm.test.mapping.basic;
 
+import jakarta.persistence.Basic;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToMany;
 import org.hibernate.annotations.Instantiator;
 import org.hibernate.engine.spi.Managed;
@@ -38,6 +41,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @DomainModel(annotatedClasses = {
 		FinalFieldTest.EntityWithFinalField.class,
+		FinalFieldTest.EntityWithLazyFinalField.class,
+		FinalFieldTest.EntityWithInheritedLazyFinalField.class,
 		FinalFieldTest.EntityWithFinalId.class,
 		FinalFieldTest.EntityWithFinalIdClass.class,
 		FinalFieldTest.EntityWithFinalIdClassRecord.class,
@@ -61,6 +66,35 @@ public class FinalFieldTest {
 
 		assumeFalse( ReflectionUtil.isFinalFieldMutationDenied() && !enhanced,
 				"Skipping non-enhanced variant when JVM denies final field mutation" );
+	}
+
+	@Test
+	public void finalLazyFieldIsLoaded(SessionFactoryScope scope) {
+		Long entityId = scope.fromTransaction( s -> {
+			EntityWithLazyFinalField entity = new EntityWithLazyFinalField( "foo" );
+			s.persist( entity );
+			return entity.getId();
+		} );
+
+		scope.inTransaction( s -> {
+			EntityWithLazyFinalField entity = s.find( EntityWithLazyFinalField.class, entityId );
+			assertEquals( "foo", entity.getDescription() );
+		} );
+	}
+
+	@Test
+	public void inheritedFinalLazyFieldIsLoaded(SessionFactoryScope scope) {
+		Long entityId = scope.fromTransaction( s -> {
+			EntityWithInheritedLazyFinalField entity = new EntityWithInheritedLazyFinalField( "foo" );
+			s.persist( entity );
+			return entity.getId();
+		} );
+
+		scope.inTransaction( s -> {
+			EntityWithInheritedLazyFinalField entity =
+					s.find( EntityWithInheritedLazyFinalField.class, entityId );
+			assertEquals( "foo", entity.getDescription() );
+		} );
 	}
 
 	@Test
@@ -172,6 +206,71 @@ public class FinalFieldTest {
 
 		public String getImmutable() {
 			return immutable;
+		}
+	}
+
+	@Entity(name = "EntityWithLazyFinalField")
+	public static class EntityWithLazyFinalField {
+
+		@Id
+		@GeneratedValue
+		private Long id;
+
+		@Basic(fetch = FetchType.LAZY)
+		private final String description;
+
+		protected EntityWithLazyFinalField() {
+			this.description = null;
+		}
+
+		public EntityWithLazyFinalField(String description) {
+			this.description = description;
+		}
+
+		public Long getId() {
+			return id;
+		}
+
+		public String getDescription() {
+			return description;
+		}
+	}
+
+	@MappedSuperclass
+	public abstract static class MappedSuperclassWithLazyFinalField {
+
+		@Id
+		@GeneratedValue
+		private Long id;
+
+		@Basic(fetch = FetchType.LAZY)
+		private final String description;
+
+		protected MappedSuperclassWithLazyFinalField() {
+			this.description = null;
+		}
+
+		protected MappedSuperclassWithLazyFinalField(String description) {
+			this.description = description;
+		}
+
+		public Long getId() {
+			return id;
+		}
+
+		public String getDescription() {
+			return description;
+		}
+	}
+
+	@Entity(name = "EntityWithInheritedLazyFinalField")
+	public static class EntityWithInheritedLazyFinalField extends MappedSuperclassWithLazyFinalField {
+
+		protected EntityWithInheritedLazyFinalField() {
+		}
+
+		public EntityWithInheritedLazyFinalField(String description) {
+			super( description );
 		}
 	}
 

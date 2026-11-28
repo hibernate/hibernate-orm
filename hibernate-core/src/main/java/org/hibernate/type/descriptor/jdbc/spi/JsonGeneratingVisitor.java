@@ -14,6 +14,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.JdbcTimeJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -22,8 +23,12 @@ import org.hibernate.type.format.JsonDocumentWriter;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 
+import static org.hibernate.type.SqlTypes.TIME;
+import static org.hibernate.type.descriptor.jdbc.JsonHelper.adjustTimeToPrecision;
 import static org.hibernate.type.descriptor.jdbc.StructHelper.getSubPart;
 
 /**
@@ -245,7 +250,13 @@ public class JsonGeneratingVisitor {
 			JsonDocumentWriter writer) throws IOException {
 		if ( modelPart instanceof SelectableMapping selectableMapping ) {
 			writer.objectKey( selectableMapping.getSelectableName() );
-			visit( modelPart.getMappedType(), value, options, writer );
+			final var mapping = selectableMapping.getJdbcMapping();
+			if ( value != null && mapping.getJdbcType().getDefaultSqlTypeCode() == TIME ) {
+				writeTime( selectableMapping, value, options, writer );
+			}
+			else {
+				visit( modelPart.getMappedType(), value, options, writer );
+			}
 		}
 		else if ( modelPart instanceof EmbeddedAttributeMapping embeddedAttribute ) {
 			if ( value != null ) {
@@ -268,6 +279,23 @@ public class JsonGeneratingVisitor {
 					+ (modelPart != null ? modelPart.getClass().getName() : "null")
 			);
 		}
+	}
+
+	// A TIME inside a document has no database column to enforce its fractional precision.
+	private static void writeTime(
+			SelectableMapping selectable, Object value, WrapperOptions options, JsonDocumentWriter writer) {
+		final var mapping = selectable.getJdbcMapping();
+		@SuppressWarnings("unchecked")
+		final var javaType = (JavaType<Object>) mapping.getJdbcJavaType();
+		final var relational = mapping.convertToRelationalValue( value );
+		if ( relational == null ) {
+			writer.nullValue();
+			return;
+		}
+		final LocalTime time = relational instanceof LocalTime localTime ? localTime
+				: JdbcTimeJavaType.INSTANCE.unwrap(
+						javaType.unwrap( relational, java.sql.Time.class, options ), LocalTime.class, options );
+		writer.stringValue( DateTimeFormatter.ISO_LOCAL_TIME.format( adjustTimeToPrecision( time, selectable, options ) ) );
 	}
 
 	protected void serializeEntity(

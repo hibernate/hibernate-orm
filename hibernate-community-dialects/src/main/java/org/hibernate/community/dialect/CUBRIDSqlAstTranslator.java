@@ -211,12 +211,20 @@ public class CUBRIDSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 
 	@Override
 	protected void renderAssignmentColumn(ColumnReference column) {
-		column.appendColumnForWrite(
-				this,
-				getAffectedTableNames().size() > 1 && !( getStatement() instanceof InsertSelectStatement )
-						? determineColumnReferenceQualifier( column )
-						: null
-		);
+		column.appendColumnForWrite( this, isQualifiedAssignment() ? determineColumnReferenceQualifier( column ) : null );
+	}
+
+	private boolean isQualifiedAssignment() {
+		final Statement statement = getStatement();
+		return !( statement instanceof InsertSelectStatement )
+			&& ( getAffectedTableNames().size() > 1
+				|| statement instanceof UpdateStatement updateStatement && hasJoins( updateStatement ) );
+	}
+
+	private static boolean hasJoins(UpdateStatement updateStatement) {
+		final var roots = updateStatement.getFromClause().getRoots();
+		return roots.size() > 1
+			|| roots.size() == 1 && roots.get( 0 ).hasRealJoins();
 	}
 
 	@Override

@@ -44,6 +44,24 @@ public interface BytecodeEnhancementMetadata {
 			SharedSessionContractImplementor session);
 
 	/**
+	 * Build an interceptor instance for an enhanced entity, without injecting it.
+	 * <p>
+	 * Every {@link LazyAttributeLoadingInterceptor} for this entity is built by this method,
+	 * so that an integrator can replace the interceptor in one place.
+	 *
+	 * @param identifier The identifier of the entity, if known
+	 * @param session The session to which the entity instance belongs, if any
+	 *
+	 * @return The built interceptor
+	 *
+	 * @throws NotInstrumentedException Thrown if {@link #isEnhancedForLazyLoading()} returns {@code false}
+	 */
+	LazyAttributeLoadingInterceptor createLazyAttributeLoadingInterceptor(
+			@Nullable Object identifier,
+			@Nullable SharedSessionContractImplementor session)
+				throws NotInstrumentedException;
+
+	/**
 	 * Build and inject an interceptor instance into the enhanced entity.
 	 *
 	 * @param entity The entity into which built interceptor should be injected

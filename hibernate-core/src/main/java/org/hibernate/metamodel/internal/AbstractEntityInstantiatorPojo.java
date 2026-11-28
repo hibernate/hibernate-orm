@@ -5,6 +5,7 @@ import jakarta.annotation.Nullable;
 
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor.EntityRelatedState;
+import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.hibernate.persister.entity.EntityPersister;
@@ -23,6 +24,7 @@ public abstract class AbstractEntityInstantiatorPojo extends AbstractPojoInstant
 	private final Class<?> proxyInterface;
 	private final boolean applyBytecodeInterception;
 	private final EntityRelatedState loadingInterceptorState;
+	private final BytecodeEnhancementMetadata bytecodeEnhancementMetadata;
 
 	public AbstractEntityInstantiatorPojo(
 			@Nonnull EntityPersister persister,
@@ -42,17 +44,14 @@ public abstract class AbstractEntityInstantiatorPojo extends AbstractPojoInstant
 										.getLazyAttributeNames()
 						)
 						: null;
+		bytecodeEnhancementMetadata = persister.getBytecodeEnhancementMetadata();
 	}
 
 	@Nonnull
 	protected Object applyInterception(@Nonnull Object entity) {
 		if ( applyBytecodeInterception ) {
 			asPersistentAttributeInterceptable( entity )
-					.$$_hibernate_setInterceptor( new LazyAttributeLoadingInterceptor(
-							loadingInterceptorState,
-							null,
-							null
-					) );
+					.$$_hibernate_setInterceptor( bytecodeEnhancementMetadata.createLazyAttributeLoadingInterceptor( null, null ) );
 		}
 		return entity;
 	}

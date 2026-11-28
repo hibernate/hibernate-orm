@@ -3,6 +3,7 @@ package org.hibernate.bytecode.internal;
 import java.util.Set;
 
 import org.hibernate.LockMode;
+import org.hibernate.SPI;
 import org.hibernate.boot.Metadata;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
@@ -22,6 +23,7 @@ import org.hibernate.type.CompositeType;
 
 import jakarta.annotation.Nullable;
 
+import static org.hibernate.SPI.Role.IMPLEMENT;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptableType;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfManagedEntity;
@@ -214,13 +216,34 @@ public class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementM
 					)
 			);
 		}
-		final var interceptor = new LazyAttributeLoadingInterceptor(
-				lazyAttributeLoadingInterceptorState,
-				identifier,
-				session
-		);
+		final var interceptor = createLazyAttributeLoadingInterceptor( identifier, session );
 		injectInterceptor( entity, interceptor, session );
 		return interceptor;
+	}
+
+	@Override
+	@SPI(IMPLEMENT)
+	public LazyAttributeLoadingInterceptor createLazyAttributeLoadingInterceptor(
+			@Nullable Object identifier,
+			@Nullable SharedSessionContractImplementor session) {
+		if ( !enhancedForLazyLoading ) {
+			throw new NotInstrumentedException( "Entity class [" + entityClass.getName() + "] is not enhanced for lazy loading" );
+		}
+		return new LazyAttributeLoadingInterceptor( lazyAttributeLoadingInterceptorState, identifier, session );
+	}
+
+	/**
+	 * Build the interceptor of an enhanced entity used as a proxy, without injecting it.
+	 */
+	@SPI(IMPLEMENT)
+	protected EnhancementAsProxyLazinessInterceptor createEnhancementAsProxyLazinessInterceptor(
+			EntityKey entityKey,
+			SharedSessionContractImplementor session) {
+		return new EnhancementAsProxyLazinessInterceptor(
+				getEnhancementAsProxyLazinessInterceptorMetastate( session ),
+				entityKey,
+				session
+		);
 	}
 
 	@Override
@@ -228,16 +251,7 @@ public class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhancementM
 			Object entity,
 			EntityKey entityKey,
 			SharedSessionContractImplementor session) {
-		EnhancementAsProxyLazinessInterceptor.EntityRelatedState meta = getEnhancementAsProxyLazinessInterceptorMetastate( session );
-		injectInterceptor(
-				entity,
-				new EnhancementAsProxyLazinessInterceptor(
-						meta,
-						entityKey,
-						session
-				),
-				session
-		);
+		injectInterceptor( entity, createEnhancementAsProxyLazinessInterceptor( entityKey, session ), session );
 	}
 
 	/*

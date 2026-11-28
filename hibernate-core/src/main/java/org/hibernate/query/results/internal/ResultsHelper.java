@@ -49,6 +49,11 @@ public class ResultsHelper {
 						selectableMapping
 				),
 				processingState -> {
+					final int nestedPosition = resolver.nestedValuesArrayPosition( selectableMapping.getSelectableName() );
+					if ( nestedPosition != -1 ) {
+						// The value is in the aggregate column (e.g. JSON) of the nesting fetch parent
+						return new ResultSetMappingSqlSelection( nestedPosition, selectableMapping.getJdbcMapping(), true );
+					}
 					final int jdbcPosition = jdbcValuesMetadata.resolveColumnPosition( columnAlias );
 					final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
 					return new ResultSetMappingSqlSelection( valuesArrayPosition, selectableMapping.getJdbcMapping() );

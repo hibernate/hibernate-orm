@@ -33,7 +33,10 @@ public class GeneratedValuesMappingProducer implements JdbcValuesMappingProducer
 			LoadQueryInfluencers loadQueryInfluencers,
 			SessionFactoryImplementor sessionFactory) {
 		final int numberOfResults = resultBuilders.size();
-		final int rowSize = jdbcResultsMetadata.getColumnCount();
+		// A driver need not report the columns of a result set which has no rows.
+		// The Spanner driver reports none when a statement returning the values
+		// it wrote matched no row, and the generated values are read by position.
+		final int rowSize = Math.max( jdbcResultsMetadata.getColumnCount(), numberOfResults );
 
 		final List<SqlSelection> sqlSelections = new ArrayList<>( rowSize );
 

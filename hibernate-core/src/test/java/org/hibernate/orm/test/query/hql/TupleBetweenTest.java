@@ -1,6 +1,7 @@
 package org.hibernate.orm.test.query.hql;
 
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
@@ -13,12 +14,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.dialect.sql.ast.spi.RowValueSupport.Feature.ORDERING_COMPARISON;
 
-/// A multi-column BETWEEN compares lexicographically, and uses the comparison
-/// emulation on databases without row-value ordering syntax.
+/// A multi-column BETWEEN compares lexicographically. It is rendered as two
+/// comparisons, since a database which accepts row values in an ordering
+/// comparison, such as MySQL or MariaDB, need not accept them in BETWEEN.
 ///
 /// @author Steve Ebersole
+@JiraKey("HHH-21172")
+@JiraKey("HHH-21298")
 @DomainModel(annotatedClasses = TupleBetweenTest.Row.class)
 @SessionFactory(useCollectingStatementInspector = true)
 class TupleBetweenTest {
@@ -51,7 +54,7 @@ class TupleBetweenTest {
 				.setParameter( "low", new Version( 1, 3 ) )
 				.setParameter( "high", new Version( 3, 1 ) )
 				.getResultList() ).containsExactly( 3, 4, 5, 6, 7 ) );
-		assertEmulatedWithoutRowOrdering( scope, inspector.getSqlQueries().get( 0 ) );
+		assertThat( inspector.getSqlQueries().get( 0 ) ).doesNotContain( " between " );
 	}
 
 	@Test
@@ -63,14 +66,7 @@ class TupleBetweenTest {
 				.setParameter( "low", new Version( 1, 3 ) )
 				.setParameter( "high", new Version( 3, 1 ) )
 				.getResultList() ).containsExactly( 1, 2, 8, 9 ) );
-		assertEmulatedWithoutRowOrdering( scope, inspector.getSqlQueries().get( 0 ) );
-	}
-
-	private static void assertEmulatedWithoutRowOrdering(SessionFactoryScope scope, String sql) {
-		if ( !scope.getSessionFactory().getJdbcServices().getDialect()
-				.getRowValueSupport().supports( ORDERING_COMPARISON ) ) {
-			assertThat( sql ).doesNotContain( " between " );
-		}
+		assertThat( inspector.getSqlQueries().get( 0 ) ).doesNotContain( " between " );
 	}
 
 	@Entity(name = "TupleBetweenRow")

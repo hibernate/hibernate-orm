@@ -42,4 +42,21 @@ public class JdbcOperationQueryInsertImpl
 			String uniqueConstraintNameThatMayFail) {
 		super( sql, parameterBinders, affectedTableNames, appliedParameters, uniqueConstraintNameThatMayFail );
 	}
+
+	public JdbcOperationQueryInsertImpl(
+			String sql,
+			List<JdbcParameterBinder> parameterBinders,
+			Set<String> affectedTableNames,
+			Map<JdbcParameter, JdbcParameterBinding> appliedParameters,
+			String uniqueConstraintNameThatMayFail,
+			boolean retryableOnUniqueConstraintViolation) {
+		super(
+				sql,
+				parameterBinders,
+				affectedTableNames,
+				appliedParameters,
+				uniqueConstraintNameThatMayFail,
+				retryableOnUniqueConstraintViolation
+		);
+	}
 }

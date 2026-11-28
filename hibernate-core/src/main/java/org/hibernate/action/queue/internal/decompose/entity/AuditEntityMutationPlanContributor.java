@@ -1,51 +1,44 @@
 package org.hibernate.action.queue.internal.decompose.entity;
 
-import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor;
-
 import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.action.queue.internal.GraphBasedActionQueue;
-import org.hibernate.action.queue.internal.decompose.collection.DecompositionSupport;
+import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.audit.ModificationType;
-import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.EntityAuditSupport;
 
+import static org.hibernate.action.queue.internal.decompose.entity.DecompositionHelper.createChangeRecorder;
+
 /// Graph mutation plan contributor for audited entity mutations.
 ///
-/// Audit table writes are transaction-completion work, so this contributor does
-/// not add audit SQL directly to the entity mutation plan.  Instead, it appends a
-/// no-op callback carrier after the current-table operations.  The callback
-/// records the logical audited change in the graph audit collector, where
-/// repeated entity changes are merged before audit operations are materialized at
-/// transaction completion.
+/// Audit rows are copied from rows which the database holds, so this
+/// contributor adds no audit SQL to the entity mutation plan. Instead, it
+/// appends a no-op callback carrier after the current-table operations. The
+/// callback records the logical audited change in the graph audit collector,
+/// where repeated entity changes are merged before the audit rows are written
+/// at transaction completion.
 ///
 /// @author Steve Ebersole
 public class AuditEntityMutationPlanContributor implements EntityMutationPlanContributor {
 	private final EntityPersister entityPersister;
 	private final EntityAuditSupport entityAuditSupport;
-	private final boolean[] auditedPropertyMask;
 
 	public AuditEntityMutationPlanContributor(EntityPersister entityPersister) {
 		this.entityPersister = entityPersister;
 		this.entityAuditSupport = entityPersister.getEntityAuditSupport();
-		this.auditedPropertyMask = entityAuditSupport.getAuditedPropertyMask();
 	}
 
 	@Override
 	public void contributeAdditionalInsert(
 			InsertContext context,
 			Consumer<FlushOperation> operationConsumer) {
-		operationConsumer.accept( createAuditCallbackCarrier(
-				context.ordinalBase(),
-				context.identifier(),
-				context.entity(),
-				context.state(),
-				ModificationType.ADD
+		operationConsumer.accept( createChangeRecorder(
+				entityPersister, context.ordinalBase(), context.identifier(), context.entity(),
+				(id, session) -> recordChange( id, ModificationType.ADD, session )
 		) );
 	}
 
@@ -53,64 +46,31 @@ public class AuditEntityMutationPlanContributor implements EntityMutationPlanCon
 	public void contributeAdditionalUpdate(
 			UpdateContext context,
 			Consumer<FlushOperation> operationConsumer) {
-		if ( !shouldAuditUpdate( context.action().getDirtyFields(), context.action().hasDirtyCollection() ) ) {
-			return;
+		final var action = context.action();
+		if ( entityAuditSupport.isAuditedUpdate( action.getDirtyFields(), action.hasDirtyCollection() ) ) {
+			operationConsumer.accept( createChangeRecorder(
+					entityPersister, context.ordinalBase(), context.identifier(), context.entity(),
+					(id, session) -> recordChange( id, ModificationType.MOD, session )
+			) );
 		}
-
-		operationConsumer.accept( createAuditCallbackCarrier(
-				context.ordinalBase(),
-				context.identifier(),
-				context.entity(),
-				context.state(),
-				ModificationType.MOD
-		) );
 	}
 
 	@Override
 	public void contributeAdditionalDelete(
 			DeleteContext context,
 			Consumer<FlushOperation> operationConsumer) {
-		final var entityEntry = context.session().getPersistenceContextInternal().getEntry( context.action().getInstance() );
-		final Object[] deleteState = entityEntry != null && entityEntry.getLoadedState() != null
-				? entityEntry.getLoadedState()
-				: context.state();
-
-		operationConsumer.accept( createAuditCallbackCarrier(
-				context.ordinalBase(),
-				context.identifier(),
-				context.action().getInstance(),
-				deleteState,
-				ModificationType.DEL
+		operationConsumer.accept( createChangeRecorder(
+				entityPersister, context.ordinalBase(), context.identifier(), context.action().getInstance(),
+				(id, session) -> recordChange( id, ModificationType.DEL, session )
 		) );
 	}
 
-	private FlushOperation createAuditCallbackCarrier(
-			int ordinalBase,
-			Object identifier,
-			Object entity,
-			Object[] state,
-			ModificationType modificationType) {
-		return DecompositionSupport.createNoOpCallbackCarrier(
-				entityPersister.getIdentifierTableDescriptor(),
-				ordinalBase * 1_000 + 900,
-				session -> resolveCollector( session ).getAuditMutationCollector().entityChanged(
-						// an identifier generated by an insert is assigned to the entity by now
-						resolveEntityKey(
-								identifier == null ? entityPersister.getIdentifier( entity, session ) : identifier,
-								session
-						),
-						entity,
-						state,
-						modificationType,
-						entityAuditSupport
-				)
+	private void recordChange(Object identifier, ModificationType modificationType, SessionImplementor session) {
+		resolveCollector( session ).getAuditMutationCollector().entityChanged(
+				session.generateEntityKey( identifier, entityPersister ),
+				modificationType,
+				entityAuditSupport
 		);
-	}
-
-	private EntityKey resolveEntityKey(
-			Object identifier,
-			SharedSessionContractImplementor session) {
-		return session.generateEntityKey( identifier, entityPersister );
 	}
 
 	private GraphBasedActionQueue resolveCollector(SessionImplementor session) {
@@ -119,20 +79,5 @@ public class AuditEntityMutationPlanContributor implements EntityMutationPlanCon
 			return graphBasedActionQueue;
 		}
 		throw new HibernateException( "Audit graph mutation plan used with non-graph action queue" );
-	}
-
-	private boolean shouldAuditUpdate(int[] dirtyAttributeIndexes, boolean hasDirtyCollection) {
-		if ( dirtyAttributeIndexes == null || dirtyAttributeIndexes.length == 0 ) {
-			return true;
-		}
-		if ( hasDirtyCollection ) {
-			return true;
-		}
-		for ( int dirtyIndex : dirtyAttributeIndexes ) {
-			if ( auditedPropertyMask[dirtyIndex] ) {
-				return true;
-			}
-		}
-		return false;
 	}
 }

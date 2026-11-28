@@ -2,7 +2,6 @@ package org.hibernate.temporal.audit;
 
 import org.hibernate.audit.ModificationType;
 import org.hibernate.audit.spi.AuditWorkQueue;
-import org.hibernate.audit.spi.AuditWriter;
 import org.hibernate.audit.spi.CollectionAuditWriter;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -14,6 +13,7 @@ import org.hibernate.engine.spi.TransactionCompletionCallbacks.AfterCompletionCa
 import org.hibernate.engine.spi.TransactionCompletionCallbacks.BeforeCompletionCallback;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.mutation.EntityAuditSupport;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.type.Type;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -46,7 +46,7 @@ class AuditWorkQueueCompletionTest {
 		var callbacks = spy( new TransactionCompletionCallbacksImpl( session ) );
 		when( session.getTransactionCompletionCallbacks() ).thenReturn( callbacks );
 		var queue = new AuditWorkQueue();
-		var entity = mock( AuditWriter.class );
+		var entity = mock( EntityAuditSupport.class );
 		var collection = mock( CollectionAuditWriter.class );
 		var key = mock( EntityKey.class );
 		var persister = mock( CollectionPersister.class );
@@ -54,7 +54,7 @@ class AuditWorkQueueCompletionTest {
 		when( persister.getKeyType() ).thenReturn( mock( Type.class ) );
 		when( persister.getOwnerEntityPersister() ).thenReturn( mock( EntityPersister.class ) );
 		var values = mock( PersistentCollection.class );
-		Runnable enqueueEntity = () -> queue.enqueue( key, new Object(), new Object[0], ModificationType.ADD, entity, session );
+		Runnable enqueueEntity = () -> queue.enqueue( key, ModificationType.ADD, entity, session );
 		Runnable enqueueCollection = () -> queue.enqueueCollection( persister, values, 1, null, collection, session );
 		if ( collectionFirst ) { enqueueCollection.run(); enqueueEntity.run(); }
 		else { enqueueEntity.run(); enqueueCollection.run(); }
@@ -62,7 +62,7 @@ class AuditWorkQueueCompletionTest {
 		verify( callbacks, times( 1 ) ).registerCallback( any( AfterCompletionCallback.class ) );
 		if ( completion.equals( "failure" ) ) {
 			doThrow( new IllegalStateException( "audit writer failed" ) ).when( entity )
-					.writeAuditRow( any(), any(), any(), any(), any() );
+					.writeModification( any(), any(), any() );
 			assertThatThrownBy( callbacks::beforeTransactionCompletion ).hasMessageContaining( "audit writer failed" );
 		}
 		else if ( completion.equals( "commit" ) ) callbacks.beforeTransactionCompletion();
@@ -70,13 +70,13 @@ class AuditWorkQueueCompletionTest {
 		callbacks.afterTransactionCompletion( completion.equals( "commit" ) );
 		callbacks.afterTransactionCompletion( false ); // Repeated cleanup cannot restore discarded work.
 		if ( completion.equals( "rollback" ) ) verifyNoInteractions( entity, collection );
-		var next = mock( AuditWriter.class );
-		queue.enqueue( mock( EntityKey.class ), new Object(), new Object[0], ModificationType.ADD, next, session );
+		var next = mock( EntityAuditSupport.class );
+		queue.enqueue( mock( EntityKey.class ), ModificationType.ADD, next, session );
 		verify( callbacks, times( 2 ) ).registerCallback( any( BeforeCompletionCallback.class ) );
 		verify( callbacks, times( 2 ) ).registerCallback( any( AfterCompletionCallback.class ) );
 		callbacks.beforeTransactionCompletion(); callbacks.afterTransactionCompletion( true );
-		verify( next, times( 1 ) ).writeAuditRow( any(), any(), any(), any(), any() );
-		verify( entity, times( completion.equals( "rollback" ) ? 0 : 1 ) ).writeAuditRow( any(), any(), any(), any(), any() );
+		verify( next, times( 1 ) ).writeModification( any(), any(), any() );
+		verify( entity, times( completion.equals( "rollback" ) ? 0 : 1 ) ).writeModification( any(), any(), any() );
 		verify( collection, times( completion.equals( "commit" ) ? 1 : 0 ) ).writeCollectionAuditRows( any(), any(), isNull(), any() );
 	}
 }

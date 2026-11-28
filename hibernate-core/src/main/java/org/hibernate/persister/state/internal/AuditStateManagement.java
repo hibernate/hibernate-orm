@@ -27,7 +27,6 @@ import org.hibernate.metamodel.mapping.internal.AuditMappingImpl;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.collection.OneToManyPersister;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinator;
 import org.hibernate.persister.collection.mutation.InsertRowsCoordinator;
 import org.hibernate.persister.collection.mutation.InsertRowsCoordinatorAudit;
@@ -54,7 +53,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 import jakarta.annotation.Nullable;
 
 import static org.hibernate.boot.model.internal.AuditHelper.MODIFICATION_TYPE;
-import static org.hibernate.boot.model.internal.AuditHelper.writtenIndexColumns;
 import static org.hibernate.boot.model.internal.AuditHelper.INVALIDATING_CHANGESET_ID;
 import static org.hibernate.boot.model.internal.AuditHelper.CHANGESET_ID;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getTableIdentifierExpression;
@@ -315,19 +313,19 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 			@Nonnull MappingModelCreationProcess creationProcess) {
 		final String originalTableName = persister.determineTableName( originalTable );
 		final String auditTableName = persister.determineTableName( auditTable );
-		final List<SelectableMapping> indexColumns = new ArrayList<>();
-		for ( var collection : originalTable.getAuditedInverseCollections() ) {
-			final var collectionPersister = (OneToManyPersister) persister.getFactory().getMappingMetamodel()
-					.getCollectionDescriptor( collection.getRole() );
-			if ( collectionPersister.isDoWriteEvenWhenInverse() ) {
-				for ( var column : writtenIndexColumns( collection ) ) {
-					indexColumns.add( toSelectableMapping( auditTableName, column, column.getType(), creationProcess ) );
-				}
+		// An audit row copies each column which its table shares with the table holding current data.
+		// That includes the order column or map key column of an audited inverse collection,
+		// and leaves out a column which the database computes again in the audit table.
+		final var dialect = creationProcess.getCreationContext().getDialect();
+		final List<String> copiedColumns = new ArrayList<>();
+		for ( var column : auditTable.getColumns() ) {
+			if ( column.getGeneratedAs() == null && originalTable.getColumn( column ) != null ) {
+				copiedColumns.add( column.getQuotedName( dialect ) );
 			}
 		}
 		map.put(
 				originalTableName,
-				createTableAuditInfo( auditTableName, holder, csIdJdbcMapping, modTypeJdbcMapping, indexColumns, creationProcess )
+				createTableAuditInfo( auditTableName, holder, csIdJdbcMapping, modTypeJdbcMapping, copiedColumns, creationProcess )
 		);
 	}
 
@@ -337,7 +335,7 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 			@Nonnull AuxiliaryTableHolder holder,
 			@Nonnull JdbcMapping csIdJdbcMapping,
 			@Nonnull JdbcMapping modTypeJdbcMapping,
-			List<SelectableMapping> indexColumns,
+			List<String> copiedColumns,
 			@Nonnull MappingModelCreationProcess creationProcess) {
 		return new AuditMappingImpl.TableAuditInfo(
 				auditTableName,
@@ -359,7 +357,7 @@ public class AuditStateManagement implements StateManagement, StateManagementLeg
 						csIdJdbcMapping,
 						creationProcess
 				),
-				List.copyOf( indexColumns )
+				List.copyOf( copiedColumns )
 		);
 	}
 

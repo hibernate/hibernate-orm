@@ -2,6 +2,7 @@ package org.hibernate.orm.test.action.queue.decomposer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -32,6 +33,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests graph decomposition for temporal history-table mutations.
+ * <p>
+ * The plan for a flush writes only the tables holding current data.
+ * Revisions are copied to the history table when the transaction
+ * completes, by the {@link org.hibernate.temporal.spi.HistoryWorkQueue}.
  *
  * @author Steve Ebersole
  */
@@ -50,7 +55,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class HistoryTableDecomposerTest {
 
 	@Test
-	public void testHistoryInsertAddsHistoryInsert(EntityManagerFactoryScope scope) {
+	public void testHistoryInsertPlansOnlyCurrentTable(EntityManagerFactoryScope scope) {
 		final var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
 		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
 			Assumptions.abort( "Skipping GRAPH test with non-GRAPH queue type" );
@@ -72,16 +77,15 @@ public class HistoryTableDecomposerTest {
 					(EventSource) session
 			);
 			final List<FlushOperation> operations = new ArrayList<>();
-			persister.getInsertDecomposer().decompose( action, 0, session, null, operations::add );
+			persister.getInsertDecomposer().decompose( action, 0, session, null, collectingWrites( operations ) );
 
-			assertEquals( 2, operations.size() );
-			assertEquals( MutationKind.INSERT, operations.get( 0 ).getKind() );
-			assertEquals( MutationKind.INSERT, operations.get( 1 ).getKind() );
+			assertEquals( 1, operations.size() );
+			assertOperation( operations.get( 0 ), MutationKind.INSERT, "graph_history_entity" );
 		} );
 	}
 
 	@Test
-	public void testHistoryUpdateAddsHistoryEndAndInsert(EntityManagerFactoryScope scope) {
+	public void testHistoryUpdatePlansOnlyCurrentTable(EntityManagerFactoryScope scope) {
 		final var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
 		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
 			Assumptions.abort( "Skipping GRAPH test with non-GRAPH queue type" );
@@ -115,19 +119,17 @@ public class HistoryTableDecomposerTest {
 					(EventSource) session
 			);
 			final List<FlushOperation> operations = new ArrayList<>();
-			persister.getUpdateDecomposer().decompose( action, 0, session, null, operations::add );
+			persister.getUpdateDecomposer().decompose( action, 0, session, null, collectingWrites( operations ) );
 
-			assertEquals( 3, operations.size() );
-			assertEquals( MutationKind.UPDATE, operations.get( 0 ).getKind() );
-			assertEquals( MutationKind.UPDATE, operations.get( 1 ).getKind() );
-			assertEquals( MutationKind.INSERT, operations.get( 2 ).getKind() );
+			assertEquals( 1, operations.size() );
+			assertOperation( operations.get( 0 ), MutationKind.UPDATE, "graph_history_entity" );
 
 			entity.name = "before";
 		} );
 	}
 
 	@Test
-	public void testHistoryDeleteAddsHistoryEnd(EntityManagerFactoryScope scope) {
+	public void testHistoryDeletePlansOnlyCurrentTable(EntityManagerFactoryScope scope) {
 		final var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
 		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
 			Assumptions.abort( "Skipping GRAPH test with non-GRAPH queue type" );
@@ -154,16 +156,15 @@ public class HistoryTableDecomposerTest {
 					(EventSource) session
 			);
 			final List<FlushOperation> operations = new ArrayList<>();
-			persister.getDeleteDecomposer().decompose( action, 0, session, null, operations::add );
+			persister.getDeleteDecomposer().decompose( action, 0, session, null, collectingWrites( operations ) );
 
-			assertEquals( 2, operations.size() );
-			assertEquals( MutationKind.DELETE, operations.get( 0 ).getKind() );
-			assertEquals( MutationKind.UPDATE, operations.get( 1 ).getKind() );
+			assertEquals( 1, operations.size() );
+			assertOperation( operations.get( 0 ), MutationKind.DELETE, "graph_history_entity" );
 		} );
 	}
 
 	@Test
-	public void testSecondaryTableHistoryInsertAddsSingleHistoryInsert(EntityManagerFactoryScope scope) {
+	public void testSecondaryTableHistoryInsertPlansOnlyCurrentTables(EntityManagerFactoryScope scope) {
 		final var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
 		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
 			Assumptions.abort( "Skipping GRAPH test with non-GRAPH queue type" );
@@ -186,17 +187,16 @@ public class HistoryTableDecomposerTest {
 					(EventSource) session
 			);
 			final List<FlushOperation> operations = new ArrayList<>();
-			persister.getInsertDecomposer().decompose( action, 0, session, null, operations::add );
+			persister.getInsertDecomposer().decompose( action, 0, session, null, collectingWrites( operations ) );
 
-			assertEquals( 3, operations.size() );
+			assertEquals( 2, operations.size() );
 			assertOperation( operations.get( 0 ), MutationKind.INSERT, "graph_history_secondary_entity" );
 			assertOperation( operations.get( 1 ), MutationKind.INSERT, "graph_history_secondary_entity_details" );
-			assertOperation( operations.get( 2 ), MutationKind.INSERT, "graph_history_secondary_entity_history" );
 		} );
 	}
 
 	@Test
-	public void testSecondaryTableHistoryUpdateAddsHistoryEndAndInsert(EntityManagerFactoryScope scope) {
+	public void testSecondaryTableHistoryUpdatePlansOnlyCurrentTables(EntityManagerFactoryScope scope) {
 		final var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
 		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
 			Assumptions.abort( "Skipping GRAPH test with non-GRAPH queue type" );
@@ -232,13 +232,11 @@ public class HistoryTableDecomposerTest {
 					(EventSource) session
 			);
 			final List<FlushOperation> operations = new ArrayList<>();
-			persister.getUpdateDecomposer().decompose( action, 0, session, null, operations::add );
+			persister.getUpdateDecomposer().decompose( action, 0, session, null, collectingWrites( operations ) );
 
-			assertEquals( 4, operations.size() );
+			assertEquals( 2, operations.size() );
 			assertOperation( operations.get( 0 ), MutationKind.UPDATE, "graph_history_secondary_entity" );
 			assertOperation( operations.get( 1 ), MutationKind.UPDATE, "graph_history_secondary_entity_details" );
-			assertOperation( operations.get( 2 ), MutationKind.UPDATE, "graph_history_secondary_entity_history" );
-			assertOperation( operations.get( 3 ), MutationKind.INSERT, "graph_history_secondary_entity_history" );
 
 			entity.primaryName = "primary-before";
 			entity.secondaryName = "secondary-before";
@@ -246,7 +244,7 @@ public class HistoryTableDecomposerTest {
 	}
 
 	@Test
-	public void testSecondaryTableHistoryDeleteAddsSingleHistoryEnd(EntityManagerFactoryScope scope) {
+	public void testSecondaryTableHistoryDeletePlansOnlyCurrentTables(EntityManagerFactoryScope scope) {
 		final var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
 		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
 			Assumptions.abort( "Skipping GRAPH test with non-GRAPH queue type" );
@@ -274,17 +272,16 @@ public class HistoryTableDecomposerTest {
 					(EventSource) session
 			);
 			final List<FlushOperation> operations = new ArrayList<>();
-			persister.getDeleteDecomposer().decompose( action, 0, session, null, operations::add );
+			persister.getDeleteDecomposer().decompose( action, 0, session, null, collectingWrites( operations ) );
 
-			assertEquals( 3, operations.size() );
+			assertEquals( 2, operations.size() );
 			assertOperation( operations.get( 0 ), MutationKind.DELETE, "graph_history_secondary_entity_details" );
 			assertOperation( operations.get( 1 ), MutationKind.DELETE, "graph_history_secondary_entity" );
-			assertOperation( operations.get( 2 ), MutationKind.UPDATE, "graph_history_secondary_entity_history" );
 		} );
 	}
 
 	@Test
-	public void testJoinedHistoryInsertAddsSingleHistoryInsert(EntityManagerFactoryScope scope) {
+	public void testJoinedHistoryInsertPlansOnlyCurrentTables(EntityManagerFactoryScope scope) {
 		final var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
 		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
 			Assumptions.abort( "Skipping GRAPH test with non-GRAPH queue type" );
@@ -307,17 +304,16 @@ public class HistoryTableDecomposerTest {
 					(EventSource) session
 			);
 			final List<FlushOperation> operations = new ArrayList<>();
-			persister.getInsertDecomposer().decompose( action, 0, session, null, operations::add );
+			persister.getInsertDecomposer().decompose( action, 0, session, null, collectingWrites( operations ) );
 
-			assertEquals( 3, operations.size() );
+			assertEquals( 2, operations.size() );
 			assertOperation( operations.get( 0 ), MutationKind.INSERT, "graph_history_joined_parent" );
 			assertOperation( operations.get( 1 ), MutationKind.INSERT, "graph_history_joined_child" );
-			assertOperation( operations.get( 2 ), MutationKind.INSERT, "graph_history_joined_parent_history" );
 		} );
 	}
 
 	@Test
-	public void testJoinedHistoryUpdateAddsHistoryEndAndInsert(EntityManagerFactoryScope scope) {
+	public void testJoinedHistoryUpdatePlansOnlyCurrentTables(EntityManagerFactoryScope scope) {
 		final var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
 		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
 			Assumptions.abort( "Skipping GRAPH test with non-GRAPH queue type" );
@@ -353,13 +349,11 @@ public class HistoryTableDecomposerTest {
 					(EventSource) session
 			);
 			final List<FlushOperation> operations = new ArrayList<>();
-			persister.getUpdateDecomposer().decompose( action, 0, session, null, operations::add );
+			persister.getUpdateDecomposer().decompose( action, 0, session, null, collectingWrites( operations ) );
 
-			assertEquals( 4, operations.size() );
+			assertEquals( 2, operations.size() );
 			assertOperation( operations.get( 0 ), MutationKind.UPDATE, "graph_history_joined_parent" );
 			assertOperation( operations.get( 1 ), MutationKind.UPDATE, "graph_history_joined_child" );
-			assertOperation( operations.get( 2 ), MutationKind.UPDATE, "graph_history_joined_parent_history" );
-			assertOperation( operations.get( 3 ), MutationKind.INSERT, "graph_history_joined_parent_history" );
 
 			entity.parentName = "parent-before";
 			entity.childName = "child-before";
@@ -367,7 +361,7 @@ public class HistoryTableDecomposerTest {
 	}
 
 	@Test
-	public void testJoinedHistoryDeleteAddsSingleHistoryEnd(EntityManagerFactoryScope scope) {
+	public void testJoinedHistoryDeletePlansOnlyCurrentTables(EntityManagerFactoryScope scope) {
 		final var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
 		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
 			Assumptions.abort( "Skipping GRAPH test with non-GRAPH queue type" );
@@ -395,13 +389,21 @@ public class HistoryTableDecomposerTest {
 					(EventSource) session
 			);
 			final List<FlushOperation> operations = new ArrayList<>();
-			persister.getDeleteDecomposer().decompose( action, 0, session, null, operations::add );
+			persister.getDeleteDecomposer().decompose( action, 0, session, null, collectingWrites( operations ) );
 
-			assertEquals( 3, operations.size() );
+			assertEquals( 2, operations.size() );
 			assertOperation( operations.get( 0 ), MutationKind.DELETE, "graph_history_joined_child" );
 			assertOperation( operations.get( 1 ), MutationKind.DELETE, "graph_history_joined_parent" );
-			assertOperation( operations.get( 2 ), MutationKind.UPDATE, "graph_history_joined_parent_history" );
 		} );
+	}
+
+	/// Leaves out the no-op operation whose callback records the entity in the history work queue.
+	private static Consumer<FlushOperation> collectingWrites(List<FlushOperation> operations) {
+		return operation -> {
+			if ( operation.getKind() != MutationKind.NO_OP ) {
+				operations.add( operation );
+			}
+		};
 	}
 
 	private static void assertOperation(

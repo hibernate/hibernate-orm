@@ -80,7 +80,7 @@ public class AuditMappingImpl implements AuditMapping {
 			SelectableMapping changesetIdMapping,
 			@Nullable SelectableMapping modificationTypeMapping,
 			@Nullable SelectableMapping invalidatingChangesetMapping,
-			List<SelectableMapping> collectionIndexColumns
+			List<String> copiedColumns
 	) {
 		public TableAuditInfo(String auditTableName, SelectableMapping changesetIdMapping,
 				@Nullable SelectableMapping modificationTypeMapping, @Nullable SelectableMapping invalidatingChangesetMapping) {
@@ -165,9 +165,10 @@ public class AuditMappingImpl implements AuditMapping {
 		return info;
 	}
 
+	@Nonnull
 	@Override
-	public List<SelectableMapping> getCollectionIndexColumns(String originalTableName) {
-		return resolveInfo( originalTableName ).collectionIndexColumns();
+	public List<String> getCopiedColumns(@Nonnull String originalTableName) {
+		return resolveInfo( originalTableName ).copiedColumns();
 	}
 
 	@Nonnull

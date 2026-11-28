@@ -24,9 +24,11 @@ import org.hibernate.persister.entity.EntityPersister;
 /// flush operations.
 ///
 /// Entity changes are merged because there can only be one audit row for a given
-/// entity key in a transaction. Collection changes are keyed by collection role
-/// and owner id and are recorded once, preserving the first snapshot captured for
-/// the collection during the transaction.
+/// entity key in a transaction. An entity change carries no entity state, since
+/// an audit row is copied from a row which the database holds: the current row
+/// of the entity, or its previous audit row. Collection changes are keyed by
+/// collection role and owner id and are recorded once, preserving the first
+/// snapshot captured for the collection during the transaction.
 ///
 /// @param <E> the execution-specific entity audit handler carried with entity changes
 /// @param <C> the execution-specific collection audit handler carried with collection changes
@@ -47,23 +49,17 @@ public class AuditChangeSet<E, C> {
 	/// by DEL becomes DEL, and ADD followed by DEL removes the audit change.
 	public void addEntityChange(
 			EntityKey entityKey,
-			Object entity,
-			Object[] values,
 			ModificationType modificationType,
 			E entityAuditHandler) {
 		entityChanges.compute( entityKey, (key, existing) -> existing == null
-				? new MutableEntityChange<>( entity, values, modificationType, entityAuditHandler )
-				: merge( existing, entity, values, modificationType ) );
+				? new MutableEntityChange<>( modificationType, entityAuditHandler )
+				: merge( existing, modificationType ) );
 	}
 
 	/// An index write needs an entity revision only if the entity has no revision of its own.
-	public void addIndexedElementChange(EntityEntry entry, Object element, Function<EntityPersister, E> handler) {
-		entityChanges.computeIfAbsent( entry.getEntityKey(), key -> {
-			final var persister = entry.getPersister();
-			final var state = entry.getLoadedState();
-			return new MutableEntityChange<>( element, state != null ? state : persister.getValues( element ),
-					ModificationType.MOD, handler.apply( persister ) );
-		} );
+	public void addIndexedElementChange(EntityEntry entry, Function<EntityPersister, E> handler) {
+		entityChanges.computeIfAbsent( entry.getEntityKey(),
+				key -> new MutableEntityChange<>( ModificationType.MOD, handler.apply( entry.getPersister() ) ) );
 	}
 
 	/// Add a collection audit change if one has not already been captured.
@@ -92,8 +88,6 @@ public class AuditChangeSet<E, C> {
 			final MutableEntityChange<E> change = entry.getValue();
 			changes.add( new EntityChange<>(
 					entry.getKey(),
-					change.entity,
-					change.values,
 					change.modificationType,
 					change.entityAuditHandler
 			) );
@@ -115,21 +109,13 @@ public class AuditChangeSet<E, C> {
 		collectionChanges.clear();
 	}
 
-	private static <E> MutableEntityChange<E> merge(
-			MutableEntityChange<E> existing,
-			Object entity,
-			Object[] newValues,
-			ModificationType incoming) {
+	private static <E> MutableEntityChange<E> merge(MutableEntityChange<E> existing, ModificationType incoming) {
 		final ModificationType merged = mergeModificationType( existing.modificationType, incoming );
 		if ( merged == null ) {
 			return null;
 		}
 		else {
 			existing.modificationType = merged;
-			existing.values = newValues;
-			if ( entity != null ) {
-				existing.entity = entity;
-			}
 			return existing;
 		}
 	}
@@ -157,15 +143,11 @@ public class AuditChangeSet<E, C> {
 	/// A merged entity audit change.
 	///
 	/// @param entityKey the persistence-context key of the audited entity
-	/// @param entity the entity instance, when still available
-	/// @param values the entity state to write into the audit row
 	/// @param modificationType the merged audit modification type
 	/// @param entityAuditHandler the execution-specific handler used to consume this change
 	/// @param <E> the entity audit handler type
 	public record EntityChange<E>(
 			EntityKey entityKey,
-			Object entity,
-			Object[] values,
 			ModificationType modificationType,
 			E entityAuditHandler) {
 	}
@@ -189,18 +171,10 @@ public class AuditChangeSet<E, C> {
 	}
 
 	private static class MutableEntityChange<E> {
-		Object entity;
-		Object[] values;
 		ModificationType modificationType;
 		final E entityAuditHandler;
 
-		private MutableEntityChange(
-				Object entity,
-				Object[] values,
-				ModificationType modificationType,
-				E entityAuditHandler) {
-			this.entity = entity;
-			this.values = values;
+		private MutableEntityChange(ModificationType modificationType, E entityAuditHandler) {
 			this.modificationType = modificationType;
 			this.entityAuditHandler = entityAuditHandler;
 		}

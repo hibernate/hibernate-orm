@@ -28,10 +28,13 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jdbc.Expectation;
+import org.hibernate.loader.ast.internal.CollectionElementLoader;
 import org.hibernate.loader.ast.internal.CollectionIndexSnapshotLoader;
 import org.hibernate.loader.ast.internal.EntityConcreteTypeLoader;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.UnsupportedMappingException;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.OneToManyCollectionPart;
@@ -48,6 +51,8 @@ import org.hibernate.persister.collection.mutation.WriteIndexCoordinatorStandard
 import org.hibernate.persister.collection.mutation.WriteIndexCoordinatorTablePerSubclass;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
+import org.hibernate.persister.entity.mutation.HistoryRevisionWriter;
+import org.hibernate.persister.entity.mutation.PartitionKeyValue;
 import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.persister.state.spi.StateManagement;
 import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
@@ -106,6 +111,14 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 	private final boolean auditIndex;
 	private CollectionIndexSnapshotLoader indexSnapshotLoader;
+
+	/// Whether the attribute which holds this collection is excluded from temporal versioning.
+	private final boolean temporalExcluded;
+	/// The columns of the row of an element which are written by this collection.
+	private final List<String> writtenElementColumns;
+	private List<SelectableMapping> writtenElementSelectables;
+	private boolean elementRevisions;
+	private CollectionElementLoader elementLoader;
 	final boolean doWriteEvenWhenInverse; // contrary to intent of JPA
 
 	public OneToManyPersister(
@@ -134,6 +147,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 		auditIndex = doWriteEvenWhenInverse
 				&& collectionBinding.getCollectionTable().getAuditedInverseCollections().contains( collectionBinding );
+		writtenElementColumns = writtenElementColumns();
+		temporalExcluded = isHistoryStrategy() && isTemporalExcluded( collectionBinding );
 		rowMutationOperations = buildRowMutationOperations();
 		stateManagement = collectionBinding.getStateManagement();
 		final var legacyIntegration = stateManagement.getLegacyIntegration();
@@ -237,6 +252,55 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		}
 	}
 
+	private List<String> writtenElementColumns() {
+		final boolean keyWritten = !isInverse && isRowInsertEnabled();
+		final List<String> columns = new ArrayList<>();
+		if ( keyWritten ) {
+			addColumns( keyColumnNames, columns );
+		}
+		if ( hasIndex() && !indexContainsFormula && ( keyWritten || doWriteEvenWhenInverse ) ) {
+			addColumns( castNonNull( indexColumnNames ), columns );
+		}
+		return columns;
+	}
+
+	private static boolean isTemporalExcluded(Collection collectionBinding) {
+		final String propertyPath =
+				collectionBinding.getRole().substring( collectionBinding.getOwnerEntityName().length() + 1 );
+		try {
+			return collectionBinding.getOwner().getRecursiveProperty( propertyPath ).isTemporalExcluded();
+		}
+		catch (MappingException e) {
+			// the collection is not held by a property which can be annotated
+			return false;
+		}
+	}
+
+	private List<SelectableMapping> writtenElementSelectables() {
+		final List<SelectableMapping> selectables = new ArrayList<>();
+		final SelectableConsumer consumer = (index, selectable) -> {
+			if ( writtenElementColumns.contains( selectable.getSelectionExpression() ) ) {
+				selectables.add( selectable );
+			}
+		};
+		final var attributeMapping = getAttributeMapping();
+		attributeMapping.getKeyDescriptor().getKeyPart().forEachSelectable( consumer );
+		final var indexDescriptor = attributeMapping.getIndexDescriptor();
+		if ( indexDescriptor != null ) {
+			indexDescriptor.forEachSelectable( consumer );
+		}
+		return selectables;
+	}
+
+	private static void addColumns(String[] columnNames, List<String> columns) {
+		for ( String columnName : columnNames ) {
+			// a formula has no column
+			if ( columnName != null ) {
+				columns.add( columnName );
+			}
+		}
+	}
+
 	@Override
 	public void postInstantiate() throws MappingException {
 		super.postInstantiate();
@@ -244,6 +308,16 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			indexSnapshotLoader = new CollectionIndexSnapshotLoader(
 					getAttributeMapping(), new LoadQueryInfluencers( getFactory() )
 			);
+		}
+		checkElementRevisions( getElementPersister() );
+		for ( var subMappingType : getElementPersister().getSubMappingTypes() ) {
+			checkElementRevisions( subMappingType.getEntityPersister() );
+		}
+		if ( elementRevisions ) {
+			writtenElementSelectables = writtenElementSelectables();
+			if ( needsRemove() ) {
+				elementLoader = new CollectionElementLoader( getAttributeMapping(), new LoadQueryInfluencers( getFactory() ) );
+			}
 		}
 
 		// Initialize JDBC operations after entity persisters have completed their initialization
@@ -261,6 +335,140 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 	public boolean hasAuditedIndex() {
 		return auditIndex && getElementPersister().getAuditMapping() != null;
+	}
+
+	/// Notes whether a revision of the given element type holds a column written
+	/// by this collection. A version of an entity has one revision, and this
+	/// collection does not increment the version of an element, so it can only
+	/// update the open revision of a versioned element.
+	private void checkElementRevisions(EntityPersister elementPersister) {
+		final var writer = elementPersister.getHistoryRevisionWriter();
+		if ( writer != null && writer.copiesAny( writtenElementColumns ) ) {
+			if ( elementPersister.isVersioned() && !temporalExcluded ) {
+				throw new UnsupportedMappingException( "Collection '" + getRole()
+						+ "' is a one-to-many association which writes the row of versioned entity '"
+						+ elementPersister.getEntityName()
+						+ "' and must be annotated '@Temporal.Excluded' for HISTORY_TABLE"
+						+ " (the association writes its join column or order column without incrementing"
+						+ " the version of the entity, which has one revision for each version)" );
+			}
+			elementRevisions = true;
+		}
+	}
+
+	/// Whether a revision of an element in its
+	/// [history table][org.hibernate.temporal.TemporalTableStrategy#HISTORY_TABLE]
+	/// holds a column written by this collection. If so, the history of an element
+	/// must record what this collection writes to its row.
+	public boolean hasElementRevisions() {
+		return elementRevisions;
+	}
+
+	/// The elements whose rows are written when the given collection is created
+	/// or updated: every element of a collection which is new to its role and key,
+	/// or else each element which was added, moved, or removed since the collection
+	/// was last written.
+	public List<Object> getWrittenElements(
+			PersistentCollection<?> collection, Object key, SharedSessionContractImplementor session) {
+		final boolean hasOwnSnapshot = hasOwnSnapshot( collection, key, session );
+		final List<Object> elements = new ArrayList<>();
+		final var entries = collection.wasInitialized() ? collection.entries( this ) : collection.queuedAdditionIterator();
+		for ( int i = 0; entries.hasNext(); i++ ) {
+			final var entry = entries.next();
+			if ( entry != null && collection.entryExists( entry, i )
+					&& !( hasOwnSnapshot && isUnchanged( collection, entry, i ) ) ) {
+				elements.add( collection.getElement( entry ) );
+			}
+		}
+		if ( hasOwnSnapshot && needsRemove() ) {
+			addDisplacedElements( collection, elements );
+		}
+		return elements;
+	}
+
+	/// The elements whose rows are written when every row of the collection
+	/// with the given key is removed. They are read from the database, since
+	/// the removal is not restricted by a filter, and so it writes rows which
+	/// a collection loaded with the filter enabled does not hold.
+	public List<Object> getRemovedElements(Object key, SharedSessionContractImplementor session) {
+		return elementLoader.load( key, session );
+	}
+
+	/// Adds the elements of the snapshot of the given collection which were
+	/// removed from the collection, or replaced by another element.
+	private void addDisplacedElements(PersistentCollection<?> collection, List<Object> elements) {
+		collection.getDeletes( this, true ).forEachRemaining( elements::add );
+		final var entries = collection.entries( this );
+		for ( int i = 0; entries.hasNext(); i++ ) {
+			final var entry = entries.next();
+			if ( entry != null && collection.entryExists( entry, i )
+					&& collection.needsUpdating( entry, i, getAttributeMapping() ) ) {
+				elements.add( collection.getSnapshotElement( entry, i ) );
+			}
+		}
+	}
+
+	/// Record that the rows of the given elements are written by this collection,
+	/// so that the history of each of them holds what was written.
+	public void recordElementRevisions(List<Object> elements, SharedSessionContractImplementor session) {
+		for ( Object element : elements ) {
+			if ( element != null ) {
+				recordElementRevision( element, session );
+			}
+		}
+	}
+
+	private void recordElementRevision(Object element, SharedSessionContractImplementor session) {
+		final var lazyInitializer = extractLazyInitializer( element );
+		final boolean uninitialized = lazyInitializer != null && lazyInitializer.isUninitialized();
+		// only a class with a table of its own has a history table of its own
+		final var concretePersister = uninitialized && !useTablePerSubclassDecomposition
+				? getFactory().getMappingMetamodel().getEntityDescriptor( lazyInitializer.getEntityName() )
+				: getConcreteElementPersister( element, session );
+		final var writer = concretePersister.getHistoryRevisionWriter();
+		if ( writer == null || !writer.copiesAny( writtenElementColumns ) ) {
+			return;
+		}
+		if ( uninitialized ) {
+			recordElementRevision( lazyInitializer.getInternalIdentifier(), null, writer, session );
+		}
+		else {
+			final Object entity = lazyInitializer == null ? element : lazyInitializer.getImplementation();
+			final var entityEntry = session.getPersistenceContextInternal().getEntry( entity );
+			if ( entityEntry == null ) {
+				recordElementRevision( concretePersister.getIdentifier( entity, session ), null, writer, session );
+			}
+			else if ( !entityEntry.getStatus().isDeletedOrGone() ) {
+				recordElementRevision( entityEntry.getId(), entityEntry.getLoadedState(), writer, session );
+			}
+		}
+	}
+
+	/// @param state the state of the row before the changeset, if it is known
+	private void recordElementRevision(
+			@Nullable Object id, @Nullable Object[] state,
+			HistoryRevisionWriter writer, SharedSessionContractImplementor session) {
+		if ( id != null ) {
+			session.getHistoryWorkQueue().entityRowWritten( id, !temporalExcluded, writtenElementSelectables,
+					PartitionKeyValue.fromState( writer.getEntityPersister(), state, session ), writer, session );
+		}
+	}
+
+	/// Whether the given collection holds a snapshot of the rows with the given key.
+	private boolean hasOwnSnapshot(PersistentCollection<?> collection, Object key, SharedSessionContractImplementor session) {
+		final var persistenceContext = session.getPersistenceContextInternal();
+		final var collectionEntry = persistenceContext.getCollectionEntry( collection );
+		return collection.wasInitialized()
+			&& collectionEntry != null
+			&& collectionEntry.getLoadedPersister() == this
+			&& collectionEntry.getSnapshot() != null
+			&& persistenceContext.getCollection( session.generateCollectionKey( this, key ) ) == collection;
+	}
+
+	/// Whether the given entry of a collection has the row it had in the snapshot.
+	private boolean isUnchanged(PersistentCollection<?> collection, Object entry, int position) {
+		return !collection.includeInInsert( entry, position, collection, getAttributeMapping() )
+			&& !collection.needsUpdating( entry, position, getAttributeMapping() );
 	}
 
 	/// Capture the destination's indexes before a replacement writes them.
@@ -287,10 +495,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			PersistentCollection<?> collection, Object key, @Nullable Object previousSnapshot,
 			SharedSessionContractImplementor session, BiConsumer<EntityEntry, Object> consumer) {
 		final var persistenceContext = session.getPersistenceContextInternal();
-		final var collectionEntry = persistenceContext.getCollectionEntry( collection );
-		final var previous = persistenceContext.getCollection( session.generateCollectionKey( this, key ) );
-		final boolean compareOwnSnapshot = previous == collection && collection.wasInitialized() && collectionEntry != null
-				&& collectionEntry.getLoadedPersister() == this && collectionEntry.getSnapshot() != null;
+		final boolean compareOwnSnapshot = hasOwnSnapshot( collection, key, session );
 		final var entries = collection.wasInitialized() ? collection.entries( this ) : collection.queuedAdditionIterator();
 		for ( int i = 0; entries.hasNext(); i++ ) {
 			final var entry = entries.next();
@@ -302,8 +507,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 					snapshotElement( previousSnapshot, collection, entry, i ), element, getFactory() ) ) {
 				continue;
 			}
-			if ( compareOwnSnapshot && !collection.needsInserting( entry, i, getElementType() )
-					&& !collection.needsUpdating( entry, i, getElementType() ) ) {
+			if ( compareOwnSnapshot && isUnchanged( collection, entry, i ) ) {
 				continue;
 			}
 			final var entity = Hibernate.unproxy( element );
@@ -382,13 +586,29 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			throws HibernateException {
 		getInsertRowsCoordinator().insertRows( collection, id, collection::includeInRecreate, session );
 		writeIndex( collection, collection.entries( this ), id, true, session );
+		elementRowsWritten( collection, id, session );
 	}
 
+	/// The last step of an update of the rows of a collection.
 	@Override
 	public void insertRows(@Nonnull PersistentCollection<?> collection, @Nonnull Object id, @Nonnull SharedSessionContractImplementor session)
 			throws HibernateException {
 		getInsertRowsCoordinator().insertRows( collection, id, collection::includeInInsert, session );
 		writeIndex( collection, collection.entries( this ), id, true, session );
+		elementRowsWritten( collection, id, session );
+	}
+
+	@Override
+	public void remove(@Nonnull Object id, @Nonnull SharedSessionContractImplementor session) throws HibernateException {
+		if ( elementRevisions && needsRemove() ) {
+			// the elements cannot be identified once their rows are written
+			final var elements = getRemovedElements( id, session );
+			super.remove( id, session );
+			elementRowsWritten( elements, session );
+		}
+		else {
+			super.remove( id, session );
+		}
 	}
 
 	@Override
@@ -406,6 +626,19 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	protected void doProcessQueuedOps(@Nonnull PersistentCollection<?> collection, @Nonnull Object id, @Nonnull SharedSessionContractImplementor session)
 			throws HibernateException {
 		writeIndex( collection, collection.queuedAdditionIterator(), id, false, session );
+		elementRowsWritten( collection, id, session );
+	}
+
+	private void elementRowsWritten(PersistentCollection<?> collection, Object key, SharedSessionContractImplementor session) {
+		if ( elementRevisions ) {
+			// the snapshot of the collection is not replaced until the action completes
+			elementRowsWritten( getWrittenElements( collection, key, session ), session );
+		}
+	}
+
+	private void elementRowsWritten(List<Object> elements, SharedSessionContractImplementor session) {
+		recordElementRevisions( elements, session );
+		session.getHistoryWorkQueue().currentRowsWritten( session );
 	}
 
 	private void writeIndex(

@@ -192,6 +192,16 @@ public interface AuxiliaryMapping {
 		return List.of();
 	}
 
+	/// The columns which a row of the auxiliary table copies from the row of
+	/// the given table holding current data, including its key columns.
+	///
+	/// Empty when the given table has no separate auxiliary table, as when
+	/// temporal revisions are held in the table for current data itself.
+	@Nonnull
+	default List<String> getCopiedColumns(@Nonnull String originalTableName) {
+		return List.of();
+	}
+
 	/// The JDBC mapping for temporal/as-of comparison values used by this
 	/// auxiliary mapping.
 	///

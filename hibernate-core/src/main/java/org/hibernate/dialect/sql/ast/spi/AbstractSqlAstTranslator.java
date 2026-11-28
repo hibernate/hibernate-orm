@@ -218,6 +218,7 @@ import org.hibernate.sql.ast.spi.model.OptionalTableUpdate;
 import org.hibernate.sql.ast.spi.model.TableDeleteCustomSql;
 import org.hibernate.sql.ast.spi.model.TableDeleteStandard;
 import org.hibernate.sql.ast.spi.model.TableInsertCustomSql;
+import org.hibernate.sql.ast.spi.model.TableInsertSelect;
 import org.hibernate.sql.ast.spi.model.TableInsertStandard;
 import org.hibernate.sql.ast.spi.model.TableUpdateCustomSql;
 import org.hibernate.sql.ast.spi.model.TableUpdateStandard;
@@ -10470,6 +10471,181 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		sqlBuffer.append( tableInsert.getCustomSql() );
 
 		tableInsert.forEachParameter( this::addParameterBinder );
+	}
+
+	/// Renders `insert into target (...) select ... from source where ...`,
+	/// copying a row of the source table to the target table.
+	///
+	/// If the source row is optional, the select reads the key from an anchor
+	/// table, to which the source table is outer joined.
+	///
+	/// If the source table holds several rows with the key, the select reads the
+	/// last of them, which is the row with no later row. The later row is found
+	/// by an outer join and not by a subquery, since the source table may be the
+	/// target table, which some databases do not allow a subquery to read.
+	///
+	/// A parameter in the select list is rendered as this dialect renders any
+	/// parameter which is a select item, since some databases do not infer the
+	/// type of a parameter in that position.
+	@Override
+	public void visitTableInsertSelect(TableInsertSelect tableInsert) {
+		final String rowOrderColumn = tableInsert.getRowOrderColumn();
+		final String sourceQualifier =
+				tableInsert.getAnchorTableName() == null && rowOrderColumn == null ? "" : "s.";
+		final var keyRestrictions = tableInsert.getKeyRestrictions();
+		final var copiedColumns = tableInsert.getCopiedColumns();
+		final var valueBindings = tableInsert.getValueBindings();
+
+		getCurrentClauseStack().push( Clause.INSERT );
+		try {
+			applySqlComment( tableInsert.getMutationComment() );
+
+			final String targetTableName = tableInsert.getMutatingTable().getTableName();
+			appendSql( "insert into " );
+			appendSql( targetTableName );
+			registerAffectedTable( targetTableName );
+
+			appendSql( ' ' );
+			char separator = '(';
+			for ( var restriction : keyRestrictions ) {
+				appendSql( separator );
+				appendSql( restriction.getColumnReference().getColumnExpression() );
+				separator = ',';
+			}
+			for ( String column : copiedColumns ) {
+				appendSql( separator );
+				appendSql( column );
+				separator = ',';
+			}
+			for ( var binding : valueBindings ) {
+				appendSql( separator );
+				appendSql( binding.getColumnReference().getColumnExpression() );
+				separator = ',';
+			}
+
+			appendSql( ") select " );
+			getCurrentClauseStack().push( Clause.SELECT );
+			try {
+				String selectSeparator = "";
+				for ( int i = 0; i < keyRestrictions.size(); i++ ) {
+					appendSql( selectSeparator );
+					appendSql( keyColumn( tableInsert, i ) );
+					selectSeparator = ",";
+				}
+				for ( String column : copiedColumns ) {
+					appendSql( selectSeparator );
+					appendSql( sourceQualifier );
+					appendSql( column );
+					selectSeparator = ",";
+				}
+				for ( var binding : valueBindings ) {
+					appendSql( selectSeparator );
+					final var value = binding.getValueExpression();
+					final var parameters = value.getParameters();
+					if ( parameters.size() == 1 && "?".equals( value.getFragment() ) ) {
+						final var parameter = parameters.iterator().next();
+						// a dialect which casts a parameter of a select list
+						// must cast it to the type of the column it is written to
+						renderSelectExpression( new SqlTypedMappingJdbcParameter( value.getSqlTypedMapping() ) {
+							@Override
+							public JdbcParameterBinder getParameterBinder() {
+								return parameter;
+							}
+						} );
+					}
+					else {
+						value.accept( this );
+					}
+					selectSeparator = ",";
+				}
+			}
+			finally {
+				getCurrentClauseStack().pop();
+			}
+
+			appendSql( " from " );
+			renderCopiedRowSource( tableInsert );
+
+			getCurrentClauseStack().push( Clause.WHERE );
+			try {
+				String restrictionSeparator = " where ";
+				for ( int i = 0; i < keyRestrictions.size(); i++ ) {
+					appendSql( restrictionSeparator );
+					appendSql( keyColumn( tableInsert, i ) );
+					appendSql( '=' );
+					keyRestrictions.get( i ).getValueExpression().accept( this );
+					restrictionSeparator = " and ";
+				}
+				if ( rowOrderColumn != null ) {
+					// no later row
+					appendSql( " and n." );
+					appendSql( rowOrderColumn );
+					appendSql( " is null" );
+				}
+			}
+			finally {
+				getCurrentClauseStack().pop();
+			}
+		}
+		finally {
+			getCurrentClauseStack().pop();
+		}
+	}
+
+	/// The table holding the copied row, outer joined to its anchor table if it
+	/// has one, or to its own later rows if it holds several rows with the key.
+	private void renderCopiedRowSource(TableInsertSelect tableInsert) {
+		final String sourceTableName = tableInsert.getSourceTableName();
+		final String anchorTableName = tableInsert.getAnchorTableName();
+		final String rowOrderColumn = tableInsert.getRowOrderColumn();
+		final var keyRestrictions = tableInsert.getKeyRestrictions();
+		if ( anchorTableName != null ) {
+			appendSql( anchorTableName );
+			appendSql( " a left join " );
+			appendSql( sourceTableName );
+			appendSql( " s" );
+			String joinSeparator = " on ";
+			for ( int i = 0; i < keyRestrictions.size(); i++ ) {
+				appendSql( joinSeparator );
+				appendSql( "s." );
+				appendSql( keyRestrictions.get( i ).getColumnReference().getColumnExpression() );
+				appendSql( '=' );
+				appendSql( keyColumn( tableInsert, i ) );
+				joinSeparator = " and ";
+			}
+		}
+		else if ( rowOrderColumn != null ) {
+			appendSql( sourceTableName );
+			appendSql( " s left join " );
+			appendSql( sourceTableName );
+			appendSql( " n on " );
+			for ( int i = 0; i < keyRestrictions.size(); i++ ) {
+				appendSql( "n." );
+				appendSql( keyRestrictions.get( i ).getColumnReference().getColumnExpression() );
+				appendSql( '=' );
+				appendSql( keyColumn( tableInsert, i ) );
+				appendSql( " and " );
+			}
+			appendSql( "n." );
+			appendSql( rowOrderColumn );
+			appendSql( ">s." );
+			appendSql( rowOrderColumn );
+		}
+		else {
+			appendSql( sourceTableName );
+		}
+	}
+
+	/// The key column from which the select reads the key of the copied row.
+	private static String keyColumn(TableInsertSelect tableInsert, int position) {
+		if ( tableInsert.getAnchorTableName() != null ) {
+			return "a." + tableInsert.getAnchorKeyColumns().get( position );
+		}
+		else {
+			final String keyColumn =
+					tableInsert.getKeyRestrictions().get( position ).getColumnReference().getColumnExpression();
+			return tableInsert.getRowOrderColumn() == null ? keyColumn : "s." + keyColumn;
+		}
 	}
 
 	@Override

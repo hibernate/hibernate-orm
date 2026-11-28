@@ -1,6 +1,7 @@
 package org.hibernate.engine.spi;
 
 import org.hibernate.audit.spi.AuditWorkQueue;
+import org.hibernate.temporal.spi.HistoryWorkQueue;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
@@ -126,6 +127,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public AuditWorkQueue getAuditWorkQueue() {
 		return delegate.getAuditWorkQueue();
+	}
+
+	@Override
+	public HistoryWorkQueue getHistoryWorkQueue() {
+		return delegate.getHistoryWorkQueue();
 	}
 
 	@Override

@@ -15,6 +15,7 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.cfg.FlushSettings.FLUSH_QUEUE_TYPE;
 import static org.hibernate.cfg.StateManagementSettings.TEMPORAL_TABLE_STRATEGY;
 
@@ -35,13 +36,22 @@ class TemporalExcludedHistoryVersionTest {
 	}
 
 	@Test
-	void earlierRevisionUsesVersionOnlyInPredicate(SessionFactoryScope scope) {
+	void openRevisionKeepsItsVersion(SessionFactoryScope scope) {
 		scope.inTransaction( session -> session.persist( new Item() ) );
 		var observer = scope.getCollectingStatementObserver();
 		observer.clear();
 		scope.inTransaction( session -> session.find( Item.class, 1 ).note = "edited" );
+		// the open revision is the one which has not ended, whatever its version
 		observer.assertQueries().map( sql -> sql.toLowerCase( Locale.ROOT ) )
 				.filteredOn( sql -> sql.startsWith( "update " ) && sql.contains( "excludeditem_history" ) )
-				.singleElement().asString().containsOnlyOnce( "version" ).containsPattern( " where .*\\bversion\\s*=" );
+				.singleElement().asString().doesNotContain( "version" ).contains( "superseded is null" );
+		// the version of the current row is now two ahead of the version of its revision
+		scope.inTransaction( session -> session.find( Item.class, 1 ).note = "edited again" );
+		scope.inSession( session -> {
+			var revision = session.createNativeQuery(
+					"select version, note from ExcludedItem_history", Object[].class ).getSingleResult();
+			assertThat( ( (Number) revision[0] ).intValue() ).isZero();
+			assertThat( revision[1] ).isEqualTo( "edited again" );
+		} );
 	}
 }

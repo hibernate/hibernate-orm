@@ -2,7 +2,6 @@ package org.hibernate.persister.entity.mutation;
 
 import jakarta.annotation.Nonnull;
 
-import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -10,6 +9,11 @@ import org.hibernate.persister.entity.EntityPersister;
  * Merge coordinator for
  * {@link org.hibernate.temporal.TemporalTableStrategy#HISTORY_TABLE}
  * temporal strategy.
+ * <p>
+ * An upsert does not reveal whether it inserted or updated the row of
+ * the table holding current data. The upserted entity is reconciled
+ * with its history table in the same way either way: the open revision
+ * is ended if there is one, and the row is copied to a new revision.
  *
  * @author Gavin King
  */
@@ -20,11 +24,5 @@ public class MergeCoordinatorHistory extends UpdateCoordinatorHistory {
 			@Nonnull SessionFactoryImplementor factory,
 			@Nonnull UpdateCoordinator currentMergeCoordinator) {
 		super( entityPersister, factory, currentMergeCoordinator );
-	}
-
-	@Override
-	boolean resultCheck(@Nonnull Object id, @Nonnull PreparedStatementDetails statementDetails, int affectedRowCount, int batchPosition) {
-		return affectedRowCount != 0
-			&& super.resultCheck( id, statementDetails, affectedRowCount, batchPosition );
 	}
 }

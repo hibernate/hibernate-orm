@@ -28,8 +28,6 @@ import org.hibernate.persister.collection.mutation.CollectionAuditSupport;
 import static org.hibernate.action.queue.internal.audit.GraphAuditMutationPlans.CollectionAuditInsertPlan;
 import static org.hibernate.action.queue.internal.audit.GraphAuditMutationPlans.CollectionAuditRowChange;
 import static org.hibernate.action.queue.internal.audit.GraphAuditMutationPlans.CollectionTransactionEndPlan;
-import static org.hibernate.action.queue.internal.audit.GraphAuditMutationPlans.EntityAuditInsertPlan;
-import static org.hibernate.action.queue.internal.audit.GraphAuditMutationPlans.EntityTransactionEndPlan;
 
 /// Transaction-scoped audit mutation collector for the graph action queue.
 ///
@@ -41,15 +39,13 @@ public class GraphAuditMutationCollector {
 
 	public void entityChanged(
 			EntityKey entityKey,
-			Object entity,
-			Object[] values,
 			ModificationType modificationType,
 			EntityAuditSupport mutationSupport) {
-		changeSet.addEntityChange( entityKey, entity, values, modificationType, mutationSupport );
+		changeSet.addEntityChange( entityKey, modificationType, mutationSupport );
 	}
 
 	public void indexedElementChanged(EntityEntry entry, Object entity) {
-		changeSet.addIndexedElementChange( entry, entity, EntityPersister::getEntityAuditSupport );
+		changeSet.addIndexedElementChange( entry, EntityPersister::getEntityAuditSupport );
 	}
 
 	public void collectionChanged(
@@ -81,12 +77,20 @@ public class GraphAuditMutationCollector {
 
 		final List<AuditChangeSet.EntityChange<EntityAuditSupport>> entityChanges = changeSet.entityChanges();
 		final List<AuditChangeSet.CollectionChange<CollectionAuditSupport>> collectionChanges = changeSet.collectionChanges();
-		final List<FlushOperation> operations = new ArrayList<>( entityChanges.size() * 2 + collectionChanges.size() * 4 );
-		createEntityTransactionEndOperations( entityChanges, changesetId, operations );
-		createEntityAuditInsertOperations( entityChanges, changesetId, session, operations );
+		final List<FlushOperation> operations = new ArrayList<>( collectionChanges.size() * 4 );
 		createCollectionAuditOperations( collectionChanges, changesetId, operations );
 
 		try {
+			// Entity audit rows are copied from rows which the database holds,
+			// and the current rows now have their final state for the changeset.
+			for ( var change : entityChanges ) {
+				change.entityAuditHandler().writeModification(
+						change.entityKey().getIdentifier(),
+						change.modificationType(),
+						session
+				);
+			}
+			session.getJdbcCoordinator().executeBatch();
 			if ( !operations.isEmpty() ) {
 				final var executor = PlanStepExecutorFactory.create( session );
 				executor.execute( operations, null, null );
@@ -168,57 +172,6 @@ public class GraphAuditMutationCollector {
 			return listener;
 		}
 		return null;
-	}
-
-	private void createEntityTransactionEndOperations(
-			List<AuditChangeSet.EntityChange<EntityAuditSupport>> changes,
-			Object changesetId,
-			List<FlushOperation> operations) {
-		int ordinal = 0;
-		for ( var change : changes ) {
-			final var mutationSupport = change.entityAuditHandler();
-			for ( var plan : mutationSupport.resolveTransactionEndUpdatePlans() ) {
-				final var graphPlan = new EntityTransactionEndPlan( mutationSupport, plan );
-				final var operation = plan.operation();
-				operations.add( new FlushOperation(
-						operation.tableDescriptor(),
-						MutationKind.UPDATE,
-						operation.operation(),
-						graphPlan.createBindPlan( change, changesetId ),
-						ordinal++,
-						graphPlan.describe( change )
-				) );
-			}
-		}
-	}
-
-	private void createEntityAuditInsertOperations(
-			List<AuditChangeSet.EntityChange<EntityAuditSupport>> changes,
-			Object changesetId,
-			SharedSessionContractImplementor session,
-			List<FlushOperation> operations) {
-		int ordinal = operations.size();
-		for ( var change : changes ) {
-			final EntityAuditSupport mutationSupport = change.entityAuditHandler();
-			final boolean[] propertyInclusions = mutationSupport.resolvePropertyInclusions(
-					change.entity(),
-					change.values(),
-					session
-			);
-			for ( var plan :
-					mutationSupport.resolveAuditInsertPlans( propertyInclusions, change.entity(), session ) ) {
-				final var graphPlan = new EntityAuditInsertPlan( mutationSupport, plan );
-				final var operation = plan.operation();
-				operations.add( new FlushOperation(
-						operation.tableDescriptor(),
-						MutationKind.INSERT,
-						operation.operation(),
-						graphPlan.createBindPlan( change, changesetId ),
-						ordinal++,
-						graphPlan.describe( change )
-				) );
-			}
-		}
 	}
 
 	private void createCollectionAuditOperations(

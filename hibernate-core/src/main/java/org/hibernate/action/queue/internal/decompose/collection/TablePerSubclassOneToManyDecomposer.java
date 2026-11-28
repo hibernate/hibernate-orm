@@ -182,6 +182,7 @@ public class TablePerSubclassOneToManyDecomposer extends AbstractOneToManyDecomp
 						action.getKey(),
 						persister.getRole()
 				);
+				recordRemovedElementRevisions( operations.get( 0 ), action.getKey() );
 				// Attach post-execution callback to the last operation
 				operations.get( operations.size() - 1 ).setPostExecutionCallback( postRemoveHandling );
 				operations.forEach( operationConsumer );

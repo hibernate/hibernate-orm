@@ -16,7 +16,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TransactionCompletionCallbacks;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.mutation.CollectionAuditSupport;
-import org.hibernate.persister.entity.mutation.AuditMutationWriter;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.mutation.EntityAuditSupport;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
@@ -24,10 +25,11 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
  * Transaction-scoped queue for deferred audit row writes.
  * <p>
  * Mutation coordinators enqueue audit entries instead of writing
- * them inline during flush. Entries are keyed by
- * {@link EntityKey}. When the same entity is modified
- * multiple times within a transaction, entries are merged
- * according to the following merge rules:
+ * them inline during flush. An entry holds no entity state, since
+ * an audit row is copied from a row which the database holds.
+ * Entries are keyed by {@link EntityKey}. When the same entity
+ * is modified multiple times within a transaction, entries are
+ * merged according to the following merge rules:
  * <ul>
  *     <li>ADD + MOD -> ADD (with latest state)
  *     <li>ADD + DEL -> entries cancel out (no audit row)
@@ -38,11 +40,11 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
  * All audit rows (INSERT + optional REVEND UPDATE) are written
  * at {@code beforeTransactionCompletion}.
  *
- * @see AuditWriter
+ * @see EntityAuditSupport
  * @since 7.4
  */
 public class AuditWorkQueue implements TransactionCompletionCallbacks.BeforeCompletionCallback {
-	private final AuditChangeSet<AuditWriter, CollectionAuditWriter> changeSet = new AuditChangeSet<>();
+	private final AuditChangeSet<EntityAuditSupport, CollectionAuditWriter> changeSet = new AuditChangeSet<>();
 	private EntityTrackingChangesetListener trackingListener;
 	private Object changelog;
 	private @Nullable Session changesetSession;
@@ -53,26 +55,22 @@ public class AuditWorkQueue implements TransactionCompletionCallbacks.BeforeComp
 	 * for the same entity already exists, the entries are merged.
 	 *
 	 * @param entityKey the entity key (reused from the persistence context)
-	 * @param entity the entity instance (may be null for delete)
-	 * @param values the entity state
 	 * @param modificationType the modification type (ADD/MOD/DEL)
-	 * @param writer callback to perform the actual write
+	 * @param support writes the audit rows of the entity
 	 * @param session the current session
 	 */
 	public void enqueue(
 			EntityKey entityKey,
-			Object entity,
-			Object[] values,
 			ModificationType modificationType,
-			AuditWriter writer,
+			EntityAuditSupport support,
 			SharedSessionContractImplementor session) {
 		registerEntityCallbacks( session );
-		changeSet.addEntityChange( entityKey, entity, values, modificationType, writer );
+		changeSet.addEntityChange( entityKey, modificationType, support );
 	}
 
 	public void indexedElementChanged(EntityEntry entry, Object entity, SharedSessionContractImplementor session) {
 		registerEntityCallbacks( session );
-		changeSet.addIndexedElementChange( entry, entity, persister -> (AuditWriter) persister.getUpdateCoordinator() );
+		changeSet.addIndexedElementChange( entry, EntityPersister::getEntityAuditSupport );
 	}
 
 	private void registerEntityCallbacks(SharedSessionContractImplementor session) {
@@ -111,16 +109,13 @@ public class AuditWorkQueue implements TransactionCompletionCallbacks.BeforeComp
 		// the diff at completion will use original vs final state
 		changeSet.addCollectionChange( collectionPersister, collection, collectionKey, originalSnapshot, writer );
 
-		final var ownerPersister = collectionPersister.getOwnerEntityPersister();
 		final var ownerChange = CollectionAuditSupport.resolveOwnerAuditChange(
 				collectionPersister, collectionKey, collection, session );
 		if ( ownerChange != null ) {
 			if ( trackingListener == null ) {
 				trackingListener = resolveTrackingListener( session );
 			}
-			changeSet.addEntityChange(
-					ownerChange.entityKey(), ownerChange.entity(), ownerChange.values(), ModificationType.MOD,
-					new AuditMutationWriter( ownerPersister, session.getFactory() ) );
+			changeSet.addEntityChange( ownerChange.entityKey(), ModificationType.MOD, ownerChange.ownerMutationSupport() );
 		}
 	}
 
@@ -142,10 +137,8 @@ public class AuditWorkQueue implements TransactionCompletionCallbacks.BeforeComp
 			// Entity audit rows first
 			for ( var entry : changeSet.entityChanges() ) {
 				final var entityKey = entry.entityKey();
-				entry.entityAuditHandler().writeAuditRow(
-						entityKey,
-						entry.entity(),
-						entry.values(),
+				entry.entityAuditHandler().writeModification(
+						entityKey.getIdentifier(),
 						entry.modificationType(),
 						session
 				);

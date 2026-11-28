@@ -5,7 +5,6 @@ import jakarta.annotation.Nullable;
 
 import org.hibernate.Internal;
 import org.hibernate.audit.ModificationType;
-import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -41,20 +40,7 @@ public class DeleteCoordinatorAudit extends AbstractAuditCoordinator implements 
 			@Nullable Object version,
 			@Nonnull SharedSessionContractImplementor session) {
 		final var entity = requireNonNull( instance );
-		final var entityEntry = session.getPersistenceContextInternal().getEntry( entity );
-		final Object[] state;
-		final EntityKey entityKey;
-		if ( entityEntry != null ) {
-			state = entityEntry.getLoadedState();
-			entityKey = entityEntry.getEntityKey();
-		}
-		else {
-			state = entityPersister().getValues( entity );
-			entityKey = new EntityKey( id, entityPersister() );
-		}
-
 		currentDeleteCoordinator.delete( entity, id, version, session );
-
-		enqueueAuditEntry( entityKey, entity, state, ModificationType.DEL, session );
+		recordModification( entity, id, ModificationType.DEL, session );
 	}
 }

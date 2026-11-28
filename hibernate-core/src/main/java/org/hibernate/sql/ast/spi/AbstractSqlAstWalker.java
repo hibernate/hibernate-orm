@@ -82,6 +82,7 @@ import org.hibernate.sql.ast.spi.model.OptionalTableUpdate;
 import org.hibernate.sql.ast.spi.model.TableDeleteCustomSql;
 import org.hibernate.sql.ast.spi.model.TableDeleteStandard;
 import org.hibernate.sql.ast.spi.model.TableInsertCustomSql;
+import org.hibernate.sql.ast.spi.model.TableInsertSelect;
 import org.hibernate.sql.ast.spi.model.TableInsertStandard;
 import org.hibernate.sql.ast.spi.model.TableUpdateCustomSql;
 import org.hibernate.sql.ast.spi.model.TableUpdateStandard;
@@ -593,6 +594,21 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 	@Override
 	public void visitCustomTableInsert(TableInsertCustomSql tableInsert) {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitTableInsertSelect(TableInsertSelect tableInsert) {
+		tableInsert.getMutatingTable().accept( this );
+
+		tableInsert.forEachValueBinding( (integer, columnValueBinding) -> {
+			columnValueBinding.getColumnReference().accept( this );
+			columnValueBinding.getValueExpression().accept( this );
+		} );
+
+		for ( var restriction : tableInsert.getKeyRestrictions() ) {
+			restriction.getColumnReference().accept( this );
+			restriction.getValueExpression().accept( this );
+		}
 	}
 
 	@Override

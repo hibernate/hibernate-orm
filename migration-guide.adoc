@@ -66,6 +66,17 @@ Custom implementations of `PersistenceContext` must implement `registerUpdatedTe
 Record the entity key when an update inserts a replacement revision, keep it across flushes and `Session.clear()`, and discard it at transaction completion.
 This lets a second flush update the revision already created by the transaction.
 
+[[history-table-revision-copy-spi]]
+=== Copying rows to a history table or audit log
+
+Custom implementations of `SqlAstWalker` must implement `visitTableInsertSelect(TableInsertSelect)`, which visits an insert copying a row from another table.
+Custom implementations of `SharedSessionContractImplementor` must implement `getHistoryWorkQueue()`.
+
+An audit row of an entity is no longer written from the state of an entity instance, so the contracts which carried that state have changed.
+`AuditWriter` has been removed.
+`AuditWorkQueue.enqueue()` and `ActionQueue.addAuditEntry()` no longer accept an entity instance, its state, or a writer, and an entity change in an `AuditChangeSet` no longer holds them.
+`AuditMapping.getCollectionIndexColumns()` has been removed, and `AuxiliaryMapping.getCopiedColumns()` lists the columns copied to an audit log or history table.
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Changes in Behavior
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -146,6 +157,27 @@ With the `HISTORY_TABLE` temporal strategy, each concrete entity class in a `TAB
 The table name defaults to the name of the corresponding current table with the suffix `_history` and can be set using `@Temporal.HistoryTable` on that class.
 If a database already contains subclass revisions in the root history table, move those revisions to the corresponding subclass history tables before upgrading.
 The old history table does not store a discriminator, so identifying the concrete type of those revisions may require application data.
+
+[[history-table-revision-copy]]
+=== Revisions of an entity in a history table
+
+With the `HISTORY_TABLE` temporal strategy, a revision of an entity is now written when the transaction completes, as a copy of the row of the table holding current data.
+A flush writes only the table holding current data, so a query which reads the history table does not see the changes made earlier in the same transaction.
+The statement which ends a revision no longer checks the version of the revision, since the version of the current row was already checked when that row was written.
+Outside of a transaction, a revision is written immediately after its current row.
+A revision of an entity which is an element of a `@OneToMany` association now holds the join column and order column written by the association, which were previously null, and the entity is given a new revision whenever the association writes those columns.
+If the association is annotated `@Temporal.Excluded`, the columns are instead updated in the open revision of the entity.
+An association which writes the row of a versioned entity must be so annotated, since a version of an entity has one revision; otherwise the mapping is rejected when the session factory is built.
+Sessions which share a transaction now share its changeset identifier.
+
+[[audit-row-copy]]
+=== Audit rows of an entity
+
+An audit row which records the creation or modification of an entity is now a copy of the row of the table holding current data.
+The audit row which records the removal of an entity is now a copy of its previous audit row.
+It holds the state which the previous changeset left the entity with, even when the instance passed to a stateless session holds different state, or the transaction which removes the entity first updates it.
+It holds the position of the entity in an audited `@OneToMany` list or map, which was previously null.
+With the default audit strategy, no audit row records the removal of an entity which has no audit row, for example, an entity created before it was audited.
 
 [[on-delete-on-entity-class]]
 === `@OnDelete` on an entity class which is not a `JOINED` subclass

@@ -26,7 +26,6 @@ import org.hibernate.action.queue.internal.plan.FlushPlan;
 import org.hibernate.action.queue.internal.support.GraphBasedActionQueueFactory;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.audit.ModificationType;
-import org.hibernate.audit.spi.AuditWriter;
 import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
 import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.engine.spi.EntityEntry;
@@ -486,6 +485,11 @@ public class GraphBasedActionQueue implements ActionQueue {
 
 		// Execute any pending JDBC batch
 		session.getJdbcCoordinator().executeBatch();
+
+		if ( !session.isTransactionInProgress() ) {
+			// With no changeset to wait for, revisions are written as soon as the current rows are.
+			session.getHistoryWorkQueue().currentRowsWritten( session );
+		}
 	}
 
 	private void executeFlushAndPrepareForTransactionCompletion() {
@@ -1029,18 +1033,11 @@ public class GraphBasedActionQueue implements ActionQueue {
 	}
 
 	@Override
-	public void addAuditEntry(
-			EntityKey entityKey,
-			Object entity,
-			Object[] values,
-			ModificationType modificationType,
-			AuditWriter writer) {
+	public void addAuditEntry(EntityKey entityKey, ModificationType modificationType) {
 		// The audit rows of this queue are written from the changes it collects,
 		// which the entry of an immediately executed insert must be merged with.
 		auditMutationCollector.entityChanged(
 				entityKey,
-				entity,
-				values,
 				modificationType,
 				entityKey.getPersister().getEntityAuditSupport()
 		);

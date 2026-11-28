@@ -39,7 +39,7 @@ public class MergeCoordinatorAudit extends UpdateCoordinatorAudit {
 			@Nullable int[] dirtyAttributeIndexes,
 			boolean hasDirtyCollection,
 			@Nonnull SharedSessionContractImplementor session) {
-		final boolean shouldAudit = shouldAuditUpdate( dirtyAttributeIndexes, hasDirtyCollection );
+		final boolean shouldAudit = auditSupport.isAuditedUpdate( dirtyAttributeIndexes, hasDirtyCollection );
 		final boolean entityExists = shouldAudit && entityPersister().getDatabaseSnapshot( id, session ) != null;
 		final var generatedValues = currentUpdateCoordinator.update(
 				entity,
@@ -53,13 +53,7 @@ public class MergeCoordinatorAudit extends UpdateCoordinatorAudit {
 				session
 		);
 		if ( shouldAudit ) {
-			enqueueAuditEntry(
-					resolveEntityKey( entity, id, session ),
-					entity,
-					values,
-					entityExists ? ModificationType.MOD : ModificationType.ADD,
-					session
-			);
+			recordModification( entity, id, entityExists ? ModificationType.MOD : ModificationType.ADD, session );
 		}
 		return generatedValues;
 	}

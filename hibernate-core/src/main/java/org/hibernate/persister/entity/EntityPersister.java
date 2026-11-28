@@ -47,6 +47,7 @@ import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
 import org.hibernate.persister.entity.mutation.EntityAuditSupport;
+import org.hibernate.persister.entity.mutation.HistoryRevisionWriter;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.persister.entity.mutation.InsertCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
@@ -787,6 +788,15 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	@Nullable
 	default EntityAuditSupport getEntityAuditSupport() {
 		return getAuditMapping() == null ? null : new EntityAuditSupport( this, getFactory() );
+	}
+
+	/// The writer of revisions of this entity, if its revisions are held in a
+	/// separate history table.
+	@Nullable
+	default HistoryRevisionWriter getHistoryRevisionWriter() {
+		final var temporalMapping = getTemporalMapping();
+		return temporalMapping == null || temporalMapping.getCopiedColumns( getIdentifierTableName() ).isEmpty() ? null
+				: new HistoryRevisionWriter( this, getFactory() );
 	}
 
 	/**

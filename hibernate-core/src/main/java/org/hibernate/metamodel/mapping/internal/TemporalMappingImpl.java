@@ -11,6 +11,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Stateful;
+import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.LegacyAuxiliaryMutationSupport;
@@ -65,6 +66,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 	private final String tableName;
 	/// The history table expression for each table expression, when each class has its own history table.
 	private final Map<String, String> historyTables;
+	private final List<String> currentTableColumns;
 	private final SelectableMapping startingColumnMapping;
 	private final SelectableMapping endingColumnMapping;
 	private final JdbcMapping jdbcMapping;
@@ -81,6 +83,17 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 
 	public TemporalMappingImpl(
 			Stateful bootMapping,
+			String tableName,
+			Map<String, String> historyTables,
+			MappingModelCreationProcess creationProcess) {
+		this( bootMapping, bootMapping.getMainTable(), bootMapping.getAuxiliaryTable(),
+				tableName, historyTables, creationProcess );
+	}
+
+	private TemporalMappingImpl(
+			Stateful bootMapping,
+			@Nullable Table currentTable,
+			@Nullable Table historyTable,
 			String tableName,
 			Map<String, String> historyTables,
 			MappingModelCreationProcess creationProcess) {
@@ -109,6 +122,14 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 		endingColumnMapping = endingColumnMapping( tableName, endingColumn, creationContext );
 
 		final var dialect = creationContext.getDialect();
+		// A separate history table has every column of the table holding current data.
+		// A column computed by the database is computed again in the history table.
+		currentTableColumns = currentTable != null && historyTable != null && currentTable != historyTable
+				? currentTable.getColumns().stream()
+						.filter( column -> column.getGeneratedAs() == null )
+						.map( column -> column.getQuotedName( dialect ) )
+						.toList()
+				: List.of();
 		if ( creationContext.getSessionFactory()
 				.getChangesetCoordinator()
 				.useServerTimestamp( dialect ) ) {
@@ -182,7 +203,14 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 			@Nonnull MappingModelCreationProcess creationProcess) {
 		final String historyTable = historyTables.get( subclassPersister.getIdentifierTableName() );
 		return historyTable == null ? this
-				: new TemporalMappingImpl( subclass.getRootClass(), historyTable, historyTables, creationProcess );
+				: new TemporalMappingImpl( subclass.getRootClass(), subclass.getIdentityTable(),
+						subclass.getAuxiliaryTable(), historyTable, historyTables, creationProcess );
+	}
+
+	@Nonnull
+	@Override
+	public List<String> getCopiedColumns(@Nonnull String originalTableName) {
+		return currentTableColumns;
 	}
 
 	@Nonnull

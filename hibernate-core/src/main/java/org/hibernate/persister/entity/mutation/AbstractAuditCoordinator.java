@@ -3,218 +3,68 @@ package org.hibernate.persister.entity.mutation;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
-import java.sql.SQLException;
-
 import org.hibernate.Internal;
 import org.hibernate.audit.ModificationType;
-import org.hibernate.audit.spi.AuditWriter;
-import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
-import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
-import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.model.MutationOperationGroup;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
- * Base support for audit log insert coordinators.
+ * Base support for the mutation coordinators of audited entities.
  * <p>
- * Supports all inheritance strategies: for SINGLE_TABLE / TABLE_PER_CLASS
- * there is one audit table; for JOINED there is one per entity table.
- * The static operation group is cached for reuse.
+ * A coordinator writes the tables holding current data, and records
+ * the modification of the entity. The audit log tables are written by
+ * the {@link EntityAuditSupport} of the entity.
  */
 @Internal
-abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator implements AuditWriter {
-	protected final BasicBatchKey auditBatchKey;
-	private final BasicBatchKey transactionEndBatchKey;
-	protected final boolean[] auditedPropertyMask;
-	@Nullable
-	private final MutationOperationGroup staticAuditInsertGroup;
-	@Nullable
-	private final MutationOperationGroup transactionEndUpdateGroup;
-	private final EntityAuditSupport entityAuditSupport;
+abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator {
+	protected final EntityAuditSupport auditSupport;
 
 	protected AbstractAuditCoordinator(@Nonnull EntityPersister entityPersister, @Nonnull SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
-		this.entityAuditSupport = entityPersister.getEntityAuditSupport();
-		this.auditedPropertyMask = entityAuditSupport.getAuditedPropertyMask();
-		this.auditBatchKey = new BasicBatchKey( entityPersister.getEntityName() + "#AUDIT_INSERT" );
-		this.transactionEndBatchKey = new BasicBatchKey( entityPersister.getEntityName() + "#AUDIT_TRANSACTION_END" );
-		final var staticAuditInsertMutationGroup = entityAuditSupport.getStaticAuditInsertMutationGroup();
-		this.staticAuditInsertGroup = staticAuditInsertMutationGroup == null
-				? null
-				: createOperationGroup( null, staticAuditInsertMutationGroup );
-		this.transactionEndUpdateGroup = entityAuditSupport.getTransactionEndUpdateMutationGroup() == null
-				? null
-				: createOperationGroup( null, entityAuditSupport.getTransactionEndUpdateMutationGroup() );
-	}
-
-	/**
-	 * Enqueue an audit entry for deferred writing at transaction completion.
-	 */
-	protected void enqueueAuditEntry(
-			@Nonnull EntityKey entityKey,
-			@Nonnull Object entity,
-			@Nonnull Object[] values,
-			@Nonnull ModificationType modificationType,
-			@Nonnull SharedSessionContractImplementor session) {
-		if ( session.isEventSource() ) {
-			// the action queue of a stateful session decides where its audit entries are collected
-			session.asEventSource().getActionQueue()
-					.addAuditEntry( entityKey, entity, values, modificationType, this );
-		}
-		else {
-			session.getAuditWorkQueue().enqueue(
-					entityKey,
-					entity,
-					values,
-					modificationType,
-					this,
-					session
-			);
-		}
-	}
-
-	@Nonnull
-	protected EntityKey resolveEntityKey(@Nonnull Object entity, @Nonnull Object id, @Nonnull SharedSessionContractImplementor session) {
-		final var entityEntry = session.getPersistenceContextInternal().getEntry( entity );
-		return entityEntry != null
-				? entityEntry.getEntityKey()
-				: new EntityKey( id, entityPersister() );
-	}
-
-	/**
-	 * Write an audit row, called by {@link org.hibernate.audit.spi.AuditWorkQueue}
-	 * at transaction completion.
-	 */
-	@Override
-	public void writeAuditRow(
-			@Nonnull EntityKey entityKey,
-			@Nonnull Object entity,
-			@Nonnull Object[] values,
-			@Nonnull ModificationType modificationType,
-			@Nonnull SharedSessionContractImplementor session) {
-		final var id = entityKey.getIdentifier();
-		updatePreviousTransactionEnd( id, modificationType, session );
-
-		final boolean dynamicInsert = entityPersister().isDynamicInsert();
-		final boolean[] propertyInclusions = entityAuditSupport.resolvePropertyInclusions( entity, values, session );
-		final var mutationGroup = dynamicInsert
-				? entityAuditSupport.resolveAuditInsertMutationGroup( propertyInclusions, entity, session )
-				: null;
-		final MutationOperationGroup operationGroup = dynamicInsert
-				? mutationGroup == null ? null : createOperationGroup( null, mutationGroup )
-				: staticAuditInsertGroup;
-		if ( operationGroup == null ) {
-			return;
-		}
-
-		final var mutationExecutor = mutationExecutorService.createExecutor(
-				resolveBatchKeyAccess( dynamicInsert, session ),
-				operationGroup,
-				session
-		);
-		try {
-			bindAuditValues(
-					id,
-					values,
-					propertyInclusions,
-					modificationType,
-					session,
-					mutationExecutor.getJdbcValueBindings()
-			);
-			mutationExecutor.execute( entity, null, null, AbstractAuditCoordinator::verifyOutcome, session );
-		}
-		finally {
-			mutationExecutor.release();
-		}
+		this.auditSupport = castNonNull( entityPersister.getEntityAuditSupport() );
 	}
 
 	@Nullable
 	@Override
 	protected BatchKey getBatchKey() {
-		return auditBatchKey;
-	}
-
-	private void bindAuditValues(
-			@Nonnull Object id,
-			@Nonnull Object[] values,
-			@Nonnull boolean[] propertyInclusions,
-			@Nonnull ModificationType modificationType,
-			@Nonnull SharedSessionContractImplementor session,
-			@Nonnull JdbcValueBindings jdbcValueBindings) {
-		for ( int tableIndex = 0; tableIndex < entityPersister().getTableMappings().length; tableIndex++ ) {
-			entityAuditSupport.bindAuditInsertValues(
-					tableIndex,
-					id,
-					values,
-					propertyInclusions,
-					modificationType,
-					session,
-					jdbcValueBindings
-			);
-		}
+		return null;
 	}
 
 	/**
-	 * Update the previous audit row's transaction end column for the validity strategy.
-	 * Sets {@code REVEND = :currentTxId} on the row with
-	 * {@code REVEND IS NULL} for the given entity ID.
-	 * <p>
-	 * Called before the new audit row INSERT, so the just-inserted row
-	 * does not exist yet and there's no risk of self-update.
-	 *
-	 * @param id the entity identifier
-	 * @param modificationType the modification type of the new audit row
-	 * @param session the current session
+	 * Record a modification of the entity, to be written to the audit
+	 * log when the transaction completes.
 	 */
-	private void updatePreviousTransactionEnd(
+	protected void recordModification(
+			@Nonnull Object entity,
 			@Nonnull Object id,
 			@Nonnull ModificationType modificationType,
 			@Nonnull SharedSessionContractImplementor session) {
-		if ( transactionEndUpdateGroup == null ) {
-			return;
+		recordModification( resolveEntityKey( entity, id, session ), modificationType, session );
+	}
+
+	protected void recordModification(
+			@Nonnull EntityKey entityKey,
+			@Nonnull ModificationType modificationType,
+			@Nonnull SharedSessionContractImplementor session) {
+		if ( session.isEventSource() ) {
+			// the action queue of a stateful session decides where its audit entries are collected
+			session.asEventSource().getActionQueue().addAuditEntry( entityKey, modificationType );
 		}
-		final var mutationExecutor = mutationExecutorService.createExecutor(
-				() -> transactionEndBatchKey,
-				transactionEndUpdateGroup,
-				session
-		);
-		try {
-			final var jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
-			for ( int tableIndex = 0; tableIndex < entityPersister().getTableMappings().length; tableIndex++ ) {
-				entityAuditSupport.bindTransactionEndValues( tableIndex, id, session, jdbcValueBindings );
-			}
-			final String entityName = entityPersister().getEntityName();
-			mutationExecutor.execute(
-					null, null, null,
-					(statementDetails, affectedRowCount, batchPosition) ->
-							EntityAuditSupport.verifyTransactionEndOutcome(
-									affectedRowCount,
-									modificationType,
-									entityName,
-									id
-							),
-					session
-			);
-		}
-		finally {
-			mutationExecutor.release();
+		else {
+			session.getAuditWorkQueue().enqueue( entityKey, modificationType, auditSupport, session );
 		}
 	}
 
-	private static boolean verifyOutcome(
-			@Nonnull PreparedStatementDetails statementDetails,
-			int affectedRowCount,
-			int batchPosition) throws SQLException {
-		statementDetails.getExpectation().verifyOutcome(
-				affectedRowCount,
-				statementDetails.getStatement(),
-				batchPosition,
-				statementDetails.getSqlString()
-		);
-		return true;
+	@Nonnull
+	private EntityKey resolveEntityKey(@Nonnull Object entity, @Nonnull Object id, @Nonnull SharedSessionContractImplementor session) {
+		final var entityEntry = session.getPersistenceContextInternal().getEntry( entity );
+		return entityEntry != null
+				? entityEntry.getEntityKey()
+				: new EntityKey( id, entityPersister() );
 	}
 }

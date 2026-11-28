@@ -9,7 +9,6 @@ import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
 import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.validation.Schema;
 
@@ -39,8 +38,6 @@ public class XmlParserHelper {
 	 * initial cache size.
 	 */
 	private static final int NUMBER_OF_SCHEMAS = 4;
-
-	private static final XMLInputFactory XML_INPUT_FACTORY = XMLInputFactory.newInstance();
 
 	private static final ConcurrentMap<String, Schema> SCHEMA_CACHE = new ConcurrentHashMap<>(
 			NUMBER_OF_SCHEMAS
@@ -138,9 +135,9 @@ public class XmlParserHelper {
 		}
 	}
 
-	private synchronized XMLEventReader createXmlEventReader(InputStream xmlStream) throws XMLStreamException {
-		XmlFactoryUtil.configureXmlFactory( XML_INPUT_FACTORY, context.allowDtdAndExternalEntities() );
-		return XML_INPUT_FACTORY.createXMLEventReader( xmlStream );
+	private XMLEventReader createXmlEventReader(InputStream xmlStream) throws XMLStreamException {
+		final var xmlInputFactory = XmlFactoryUtil.newXmlInputFactory( context.allowDtdAndExternalEntities() );
+		return xmlInputFactory.createXMLEventReader( xmlStream );
 	}
 
 	private String getPackage(String resourceName) {

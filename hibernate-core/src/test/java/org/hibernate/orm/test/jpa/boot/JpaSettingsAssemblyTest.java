@@ -3,6 +3,7 @@ package org.hibernate.orm.test.jpa.boot;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl;
@@ -45,12 +46,16 @@ import static org.hibernate.cfg.AvailableSettings.JPA_JDBC_URL;
 import static org.hibernate.cfg.AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.URL;
 import static org.hibernate.cfg.AvailableSettings.USER;
+import static org.hibernate.cfg.MappingSettings.XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES;
 
 /// Characterizes JPA source precedence independently of registry alias normalization.
 ///
 /// @author Steve Ebersole
 @BaseUnitTest
 class JpaSettingsAssemblyTest {
+	private static final String DTD_ENTITY_CFG_XML = "org/hibernate/orm/test/boot/cfgXml/dtd-entity.cfg.xml";
+	private static final String DTD_ENTITY_PROPERTY = "hibernate.test.entity.property";
+
 	@Test
 	void integrationOverridesAreCopiedAndAppliedAfterSpecializedResolution() {
 		final var configuration = configuration( false )
@@ -195,6 +200,52 @@ class JpaSettingsAssemblyTest {
 		assertThatThrownBy( () -> builder( configuration( false ).property( CLASS_CACHE_PREFIX + ".Entity", "" ) ) )
 				.isInstanceOf( PersistenceException.class ).hasMessageContaining( "Cache region configuration" )
 				.hasMessageContaining( "[persistence unit: assembly]" );
+	}
+
+	@ParameterizedTest
+	@ValueSource(booleans = { false, true })
+	void selectedHibernateXmlRejectsDtdAndExternalEntitiesByDefault(boolean hibernateConfiguration) {
+		final var configuration = configuration( hibernateConfiguration ).property( CFG_XML_FILE, DTD_ENTITY_CFG_XML );
+		assertThatThrownBy( () -> builder( configuration ) ).isInstanceOf( HibernateException.class );
+	}
+
+	@ParameterizedTest
+	@ValueSource(booleans = { false, true })
+	void unitPropertyAllowsDtdAndExternalEntitiesInSelectedHibernateXml(boolean hibernateConfiguration) {
+		final var configuration = configuration( hibernateConfiguration )
+				.property( XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES, "true" )
+				.property( CFG_XML_FILE, DTD_ENTITY_CFG_XML );
+		final var builder = builder( configuration );
+		try {
+			assertThat( builder.getConfigurationValues() ).containsEntry( DTD_ENTITY_PROPERTY, "resolved" );
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( builder.getStandardServiceRegistry() );
+		}
+	}
+
+	@Test
+	void integrationSettingAllowsDtdAndExternalEntitiesInSelectedHibernateXml() {
+		final var builder = new EntityManagerFactoryBuilderImpl(
+				new PersistenceConfigurationDescriptor( configuration( false ) ),
+				Map.of( CFG_XML_FILE, DTD_ENTITY_CFG_XML, XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES, true ) );
+		try {
+			assertThat( builder.getConfigurationValues() ).containsEntry( DTD_ENTITY_PROPERTY, "resolved" );
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( builder.getStandardServiceRegistry() );
+		}
+	}
+
+	@Test
+	void integrationSettingOverridesUnitPropertyForSelectedHibernateXml() {
+		final var configuration = configuration( false )
+				.property( XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES, "true" )
+				.property( CFG_XML_FILE, DTD_ENTITY_CFG_XML );
+		assertThatThrownBy( () -> new EntityManagerFactoryBuilderImpl(
+				new PersistenceConfigurationDescriptor( configuration ),
+				Map.of( XML_ALLOW_DTD_AND_EXTERNAL_ENTITIES, false ) ) )
+				.isInstanceOf( HibernateException.class );
 	}
 
 	private static PersistenceConfiguration configuration(boolean hibernateConfiguration) {

@@ -643,7 +643,16 @@ public class NativeQueryImpl<R>
 	@Nonnull
 	public <X> NativeQueryImplementor<X> asSelectionQuery(@Nonnull Class<X> type) {
 		errorIfNotSelectForSure();
-		checkResultType( type, resultSetMapping() );
+		final var mapping = resultSetMapping();
+		// A type cast does not add an entity mapping to implicit JDBC results.
+		if ( mapping.getNumberOfResultBuilders() == 0
+				&& getMappingMetamodel().isEntityClass( type )
+				&& queryOptions.getTupleTransformer() == null
+				&& queryOptions.getResultListTransformer() == null ) {
+			throw new IllegalArgumentException( "Native query has no result set mapping for entity '"
+					+ type.getName() + "'" );
+		}
+		checkResultType( type, mapping );
 		//noinspection unchecked
 		return (NativeQueryImplementor<X>) this;
 	}

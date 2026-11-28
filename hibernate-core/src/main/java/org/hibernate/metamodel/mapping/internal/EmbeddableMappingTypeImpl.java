@@ -203,16 +203,11 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 		final var aggregateColumn = bootDescriptor.getAggregateColumn();
 		if ( aggregateColumn != null ) {
-			final boolean insertable;
-			final boolean updatable;
-			if ( componentProperty == null ) {
-				insertable = true;
-				updatable = true;
-			}
-			else {
-				insertable = componentProperty.isInsertable();
-				updatable = componentProperty.isUpdatable();
-			}
+			final var aggregateValue = aggregateColumn.getValue();
+			final boolean insertable = aggregateValue.isColumnInsertable( 0 )
+					&& ( componentProperty == null || componentProperty.isInsertable() );
+			final boolean updatable = aggregateValue.isColumnUpdateable( 0 )
+					&& ( componentProperty == null || componentProperty.isUpdatable() );
 			this.aggregateMapping = SelectableMappingImpl.from(
 					bootDescriptor.getOwner().getTable()
 							.getQualifiedName( creationContext.getSqlStringGenerationContext() ),
@@ -1092,38 +1087,46 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 	@Override
 	public void forEachInsertable(int offset, @Nonnull SelectableConsumer consumer) {
-		if ( shouldMutateAggregateMapping() ) {
-			if ( castNonNull( aggregateMapping ).isInsertable() ) {
-				consumer.accept( offset, castNonNull( aggregateMapping ) );
+		forEachMutationSelectable( this, offset, (index, selectable) -> {
+			if ( selectable.isInsertable() && !selectable.isFormula() ) {
+				consumer.accept( index, selectable );
 			}
-		}
-		else {
-			final int jdbcTypeCount = selectableMappings.getJdbcTypeCount();
-			for ( int i = 0; i < jdbcTypeCount; i++ ) {
-				final SelectableMapping selectable = selectableMappings.getSelectable( i );
-				if ( selectable.isInsertable() ) {
-					consumer.accept( offset + i, selectable );
-				}
-			}
-		}
+		} );
 	}
 
 	@Override
 	public void forEachUpdatable(int offset, @Nonnull SelectableConsumer consumer) {
-		if ( shouldMutateAggregateMapping() ) {
-			if ( castNonNull( aggregateMapping ).isUpdateable() ) {
-				consumer.accept( offset, castNonNull( aggregateMapping ) );
+		forEachMutationSelectable( this, offset, (index, selectable) -> {
+			if ( selectable.isUpdateable() && !selectable.isFormula() ) {
+				consumer.accept( index, selectable );
+			}
+		} );
+	}
+
+	private static int forEachMutationSelectable(
+			EmbeddableMappingType mappingType,
+			int offset,
+			SelectableConsumer consumer) {
+		if ( mappingType.shouldMutateAggregateMapping() ) {
+			consumer.accept( offset, castNonNull( mappingType.getAggregateMapping() ) );
+			return 1;
+		}
+		int span = 0;
+		for ( int i = 0; i < mappingType.getNumberOfAttributeMappings(); i++ ) {
+			final var attributeMapping = mappingType.getAttributeMapping( i );
+			if ( attributeMapping instanceof EmbeddableValuedModelPart embeddedAttribute ) {
+				span += forEachMutationSelectable(
+						embeddedAttribute.getEmbeddableTypeDescriptor(), offset + span, consumer );
+			}
+			else {
+				span += attributeMapping.forEachSelectable( offset + span, consumer );
 			}
 		}
-		else {
-			final int jdbcTypeCount = selectableMappings.getJdbcTypeCount();
-			for ( int i = 0; i < jdbcTypeCount; i++ ) {
-				final var selectable = selectableMappings.getSelectable( i );
-				if ( selectable.isUpdateable() ) {
-					consumer.accept( offset + i, selectable );
-				}
-			}
+		final var discriminator = mappingType.getDiscriminatorMapping();
+		if ( discriminator != null ) {
+			span += discriminator.forEachSelectable( offset + span, consumer );
 		}
+		return span;
 	}
 
 	@Nullable

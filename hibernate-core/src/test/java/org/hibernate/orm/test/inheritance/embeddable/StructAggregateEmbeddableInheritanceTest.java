@@ -23,6 +23,8 @@ import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -111,6 +113,23 @@ public class StructAggregateEmbeddableInheritanceTest implements AdditionalMappi
 			assertThat( result.getParentProp() ).isEqualTo( "embeddable_2" );
 			assertThat( result ).isExactlyInstanceOf( ChildTwoEmbeddable.class );
 			assertThat( ( (ChildTwoEmbeddable) result ).getChildTwoProp() ).isEqualTo( 2L );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-21270")
+	@RequiresDialect(PostgreSQLDialect.class)
+	public void testUpdateAggregateParameter(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.persist( new TestEntity( 100L, new ParentEmbeddable( "Before" ) ) ) );
+		scope.inTransaction( session -> assertThat( session.createMutationQuery(
+				"update TestEntity t set t.embeddable=:value where t.id=100" )
+				.setParameter( "value", new ChildOneEmbeddable( "After", 123 ) ).executeUpdate() ).isEqualTo( 1 ) );
+		scope.inTransaction( session -> {
+			final var entity = session.find( TestEntity.class, 100L );
+			assertThat( entity.getEmbeddable() ).isExactlyInstanceOf( ChildOneEmbeddable.class );
+			assertThat( entity.getEmbeddable().getParentProp() ).isEqualTo( "After" );
+			assertThat( ( (ChildOneEmbeddable) entity.getEmbeddable() ).getChildOneProp() ).isEqualTo( 123 );
+			session.remove( entity );
 		} );
 	}
 

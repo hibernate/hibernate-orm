@@ -37,6 +37,16 @@ public abstract class AbstractPostgreSQLJsonPGObjectType extends JsonJdbcType {
 	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
 		return new BasicBinder<>( javaType, this ) {
 			@Override
+			protected void doBindNull(PreparedStatement st, int index, WrapperOptions options) throws SQLException {
+				st.setNull( index, SqlTypes.OTHER, jsonb ? "jsonb" : "json" );
+			}
+
+			@Override
+			protected void doBindNull(CallableStatement st, String name, WrapperOptions options) throws SQLException {
+				st.setNull( name, SqlTypes.OTHER, jsonb ? "jsonb" : "json" );
+			}
+
+			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
 				final String stringValue = ( (AbstractPostgreSQLJsonPGObjectType) getJdbcType() ).toString(

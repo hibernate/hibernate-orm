@@ -95,6 +95,7 @@ import org.hibernate.type.NullType;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
+import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.internal.BindingTypeHelper;
@@ -793,7 +794,19 @@ public class SqmUtil {
 	private static Bindable parameterTypeForOccurrence(Bindable parameterType, JdbcParametersList jdbcParams) {
 		// A single SQM parameter can supply the foreign key in SET and the identifier in WHERE.
 		final var entityMapping = jdbcParams.size() == 0 ? null : jdbcParams.get( 0 ).getEntityMapping();
-		return entityMapping == null ? parameterType : entityMapping;
+		if ( entityMapping != null ) {
+			return entityMapping;
+		}
+		if ( jdbcParams.size() == 1 ) {
+			final var jdbcMapping = jdbcParams.get( 0 ).getExpressionType().getSingleJdbcMapping();
+			if ( jdbcMapping.getJdbcType() instanceof AggregateJdbcType aggregateJdbcType
+					&& aggregateJdbcType.getEmbeddableMappingType() != null
+					&& jdbcMapping instanceof Bindable bindable ) {
+				// The same domain parameter may also occur as an ordinary, flattened embeddable.
+				return bindable;
+			}
+		}
+		return parameterType;
 	}
 
 	private static void createValueBindings(

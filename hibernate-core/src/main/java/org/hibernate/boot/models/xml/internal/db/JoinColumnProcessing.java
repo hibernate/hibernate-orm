@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.JoinColumnOrFormula;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbForeignKeyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPrimaryKeyJoinColumnImpl;
@@ -200,18 +201,33 @@ public class JoinColumnProcessing {
 
 	public static void applyMapKeyJoinColumns(
 			List<JaxbMapKeyJoinColumnImpl> jaxbJoinColumns,
+			JaxbForeignKeyImpl jaxbMapKeyForeignKey,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbJoinColumns ) ) {
+		if ( CollectionHelper.isEmpty( jaxbJoinColumns ) && jaxbMapKeyForeignKey == null ) {
 			return;
 		}
 
+		final var modelsContext = xmlDocumentContext.getModelBuildingContext();
+		// A <map-key-foreign-key/> without <map-key-join-column/> only supplements the mapping:
+		// keep the join columns already declared (in override mode, by annotations)
+		final MapKeyJoinColumn[] joinColumns = CollectionHelper.isEmpty( jaxbJoinColumns )
+				? memberDetails.getRepeatedAnnotationUsages( JpaAnnotations.MAP_KEY_JOIN_COLUMN, modelsContext )
+				: transformMapKeyJoinColumns( jaxbJoinColumns, xmlDocumentContext );
+
+		// There is no @MapKeyForeignKey, the foreign key is carried by @MapKeyJoinColumns#foreignKey
 		final MapKeyJoinColumnsJpaAnnotation joinColumnsUsage = (MapKeyJoinColumnsJpaAnnotation) memberDetails.replaceAnnotationUsage(
 				JpaAnnotations.MAP_KEY_JOIN_COLUMN,
 				JpaAnnotations.MAP_KEY_JOIN_COLUMNS,
-				xmlDocumentContext.getModelBuildingContext()
+				modelsContext
 		);
-		joinColumnsUsage.value( transformMapKeyJoinColumns( jaxbJoinColumns, xmlDocumentContext ) );
+		joinColumnsUsage.value( joinColumns );
+		if ( jaxbMapKeyForeignKey != null ) {
+			joinColumnsUsage.foreignKey( ForeignKeyProcessing.createNestedForeignKeyAnnotation(
+					jaxbMapKeyForeignKey,
+					xmlDocumentContext
+			) );
+		}
 	}
 
 	private static final MapKeyJoinColumn[] NO_KEY_JOIN_COLUMNS = new MapKeyJoinColumn[0];

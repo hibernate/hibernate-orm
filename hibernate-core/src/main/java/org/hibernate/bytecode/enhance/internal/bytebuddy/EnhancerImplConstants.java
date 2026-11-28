@@ -30,6 +30,7 @@ import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInter
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.accessor.ValueReader;
 import org.hibernate.accessor.ValueWriter;
+import org.hibernate.bytecode.spi.Generated;
 import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.engine.spi.CompositeTracker;
 import org.hibernate.engine.spi.EntityEntry;
@@ -78,6 +79,8 @@ public final class EnhancerImplConstants {
 	//Frequently used annotations, declared as collections as otherwise they get wrapped into them over and over again:
 	final Collection<? extends AnnotationDescription> TRANSIENT_ANNOTATION = List.of(
 			AnnotationDescription.Builder.ofType( Transient.class ).build() );
+	final Collection<? extends AnnotationDescription> GENERATED_ANNOTATION = List.of(
+			AnnotationDescription.Builder.ofType( Generated.class ).build() );
 
 	//Frequently used Types for method signatures:
 	final TypeDefinition TypeVoid = TypeDescription.ForLoadedType.of( void.class );

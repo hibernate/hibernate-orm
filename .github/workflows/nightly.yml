@@ -70,6 +70,10 @@ jobs:
           { "name": "JDK", "java-test-version": "28",
             "java-test-from": "jdk.java.net",
             "java-launcher-args": "--enable-preview --illegal-final-field-mutation=deny -Dnet.bytebuddy.experimental=true",
-            "gradle-args": "-PskipJacoco=true" }
+            "gradle-args": "-PskipJacoco=true" },
+          { "name": "Semeru", "java-test-version": "17", "java-test-distribution": "semeru",
+            "runs-on": "runs-on/fleet=linux-standard/env=ibm" },
+          { "name": "Semeru", "java-test-version": "21", "java-test-distribution": "semeru",
+            "runs-on": "runs-on/fleet=linux-standard/env=ibm" }
         ]
     secrets: inherit

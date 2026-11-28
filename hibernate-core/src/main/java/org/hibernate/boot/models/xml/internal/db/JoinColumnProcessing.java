@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.JoinColumnOrFormula;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbForeignKeyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMapKeyJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPrimaryKeyJoinColumnImpl;
@@ -162,9 +163,15 @@ public class JoinColumnProcessing {
 	 */
 	public static void applyPrimaryKeyJoinColumns(
 			List<JaxbPrimaryKeyJoinColumnImpl> jaxbJoinColumns,
+			JaxbForeignKeyImpl jaxbPrimaryKeyForeignKey,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		if ( CollectionHelper.isEmpty( jaxbJoinColumns ) ) {
+		// A <primary-key-foreign-key/> without any <primary-key-join-column/> becomes an empty container
+		//   @PrimaryKeyJoinColumns(value = {}, foreignKey = @ForeignKey(...))
+		// which maps the association to the primary key with defaulted join columns.
+		// Without either element nothing is applied: a @PrimaryKeyJoinColumns would turn the association
+		// into a true one-to-one.
+		if ( CollectionHelper.isEmpty( jaxbJoinColumns ) && jaxbPrimaryKeyForeignKey == null ) {
 			return;
 		}
 
@@ -174,10 +181,22 @@ public class JoinColumnProcessing {
 				xmlDocumentContext.getModelBuildingContext()
 		);
 
+		// creates on the attribute
+		//   @PrimaryKeyJoinColumns(
+		//       value = { @PrimaryKeyJoinColumn(...), ... },   // from <primary-key-join-column/>
+		//       foreignKey = @ForeignKey(...)                  // from <primary-key-foreign-key/>, if present
+		//   )
+		// There is no @PrimaryKeyForeignKey annotation, PrimaryKeyJoinColumns#foreignKey carries it instead.
 		columnsUsage.value( transformPrimaryKeyJoinColumns(
 				jaxbJoinColumns,
 				xmlDocumentContext
 		) );
+		if ( jaxbPrimaryKeyForeignKey != null ) {
+			columnsUsage.foreignKey( ForeignKeyProcessing.createNestedForeignKeyAnnotation(
+					jaxbPrimaryKeyForeignKey,
+					xmlDocumentContext
+			) );
+		}
 	}
 
 	private static final PrimaryKeyJoinColumn[] NO_PRIMARY_KEY_JOIN_COLUMNS = new PrimaryKeyJoinColumn[0];

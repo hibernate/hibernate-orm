@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entity-mappings xmlns="https://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+    <package>org.hibernate.orm.test.boot.models.xml.pkjoincolumn</package>
+    <access>FIELD</access>
+
+    <!-- JOINED subclass: key column with a nested foreign-key -->
+    <entity class="XmlPrimaryKeyJoinColumnPersistenceTest$Animal" name="Animal" metadata-complete="true">
+        <table name="animal"/>
+        <inheritance strategy="JOINED"/>
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+        </attributes>
+    </entity>
+
+    <entity class="XmlPrimaryKeyJoinColumnPersistenceTest$Dog" name="Dog" metadata-complete="true">
+        <table name="dog"/>
+        <primary-key-join-column name="dog_id" referenced-column-name="id">
+            <foreign-key name="fk_dog_animal"/>
+        </primary-key-join-column>
+        <attributes>
+            <basic name="breed"/>
+        </attributes>
+    </entity>
+
+    <!-- JOINED subclass: key column with an entity level primary-key-foreign-key -->
+    <entity class="XmlPrimaryKeyJoinColumnPersistenceTest$Vehicle" name="Vehicle" metadata-complete="true">
+        <table name="vehicle"/>
+        <inheritance strategy="JOINED"/>
+        <attributes>
+            <id name="id"/>
+            <basic name="maker"/>
+        </attributes>
+    </entity>
+
+    <entity class="XmlPrimaryKeyJoinColumnPersistenceTest$Car" name="Car" metadata-complete="true">
+        <table name="car"/>
+        <primary-key-join-column name="car_id" referenced-column-name="id"/>
+        <primary-key-foreign-key name="fk_car_vehicle"/>
+        <attributes>
+            <basic name="seats"/>
+        </attributes>
+    </entity>
+
+    <!-- secondary table: key column with a primary-key-foreign-key -->
+    <entity class="XmlPrimaryKeyJoinColumnPersistenceTest$Customer" name="Customer" metadata-complete="true">
+        <table name="customer"/>
+        <secondary-table name="customer_detail" owned="true" optional="true">
+            <primary-key-join-column name="customer_id" referenced-column-name="id"/>
+            <primary-key-foreign-key name="fk_customer_detail"/>
+        </secondary-table>
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+            <basic name="detail">
+                <column table="customer_detail"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <!-- one-to-one sharing the primary key -->
+    <entity class="XmlPrimaryKeyJoinColumnPersistenceTest$Person" name="Person" metadata-complete="true">
+        <table name="person"/>
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+        </attributes>
+    </entity>
+
+    <entity class="XmlPrimaryKeyJoinColumnPersistenceTest$Passport" name="Passport" metadata-complete="true">
+        <table name="passport"/>
+        <attributes>
+            <id name="id"/>
+            <basic name="passportNumber"/>
+            <one-to-one name="person" optional="false">
+                <primary-key-join-column name="id" referenced-column-name="id"/>
+                <primary-key-foreign-key name="fk_passport_person"/>
+            </one-to-one>
+        </attributes>
+    </entity>
+</entity-mappings>

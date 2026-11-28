@@ -876,7 +876,7 @@ primary regression families, not an exhaustive list of all locking tests.
 |State adoption and managed callbacks
 |`org/hibernate/orm/test/engine/spi/EntityEntryTest`; `org/hibernate/orm/test/locking/FollowOnLockingVersionAdoptionTest`, `FollowOnLockingVersionConsistencyTest`, `ManagedOnlyLockingCursorTest`.
 |Identity, collection keys, and allocation
-|`org/hibernate/orm/test/locking/CompositeIdentifierLockResultTest`, `CompositeIdentifierEntityDetailsMapTest`, `CompositeIdentifierFollowOnLockingTest`, `CompositeIdentifierLockTranslationTest`, `CompositeCollectionLockingTest`, `CompositeCollectionLockingEmulationTest`, `CompositeCollectionLockTranslationTest`; `org/hibernate/sql/exec/internal/lock/AcquisitionIdentityIndexTest`.
+|`org/hibernate/orm/test/locking/CompositeIdentifierLockResultTest`, `CompositeIdentifierEntityDetailsMapTest`, `CompositeIdentifierFollowOnLockingTest`, `CompositeCollectionLockingTest`, `CompositeCollectionLockTranslationTest`; `org/hibernate/sql/exec/internal/lock/AcquisitionIdentityIndexTest`.
 |Mode/scope composition
 |`org/hibernate/orm/test/locking/PessimisticLockScopeAcquisitionTest`, `PessimisticLockScopeExpansionTest`, `PessimisticForceIncrementScopeTest`, `ForceIncrementExecutionTest`; dialect `EntityLockingStrategyFactoryTest`.
 |Refresh policy
